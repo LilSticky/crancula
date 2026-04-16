@@ -1,9 +1,9 @@
-import {Route} from "@angular/router";
-import {HomeComponent} from "./app/home/home.component";
-import {DetailComponent} from "./app/detail/detail.component";
-import {PageNotFoundComponent} from "./app/shared/components";
+import {profileRoutes} from "./app/features/profile/pages/profile-routes";
+import {HomePage} from "./app/features/home/home.page";
+import {NotFoundPage} from "./app/features/not-found/not-found.page";
+import {CranculaRoutes} from "./model/crancula-routes";
 
-export const routes: Route[] = [
+export const routes: CranculaRoutes = [
   {
     path: '',
     redirectTo: 'home',
@@ -11,14 +11,22 @@ export const routes: Route[] = [
   },
   {
     path: 'home',
-    component: HomeComponent
+    component: HomePage,
+    pathMatch: "full",
+    title: "Home",
+    data: {
+      fullPath: '/home',
+      showIn: {
+        navbar: true
+      },
+      translate: {
+        title: 'ROUTES.TO_HOME'
+      }
+    }
   },
-  {
-    path: 'detail',
-    component: DetailComponent
-  },
+  ...profileRoutes,
   {
     path: '**',
-    component: PageNotFoundComponent
+    component: NotFoundPage
   }
 ];

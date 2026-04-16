@@ -1,12 +1,18 @@
 {
   "PAGES": {
       "HOME": {
-          "TITLE": "App works !",
-          "GO_TO_DETAIL": "Go to Detail"
+          "TITLE": "Crancula"
       },
-      "DETAIL": {
-        "TITLE": "Detail page !",
+      "PROFILES": {
+        "TITLE": "Profiles",
         "BACK_TO_HOME": "Back to Home"
+    }
+  },
+  "PROFILE": {
+    "FORM": {
+      "SAVE": "Save",
+      "TITLE": "Edit Profile",
+      "NAME_LABEL": "Name"
     }
   }
 }

@@ -1,15 +1,23 @@
-import { Component, inject } from '@angular/core';
-import { ElectronService } from './core/services';
-import { TranslateService } from '@ngx-translate/core';
-import { APP_CONFIG } from '../environments/environment';
-import { RouterOutlet } from '@angular/router';
+import {Component, inject} from '@angular/core';
+import {ElectronService} from './core/services';
+import {TranslateService} from '@ngx-translate/core';
+import {APP_CONFIG} from '../environments/environment';
+import {RouterOutlet} from '@angular/router';
+import {NavbarComponent} from "./features/navbar/navbar.component";
 
 @Component({
-    selector: 'app-root',
-    templateUrl: './app.component.html',
-    styleUrls: ['./app.component.scss'],
-    standalone: true,
-    imports: [RouterOutlet]
+  // eslint-disable-next-line @angular-eslint/component-selector
+  selector: 'app-root',
+  template: `
+    <cranc-navbar/>
+    <router-outlet/>
+  `,
+  styles: `
+    :host {
+    }
+  `,
+  standalone: true,
+  imports: [RouterOutlet, NavbarComponent]
 })
 export class AppComponent {
   private electronService = inject(ElectronService);
@@ -19,10 +27,10 @@ export class AppComponent {
     const electronService = this.electronService;
 
     this.translate.setDefaultLang('en');
-    console.log('APP_CONFIG', APP_CONFIG);
+    console.debug('APP_CONFIG', APP_CONFIG);
 
     if (electronService.isElectron) {
-      console.log(process.env);
+      console.log(process.env.APPDATA);
       console.log('Run in electron');
       console.log('Electron ipcRenderer', this.electronService.ipcRenderer);
       console.log('NodeJS childProcess', this.electronService.childProcess);
