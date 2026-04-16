@@ -5,6 +5,7 @@ type WithId = {
   id: string;
 };
 
+// FIXME: [AI Prototype] check function and improve
 export class FileStorage<T extends WithId> {
   private filePath: string;
 
@@ -60,7 +61,7 @@ export class FileStorage<T extends WithId> {
       throw new Error(`Item with id ${id} not found`);
     }
 
-    const updated = { ...items[index], ...updates, id };
+    const updated = {...items[index], ...updates, id};
     items[index] = updated;
 
     await this.write(items);

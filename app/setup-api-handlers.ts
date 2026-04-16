@@ -1,8 +1,9 @@
-// constructor
+// noinspection ES6PreferShortImport
+
 import {ipcMain} from "electron";
-import {apiRoutes} from "../../api/index";
-import {Profile} from "../../api/model/profile";
-import {FileStorage} from "../storage";
+import {apiRoutes} from "../api/index";
+import {Profile} from "../api/model/profile";
+import {FileStorage} from "./storage";
 
 export function setupApiHandlers(
   profilesStorage: FileStorage<Profile> = new FileStorage<Profile>('profiles')
