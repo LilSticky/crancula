@@ -1,13 +1,15 @@
 {
   "name": "crancula",
-  "description": "Angular Electron sample",
+  "description": "Composer and converter for punched tape music scores",
   "author": {
-    "name": "Maxime GRIS",
-    "email": "maxime.gris@gmail.com"
+    "name": "Lil Sticky"
   },
-  "version": "17.0.0",
+  "version": "0.1.0",
   "main": "main.js",
   "private": true,
+  "include": [
+    "../api/index.ts"
+  ],
   "dependencies": {
   }
 }
