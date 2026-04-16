@@ -14,7 +14,7 @@ export const profileRoutes: CranculaRoutes = [
         pathMatch: "full",
         title: "Profiles",
         data: {
-          fullPath: '/profile/list',
+          path: '/profile/list',
           showIn: {
             navbar: true
           },

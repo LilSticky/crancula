@@ -7,7 +7,7 @@ export type TranslateData = {
   title?: string
 };
 export type RouteData = {
-  fullPath: string
+  path: string
   showIn: MenuData,
   translate: TranslateData
 };

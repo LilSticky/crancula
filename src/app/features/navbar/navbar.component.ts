@@ -2,7 +2,7 @@ import {Component} from '@angular/core';
 import {TranslatePipe} from "@ngx-translate/core";
 import {RouterLink} from "@angular/router";
 import {MatButton} from "@angular/material/button";
-import {forNavBar, selectNavigations} from "./crancula-navigation";
+import {CranculaNavigations} from "./model/crancula-navigations";
 
 @Component({
   selector: 'cranc-navbar',
@@ -14,7 +14,7 @@ import {forNavBar, selectNavigations} from "./crancula-navigation";
   template: `
     <div class="flex-row">
       @for (item of items; track $index) {
-        <a matButton [routerLink]="item.fullPath">{{ item.translate.title | translate }}</a>
+        <a matButton [routerLink]="item.path">{{ item.translate.title | translate }}</a>
       }
     </div>
   `,
@@ -27,5 +27,5 @@ import {forNavBar, selectNavigations} from "./crancula-navigation";
     }`,
 })
 export class NavbarComponent {
-  items = selectNavigations(forNavBar)
+  items = CranculaNavigations.forNavbar()
 }
