@@ -1,3 +1,5 @@
+// noinspection ES6PreferShortImport
+
 import {Profile} from "../../api/model/profile";
 
 export const profileRoutes = {
