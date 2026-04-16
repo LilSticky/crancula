@@ -15,7 +15,7 @@ export const routes: CranculaRoutes = [
     pathMatch: "full",
     title: "Home",
     data: {
-      fullPath: '/home',
+      path: '/home',
       showIn: {
         navbar: true
       },
