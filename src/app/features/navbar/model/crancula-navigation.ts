@@ -9,27 +9,14 @@ export class CranculaNavigation implements RouteData {
     title: string
   };
 
-  constructor({path, showIn, translate}: RouteData) {
-    this.path = path;
+  constructor({data, path}: CranculaRoute, parentPath: string = '') {
+    this.path = (parentPath ? ['', parentPath, path] : [parentPath, path]).join('/');
     this.showIn = {
-      navbar: showIn.navbar ?? false
+      navbar: data?.showIn.navbar ?? false
     };
     this.translate = {
-      title: translate.title ?? ''
+      title: data?.translate.title ?? ''
     };
   }
-
-  static of = ({data, path}: CranculaRoute, parentPath: string = ''): CranculaNavigation => new CranculaNavigation({
-    path: [parentPath, path ?? ''].join('/'),
-    showIn: data?.showIn ?? {
-      navbar: data?.showIn.navbar ?? false
-    },
-    translate: data?.translate ?? {
-      title: data?.translate.title
-    }
-  });
-
-  static childrenOf = (route: CranculaRoute) => (route.children ?? [])
-    .map((next: CranculaRoute) => this.of(next, route.path))
 }
 

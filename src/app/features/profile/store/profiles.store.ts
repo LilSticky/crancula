@@ -14,6 +14,7 @@ const initialState: ProfilesState = {
 }
 
 export const ProfilesStore = signalStore(
+  { providedIn: 'root' },
   withState(initialState),
   withEntities<Profile>(),
   withLinkedState((store) => ({

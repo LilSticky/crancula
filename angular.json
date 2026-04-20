@@ -116,7 +116,12 @@
               "lcovonly"
             ],
             "reporters": [
-              ["default", { "summary": true }],
+              [
+                "default",
+                {
+                  "summary": true
+                }
+              ],
               [
                 "html",
                 {
@@ -160,7 +165,9 @@
       "setParserOptionsProject": true
     },
     "@schematics/angular:component": {
-      "type": "component"
+      "type": "component",
+      "inlineStyle": true,
+      "inlineTemplate": true
     },
     "@schematics/angular:directive": {
       "type": "directive"
