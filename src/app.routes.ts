@@ -20,7 +20,7 @@ export const routes: CranculaRoutes = [
         navbar: true
       },
       translate: {
-        title: 'ROUTES.TO_HOME'
+        title: 'PAGES.HOME.TITLE'
       }
     }
   },

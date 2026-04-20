@@ -19,7 +19,7 @@ export const profileRoutes: CranculaRoutes = [
             navbar: true
           },
           translate: {
-            title: 'ROUTES.TO_PROFILES'
+            title: 'PAGES.PROFILES.TITLE'
           }
         }
       },

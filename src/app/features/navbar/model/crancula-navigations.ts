@@ -2,30 +2,35 @@ import {routes} from "../../../../app.routes";
 import {CranculaRoute, CranculaRoutes} from "../../../../model/crancula-routes";
 import {CranculaNavigation} from "./crancula-navigation";
 
-export class CranculaNavigations extends Array<CranculaNavigation> {
-  constructor(...items: CranculaNavigation[]) {
-    super(items.length);
-    super.push(...items)
+const toNavigation = (route: CranculaRoute): CranculaNavigation => new CranculaNavigation(route);
+const toChildNavigation = (route: CranculaRoute, parentPath?: string): CranculaNavigation => new CranculaNavigation(route, parentPath);
+
+export class CranculaNavigations {
+  root: CranculaRoutes;
+  items: Array<CranculaNavigation>
+
+  constructor(routes: CranculaRoutes) {
+    this.root = routes;
+    this.items = routes.map(toNavigation);
+    routes.forEach((route: CranculaRoute) => this.addChildrenOf(route));
   }
 
-  static fromRoutes() {
-    const navs = routes.map(route => CranculaNavigation.of(route));
-    return new CranculaNavigations(...navs).addChildren(routes)
+  public static forNavbar(): CranculaNavigation[] {
+    return this.fromRoutes().items.filter((nav: CranculaNavigation) => nav.showIn.navbar);
   }
 
-  static forNavbar() {
-    return this.fromRoutes().filter((nav: CranculaNavigation) => nav.showIn.navbar)
+  private static fromRoutes(): CranculaNavigations {
+    return new CranculaNavigations(routes);
   }
 
-  addAll = (next: CranculaNavigation[]): CranculaNavigations => new CranculaNavigations(...this, ...next);
+  private add = (navigation: CranculaNavigation): number => this.items.push(navigation);
 
-  addChildren(routes: CranculaRoutes): CranculaNavigations {
-    routes.map(CranculaNavigation.childrenOf).forEach(this.addAll);
-    const children: CranculaRoutes = routes.reduce((previous: CranculaRoutes, route: CranculaRoute): CranculaRoutes => [...previous, ...(route.children ?? [])], []);
-    if (children.some((child: CranculaRoute): boolean => !!child.children)) {
-      return this.addChildren(children)
-    } else {
-      return this
-    }
+  private addChildrenOf({children, path}: CranculaRoute): void {
+    (children ?? []).forEach((child: CranculaRoute): void => {
+      this.add(toChildNavigation(child, path));
+      if (child.children) {
+        this.addChildrenOf(child)
+      }
+    });
   }
 }

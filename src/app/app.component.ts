@@ -10,9 +10,17 @@ import {NavbarComponent} from "./features/navbar/navbar.component";
   selector: 'app-root',
   template: `
     <cranc-navbar/>
-    <router-outlet/>
+    <div class="page-container">
+      <router-outlet/>
+    </div>
   `,
   styles: `
+
+    .page-container {
+      width: 80%;
+      margin: auto;
+    }
+
     :host {
     }
   `,

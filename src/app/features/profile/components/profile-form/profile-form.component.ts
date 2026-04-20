@@ -2,31 +2,45 @@ import {Component, model, output} from '@angular/core';
 import {Field, form} from "@angular/forms/signals";
 import {TranslatePipe} from "@ngx-translate/core";
 import {Profile} from "@api/model/profile";
+import {MatButton} from "@angular/material/button";
+import {TextFormFieldComponent} from "@shared/components/text-form-field/text-form-field.component";
+import {NotesFormComponent} from "./notes-form/notes-form.component";
 
 @Component({
   selector: 'cranc-profile-form',
   imports: [
     Field,
-    TranslatePipe
+    TranslatePipe,
+    MatButton,
+    TextFormFieldComponent,
+    TextFormFieldComponent,
+    NotesFormComponent
   ],
   template: `
-    <form (submit)="submit()">
-      <h2>{{ 'PROFILE.FORM.TITLE' | translate }}</h2>
-      <div>
-        <label for="profile-form-name-input">{{ 'PROFILE.FORM.NAME_LABEL' | translate }}</label>
-        <input id="profile-form-name-input" [field]="profileForm()">
-      </div>
-      <button type="submit"><div>{{ 'PROFILE.FORM.SAVE' | translate }}</div></button>
+    <form (submit)="submit($event)" class="profile-form">
+      <h2>{{ 'PAGES.PROFILE.FORM.TITLE' | translate }}</h2>
+      <cranc-text-form-field
+        [field]="profileForm"
+        label="PAGES.PROFILE.FORM.NAME"
+      />
+      <cranc-notes-form [field]="profileForm.notes"/>
+      <button matButton="filled" type="submit">{{ 'PAGES.PROFILE.FORM.SAVE' | translate }}</button>
     </form>
   `,
-  styles: '',
+  styles: `
+    .profile-form {
+      display: flex;
+      flex-direction: column;
+    }
+  `,
 })
 export class ProfileFormComponent {
-  profileModel = model<Profile>();
+  profileModel = model.required<Profile>();
   profileForm = form(this.profileModel);
   save = output<Profile>();
 
-  submit() {
+  submit($event: SubmitEvent) {
+    $event.preventDefault();
     const value = this.profileModel();
     if (value) {
       this.save.emit(value)

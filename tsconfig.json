@@ -18,7 +18,8 @@
     "useDefineForClassFields": false,
     "baseUrl": "./",
     "paths": {
-      "@api/*": ["api/*"]
+      "@api/*": ["api/*"],
+      "@shared/*": ["src/app/features/shared/*"]
     },
   },
   "exclude": [

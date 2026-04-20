@@ -1,18 +1,25 @@
 {
+  "TITLE": "Crancula",
   "PAGES": {
-      "HOME": {
-          "TITLE": "Crancula"
-      },
-      "PROFILES": {
-        "TITLE": "Profiles",
-        "BACK_TO_HOME": "Back to Home"
-    }
-  },
-  "PROFILE": {
-    "FORM": {
-      "SAVE": "Save",
-      "TITLE": "Edit Profile",
-      "NAME_LABEL": "Name"
+    "HOME": {
+      "TITLE": "Overview"
+    },
+    "PROFILES": {
+      "TITLE": "Profiles",
+      "BACK_TO_HOME": "Back to Home",
+      "TABLE": {
+        "NAME": "Name",
+        "NOTES": "Note Count",
+        "EDIT": "Edit",
+        "NEW": "New Profile"
+      }
+    },
+    "PROFILE": {
+      "FORM": {
+        "SAVE": "Save",
+        "TITLE": "Edit Profile",
+        "NAME": "Name"
+      }
     }
   }
 }

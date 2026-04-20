@@ -1,6 +1,10 @@
-import {contextBridge, ipcRenderer} from 'electron';
-import {apiRoutes, CranculaApi} from "@api/index";
-import {Profile} from "@api/model/profile";
+// can only import types because they are removed at runtime
+import type {CranculaApi} from "@api/index";
+import type {Profile} from "@api/model/profile";
+// everything else must use require (does not support @-alias)
+// noinspection ES6ConvertRequireIntoImport
+const {contextBridge, ipcRenderer} = require('electron');
+const {apiRoutes} = require("../api/index");
 
 function invoke(route: keyof typeof apiRoutes, args?: any) {
   return ipcRenderer.invoke(apiRoutes[route], args);

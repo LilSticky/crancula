@@ -1,8 +1,7 @@
 import {app, BrowserWindow, screen} from 'electron';
 import * as path from 'path';
 import * as fs from 'fs';
-
-import {setupApiHandlers} from "./api/setup-api-handlers";
+import {setupApiHandlers} from "./setup-api-handlers";
 
 let win: BrowserWindow | null = null;
 const args = process.argv.slice(1),
@@ -21,9 +20,9 @@ function createWindow(): BrowserWindow {
     webPreferences: {
       nodeIntegration: true,
       allowRunningInsecureContent: serve,
-      contextIsolation: false,
+      contextIsolation: true,
       webSecurity: !serve,
-      preload: path.join(__dirname, 'preload.js')
+      preload: path.join(__dirname, 'preload.ts')
     },
   });
 
