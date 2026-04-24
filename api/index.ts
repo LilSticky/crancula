@@ -1,11 +1,7 @@
-// noinspection ES6PreferShortImport
+export interface DataStore<T> {
 
-import {ProfilesApi, profilesRoutes} from "../api/profiles/routes";
-import {ProfileApi, profileRoutes} from "../api/profile/routes";
+  set(values: T[]): Promise<void>;
 
-export const apiRoutes = {
-  ...profilesRoutes,
-  ...profileRoutes
-};
+  get(): Promise<T[]>;
+}
 
-export type CranculaApi = ProfilesApi & ProfileApi;

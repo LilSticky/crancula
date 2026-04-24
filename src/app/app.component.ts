@@ -1,7 +1,4 @@
-import {Component, inject} from '@angular/core';
-import {ElectronService} from './core/services';
-import {TranslateService} from '@ngx-translate/core';
-import {APP_CONFIG} from '../environments/environment';
+import {Component} from '@angular/core';
 import {RouterOutlet} from '@angular/router';
 import {NavbarComponent} from "./features/navbar/navbar.component";
 
@@ -28,22 +25,7 @@ import {NavbarComponent} from "./features/navbar/navbar.component";
   imports: [RouterOutlet, NavbarComponent]
 })
 export class AppComponent {
-  private electronService = inject(ElectronService);
-  private translate = inject(TranslateService);
 
   constructor() {
-    const electronService = this.electronService;
-
-    this.translate.setDefaultLang('en');
-    console.debug('APP_CONFIG', APP_CONFIG);
-
-    if (electronService.isElectron) {
-      console.log(process.env.APPDATA);
-      console.log('Run in electron');
-      console.log('Electron ipcRenderer', this.electronService.ipcRenderer);
-      console.log('NodeJS childProcess', this.electronService.childProcess);
-    } else {
-      console.log('Run in browser');
-    }
   }
 }

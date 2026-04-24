@@ -18,7 +18,11 @@
       "FORM": {
         "SAVE": "Speichern",
         "TITLE": "Profil bearbeiten",
-        "NAME": "Name"
+        "NAME": "Name",
+        "LOADING": "Lädt, bitte warten...",
+        "ERROR": {
+          "NO_PROFILE_SELECTED": "Es wurde noch kein Profil zum editieren ausgewählt."
+        }
       }
     }
   }

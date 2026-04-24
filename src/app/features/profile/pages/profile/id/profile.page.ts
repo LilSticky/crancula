@@ -1,38 +1,39 @@
 import {Component, inject} from '@angular/core';
 import {ProfileFormComponent} from "../../../components/profile-form/profile-form.component";
-import {ActivatedRoute, ParamMap} from "@angular/router";
-import {map, switchMap} from "rxjs";
+import {ActivatedRoute, Params} from "@angular/router";
+import {map} from "rxjs";
 import {ProfilesStore} from "../../../store/profiles.store";
+import {TranslatePipe} from "@ngx-translate/core";
 
+const getId = (params: Params): string => (params["id"] || '') as string;
 
 @Component({
   selector: 'cranc-profile-page',
   imports: [
-    ProfileFormComponent
+    ProfileFormComponent,
+    TranslatePipe
   ],
   template: `
-    <cranc-profile-form
-      [profileModel]="selectedProfile()"
-    />
+    @let selected = store.selectedProfile();
+    @if (selected) {
+      <cranc-profile-form
+        [profileModel]="selected"
+      />
+    } @else if (store.isLoading()) {
+      {{ 'PAGES.PROFILE.FORM.LOADING' | translate }}
+    } @else {
+      {{ 'PAGES.PROFILE.FORM.ERROR.NO_PROFILE_SELECTED' | translate }}
+    }
   `,
   styles: ``,
 })
 export class ProfilePage {
-  private readonly store = inject(ProfilesStore);
-  protected readonly selectedProfile = this.store.selectedProfile;
+  protected readonly store = inject(ProfilesStore);
 
   private readonly route = inject(ActivatedRoute);
-  private readonly profileId$ = this.route.paramMap.pipe(
-    map((params: ParamMap): string => params.get("id") ?? ''));
-  private readonly profile$ = this.profileId$.pipe(
-    switchMap(id => this.store.readProfile(id))
-  )
 
   constructor() {
-    this.profile$.subscribe((profile) => {
-      if (profile) {
-        this.store.selectProfile(profile)
-      }
-    });
+    // keep updating the selected profile id of the store with the profile id of the route
+    this.route.params.pipe(map(getId)).subscribe(this.store.selectProfile);
   }
 }

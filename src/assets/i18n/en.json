@@ -18,7 +18,11 @@
       "FORM": {
         "SAVE": "Save",
         "TITLE": "Edit Profile",
-        "NAME": "Name"
+        "NAME": "Name",
+        "LOADING": "Loading, please wait...",
+        "ERROR": {
+          "NO_PROFILE_SELECTED": "No profile was selected to edit yet."
+        }
       }
     }
   }

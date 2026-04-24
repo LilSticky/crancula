@@ -1,59 +1,69 @@
-import {patchState, signalStore, withHooks, withLinkedState, withMethods, withState} from "@ngrx/signals";
-import {inject} from "@angular/core";
-import {setAllEntities, withEntities} from "@ngrx/signals/entities";
-import {tap} from "rxjs";
-import {ProfilesService} from "../service/profiles.service";
-import {Profile} from "@api/model/profile"
+import {getState, patchState, signalStore, withComputed, withHooks, withMethods, withState} from "@ngrx/signals";
+import {addEntity, removeEntity, withEntities} from "@ngrx/signals/entities";
+import {Organ} from "@api/model/organ"
+import {effect} from "@angular/core";
 
-type ProfilesState = {
-  isLoading: boolean;
+type ProfilesStoreState = {
+  _selectedProfileId: string;
+  _isLoading: boolean;
 }
 
-const initialState: ProfilesState = {
-  isLoading: false
+const initialState: ProfilesStoreState = {
+  _selectedProfileId: '',
+  _isLoading: false,
 }
 
+export type ProfilesState = typeof ProfilesStore
 export const ProfilesStore = signalStore(
-  { providedIn: 'root' },
-  withState(initialState),
-  withEntities<Profile>(),
-  withLinkedState((store) => ({
-    selectedProfile: (): Profile => store.entityMap()[0] ?? null,
-  })),
-  withMethods((store, profilesService = inject(ProfilesService)) => {
-      return {
-        // profile api
-        createProfile: (profile: Profile) => profilesService.createProfile(profile),
-        readProfile: (id: string) => profilesService.readProfile(id),
-        updateProfile: (profile: Profile) => profilesService.updateProfile(profile),
-        deleteProfile: (id: string) => profilesService.deleteProfile(id),
-        // profiles api
-        createProfiles: (profiles: Profile[]) => profilesService.createProfiles(profiles),
-        readProfiles: () => profilesService.readProfiles(),
-        updateProfiles: (profiles: Profile[]) => profilesService.updateProfiles(profiles),
-        deleteProfiles: (ids: string[]) => profilesService.deleteProfiles(ids),
-        // custom store methods
-        hasProfile: (profile: Profile) => store.ids().includes(profile.id),
-        selectProfile: (profile: Profile) => {
-          patchState(store, {selectedProfile: profile})
-        },
-        setLoading: (isLoading: boolean) => {
-          patchState(store, {isLoading})
-        }
-      };
-    }
+  {providedIn: 'root'},
+  withState<ProfilesStoreState>(initialState),
+  withEntities<Organ>(),
+  withComputed((store) => ({
+      selectedProfile(): Organ | null {
+        const id = store._selectedProfileId();
+        return store.entityMap()[id] ?? null;
+      },
+      isLoading(): boolean {
+        return store._isLoading();
+      }
+    })
   ),
-  withHooks({
-    onInit(store, profilesService = inject(ProfilesService)) {
-      store.setLoading(true)
-      // load all entities from storage and initialize store with them
-      profilesService.readProfiles().pipe(
-        tap({
-          next: (profiles) => patchState(store, setAllEntities(profiles)),
-          error: console.error,
-          finalize: () => store.setLoading(false)
-        })
-      );
+  withMethods((store) => ({
+    selectProfile(id?: string): void {
+      if (id && this._isKnown(id) && !this._isSelected(id)) {
+        this._selectProfile(id)
+      }
+    },
+    newProfile(): Organ {
+      const profile = new Organ();
+      this._addProfile(profile)
+      return profile;
+    },
+    setLoading(loading: boolean): void {
+      patchState(store, {_isLoading: loading})
+    },
+    _addProfile(profile: Organ): void {
+      patchState(store, addEntity(profile))
+    },
+    _deleteProfile(id: string): void {
+      patchState(store, removeEntity(id))
+    },
+    _isKnown(id: Organ["id"]) {
+      return store.ids().includes(id)
+    },
+    _selectProfile(id: Organ["id"]) {
+      patchState(store, {_selectedProfileId: id})
+    },
+    _isSelected(id: string) {
+      return store._selectedProfileId() == id
     }
-  }),
+  })),
+  withHooks({
+    onInit(store) {
+      effect(() => {
+        const state = getState(store);
+        console.debug('store state changed', state)
+      });
+    }
+  })
 )

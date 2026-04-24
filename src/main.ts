@@ -31,6 +31,6 @@ bootstrapApplication(AppComponent, {
     importProvidersFrom(
       CoreModule,
       SharedModule
-    )
+    ),
   ]
 }).catch(err => console.error(err));

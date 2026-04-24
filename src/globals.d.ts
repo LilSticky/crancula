@@ -1,9 +1,9 @@
-import {CranculaApi} from "@api/index";
+import {DataStore} from "@api/index";
 
 declare global {
   interface Window {
     process: any;
     require: any;
-    api: CranculaApi;
+    bridge: DataStore;
   }
 }
