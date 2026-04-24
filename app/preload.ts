@@ -1,26 +1,16 @@
-// can only import types because they are removed at runtime
-import type {CranculaApi} from "@api/index";
-import type {Profile} from "@api/model/profile";
-// everything else must use require (does not support @-alias)
+// noinspection ES6PreferShortImport
 // noinspection ES6ConvertRequireIntoImport
+
+// can only import types because they are removed at runtime
+import type {DataStore} from "../api/index"
+import type {Organ} from "@api/model/organ";
+// everything else must use require (does not support @-alias)
 const {contextBridge, ipcRenderer} = require('electron');
-const {apiRoutes} = require("../api/index");
+const {Channel} = require("../api/channel");
 
-function invoke(route: keyof typeof apiRoutes, args?: any) {
-  return ipcRenderer.invoke(apiRoutes[route], args);
-}
-
-const api: CranculaApi = {
-  // profiles api
-  createProfiles: (profiles) => invoke("profiles.create", profiles),
-  readProfiles: () => invoke("profiles.read"),
-  updateProfiles: (profiles) => invoke("profiles.update", profiles),
-  deleteProfiles: (profileIds) => invoke("profiles.delete", profileIds),
-  // profile api
-  createProfile: (profile) => invoke("profile.create", profile),
-  readProfile: (profileId) => invoke("profile.read", profileId),
-  updateProfile: (profile) => invoke("profile.update", profile),
-  deleteProfile: (profileId: Profile["id"]) => invoke("profile.delete", profileId),
+const db: DataStore<Organ> = {
+  set: async (profiles: Organ[]): Promise<void> => ipcRenderer.invoke(Channel.SET_PROFILES, profiles),
+  get: async (): Promise<Organ[]> => ipcRenderer.invoke(Channel.GET_PROFILES)
 };
 
-contextBridge.exposeInMainWorld('api', api);
+contextBridge.exposeInMainWorld('db', db);

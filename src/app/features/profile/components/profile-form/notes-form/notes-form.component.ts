@@ -2,11 +2,11 @@ import {Component, model} from '@angular/core';
 import {TextFormFieldComponent} from "@shared/components/text-form-field/text-form-field.component";
 import {NumberFormFieldComponent} from "@shared/components/number-form-field/number-form-field.component";
 import {Field, FormValueControl} from "@angular/forms/signals";
-import {newNote, Note} from "@api/model/profile";
 import {MatDivider, MatList, MatListItem} from "@angular/material/list";
 import {MatFabButton} from "@angular/material/button";
 import {MatIcon} from "@angular/material/icon";
 import {TranslatePipe} from "@ngx-translate/core";
+import {Pipe} from "@api/model/pipe";
 
 @Component({
   selector: 'cranc-notes-form',
@@ -51,10 +51,10 @@ import {TranslatePipe} from "@ngx-translate/core";
     }
   `,
 })
-export class NotesFormComponent implements FormValueControl<Note[]> {
-  value = model<Note[]>([]);
+export class NotesFormComponent implements FormValueControl<Pipe[]> {
+  value = model<Pipe[]>([]);
 
-  addNote = () => {
-    this.value.update(arr => [...arr, newNote()])
+  addNote() {
+    this.value.update(arr => [...arr, new Pipe()])
   }
 }

@@ -1,7 +1,7 @@
 import {Component, model, output} from '@angular/core';
 import {Field, form} from "@angular/forms/signals";
 import {TranslatePipe} from "@ngx-translate/core";
-import {Profile} from "@api/model/profile";
+import {Organ} from "@api/model/organ";
 import {MatButton} from "@angular/material/button";
 import {TextFormFieldComponent} from "@shared/components/text-form-field/text-form-field.component";
 import {NotesFormComponent} from "./notes-form/notes-form.component";
@@ -35,9 +35,9 @@ import {NotesFormComponent} from "./notes-form/notes-form.component";
   `,
 })
 export class ProfileFormComponent {
-  profileModel = model.required<Profile>();
+  profileModel = model.required<Organ>();
   profileForm = form(this.profileModel);
-  save = output<Profile>();
+  save = output<Organ>();
 
   submit($event: SubmitEvent) {
     $event.preventDefault();

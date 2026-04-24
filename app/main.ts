@@ -1,7 +1,9 @@
-import {app, BrowserWindow, screen} from 'electron';
+import {app, BrowserWindow, ipcMain, screen} from 'electron';
 import * as path from 'path';
 import * as fs from 'fs';
-import {setupApiHandlers} from "./setup-api-handlers";
+import {FileStorage} from "./storage";
+import {Organ} from "@api/model/organ";
+import {Channel} from "@api/channel";
 
 let win: BrowserWindow | null = null;
 const args = process.argv.slice(1),
@@ -18,10 +20,7 @@ function createWindow(): BrowserWindow {
     width: size.width,
     height: size.height,
     webPreferences: {
-      nodeIntegration: true,
       allowRunningInsecureContent: serve,
-      contextIsolation: true,
-      webSecurity: !serve,
       preload: path.join(__dirname, 'preload.ts')
     },
   });
@@ -61,6 +60,12 @@ function createWindow(): BrowserWindow {
   return win;
 }
 
+function profileStoreFactory() {
+  const store: FileStorage<Organ> = new FileStorage<Organ>('profiles')
+  ipcMain.handle(Channel.GET_PROFILES, store.handleGet)
+  ipcMain.handle(Channel.SET_PROFILES, store.handleSet)
+}
+
 try {
   app.whenReady().then(() => {
     // This method will be called when Electron has finished initialization and is ready to create browser windows.
@@ -76,7 +81,7 @@ try {
       }
     });
 
-    setupApiHandlers();
+    profileStoreFactory();
   })
   // Quit when all windows are closed.
   app.on('window-all-closed', () => {

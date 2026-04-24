@@ -17,7 +17,7 @@ import {
   MatTable
 } from "@angular/material/table";
 import {PROFILE_BASE_PATH} from "../../pages/profile-routes";
-import {Profile} from "@api/model/profile";
+import {Organ} from "@api/model/organ";
 import {MatFabButton} from "@angular/material/button";
 import {TranslatePipe} from "@ngx-translate/core";
 import {MatIcon} from "@angular/material/icon";
@@ -118,6 +118,6 @@ import {MatIcon} from "@angular/material/icon";
 })
 export class ProfileListComponent {
   displayedColumns: string[] = ['name', 'notes', 'edit'];
-  readonly profiles = input.required<Profile[]>()
+  readonly profiles = input.required<Organ[]>()
   protected readonly basePath = PROFILE_BASE_PATH;
 }
