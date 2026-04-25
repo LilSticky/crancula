@@ -4,24 +4,24 @@
     "HOME": {
       "TITLE": "Overview"
     },
-    "PROFILES": {
-      "TITLE": "Profiles",
+    "ORGANS": {
+      "TITLE": "Organs",
       "BACK_TO_HOME": "Back to Home",
       "TABLE": {
         "NAME": "Name",
-        "NOTES": "Note Count",
+        "PIPES": "Pipe Count",
         "EDIT": "Edit",
-        "NEW": "New Profile"
+        "NEW": "New Organ"
       }
     },
-    "PROFILE": {
+    "ORGAN": {
       "FORM": {
         "SAVE": "Save",
-        "TITLE": "Edit Profile",
+        "TITLE": "Edit Organ",
         "NAME": "Name",
         "LOADING": "Loading, please wait...",
         "ERROR": {
-          "NO_PROFILE_SELECTED": "No profile was selected to edit yet."
+          "NO_ORGAN_SELECTED": "No organ was selected to edit yet."
         }
       }
     }

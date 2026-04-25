@@ -3,49 +3,51 @@ import {Field, form} from "@angular/forms/signals";
 import {TranslatePipe} from "@ngx-translate/core";
 import {Organ} from "@api/model/organ";
 import {MatButton} from "@angular/material/button";
+import {PipesFormComponent} from "./pipes-form/pipes-form.component";
 import {TextFormFieldComponent} from "@shared/components/text-form-field/text-form-field.component";
-import {NotesFormComponent} from "./notes-form/notes-form.component";
 
 @Component({
-  selector: 'cranc-profile-form',
+  selector: 'cranc-organ-form',
   imports: [
     Field,
     TranslatePipe,
     MatButton,
     TextFormFieldComponent,
     TextFormFieldComponent,
-    NotesFormComponent
+    TextFormFieldComponent,
+    PipesFormComponent,
+    TextFormFieldComponent,
   ],
   template: `
-    <form (submit)="submit($event)" class="profile-form">
-      <h2>{{ 'PAGES.PROFILE.FORM.TITLE' | translate }}</h2>
+    <form (submit)="submit($event)" class="organ-form">
+      <h2>{{ 'PAGES.ORGAN.FORM.TITLE' | translate }}</h2>
       <cranc-text-form-field
-        [field]="profileForm"
-        label="PAGES.PROFILE.FORM.NAME"
+        [field]="organForm"
+        label="PAGES.ORGAN.FORM.NAME"
       />
-      <cranc-notes-form [field]="profileForm.notes"/>
-      <button matButton="filled" type="submit">{{ 'PAGES.PROFILE.FORM.SAVE' | translate }}</button>
+      <cranc-pipes-form [field]="organForm.pipes"/>
+      <button matButton="filled" type="submit">{{ 'PAGES.ORGAN.FORM.SAVE' | translate }}</button>
     </form>
   `,
   styles: `
-    .profile-form {
+    .organ-form {
       display: flex;
       flex-direction: column;
     }
   `,
 })
-export class ProfileFormComponent {
-  profileModel = model.required<Organ>();
-  profileForm = form(this.profileModel);
+export class OrganFormComponent {
+  organModel = model.required<Organ>();
+  organForm = form(this.organModel);
   save = output<Organ>();
 
   submit($event: SubmitEvent) {
     $event.preventDefault();
-    const value = this.profileModel();
+    const value = this.organModel();
     if (value) {
       this.save.emit(value)
     } else {
-      console.warn('failed to save empty profile')
+      console.warn('failed to save empty organ')
     }
   }
 }

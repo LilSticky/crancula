@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { ProfileFormComponent } from './profile-form.component';
+import { NewOrganPage } from './new-organ.page';
 
-describe('ProfileFormComponent', () => {
-  let component: ProfileFormComponent;
-  let fixture: ComponentFixture<ProfileFormComponent>;
+describe('OrganFormPageComponent', () => {
+  let component: NewOrganPage;
+  let fixture: ComponentFixture<NewOrganPage>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ProfileFormComponent]
+      imports: [NewOrganPage]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(ProfileFormComponent);
+    fixture = TestBed.createComponent(NewOrganPage);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

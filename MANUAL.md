@@ -112,7 +112,7 @@ E2E Test scripts can be found in `e2e` folder.
 |---------------|---------------------------|
 | `npm run e2e` | Execute end to end tests  |
 
-Note: To make it work behind a proxy, you can add this proxy exception in your terminal  
+Pipe: To make it work behind a proxy, you can add this proxy exception in your terminal  
 `export {no_proxy,NO_PROXY}="127.0.0.1,localhost"`
 
 ## Debug with VsCode
@@ -123,7 +123,7 @@ Then set some breakpoints in your application's source code.
 
 Finally from VsCode press **Ctrl+Shift+D** and select **Application Debug** and press **F5**.
 
-Please note that Hot reload is only available in Renderer process.
+Please pipe that Hot reload is only available in Renderer process.
 
 ## Want to use Angular Material ? Ngx-Bootstrap ?
 

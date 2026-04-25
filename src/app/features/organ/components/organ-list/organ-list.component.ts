@@ -16,14 +16,14 @@ import {
   MatRowDef,
   MatTable
 } from "@angular/material/table";
-import {PROFILE_BASE_PATH} from "../../pages/profile-routes";
 import {Organ} from "@api/model/organ";
 import {MatFabButton} from "@angular/material/button";
 import {TranslatePipe} from "@ngx-translate/core";
 import {MatIcon} from "@angular/material/icon";
+import {ORGAN_BASE_PATH} from "../../pages/routes";
 
 @Component({
-  selector: 'cranc-profile-list',
+  selector: 'cranc-organ-list',
   imports: [
     RouterLink,
     MatTable,
@@ -45,26 +45,26 @@ import {MatIcon} from "@angular/material/icon";
     MatIcon
   ],
   template: `
-    <table mat-table [dataSource]="profiles()" class="mat-elevation-z8 profile-table">
+    <table mat-table [dataSource]="organs()" class="mat-elevation-z8 organ-table">
       <!-- Name Column -->
       <ng-container matColumnDef="name">
-        <th mat-header-cell *matHeaderCellDef>{{ "PAGES.PROFILES.TABLE.NAME" | translate }}</th>
+        <th mat-header-cell *matHeaderCellDef>{{ "PAGES.ORGANS.TABLE.NAME" | translate }}</th>
         <td mat-cell *matCellDef="let element">{{ element.name }}</td>
         <td mat-footer-cell *matFooterCellDef>
         </td>
       </ng-container>
 
-      <!-- Notes Column -->
-      <ng-container matColumnDef="notes">
-        <th mat-header-cell *matHeaderCellDef>{{ "PAGES.PROFILES.TABLE.NOTES" | translate }}</th>
-        <td mat-cell *matCellDef="let element">{{ element.notes.length }}</td>
+      <!-- Pipes Column -->
+      <ng-container matColumnDef="pipes">
+        <th mat-header-cell *matHeaderCellDef>{{ "PAGES.ORGANS.TABLE.PIPES" | translate }}</th>
+        <td mat-cell *matCellDef="let element">{{ element.pipes.length }}</td>
         <td mat-footer-cell *matFooterCellDef>
         </td>
       </ng-container>
 
       <!-- Edit Column -->
       <ng-container matColumnDef="edit">
-        <th mat-header-cell *matHeaderCellDef>{{ "PAGES.PROFILES.TABLE.EDIT" | translate }}</th>
+        <th mat-header-cell *matHeaderCellDef>{{ "PAGES.ORGANS.TABLE.EDIT" | translate }}</th>
         <td mat-cell *matCellDef="let element">
           <button matFab [routerLink]="['/', basePath, element.id]" aria-label="Button with a delete icon">
             <mat-icon>edit</mat-icon>
@@ -73,7 +73,7 @@ import {MatIcon} from "@angular/material/icon";
         <td mat-footer-cell *matFooterCellDef>
           <button matFab extended [routerLink]="['/', basePath, 'new']" style="margin-top: 10%; margin-bottom: 10%">
             <mat-icon>add</mat-icon>
-            {{ "PAGES.PROFILES.TABLE.NEW" | translate }}
+            {{ "PAGES.ORGANS.TABLE.NEW" | translate }}
           </button>
         </td>
       </ng-container>
@@ -89,7 +89,7 @@ import {MatIcon} from "@angular/material/icon";
     </table>
   `,
   styles: `
-    .profile-table {
+    .organ-table {
       width: 100%;
     }
 
@@ -107,7 +107,7 @@ import {MatIcon} from "@angular/material/icon";
       width: auto;
     }
 
-    .mat-column-notes {
+    .mat-column-pipes {
       width: 10%;
     }
 
@@ -116,8 +116,8 @@ import {MatIcon} from "@angular/material/icon";
     }
   `,
 })
-export class ProfileListComponent {
-  displayedColumns: string[] = ['name', 'notes', 'edit'];
-  readonly profiles = input.required<Organ[]>()
-  protected readonly basePath = PROFILE_BASE_PATH;
+export class OrganListComponent {
+  displayedColumns: string[] = ['name', 'pipes', 'edit'];
+  readonly organs = input.required<Organ[]>()
+  protected readonly basePath = ORGAN_BASE_PATH;
 }

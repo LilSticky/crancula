@@ -1,21 +1,21 @@
 import {ComponentFixture, TestBed} from '@angular/core/testing';
 
-import {ProfilesPage} from './profiles.page';
+import {OrgansPage} from './organs.page';
 import {TranslateModule} from '@ngx-translate/core';
 import {provideRouter} from '@angular/router';
 
 describe('DetailComponent', () => {
-  let component: ProfilesPage;
-  let fixture: ComponentFixture<ProfilesPage>;
+  let component: OrgansPage;
+  let fixture: ComponentFixture<OrgansPage>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       declarations: [],
-      imports: [ProfilesPage, TranslateModule.forRoot()],
+      imports: [OrgansPage, TranslateModule.forRoot()],
       providers: [provideRouter([])]
     }).compileComponents();
 
-    fixture = TestBed.createComponent(ProfilesPage);
+    fixture = TestBed.createComponent(OrgansPage);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

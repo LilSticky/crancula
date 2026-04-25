@@ -9,7 +9,7 @@ import {TranslatePipe} from "@ngx-translate/core";
 import {Pipe} from "@api/model/pipe";
 
 @Component({
-  selector: 'cranc-notes-form',
+  selector: 'cranc-pipes-form',
   imports: [
     TextFormFieldComponent,
     Field,
@@ -23,38 +23,38 @@ import {Pipe} from "@api/model/pipe";
   ],
   template: `
     <mat-list>
-      @for (note of value(); track $index) {
-        <mat-list-item class="notes-form-row">
+      @for (pipe of value(); track $index) {
+        <mat-list-item class="pipes-form-row">
           <cranc-text-form-field
-            [field]="note.name"
-            label="PAGES.PROFILE.FORM.NOTE_NAME"
+            [field]="pipe.name"
+            label="PAGES.ORGAN.FORM.PIPE_NAME"
           />
           <cranc-number-form-field
-            [field]="note.pitch"
-            label="PAGES.PROFILE.FORM.NOTE_PITCH"
+            [field]="pipe.pitch"
+            label="PAGES.ORGAN.FORM.PIPE_PITCH"
           />
         </mat-list-item>
         <mat-divider></mat-divider>
       }
-      <mat-list-item class="notes-form-row">
-        <button matFab extended (click)="addNote()" style="margin: 10px">
+      <mat-list-item class="pipes-form-row">
+        <button matFab extended (click)="addPipe()" style="margin: 10px">
           <mat-icon>add</mat-icon>
-          {{ 'PAGES.PROFILE.FORM.NEW_NOTE' | translate }}
+          {{ 'PAGES.ORGAN.FORM.NEW_PIPE' | translate }}
         </button>
       </mat-list-item>
     </mat-list>
   `,
   styles: `
-    .notes-form-row {
+    .pipes-form-row {
       display: flex;
       flex-direction: row;
     }
   `,
 })
-export class NotesFormComponent implements FormValueControl<Pipe[]> {
+export class PipesFormComponent implements FormValueControl<Pipe[]> {
   value = model<Pipe[]>([]);
 
-  addNote() {
+  addPipe() {
     this.value.update(arr => [...arr, new Pipe()])
   }
 }

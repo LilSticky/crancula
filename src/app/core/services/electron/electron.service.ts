@@ -35,7 +35,7 @@ export class ElectronService {
         console.log(`stdout:\n${stdout}`);
       });
 
-      // Notes :
+      // Pipes :
       // * A NodeJS's dependency imported with 'window.require' MUST BE present in `dependencies` of both `app/package.json`
       // and `package.json (root folder)` in order to make it work here in Electron's Renderer process (src folder)
       // because it will loaded at runtime by Electron.
