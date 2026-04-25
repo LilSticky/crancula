@@ -9,7 +9,7 @@ export class Pipe {
     pitch?: number
   ) {
     this.id = id ? id : crypto.randomUUID()
-    this.name = name ? name : 'new Note'
+    this.name = name ? name : 'new Pipe'
     this.pitch = pitch ? pitch : 0
   }
 }

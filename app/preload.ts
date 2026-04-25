@@ -2,15 +2,17 @@
 // noinspection ES6ConvertRequireIntoImport
 
 // can only import types because they are removed at runtime
-import type {DataStore} from "../api/index"
-import type {Organ} from "@api/model/organ";
+import type {Organ} from "../api/model/organ";
+import {DataStore} from "../api/index";
+import {Bridge} from "./bridge";
 // everything else must use require (does not support @-alias)
 const {contextBridge, ipcRenderer} = require('electron');
 const {Channel} = require("../api/channel");
 
-const db: DataStore<Organ> = {
-  set: async (profiles: Organ[]): Promise<void> => ipcRenderer.invoke(Channel.SET_PROFILES, profiles),
-  get: async (): Promise<Organ[]> => ipcRenderer.invoke(Channel.GET_PROFILES)
+const organs: DataStore<Organ> = {
+  set: async (organs: Organ[]): Promise<void> => ipcRenderer.invoke(Channel.SET_ORGANS, organs),
+  get: async (): Promise<Organ[]> => ipcRenderer.invoke(Channel.GET_ORGANS)
 };
 
-contextBridge.exposeInMainWorld('db', db);
+const bridge: Bridge = {organs};
+contextBridge.exposeInMainWorld('bridge', bridge);

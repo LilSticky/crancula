@@ -60,10 +60,10 @@ function createWindow(): BrowserWindow {
   return win;
 }
 
-function profileStoreFactory() {
-  const store: FileStorage<Organ> = new FileStorage<Organ>('profiles')
-  ipcMain.handle(Channel.GET_PROFILES, store.handleGet)
-  ipcMain.handle(Channel.SET_PROFILES, store.handleSet)
+function organStoreFactory() {
+  const store: FileStorage<Organ> = new FileStorage<Organ>('organs')
+  ipcMain.handle(Channel.GET_ORGANS, store.handleGet)
+  ipcMain.handle(Channel.SET_ORGANS, store.handleSet)
 }
 
 try {
@@ -81,7 +81,7 @@ try {
       }
     });
 
-    profileStoreFactory();
+    organStoreFactory();
   })
   // Quit when all windows are closed.
   app.on('window-all-closed', () => {

@@ -4,24 +4,24 @@
     "HOME": {
       "TITLE": "Übersicht"
     },
-    "PROFILES": {
-      "TITLE": "Profile",
+    "ORGANS": {
+      "TITLE": "Organ",
       "BACK_TO_HOME": "Zurück zum Start",
       "TABLE": {
         "NAME": "Name",
-        "NOTES": "Notenanzahl",
+        "PIPES": "Pipenanzahl",
         "EDIT": "Bearbeiten",
         "NEW": "Neues Profil"
       }
     },
-    "PROFILE": {
+    "ORGAN": {
       "FORM": {
         "SAVE": "Speichern",
         "TITLE": "Profil bearbeiten",
         "NAME": "Name",
         "LOADING": "Lädt, bitte warten...",
         "ERROR": {
-          "NO_PROFILE_SELECTED": "Es wurde noch kein Profil zum editieren ausgewählt."
+          "NO_ORGAN_SELECTED": "Es wurde noch kein Profil zum editieren ausgewählt."
         }
       }
     }
