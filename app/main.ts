@@ -1,9 +1,11 @@
+// noinspection ES6PreferShortImport
+
 import {app, BrowserWindow, ipcMain, screen} from 'electron';
 import * as path from 'path';
 import * as fs from 'fs';
 import {FileStorage} from "./storage";
-import {Organ} from "@api/model/organ";
-import {Channel} from "@api/channel";
+import {Organ} from "../api/model/organ";
+import {Channel} from "../api/channel";
 
 let win: BrowserWindow | null = null;
 const args = process.argv.slice(1),
@@ -20,8 +22,7 @@ function createWindow(): BrowserWindow {
     width: size.width,
     height: size.height,
     webPreferences: {
-      allowRunningInsecureContent: serve,
-      preload: path.join(__dirname, 'preload.ts')
+      preload: path.join(__dirname, 'preload.js')
     },
   });
 

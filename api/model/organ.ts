@@ -1,4 +1,6 @@
-import {Pipe} from "@api/model/pipe";
+// noinspection ES6PreferShortImport
+
+import {Pipe} from "../../api/model/pipe";
 
 export class Organ {
   id: string
