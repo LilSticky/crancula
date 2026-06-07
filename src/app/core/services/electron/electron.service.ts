@@ -5,7 +5,6 @@ import {Injectable} from '@angular/core';
 import {ipcRenderer, webFrame} from 'electron';
 import * as childProcess from 'child_process';
 import * as fs from 'fs';
-import {Bridge} from "../../../../../app/bridge";
 
 @Injectable({
   providedIn: 'root'
@@ -15,7 +14,6 @@ export class ElectronService {
   webFrame!: typeof webFrame;
   childProcess!: typeof childProcess;
   fs!: typeof fs;
-  bridge!: Bridge
 
   constructor() {
     // Conditional imports
@@ -23,7 +21,6 @@ export class ElectronService {
       this.ipcRenderer = (window as any).require('electron').ipcRenderer;
       this.webFrame = (window as any).require('electron').webFrame;
       this.fs = (window as any).require('fs');
-      this.bridge = window.bridge;
 
       this.childProcess = (window as any).require('child_process');
       this.childProcess.exec('node -v', (error, stdout, stderr) => {

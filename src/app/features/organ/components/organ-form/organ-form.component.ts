@@ -12,9 +12,6 @@ import {TextFormFieldComponent} from "@shared/components/text-form-field/text-fo
     Field,
     TranslatePipe,
     MatButton,
-    TextFormFieldComponent,
-    TextFormFieldComponent,
-    TextFormFieldComponent,
     PipesFormComponent,
     TextFormFieldComponent,
   ],
@@ -22,8 +19,9 @@ import {TextFormFieldComponent} from "@shared/components/text-form-field/text-fo
     <form (submit)="submit($event)" class="organ-form">
       <h2>{{ 'PAGES.ORGAN.FORM.TITLE' | translate }}</h2>
       <cranc-text-form-field
-        [field]="organForm"
+        [field]="organForm.name"
         label="PAGES.ORGAN.FORM.NAME"
+        class="name-input"
       />
       <cranc-pipes-form [field]="organForm.pipes"/>
       <button matButton="filled" type="submit">{{ 'PAGES.ORGAN.FORM.SAVE' | translate }}</button>
@@ -44,6 +42,7 @@ export class OrganFormComponent {
   submit($event: SubmitEvent) {
     $event.preventDefault();
     const value = this.organModel();
+    console.debug("save organ", value)
     if (value) {
       this.save.emit(value)
     } else {

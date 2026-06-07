@@ -1,4 +1,4 @@
-import {Bridge} from "../app/bridge";
+import {Bridge} from "@api/model/bridge";
 
 declare global {
   interface Window {

@@ -1,5 +1,4 @@
-import {Component, input} from '@angular/core';
-import {RouterLink} from "@angular/router";
+import {Component, input, output} from '@angular/core';
 import {
   MatCell,
   MatCellDef,
@@ -21,11 +20,11 @@ import {MatFabButton} from "@angular/material/button";
 import {TranslatePipe} from "@ngx-translate/core";
 import {MatIcon} from "@angular/material/icon";
 import {ORGAN_BASE_PATH} from "../../pages/routes";
+import {EntityId} from "@ngrx/signals/entities";
 
 @Component({
   selector: 'cranc-organ-list',
   imports: [
-    RouterLink,
     MatTable,
     MatColumnDef,
     MatHeaderCell,
@@ -66,12 +65,13 @@ import {ORGAN_BASE_PATH} from "../../pages/routes";
       <ng-container matColumnDef="edit">
         <th mat-header-cell *matHeaderCellDef>{{ "PAGES.ORGANS.TABLE.EDIT" | translate }}</th>
         <td mat-cell *matCellDef="let element">
-          <button matFab [routerLink]="['/', basePath, element.id]" aria-label="Button with a delete icon">
+          <button matFab aria-label="Button with an edit icon">
             <mat-icon>edit</mat-icon>
           </button>
         </td>
         <td mat-footer-cell *matFooterCellDef>
-          <button matFab extended [routerLink]="['/', basePath, 'new']" style="margin-top: 10%; margin-bottom: 10%">
+          <button matFab extended (click)="addNewOrgan.emit()" style="margin-top: 10%; margin-bottom: 10%"
+                  aria-label="Button with an add icon">
             <mat-icon>add</mat-icon>
             {{ "PAGES.ORGANS.TABLE.NEW" | translate }}
           </button>
@@ -82,7 +82,7 @@ import {ORGAN_BASE_PATH} from "../../pages/routes";
       <tr
         mat-row
         *matRowDef="let row; columns: displayedColumns;"
-        [routerLink]="[basePath, row.id]"
+        (click)="selectOrgan.emit(row.id)"
       ></tr>
       <tr mat-footer-row *matFooterRowDef="displayedColumns">
       </tr>
@@ -97,6 +97,8 @@ import {ORGAN_BASE_PATH} from "../../pages/routes";
       border-bottom: 1px solid transparent;
       border-top: 1px solid transparent;
       cursor: pointer;
+      padding-top: 20px;
+      padding-bottom: 20px;
     }
 
     .mat-mdc-row:hover .mat-mdc-cell {
@@ -120,4 +122,6 @@ export class OrganListComponent {
   displayedColumns: string[] = ['name', 'pipes', 'edit'];
   readonly organs = input.required<Organ[]>()
   protected readonly basePath = ORGAN_BASE_PATH;
+  addNewOrgan = output();
+  selectOrgan = output<EntityId>()
 }
