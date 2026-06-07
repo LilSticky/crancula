@@ -5,7 +5,6 @@ import * as path from 'path';
 import * as fs from 'fs';
 import {FileStorage} from "./storage";
 import {Organ} from "../api/model/organ";
-import {Channel} from "../api/channel";
 
 let win: BrowserWindow | null = null;
 const args = process.argv.slice(1),
@@ -63,8 +62,8 @@ function createWindow(): BrowserWindow {
 
 function organStoreFactory() {
   const store: FileStorage<Organ> = new FileStorage<Organ>('organs')
-  ipcMain.handle(Channel.GET_ORGANS, store.handleGet)
-  ipcMain.handle(Channel.SET_ORGANS, store.handleSet)
+  ipcMain.handle("ORGANS:GET", store.handleGet)
+  ipcMain.handle("ORGANS:SET", store.handleSet)
 }
 
 try {

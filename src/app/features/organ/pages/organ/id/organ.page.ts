@@ -2,8 +2,9 @@ import {Component, inject} from '@angular/core';
 import {OrganFormComponent} from "../../../components/organ-form/organ-form.component";
 import {ActivatedRoute, Params} from "@angular/router";
 import {map} from "rxjs";
-import {OrgansStore} from "../../../store/organs.store";
+import {OrganStore} from "../../../store/organStore";
 import {TranslatePipe} from "@ngx-translate/core";
+import {Organ} from "@api/model/organ";
 
 const getId = (params: Params): string => (params["id"] || '') as string;
 
@@ -14,10 +15,11 @@ const getId = (params: Params): string => (params["id"] || '') as string;
     TranslatePipe
   ],
   template: `
-    @let selected = store.selectedOrgan();
-    @if (selected) {
+    @let model = selected();
+    @if (model) {
       <cranc-organ-form
-        [organModel]="selected"
+        [organModel]="model"
+        (save)="onSave($event)"
       />
     } @else if (store.isLoading()) {
       {{ 'PAGES.ORGAN.FORM.LOADING' | translate }}
@@ -28,18 +30,25 @@ const getId = (params: Params): string => (params["id"] || '') as string;
   styles: ``,
 })
 export class OrganPage {
-  readonly store = inject(OrgansStore);
+  readonly store = inject(OrganStore);
+  protected readonly selected = this.store.selectedEntity;
 
   private readonly route = inject(ActivatedRoute);
 
   constructor() {
-    // keep updating the selected organ id of the store with the organ id of the route
     this.route.params.pipe(map(getId)).subscribe((id?: string) => ({
       next: () => {
-        if (this.store.isSelectable(id)) {
-          this.store.selectOrgan(id)
+        const selected = this.store.selectedEntity();
+        if (!selected) {
+          console.debug("selected organ by id from route", selected)
+          this.store.selectEntity(id)
         }
       }
     }));
+  }
+
+  onSave(organ: Organ): void {
+    console.debug("onSave organ")
+    this.store.updateEntity(organ)
   }
 }

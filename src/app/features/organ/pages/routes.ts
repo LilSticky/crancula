@@ -8,30 +8,23 @@ export const organRoutes: CranculaRoutes = [
     path: ORGAN_BASE_PATH,
     children: [
       {
-        path: 'list',
+        path: '',
         component: OrgansPage,
         pathMatch: "full",
         title: "Organs",
         data: {
-          path: '/organ/list',
+          path: '/organ',
           showIn: {
             navbar: true
           },
           translate: {
             title: 'PAGES.ORGANS.TITLE'
           }
-        }
-      },
-      {
-        path: 'new',
-        component: OrganPage,
-        pathMatch: "full",
-        title: "New Organ"
+        },
       },
       {
         path: ':id',
         component: OrganPage,
-        pathMatch: "full",
         title: "Organ"
       }
     ]

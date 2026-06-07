@@ -19,6 +19,9 @@
         "SAVE": "Save",
         "TITLE": "Edit Organ",
         "NAME": "Name",
+        "PIPE_NAME": "Name",
+        "PIPE_PITCH": "Pitch",
+        "NEW_PIPE": "New Pipe",
         "LOADING": "Loading, please wait...",
         "ERROR": {
           "NO_ORGAN_SELECTED": "No organ was selected to edit yet."
