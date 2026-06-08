@@ -1,8 +1,8 @@
 # Crancula Agent Instructions
 
-Domain language should be used and extended. Find it in `DEFINITIONS.md`.
+Domain language should be used and updated if unclear. Find it in `DEFINITIONS.md`.
 
-The purpose and target of this project is describe in `FEATURES.md`
+The purpose and target of this project is describe in `FEATURES.md`.
 
 ## Project Overview
 Crancula is an Electron-based Angular application for composing and converting punched tape music scores. It uses Angular 21 with TypeScript and Electron for desktop functionality, with a focus on music score management and conversion between formats.
