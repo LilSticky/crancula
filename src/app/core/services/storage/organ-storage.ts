@@ -1,7 +1,7 @@
 import {DataStore} from "@api/index";
 import {Organ} from "@api/model/organ";
 
-export class OrganDataStore implements DataStore<Organ> {
+export class OrganStorage implements DataStore<Organ> {
   private readonly _key = "organs";
 
   async get(): Promise<Organ[]> {
