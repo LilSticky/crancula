@@ -1,10 +1,10 @@
 import {signalStore} from "@ngrx/signals";
 import {Organ} from "@api/model/organ"
 import {withSelectedEntityModule} from "@shared/store-features/withSelectedEntityStore";
-
-const ORGANS_CHANNEL = "organs";
+import {withStorageSync} from "@angular-architects/ngrx-toolkit";
 
 export const OrganStore = signalStore(
   {providedIn: 'root'},
-  withSelectedEntityModule<Organ>(ORGANS_CHANNEL)
+  withSelectedEntityModule<Organ>(),
+  withStorageSync('organs')
 )

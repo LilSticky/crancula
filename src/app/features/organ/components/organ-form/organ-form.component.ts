@@ -9,11 +9,11 @@ import {TextFormFieldComponent} from "@shared/components/text-form-field/text-fo
 @Component({
   selector: 'cranc-organ-form',
   imports: [
-    Field,
     TranslatePipe,
     MatButton,
     PipesFormComponent,
     TextFormFieldComponent,
+    Field,
   ],
   template: `
     <form (submit)="submit($event)" class="organ-form">

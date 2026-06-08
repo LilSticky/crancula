@@ -1,10 +1,8 @@
 // noinspection ES6PreferShortImport
 
-import {app, BrowserWindow, ipcMain, screen} from 'electron';
+import {app, BrowserWindow, screen} from 'electron';
 import * as path from 'path';
 import * as fs from 'fs';
-import {FileStorage} from "./storage";
-import {Organ} from "../api/model/organ";
 
 let win: BrowserWindow | null = null;
 const args = process.argv.slice(1),
@@ -60,12 +58,6 @@ function createWindow(): BrowserWindow {
   return win;
 }
 
-function organStoreFactory() {
-  const store: FileStorage<Organ> = new FileStorage<Organ>('organs')
-  ipcMain.handle("ORGANS:GET", store.handleGet)
-  ipcMain.handle("ORGANS:SET", store.handleSet)
-}
-
 try {
   app.whenReady().then(() => {
     // This method will be called when Electron has finished initialization and is ready to create browser windows.
@@ -81,7 +73,6 @@ try {
       }
     });
 
-    organStoreFactory();
   })
   // Quit when all windows are closed.
   app.on('window-all-closed', () => {
