@@ -4,7 +4,7 @@ Domain language should be used and updated if unclear. Find it in `DEFINITIONS.m
 
 The purpose and target of this project is describe in `FEATURES.md`.
 
-All typescript code should be typed as strictly as possible.
+All code should be typed as strictly as possible.
 
 ## Project Overview
 Crancula is an Electron-based Angular application for composing and converting punched tape music scores. It uses Angular 21 with TypeScript and Electron for desktop functionality, with a focus on music score management and conversion between formats.
@@ -37,6 +37,9 @@ The project is intended to explore Electron and new features of Angular.
 - The app has a main Electron window that loads the Angular app (`src/index.html`)
 - Uses the `@api/*` path mapping that includes `api/index.ts` in the app's package.json
 - Environment configurations in `src/environments/` with dev/prod variants
+- When using translation keys, always make sure the entry exist in both the English and German translation file
+- TypeScript: Keep to Angular best practices and type as strictly as possible
+- Styling: Use Angular Material (`@angular/material`) and only use minimal customizations in SCSS
 
 ## Development Workflow
 - Run `npm start` to start development server
