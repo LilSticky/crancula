@@ -1,0 +1,78 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "disabled_providers": ["OpenCode"],
+  "provider": {
+    "ollama": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Ollama (local)",
+      "options": {
+        "baseURL": "http://127.0.0.1:11434",
+        "timeout": false,
+        "chunkTimeout": 30000,
+        "setCacheKey": true
+      },
+      "models": {
+        "qwen3-code:30b": {
+          "name": "qwen-code"
+        }
+      }
+    }
+  },
+  "permission": {
+    "edit": "allow",
+    "write": "allow",
+    "read": "allow",
+    "grep": {
+      "**/api/**": "allow",
+      "**/app/**": "allow",
+      "**/dist/**": "deny",
+      "**/documentation/**": "allow",
+      "**/e2e/**": "allow",
+      "**/node_modules/**": "deny",
+      "**/src/**": "allow"
+    },
+    "glob": "allow",
+    "list": "allow",
+    "patch": "allow",
+    "todowrite": "allow",
+    "todoread": "allow",
+    "question": "allow",
+    "bash": {
+      "*": "ask",
+      "git show *": "allow",
+      "git log *": "allow",
+      "git log": "allow",
+      "git diff *": "allow",
+      "git diff": "allow",
+      "git status": "allow",
+      "git status *": "allow",
+      "git branch": "allow",
+      "git branch -l": "allow",
+      "git branch -l *": "allow",
+      "git tag": "allow",
+      "git stash list": "allow",
+      "git fetch": "allow",
+      "git commit *": "deny",
+      "git push": "deny",
+      "git push *": "deny",
+      "git add": "deny",
+      "git add *": "deny",
+      "git reset *": "deny",
+      "git checkout *": "deny",
+      "git switch *": "deny",
+      "git merge *": "deny",
+      "git rebase *": "deny",
+      "git cherry-pick *": "deny",
+      "git stash *": "deny",
+      "git branch *": "deny",
+      "git tag *": "deny",
+      "git rm *": "deny",
+      "git mv *": "deny",
+      "git restore *": "deny",
+      "git revert *": "deny",
+      "git clean *": "deny"
+    },
+    "skill": "ask",
+    "webfetch": "ask"
+  }
+}
