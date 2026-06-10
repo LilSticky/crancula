@@ -1,6 +1,6 @@
 # Organ
 * Has a defined set of pipes
-* Has technical properties such as tape width or hole diameter
+* Defines the physical characteristics and capabilities of a barrel organ
 * Plays punched tape
   * tape is drawn through a pneumatic system
   * holes in tape control airflow
@@ -23,11 +23,14 @@
 
 # Hole
 * Each hole in the tape represents one note being played by a pipe
-* can be extended along the row to extend the note
+* Can be extended along the row to extend the note duration
+* Has position (pipe index, start column) and dimensions (length)
+* Similar to a single musical score, but for punched tape
 
 # Song
 * A specific sequence of sounds forming music
-* Represented as Scores or Tape
+* Converted to tape format for playback on barrel organs
+* Converted to scores for human reading
 
 # Scores
 * Human-readable notation of music
@@ -36,3 +39,4 @@
 
 # Note
 * Specific perceivable frequency defined by a name
+* Part of a song's musical structure
