@@ -1,14 +1,14 @@
 export class Pipe {
-  id: string
+  index: number
   pitch: number
   name: string
 
   constructor(
-    id?: string,
+    index?: number,
     name?: string,
     pitch?: number
   ) {
-    this.id = id ? id : crypto.randomUUID()
+    this.index = index ? index : 0
     this.name = name ? name : ''
     this.pitch = pitch ? pitch : 0
   }

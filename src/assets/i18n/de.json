@@ -9,9 +9,12 @@
       "BACK_TO_HOME": "Zurück zum Start",
       "TABLE": {
         "NAME": "Name",
-        "PIPES": "Pipenanzahl",
+        "PIPES": "Pfeifenanzahl",
+        "TAPE_WIDTH": "Bandbreite",
+        "HOLE_DIAMETER": "Lochweite",
         "EDIT": "Bearbeiten",
-        "NEW": "Neues Profil"
+        "DELETE": "Löschen",
+        "NEW": "Neue Orgel"
       }
     },
     "ORGAN": {
@@ -19,11 +22,17 @@
         "SAVE": "Speichern",
         "TITLE": "Profil bearbeiten",
         "NAME": "Name",
+        "PIPE_NAME": "Name",
+        "PIPE_PITCH": "Tonhöhe",
+        "NEW_PIPE": "Neue Pfeife",
         "LOADING": "Lädt, bitte warten...",
         "ERROR": {
-          "NO_ORGAN_SELECTED": "Es wurde noch kein Profil zum editieren ausgewählt."
+          "NO_ORGAN_SELECTED": "Es wurde noch keine Orgel zum bearbeiten ausgewählt."
         }
       }
     }
+  },
+  "CONFIRMATION_DIALOG": {
+    "DELETE": "Bist du dir sicher, das du {{ref}} für immer löschen möchtest?"
   }
 }

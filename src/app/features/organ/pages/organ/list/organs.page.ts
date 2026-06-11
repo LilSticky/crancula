@@ -17,7 +17,8 @@ import {ORGAN_BASE_PATH} from "../../routes";
     <cranc-organ-list
       [organs]="organs()"
       (addNewOrgan)="onAddNewOrgan()"
-      (selectOrgan)="onSelectOrgan($event)"
+      (editOrgan)="onEditOrgan($event)"
+      (deleteOrgan)="onDeleteOrgan($event)"
     />
   `,
   styles: `
@@ -33,8 +34,12 @@ export class OrgansPage {
   private store = inject(OrganStore);
   protected organs = this.store.entities;
   onAddNewOrgan = () => this.store.selectNewEntity(new Organ());
-  onSelectOrgan = async (id: EntityId) => {
+  onEditOrgan = async (id: EntityId) => {
     this.store.selectEntity(id);
     await this.router.navigate(['/', ORGAN_BASE_PATH, id])
+  };
+  onDeleteOrgan = async (id: EntityId) => {
+    this.store.deleteEntity(id);
+    await this.router.navigate(['/', ORGAN_BASE_PATH])
   };
 }

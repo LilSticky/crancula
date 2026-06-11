@@ -50,5 +50,6 @@ export class OrganPage {
   onSave(organ: Organ): void {
     console.debug("onSave organ")
     this.store.updateEntity(organ)
+    // TODO user feedback that the organ was saved
   }
 }

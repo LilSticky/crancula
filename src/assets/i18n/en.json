@@ -10,7 +10,10 @@
       "TABLE": {
         "NAME": "Name",
         "PIPES": "Pipe Count",
+        "TAPE_WIDTH": "Tape width",
+        "HOLE_DIAMETER": "Hole diameter",
         "EDIT": "Edit",
+        "DELETE": "Delete",
         "NEW": "New Organ"
       }
     },
@@ -28,5 +31,8 @@
         }
       }
     }
+  },
+  "CONFIRMATION_DIALOG": {
+    "DELETE": "Are you sure you want to delete {{ref}} forever?"
   }
 }
