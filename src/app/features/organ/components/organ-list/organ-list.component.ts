@@ -1,4 +1,4 @@
-import {Component, input, output} from '@angular/core';
+import {Component, inject, input, output} from '@angular/core';
 import {
   MatCell,
   MatCellDef,
@@ -19,8 +19,9 @@ import {Organ} from "@api/model/organ";
 import {MatFabButton} from "@angular/material/button";
 import {TranslatePipe} from "@ngx-translate/core";
 import {MatIcon} from "@angular/material/icon";
-import {ORGAN_BASE_PATH} from "../../pages/routes";
 import {EntityId} from "@ngrx/signals/entities";
+import {MatDialog, MatDialogConfig} from "@angular/material/dialog";
+import {ConfirmDialogComponent} from "@shared/components/confirm-dialog/confirm-dialog.component";
 
 @Component({
   selector: 'cranc-organ-list',
@@ -41,53 +42,9 @@ import {EntityId} from "@ngrx/signals/entities";
     MatFooterRowDef,
     MatFooterCellDef,
     MatFabButton,
-    MatIcon
+    MatIcon,
   ],
-  template: `
-    <table mat-table [dataSource]="organs()" class="mat-elevation-z8 organ-table">
-      <!-- Name Column -->
-      <ng-container matColumnDef="name">
-        <th mat-header-cell *matHeaderCellDef>{{ "PAGES.ORGANS.TABLE.NAME" | translate }}</th>
-        <td mat-cell *matCellDef="let element">{{ element.name }}</td>
-        <td mat-footer-cell *matFooterCellDef>
-        </td>
-      </ng-container>
-
-      <!-- Pipes Column -->
-      <ng-container matColumnDef="pipes">
-        <th mat-header-cell *matHeaderCellDef>{{ "PAGES.ORGANS.TABLE.PIPES" | translate }}</th>
-        <td mat-cell *matCellDef="let element">{{ element.pipes.length }}</td>
-        <td mat-footer-cell *matFooterCellDef>
-        </td>
-      </ng-container>
-
-      <!-- Edit Column -->
-      <ng-container matColumnDef="edit">
-        <th mat-header-cell *matHeaderCellDef>{{ "PAGES.ORGANS.TABLE.EDIT" | translate }}</th>
-        <td mat-cell *matCellDef="let element">
-          <button matFab aria-label="Button with an edit icon">
-            <mat-icon>edit</mat-icon>
-          </button>
-        </td>
-        <td mat-footer-cell *matFooterCellDef>
-          <button matFab extended (click)="addNewOrgan.emit()" style="margin-top: 10%; margin-bottom: 10%"
-                  aria-label="Button with an add icon">
-            <mat-icon>add</mat-icon>
-            {{ "PAGES.ORGANS.TABLE.NEW" | translate }}
-          </button>
-        </td>
-      </ng-container>
-
-      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-      <tr
-        mat-row
-        *matRowDef="let row; columns: displayedColumns;"
-        (click)="selectOrgan.emit(row.id)"
-      ></tr>
-      <tr mat-footer-row *matFooterRowDef="displayedColumns">
-      </tr>
-    </table>
-  `,
+  templateUrl: './organ-list.component.html',
   styles: `
     .organ-table {
       width: 100%;
@@ -104,24 +61,29 @@ import {EntityId} from "@ngrx/signals/entities";
     .mat-mdc-row:hover .mat-mdc-cell {
       border-color: currentColor;
     }
-
-    .mat-column-name {
-      width: auto;
-    }
-
-    .mat-column-pipes {
-      width: 10%;
-    }
-
-    .mat-column-edit {
-      width: 10%;
-    }
   `,
 })
 export class OrganListComponent {
-  displayedColumns: string[] = ['name', 'pipes', 'edit'];
+  displayedColumns: string[] = ['name', 'pipes', 'tapeWidth', 'holeDiameter', 'edit', 'delete'];
   readonly organs = input.required<Organ[]>()
-  protected readonly basePath = ORGAN_BASE_PATH;
   addNewOrgan = output();
-  selectOrgan = output<EntityId>()
+  editOrgan = output<EntityId>()
+  deleteOrgan = output<EntityId>()
+  dialog = inject(MatDialog);
+
+  onDelete(organ: Organ): void {
+    const config = new MatDialogConfig()
+    config.disableClose = false
+    config.data = {
+      action: 'DELETE',
+      entity: organ
+    }
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, config);
+
+    dialogRef.afterClosed().subscribe(confirmed => {
+      if (confirmed) {
+        this.deleteOrgan.emit(organ.id);
+      }
+    });
+  }
 }

@@ -23,9 +23,32 @@ export const organRoutes: CranculaRoutes = [
         },
       },
       {
+        path: 'new',
+        component: OrganPage,
+        title: "New Organ",
+        data: {
+          path: '/organ/new',
+          showIn: {
+            navbar: false
+          },
+          translate: {
+            title: 'PAGES.ORGAN.TITLE_NEW'
+          }
+        }
+      },
+      {
         path: ':id',
         component: OrganPage,
-        title: "Organ"
+        title: "Organ",
+        data: {
+          path: '/organ/:id',
+          showIn: {
+            navbar: false
+          },
+          translate: {
+            title: 'PAGES.ORGAN.TITLE_EDIT'
+          }
+        }
       }
     ]
   }];

@@ -49,7 +49,7 @@ export function withCrud<Entity extends HasId>() {
        * delete an existing entity by its {@link id} from the {@link store} if it is known
        * @param id
        */
-      _deleteEntity(id: string): void {
+      deleteEntity(id: EntityId): void {
         if (store._isKnown(id)) {
           patchState(store, removeEntity(id))
         } else {
