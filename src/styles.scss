@@ -1,4 +1,3 @@
-
 // Include theming for Angular Material with `mat.theme()`.
 // This Sass mixin will define CSS variables that are used for styling Angular Material
 // components according to the Material 3 design spec.
@@ -34,4 +33,26 @@ body {
   // Reset the user agent margin.
   margin: 0;
   height: 100%;
+}
+
+.cranc-form-section {
+  border: 1px solid #ccc;
+  padding: 1rem;
+  margin-top: 1rem;
+  border-radius: 4px;
+
+  h3 {
+    margin-top: 0;
+  }
+
+  .actions {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .column {
+    padding-right: 2rem;
+  }
 }

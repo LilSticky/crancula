@@ -20,8 +20,17 @@
     "ORGAN": {
       "FORM": {
         "SAVE": "Save",
+        "DISCARD": "Discard",
         "TITLE": "Edit Organ",
+        "GENERAL_SETTINGS": "General settings:",
         "NAME": "Name",
+        "TAPE_SETTINGS": "Tape settings:",
+        "TAPE_WIDTH_MM": "Width (mm)",
+        "TAPE_BORDER_MM": "Border (mm)",
+        "HOLE_SETTINGS": "Hole settings:",
+        "HOLE_DIAMETER_MM": "Diameter (mm)",
+        "HOLE_SPACING_MM": "Spacing (mm)",
+        "PIPE_SETTINGS": "Pipe settings:",
         "PIPE_NAME": "Name",
         "PIPE_PITCH": "Pitch",
         "NEW_PIPE": "New Pipe",

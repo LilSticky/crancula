@@ -2,15 +2,25 @@
 
 import {Pipe} from "../../api/model/pipe";
 
-export class Organ {
-  id: string
-  name: string
-  pipes: Pipe[]
+/**
+ * contains all information required to initialize a {@link Tape} for this {@link Organ}
+ */
+interface TapeConfig {
+  // tape settings
   tapeWidthMm: number
+  tapeBorderMm: number
+  // hole settings
   holeDiameterMm: number
   holeSpacingMm: number
-  rowHeighMm: number
-  columnWidthMm: number
+}
+
+export class Organ {
+  id: string
+  // general
+  name: string
+  tape: TapeConfig;
+  // pipe settings
+  pipes: Pipe[]
 
   constructor(
     id?: string,
@@ -19,16 +29,16 @@ export class Organ {
     tapeWidthMm?: number,
     holeDiameterMm?: number,
     holeSpacingMm?: number,
-    rowHeighMm?: number,
-    columnWidthMm?: number,
+    tapeBorderMm?: number,
   ) {
     this.id = id ? id : crypto.randomUUID()
     this.name = name ? name : 'new Organ'
     this.pipes = pipes ? pipes : []
-    this.tapeWidthMm = tapeWidthMm ? tapeWidthMm : 0;
-    this.holeDiameterMm = holeDiameterMm ? holeDiameterMm : 0;
-    this.holeSpacingMm = holeSpacingMm ? holeSpacingMm : 0;
-    this.rowHeighMm = rowHeighMm ? rowHeighMm : 0;
-    this.columnWidthMm = columnWidthMm ? columnWidthMm : 0;
+    this.tape = {
+      tapeWidthMm: tapeWidthMm ? tapeWidthMm : 0,
+      tapeBorderMm: tapeBorderMm ? tapeBorderMm : 0,
+      holeDiameterMm: holeDiameterMm ? holeDiameterMm : 0,
+      holeSpacingMm: holeSpacingMm ? holeSpacingMm : 0,
+    }
   }
 }

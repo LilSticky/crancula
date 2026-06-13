@@ -17,7 +17,6 @@ import {FormValueControl} from "@angular/forms/signals";
       <input
         matInput
         type="text"
-        [class]="class()"
         [value]="value()"
         (input)="set($event)"
       >
@@ -28,7 +27,6 @@ import {FormValueControl} from "@angular/forms/signals";
 export class TextFormFieldComponent implements FormValueControl<string> {
   value = model<string>('')
   label = input<string>('')
-  class = input<string>('')
 
   set(event: Event) {
     const target = (event as InputEvent).target
