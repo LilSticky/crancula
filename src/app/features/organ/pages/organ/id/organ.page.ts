@@ -1,10 +1,11 @@
 import {Component, inject} from '@angular/core';
 import {OrganFormComponent} from "../../../components/organ-form/organ-form.component";
-import {ActivatedRoute, Params} from "@angular/router";
+import {ActivatedRoute, Params, Router} from "@angular/router";
 import {map} from "rxjs";
 import {OrganStore} from "../../../store/organStore";
 import {TranslatePipe} from "@ngx-translate/core";
 import {Organ} from "@api/model/organ";
+import {ORGAN_BASE_PATH} from "../../routes";
 
 const getId = (params: Params): string => (params["id"] || '') as string;
 
@@ -20,6 +21,7 @@ const getId = (params: Params): string => (params["id"] || '') as string;
       <cranc-organ-form
         [organModel]="model"
         (save)="onSave($event)"
+        (discard)="onDiscard($event)"
       />
     } @else if (store.isLoading()) {
       {{ 'PAGES.ORGAN.FORM.LOADING' | translate }}
@@ -34,6 +36,7 @@ export class OrganPage {
   protected readonly selected = this.store.selectedEntity;
 
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
 
   constructor() {
     this.route.params.pipe(map(getId)).subscribe((id?: string) => ({
@@ -51,5 +54,12 @@ export class OrganPage {
     console.debug("onSave organ")
     this.store.updateEntity(organ)
     // TODO user feedback that the organ was saved
+  }
+
+  protected async onDiscard(initialState?: Organ) {
+    if (initialState) {
+      this.store.updateEntity(initialState)
+    }
+    await this.router.navigate(['/', ORGAN_BASE_PATH])
   }
 }

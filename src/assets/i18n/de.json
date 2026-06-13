@@ -20,8 +20,17 @@
     "ORGAN": {
       "FORM": {
         "SAVE": "Speichern",
-        "TITLE": "Profil bearbeiten",
+        "DISCARD": "Verwerfen",
+        "TITLE": "Orgel bearbeiten",
+        "GENERAL_SETTINGS": "Generelle Einstellungen:",
         "NAME": "Name",
+        "TAPE_SETTINGS": "Band Einstellungen:",
+        "TAPE_WIDTH_MM": "Breite (mm)",
+        "TAPE_BORDER_MM": "Rand (mm)",
+        "HOLE_SETTINGS": "Loch Einstellungen:",
+        "HOLE_DIAMETER_MM": "Durchmesser (mm)",
+        "HOLE_SPACING_MM": "Abstand (mm)",
+        "PIPE_SETTINGS": "Pfeifen Einstellungen:",
         "PIPE_NAME": "Name",
         "PIPE_PITCH": "Tonhöhe",
         "NEW_PIPE": "Neue Pfeife",

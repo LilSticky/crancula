@@ -17,7 +17,6 @@ import {FormValueControl} from "@angular/forms/signals";
       <input
         matInput
         type="number"
-        [class]="class()"
         [value]="value()"
         (input)="set($event)"
       >
@@ -28,7 +27,6 @@ import {FormValueControl} from "@angular/forms/signals";
 export class NumberFormFieldComponent implements FormValueControl<number> {
   value = model<number>(0)
   label = input<string>('')
-  class = input<string>('')
 
   set(event: Event) {
     const target = (event as InputEvent).target
