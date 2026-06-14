@@ -65,7 +65,7 @@ export class OrganFormComponent implements OnInit {
 
   protected onAddPipe() {
     this.organModel.update(organ => {
-      if (organ) organ.pipes.append(new Pipe())
+      if (organ) organ.pipes.add(new Pipe())
       return organ
     })
   }
