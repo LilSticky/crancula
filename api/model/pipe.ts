@@ -12,4 +12,12 @@ export class Pipe {
     this.name = name ? name : ''
     this.pitch = pitch ? pitch : 0
   }
+
+  equals(pipe: Pipe) {
+    return this.index === pipe.index && this.pitch === pipe.pitch && this.name === pipe.name;
+  }
+
+  setIndex(index: number) {
+    this.index = index
+  }
 }
