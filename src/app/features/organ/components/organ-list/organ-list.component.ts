@@ -21,7 +21,7 @@ import {TranslatePipe} from "@ngx-translate/core";
 import {MatIcon} from "@angular/material/icon";
 import {EntityId} from "@ngrx/signals/entities";
 import {MatDialog, MatDialogConfig} from "@angular/material/dialog";
-import {ConfirmDialogComponent} from "@shared/components/confirm-dialog/confirm-dialog.component";
+import {ConfirmableAction, ConfirmDialogComponent} from "@shared/components/confirm-dialog/confirm-dialog.component";
 
 @Component({
   selector: 'cranc-organ-list',
@@ -75,7 +75,7 @@ export class OrganListComponent {
     const config = new MatDialogConfig()
     config.disableClose = false
     config.data = {
-      action: 'DELETE',
+      action: ConfirmableAction.DELETE,
       entity: organ
     }
     const dialogRef = this.dialog.open(ConfirmDialogComponent, config);

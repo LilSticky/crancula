@@ -1,4 +1,4 @@
-import {Component, model, OnInit, output} from '@angular/core';
+import {Component, inject, model, OnInit, output} from '@angular/core';
 import {Field, form} from "@angular/forms/signals";
 import {TranslatePipe} from "@ngx-translate/core";
 import {Organ} from "@api/model/organ";
@@ -9,6 +9,8 @@ import {PipesFormComponent} from "./pipes-form/pipes-form.component";
 import {MatIcon} from "@angular/material/icon";
 import {Pipe} from "@api/model/pipe";
 import {MatDivider} from "@angular/material/list";
+import {MatDialog, MatDialogConfig} from "@angular/material/dialog";
+import {ConfirmableAction, ConfirmDialogComponent} from "@shared/components/confirm-dialog/confirm-dialog.component";
 
 @Component({
   selector: 'cranc-organ-form',
@@ -39,6 +41,7 @@ export class OrganFormComponent implements OnInit {
   discard = output<Organ | undefined>();
   private initialModel?: Organ;
   protected organForm = form(this.organModel);
+  dialog = inject(MatDialog);
 
   ngOnInit() {
     this.initialModel = this.organModel();
@@ -57,9 +60,19 @@ export class OrganFormComponent implements OnInit {
 
   protected onDiscard() {
     const model = this.initialModel;
-    // TODO confirm dialog - all edits will be lost
     if (model) {
-      this.discard.emit(model)
+      const config = new MatDialogConfig()
+      config.disableClose = false
+      config.data = {
+        action: ConfirmableAction.DISCARD,
+        entity: this.organModel()
+      }
+      const dialogRef = this.dialog.open(ConfirmDialogComponent, config);
+      dialogRef.afterClosed().subscribe(confirmed => {
+        if (confirmed) {
+          this.discard.emit(model)
+        }
+      });
     }
   }
 
