@@ -7,6 +7,7 @@ import {TranslatePipe} from "@ngx-translate/core";
 import {MatIconButton} from "@angular/material/button";
 import {MatIcon} from "@angular/material/icon";
 import {Pipes} from "@api/model/pipes";
+import {CdkDrag, CdkDragDrop, CdkDropList} from "@angular/cdk/drag-drop";
 
 @Component({
   selector: 'cranc-pipes-form',
@@ -16,43 +17,11 @@ import {Pipes} from "@api/model/pipes";
     TranslatePipe,
     MatIcon,
     MatIconButton,
-
+    CdkDropList,
+    CdkDrag
   ],
-  template: `
-    <div class="pipe-form-list cranc-form-section">
-      <h3>{{ 'PAGES.ORGAN.FORM.PIPE_SETTINGS' | translate }}</h3>
-      @for (pipe of value(); track pipe.index) {
-        <div class="pipes-form-row">
-          <cranc-text-form-field
-            [(value)]="pipe.name"
-            label="PAGES.ORGAN.FORM.PIPE_NAME"
-            class="column"
-          />
-          <cranc-number-form-field
-            [(value)]="pipe.pitch"
-            label="PAGES.ORGAN.FORM.PIPE_PITCH"
-            class="column"
-          />
-          <span class="cranc-form-section pipe-actions">
-            <button matIconButton (click)="value.update(remove(pipe))">
-              <mat-icon>delete</mat-icon>
-            </button>
-            <button matIconButton (click)="value.update(moveUp(pipe))">
-              <mat-icon>keyboard_arrow_up</mat-icon>
-            </button>
-            <button matIconButton (click)="value.update(moveDown(pipe))">
-              <mat-icon>keyboard_arrow_down</mat-icon>
-            </button>
-          </span>
-        </div>
-      }
-    </div>
-  `,
-  styles: `
-    .pipe-actions {
-      display: inline-flex;
-    }
-  `
+  templateUrl: './pipes-form.component.html',
+  styleUrl: './pipes-form.component.scss'
 })
 export class PipesFormComponent implements FormValueControl<Pipes> {
   value = model<Pipes>(new Pipes([]));
@@ -64,19 +33,24 @@ export class PipesFormComponent implements FormValueControl<Pipes> {
     };
   }
 
+  protected move(event: CdkDragDrop<string[]>) {
+    this.value.update((pipes: Pipes) => {
+      pipes.move(event.previousIndex, event.currentIndex);
+      return pipes
+    })
+  }
+
   protected moveUp(pipe: Pipe) {
     return (pipes: Pipes) => {
-      pipes.moveUp(pipe)
+      pipes.move(pipe.index, pipe.index + 1)
       return pipes
     };
   }
 
   protected moveDown(pipe: Pipe) {
     return (pipes: Pipes) => {
-      pipes.moveDown(pipe);
+      pipes.move(pipe.index, pipe.index - 1);
       return pipes;
     };
   }
-
-// TODO drag-and-drop to change pipe order
 }
