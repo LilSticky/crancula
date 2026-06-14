@@ -9,8 +9,9 @@ import {
 import {MatButton} from "@angular/material/button";
 import {TranslateService} from "@ngx-translate/core";
 
-enum ConfirmableAction {
-  DELETE = 'DELETE'
+export enum ConfirmableAction {
+  DELETE = 'DELETE',
+  DISCARD = 'DISCARD'
 }
 
 @Component({

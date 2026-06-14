@@ -28,7 +28,7 @@ import {MatDivider} from "@angular/material/list";
     .organ-form {
       display: flex;
       flex-direction: column;
-      width: 40%;
+      width: 60%;
       margin: auto;
     }
   `,
@@ -57,21 +57,16 @@ export class OrganFormComponent implements OnInit {
 
   protected onDiscard() {
     const model = this.initialModel;
+    // TODO confirm dialog - all edits will be lost
     if (model) {
       this.discard.emit(model)
-    } else {
-      // TODO confirm dialog if organ has no previous state
     }
   }
 
   protected onAddPipe() {
     this.organModel.update(organ => {
-      organ.pipes.push(new Pipe())
-      return organ;
+      if (organ) organ.pipes.append(new Pipe())
+      return organ
     })
-  }
-
-  protected onDeletePipe(_: Pipe) {
-    console.error("Delete pipe is not implemented yet")
   }
 }

@@ -79,7 +79,6 @@ export class OrganListComponent {
       entity: organ
     }
     const dialogRef = this.dialog.open(ConfirmDialogComponent, config);
-
     dialogRef.afterClosed().subscribe(confirmed => {
       if (confirmed) {
         this.deleteOrgan.emit(organ.id);

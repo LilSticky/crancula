@@ -1,6 +1,7 @@
 // noinspection ES6PreferShortImport
 
-import {Pipe} from "../../api/model/pipe";
+import {Pipes} from "@api/model/pipes";
+import {Pipe} from "@api/model/pipe";
 
 /**
  * contains all information required to initialize a {@link Tape} for this {@link Organ}
@@ -20,7 +21,7 @@ export class Organ {
   name: string
   tape: TapeConfig;
   // pipe settings
-  pipes: Pipe[]
+  pipes: Pipes
 
   constructor(
     id?: string,
@@ -33,7 +34,7 @@ export class Organ {
   ) {
     this.id = id ? id : crypto.randomUUID()
     this.name = name ? name : 'new Organ'
-    this.pipes = pipes ? pipes : []
+    this.pipes = pipes ? new Pipes(pipes) : new Pipes([])
     this.tape = {
       tapeWidthMm: tapeWidthMm ? tapeWidthMm : 0,
       tapeBorderMm: tapeBorderMm ? tapeBorderMm : 0,
