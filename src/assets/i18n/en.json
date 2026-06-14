@@ -43,6 +43,6 @@
   },
   "CONFIRMATION_DIALOG": {
     "DELETE": "Are you sure you want to delete {{ref}} forever?",
-    "DISCARD": "Are you sure you want to discard all changes to {{ref}}"
+    "DISCARD": "Are you sure you want to discard all changes to {{ref}}?"
   }
 }
