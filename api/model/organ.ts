@@ -15,6 +15,13 @@ interface TapeConfig {
   holeSpacingMm: number
 }
 
+export type DriedOrgan = {
+  id: string
+  name: string
+  tape: TapeConfig;
+  pipes: Pipe[]
+};
+
 export class Organ {
   id: string
   // general
@@ -27,19 +34,16 @@ export class Organ {
     id?: string,
     name?: string,
     pipes?: Pipe[],
-    tapeWidthMm?: number,
-    holeDiameterMm?: number,
-    holeSpacingMm?: number,
-    tapeBorderMm?: number,
+    tape?: TapeConfig
   ) {
     this.id = id ? id : crypto.randomUUID()
     this.name = name ? name : 'new Organ'
     this.pipes = pipes ? new Pipes(pipes) : new Pipes([])
     this.tape = {
-      tapeWidthMm: tapeWidthMm ? tapeWidthMm : 0,
-      tapeBorderMm: tapeBorderMm ? tapeBorderMm : 0,
-      holeDiameterMm: holeDiameterMm ? holeDiameterMm : 0,
-      holeSpacingMm: holeSpacingMm ? holeSpacingMm : 0,
+      tapeWidthMm: tape?.tapeWidthMm ? tape.tapeWidthMm : 0,
+      tapeBorderMm: tape?.tapeBorderMm ? tape.tapeBorderMm : 0,
+      holeDiameterMm: tape?.holeDiameterMm ? tape.holeDiameterMm : 0,
+      holeSpacingMm: tape?.holeSpacingMm ? tape.holeSpacingMm : 0,
     }
   }
 }

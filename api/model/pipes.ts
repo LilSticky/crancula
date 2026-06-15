@@ -49,4 +49,9 @@ export class Pipes implements Iterable<Pipe> {
   public sort() {
     this.pipes.sort((a, b) => a.index - b.index)
   }
+
+  /** Simple representation for storage */
+  public toArray(): Pipe[] {
+    return this.pipes
+  }
 }
