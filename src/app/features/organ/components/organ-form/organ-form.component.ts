@@ -1,16 +1,18 @@
-import {Component, inject, model, OnInit, output} from '@angular/core';
+import {Component, computed, inject, model, OnInit, output} from '@angular/core';
 import {Field, form} from "@angular/forms/signals";
 import {TranslatePipe} from "@ngx-translate/core";
 import {Organ} from "@api/model/organ";
 import {MatButton} from "@angular/material/button";
-import {TextFormFieldComponent} from "@shared/components/text-form-field/text-form-field.component";
-import {NumberFormFieldComponent} from "@shared/components/number-form-field/number-form-field.component";
 import {PipesFormComponent} from "./pipes-form/pipes-form.component";
 import {MatIcon} from "@angular/material/icon";
 import {Pipe} from "@api/model/pipe";
 import {MatDivider} from "@angular/material/list";
 import {MatDialog, MatDialogConfig} from "@angular/material/dialog";
 import {ConfirmableAction, ConfirmDialogComponent} from "@shared/components/confirm-dialog/confirm-dialog.component";
+import {organFormSchema} from "./organ-form.schema";
+import {TextFormFieldComponent} from "@shared/components/form-field/text-form-field/text-form-field.component";
+import {NumberFormFieldComponent} from "@shared/components/form-field/number-form-field/number-form-field.component";
+
 
 @Component({
   selector: 'cranc-organ-form',
@@ -39,8 +41,8 @@ export class OrganFormComponent implements OnInit {
   organModel = model.required<Organ>();
   save = output<Organ>();
   discard = output<Organ | undefined>();
-  private initialModel?: Organ;
-  protected organForm = form(this.organModel);
+  private initialModel: Organ = new Organ();
+  protected organForm = form(this.organModel, organFormSchema);
   dialog = inject(MatDialog);
 
   ngOnInit() {
@@ -51,16 +53,15 @@ export class OrganFormComponent implements OnInit {
     $event.preventDefault();
     const value = this.organModel();
     console.debug("save organ", value)
-    if (value) {
+    if (value && this.organForm().valid()) {
       this.save.emit(value)
-    } else {
-      console.warn('failed to save empty organ')
+      this.organForm().reset(value)
     }
   }
 
   protected onDiscard() {
-    const model = this.initialModel;
-    if (model) {
+    const value = this.initialModel;
+    if (value) {
       const config = new MatDialogConfig()
       config.disableClose = false
       config.data = {
@@ -70,16 +71,24 @@ export class OrganFormComponent implements OnInit {
       const dialogRef = this.dialog.open(ConfirmDialogComponent, config);
       dialogRef.afterClosed().subscribe(confirmed => {
         if (confirmed) {
-          this.discard.emit(model)
+          this.discard.emit(value)
+          this.organForm().reset(value)
         }
       });
     }
   }
 
-  protected onAddPipe() {
-    this.organModel.update(organ => {
-      if (organ) organ.pipes.add(new Pipe())
-      return organ
-    })
+  protected addPipe() {
+    return (organ: Organ) => {
+      return organ.pipes.add(new Pipe());
+    }
   }
+
+  protected cannotDiscard = computed(() => {
+    return !this.organForm().dirty()
+  })
+
+  protected cannotSave = computed(() => {
+    return !this.organForm().dirty() || this.organForm().invalid()
+  })
 }
