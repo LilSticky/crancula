@@ -41,13 +41,14 @@
   <!-- Form Action Section -->
   <div class="cranc-form-section">
     <div class="actions">
-      <button matButton="outlined" type="button" (click)="onDiscard()">{{ 'PAGES.ORGAN.FORM.DISCARD' | translate }}
+      <button matButton="outlined" type="button" (click)="onDiscard()" [disabled]="cannotDiscard()">
+        {{ 'PAGES.ORGAN.FORM.DISCARD' | translate }}
       </button>
-      <button matButton="tonal" type="button" (click)="onAddPipe()">
+      <button matButton="tonal" type="button" (click)="organModel.update(addPipe())">
         <mat-icon>add</mat-icon>
         {{ 'PAGES.ORGAN.FORM.NEW_PIPE' | translate }}
       </button>
-      <button matButton="filled" type="submit">
+      <button matButton="filled" type="submit" [disabled]="cannotSave()">
         <mat-icon>save</mat-icon>
         {{ 'PAGES.ORGAN.FORM.SAVE' | translate }}
       </button>
