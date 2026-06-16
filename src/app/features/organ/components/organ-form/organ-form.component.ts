@@ -5,13 +5,14 @@ import {Organ} from "@api/model/organ";
 import {MatButton} from "@angular/material/button";
 import {PipesFormComponent} from "./pipes-form/pipes-form.component";
 import {MatIcon} from "@angular/material/icon";
-import {Pipe} from "@api/model/pipe";
+import {OrganPipe} from "@api/model/organPipe";
 import {MatDivider} from "@angular/material/list";
 import {MatDialog, MatDialogConfig} from "@angular/material/dialog";
 import {ConfirmableAction, ConfirmDialogComponent} from "@shared/components/confirm-dialog/confirm-dialog.component";
 import {organFormSchema} from "./organ-form.schema";
 import {TextFormFieldComponent} from "@shared/components/form-field/text-form-field/text-form-field.component";
 import {NumberFormFieldComponent} from "@shared/components/form-field/number-form-field/number-form-field.component";
+import {OrganPipes} from "@api/model/organPipes";
 
 
 @Component({
@@ -22,10 +23,9 @@ import {NumberFormFieldComponent} from "@shared/components/form-field/number-for
     PipesFormComponent,
     TextFormFieldComponent,
     NumberFormFieldComponent,
-    Field,
     MatIcon,
     MatDivider,
-
+    Field
   ],
   templateUrl: './organ-form.component.html',
   styles: `
@@ -80,7 +80,8 @@ export class OrganFormComponent implements OnInit {
 
   protected addPipe() {
     return (organ: Organ) => {
-      return organ.pipes.add(new Pipe());
+      organ.pipes = organ.pipes.add(new OrganPipe());
+      return organ
     }
   }
 
@@ -91,4 +92,12 @@ export class OrganFormComponent implements OnInit {
   protected cannotSave = computed(() => {
     return !this.organForm().dirty() || this.organForm().invalid()
   })
+
+
+  protected setPipes(pipes: OrganPipes) {
+    return (organ: Organ) => {
+      organ.pipes = pipes;
+      return organ
+    }
+  }
 }

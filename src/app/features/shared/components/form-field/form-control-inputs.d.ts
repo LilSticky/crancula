@@ -22,4 +22,3 @@ export type FormNameInput = InputSignal<string> | InputSignalWithTransform<strin
 export type FormNumberInput = InputSignal<number | undefined> | InputSignalWithTransform<number | undefined, unknown>;
 
 export type FormPatternInput = InputSignal<readonly RegExp[]> | InputSignalWithTransform<readonly RegExp[], unknown>;
-

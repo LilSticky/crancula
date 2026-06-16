@@ -1,7 +1,6 @@
 import {Component, input, model} from '@angular/core';
 import {MatError, MatFormField, MatInput, MatLabel} from "@angular/material/input";
 import {TranslatePipe} from "@ngx-translate/core";
-import {DisabledReason, FormValueControl, ValidationError, WithOptionalField} from "@angular/forms/signals";
 import {
   FormBooleanInput,
   FormDisabledInput,
@@ -11,6 +10,7 @@ import {
   FormPatternInput,
   FormTouchedModel
 } from "@shared/components/form-field/form-control-inputs";
+import {DisabledReason, FormValueControl, ValidationError, WithOptionalField} from "@angular/forms/signals";
 
 @Component({
   selector: 'cranc-text-form-field',
@@ -39,25 +39,25 @@ import {
   `,
 })
 export class TextFormFieldComponent implements FormValueControl<string> {
-  readonly value = model<string>('')
-  readonly label = input<string>('')
+  public readonly errors: FormErrorInput = input<readonly WithOptionalField<ValidationError>[]>([]);
+  public readonly disabled: FormBooleanInput = input<boolean>(false);
+  public readonly disabledReasons: FormDisabledInput = input<readonly WithOptionalField<DisabledReason>[]>([]);
+  public readonly readonly: FormBooleanInput = input<boolean>(false);
+  public readonly hidden: FormBooleanInput = input<boolean>(false);
+  public readonly invalid: FormBooleanInput = input<boolean>(false);
+  public readonly pending: FormBooleanInput = input<boolean>(false);
+  public readonly touched: FormTouchedModel = model<boolean>(false);
+  public readonly dirty: FormBooleanInput = input<boolean>(false);
+  public readonly name: FormNameInput = input<string>("");
+  public readonly required: FormBooleanInput = input<boolean>(false);
+  public readonly min: FormNumberInput = input<number | undefined>();
+  public readonly minLength: FormNumberInput = input<number | undefined>();
+  public readonly max: FormNumberInput = input<number | undefined>();
+  public readonly maxLength: FormNumberInput = input<number | undefined>();
+  public readonly pattern: FormPatternInput = input<readonly RegExp[]>([]);
 
-  readonly errors: FormErrorInput = input<readonly WithOptionalField<ValidationError>[]>([]);
-  readonly disabled: FormBooleanInput = input<boolean>(false);
-  readonly disabledReasons: FormDisabledInput = input<readonly WithOptionalField<DisabledReason>[]>([]);
-  readonly readonly: FormBooleanInput = input<boolean>(false);
-  readonly hidden: FormBooleanInput = input<boolean>(false);
-  readonly invalid: FormBooleanInput = input<boolean>(false);
-  readonly pending: FormBooleanInput = input<boolean>(false);
-  readonly touched: FormTouchedModel = model<boolean>(false);
-  readonly dirty: FormBooleanInput = input<boolean>(false);
-  readonly name: FormNameInput = input<string>("");
-  readonly required: FormBooleanInput = input<boolean>(false);
-  readonly min: FormNumberInput = input<number | undefined>();
-  readonly minLength: FormNumberInput = input<number | undefined>();
-  readonly max: FormNumberInput = input<number | undefined>();
-  readonly maxLength: FormNumberInput = input<number | undefined>();
-  readonly pattern: FormPatternInput = input<readonly RegExp[]>([]);
+  public readonly value = model.required<string>()
+  public readonly label = input<string>('')
 
   set(event: Event) {
     const target = (event as InputEvent).target

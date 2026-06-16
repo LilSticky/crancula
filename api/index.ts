@@ -6,7 +6,7 @@ export interface DataStore<T> {
 }
 
 export {Organ} from './model/organ';
-export {Pipe} from './model/pipe';
+export {OrganPipe} from './model/organPipe';
 export {Hole} from './model/hole';
 export {Tape} from './model/tape';
 export {Song} from './model/song';
