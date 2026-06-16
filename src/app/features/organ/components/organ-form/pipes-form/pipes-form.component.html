@@ -1,6 +1,6 @@
-<div cdkDropList class="pipe-form-list cranc-form-section" (cdkDropListDropped)="value.update(move($event))">
+<div cdkDropList class="pipe-form-list cranc-form-section" (cdkDropListDropped)="drop($event)">
   <h3>{{ 'PAGES.ORGAN.FORM.PIPE_SETTINGS' | translate }}</h3>
-  @for (pipe of value(); track pipe) {
+  @for (pipe of pipes(); track pipe.index) {
     <div class="pipes-form-row" cdkDrag>
       <cranc-text-form-field
         [(value)]="pipe.name"
@@ -13,13 +13,13 @@
         class="column"
       />
       <span class="cranc-form-section pipe-actions">
-        <button matIconButton (click)="value.update(remove(pipe))">
+        <button matIconButton type="button" (click)="remove(pipe)">
           <mat-icon>delete</mat-icon>
         </button>
-        <button matIconButton (click)="value.update(moveUp(pipe))">
+        <button matIconButton type="button" (click)="moveUp(pipe)" [disabled]="pipe.index <= 0">
           <mat-icon>keyboard_arrow_up</mat-icon>
         </button>
-        <button matIconButton (click)="value.update(moveDown(pipe))">
+        <button matIconButton type="button" (click)="moveDown(pipe)" [disabled]="pipe.index >= pipes().length - 1">
           <mat-icon>keyboard_arrow_down</mat-icon>
         </button>
       </span>

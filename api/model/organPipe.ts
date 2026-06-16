@@ -1,4 +1,4 @@
-export class Pipe {
+export class OrganPipe {
   index: number
   pitch: number
   name: string
@@ -13,7 +13,7 @@ export class Pipe {
     this.pitch = pitch ? pitch : 0
   }
 
-  equals(pipe: Pipe) {
+  equals(pipe: OrganPipe) {
     return this.index === pipe.index && this.pitch === pipe.pitch && this.name === pipe.name;
   }
 
