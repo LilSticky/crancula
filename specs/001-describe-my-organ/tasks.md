@@ -229,25 +229,25 @@ list with its details. Pipe 60 shows "C4".
 
 ### Tests for User Story 1 ⚠️ (write first, must fail)
 
-- [ ] T016 [P] [US1] Write the component test `src/app/features/organ/organ-list/organ-list.component.spec.ts`:
+- [X] T016 [P] [US1] Write the component test `src/app/features/organ/organ-list/organ-list.component.spec.ts`:
   - it shows an empty-state text when there are no Organs;
   - it lists Organs by name with their Pipe count;
   - the "New Organ" action navigates to `/organs/new`.
-- [ ] T017 [P] [US1] Write the component test `src/app/features/organ/organ-editor/organ-editor.component.spec.ts`:
+- [X] T017 [P] [US1] Write the component test `src/app/features/organ/organ-editor/organ-editor.component.spec.ts`:
   - **Fields:** name, tape width, border, hole diameter, row spacing and Minimum Gap.
   - **Minimum Hole Length:** shown, read-only, equal to the hole diameter.
   - **Pipes:** "add Pipe" appends a row; each row shows its note name (60 → C4).
   - **Autosave:** once the draft is valid, `OrganLibrary.put` is called and the route changes to
     `/organs/<id>`. While it is invalid, `put` is not called.
-- [ ] T018 [P] [US1] Write the e2e test `e2e/organ-define.spec.ts`: with a fresh `userData`,
+- [X] T018 [P] [US1] Write the e2e test `e2e/organ-define.spec.ts`: with a fresh `userData`,
   create "Street organ" using the quickstart values (tape width 120, border 5, hole diameter 2.5,
   row spacing 3.5, Minimum Gap 1.5, 31 Pipes from note 53). It appears in the Organ list.
 
 ### Implementation for User Story 1
 
-- [ ] T019 [US1] Implement `src/app/features/organ/organ-list/organ-list.component.ts` (and
+- [X] T019 [US1] Implement `src/app/features/organ/organ-list/organ-list.component.ts` (and
   `.html`): standalone, OnPush, Material list or table, reading `OrganLibrary`.
-- [ ] T020 [US1] Implement `src/app/features/organ/organ-editor/organ-editor.component.ts` (and
+- [X] T020 [US1] Implement `src/app/features/organ/organ-editor/organ-editor.component.ts` (and
   `.html`):
   - **Form:** standalone, OnPush. A signal form (`form()` from `@angular/forms/signals`) over an
     `OrganDraft` signal. Material inputs, `type=number`, decimals allowed.
@@ -255,10 +255,10 @@ list with its details. Pipe 60 shows "C4".
   - **Autosave:** an `effect` runs `validateOrgan` and calls `OrganLibrary.put` when the result is
     ok and differs from the stored Organ (FR-012). For a new draft it then navigates to
     `/organs/<id>`.
-- [ ] T021 [US1] Add `src/app/features/organ/routes.ts` (`/organs`, `/organs/new`,
+- [X] T021 [US1] Add `src/app/features/organ/routes.ts` (`/organs`, `/organs/new`,
   `/organs/:id`; an unknown id redirects to `/organs`) and register it in `src/app.routes.ts`,
   with a navbar entry through the existing `CranculaRoute` data.
-- [ ] T022 [P] [US1] Add the `ORGAN.*` labels used in US1 to `src/assets/i18n/en.json` and
+- [X] T022 [P] [US1] Add the `ORGAN.*` labels used in US1 to `src/assets/i18n/en.json` and
   `src/assets/i18n/de.json`; the parity test from T003 must stay green.
 
 **Checkpoint**: US1 works in Electron; T016–T018 are green.

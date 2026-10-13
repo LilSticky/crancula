@@ -133,6 +133,13 @@ Each entry gives the decision, the reason for it, and the alternatives considere
 - **Alternatives**: built-in signal-form validators for each rule. They would duplicate the
   domain logic, and cross-field rules (fit, overlap) are awkward to express with them.
 
+- **Revised during implementation (2026-10-14)**: the editor uses plain signals with `(input)`
+  handlers instead of signal forms. In Angular 21, signal forms (experimental) can't bind a
+  `number | null` model to number inputs, and array fields iterate as entries. Making the domain's
+  `OrganDraft` fit that API would have bent the domain to a UI library. `validateOrgan` is still the
+  single source of the rules. Inputs show a `displayed` copy of the draft, which follows it only on
+  structural changes, so a number is never rewritten while it is being typed.
+
 ## R7 Note names
 
 - **Decision**: Use scientific pitch notation with sharps: 60 → `C4`, 61 → `C#4`, 0 → `C-1`,
