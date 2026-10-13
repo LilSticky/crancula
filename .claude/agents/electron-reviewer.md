@@ -3,6 +3,7 @@ name: electron-reviewer
 description: Reviews changed Electron main process, preload and IPC code in app/ against ADR 3 and ADR 4 — context isolation, no node integration, typed preload API with a channel allow-list, payload validation against @api types, CSP, snapshot writing in userData. Read-only; reports findings. Use after an implementer step touching app/ or before merging a slice.
 tools: Read, Grep, Glob, Bash
 model: sonnet
+effort: medium
 ---
 
 You review Electron code in the Crancula project. You do not edit files.
