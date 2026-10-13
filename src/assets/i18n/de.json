@@ -74,6 +74,18 @@
       "ROW": "Reihe {{row}}",
       "PIPE_NOTE": "MIDI-Note",
       "ADD_PIPE": "Pfeife hinzufügen"
+    },
+    "VIOLATION": {
+      "NAME_REQUIRED": "Bitte gib einen Namen ein.",
+      "PIPES_REQUIRED": "Füge mindestens eine Pfeife hinzu.",
+      "PIPE_NOTE_REQUIRED": "Gib die MIDI-Note dieser Pfeife ein.",
+      "PIPE_NOTE_OUT_OF_RANGE": "{{note}} ist keine MIDI-Note (0–127).",
+      "DUPLICATE_PIPE": "Eine andere Pfeife spielt bereits {{noteName}}.",
+      "VALUE_REQUIRED": "Bitte gib einen Wert ein.",
+      "MUST_BE_POSITIVE": "Muss größer als 0 sein.",
+      "MUST_NOT_BE_NEGATIVE": "Darf nicht negativ sein.",
+      "ROW_SPACING_BELOW_HOLE_DIAMETER": "Muss mindestens so groß wie der Lochdurchmesser ({{holeDiameter}} mm) sein, sonst überlappen benachbarte Löcher.",
+      "PIPES_EXCEED_TAPE_WIDTH": "Die Pfeifen brauchen {{requiredWidth}} mm, das Band ist aber nur {{availableWidth}} mm breit."
     }
   }
 }

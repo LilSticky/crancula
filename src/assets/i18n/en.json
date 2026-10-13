@@ -74,6 +74,18 @@
       "ROW": "Row {{row}}",
       "PIPE_NOTE": "MIDI note",
       "ADD_PIPE": "Add Pipe"
+    },
+    "VIOLATION": {
+      "NAME_REQUIRED": "Please enter a name.",
+      "PIPES_REQUIRED": "Add at least one Pipe.",
+      "PIPE_NOTE_REQUIRED": "Enter the MIDI note of this Pipe.",
+      "PIPE_NOTE_OUT_OF_RANGE": "{{note}} is not a MIDI note (0–127).",
+      "DUPLICATE_PIPE": "Another Pipe already plays {{noteName}}.",
+      "VALUE_REQUIRED": "Please enter a value.",
+      "MUST_BE_POSITIVE": "Must be greater than 0.",
+      "MUST_NOT_BE_NEGATIVE": "Must not be negative.",
+      "ROW_SPACING_BELOW_HOLE_DIAMETER": "Must be at least the hole diameter ({{holeDiameter}} mm), or neighbouring holes overlap.",
+      "PIPES_EXCEED_TAPE_WIDTH": "The Pipes need {{requiredWidth}} mm, but the tape is only {{availableWidth}} mm wide."
     }
   }
 }
