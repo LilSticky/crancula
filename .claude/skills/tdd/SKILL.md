@@ -10,7 +10,7 @@ All production code is written test-first. Work in small cycles, one behaviour p
 ## Cycle
 
 1. **Red** — delegate to the `test-first` agent (or follow its rules yourself for a tiny change): write the smallest failing test for one behaviour, run it, confirm it fails for the expected reason. Bug fix → first a test that reproduces the bug.
-2. **Green** — write the minimum production code to make that test pass. No extra behaviour, no speculative abstractions. Run the test, then the whole suite (`npm run test`).
+2. **Green** — delegate to the `implementer` agent, which also does step 3 (or follow its rules yourself for a tiny change): write the minimum production code to make that test pass. No extra behaviour, no speculative abstractions. Run the test, then the whole suite (`npm run test`).
 3. **Refactor** — with everything green, clean up production and test code (naming per `documentation/DICTIONARY.md`, strict typing, duplication). Rerun tests after each step. Never change behaviour here.
 4. Repeat for the next behaviour. Tick the task in `tasks.md` only once its tests are green.
 

@@ -57,7 +57,7 @@ index; the `adr` skill does both.
 - **Spec Kit per slice**, on branch `NNN-slice-name` from `main`: `/speckit-specify` →
   `/speckit-clarify` → `/speckit-plan` → `/speckit-tasks` → `/speckit-implement`.
 - **TDD for all code**: domain, Angular UI, Electron main/preload/IPC, and bug fixes. Follow the
-  `tdd` skill; use the `test-first` agent for the red phase. The TDD guard hook blocks edits to
+  `tdd` skill; use the `test-first` agent for the red phase and `implementer` for green. The TDD guard hook blocks edits to
   `src/`, `app/` and `api/` until a `*.spec.ts` or `e2e/` file has changed.
 - **Domain discovery** and dictionary reviews go to the `domain-modeler` agent. It proposes; the user
   approves before `DICTIONARY.md` changes.
@@ -73,6 +73,35 @@ index; the `adr` skill does both.
 - The existing prototype code is a **quarry**: reuse what fits, replace what doesn't. Don't patch
   around it.
 
+## Delegation
+
+This is a standing instruction to use subagents. The main session orchestrates: it reads
+`tasks.md`, hands each step to the cheapest agent that can do it, checks the diff and test result,
+and commits. It does not write code itself, which keeps its context small across a whole slice.
+
+| Work | Agent | Model |
+|------|-------|-------|
+| Domain discovery, slicing, dictionary review | `domain-modeler` | opus |
+| Failing test for one task (red) | `test-first` | sonnet |
+| Make it green, refactor (green) | `implementer` | sonnet |
+| Review `src/` changes | `angular-reviewer` | sonnet |
+| Review `app/` and IPC changes | `electron-reviewer` | sonnet |
+| Slice vs. `spec.md` before merging | `spec-auditor` | sonnet |
+| STATUS/ROADMAP, GitHub Issues and board, i18n parity | `housekeeper` | haiku |
+| Broad read-only code search | `Explore` | haiku |
+
+- **Loop per task**: `test-first` → `implementer` → the matching reviewer(s), run in parallel →
+  the main session fixes findings via `implementer`, then commits.
+- **Hand-off through files**: prompts name a task ID in `tasks.md` and the files involved; agents
+  read the repository rather than the chat, and report in 5 lines or fewer. Details go into
+  spec, tasks or STATUS, not into the chat.
+- **One working tree per session.** Several sessions run at once; never switch branches or commit
+  in another session's tree. Start extra work in its own worktree
+  (`git worktree add ../crancula-<topic> -b <branch> origin/main`) and tell running sessions
+  which files you will touch. Subagents of one session share that session's tree and run
+  sequentially when they edit; read-only reviewers may run in parallel.
+- Escalate to a stronger model only when an agent fails twice on the same task.
+
 ## Code conventions
 
 - **Language**: use dictionary terms in code, tests, UI texts and commits (Organ, Pipe, Tape, Hole,
@@ -82,7 +111,8 @@ index; the `adr` skill does both.
 - **Typing**: as strict as possible. No `any`, no non-null assertions to silence the compiler.
 - **Angular**: standalone components, signals and signal forms, OnPush; follow the Angular MCP
   `get_best_practices`. Angular Material with minimal SCSS.
-- **i18n**: @ngx-translate. Every key must exist in both `src/assets/i18n/en.json` and `de.json`.
+- **i18n**: @ngx-translate. Every key must exist in both `src/assets/i18n/en.json` and `de.json`
+  (`npm run i18n:check`).
 - **Electron** (ADR 4): `contextIsolation` on, `nodeIntegration` off; the renderer talks to the main
   process only via a typed preload API with an allow-list of channels. Payloads are validated
   against `@api` types. No `window.require`.
@@ -96,6 +126,7 @@ index; the `adr` skill does both.
   (`@shared/*` → `src/app/features/shared/*`)
 - `app/`: Electron main process (`app/main.ts`) and preload
 - `e2e/`: Playwright tests
+- `scripts/`: repository checks run by npm scripts and CI
 - `documentation/`, `specs/`, `.specify/`: docs and Spec Kit
 - `.claude/agents/`, `.claude/skills/`, `.claude/hooks/`: agent tooling
 
@@ -108,5 +139,6 @@ index; the `adr` skill does both.
 - `npm run test` / `npm run test:watch`: Vitest unit and component tests
 - `npm run e2e`: Playwright end-to-end tests (production build first)
 - `npm run lint`: ESLint
+- `npm run i18n:check`: en/de translation key parity (`i18n-parity` skill)
 
 Development happens on Windows. The Bash tool is Git Bash and the primary shell is PowerShell.
