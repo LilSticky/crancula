@@ -12,7 +12,7 @@ Issues: [GitHub](https://github.com/LilSticky/crancula/issues)
 The plan is done: [plan.md](../specs/001-describe-my-organ/plan.md). Snapshot writing is decided in
 ADR 8, and the Node test setup in ADR 7.
 
-**Next concrete step:** run `/speckit-tasks` for this slice.
+**Next concrete step:** start `/speckit-implement` with Phase 1 of [tasks.md](../specs/001-describe-my-organ/tasks.md) (T001: remove the prototype organ feature).
 
 ## Known broken / WIP
 
