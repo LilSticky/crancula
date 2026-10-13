@@ -1,4 +1,4 @@
-import {Component, computed, input, model} from '@angular/core';
+import {Component, input, model, signal} from '@angular/core';
 import {DisabledReason, FormValueControl, ValidationError, WithOptionalField} from '@angular/forms/signals';
 import {OrganPipe} from "@api/model/organPipe";
 import {TranslatePipe} from "@ngx-translate/core";
@@ -18,12 +18,6 @@ import {
 } from "@shared/components/form-field/form-control-inputs";
 import {NumberFormFieldComponent} from "@shared/components/form-field/number-form-field/number-form-field.component";
 
-function move(from: number, to: number): (pipe: OrganPipes) => OrganPipes {
-  return (pipes: OrganPipes): OrganPipes => {
-    return pipes.move(from, to) ?? pipes;
-  };
-}
-
 @Component({
   selector: 'cranc-pipes-form',
   imports: [
@@ -38,7 +32,7 @@ function move(from: number, to: number): (pipe: OrganPipes) => OrganPipes {
   templateUrl: './pipes-form.component.html',
   styleUrl: './pipes-form.component.scss'
 })
-export class PipesFormComponent implements FormValueControl<OrganPipes> {
+export class PipesFormComponent implements FormValueControl<OrganPipe[]> {
   public readonly errors: FormErrorInput = input<readonly WithOptionalField<ValidationError>[]>([]);
   public readonly disabled: FormBooleanInput = input<boolean>(false);
   public readonly disabledReasons: FormDisabledInput = input<readonly WithOptionalField<DisabledReason>[]>([]);
@@ -56,22 +50,32 @@ export class PipesFormComponent implements FormValueControl<OrganPipes> {
   public readonly maxLength: FormNumberInput = input<number | undefined>();
   public readonly pattern: FormPatternInput = input<readonly RegExp[]>([]);
 
-  public readonly value = model.required<OrganPipes>()
-  protected readonly pipes = computed((): OrganPipe[] => this.value().toArray());
+  public readonly value = model.required<OrganPipe[]>();
+  protected readonly model = signal<OrganPipes>(new OrganPipes(this.value()));
 
   protected remove(pipe: OrganPipe) {
-    this.value.update((pipes: OrganPipes) => pipes.remove(pipe));
+    this.value.set(this.model().remove(pipe).toArray());
   }
 
   protected drop(event: CdkDragDrop<string[]>) {
-    this.value.update(move(event.previousIndex, event.currentIndex))
+    const from = event.previousIndex;
+    const to = event.currentIndex;
+    this.value.set(this.move(from, to).toArray());
   }
 
   protected moveUp(pipe: OrganPipe) {
-    this.value.update(move(pipe.index, pipe.index - 1));
+    const from = pipe.index;
+    const to = pipe.index - 1;
+    this.value.set(this.move(from, to).toArray());
   }
 
   protected moveDown(pipe: OrganPipe) {
-    this.value.update(move(pipe.index, pipe.index + 1));
+    const from = pipe.index;
+    const to = pipe.index + 1;
+    this.value.set(this.move(from, to).toArray());
+  }
+
+  private move(from: number, to: number): OrganPipes {
+    return this.model().move(from, to) ?? this.model();
   }
 }

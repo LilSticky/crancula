@@ -1,4 +1,10 @@
-export class OrganPipe {
+export interface OrganPipeInterface {
+  index: number
+  pitch: number
+  name: string
+}
+
+export class OrganPipe implements OrganPipeInterface {
   index: number
   pitch: number
   name: string

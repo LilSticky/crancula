@@ -1,13 +1,14 @@
-import {min, minLength, required, schema} from "@angular/forms/signals";
-import {Organ} from "@api/model/organ";
+import {applyEach, min, minLength, required, schema} from "@angular/forms/signals";
 import {OrganPipe} from "@api/model/organPipe";
 
-export const pipesFormSchema = schema<OrganPipe[]>((path) => {
-  // TODO validate Pipes
-  console.log("validation on pipes called", path)
+import {FormOrgan} from "./form-organ";
+
+export const pipeFormSchema = schema<OrganPipe>((path) => {
+  required(path.name)
+  required(path.pitch)
 });
 
-export const organFormSchema = schema<Organ>((path) => {
+export const organFormSchema = schema<FormOrgan>((path) => {
   // Organ Name
   required(path.name, {message: "FORM_VALIDATION.REQUIRED"});
   minLength(path.name, 1, {message: "FORM_VALIDATION.MIN_LENGTH"})
@@ -23,5 +24,6 @@ export const organFormSchema = schema<Organ>((path) => {
   // Hole Diameter
   required(path.tape.holeDiameterMm, {message: "FORM_VALIDATION.REQUIRED"})
   min(path.tape.holeDiameterMm, 1, {message: "FORM_VALIDATION.MIN_VALUE"})
-  // Ignore Pipes, they are handled by pipesFormSchema
+  // Pipes
+  applyEach(path.pipes, pipeFormSchema)
 })

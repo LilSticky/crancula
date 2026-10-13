@@ -2,18 +2,7 @@
 
 import {OrganPipes} from "@api/model/organPipes";
 import {OrganPipe} from "@api/model/organPipe";
-
-/**
- * contains all information required to initialize a {@link Tape} for this {@link Organ}
- */
-interface TapeConfig {
-  // tape settings
-  tapeWidthMm: number
-  tapeBorderMm: number
-  // hole settings
-  holeDiameterMm: number
-  holeSpacingMm: number
-}
+import {TapeConfig} from "@api/model/tapeConfig";
 
 export type DriedOrgan = {
   id: string
@@ -22,7 +11,16 @@ export type DriedOrgan = {
   pipes: OrganPipe[]
 };
 
-export class Organ {
+export interface OrganInterface {
+  id: string
+  // general
+  name: string
+  tape: TapeConfig;
+  // pipe settings
+  pipes: OrganPipes
+}
+
+export class Organ implements OrganInterface {
   id: string
   // general
   name: string
