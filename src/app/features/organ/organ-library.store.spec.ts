@@ -104,10 +104,14 @@ describe('OrganLibrary', () => {
 
   describe('save problems', () => {
     it('are reported and cleared by the next successful save', async () => {
-      const api = createInMemoryCranculaApi();
-      const realSave = api.organs.save;
+      const inMemory = createInMemoryCranculaApi();
       let next: OrganLibrarySaveResult = {status: 'failed', reason: 'disk full'};
-      api.organs.save = async (snapshot) => (next.status === 'saved' ? realSave(snapshot) : next);
+      const api: CranculaApi = {
+        organs: {
+          load: () => inMemory.organs.load(),
+          save: (snapshot) => (next.status === 'saved' ? inMemory.organs.save(snapshot) : Promise.resolve(next)),
+        },
+      };
       const {library} = setup(api);
 
       await library.put(organ('First'));
