@@ -47,7 +47,11 @@ async function open(id?: string) {
     await type(field('pipe-note'), '60');
   }
 
-  return {fixture, element, field, type, click, pipeRows, fillValidOrgan};
+  /** The rule message shown at a field, by the field's path in the Organ. */
+  const violationAt = (path: string) =>
+    [...element.querySelectorAll(`[data-testid="violation"][data-path="${path}"]`)].map((error) => error.textContent?.trim());
+
+  return {fixture, element, field, type, click, pipeRows, fillValidOrgan, violationAt};
 }
 
 describe('OrganEditorComponent', () => {
@@ -146,6 +150,128 @@ describe('OrganEditorComponent', () => {
       await type(field('name'), 'Renamed');
 
       expect(library.entities().map(({id, name}) => ({id, name}))).toEqual([{id: organ.id, name: 'Renamed'}]);
+    });
+  });
+
+  describe('rule violations', () => {
+    it('shows no "missing value" messages on an untouched new Organ', async () => {
+      const {open: openEditor} = render();
+      const {element} = await openEditor();
+      expect(element.querySelectorAll('[data-testid="violation"]')).toHaveLength(0);
+    });
+
+    it('asks for a name once the name was cleared', async () => {
+      const {open: openEditor} = render();
+      const {field, type, violationAt} = await openEditor();
+
+      await type(field('name'), 'x');
+      await type(field('name'), '');
+
+      expect(violationAt('name')).toEqual(['Please enter a name.']);
+    });
+
+    it('asks for a value once a measurement was cleared', async () => {
+      const {open: openEditor} = render();
+      const {field, type, violationAt} = await openEditor();
+
+      await type(field('tape-width'), '1');
+      await type(field('tape-width'), '');
+
+      expect(violationAt('tapeBed.tapeWidth')).toEqual(['Please enter a value.']);
+    });
+
+    it('asks for Pipes once the Organ was edited', async () => {
+      const {open: openEditor} = render();
+      const {field, type, violationAt} = await openEditor();
+
+      await type(field('name'), 'Street organ');
+
+      expect(violationAt('pipes')).toEqual(['Add at least one Pipe.']);
+    });
+
+    it('asks for the note of a new Pipe once it was cleared', async () => {
+      const {open: openEditor} = render();
+      const {field, type, click, violationAt} = await openEditor();
+
+      await click('add-pipe');
+      await type(field('pipe-note'), '6');
+      await type(field('pipe-note'), '');
+
+      expect(violationAt('pipes.0.note')).toEqual(['Enter the MIDI note of this Pipe.']);
+    });
+
+    it('rejects a note outside 0–127 right away', async () => {
+      const {open: openEditor} = render();
+      const {field, type, click, violationAt} = await openEditor();
+
+      await click('add-pipe');
+      await type(field('pipe-note'), '128');
+
+      expect(violationAt('pipes.0.note')).toEqual(['128 is not a MIDI note (0–127).']);
+    });
+
+    it('marks both Pipes of a duplicate note', async () => {
+      const {open: openEditor} = render();
+      const {element, type, click, violationAt} = await openEditor();
+
+      await click('add-pipe');
+      await click('add-pipe');
+      const notes = element.querySelectorAll<HTMLInputElement>('[data-testid="pipe-note"]');
+      await type(notes[0], '60');
+      await type(notes[1], '60');
+
+      expect(violationAt('pipes.0.note')).toEqual(['Another Pipe already plays C4.']);
+      expect(violationAt('pipes.1.note')).toEqual(['Another Pipe already plays C4.']);
+    });
+
+    it('requires positive measurements and a border that is not negative', async () => {
+      const {open: openEditor} = render();
+      const {field, type, violationAt} = await openEditor();
+
+      await type(field('minimum-gap'), '0');
+      await type(field('border'), '-1');
+
+      expect(violationAt('minimumGap')).toEqual(['Must be greater than 0.']);
+      expect(violationAt('tapeBed.border')).toEqual(['Must not be negative.']);
+    });
+
+    it('requires a row spacing of at least the hole diameter', async () => {
+      const {open: openEditor} = render();
+      const {field, type, violationAt} = await openEditor();
+
+      await type(field('hole-diameter'), '3');
+      await type(field('row-spacing'), '2.5');
+
+      expect(violationAt('tapeBed.rowSpacing')).toEqual([
+        'Must be at least the hole diameter (3 mm), or neighbouring holes overlap.',
+      ]);
+    });
+
+    it('shows how much tape width the Pipes need', async () => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 31);
+      await library.put(organ);
+      const {field, type, violationAt} = await openEditor(organ.id);
+
+      await type(field('tape-width'), '100');
+
+      expect(violationAt('tapeBed.tapeWidth')).toEqual(['The Pipes need 117.5 mm, but the tape is only 100 mm wide.']);
+    });
+
+    it('stores only the fixed version of a stored Organ edited into an invalid state', async () => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ');
+      await library.put(organ);
+      const put = vi.spyOn(library, 'put');
+      const {field, type} = await openEditor(organ.id);
+
+      await type(field('name'), '');
+      expect(put).not.toHaveBeenCalled();
+      expect(library.entities()[0]?.name).toBe('Street organ');
+
+      await type(field('name'), 'Fixed');
+      expect(put).toHaveBeenCalledTimes(1);
+      expect(library.entities()[0]?.name).toBe('Fixed');
     });
   });
 });
