@@ -39,9 +39,8 @@ and kept as a snapshot on disk (ADR 3, ADR 4).
   (debounced on change, on quit). Decide in "Describe my organ".
 - **Air Demand:** how "too many Pipes at once" depends on which Pipes play. Domain discovery is
   not finished; not in v0.1.
-- The constitution and ADR 6 say `main`, but the repository's main branch is `master`. Rename it,
-  or change the docs?
 - Release builds: CI (`.github/workflows/ci.yml`) runs lint, test and build on Linux, Windows
   and macOS, and is red until the build and test items above are fixed. Packaging v0.1 as
   GitHub Releases is not set up yet ([#11](https://github.com/LilSticky/crancula/issues/11)).
-- GitHub Project board: not created yet; it needs `gh auth refresh -s project,read:project`.
+- GitHub Project board [Crancula](https://github.com/users/LilSticky/projects/1) exists but is
+  not yet linked to the repository and has no Issues on it.
