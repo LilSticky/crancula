@@ -1,32 +1,28 @@
-import { BrowserContext, ElectronApplication, Page, _electron as electron } from 'playwright';
-import { test, expect } from '@playwright/test';
-import * as PATH from 'path';
+import {expect, test} from '@playwright/test';
+import {launchApp, type LaunchedApp} from './support/launch-app';
 
-test.describe('Check Home Page', () => {
-  let app: ElectronApplication;
-  let firstWindow: Page;
-  let context: BrowserContext;
+test.describe('Home page', () => {
+  let launched: LaunchedApp;
 
-  test.beforeAll( async () => {
-    app = await electron.launch({ args: [PATH.join(__dirname, '../app/main.js'), PATH.join(__dirname, '../app/package.json')] });
-    context = app.context();
-    await context.tracing.start({ screenshots: true, snapshots: true });
-    firstWindow = await app.firstWindow();
-    await firstWindow.waitForLoadState('domcontentloaded');
+  test.beforeAll(async () => {
+    launched = await launchApp();
+    await launched.app.context().tracing.start({screenshots: true, snapshots: true});
   });
 
-  test('Launch electron app', async () => {
+  test.afterAll(async () => {
+    await launched.app.context().tracing.stop({path: 'e2e/tracing/trace.zip'});
+    await launched.app.close();
+  });
 
-    const windowState: { isVisible: boolean; isDevToolsOpened: boolean; isCrashed: boolean } = await app.evaluate(async (process) => {
-      const mainWindow = process.BrowserWindow.getAllWindows()[0];
-
+  test('launches the Electron app', async () => {
+    const windowState = await launched.app.evaluate(async ({BrowserWindow}) => {
+      const mainWindow = BrowserWindow.getAllWindows()[0];
       const getState = () => ({
         isVisible: mainWindow.isVisible(),
         isDevToolsOpened: mainWindow.webContents.isDevToolsOpened(),
         isCrashed: mainWindow.webContents.isCrashed(),
       });
-
-      return new Promise((resolve) => {
+      return new Promise<ReturnType<typeof getState>>((resolve) => {
         if (mainWindow.isVisible()) {
           resolve(getState());
         } else {
@@ -40,20 +36,7 @@ test.describe('Check Home Page', () => {
     expect(windowState.isCrashed).toBeFalsy();
   });
 
-  // test('Check Home Page design', async ({ browserName}) => {
-  //   // Uncomment if you change the design of Home Page in order to create a new screenshot
-  //   const screenshot = await firstWindow.screenshot({ path: '/tmp/home.png' });
-  //   expect(screenshot).toMatchSnapshot(`home-${browserName}.png`);
-  // });
-
-  test('Check title', async () => {
-    const elem = await firstWindow.$('app-home h1');
-    const text = elem ? await elem.innerText() : null;
-    expect(text).toBe('App works !');
-  });
-
-  test.afterAll( async () => {
-    await context.tracing.stop({ path: 'e2e/tracing/trace.zip' });
-    await app.close();
+  test('shows the home page title', async () => {
+    await expect(launched.window.locator('cranc-home-page h1')).toHaveText('Overview');
   });
 });
