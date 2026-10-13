@@ -1,8 +1,6 @@
 # Crancula Agent Instructions
 
-Domain language should be used and updated if unclear. Find it in `DEFINITIONS.md`.
-
-The purpose and target of this project is describe in `FEATURES.md`.
+Domain language should be used and updated if unclear. Find it in `documentation/DICTIONARY.md`.
 
 All code should be typed as strictly as possible.
 
