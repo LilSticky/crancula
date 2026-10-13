@@ -275,7 +275,7 @@ problem. Fix it and the Organ is stored.
 
 ### Tests for User Story 2 ⚠️
 
-- [ ] T023 [P] [US2] Extend `src/app/features/organ/organ-editor/organ-editor.component.spec.ts`.
+- [X] T023 [P] [US2] Extend `src/app/features/organ/organ-editor/organ-editor.component.spec.ts`.
   For each violation code from the data-model table, the matching
   `ORGAN.VIOLATION.<CODE_IN_UPPER_SNAKE>` message is shown at its field. Also check:
   - a duplicate marks **both** Pipes;
@@ -285,10 +285,10 @@ problem. Fix it and the Organ is stored.
 
 ### Implementation for User Story 2
 
-- [ ] T024 [US2] In the editor, map the domain violations to signal-form field errors with **one**
+- [X] T024 [US2] In the editor, map the domain violations to signal-form field errors with **one**
   custom validator that calls `validateOrgan` (R6, no duplicated rules), and render them with
   `mat-error` and `translate`, passing the parameters.
-- [ ] T025 [P] [US2] Add all `ORGAN.VIOLATION.*` keys, with parameters, to `en.json` and `de.json`.
+- [X] T025 [P] [US2] Add all `ORGAN.VIOLATION.*` keys, with parameters, to `en.json` and `de.json`.
 
 **Checkpoint**: US1 and US2 green. SC-002 is covered by T023.
 
