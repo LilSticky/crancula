@@ -54,7 +54,7 @@ index; the `adr` skill does both.
 - **Spec Kit per slice**, on branch `NNN-slice-name` from `main`: `/speckit-specify` →
   `/speckit-clarify` → `/speckit-plan` → `/speckit-tasks` → `/speckit-implement`.
 - **TDD for all code**: domain, Angular UI, Electron main/preload/IPC, and bug fixes. Follow the
-  `tdd` skill; use the `test-first` agent for the red phase. The TDD guard hook blocks edits to
+  `tdd` skill; use the `test-first` agent for the red phase and `implementer` for green. The TDD guard hook blocks edits to
   `src/`, `app/` and `api/` until a `*.spec.ts` or `e2e/` file has changed.
 - **Domain discovery** and dictionary reviews go to the `domain-modeler` agent. It proposes; the user
   approves before `DICTIONARY.md` changes.
@@ -69,6 +69,35 @@ index; the `adr` skill does both.
   output short. Detail belongs in files.
 - The existing prototype code is a **quarry**: reuse what fits, replace what doesn't. Don't patch
   around it.
+
+## Delegation
+
+This is a standing instruction to use subagents. The main session orchestrates: it reads
+`tasks.md`, hands each step to the cheapest agent that can do it, checks the diff and test result,
+and commits. It does not write code itself, which keeps its context small across a whole slice.
+
+| Work | Agent | Model |
+|------|-------|-------|
+| Domain discovery, slicing, dictionary review | `domain-modeler` | opus |
+| Failing test for one task (red) | `test-first` | sonnet |
+| Make it green, refactor (green) | `implementer` | sonnet |
+| Review `src/` changes | `angular-reviewer` | sonnet |
+| Review `app/` and IPC changes | `electron-reviewer` | sonnet |
+| Slice vs. `spec.md` before merging | `spec-auditor` | sonnet |
+| STATUS/ROADMAP, GitHub Issues and board, i18n parity | `housekeeper` | haiku |
+| Broad read-only code search | `Explore` | haiku |
+
+- **Loop per task**: `test-first` → `implementer` → the matching reviewer(s), run in parallel →
+  the main session fixes findings via `implementer`, then commits.
+- **Hand-off through files**: prompts name a task ID in `tasks.md` and the files involved; agents
+  read the repository rather than the chat, and report in 5 lines or fewer. Details go into
+  spec, tasks or STATUS, not into the chat.
+- **One working tree per session.** Several sessions run at once; never switch branches or commit
+  in another session's tree. Start extra work in its own worktree
+  (`git worktree add ../crancula-<topic> -b <branch> origin/main`) and tell running sessions
+  which files you will touch. Subagents of one session share that session's tree and run
+  sequentially when they edit; read-only reviewers may run in parallel.
+- Escalate to a stronger model only when an agent fails twice on the same task.
 
 ## Code conventions
 
