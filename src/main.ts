@@ -1,7 +1,7 @@
 import {enableProdMode, importProvidersFrom, provideZoneChangeDetection} from '@angular/core';
 import {bootstrapApplication} from '@angular/platform-browser';
 import {provideHttpClient, withInterceptorsFromDi} from '@angular/common/http';
-import {provideRouter} from '@angular/router';
+import {provideRouter, withComponentInputBinding} from '@angular/router';
 
 import {AppComponent} from './app/app.component';
 import {APP_CONFIG} from './environments/environment';
@@ -10,6 +10,7 @@ import {SharedModule} from './app/shared/shared.module';
 import {provideTranslateService} from '@ngx-translate/core';
 import {provideTranslateHttpLoader} from '@ngx-translate/http-loader';
 import {routes} from "./app.routes";
+import {provideOrganLibrary} from "./app/features/organ/organ-library.store";
 
 if (APP_CONFIG.production) {
   enableProdMode();
@@ -27,7 +28,8 @@ bootstrapApplication(AppComponent, {
       fallbackLang: 'en',
       lang: 'en'
     }),
-    provideRouter(routes),
+    provideRouter(routes, withComponentInputBinding()),
+    provideOrganLibrary(),
     importProvidersFrom(
       CoreModule,
       SharedModule
