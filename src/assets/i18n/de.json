@@ -49,5 +49,31 @@
     "MIN_LENGTH": "Dieser Wert muss länger sein",
     "MIN_VALUE": "Dieser Wert muss größer sein",
     "REQUIRED": "Dieser Wert muss angegeben werden"
+  },
+  "ORGAN": {
+    "NAV": "Drehorgeln",
+    "LIST": {
+      "TITLE": "Drehorgeln",
+      "EMPTY": "Noch keine Drehorgeln.",
+      "NEW": "Neue Drehorgel",
+      "PIPE_COUNT": "{{count}} Pfeifen"
+    },
+    "EDITOR": {
+      "TITLE_NEW": "Neue Drehorgel",
+      "TITLE": "Drehorgel",
+      "NAME": "Name",
+      "TAPE_BED": "Bandbett",
+      "TAPE_WIDTH": "Bandbreite (mm)",
+      "BORDER": "Rand (mm)",
+      "HOLE_DIAMETER": "Lochdurchmesser (mm)",
+      "ROW_SPACING": "Reihenabstand (mm)",
+      "MINIMUM_GAP": "Mindestabstand (mm)",
+      "MINIMUM_HOLE_LENGTH": "Mindestlochlänge (mm)",
+      "MINIMUM_HOLE_LENGTH_HINT": "Entspricht dem Lochdurchmesser",
+      "PIPES": "Pfeifen",
+      "ROW": "Reihe {{row}}",
+      "PIPE_NOTE": "MIDI-Note",
+      "ADD_PIPE": "Pfeife hinzufügen"
+    }
   }
 }

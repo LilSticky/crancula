@@ -49,5 +49,31 @@
     "MIN_LENGTH": "This value needs to be longer",
     "MIN_VALUE": "This value needs to be greater",
     "REQUIRED": "This value is required"
+  },
+  "ORGAN": {
+    "NAV": "Organs",
+    "LIST": {
+      "TITLE": "Organs",
+      "EMPTY": "No Organs yet.",
+      "NEW": "New Organ",
+      "PIPE_COUNT": "{{count}} Pipes"
+    },
+    "EDITOR": {
+      "TITLE_NEW": "New Organ",
+      "TITLE": "Organ",
+      "NAME": "Name",
+      "TAPE_BED": "Tape Bed",
+      "TAPE_WIDTH": "Tape width (mm)",
+      "BORDER": "Border (mm)",
+      "HOLE_DIAMETER": "Hole diameter (mm)",
+      "ROW_SPACING": "Spacing between rows (mm)",
+      "MINIMUM_GAP": "Minimum Gap (mm)",
+      "MINIMUM_HOLE_LENGTH": "Minimum Hole Length (mm)",
+      "MINIMUM_HOLE_LENGTH_HINT": "Equals the hole diameter",
+      "PIPES": "Pipes",
+      "ROW": "Row {{row}}",
+      "PIPE_NOTE": "MIDI note",
+      "ADD_PIPE": "Add Pipe"
+    }
   }
 }
