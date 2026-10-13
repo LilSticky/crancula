@@ -28,6 +28,9 @@ One behaviour to specify: a task from `tasks.md`, an acceptance criterion from a
 3. Run it: unit tests with `npm run test`, e2e with `npm run e2e`.
 4. Confirm it fails, and fails for the expected reason (assertion or missing API, not a typo, broken setup or unrelated error). Fix the test until it does.
 
+## Output discipline
+Command output costs tokens. Pipe test and lint runs through `2>&1 | tail -n 40` (Bash) or `2>&1 | Select-Object -Last 40` (PowerShell), and only look further up when the tail doesn't show the failure. Use `npm run lint -- --quiet` for errors only. Never paste full logs into your report.
+
 ## Report
 - Test file(s) and test names written
 - The failure output (trimmed) and why it is the expected failure

@@ -19,10 +19,13 @@ A task ID from `specs/<slice>/tasks.md` and the red report of the `test-first` a
 
 ## Procedure
 1. Read the task, the failing tests and the neighbouring code.
-2. Implement the smallest change. Run `npm run test` (or `npm run e2e` for e2e tests) until green.
+2. Implement the smallest change. Run the affected spec until green, then the whole suite (`npm run test`, or `npm run e2e` for e2e tests).
 3. Refactor production and test code for clarity, running tests after each step.
-4. Run `npm run lint` and fix what you introduced.
+4. Run `npm run lint -- --quiet` and fix what you introduced.
 5. Tick the task in `tasks.md`. Do not commit; the orchestrating session commits.
+
+## Output discipline
+Command output costs tokens. Pipe test and lint runs through `2>&1 | tail -n 40` (Bash) or `2>&1 | Select-Object -Last 40` (PowerShell), and only look further up when the tail doesn't show the failure. Use `npm run lint -- --quiet` for errors only. Never paste full logs into your report.
 
 ## Report (5 lines or fewer)
 - Task ID and files changed
