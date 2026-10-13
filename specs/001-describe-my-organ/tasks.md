@@ -303,19 +303,19 @@ the message and the untouched backup.
 
 ### Tests for User Story 3 ⚠️
 
-- [ ] T026 [P] [US3] Write the e2e test `e2e/organ-restart.spec.ts`:
+- [X] T026 [P] [US3] Write the e2e test `e2e/organ-restart.spec.ts`:
   - create an Organ, close the app, relaunch it with the same `CRANCULA_USER_DATA`, and check that
     all values and the Pipe order are identical (SC-003);
   - write `{oops` to `<userData>/snapshots/organs.json`, launch, and check that a "couldn't be
     loaded" message is visible, the app is usable, and `organs.unreadable-*.json` contains exactly
     `{oops` (SC-004).
-- [ ] T027 [P] [US3] Write the component test `src/app/app.component.spec.ts`: a load problem or
+- [X] T027 [P] [US3] Write the component test `src/app/app.component.spec.ts`: a load problem or
   save problem in `OrganLibrary` shows a Material snackbar with the translated message, including
   the backup path for load problems.
 
 ### Implementation for User Story 3
 
-- [ ] T028 [US3] Show `OrganLibrary.loadProblem` and `saveProblem` from `src/app/app.component.ts`
+- [X] T028 [US3] Show `OrganLibrary.loadProblem` and `saveProblem` from `src/app/app.component.ts`
   with `MatSnackBar`. Add the `ORGAN.STORAGE.*` keys to `en.json` and `de.json`.
 
 **Checkpoint**: The P1 stories are complete. This is the MVP of the slice.

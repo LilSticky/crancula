@@ -9,18 +9,33 @@ Issues: [GitHub](https://github.com/LilSticky/crancula/issues)
 **Describe my organ**, on branch `001-describe-my-organ`. The spec is clarified:
 [spec.md](../specs/001-describe-my-organ/spec.md).
 
-Phases 1–2 of [tasks.md](../specs/001-describe-my-organ/tasks.md) are done (T001–T015): the Organ
-domain in `api/organ/`, the snapshot file and IPC in `app/`, the sandboxed preload, and the
-`OrganLibrary` store. There is no Organ UI yet. Angular specs run in jsdom (ADR 9).
+The **MVP is done** (T001–T028, User Stories 1–3) and waits for the user's review in Electron
+(`npm run electron:local`; walkthrough in [quickstart.md](../specs/001-describe-my-organ/quickstart.md)).
+Organs can be defined, invalid ones are never stored and show their broken rules, and they survive a
+restart. An unreadable snapshot is reported and kept.
 
-**Next concrete step:** T016, the failing component test for the Organ list (User Story 1).
-The MVP goes up to T028; then stop so the user can review in Electron.
+Changes from the plan:
+- **Editor:** plain signals instead of signal forms (research R6).
+- **Angular specs:** run in jsdom (ADR 9).
+- **Error states:** a small `crancErrorState` directive puts form fields into their error state.
+
+**Next concrete step:** after the user's review, continue with User Story 4 (T029, the failing editor
+test for reordering and removing Pipes). Restart the session first, so the new agents from `main`
+(implementer, reviewers) are loaded.
 
 ## Known broken / WIP
 
 - No known broken items. These are fixed on this branch and close when the slice merges into
   `main`: #4 (build), #5 (no tests), #6 (`window.require`), #7 (localStorage), #8 (`api/model`).
-- The Organ feature has no UI until User Story 1 is done; the navbar shows only Home.
+- **Not done yet:**
+  - User Story 4: reorder and remove Pipes, delete an Organ, confirm before leaving with
+    invalid changes.
+  - User Story 5: language switch.
+  - Polish (T039–T042).
+- **German texts to review:** the German UI terms are first guesses: "Drehorgel", "Pfeife",
+  "Bandbett" (Tape Bed), "Reihenabstand", "Mindestabstand", "Mindestlochlänge".
+- **`npm run i18n:check`:** lists the dynamic `ORGAN.VIOLATION.*` keys and the old prototype keys
+  as unused. T039 cleans up the old keys.
 
 ## Open questions
 
