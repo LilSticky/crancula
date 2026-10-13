@@ -6,12 +6,18 @@
 //     so a failing test must exist before implementation (red before green).
 //
 //   node .claude/hooks/tdd-guard.mjs stop      (Stop)
-//     Runs lint and unit tests when code changed, and keeps the turn going while they fail,
-//     so nothing is reported done while red.
+//     Runs lint and unit tests when this session changed code, and keeps the turn going while
+//     they fail, so nothing is reported done while red. Other sessions may share the working
+//     tree, so only files this session edited count (recorded by pre-edit, per session_id).
 //
 // Exit code 2 blocks the action; stderr is fed back to Claude.
 import { execSync } from 'node:child_process';
-import { relative, resolve } from 'node:path';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join, relative, resolve } from 'node:path';
+
+/** Folder holding, per session, the code paths that session edited. */
+const SESSION_DIR = join(tmpdir(), 'crancula-tdd-guard');
 
 /** Directories holding production code that falls under TDD. */
 const GUARDED_DIRS = ['src/', 'app/', 'api/'];
@@ -54,6 +60,32 @@ function isGuarded(path) {
   );
 }
 
+/** @param {unknown} sessionId @returns {string | null} */
+function sessionFile(sessionId) {
+  return typeof sessionId === 'string' && /^[\w-]+$/.test(sessionId) ? join(SESSION_DIR, `${sessionId}.json`) : null;
+}
+
+/** @param {unknown} sessionId @returns {string[]} code paths this session edited */
+function editedBySession(sessionId) {
+  const file = sessionFile(sessionId);
+  if (file === null) return [];
+  try {
+    const paths = JSON.parse(readFileSync(file, 'utf8'));
+    return Array.isArray(paths) ? paths.filter((path) => typeof path === 'string') : [];
+  } catch {
+    return [];
+  }
+}
+
+/** @param {unknown} sessionId @param {string} path */
+function recordEdit(sessionId, path) {
+  const file = sessionFile(sessionId);
+  const paths = editedBySession(sessionId);
+  if (file === null || paths.includes(path)) return;
+  mkdirSync(SESSION_DIR, { recursive: true });
+  writeFileSync(file, JSON.stringify([...paths, path]));
+}
+
 /** @param {Record<string, any>} input */
 function preEdit(input) {
   const cwd = input.cwd ?? process.cwd();
@@ -61,6 +93,7 @@ function preEdit(input) {
   if (typeof filePath !== 'string') return 0;
 
   const path = relative(cwd, resolve(cwd, filePath)).replace(/\\/g, '/');
+  if (TEST_FILE.test(path) || isGuarded(path)) recordEdit(input.session_id, path);
   if (!isGuarded(path)) return 0;
 
   const changedTests = changedFiles(cwd).filter((file) => TEST_FILE.test(file));
@@ -93,7 +126,10 @@ function stop(input) {
   if (input.stop_hook_active) return 0;
 
   const cwd = input.cwd ?? process.cwd();
-  const codeChanged = changedFiles(cwd).some((file) => isGuarded(file) || TEST_FILE.test(file));
+  const edited = editedBySession(input.session_id);
+  const codeChanged = changedFiles(cwd).some(
+    (file) => (isGuarded(file) || TEST_FILE.test(file)) && edited.includes(file),
+  );
   if (!codeChanged) return 0;
 
   for (const command of ['npm run lint', 'npm run test']) {
