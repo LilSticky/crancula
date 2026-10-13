@@ -1,7 +1,8 @@
 # Status
 
 Where work stands right now. Updated in every change (constitution, principle VI).
-Plan: [ROADMAP.md](ROADMAP.md) · Decisions: [adr/](adr/README.md) · Language: [DICTIONARY.md](DICTIONARY.md)
+Plan: [ROADMAP.md](ROADMAP.md) · Decisions: [adr/](adr/README.md) · Language: [DICTIONARY.md](DICTIONARY.md) ·
+Issues: [GitHub](https://github.com/LilSticky/crancula/issues)
 
 ## Current slice
 
@@ -40,5 +41,7 @@ and kept as a snapshot on disk (ADR 3, ADR 4).
   not finished; not in v0.1.
 - The constitution and ADR 6 say `main`, but the repository's main branch is `master`. Rename it,
   or change the docs?
-- CI for cross-platform GitHub Releases: there is no remote/workflow yet. Needed before
-  releasing v0.1.
+- Release builds: CI (`.github/workflows/ci.yml`) runs lint, test and build on Linux, Windows
+  and macOS, and is red until the build and test items above are fixed. Packaging v0.1 as
+  GitHub Releases is not set up yet ([#11](https://github.com/LilSticky/crancula/issues/11)).
+- GitHub Project board: not created yet; it needs `gh auth refresh -s project,read:project`.
