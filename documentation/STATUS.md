@@ -33,8 +33,9 @@ when snapshots are written (ADR 3).
 
 ## Open questions
 
-- Snapshot location (Electron `userData` vs. a folder chosen by the user) and write timing
-  (debounced on change, on quit). Decide in `/speckit-plan` for "Describe my organ".
+- When snapshots are written (debounced on change, on quit). Decide in `/speckit-plan` for
+  "Describe my organ". Location is decided: Electron's `userData` folder (choosing a folder may
+  come later).
 - **Air Demand:** how "too many Pipes at once" depends on which Pipes play. Domain discovery is
   not finished; not in v0.1.
 - CI for cross-platform GitHub Releases: there is no remote/workflow yet. Needed before
