@@ -39,7 +39,7 @@ on its own.
 
 **Purpose**: Get a compiling baseline and a test setup that can actually run tests.
 
-- [ ] T001 Delete the prototype code that the plan replaces (research R10), and remove its
+- [X] T001 Delete the prototype code that the plan replaces (research R10), and remove its
   references from `src/app.routes.ts`, `src/app/core/core.module.ts`,
   `src/app/core/services/index.ts` and `src/app/shared/shared.module.ts`. Delete:
   - `api/model/` and the matching exports in `api/index.ts`;
@@ -49,7 +49,7 @@ on its own.
 
   Keep `src/app/features/shared/components/confirm-dialog/`. Then `npm run build` and
   `npm run lint` must pass. Commit as `refactor: remove prototype organ feature`.
-- [ ] T002 Add `vitest.node.config.ts` at the repository root:
+- [X] T002 Add `vitest.node.config.ts` at the repository root:
   - `environment: 'node'`;
   - `include: ['api/**/*.spec.ts', 'app/**/*.spec.ts']`.
 
@@ -60,11 +60,11 @@ on its own.
 
   Exclude `api/**/*.spec.ts` and `app/**/*.spec.ts` from `src/tsconfig.spec.json` and
   `tsconfig.serve.json` (ADR 7).
-- [ ] T003 [P] Write the i18n parity test in `src/app/i18n-parity.spec.ts`. It asserts that
+- [X] T003 [P] Write the i18n parity test in `src/app/i18n-parity.spec.ts`. It asserts that
   `src/assets/i18n/en.json` and `src/assets/i18n/de.json` have identical sets of nested keys,
   and fix any keys that differ. This gives `ng test` its first test, so the "No tests found" error
   goes away.
-- [ ] T004 [P] Add `app/preload.ts` to the `files` of `tsconfig.serve.json`. Remove
+- [X] T004 [P] Add `app/preload.ts` to the `files` of `tsconfig.serve.json`. Remove
   `experimentalDecorators` and `emitDecoratorMetadata`, which the main process doesn't need.
 
 **Checkpoint**: `npm run lint`, `npm run build` and `npm run test` all run. Each test command may
@@ -81,13 +81,13 @@ stories need them.
 
 ### Domain (`api/organ/`, Node Vitest)
 
-- [ ] T005 [P] Write the failing test `api/organ/midi-note-number.spec.ts`, then implement
+- [X] T005 [P] Write the failing test `api/organ/midi-note-number.spec.ts`, then implement
   `api/organ/midi-note-number.ts`:
   - **Type:** branded `MidiNoteNumber`, an "integer 0–127".
   - **Constructor:** `midiNoteNumber(n): MidiNoteNumber | undefined`.
   - **Note names:** `noteName(note)` uses sharps: 60 → `C4`, 61 → `C#4`, 0 → `C-1`,
     127 → `G9` (R7).
-- [ ] T006 [P] Write the failing test `api/organ/organ.spec.ts`, then implement
+- [X] T006 [P] Write the failing test `api/organ/organ.spec.ts`, then implement
   `api/organ/organ.ts`:
   - **Types:**
     - `OrganId`: branded non-empty UUID string.
@@ -102,7 +102,7 @@ stories need them.
 
   Valid `Organ`s must only be obtainable through `validateOrgan` or the snapshot parser. Use
   the brands and a non-exported constructor.
-- [ ] T007 [P] Write the failing test `api/organ/organ-draft.spec.ts`, then implement
+- [X] T007 [P] Write the failing test `api/organ/organ-draft.spec.ts`, then implement
   `api/organ/organ-draft.ts`.
   - **`OrganDraft`:**
     - numbers are `number | null`;
@@ -115,7 +115,7 @@ stories need them.
     - `addPipe` adds an empty Pipe as the last row.
     - `movePipe` throws `RangeError` if a row is out of bounds.
     - Rows are always contiguous.
-- [ ] T008 Write the failing test `api/organ/validate-organ.spec.ts`, then implement
+- [X] T008 Write the failing test `api/organ/validate-organ.spec.ts`, then implement
   `api/organ/validate-organ.ts` with `validateOrgan(draft): Result<Organ, OrganViolation[]>`.
   - It returns **all** violations, never stopping at the first one.
   - It trims the name and assigns a new `OrganId` with `crypto.randomUUID()` if `draft.id` is
@@ -133,7 +133,7 @@ stories need them.
     - `pipes-exceed-tape-width`: params `requiredWidth`, `availableWidth`
 
   Depends on T005 to T007.
-- [ ] T009 Write the failing test `api/organ/organ-library-snapshot.spec.ts`, then implement
+- [X] T009 Write the failing test `api/organ/organ-library-snapshot.spec.ts`, then implement
   `api/organ/organ-library-snapshot.ts` (contract):
   - `OrganLibrarySnapshot` is `{ version: 1, organs: OrganSnapshot[] }`.
   - `toSnapshot(organs)`.
@@ -144,7 +144,7 @@ stories need them.
     - any Organ that fails `validateOrgan`.
 
   Depends on T008.
-- [ ] T010 [P] Create `api/organ/crancula-api.ts` with `CranculaApi`, `OrganLibraryLoadResult`
+- [X] T010 [P] Create `api/organ/crancula-api.ts` with `CranculaApi`, `OrganLibraryLoadResult`
   (`loaded | empty | unreadable{backupPath, reason}`) and `OrganLibrarySaveResult`
   (`saved | rejected{reason} | failed{reason}`), exactly as in the contract. Re-export the organ
   domain and the API types from `api/index.ts`. Add a type-level spec in
@@ -152,7 +152,7 @@ stories need them.
 
 ### Electron main process and preload (`app/`, Node Vitest + e2e)
 
-- [ ] T011 Write the failing test `app/organ-library-file.spec.ts` (temporary directories), then
+- [X] T011 Write the failing test `app/organ-library-file.spec.ts` (temporary directories), then
   implement `app/organ-library-file.ts` with `createOrganLibraryFile(dir, { debounceMs })`, which
   offers `load()`, `save(snapshot)` and `flush()`:
   - **No file:** `load` returns `empty`.
@@ -170,11 +170,11 @@ stories need them.
     - `flush` awaits any pending write.
 
   Depends on T009 (ADR 8).
-- [ ] T012 Write the failing test `app/organ-library-ipc.spec.ts` (fake `ipcMain`), then implement
+- [X] T012 Write the failing test `app/organ-library-ipc.spec.ts` (fake `ipcMain`), then implement
   `app/organ-library-ipc.ts` with `registerOrganLibraryHandlers(ipcMain, file)`. It handles
   exactly the channels `organs:load` and `organs:save` (the allow-list constant
   `ORGAN_LIBRARY_CHANNELS`). Depends on T011.
-- [ ] T013 Write the failing e2e test `e2e/boundary.spec.ts`. In the window:
+- [X] T013 Write the failing e2e test `e2e/boundary.spec.ts`. In the window:
   - `typeof window.require === 'undefined'`;
   - `window.crancula.organs.load` is a function;
   - calling it with a fresh `CRANCULA_USER_DATA` returns `{ status: 'empty' }`.
@@ -195,7 +195,7 @@ stories need them.
 
 ### Renderer adapter (`src/app/`, ng test)
 
-- [ ] T014 [P] Write the failing test `src/app/core/crancula-api.token.spec.ts`, then implement
+- [X] T014 [P] Write the failing test `src/app/core/crancula-api.token.spec.ts`, then implement
   `src/app/core/crancula-api.token.ts`:
   - `CRANCULA_API: InjectionToken<CranculaApi>`, whose factory returns `window.crancula` if it
     exists and `createInMemoryCranculaApi()` otherwise;
@@ -203,7 +203,7 @@ stories need them.
     and the browser dev server.
 
   Declare `window.crancula` in `src/model/window.d.ts`.
-- [ ] T015 Write the failing test `src/app/features/organ/organ-library.store.spec.ts`, then
+- [X] T015 Write the failing test `src/app/features/organ/organ-library.store.spec.ts`, then
   implement `src/app/features/organ/organ-library.store.ts`:
   - It's a `signalStore` with `withEntities<Organ>()` that holds only valid Organs.
   - `load()` calls `CRANCULA_API.organs.load`, fills the entities, and sets a `loadProblem` signal

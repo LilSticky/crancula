@@ -9,30 +9,18 @@ Issues: [GitHub](https://github.com/LilSticky/crancula/issues)
 **Describe my organ**, on branch `001-describe-my-organ`. The spec is clarified:
 [spec.md](../specs/001-describe-my-organ/spec.md).
 
-The plan is done: [plan.md](../specs/001-describe-my-organ/plan.md). Snapshot writing is decided in
-ADR 8, and the Node test setup in ADR 7.
+Phases 1–2 of [tasks.md](../specs/001-describe-my-organ/tasks.md) are done (T001–T015): the Organ
+domain in `api/organ/`, the snapshot file and IPC in `app/`, the sandboxed preload, and the
+`OrganLibrary` store. There is no Organ UI yet. Angular specs run in jsdom (ADR 9).
 
-**Next concrete step:** start `/speckit-implement` with Phase 1 of [tasks.md](../specs/001-describe-my-organ/tasks.md) (T001: remove the prototype organ feature).
+**Next concrete step:** T016, the failing component test for the Organ list (User Story 1).
+The MVP goes up to T028; then stop so the user can review in Electron.
 
 ## Known broken / WIP
 
-- **The app does not build** (`npm run build`), a leftover from the prototype:
-  - `pipes-form.component.html` calls a non-existent `pipes()`;
-  - a required `model` is unbound (NG8118);
-  - `FormTouchedModel` typing errors (TS7053).
-
-  The prototype organ feature is a quarry (constitution, principle VII); the "Describe my organ"
-  slice replaces it rather than patching it.
-- **`npm run test` exits with an error** because there are no unit tests yet ("No tests found").
-  The first TDD cycle fixes this.
-- **`ElectronService` uses `window.require`**, which ADR 4 forbids; it is to be replaced by a
-  typed preload API.
-- **Organs persist to localStorage** via `withStorageSync`, which ADR 3 replaces with file
-  snapshots.
-- **`api/model` contradicts the dictionary:**
-  - `Hole` has no position and has an `opened` flag;
-  - `Tape` has no mm per Column;
-  - `Tape`/`Grid` are unexported sketches.
+- No known broken items. These are fixed on this branch and close when the slice merges into
+  `main`: #4 (build), #5 (no tests), #6 (`window.require`), #7 (localStorage), #8 (`api/model`).
+- The Organ feature has no UI until User Story 1 is done; the navbar shows only Home.
 
 ## Open questions
 
