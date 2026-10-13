@@ -23,7 +23,7 @@
     "electron:local": "npm run web:dev && electron .",
     "electron:build": "npm run web:prod && electron-builder build --publish=never",
     "test": "npm run test:node && ng test --watch=false",
-    "test:node": "vitest run -c vitest.node.config.ts",
+    "test:node": "tsc -p tsconfig.node.json && vitest run -c vitest.node.config.ts",
     "test:node:watch": "vitest -c vitest.node.config.ts",
     "test:watch": "ng test",
     "e2e": "npm run web:prod && playwright test -c e2e/playwright.config.ts e2e/",
