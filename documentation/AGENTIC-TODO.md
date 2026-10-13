@@ -9,9 +9,11 @@ Custom agents, skills and setup still to build for the spec-, test- and domain-d
 ## Agents (`.claude/agents/`)
 - [x] `domain-modeler` - checks specs and `api/model` against `documentation/DICTIONARY.md` (ubiquitous language, aggregates, no domain logic in components)
 - [x] `test-first` - writes only the failing Vitest/Playwright test for a task in `tasks.md` and confirms it fails (TDD red phase)
-- [ ] `angular-reviewer` - signals, signal forms, standalone/OnPush/zoneless, strict typing, Material-only styling, en/de translation parity
-- [ ] `electron-reviewer` - `app/main.js`, preload and IPC: context isolation, channel allow-list, payload validation against `@api` types, CSP
-- [ ] `spec-auditor` - after `/speckit-implement`, compares code and tests against `spec.md` acceptance criteria and reports gaps
+- [x] `angular-reviewer` - signals, signal forms, standalone/OnPush/zoneless, strict typing, Material-only styling, en/de translation parity
+- [x] `electron-reviewer` - `app/main.js`, preload and IPC: context isolation, channel allow-list, payload validation against `@api` types, CSP
+- [x] `spec-auditor` - after `/speckit-implement`, compares code and tests against `spec.md` acceptance criteria and reports gaps
+- [x] `implementer` - TDD green and refactor phase for one task (sonnet)
+- [x] `housekeeper` - STATUS/ROADMAP upkeep, GitHub Issues and board, i18n parity (haiku)
 
 ## Skills (`.claude/skills/`)
 - [ ] `i18n-parity` - check and fix en/de translation keys
