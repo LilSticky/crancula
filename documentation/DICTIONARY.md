@@ -73,7 +73,7 @@
 
 # Minimum Hole Length
 * Shortest Hole in mm the Organ can play reliably; a hard physical limit
-* Tied to the hole diameter
+* Equals the hole diameter of the Tape Bed; not set separately
 * Together with the Crank speed it gives the shortest note duration
 * Limits a Hole's length, not where it starts: a Hole's start can be shifted by less than this length
 
