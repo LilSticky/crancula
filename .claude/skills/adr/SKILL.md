@@ -39,7 +39,7 @@ Write an ADR when a decision is hard to reverse or would puzzle someone resuming
    ```
 
    Use terms from `documentation/DICTIONARY.md`. Status is `Proposed` if the user still has to confirm it, otherwise `Accepted`.
-3. Append a row to the index table: `| N | [Title](NNNN-kebab-title.md) | Status |`.
+3. Append a row to the index table: `| N | [Title](NNNN-kebab-title.md) | Status |`. Mirror it in the ADR table in `AGENTS.md` (links prefixed with `documentation/adr/`).
 4. If the decision changes the constitution, also bump its version (MAJOR/MINOR/PATCH) and reference the ADR.
 5. Commit the ADR together with the change it explains (one small commit, e.g. `docs(adr): record <decision>`), or alone if it's a pure decision.
 
@@ -49,7 +49,7 @@ Never edit the Context/Decision of an accepted ADR. Instead:
 
 1. Create the new ADR as above; in its Context, link the ADR it replaces.
 2. In the old ADR, change only the Status to `Superseded by [N. Title](NNNN-….md)` (or `Deprecated` with a one-line reason).
-3. Update both rows in the index.
+3. Update both rows in the index and in `AGENTS.md`.
 
 Typos and broken links may be fixed in place.
 

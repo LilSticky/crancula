@@ -1,60 +1,108 @@
 # Crancula Agent Instructions
 
-Domain language should be used and updated if unclear. Find it in `documentation/DICTIONARY.md`.
+Crancula is a hobby desktop app (Electron + Angular 21) that turns music into a punched Tape for the
+user's own barrel Organ, cut by a Plotter. v0.1: describe an Organ, bring a MIDI Song onto a Tape,
+export the Tape as SVG for a vinyl cutter.
 
-All code should be typed as strictly as possible.
+The project has stalled several times from lost context. Everything you need to resume lives in the
+repository. Keep it that way.
 
-## Project Overview
-Crancula is an Electron-based Angular application for composing and converting punched tape music scores. It uses Angular 21 with TypeScript and Electron for desktop functionality, with a focus on music score management and conversion between formats.
+## Start here
 
-The project is intended to explore Electron and new features of Angular.
+Read these in order before doing anything:
 
-## Key Commands
-- `npm start` - Start development server (Angular + Electron)
-- `npm run electron:serve` - Start Electron app with Angular development server
-- `npm run electron:local` - Build web assets and run Electron app locally
-- `npm run electron:build` - Build Electron application for distribution
-- `npm run test` - Run unit tests
-- `npm run test:watch` - Run unit tests in watch mode
-- `npm run e2e` - Run end-to-end tests
-- `npm run lint` - Run linting
-- `npm run build` - Build web application
+1. [`documentation/STATUS.md`](documentation/STATUS.md): the current slice, the **one next step**,
+   known broken/WIP items, and open questions.
+2. [`documentation/ROADMAP.md`](documentation/ROADMAP.md): the ordered slices and their state.
+3. [`.specify/memory/constitution.md`](.specify/memory/constitution.md): binding principles and
+   the Definition of Done. It overrides this file if the two ever disagree.
+4. [`documentation/DICTIONARY.md`](documentation/DICTIONARY.md): the ubiquitous language.
+5. The ADRs below, and `specs/<slice>/` for the slice you are working on.
 
-## Architecture
-- **Frontend**: Angular 21 application with TypeScript and SCSS
-- **Backend**: Electron-based desktop application with Node.js integration
-- **Build System**: Uses Angular CLI with custom webpack configuration
-- **Testing**: Unit tests with Vitest, E2E tests with Playwright
-- **Translation**: Uses @ngx-translate for internationalization
+## Documentation sources
 
-## Important Details
-- The application uses Angular's application builder (`@angular/build:application`) rather than custom webpack builders for standard builds
-- Main Electron process in `app/main.js`
-- Angular routing configured in `src/app.routes.ts`
-- Application entry point is `src/main.ts`
-- The app has a main Electron window that loads the Angular app (`src/index.html`)
-- Uses the `@api/*` path mapping that includes `api/index.ts` in the app's package.json
-- Environment configurations in `src/environments/` with dev/prod variants
-- When using translation keys, always make sure the entry exist in both the English and German translation file
-- TypeScript: Keep to Angular best practices and type as strictly as possible
-- Styling: Use Angular Material (`@angular/material`) and only use minimal customizations in SCSS
+| Source | Purpose | Update when |
+|--------|---------|-------------|
+| `documentation/STATUS.md` | Where work stands right now | Every change |
+| `documentation/ROADMAP.md` | Slices, ordered by domain capability | A slice changes state or scope |
+| `documentation/DICTIONARY.md` | Domain terms | A term is added or clarified (only with user approval) |
+| `documentation/adr/` | Architecture decisions (Nygard) | A significant decision is made (`adr` skill) |
+| `.specify/memory/constitution.md` | Principles, Definition of Done, governance | Only through an ADR plus a version bump |
+| `specs/NNN-slice/` | Spec Kit artifacts per slice (spec, plan, tasks) | During the slice |
+| `documentation/AGENTIC-TODO.md` | Agent tooling still to build | Tooling is added |
 
-## Development Workflow
-- Run `npm start` to start development server
-- For development with live reload: `npm run electron:serve`
-- For local testing without building: `npm run electron:local`
-- Tests run on both components and e2e flows
-- Linting runs before tests and build
+## Architecture Decision Records
 
-## Package Structure
-- `src/` - Angular application code
-- `app/` - Electron main and renderer processes
-- `api/` - Shared data interfaces
-- `e2e/` - End-to-end tests with Playwright
-- `dist/` - Build output directory
+Index of [`documentation/adr/`](documentation/adr/README.md). Keep this table in sync with the ADR
+index; the `adr` skill does both.
 
-## Testing Notes
-- Unit tests are configured to use Vitest with browser mode
-- E2E tests are handled by Playwright
-- The application uses a test configuration in angular.json for testing
-- Coverage reports generated for unit tests
+| # | Title | Status |
+|---|-------|--------|
+| 1 | [Record architecture decisions](documentation/adr/0001-record-architecture-decisions.md) | Accepted |
+| 2 | [Framework-free domain with adapters](documentation/adr/0002-framework-free-domain.md) | Accepted |
+| 3 | [In-memory state as source of truth, snapshots on disk](documentation/adr/0003-memory-first-snapshots.md) | Accepted |
+| 4 | [Strict Electron process boundary](documentation/adr/0004-strict-electron-boundary.md) | Accepted |
+| 5 | [MIDI in and SVG out first](documentation/adr/0005-midi-in-svg-out-first.md) | Accepted |
+| 6 | [Autonomous slices on branches, squash-merged](documentation/adr/0006-autonomous-slices-squash-merge.md) | Accepted |
+
+## Workflow
+
+- **Slices by domain, not technology.** Name a slice after what it lets the user do ("Describe my
+  organ"), never after a layer or format ("SVG export", "persistence"). Formats, persistence, IPC and
+  UI are adapters inside a slice.
+- **Spec Kit per slice**, on branch `NNN-slice-name` from `main`: `/speckit-specify` →
+  `/speckit-clarify` → `/speckit-plan` → `/speckit-tasks` → `/speckit-implement`.
+- **TDD for all code**: domain, Angular UI, Electron main/preload/IPC, and bug fixes. Follow the
+  `tdd` skill; use the `test-first` agent for the red phase. The TDD guard hook blocks edits to
+  `src/`, `app/` and `api/` until a `*.spec.ts` or `e2e/` file has changed.
+- **Domain discovery** and dictionary reviews go to the `domain-modeler` agent. It proposes; the user
+  approves before `DICTIONARY.md` changes.
+- **Commits**: small, one concern each, conventional-commit style (`feat:`, `fix:`, `docs:`,
+  `chore:`, …, with an optional scope). Never bundle unrelated changes; split even within one
+  file if needed.
+- **Merging**: when the Definition of Done gate is green, squash-merge the branch into `main`
+  yourself. The gate: runs in Electron; tests and lint green; STATUS/ROADMAP/DICTIONARY/ADRs
+  updated; committed. If you merge with something red, say so explicitly and record it in STATUS.
+- **Talking to the user**: work autonomously. Ask only about domain questions, dictionary changes
+  and scope changes. Always ask through interactive prompts, never only in prose, and keep chat
+  output short. Detail belongs in files.
+- The existing prototype code is a **quarry**: reuse what fits, replace what doesn't. Don't patch
+  around it.
+
+## Code conventions
+
+- **Language**: use dictionary terms in code, tests, UI texts and commits (Organ, Pipe, Tape, Hole,
+  Column, Tape Bed, …). If a term is missing, don't invent one in code; ask.
+- **Domain** (ADR 2): pure TypeScript per slice, with no Angular, Electron or Node imports. Shared
+  domain types are exposed via `@api/*` (`api/`). Make invalid states unrepresentable.
+- **Typing**: as strict as possible. No `any`, no non-null assertions to silence the compiler.
+- **Angular**: standalone components, signals and signal forms, OnPush; follow the Angular MCP
+  `get_best_practices`. Angular Material with minimal SCSS.
+- **i18n**: @ngx-translate. Every key must exist in both `src/assets/i18n/en.json` and `de.json`.
+- **Electron** (ADR 4): `contextIsolation` on, `nodeIntegration` off; the renderer talks to the main
+  process only via a typed preload API with an allow-list of channels. Payloads are validated
+  against `@api` types. No `window.require`.
+- **State** (ADR 3): in-memory state is the truth. Snapshots are versioned files in Electron's
+  `userData` folder, written by the main process and loaded on startup.
+
+## Layout
+
+- `api/`: shared domain types and models (`@api/*`)
+- `src/`: Angular app; routes in `src/app.routes.ts`, features in `src/app/features/`
+  (`@shared/*` → `src/app/features/shared/*`)
+- `app/`: Electron main process (`app/main.ts`) and preload
+- `e2e/`: Playwright tests
+- `documentation/`, `specs/`, `.specify/`: docs and Spec Kit
+- `.claude/agents/`, `.claude/skills/`, `.claude/hooks/`: agent tooling
+
+## Commands
+
+- `npm start`: Angular dev server plus Electron with live reload
+- `npm run electron:local`: build the web assets and run Electron locally
+- `npm run electron:build`: package the app for distribution
+- `npm run build`: build the web app (also compiles `app/`)
+- `npm run test` / `npm run test:watch`: Vitest unit and component tests
+- `npm run e2e`: Playwright end-to-end tests (production build first)
+- `npm run lint`: ESLint
+
+Development happens on Windows. The Bash tool is Git Bash and the primary shell is PowerShell.
