@@ -5,11 +5,11 @@ Plan: [ROADMAP.md](ROADMAP.md) · Decisions: [adr/](adr/README.md) · Language: 
 
 ## Current slice
 
-**Describe my organ** (next up; Foundation is done)
+**Describe my organ**, on branch `001-describe-my-organ`. The spec is clarified:
+[spec.md](../specs/001-describe-my-organ/spec.md).
 
-**Next concrete step:** run `/speckit-specify` for "Describe my organ": define an Organ with its
-Pipes (MIDI note numbers), Tape Bed, Minimum Hole Length and Minimum Gap, editable in the app
-and kept as a snapshot on disk (ADR 3, ADR 4).
+**Next concrete step:** run `/speckit-plan` for this slice. It decides the snapshot location and
+when snapshots are written (ADR 3).
 
 ## Known broken / WIP
 
@@ -33,12 +33,9 @@ and kept as a snapshot on disk (ADR 3, ADR 4).
 
 ## Open questions
 
-- Is Minimum Hole Length simply the hole diameter of the Tape Bed? If so, drop one of the two.
 - Snapshot location (Electron `userData` vs. a folder chosen by the user) and write timing
-  (debounced on change, on quit). Decide in "Describe my organ".
+  (debounced on change, on quit). Decide in `/speckit-plan` for "Describe my organ".
 - **Air Demand:** how "too many Pipes at once" depends on which Pipes play. Domain discovery is
   not finished; not in v0.1.
-- The constitution and ADR 6 say `main`, but the repository's main branch is `master`. Rename it,
-  or change the docs?
 - CI for cross-platform GitHub Releases: there is no remote/workflow yet. Needed before
   releasing v0.1.
