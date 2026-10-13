@@ -21,7 +21,8 @@ Release v0.1 as cross-platform GitHub Releases built in CI, once all of the abov
 
 - **GitHub repository**: [LilSticky/crancula](https://github.com/LilSticky/crancula) (private).
   Tasks, bugs and open questions are Issues; CI runs lint, test and build on every push to `main`
-  and every pull request. Still to do: a Project board and the release workflow
+  and every pull request. Progress is tracked on the [Project board](https://github.com/users/LilSticky/projects/1).
+  Still to do: the release workflow
   ([#11](https://github.com/LilSticky/crancula/issues/11)).
 - **Later: design guide.** Create a design guide and unified styling with the frontend-design
   skill, on top of Angular Material.

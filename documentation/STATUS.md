@@ -42,5 +42,3 @@ and kept as a snapshot on disk (ADR 3, ADR 4).
 - Release builds: CI (`.github/workflows/ci.yml`) runs lint, test and build on Linux, Windows
   and macOS, and is red until the build and test items above are fixed. Packaging v0.1 as
   GitHub Releases is not set up yet ([#11](https://github.com/LilSticky/crancula/issues/11)).
-- GitHub Project board [Crancula](https://github.com/users/LilSticky/projects/1) exists but is
-  not yet linked to the repository and has no Issues on it.
