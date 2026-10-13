@@ -3,6 +3,7 @@ export {midiNoteNumber, noteName, type MidiNoteNumber} from './organ/midi-note-n
 export {
   millimetres,
   minimumHoleLength,
+  newOrganId,
   organId,
   requiredTapeWidth,
   type Millimetres,
