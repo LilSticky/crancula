@@ -11,4 +11,5 @@ with a new one and update both statuses here.
 | 3 | [In-memory state as source of truth, snapshots on disk](0003-memory-first-snapshots.md) | Accepted |
 | 4 | [Strict Electron process boundary](0004-strict-electron-boundary.md) | Accepted |
 | 5 | [MIDI in and SVG out first](0005-midi-in-svg-out-first.md) | Accepted |
-| 6 | [Autonomous slices on branches, squash-merged](0006-autonomous-slices-squash-merge.md) | Accepted |
+| 6 | [Autonomous slices on branches, squash-merged](0006-autonomous-slices-squash-merge.md) | Superseded by 10 |
+| 10 | [Merge through pull requests that reference issues](0010-merge-through-pull-requests.md) | Accepted |

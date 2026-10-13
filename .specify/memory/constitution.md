@@ -99,8 +99,9 @@ Rationale: frequent, visible progress keeps momentum.
   1. It runs end to end in the Electron app.
   2. Unit, component and e2e tests and lint are green.
   3. STATUS, ROADMAP, DICTIONARY and any affected ADRs are updated.
-  4. It is committed on the slice branch and merged into `main`.
-- When the gate is green, the agent merges the slice into `main` itself. The user follows along
+  4. It is committed on the slice branch and merged into `main` through a pull request that
+     references its issues (ADR 10).
+- When the gate is green and CI passes, the agent squash-merges the pull request itself. The user follows along
   via `documentation/STATUS.md`.
 
 ## Governance
@@ -113,4 +114,4 @@ Rationale: frequent, visible progress keeps momentum.
 - Every spec, plan and implementation MUST be checked against these principles (the Constitution
   Check in `/speckit-plan`); any deviation MUST be justified in the plan or rejected.
 
-**Version**: 1.0.0 | **Ratified**: 2026-10-13 | **Last Amended**: 2026-10-13
+**Version**: 1.1.0 | **Ratified**: 2026-10-13 | **Last Amended**: 2026-10-14
