@@ -26,7 +26,8 @@
     "test:watch": "ng test",
     "e2e": "npm run web:prod && playwright test -c e2e/playwright.config.ts e2e/",
     "e2e:show-trace": "playwright show-trace e2e/tracing/trace.zip",
-    "lint": "ng lint"
+    "lint": "ng lint",
+    "i18n:check": "node scripts/check-i18n.mjs"
   },
   "dependencies": {
     "@angular-architects/ngrx-toolkit": "21.0.1",
