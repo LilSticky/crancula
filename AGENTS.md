@@ -9,15 +9,16 @@ repository. Keep it that way.
 
 ## Start here
 
-Read these in order before doing anything:
+Read [`documentation/STATUS.md`](documentation/STATUS.md) first: the current slice, the **one next
+step**, known broken/WIP items, and open questions. Then read only what that step needs:
 
-1. [`documentation/STATUS.md`](documentation/STATUS.md): the current slice, the **one next step**,
-   known broken/WIP items, and open questions.
-2. [`documentation/ROADMAP.md`](documentation/ROADMAP.md): the ordered slices and their state.
-3. [`.specify/memory/constitution.md`](.specify/memory/constitution.md): binding principles and
-   the Definition of Done. It overrides this file if the two ever disagree.
-4. [`documentation/DICTIONARY.md`](documentation/DICTIONARY.md): the ubiquitous language.
-5. The ADRs below, and `specs/<slice>/` for the slice you are working on.
+| When you… | Read |
+|-----------|------|
+| work on a slice | `specs/<slice>/` (spec, plan, tasks) |
+| name anything in code, tests, UI or docs | [`documentation/DICTIONARY.md`](documentation/DICTIONARY.md) |
+| make or question an architecture decision | the [ADR index](documentation/adr/README.md), then the ADRs it points to |
+| plan, check the Definition of Done, or merge | [`.specify/memory/constitution.md`](.specify/memory/constitution.md); it overrides this file if the two disagree |
+| change slice order or scope | [`documentation/ROADMAP.md`](documentation/ROADMAP.md) |
 
 ## Documentation sources
 
@@ -31,20 +32,6 @@ Read these in order before doing anything:
 | `specs/NNN-slice/` | Spec Kit artifacts per slice (spec, plan, tasks) | During the slice |
 | `documentation/AGENTIC-TODO.md` | Agent tooling still to build | Tooling is added |
 | [GitHub Issues](https://github.com/LilSticky/crancula/issues) | Bugs, slices, open questions (`gh issue`) | A bug or question is found or resolved |
-
-## Architecture Decision Records
-
-Index of [`documentation/adr/`](documentation/adr/README.md). Keep this table in sync with the ADR
-index; the `adr` skill does both.
-
-| # | Title | Status |
-|---|-------|--------|
-| 1 | [Record architecture decisions](documentation/adr/0001-record-architecture-decisions.md) | Accepted |
-| 2 | [Framework-free domain with adapters](documentation/adr/0002-framework-free-domain.md) | Accepted |
-| 3 | [In-memory state as source of truth, snapshots on disk](documentation/adr/0003-memory-first-snapshots.md) | Accepted |
-| 4 | [Strict Electron process boundary](documentation/adr/0004-strict-electron-boundary.md) | Accepted |
-| 5 | [MIDI in and SVG out first](documentation/adr/0005-midi-in-svg-out-first.md) | Accepted |
-| 6 | [Autonomous slices on branches, squash-merged](documentation/adr/0006-autonomous-slices-squash-merge.md) | Accepted |
 
 ## Workflow
 
