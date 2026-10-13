@@ -44,6 +44,8 @@ index; the `adr` skill does both.
 | 4 | [Strict Electron process boundary](documentation/adr/0004-strict-electron-boundary.md) | Accepted |
 | 5 | [MIDI in and SVG out first](documentation/adr/0005-midi-in-svg-out-first.md) | Accepted |
 | 6 | [Autonomous slices on branches, squash-merged](documentation/adr/0006-autonomous-slices-squash-merge.md) | Accepted |
+| 7 | [Node Vitest for the domain and the main process](documentation/adr/0007-node-vitest-for-domain-and-main.md) | Accepted |
+| 8 | [Snapshot write strategy](documentation/adr/0008-snapshot-write-strategy.md) | Accepted |
 
 ## Workflow
 

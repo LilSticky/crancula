@@ -12,3 +12,5 @@ with a new one and update both statuses here.
 | 4 | [Strict Electron process boundary](0004-strict-electron-boundary.md) | Accepted |
 | 5 | [MIDI in and SVG out first](0005-midi-in-svg-out-first.md) | Accepted |
 | 6 | [Autonomous slices on branches, squash-merged](0006-autonomous-slices-squash-merge.md) | Accepted |
+| 7 | [Node Vitest for the domain and the main process](0007-node-vitest-for-domain-and-main.md) | Accepted |
+| 8 | [Snapshot write strategy](0008-snapshot-write-strategy.md) | Accepted |
