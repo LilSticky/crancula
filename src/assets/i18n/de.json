@@ -86,6 +86,11 @@
       "MUST_NOT_BE_NEGATIVE": "Darf nicht negativ sein.",
       "ROW_SPACING_BELOW_HOLE_DIAMETER": "Muss mindestens so groß wie der Lochdurchmesser ({{holeDiameter}} mm) sein, sonst überlappen benachbarte Löcher.",
       "PIPES_EXCEED_TAPE_WIDTH": "Die Pfeifen brauchen {{requiredWidth}} mm, das Band ist aber nur {{availableWidth}} mm breit."
+    },
+    "STORAGE": {
+      "LOAD_PROBLEM": "Deine Drehorgeln konnten nicht geladen werden. Die Datei wurde unter {{backupPath}} aufbewahrt.",
+      "SAVE_PROBLEM": "Deine Änderungen konnten nicht gespeichert werden: {{reason}}",
+      "DISMISS": "OK"
     }
   }
 }

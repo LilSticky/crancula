@@ -86,6 +86,11 @@
       "MUST_NOT_BE_NEGATIVE": "Must not be negative.",
       "ROW_SPACING_BELOW_HOLE_DIAMETER": "Must be at least the hole diameter ({{holeDiameter}} mm), or neighbouring holes overlap.",
       "PIPES_EXCEED_TAPE_WIDTH": "The Pipes need {{requiredWidth}} mm, but the tape is only {{availableWidth}} mm wide."
+    },
+    "STORAGE": {
+      "LOAD_PROBLEM": "Your Organs couldn't be loaded. The file was kept at {{backupPath}}.",
+      "SAVE_PROBLEM": "Your changes couldn't be saved: {{reason}}",
+      "DISMISS": "OK"
     }
   }
 }
