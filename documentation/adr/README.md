@@ -14,3 +14,4 @@ with a new one and update both statuses here.
 | 6 | [Autonomous slices on branches, squash-merged](0006-autonomous-slices-squash-merge.md) | Accepted |
 | 7 | [Node Vitest for the domain and the main process](0007-node-vitest-for-domain-and-main.md) | Accepted |
 | 8 | [Snapshot write strategy](0008-snapshot-write-strategy.md) | Accepted |
+| 9 | [Angular specs run in jsdom](0009-angular-specs-in-jsdom.md) | Accepted |

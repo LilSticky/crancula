@@ -47,6 +47,7 @@ index; the `adr` skill does both.
 | 6 | [Autonomous slices on branches, squash-merged](documentation/adr/0006-autonomous-slices-squash-merge.md) | Accepted |
 | 7 | [Node Vitest for the domain and the main process](documentation/adr/0007-node-vitest-for-domain-and-main.md) | Accepted |
 | 8 | [Snapshot write strategy](documentation/adr/0008-snapshot-write-strategy.md) | Accepted |
+| 9 | [Angular specs run in jsdom](documentation/adr/0009-angular-specs-in-jsdom.md) | Accepted |
 
 ## Workflow
 
