@@ -4,16 +4,26 @@
 
 **Created**: 2026-10-13
 
-**Status**: Draft
+**Status**: Clarified
 
 **Input**: User description: "Describe my organ: as the owner of a barrel organ I can define an Organ in Crancula so that Tapes can later be made for it. An Organ has a name, an ordered set of Pipes (each identified by the MIDI note number of the note it plays, shown as a note name like C4; one Pipe per row of the Tape), a Tape Bed (tape width, border, hole diameter, spacing between rows, all in mm), and the hard limits Minimum Hole Length and Minimum Gap (mm). I can create, view, edit (including adding, removing and reordering Pipes) and delete Organs. Invalid Organs cannot be saved (e.g. duplicate Pipes, Pipes that don't fit the Tape Bed width, non-positive measurements). Organs survive an app restart: the in-memory state is the source of truth and is kept as a snapshot on disk that is loaded on startup (ADR 3) through the strict Electron boundary (ADR 4). UI in English and German. Out of scope: Air Demand, Tapes, Songs."
+
+## Clarifications
+
+### Session 2026-10-13
+
+- Q: How do Minimum Hole Length and hole diameter relate? → A: Minimum Hole Length equals the
+  Tape Bed's hole diameter and is not entered separately (FR-010).
+- Q: How are changes to an Organ saved? → A: Automatically whenever the Organ is valid, with no
+  Save button (FR-012).
+- Q: Are the fit rules right (FR-008, FR-009)? → A: Yes, both.
 
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Define my organ (Priority: P1)
 
 As the owner of a barrel organ, I create an Organ in Crancula: I give it a name, enter the
-measurements of its Tape Bed, its Minimum Hole Length and Minimum Gap, and add one Pipe per row
+measurements of its Tape Bed and its Minimum Gap, and add one Pipe per row
 in the order the rows run across the Tape, each with the note it plays. Crancula then knows
 everything about my organ that a Tape needs.
 
@@ -21,61 +31,63 @@ everything about my organ that a Tape needs.
 Organ. Without it nothing else can be built or tried.
 
 **Independent Test**: Start the app with no Organs, create an Organ with a name, Tape Bed
-measurements, limits and a few Pipes, save it, and see it in the Organ list with its details.
+measurements, Minimum Gap and a few Pipes, and see it in the Organ list with its details.
 
 **Acceptance Scenarios**:
 
 1. **Given** no Organs exist, **When** I create an Organ named "Street organ" with valid Tape Bed
-   measurements, limits and 31 Pipes, and save, **Then** it appears in the Organ list.
+   measurements, Minimum Gap and 31 Pipes, **Then** it is stored automatically and appears in the
+   Organ list.
 2. **Given** I am adding a Pipe, **When** I enter MIDI note number 60, **Then** the Pipe is shown
    as "C4".
 3. **Given** I am creating an Organ, **When** I add Pipes, **Then** each new Pipe is added as the
    last row, and the row order is shown.
-4. **Given** I am creating an Organ, **When** I leave the form without saving after confirming that
-   I want to discard my changes, **Then** no Organ is created.
+4. **Given** I am creating an Organ that is not valid yet, **When** I leave the form and confirm
+   that my unfinished input will be lost, **Then** no Organ is created.
 
 ---
 
-### User Story 2 - Only valid Organs are saved (Priority: P1)
+### User Story 2 - Only valid Organs are stored (Priority: P1)
 
-Crancula prevents me from saving an Organ that couldn't work physically, and tells me what's
-wrong, in my language, next to the value that causes the problem.
+Crancula never stores an Organ that couldn't work physically, and tells me what's wrong, in my
+language, next to the value that causes the problem.
 
 **Why this priority**: Later slices rely on the Organ being consistent (for example, every row of
 a Tape must fit on the physical tape). Catching mistakes here keeps them from showing up later as
 an unusable punched tape.
 
-**Independent Test**: Try to save Organs that each break exactly one rule and check that saving is
-refused with a message naming the problem; then fix the value and save successfully.
+**Independent Test**: Enter Organs that each break exactly one rule and check that nothing is
+stored and a message names the problem; then fix the value and see it stored.
 
 **Acceptance Scenarios**:
 
-1. **Given** an Organ with two Pipes that have the same MIDI note number, **When** I try to save,
-   **Then** saving is refused and both Pipes are marked as duplicates.
-2. **Given** an Organ whose Pipes don't fit across its tape width (see FR-008), **When** I try to
-   save, **Then** saving is refused with a message stating how much width is needed and how
-   much is available.
-3. **Given** an Organ with a measurement of 0 or less, **When** I try to save, **Then** saving is
-   refused and that field is marked.
-4. **Given** an Organ without a name or without any Pipes, **When** I try to save, **Then** saving
-   is refused and the missing information is marked.
+1. **Given** an Organ with two Pipes that have the same MIDI note number, **Then** it is not
+   stored and both Pipes are marked as duplicates.
+2. **Given** an Organ whose Pipes don't fit across its tape width (see FR-008), **Then** it is not
+   stored and a message states how much width is needed and how much is available.
+3. **Given** an Organ with a measurement of 0 or less, **Then** it is not stored and that field is
+   marked.
+4. **Given** an Organ without a name or without any Pipes, **Then** it is not stored and the
+   missing information is marked.
+5. **Given** a stored Organ that I edit into an invalid state, **When** I fix the problem,
+   **Then** the corrected Organ is stored; the invalid intermediate state never was.
 
 ---
 
 ### User Story 3 - My organs are still there after a restart (Priority: P1)
 
-I close Crancula and open it again later; all my Organs are still there, exactly as I saved them.
+I close Crancula and open it again later; all my Organs are still there, exactly as last stored.
 
 **Why this priority**: Without this, defining an Organ is pointless for a desktop tool used across
 many sessions.
 
-**Independent Test**: Create and save an Organ, quit the app, start it again, and compare the
-Organ's details to what was saved.
+**Independent Test**: Create an Organ, quit the app, start it again, and compare the Organ's
+details to what was entered.
 
 **Acceptance Scenarios**:
 
-1. **Given** I saved an Organ, **When** I restart the app, **Then** the Organ with all its values
-   and Pipe order is shown unchanged.
+1. **Given** I created a valid Organ, **When** I restart the app, **Then** the Organ with all its
+   values and Pipe order is shown unchanged.
 2. **Given** I deleted an Organ, **When** I restart the app, **Then** it is gone.
 3. **Given** the stored Organs cannot be read on startup (damaged or from an unknown newer
    version), **When** the app starts, **Then** I'm told that my Organs couldn't be loaded, the
@@ -91,19 +103,19 @@ measurements, add, remove and reorder Pipes, or delete the whole Organ.
 **Why this priority**: Measurements get corrected over time, but creating a new Organ is an
 acceptable workaround at first.
 
-**Independent Test**: Open a saved Organ, move a Pipe from the last row to the first, remove one
-Pipe, change the tape width, save, and verify the list and details reflect it; then delete the
-Organ.
+**Independent Test**: Open a stored Organ, move a Pipe from the last row to the first, remove one
+Pipe, change the tape width, and verify the list and details reflect it, also after a restart;
+then delete the Organ.
 
 **Acceptance Scenarios**:
 
-1. **Given** a saved Organ, **When** I move a Pipe to another row and save, **Then** the new row
-   order is kept.
-2. **Given** a saved Organ, **When** I remove a Pipe and save, **Then** the remaining Pipes keep
-   their relative order with no gaps in row numbers.
-3. **Given** I edited an Organ without saving, **When** I try to leave, **Then** I'm asked whether
-   to discard my changes.
-4. **Given** a saved Organ, **When** I delete it and confirm, **Then** it is removed from the list.
+1. **Given** a stored Organ, **When** I move a Pipe to another row, **Then** the new row order is
+   stored.
+2. **Given** a stored Organ, **When** I remove a Pipe, **Then** the remaining Pipes keep their
+   relative order with no gaps in row numbers.
+3. **Given** I edited a stored Organ into an invalid state, **When** I leave it, **Then** I'm
+   told that my invalid changes will be lost, and on confirming, the last valid version remains.
+4. **Given** a stored Organ, **When** I delete it and confirm, **Then** it is removed from the list.
    **When** I cancel instead, **Then** nothing changes.
 
 ---
@@ -131,18 +143,20 @@ untranslated.
 - Two Organs may have the same name; they are still distinct Organs. Each is identified internally,
   not by its name.
 - Moving the first Pipe up or the last Pipe down is not possible.
-- Removing all Pipes leaves an unsaveable Organ (see Story 2).
+- Removing all Pipes makes the Organ invalid, so it isn't stored (see Story 2).
 - Measurements accept decimals (e.g. 0.5 mm).
-- Very large Organs (e.g. 100+ Pipes) can still be edited and saved.
-- If saving to disk fails (e.g. disk full, no permission), I'm told so. The Organ is not reported
-  as saved, and my input stays in the form so that nothing is lost.
+- Very large Organs (e.g. 100+ Pipes) can still be edited and stored.
+- Typing quickly produces many valid intermediate states; storing them must not slow down editing
+  or lose the last change.
+- If writing to disk fails (e.g. disk full, no permission), I'm told so, and my input stays in the
+  app so that nothing is lost.
 
 ## Requirements *(mandatory)*
 
 ### Functional Requirements
 
-- **FR-001**: Users MUST be able to create an Organ with a name, a Tape Bed, a Minimum Hole Length,
-  a Minimum Gap and an ordered list of Pipes.
+- **FR-001**: Users MUST be able to create an Organ with a name, a Tape Bed, a Minimum Gap and an
+  ordered list of Pipes.
 - **FR-002**: The Tape Bed MUST consist of tape width, border, hole diameter and spacing between
   rows, all in millimetres.
 - **FR-003**: Each Pipe MUST be identified by a MIDI note number (0–127) and MUST be displayed with
@@ -151,31 +165,28 @@ untranslated.
   add a Pipe (as the last row), remove a Pipe, and move a Pipe to another row.
 - **FR-005**: Users MUST be able to see a list of all Organs and open any Organ to view and edit it.
 - **FR-006**: Users MUST be able to delete an Organ after confirming the deletion.
-- **FR-007**: The system MUST refuse to save an Organ that has:
+- **FR-007**: The system MUST NOT store an Organ that has:
   - no name;
   - no Pipes;
   - two Pipes with the same MIDI note number;
-  - a measurement (tape width, hole diameter, spacing between rows, Minimum Hole Length,
-    Minimum Gap) that is 0 or less;
+  - a measurement (tape width, hole diameter, spacing between rows, Minimum Gap) that is 0 or less;
   - a negative border.
-- **FR-008**: The system MUST refuse to save an Organ whose Pipes don't fit across the tape width,
+- **FR-008**: The system MUST NOT store an Organ whose Pipes don't fit across the tape width,
   where the required width is
   `2 × border + (number of Pipes − 1) × spacing between rows + hole diameter`.
-- **FR-009**: The system MUST refuse to save an Organ whose spacing between rows is smaller than its
+- **FR-009**: The system MUST NOT store an Organ whose spacing between rows is smaller than its
   hole diameter, because neighbouring holes would overlap.
-- **FR-010**: [NEEDS CLARIFICATION: Is Minimum Hole Length required to be at least the hole
-  diameter, is it simply equal to the hole diameter (so it isn't entered separately), or are the
-  two independent?]
-- **FR-011**: Every refused save MUST show, next to the affected value, a message in the user's
-  language explaining the problem.
-- **FR-012**: Saved Organs MUST survive an app restart unchanged: all values and the Pipe order.
-- **FR-013**: [NEEDS CLARIFICATION: Are changes to an Organ saved explicitly (Save button,
-  with a "discard changes?" question when leaving with unsaved edits), or automatically as soon
-  as the Organ is valid?]
+- **FR-010**: The Organ's Minimum Hole Length MUST equal its Tape Bed's hole diameter. It is shown
+  to the user but not entered separately.
+- **FR-011**: Every rule an Organ breaks MUST be shown next to the affected value, with a message in
+  the user's language explaining the problem.
+- **FR-012**: Changes MUST be stored automatically whenever the Organ is valid; there is no Save
+  button. Invalid changes are kept only in the editor until they are fixed. Leaving the editor
+  with invalid changes MUST ask for confirmation that they will be lost.
+- **FR-013**: Stored Organs MUST survive an app restart unchanged: all values and the Pipe order.
 - **FR-014**: If stored Organs can't be read at startup, the app MUST start anyway, inform the user,
   and MUST NOT overwrite the unreadable data.
-- **FR-015**: If storing Organs fails, the app MUST inform the user and MUST NOT report the Organ
-  as saved.
+- **FR-015**: If writing Organs to disk fails, the app MUST inform the user.
 - **FR-016**: All texts of this feature MUST be available in English and German.
 
 ### Key Entities
@@ -183,7 +194,7 @@ untranslated.
 - **Organ**: a barrel organ owned by the user. It has:
   - a name (not necessarily unique);
   - one Tape Bed;
-  - a Minimum Hole Length and a Minimum Gap (mm);
+  - a Minimum Gap (mm); its Minimum Hole Length is the Tape Bed's hole diameter;
   - an ordered, non-empty list of Pipes with unique MIDI note numbers.
 
   It is identified independently of its name, and Tapes will later reference it.
@@ -197,9 +208,9 @@ untranslated.
 ### Measurable Outcomes
 
 - **SC-001**: Users can define their own 31-Pipe organ from their measurements in under 10 minutes.
-- **SC-002**: 100% of the invalid cases listed in FR-007 to FR-009 are refused with a message,
+- **SC-002**: 100% of the invalid cases listed in FR-007 to FR-009 are not stored and show a message,
   and each message names the field to fix.
-- **SC-003**: After a restart, 100% of saved Organs are shown with identical values and Pipe order.
+- **SC-003**: After a restart, 100% of stored Organs are shown with identical values and Pipe order.
 - **SC-004**: No data loss when the stored Organs are unreadable: the original data is unchanged
   after the app has started.
 - **SC-005**: Every text of the feature is shown in the selected language (English or German), with

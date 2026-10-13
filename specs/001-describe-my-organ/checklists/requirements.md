@@ -13,7 +13,7 @@
 
 ## Requirement Completeness
 
-- [ ] No [NEEDS CLARIFICATION] markers remain
+- [x] No [NEEDS CLARIFICATION] markers remain
 - [x] Requirements are testable and unambiguous
 - [x] Success criteria are measurable
 - [x] Success criteria are technology-agnostic (no implementation details)
@@ -31,8 +31,6 @@
 
 ## Notes
 
-- Two open [NEEDS CLARIFICATION] markers:
-  - FR-010: Minimum Hole Length vs. hole diameter.
-  - FR-013: explicit save vs. autosave.
+- All clarifications were resolved on 2026-10-13 (see the spec's Clarifications section).
 - The snapshot location and when snapshots are written are decided in `/speckit-plan` (ADR 3).
   They are not spec-level choices.
