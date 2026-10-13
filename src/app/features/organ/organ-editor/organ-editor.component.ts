@@ -1,5 +1,4 @@
 import {ChangeDetectionStrategy, Component, computed, effect, inject, input, linkedSignal, signal, untracked} from '@angular/core';
-import type {ErrorStateMatcher} from '@angular/material/core';
 import {MatButton} from '@angular/material/button';
 import {MatError, MatFormField, MatHint, MatInput, MatLabel} from '@angular/material/input';
 import {MatIcon} from '@angular/material/icon';
@@ -19,6 +18,7 @@ import {
   toSnapshot,
   validateOrgan,
 } from '@api/index';
+import {ErrorStateDirective} from '../../shared/directives/error-state.directive';
 import {OrganLibrary} from '../organ-library.store';
 
 type TapeBedField = keyof OrganDraft['tapeBed'];
@@ -40,7 +40,7 @@ const MISSING_VALUE_CODES: ReadonlySet<OrganViolationCode> = new Set([
 @Component({
   selector: 'cranc-organ-editor',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslatePipe, MatFormField, MatLabel, MatInput, MatHint, MatError, MatButton, MatIcon],
+  imports: [TranslatePipe, MatFormField, MatLabel, MatInput, MatHint, MatError, MatButton, MatIcon, ErrorStateDirective],
   templateUrl: './organ-editor.component.html',
   styles: `
     .organ-editor {
@@ -97,8 +97,6 @@ export class OrganEditorComponent {
     return byPath;
   });
 
-  private readonly errorStateMatchers = new Map<string, ErrorStateMatcher>();
-
   protected readonly minimumHoleLength = computed(() => this.draft().tapeBed.holeDiameter ?? '');
   protected readonly noteNames = computed(() =>
     this.draft().pipes.map(({note}) => {
@@ -125,16 +123,6 @@ export class OrganEditorComponent {
   /** The rule messages to show at the field with this path. */
   protected violationsAt(path: string): readonly ViolationMessage[] {
     return this.shownViolations().get(path) ?? [];
-  }
-
-  /** Puts the Material form field of `path` into its error state while a message is shown there. */
-  protected errorStateAt(path: string): ErrorStateMatcher {
-    let matcher = this.errorStateMatchers.get(path);
-    if (!matcher) {
-      matcher = {isErrorState: () => this.violationsAt(path).length > 0};
-      this.errorStateMatchers.set(path, matcher);
-    }
-    return matcher;
   }
 
   protected setName(value: string): void {
