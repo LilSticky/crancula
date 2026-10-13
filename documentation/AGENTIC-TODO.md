@@ -16,8 +16,8 @@ Custom agents, skills and setup still to build for the spec-, test- and domain-d
 - [x] `housekeeper` - STATUS/ROADMAP upkeep, GitHub Issues and board, i18n parity (haiku)
 
 ## Skills (`.claude/skills/`)
-- [ ] `i18n-parity` - check and fix en/de translation keys
-- [ ] `dictionary` - add or rename a domain term in `documentation/DICTIONARY.md` and propagate it through the code
+- [x] `i18n-parity` - check and fix en/de translation keys
+- [x] `dictionary` - add or rename a domain term in `documentation/DICTIONARY.md` and propagate it through the code
 - [x] `adr` - create, supersede and look up Nygard ADRs in `documentation/adr/` and keep the index in sync
 - [x] `tdd` - red/green/refactor loop; documents the guard hooks
 

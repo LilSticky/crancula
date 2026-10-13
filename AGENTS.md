@@ -108,7 +108,8 @@ and commits. It does not write code itself, which keeps its context small across
 - **Typing**: as strict as possible. No `any`, no non-null assertions to silence the compiler.
 - **Angular**: standalone components, signals and signal forms, OnPush; follow the Angular MCP
   `get_best_practices`. Angular Material with minimal SCSS.
-- **i18n**: @ngx-translate. Every key must exist in both `src/assets/i18n/en.json` and `de.json`.
+- **i18n**: @ngx-translate. Every key must exist in both `src/assets/i18n/en.json` and `de.json`
+  (`npm run i18n:check`).
 - **Electron** (ADR 4): `contextIsolation` on, `nodeIntegration` off; the renderer talks to the main
   process only via a typed preload API with an allow-list of channels. Payloads are validated
   against `@api` types. No `window.require`.
@@ -122,6 +123,7 @@ and commits. It does not write code itself, which keeps its context small across
   (`@shared/*` → `src/app/features/shared/*`)
 - `app/`: Electron main process (`app/main.ts`) and preload
 - `e2e/`: Playwright tests
+- `scripts/`: repository checks run by npm scripts and CI
 - `documentation/`, `specs/`, `.specify/`: docs and Spec Kit
 - `.claude/agents/`, `.claude/skills/`, `.claude/hooks/`: agent tooling
 
@@ -134,5 +136,6 @@ and commits. It does not write code itself, which keeps its context small across
 - `npm run test` / `npm run test:watch`: Vitest unit and component tests
 - `npm run e2e`: Playwright end-to-end tests (production build first)
 - `npm run lint`: ESLint
+- `npm run i18n:check`: en/de translation key parity (`i18n-parity` skill)
 
 Development happens on Windows. The Bash tool is Git Bash and the primary shell is PowerShell.
