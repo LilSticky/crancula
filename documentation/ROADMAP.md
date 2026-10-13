@@ -17,6 +17,13 @@ States: `planned` · `in progress` · `done`
 
 Release v0.1 as cross-platform GitHub Releases built in CI, once all of the above are done.
 
+## Project infrastructure (not slices)
+
+- **Soon: GitHub repository.** Push the repo to GitHub and manage tasks, bugs and progress there
+  (Issues, Projects, Actions for CI and cross-platform Releases). The docs then link to it.
+- **Later: design guide.** Create a design guide and unified styling with the frontend-design
+  skill, on top of Angular Material.
+
 ## Later (unordered)
 
 - **Edit a tape**: add, extend, move and remove Holes; Transposition of all or single notes;
