@@ -401,10 +401,10 @@ translation key.
   and fix anything that deviates.
 - [ ] T042 Run the Definition of Done gate: `npm run lint`, `npm run test`, `npm run build`,
   `npm run e2e`. Then:
-  - update `documentation/STATUS.md`: clear the fixed "Known broken" items and close the matching
-    GitHub issues;
+  - update `documentation/STATUS.md`: clear the fixed "Known broken" items;
   - set "Describe my organ" to `done` in `documentation/ROADMAP.md`;
-  - squash-merge into `main` and push.
+  - open a pull request (ADR 10) with `Closes #1` and `Closes #N` for each fixed "Known broken"
+    issue (#4–#8), and squash-merge it once CI is green.
 
 ---
 
@@ -447,4 +447,4 @@ Task: "T018 e2e organ-define test"
 1. **MVP:** Phases 1–5 (US1 to US3, all P1). An Organ can be defined, it is valid, and it is
    persistent. Validate in Electron.
 2. **Then:** US4 (editing and deleting) and US5 (language switch).
-3. **Finish:** Polish and the DoD gate, then squash-merge.
+3. **Finish:** Polish and the DoD gate, then squash-merge through a pull request.
