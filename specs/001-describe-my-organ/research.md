@@ -139,6 +139,7 @@ Each entry gives the decision, the reason for it, and the alternatives considere
   `OrganDraft` fit that API would have bent the domain to a UI library. `validateOrgan` is still the
   single source of the rules. Inputs show a `displayed` copy of the draft, which follows it only on
   structural changes, so a number is never rewritten while it is being typed.
+  **To revisit** after updating the tech stack: the user wants signal forms used rather than avoided.
 
 ## R7 Note names
 

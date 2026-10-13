@@ -19,9 +19,10 @@ Changes from the plan:
 - **Angular specs:** run in jsdom (ADR 9).
 - **Error states:** a small `crancErrorState` directive puts form fields into their error state.
 
-**Next concrete step:** after the user's review, continue with User Story 4 (T029, the failing editor
-test for reordering and removing Pipes). Restart the session first, so the new agents from `main`
-(implementer, reviewers) are loaded.
+**Next concrete step:** update the tech stack and add Dependabot, on its own branch from `main`
+([#13](https://github.com/LilSticky/crancula/issues/13)). Then switch the editor back to signal forms where the newer Angular allows it
+(research R6), and continue with User Story 4 (T029). Restart the session first, so the new agents
+from `main` are loaded.
 
 ## Known broken / WIP
 
