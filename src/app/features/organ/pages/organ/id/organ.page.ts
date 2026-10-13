@@ -21,7 +21,7 @@ const getId = (params: Params): string => (params["id"] || '') as string;
       <cranc-organ-form
         [organModel]="model"
         (save)="onSave($event)"
-        (discard)="onDiscard($event)"
+        (discard)="onDiscard()"
       />
     } @else if (store.isLoading()) {
       {{ 'PAGES.ORGAN.FORM.LOADING' | translate }}
@@ -56,10 +56,7 @@ export class OrganPage {
     // TODO user feedback that the organ was saved
   }
 
-  protected async onDiscard(initialState?: Organ) {
-    if (initialState) {
-      this.store.updateEntity(initialState)
-    }
+  protected async onDiscard() {
     await this.router.navigate(['/', ORGAN_BASE_PATH])
   }
 }
