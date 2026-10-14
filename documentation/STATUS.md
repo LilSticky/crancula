@@ -36,7 +36,7 @@ README rewritten for organ owners (2026-10-14): punched-tape banner (`documentat
 roadmap checklist, glossary and build-from-source steps. The repository is now MIT-licensed (`LICENSE`).
 Logo (2026-10-14): a tile of tape with a punched C (`src/assets/icons/logo.svg`) replaces the
 Angular icons (favicon, ico, icns, png) and shows with the name as a home link in the navbar.
-The portable Windows build still points at a missing splash image `assets/icons/electron.bmp`.
+The portable Windows build shows a splash in the same style while it unpacks (`src/assets/icons/electron.bmp`).
 
 **Next concrete step:** squash-merge [PR #15](https://github.com/LilSticky/crancula/pull/15) once CI,
 now including e2e, is green (T042). After that:
