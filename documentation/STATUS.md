@@ -32,6 +32,9 @@ Local gate run on 2026-10-14: lint green, test 124 node + 104 Angular passed, i1
 e2e 13 passed. The manual walkthrough (T041) is replaced by the e2e suite in CI on Linux, Windows
 and macOS (ADR 13, constitution 1.1.1).
 
+README rewritten for organ owners (2026-10-14): punched-tape banner (`documentation/images/banner.svg`),
+roadmap checklist, glossary and build-from-source steps. The repository is now MIT-licensed (`LICENSE`).
+
 **Next concrete step:** squash-merge [PR #15](https://github.com/LilSticky/crancula/pull/15) once CI,
 now including e2e, is green (T042). After that:
 - Rebase the tech-stack branch `chore/update-tech-stack` for [#13](https://github.com/LilSticky/crancula/issues/13)
