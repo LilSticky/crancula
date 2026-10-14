@@ -20,7 +20,7 @@ Custom agents, skills and setup still to build for the spec-, test- and domain-d
 - [x] `dictionary` - add or rename a domain term in `documentation/DICTIONARY.md` and propagate it through the code
 - [x] `adr` - create, supersede and look up Nygard ADRs in `documentation/adr/` and keep the index in sync
 - [x] `tdd` - red/green/refactor loop; documents the guard hooks
-- [ ] Remove the deprecated `speckit-taskstoissues` skill; `speckit-github-taskstoissues` replaces it ([#37](https://github.com/LilSticky/crancula/issues/37))
+- [x] Remove the deprecated `speckit-taskstoissues` skill; `speckit-github-taskstoissues` replaces it. A Spec Kit upgrade may bring it back; delete it again ([#37](https://github.com/LilSticky/crancula/issues/37))
 
 ## Hooks
 - [x] Run `npm run lint` and Vitest tests when a turn ends, so nothing is reported done while red (`.claude/hooks/tdd-guard.mjs stop`)
