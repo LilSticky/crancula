@@ -1,6 +1,6 @@
 import {Injectable} from '@angular/core';
-import type {FormControl} from '@angular/forms';
 import {
+  type Field,
   type FieldTree,
   type ReadonlyFieldTree,
   type SchemaPath,
@@ -96,9 +96,12 @@ export function violationMessage(error: OrganFieldError): TranslatableText {
 /** Puts a Material input in its error state exactly while the editor shows a message for its field. */
 @Injectable()
 export class ShownViolationMatcher extends ErrorStateMatcher {
-  override isErrorState(control: FormControl | null): boolean {
-    return Object.values(control?.errors ?? {})
+  override isSignalErrorState(field: Field<unknown> | null): boolean {
+    if (!field) return false;
+    const state = field();
+    return state
+      .errors()
       .filter(isOrganFieldError)
-      .some((error) => isShown(error, control?.dirty ?? false));
+      .some((error) => isShown(error, state.dirty()));
   }
 }

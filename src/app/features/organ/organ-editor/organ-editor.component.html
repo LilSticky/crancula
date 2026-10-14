@@ -3,11 +3,11 @@
 
   <mat-form-field>
     <mat-label>{{ 'ORGAN.EDITOR.NAME' | translate }}</mat-label>
-    <input matInput #name data-testid="name" [value]="displayed().name" (input)="setName(name.value)"
-           [crancErrorState]="violationsAt('name').length > 0"/>
+    <input matInput data-testid="name" [formField]="organ.name"/>
     <ng-container ngProjectAs="mat-error">
-      @for (violation of violationsAt('name'); track violation.key) {
-        <mat-error data-testid="violation" data-path="name">{{ violation.key | translate: violation.params }}</mat-error>
+      @for (violation of violationsAt(organ.name); track violation.kind) {
+        @let message = violationMessage(violation);
+        <mat-error data-testid="violation" data-path="name">{{ message.key | translate: message.params }}</mat-error>
       }
     </ng-container>
   </mat-form-field>
@@ -15,56 +15,51 @@
   <h3>{{ 'ORGAN.EDITOR.TAPE_BED' | translate }}</h3>
   <mat-form-field>
     <mat-label>{{ 'ORGAN.EDITOR.TAPE_WIDTH' | translate }}</mat-label>
-    <input matInput #tapeWidth type="number" data-testid="tape-width"
-           [value]="displayed().tapeBed.tapeWidth ?? ''" (input)="setTapeBed('tapeWidth', tapeWidth.value)"
-           [crancErrorState]="violationsAt('tapeBed.tapeWidth').length > 0"/>
+    <input matInput type="number" data-testid="tape-width" [formField]="organ.tapeBed.tapeWidth"/>
     <ng-container ngProjectAs="mat-error">
-      @for (violation of violationsAt('tapeBed.tapeWidth'); track violation.key) {
-        <mat-error data-testid="violation" data-path="tapeBed.tapeWidth">{{ violation.key | translate: violation.params }}</mat-error>
+      @for (violation of violationsAt(organ.tapeBed.tapeWidth); track violation.kind) {
+        @let message = violationMessage(violation);
+        <mat-error data-testid="violation" data-path="tapeBed.tapeWidth">{{ message.key | translate: message.params }}</mat-error>
       }
     </ng-container>
   </mat-form-field>
   <mat-form-field>
     <mat-label>{{ 'ORGAN.EDITOR.BORDER' | translate }}</mat-label>
-    <input matInput #border type="number" data-testid="border"
-           [value]="displayed().tapeBed.border ?? ''" (input)="setTapeBed('border', border.value)"
-           [crancErrorState]="violationsAt('tapeBed.border').length > 0"/>
+    <input matInput type="number" data-testid="border" [formField]="organ.tapeBed.border"/>
     <ng-container ngProjectAs="mat-error">
-      @for (violation of violationsAt('tapeBed.border'); track violation.key) {
-        <mat-error data-testid="violation" data-path="tapeBed.border">{{ violation.key | translate: violation.params }}</mat-error>
+      @for (violation of violationsAt(organ.tapeBed.border); track violation.kind) {
+        @let message = violationMessage(violation);
+        <mat-error data-testid="violation" data-path="tapeBed.border">{{ message.key | translate: message.params }}</mat-error>
       }
     </ng-container>
   </mat-form-field>
   <mat-form-field>
     <mat-label>{{ 'ORGAN.EDITOR.HOLE_DIAMETER' | translate }}</mat-label>
-    <input matInput #holeDiameter type="number" data-testid="hole-diameter"
-           [value]="displayed().tapeBed.holeDiameter ?? ''" (input)="setTapeBed('holeDiameter', holeDiameter.value)"
-           [crancErrorState]="violationsAt('tapeBed.holeDiameter').length > 0"/>
+    <input matInput type="number" data-testid="hole-diameter" [formField]="organ.tapeBed.holeDiameter"/>
     <ng-container ngProjectAs="mat-error">
-      @for (violation of violationsAt('tapeBed.holeDiameter'); track violation.key) {
-        <mat-error data-testid="violation" data-path="tapeBed.holeDiameter">{{ violation.key | translate: violation.params }}</mat-error>
+      @for (violation of violationsAt(organ.tapeBed.holeDiameter); track violation.kind) {
+        @let message = violationMessage(violation);
+        <mat-error data-testid="violation" data-path="tapeBed.holeDiameter">{{ message.key | translate: message.params }}</mat-error>
       }
     </ng-container>
   </mat-form-field>
   <mat-form-field>
     <mat-label>{{ 'ORGAN.EDITOR.ROW_SPACING' | translate }}</mat-label>
-    <input matInput #rowSpacing type="number" data-testid="row-spacing"
-           [value]="displayed().tapeBed.rowSpacing ?? ''" (input)="setTapeBed('rowSpacing', rowSpacing.value)"
-           [crancErrorState]="violationsAt('tapeBed.rowSpacing').length > 0"/>
+    <input matInput type="number" data-testid="row-spacing" [formField]="organ.tapeBed.rowSpacing"/>
     <ng-container ngProjectAs="mat-error">
-      @for (violation of violationsAt('tapeBed.rowSpacing'); track violation.key) {
-        <mat-error data-testid="violation" data-path="tapeBed.rowSpacing">{{ violation.key | translate: violation.params }}</mat-error>
+      @for (violation of violationsAt(organ.tapeBed.rowSpacing); track violation.kind) {
+        @let message = violationMessage(violation);
+        <mat-error data-testid="violation" data-path="tapeBed.rowSpacing">{{ message.key | translate: message.params }}</mat-error>
       }
     </ng-container>
   </mat-form-field>
   <mat-form-field>
     <mat-label>{{ 'ORGAN.EDITOR.MINIMUM_GAP' | translate }}</mat-label>
-    <input matInput #minimumGap type="number" data-testid="minimum-gap"
-           [value]="displayed().minimumGap ?? ''" (input)="setMinimumGap(minimumGap.value)"
-           [crancErrorState]="violationsAt('minimumGap').length > 0"/>
+    <input matInput type="number" data-testid="minimum-gap" [formField]="organ.minimumGap"/>
     <ng-container ngProjectAs="mat-error">
-      @for (violation of violationsAt('minimumGap'); track violation.key) {
-        <mat-error data-testid="violation" data-path="minimumGap">{{ violation.key | translate: violation.params }}</mat-error>
+      @for (violation of violationsAt(organ.minimumGap); track violation.kind) {
+        @let message = violationMessage(violation);
+        <mat-error data-testid="violation" data-path="minimumGap">{{ message.key | translate: message.params }}</mat-error>
       }
     </ng-container>
   </mat-form-field>
@@ -75,26 +70,26 @@
   </mat-form-field>
 
   <h3>{{ 'ORGAN.EDITOR.PIPES' | translate }}</h3>
-  @for (violation of violationsAt('pipes'); track violation.key) {
-    <p class="violation" data-testid="violation" data-path="pipes">{{ violation.key | translate: violation.params }}</p>
+  @for (violation of violationsAt(organ.pipes); track violation.kind) {
+    @let message = violationMessage(violation);
+    <p class="violation" data-testid="violation" data-path="pipes">{{ message.key | translate: message.params }}</p>
   }
   <div cdkDropList (cdkDropListDropped)="dropPipe($event)">
-    @for (pipe of displayed().pipes; track $index; let row = $index; let first = $first; let last = $last) {
+    @for (pipe of organ.pipes; track pipe; let row = $index; let first = $first; let last = $last) {
       <div class="pipe" data-testid="pipe" cdkDrag>
         <mat-icon cdkDragHandle class="drag-handle" [attr.aria-label]="'ORGAN.EDITOR.DRAG_PIPE' | translate">drag_indicator</mat-icon>
         <span>{{ 'ORGAN.EDITOR.ROW' | translate: {row: row + 1} }}</span>
         <mat-form-field>
           <mat-label>{{ 'ORGAN.EDITOR.PIPE_NOTE' | translate }}</mat-label>
-          <input matInput #note type="number" data-testid="pipe-note"
-                 [value]="pipe.note ?? ''" (input)="setPipeNote(row, note.value)"
-                 [crancErrorState]="violationsAt('pipes.' + row + '.note').length > 0"/>
+          <input matInput type="number" data-testid="pipe-note" [formField]="pipe.note"/>
           <ng-container ngProjectAs="mat-error">
-            @for (violation of violationsAt('pipes.' + row + '.note'); track violation.key) {
-              <mat-error data-testid="violation" [attr.data-path]="'pipes.' + row + '.note'">{{ violation.key | translate: violation.params }}</mat-error>
+            @for (violation of violationsAt(pipe.note); track violation.kind) {
+              @let message = violationMessage(violation);
+              <mat-error data-testid="violation" [attr.data-path]="violation.violation.path">{{ message.key | translate: message.params }}</mat-error>
             }
           </ng-container>
         </mat-form-field>
-        <span data-testid="pipe-note-name">{{ noteNames()[row] }}</span>
+        <span data-testid="pipe-note-name">{{ noteNameOf(pipe.note().value()) }}</span>
         <button matIconButton type="button" data-testid="move-up" [disabled]="first"
                 [attr.aria-label]="'ORGAN.EDITOR.MOVE_PIPE_UP' | translate" (click)="movePipe(row, row - 1)">
           <mat-icon>arrow_upward</mat-icon>
