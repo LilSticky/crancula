@@ -392,6 +392,8 @@ translation key.
 
 ## Phase 8: Polish & Cross-Cutting Concerns
 
+(Phase 9 comes from the MVP review and runs before T041/T042.)
+
 - [x] T039 Remove i18n keys that nothing uses any more from both language files, and check that
   the parity test is green.
 - [x] T040 Remove `withStorageSync`/`@angular-architects/ngrx-toolkit` from `package.json` if they
@@ -405,6 +407,54 @@ translation key.
   - set "Describe my organ" to `done` in `documentation/ROADMAP.md`;
   - open a pull request (ADR 10) with `Closes #1` and `Closes #N` for each fixed "Known broken"
     issue (#4–#8), and squash-merge it once CI is green.
+
+---
+
+## Phase 9: Review changes (2026-10-14)
+
+**Goal**: Save is explicit (FR-012), leaving with unsaved changes warns and lists what to fix
+(FR-012a), and the application menu follows the language switch (FR-016).
+
+### Explicit Save and the leave warning
+
+- [ ] T043 [US1] Extend `organ-editor.component.spec.ts`:
+  - a valid change is **not** stored until `save` is pressed; then it is stored;
+  - the Save button is disabled when unchanged, disabled when invalid, enabled when changed and
+    valid, and disabled again after saving;
+  - a new Organ navigates to `/organs/<id>` only after its first save;
+  - replace the specs that relied on autosave so that they press Save.
+- [ ] T044 [US4] Rewrite `leave-invalid.guard.spec.ts` as `leave-unsaved.guard.spec.ts`:
+  - no unsaved changes → leave without a dialog;
+  - valid unsaved changes → dialog says they aren't saved; "stay" stays, "discard" leaves;
+  - invalid unsaved changes → dialog lists each broken rule with its field label (e.g.
+    "Row 3 · MIDI note: Another Pipe already plays C4."); "stay" is the default;
+  - after discarding, the last saved version is unchanged.
+- [ ] T045 [US1] Implement: remove the autosave effect, add a Save button
+  (`data-testid="save-organ"`, `matButton="filled"`), keep the saved draft as the new baseline,
+  and expose `unsavedChanges(): {invalid: readonly ViolationMessage[]} | {invalid: []} | null`
+  (or a similar typed result) for the guard.
+- [ ] T046 [US4] Implement `leave-unsaved.guard.ts` and a `LeaveUnsavedDialogComponent` (Material
+  dialog, "Stay and fix"/"Stay" default focus, "Discard changes" warn). Wire it into
+  `routes.ts`, and add the i18n keys to `en.json` and `de.json`.
+- [ ] T047 [US1] Update the e2e tests that create or edit Organs (`organ-define`, `organ-edit`,
+  `organ-restart`, `organ-german`, `e2e/support/organ-editor.ts`) to press Save, and add a
+  scenario: leaving with invalid changes shows the listed problems.
+
+### The application menu follows the language
+
+- [ ] T048 [US5] Node test `app/application-menu.spec.ts`: `menuTemplate(language)` builds the
+  menu from the en/de JSON files with translated labels (File, Edit, View, Window, Help and their
+  items), and an unknown language falls back to English.
+- [ ] T049 [US5] Node test for a new allow-listed channel `app:set-language`: the handler accepts
+  only `'en' | 'de'` and rebuilds the menu; anything else is rejected. Extend
+  `api/organ/crancula-api.ts` (or a new `api/app/`) with `setLanguage(language)`.
+- [ ] T050 [US5] Implement `app/application-menu.ts`, the IPC handler and the preload method; the
+  navbar calls `setLanguage` on start and on every switch. Add the `MENU.*` keys to both language
+  files. Extend `e2e/organ-german.spec.ts`: after switching to German, the menu labels are German.
+- [ ] T051 Update `quickstart.md`, `plan.md` (no autosave) and research R6/R-autosave notes to the
+  new save model.
+
+**Checkpoint**: all user stories green with explicit Save; then T041 and T042.
 
 ---
 

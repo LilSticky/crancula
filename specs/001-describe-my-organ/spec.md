@@ -18,6 +18,16 @@
   Save button (FR-012).
 - Q: Are the fit rules right (FR-008, FR-009)? → A: Yes, both.
 
+### Session 2026-10-14 (review of the MVP)
+
+- Q: Saving automatically wasn't visible to the user. How are changes saved now? → A: Only with
+  a Save button. It is disabled while there are no unsaved changes or the Organ is invalid. This
+  replaces the 2026-10-13 answer (FR-012).
+- Q: What happens when I leave the editor with unsaved changes? → A: I'm warned. If the changes
+  are invalid, the warning lists each broken rule with its field, so I know what to fix; I can
+  stay and fix them (the default) or discard them (FR-012a).
+- Q: Does the language switch apply to the application menu too? → A: Yes (FR-016).
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Define my organ (Priority: P1)
@@ -36,7 +46,7 @@ measurements, Minimum Gap and a few Pipes, and see it in the Organ list with its
 **Acceptance Scenarios**:
 
 1. **Given** no Organs exist, **When** I create an Organ named "Street organ" with valid Tape Bed
-   measurements, Minimum Gap and 31 Pipes, **Then** it is stored automatically and appears in the
+   measurements, Minimum Gap and 31 Pipes and press Save, **Then** it is stored and appears in the
    Organ list.
 2. **Given** I am adding a Pipe, **When** I enter MIDI note number 60, **Then** the Pipe is shown
    as "C4".
@@ -44,6 +54,11 @@ measurements, Minimum Gap and a few Pipes, and see it in the Organ list with its
    last row, and the row order is shown.
 4. **Given** I am creating an Organ that is not valid yet, **When** I leave the form and confirm
    that my unfinished input will be lost, **Then** no Organ is created.
+5. **Given** I opened an Organ and changed nothing, or my changes are invalid, **Then** the Save
+   button is disabled. **When** I make a valid change, **Then** it is enabled; after saving it is
+   disabled again.
+6. **Given** I made valid changes that I haven't saved, **When** I leave the editor, **Then** I'm
+   warned that they aren't saved; I can stay, or discard them and leave.
 
 ---
 
@@ -70,7 +85,7 @@ stored and a message names the problem; then fix the value and see it stored.
 4. **Given** an Organ without a name or without any Pipes, **Then** it is not stored and the
    missing information is marked.
 5. **Given** a stored Organ that I edit into an invalid state, **When** I fix the problem,
-   **Then** the corrected Organ is stored; the invalid intermediate state never was.
+   **Then** I can save the corrected Organ; the invalid intermediate state was never stored.
 
 ---
 
@@ -110,11 +125,12 @@ then delete the Organ.
 **Acceptance Scenarios**:
 
 1. **Given** a stored Organ, **When** I move a Pipe to another row, **Then** the new row order is
-   stored.
+   stored after I save.
 2. **Given** a stored Organ, **When** I remove a Pipe, **Then** the remaining Pipes keep their
    relative order with no gaps in row numbers.
 3. **Given** I edited a stored Organ into an invalid state, **When** I leave it, **Then** I'm
-   told that my invalid changes will be lost, and on confirming, the last valid version remains.
+   told that my changes can't be saved, with each broken rule and its field listed. I can stay and
+   fix them, or discard them; on discarding, the last saved version remains.
 4. **Given** a stored Organ, **When** I delete it and confirm, **Then** it is removed from the list.
    **When** I cancel instead, **Then** nothing changes.
 
@@ -133,6 +149,8 @@ untranslated.
 
 1. **Given** the app is set to German, **When** I create an Organ and trigger each validation
    message, **Then** all labels and messages are German.
+2. **Given** I switch the language, **Then** the application menu uses that language too, also
+   after a restart.
 
 ---
 
@@ -146,8 +164,7 @@ untranslated.
 - Removing all Pipes makes the Organ invalid, so it isn't stored (see Story 2).
 - Measurements accept decimals (e.g. 0.5 mm).
 - Very large Organs (e.g. 100+ Pipes) can still be edited and stored.
-- Typing quickly produces many valid intermediate states; storing them must not slow down editing
-  or lose the last change.
+- Saving many times in a row must not slow down editing or lose the last change.
 - If writing to disk fails (e.g. disk full, no permission), I'm told so, and my input stays in the
   app so that nothing is lost.
 
@@ -180,14 +197,18 @@ untranslated.
   to the user but not entered separately.
 - **FR-011**: Every rule an Organ breaks MUST be shown next to the affected value, with a message in
   the user's language explaining the problem.
-- **FR-012**: Changes MUST be stored automatically whenever the Organ is valid; there is no Save
-  button. Invalid changes are kept only in the editor until they are fixed. Leaving the editor
-  with invalid changes MUST ask for confirmation that they will be lost.
+- **FR-012**: Changes MUST be stored only when the user presses Save. The Save button MUST be
+  disabled while there are no unsaved changes or the Organ is invalid. Unsaved changes are kept
+  only in the editor.
+- **FR-012a**: Leaving the editor with unsaved changes MUST warn the user and let them stay or
+  discard the changes. If the changes are invalid, the warning MUST list each broken rule with
+  the field it belongs to.
 - **FR-013**: Stored Organs MUST survive an app restart unchanged: all values and the Pipe order.
 - **FR-014**: If stored Organs can't be read at startup, the app MUST start anyway, inform the user,
   and MUST NOT overwrite the unreadable data.
 - **FR-015**: If writing Organs to disk fails, the app MUST inform the user.
-- **FR-016**: All texts of this feature MUST be available in English and German.
+- **FR-016**: All texts of this feature MUST be available in English and German. The language
+  switch MUST also apply to the application menu.
 
 ### Key Entities
 
