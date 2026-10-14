@@ -16,3 +16,4 @@ with a new one and update both statuses here.
 | 8 | [Snapshot write strategy](0008-snapshot-write-strategy.md) | Accepted |
 | 9 | [Angular specs run in jsdom](0009-angular-specs-in-jsdom.md) | Accepted |
 | 10 | [Merge through pull requests that reference issues](0010-merge-through-pull-requests.md) | Accepted |
+| 11 | [UI preferences in localStorage](0011-ui-preferences-in-local-storage.md) | Accepted |

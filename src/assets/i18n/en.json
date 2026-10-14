@@ -53,6 +53,13 @@
     "MIN_VALUE": "This value needs to be greater",
     "REQUIRED": "This value is required"
   },
+  "NAVBAR": {
+    "LANGUAGE": "Language"
+  },
+  "NOT_FOUND": {
+    "TITLE": "Something went wrong!",
+    "MESSAGE": "Page could not be found"
+  },
   "ORGAN": {
     "NAV": "Organs",
     "LIST": {

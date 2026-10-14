@@ -372,16 +372,16 @@ translation key.
 
 ### Tests for User Story 5 ⚠️
 
-- [ ] T036 [P] [US5] Write the component test `src/app/features/navbar/navbar.component.spec.ts`:
+- [x] T036 [P] [US5] Write the component test `src/app/features/navbar/navbar.component.spec.ts`:
   the language switch toggles `TranslateService` between `en` and `de`, and the choice is
   remembered across restarts.
-- [ ] T037 [P] [US5] Write the e2e test `e2e/organ-german.spec.ts`: switch to German, create an
+- [x] T037 [P] [US5] Write the e2e test `e2e/organ-german.spec.ts`: switch to German, create an
   Organ, and trigger `pipes-exceed-tape-width` and `duplicate-pipe`. The visible texts contain no
   `ORGAN.` key patterns, and the messages are German (SC-005).
 
 ### Implementation for User Story 5
 
-- [ ] T038 [US5] Add a language switch (Material button toggle or menu) to
+- [x] T038 [US5] Add a language switch (Material button toggle or menu) to
   `src/app/features/navbar/navbar.component.ts`. Remember the choice in a small snapshot, or in
   `localStorage` as a UI preference.
 

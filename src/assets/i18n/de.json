@@ -53,6 +53,13 @@
     "MIN_VALUE": "Dieser Wert muss größer sein",
     "REQUIRED": "Dieser Wert muss angegeben werden"
   },
+  "NAVBAR": {
+    "LANGUAGE": "Sprache"
+  },
+  "NOT_FOUND": {
+    "TITLE": "Etwas ist schiefgelaufen!",
+    "MESSAGE": "Die Seite wurde nicht gefunden"
+  },
   "ORGAN": {
     "NAV": "Drehorgeln",
     "LIST": {

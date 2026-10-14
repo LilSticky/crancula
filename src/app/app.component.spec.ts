@@ -1,6 +1,7 @@
 import {TestBed} from '@angular/core/testing';
 import {provideRouter} from '@angular/router';
 import type {CranculaApi} from '@api/index';
+import {vi} from 'vitest';
 import {provideTestTranslations} from '../testing/test-translations';
 import {testOrgan} from '../testing/organs';
 import {AppComponent} from './app.component';
@@ -19,6 +20,12 @@ async function render(api: CranculaApi) {
 }
 
 describe('AppComponent', () => {
+  beforeEach(() => {
+    // jsdom's localStorage is unavailable here; the navbar reads the stored language from it.
+    vi.stubGlobal('localStorage', {getItem: () => null, setItem: () => undefined, removeItem: () => undefined});
+  });
+  afterEach(() => vi.unstubAllGlobals());
+
   it('tells the user when the Organs could not be loaded', async () => {
     const api = createInMemoryCranculaApi();
     api.organs.load = () => Promise.resolve({status: 'unreadable', backupPath: 'C:/data/organs.unreadable.json', reason: 'bad JSON'});
