@@ -144,8 +144,9 @@ sources on GitHub.
   ```
 
   If the rounded end is not after the rounded start, the end becomes start + 1 (FR-005: a Note
-  is at least one Column long). Columns are counted from the Song's Tick 0, and they stay that
-  way: the Tape starts with the Song's start (FR-013), so Song and Tape share their Columns.
+  is at least one Column long). Quantisation counts Columns from the Song's Tick 0. The Tape then
+  starts at the first Note of the selected Parts (FR-013), so the pipeline subtracts that Note's
+  Column from every Column (see R6, "Tape start and length").
 - **Worked examples** (Ticks per quarter note 480, so one Column is 60 Ticks):
   - quarter Note at Tick 480, duration 480 → Columns 8 to 16: start 8, length 8 (scenario 3);
   - start 29 → Column 0; start 30 (exactly half) → Column 1; start 31 → Column 1;
@@ -251,8 +252,11 @@ sources on GitHub.
     gone). Once *i* moves past a Hole, its end never changes again, and later steps only change
     ends of later Holes, never their starts, so its length ≥ L and its gap to the next Hole ≥ G
     stay true. Rows are independent. Sorting makes the whole step O(H log H) for H Holes.
-  - **Tape start and length**: the Tape starts at the Song's Column 0 (FR-013, Spec question 2),
-    so no Column is shifted. Its length in Columns is the largest Hole end after the fixes: only
+  - **Tape start and length**: the Tape starts at the first Note of the selected Parts, an
+    Unplayable Note included (FR-013, Spec question 2). Its *offset* is the smallest quantised
+    start Column among all selected Notes, taken before the Transposition and octave moves.
+    Every Column of a Note or Hole is reduced by the offset, so the Tape's Column 0 is that
+    Note's Column; silence before it is cut, silence between Notes is kept. Its length in Columns is the largest Hole end after the fixes: only
     the last Hole of a row can grow past the previous end. The length is stored on the Tape and
     stays the same when Holes are removed later (FR-021, Spec question 4).
   - Every fix is reported once per step applied, with Pipe and Column and the length before and
@@ -411,9 +415,10 @@ Assumptions.
 2. **Which Columns does the Import Summary use?** FR-009/FR-015 list Notes and Holes "with their
    Column". If the Tape started at its first Hole, an Unplayable Note before it would get a
    negative Column.
-   **Resolved**: Columns are counted from the Song's start, Column 1 being the Song's first
-   Column, and the Tape starts with the Song's start (FR-013, FR-015), so no Column is negative.
-   Internally Columns stay counted from 0 (R3); the UI shows them plus one.
+   **Resolved** (user, 2026-10-14): the Tape starts at the first Note of the selected Parts,
+   Unplayable Notes included, so silence before it is cut (FR-013). Columns in the Import Summary
+   are counted from 1 at the Tape's start (FR-015), so no Column is negative. Inside the program
+   Columns stay counted from 0 at the Tape's start; the UI shows them plus one.
 3. **Range of the user's Transposition (FR-007, "any other number")**: otherwise a transposed
    Note has no note number.
    **Resolved**: limited to the range that keeps every selected Note within MIDI note numbers

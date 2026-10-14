@@ -25,6 +25,11 @@
   A Tape left without Holes stays; I can remove it myself (FR-021, Story 2 scenario 5).
 - Q: Which terms does this slice add to the dictionary? → A: Tick, Fit and Import Summary. The
   Parts chosen for a Tape are "the selected Parts", not a term of their own.
+- Q: Where does a new Tape start, and which Column is Column 1 in the Import Summary? → A: The Tape
+  starts at the first Note of the selected Parts, an Unplayable Note included. Silence before it
+  is cut, silence between Notes is kept, and the Tape ends with the end of its last Hole. Columns
+  in the Import Summary are counted from 1 at the Tape's start, so none is negative; inside the
+  program Columns still count from 0 (FR-013, FR-015).
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -210,10 +215,12 @@ untranslated.
   upward one is used.
 - Tempo and tempo changes in the Song don't change the Tape: Columns are musical time, and the
   Tape holds no tempo.
-- The Tape starts with the Song's start, so silence before the first Note is kept on the Tape, as
-  is silence between Notes. The Tape ends with the end of its last Hole.
-- An Unplayable Note before the first Hole is listed with its Column counted from the Song's
-  start, like every other Column in the Import Summary; no Column is negative.
+- The Tape starts at the first Note of the selected Parts, even if that Note is an Unplayable
+  Note, so silence before it is cut. Silence between Notes is kept. The Tape ends with the end of
+  its last Hole.
+- An Unplayable Note before the first Hole is listed with its Column counted from 1 at the Tape's
+  start, like every other Column in the Import Summary; no Column is negative. If it is the very
+  first Note, it is in Column 1, and the first Hole starts after it.
 - Several Transpositions fit the same number of Notes: the one with the fewest semitones wins; if
   two are equally far (for example −6 and +6), the upward one wins.
 - Not a single Note of the selected Parts can be placed, not even by moving it by octaves: no Tape
@@ -290,16 +297,18 @@ untranslated.
   3. if that would make it shorter than the Minimum Hole Length, it and the next Hole become one
      Hole, and the next Note's repetition is lost.
   The start of a Hole MUST NOT be moved.
-- **FR-013**: The Tape MUST start with the Song's start (its first Column is the Song's first
-  Column) and, when created, end with the end of its last Hole, after the fixes of FR-012. Its
-  length in Columns MUST NOT change when Holes are removed later (FR-021).
+- **FR-013**: The Tape MUST start at the first Note of the selected Parts (its first Column is
+  that Note's first Column), an Unplayable Note included. Silence before that Note MUST be cut and
+  silence between Notes MUST be kept. When created, the Tape MUST end with the end of its last
+  Hole, after the fixes of FR-012. Its length in Columns MUST NOT change when Holes are removed
+  later (FR-021).
 - **FR-014**: Each Tape MUST have a name, prefilled with the Song's name from the Song Source or,
   if it has none, the file name. A Tape MUST NOT be created without a name.
 - **FR-015**: After a Tape is created, the system MUST show the Import Summary: the Transposition
   used, the number of Notes on the Tape, every Note moved by octaves (FR-009), the Unplayable
   Notes, and every Hole merged (FR-008), lengthened, shortened or merged (FR-012), each with its
-  Pipe and Column. Columns in the Import Summary MUST be counted from the Song's start, Column 1
-  being the Song's first Column.
+  Pipe and Column. Columns in the Import Summary MUST be counted from the Tape's start, Column 1
+  being the Tape's first Column; inside the program, Columns count from 0.
 - **FR-016**: The Tape MUST belong to exactly one Organ and MUST keep the Transposition and the
   selected Parts it was created with. It MUST reference the Song it was created from, and that
   Song MUST be kept as long as a Tape references it.
@@ -393,9 +402,10 @@ untranslated.
 - **Column length:** set once when the Tape is created and not changed in this slice; changing it
   would change every Hole's length in mm and belongs to "Edit a tape". The first default equals
   the Minimum Hole Length so a one-Column Hole is just long enough.
-- **Columns in the Import Summary:** counted from the Song's start; Column 1 is the Song's first
-  Column. Since the Tape starts with the Song's start (FR-013), Tape and Song share their Columns,
-  and no Column is negative, also for an Unplayable Note before the first Hole.
+- **Columns in the Import Summary:** counted from 1 at the Tape's start; Column 1 is the Tape's
+  first Column, the first Column of the first Note of the selected Parts. Since the Tape starts
+  there (FR-013), no Column is negative, also for an Unplayable Note before the first Hole. Inside
+  the program, Columns count from 0; the Song's Columns are shifted by the Tape's first Note.
 - **Song kept:** the Song's Notes, Parts and name are stored with the Tapes that reference it, not
   the original file. There is no Song list in this slice; a Song no longer referenced by any Tape
   is removed.

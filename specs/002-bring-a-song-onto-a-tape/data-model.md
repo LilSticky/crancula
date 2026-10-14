@@ -19,7 +19,7 @@ Folder layout, file names and the exact export list in `api/index.ts` are decide
 | `TapeId` | branded `string` | UUID |
 | `Tick` | branded `number` | integer ≥ 0, < 2³¹ (research R2) |
 | `TicksPerQuarter` | branded `number` | integer 1–32767 (the SMF header's 15 bits) |
-| `Column` | branded `number` | integer ≥ 0; a position on the Tape, counted from 0 at the Song's start (FR-013) |
+| `Column` | branded `number` | integer ≥ 0; a position on the Tape, counted from 0 at the Tape's start, the first Note of the selected Parts (FR-013) |
 | `ColumnCount` | branded `number` | integer ≥ 1; a length in Columns |
 | `Transposition` | branded `number` | integer −127 to +127, in semitones |
 | `PartIndex` | branded `number` | integer ≥ 0, < the Song's number of Parts |
@@ -55,7 +55,7 @@ not kept; they are details of the Song Source.
 | Field | Type | Rule |
 |-------|------|------|
 | `noteNumber` | `MidiNoteNumber` | 0–127 |
-| `start` | `Tick` | from the Song's start |
+| `start` | `Tick` | from the Song's start (a Tape's Columns are counted from its first Note, FR-013) |
 | `duration` | `Tick` | ≥ 0; 0 is allowed (a note-on and note-off at the same Tick, research R2) |
 
 Invariant: `start + duration` < 2³¹. Loudness, instrument and tempo are not part of a Note
@@ -141,8 +141,9 @@ Shown once after `createTape`, not stored (spec Assumptions).
 | `repetition-merged` | `pipe`, `column`, `lostColumn: Column` (start of the removed Hole) | FR-012 rule 3 |
 
 `noteNumber` is the number after the Transposition; the UI shows it with `noteName`. Every
-`column` is counted from 0 at the Song's start, so none is negative, also for an Unplayable Note
-before the first Hole. The UI shows it plus one: Column 1 is the Song's first Column (FR-015).
+`column` is counted from 0 at the Tape's start (the first Note of the selected Parts, FR-013), so
+none is negative, also for an Unplayable Note before the first Hole. The UI shows it plus one:
+Column 1 is the Tape's first Column (FR-015).
 Accounting (SC-003): number of selected Notes = Notes matching a Pipe + Notes moved by octaves +
 Unplayable Notes, and every placed Note is in a Hole of its own or in one named by
 `holeChanges`.
@@ -168,7 +169,7 @@ Unplayable Notes, and every placed Note is in a Hole of its own or in one named 
 | `selectedParts` | `readonly PartIndex[] \| undefined` | the selected Parts it was created with (FR-016); sorted ascending, unique, non-empty, each a Part of the Song. Set exactly when `songId` is set |
 | `transposition` | `Transposition` | the one it was created with (FR-016) |
 | `columnLength` | `Millimetres` | > 0 (FR-010) |
-| `length` | `ColumnCount` | its length in Columns from the Song's start (FR-013); stored, because removing Holes must not change it (FR-021) |
+| `length` | `ColumnCount` | its length in Columns from the Tape's start, the first Note of the selected Parts (FR-013); stored, because removing Holes must not change it (FR-021) |
 | `holes` | `readonly Hole[]` | see invariants; may be empty after Pipes were removed (FR-021) |
 
 **Invariants** (checked by `createTape` and the snapshot parser; the type is branded like
