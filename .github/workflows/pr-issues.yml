@@ -9,6 +9,9 @@ permissions: {}
 jobs:
   references:
     name: References an issue (ADR 10)
+    # ADR 16: Dependabot pull requests have no issue. A job skipped by `if` reports "skipped",
+    # which counts as passing for the required check.
+    if: github.event.pull_request.user.login != 'dependabot[bot]'
     runs-on: ubuntu-latest
     steps:
       - name: Check the body for Closes/Refs #N
