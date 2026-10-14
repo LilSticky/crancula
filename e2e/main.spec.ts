@@ -15,23 +15,14 @@ test.describe('Home page', () => {
   });
 
   test('launches the Electron app', async () => {
-    const windowState = await launched.app.evaluate(async ({BrowserWindow}) => {
+    const windowState = await launched.app.evaluate(({BrowserWindow}) => {
       const mainWindow = BrowserWindow.getAllWindows()[0];
-      const getState = () => ({
-        isVisible: mainWindow.isVisible(),
+      return {
         isDevToolsOpened: mainWindow.webContents.isDevToolsOpened(),
         isCrashed: mainWindow.webContents.isCrashed(),
-      });
-      return new Promise<ReturnType<typeof getState>>((resolve) => {
-        if (mainWindow.isVisible()) {
-          resolve(getState());
-        } else {
-          mainWindow.once('ready-to-show', () => setTimeout(() => resolve(getState()), 0));
-        }
-      });
+      };
     });
 
-    expect(windowState.isVisible).toBeTruthy();
     expect(windowState.isDevToolsOpened).toBeFalsy();
     expect(windowState.isCrashed).toBeFalsy();
   });

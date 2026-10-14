@@ -66,3 +66,5 @@ now including e2e, is green (T042). After that:
   ([#18](https://github.com/LilSticky/crancula/issues/18)): no direct or force pushes, no deletion,
   pull request required (no approvals), the three CI checks "Lint, test and build" must pass,
   squash merge only; merged branches are deleted. Merging with red CI is no longer possible.
+- 2026-10-14: e2e runs keep the Electron window out of sight (`CRANCULA_HEADLESS`, set by the e2e
+  launcher); `HEADED=1` shows it, slowed down and traced.
