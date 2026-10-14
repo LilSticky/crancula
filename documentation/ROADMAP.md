@@ -19,7 +19,7 @@ Release v0.1 as cross-platform GitHub Releases built in CI, once all of the abov
 
 ## Project infrastructure (not slices)
 
-- **GitHub repository**: [LilSticky/crancula](https://github.com/LilSticky/crancula) (private).
+- **GitHub repository**: [LilSticky/crancula](https://github.com/LilSticky/crancula) (public, MIT).
   Tasks, bugs and open questions are Issues; CI runs lint, test and build on every push to `main`
   and every pull request. Progress is tracked on the [Project board](https://github.com/users/LilSticky/projects/1).
   Still to do: the release workflow
