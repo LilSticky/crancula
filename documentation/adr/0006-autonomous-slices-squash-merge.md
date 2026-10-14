@@ -4,7 +4,7 @@ Date: 2026-10-13
 
 ## Status
 
-Accepted
+Superseded by [10. Merge through pull requests that reference issues](0010-merge-through-pull-requests.md)
 
 ## Context
 

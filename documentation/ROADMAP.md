@@ -1,8 +1,8 @@
 # Roadmap
 
 Ordered slices, cut by domain and user capability (see the constitution). Each slice goes
-through Spec Kit on its own branch and is squash-merged into the main branch when its
-Definition of Done gate is green. Where work stands right now: [STATUS.md](STATUS.md).
+through Spec Kit on its own branch and is squash-merged into the main branch through a pull
+request that closes its issue, once its Definition of Done gate is green (ADR 10). Where work stands right now: [STATUS.md](STATUS.md).
 
 States: `planned` · `in progress` · `done`
 
