@@ -72,13 +72,37 @@ jobs:
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@v7
       - uses: actions/download-artifact@v8
         with:
           path: artifacts
           merge-multiple: true
+      # Release notes: the version's section of CHANGELOG.md (release skill), plus the install note.
+      - name: Write release notes
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          version="${TAG#v}"
+          awk -v v="$version" '
+            index($0, "## [" v "]") == 1 { on = 1; next }
+            on && /^## \[/ { exit }
+            on && /^\[[^]]+\]: / { exit }
+            on { print }
+          ' CHANGELOG.md > notes.md
+          if ! grep -q '[^[:space:]]' notes.md; then
+            echo "::error::CHANGELOG.md has no section for $version."
+            exit 1
+          fi
+          cat >> notes.md <<'NOTE'
+
+          ### Install
+          Windows: portable `.exe`. macOS: `.dmg` (Apple silicon). Linux: `.AppImage`.
+          The builds are not code-signed: Windows SmartScreen asks for confirmation (*More info → Run anyway*);
+          on macOS, run `xattr -cr /Applications/crancula.app` if Gatekeeper reports the app as damaged.
+          NOTE
       - name: Create draft release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
           TAG: ${{ github.ref_name }}
-        run: gh release create "$TAG" artifacts/* --draft --verify-tag --title "$TAG" --generate-notes
+        run: gh release create "$TAG" artifacts/* --draft --verify-tag --title "$TAG" --notes-file notes.md

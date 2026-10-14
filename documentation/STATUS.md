@@ -49,7 +49,7 @@ research R6 revised): `form()` over `OrganDraft`, `[formField]` inputs, one `val
   packages on Linux, Windows and macOS. A pushed tag `v*` also creates a draft GitHub Release; a
   manual run, or a pull request that changes the workflow or `electron-builder.json`, only builds
   artifacts. Builds are unsigned. v0.0.1 (2026-10-14) is the first release from a tag; v0.1 follows
-  when all v0.1 slices are done.
+  when all v0.1 slices are done. Release with `/release` (ADR 19); notes come from `CHANGELOG.md`.
 
 ## Process changes
 
