@@ -31,14 +31,12 @@ research R6 revised): `form()` over `OrganDraft`, `[formField]` inputs, one `val
 `validateOrgan`, a `ShownViolationMatcher` instead of the `crancErrorState` directive. Lint, i18n,
 120 Angular tests and 18 e2e green. Unreadable number text shows "Enter a number.".
 
-**Next concrete step:** `/speckit-specify` for "Punch a tape" ([#3](https://github.com/LilSticky/crancula/issues/3))
-after this pull request merges. Draft PR #26 (release workflow) waits for that.
+**Next concrete step:** `/speckit-specify` for "Punch a tape" ([#3](https://github.com/LilSticky/crancula/issues/3)).
 
 ## Known broken / WIP
 
 - `e2e/fonts.spec.ts` "requests no font from an external origin" failed intermittently twice locally
   (`ERR_FILE_NOT_FOUND` on reload). Not reproducible yet.
-- Claude triage Action failed with `429 usage_limit_reached` on [#37](https://github.com/LilSticky/crancula/issues/37).
 - Fixed on 2026-10-14: fonts no longer load from Google; Roboto and Material
   Icons ship with the app from `src/fonts/`, licenses in `src/assets/fonts/`
   ([#24](https://github.com/LilSticky/crancula/issues/24)).
@@ -47,10 +45,10 @@ after this pull request merges. Draft PR #26 (release workflow) waits for that.
 
 - **Air Demand:** how "too many Pipes at once" depends on which Pipes play. Domain discovery is
   not finished; not in v0.1.
-- Release builds: CI (`.github/workflows/ci.yml`) runs lint, test and build on Linux, Windows
-  and macOS and should go green with this branch. Packaging now starts locally on Windows (smoke
-  launch of the packaged app). CI packaging and GitHub Releases are not set up yet
-  ([#11](https://github.com/LilSticky/crancula/issues/11)).
+- Release workflow ([#11](https://github.com/LilSticky/crancula/issues/11)): `.github/workflows/release.yml`
+  packages on Linux, Windows and macOS. A pushed tag `v*` also creates a draft GitHub Release; a
+  manual run, or a pull request that changes the workflow or `electron-builder.json`, only builds
+  artifacts. Builds are unsigned. Publishing is untested until the first tag.
 
 ## Process changes
 
@@ -63,7 +61,8 @@ after this pull request merges. Draft PR #26 (release workflow) waits for that.
   walkthrough as proof that a slice runs in Electron (ADR 13, constitution 1.1.1).
 - 2026-10-14: the repository is public, and the ruleset "No direct push to main" enforces ADR 10
   ([#18](https://github.com/LilSticky/crancula/issues/18)): no direct or force pushes, no deletion,
-  pull request required (no approvals), the three CI checks "Lint, test and build" must pass,
+  pull request required (no approvals), the three CI checks "Lint, test and build" and
+  "References an issue (ADR 10)" must pass,
   squash merge only; merged branches are deleted. Merging with red CI is no longer possible.
 - 2026-10-14: e2e runs keep the Electron window out of sight (`CRANCULA_HEADLESS`, set by the e2e
   launcher); `HEADED=1` shows it, slowed down and traced.
