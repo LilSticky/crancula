@@ -8,6 +8,7 @@
   },
   "keywords": [],
   "main": "app/main.js",
+  "license": "MIT",
   "private": true,
   "scripts": {
     "postinstall": "install-electron --no && electron-builder install-app-deps",
