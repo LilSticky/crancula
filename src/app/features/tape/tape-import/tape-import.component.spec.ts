@@ -1,7 +1,9 @@
 import {TestBed} from '@angular/core/testing';
 import {provideRouter, Router} from '@angular/router';
 import {
+  allowedTranspositions,
   defaultSelectedParts,
+  transposition,
   fitOf,
   MAXIMUM_MIDI_FILE_SIZE,
   minimumHoleLength,
@@ -353,6 +355,78 @@ describe('TapeImportComponent', () => {
       await type(field('transposition'), '100');
 
       expect(violationsAt('transposition')).toEqual(['transposition-out-of-range']);
+    });
+  });
+
+  describe('Transposition', () => {
+    const selected = (...indices: number[]) => new Set(indices as PartIndex[]);
+    const semitones = (value: number) => {
+      const result = transposition(value);
+      if (result === undefined) throw new Error(`invalid test Transposition ${value}`);
+      return result;
+    };
+    const highestNoteBytes = () =>
+      encodeSmf({
+        format: 1,
+        division: {ticksPerQuarterNote: TICKS_PER_QUARTER},
+        tracks: [track(0, [60, 127], 'Lead')],
+      });
+
+    it('limits the Transposition input to the allowed Transpositions of the selected Parts', async () => {
+      const {choose, field} = await render({organs: [testOrgan('Street organ', 3)]});
+      const song = songOf(melodyBytes(), 'melody.mid');
+
+      await choose(midiFile(melodyBytes()));
+
+      const {lowest, highest} = allowedTranspositions(song, defaultSelectedParts(song));
+      expect(field('transposition').min).toBe(String(lowest));
+      expect(field('transposition').max).toBe(String(highest));
+    });
+
+    it('shows the Fit for a chosen Transposition instead of the proposal', async () => {
+      const organ = testOrgan('Street organ', 3);
+      const {choose, field, type, fit} = await render({organs: [organ]});
+      const song = songOf(melodyBytes(), 'melody.mid');
+      await choose(midiFile(melodyBytes()));
+
+      await type(field('transposition'), '7');
+
+      expect(fit()).toEqual(fitOf(song, defaultSelectedParts(song), organ, semitones(7)));
+    });
+
+    it('creates the Tape with the chosen Transposition', async () => {
+      const {choose, field, type, create, tapes} = await render({organs: [testOrgan('Street organ', 3)]});
+      await choose(midiFile(melodyBytes()));
+
+      await type(field('transposition'), '7');
+      await create();
+
+      expect(tapes.tapeEntities()[0]?.transposition).toBe(7);
+    });
+
+    it('restores the proposal with "use proposal"', async () => {
+      const organ = testOrgan('Street organ', 3);
+      const {choose, field, type, query, fit, fixture} = await render({organs: [organ]});
+      const song = songOf(melodyBytes(), 'melody.mid');
+      const proposed = proposeTransposition(song, defaultSelectedParts(song), organ);
+      await choose(midiFile(melodyBytes()));
+      await type(field('transposition'), '7');
+
+      query('use-proposal')?.click();
+      await fixture.whenStable();
+
+      expect(field('transposition').value).toBe(String(proposed));
+      expect(fit()).toEqual(fitOf(song, selected(0), organ, proposed));
+    });
+
+    it('refuses +1 when the highest selected Note is G9 and disables Create', async () => {
+      const {choose, field, type, violationsAt, query} = await render({organs: [testOrgan('Street organ', 3)]});
+      await choose(midiFile(highestNoteBytes()));
+
+      await type(field('transposition'), '1');
+
+      expect(violationsAt('transposition')).toEqual(['transposition-out-of-range']);
+      expect(query('create-tape')?.hasAttribute('disabled')).toBe(true);
     });
   });
 

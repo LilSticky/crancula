@@ -499,7 +499,7 @@ expected rows, start Columns and lengths.
 
 ### Tests for User Story 5 ⚠️
 
-- [ ] T067 [P] [US5] Extend `src/app/features/tape/tape-import/tape-import.component.spec.ts`
+- [x] T067 [P] [US5] Extend `src/app/features/tape/tape-import/tape-import.component.spec.ts`
   (FR-007, Story 5): a number input for the Transposition, limited to `allowedTranspositions`;
   choosing +7 instead of −5 shows the Fit for +7 and the created Tape uses +7; "use proposal"
   restores the proposal; with a highest selected Note G9, +1 can't be chosen
@@ -507,7 +507,7 @@ expected rows, start Columns and lengths.
 
 ### Implementation for User Story 5
 
-- [ ] T068 [US5] Add the Transposition input and "use proposal" to the import page, with the
+- [x] T068 [US5] Add the Transposition input and "use proposal" to the import page, with the
   `TAPE.TRANSPOSITION.*` keys in `en.json` and `de.json`, until T067 is green.
 
 **Checkpoint**: US1–US5 green.

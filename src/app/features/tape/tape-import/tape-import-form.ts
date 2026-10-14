@@ -3,12 +3,15 @@ import {
   type Field,
   type FieldTree,
   type ReadonlyFieldTree,
-  type SchemaPath,
+  max,
+  min,
+  type SchemaPathTree,
   validateTree,
   type ValidationError,
 } from '@angular/forms/signals';
 import {ErrorStateMatcher} from '@angular/material/core';
 import {
+  allowedTranspositions,
   type CreatedTape,
   createTape,
   type Organ,
@@ -41,7 +44,7 @@ export interface TapeFieldError extends ValidationError.WithFieldTree {
 }
 
 function isTapeFieldError(error: ValidationError): error is TapeFieldError {
-  return error.kind !== 'parse';
+  return error.kind !== 'parse' && error.kind !== 'min' && error.kind !== 'max';
 }
 
 /** The Tape the draft makes, or the codes of the rules it breaks; the only call of `createTape` on this page. */
@@ -67,7 +70,10 @@ export function createTapeFromDraft(
  * the rules of a Tape live; each violation becomes an error at the field it belongs to.
  */
 export function tapeImportSchema(context: Signal<TapeImportContext | null>) {
-  return (draft: SchemaPath<TapeImportDraft>): void => {
+  return (draft: SchemaPathTree<TapeImportDraft>): void => {
+    // Only bounds the input (its min and max attributes); `createTape` reports the violation.
+    min(draft.transposition, () => allowed(context)?.lowest);
+    max(draft.transposition, () => allowed(context)?.highest);
     validateTree(draft, ({value, fieldTree}) => {
       const chosen = context();
       if (chosen === null) return undefined;
@@ -75,6 +81,11 @@ export function tapeImportSchema(context: Signal<TapeImportContext | null>) {
       return result.ok ? undefined : result.error.map((code) => toFieldError(code, fieldTree));
     });
   };
+}
+
+function allowed(context: Signal<TapeImportContext | null>) {
+  const chosen = context();
+  return chosen && allowedTranspositions(chosen.song, chosen.selectedParts);
 }
 
 function toFieldError(code: TapeViolationCode, draft: ReadonlyFieldTree<TapeImportDraft>): TapeFieldError {

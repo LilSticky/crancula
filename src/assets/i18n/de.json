@@ -51,6 +51,9 @@
       "TRANSPOSITION": "Transposition (Halbtöne)",
       "CREATE": "Band erstellen"
     },
+    "TRANSPOSITION": {
+      "USE_PROPOSAL": "Vorschlag verwenden"
+    },
     "SONG_REJECTION": {
       "NOT_A_MIDI_FILE": "Diese Datei ist keine MIDI-Datei, sie ist beschädigt oder größer als 16 MiB.",
       "FORMAT_2": "Diese MIDI-Datei enthält mehrere unabhängige Sequenzen (Format 2). Speichere sie als Format 0 oder 1 und versuche es erneut.",

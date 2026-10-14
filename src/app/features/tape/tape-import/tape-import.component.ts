@@ -78,7 +78,7 @@ export class TapeImportComponent {
     computation: (song) => (song ? defaultSelectedParts(song) : new Set()),
   });
 
-  private readonly context = computed<TapeImportContext | null>(() => {
+  protected readonly context = computed<TapeImportContext | null>(() => {
     const song = this.song();
     const organ = this.organ();
     return song && organ ? {song, organ, selectedParts: this.selectedParts()} : null;
@@ -146,6 +146,16 @@ export class TapeImportComponent {
       else next.delete(index as PartIndex);
       return next;
     });
+  }
+
+  /** Replaces the chosen Transposition with the proposal for the selected Parts. */
+  protected useProposal(): void {
+    const context = this.context();
+    if (context === null) return;
+    this.draft.update((draft) => ({
+      ...draft,
+      transposition: proposeTransposition(context.song, context.selectedParts, context.organ),
+    }));
   }
 
   protected chooseOrgan(organId: string): void {

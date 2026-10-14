@@ -75,6 +75,11 @@
         }
       </ng-container>
     </mat-form-field>
+    <div>
+      <button matButton="outlined" type="button" data-testid="use-proposal" [disabled]="context() === null" (click)="useProposal()">
+        {{ 'TAPE.TRANSPOSITION.USE_PROPOSAL' | translate }}
+      </button>
+    </div>
 
     @if (fit(); as fit) {
       <div data-testid="fit" [attr.data-matching-a-pipe]="fit.matchingAPipe" [attr.data-moved-by-octaves]="fit.movedByOctaves" [attr.data-unplayable]="fit.unplayable">

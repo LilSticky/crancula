@@ -51,6 +51,9 @@
       "TRANSPOSITION": "Transposition (semitones)",
       "CREATE": "Create Tape"
     },
+    "TRANSPOSITION": {
+      "USE_PROPOSAL": "Use proposal"
+    },
     "SONG_REJECTION": {
       "NOT_A_MIDI_FILE": "This file is not a MIDI file, or it is damaged or larger than 16 MiB.",
       "FORMAT_2": "This MIDI file has several independent sequences (format 2). Save it as format 0 or 1 and try again.",
