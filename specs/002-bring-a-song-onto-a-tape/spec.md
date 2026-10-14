@@ -30,6 +30,13 @@
   is cut, silence between Notes is kept, and the Tape ends with the end of its last Hole. Columns
   in the Import Summary are counted from 1 at the Tape's start, so none is negative; inside the
   program Columns still count from 0 (FR-013, FR-015).
+- Q: Can I remove a Pipe from an Organ while the stored Tapes can't be read? → A: No. Saving an
+  Organ with removed Pipes is refused with a message naming the reason, like deleting an Organ
+  (FR-020), because the Holes of those Pipes couldn't be removed. Every other change to the Organ
+  can still be saved (FR-021a). Decided 2026-10-14.
+- Q: Is "Column length" a dictionary term? → A: No. It is a descriptive phrase for the Tape's
+  physical length of one Column in mm and may be used in the spec and the UI as is. Decided
+  2026-10-14.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -245,6 +252,9 @@ untranslated.
   listed but can't be opened until their Organ is readable again. Nothing is deleted.
 - I delete an Organ while the stored Tapes can't be read: the deletion is refused with a message,
   so no Tape is lost. Once the Tapes are readable, I can delete the Organ.
+- I remove a Pipe from an Organ while the stored Tapes can't be read: saving is refused with a
+  message, because the Holes of that Pipe couldn't be removed. Other changes to the Organ can
+  still be saved (FR-021a).
 - If writing Tapes to disk fails (for example disk full), I'm told so and the Tape stays in the app
   so that nothing is lost.
 
@@ -326,6 +336,9 @@ untranslated.
   are affected. After the user confirms, saving MUST remove those Holes and keep everything else
   of the Tapes, including their length in Columns; a Tape left without Holes MUST stay. If the
   user cancels, neither the Organ nor its Tapes change.
+- **FR-021a**: While the stored Tapes can't be read (FR-023), saving an Organ from which Pipes were
+  removed MUST be refused with a message naming the reason; the Organ stays as last saved. Saving
+  any other change to an Organ (including adding or reordering Pipes) MUST still work.
 - **FR-022**: Stored Tapes MUST survive an app restart unchanged.
 - **FR-023**: If stored Tapes can't be read at startup, the app MUST start anyway, inform the user,
   keep the Organs usable, and MUST NOT overwrite the unreadable data. If the Organs can't be read,
