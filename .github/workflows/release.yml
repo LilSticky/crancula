@@ -1,0 +1,79 @@
+# Packages Crancula for Windows, macOS and Linux and publishes a draft GitHub Release (#11).
+# A pushed tag `v*` builds and publishes; a manual run only builds and keeps the artifacts.
+# The builds are not code-signed: Windows SmartScreen and macOS Gatekeeper will warn.
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Lint and test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: Translations
+        run: npm run i18n:check
+      - name: Test
+        run: npm run test
+
+  build:
+    name: Package (${{ matrix.os }})
+    needs: check
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - run: npm ci
+      - name: Package
+        run: npm run electron:build
+        env:
+          # Unsigned builds: don't look for a signing identity on macOS.
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      # Targets from electron-builder.json: portable .exe, .dmg, .AppImage.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: crancula-${{ runner.os }}
+          path: |
+            release/*.exe
+            release/*.dmg
+            release/*.AppImage
+          if-no-files-found: error
+
+  publish:
+    name: Publish draft release
+    needs: build
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+      - name: Create draft release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ github.ref_name }}
+        run: gh release create "$TAG" artifacts/* --draft --verify-tag --title "$TAG" --generate-notes
