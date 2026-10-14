@@ -72,3 +72,8 @@ slice 002. Draft PR #26 (release workflow) waits for that.
 - 2026-10-14: Dependabot pull requests skip the issue reference check, and patch and minor updates
   squash-merge automatically once CI is green; major updates stay manual (ADR 16, amends ADR 10 and 14).
   Needs the repository setting "Allow auto-merge" to be on.
+- 2026-10-14: Dependabot major updates evaluated ([#49](https://github.com/LilSticky/crancula/issues/49)):
+  `actions/checkout`, `setup-node` and `upload-artifact` moved to v7. Majors of `@types/node` (until the
+  Electron Node runtime moves beyond 24) and `electron-reloader` are held in `dependabot.yml`;
+  `electron-reloader` waits for the ESM main process ([#47](https://github.com/LilSticky/crancula/issues/47)).
+  A flaky macOS e2e test is tracked in [#48](https://github.com/LilSticky/crancula/issues/48).
