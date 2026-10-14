@@ -7,7 +7,7 @@ import {
   MatDialogTitle
 } from "@angular/material/dialog";
 import {MatButton} from "@angular/material/button";
-import {TranslateService} from "@ngx-translate/core";
+import {TranslatePipe, TranslateService} from "@ngx-translate/core";
 
 export enum ConfirmableAction {
   DELETE = 'DELETE',
@@ -19,17 +19,18 @@ export enum ConfirmableAction {
     MatDialogContent,
     MatDialogActions,
     MatButton,
-    MatDialogTitle
+    MatDialogTitle,
+    TranslatePipe
   ],
   selector: 'cranc-confirm-dialog',
   template: `
-    <h2 matDialogTitle>Confirm Action</h2>
+    <h2 matDialogTitle>{{ 'CONFIRMATION_DIALOG.TITLE' | translate }}</h2>
     <mat-dialog-content>
       {{ confirmationMessage }}
     </mat-dialog-content>
     <mat-dialog-actions align="end">
-      <button mat-button (click)="onCancel()">Cancel</button>
-      <button mat-raised-button color="warn" (click)="onConfirm()">Confirm</button>
+      <button mat-button (click)="onCancel()">{{ 'CONFIRMATION_DIALOG.CANCEL' | translate }}</button>
+      <button mat-raised-button color="warn" (click)="onConfirm()">{{ 'CONFIRMATION_DIALOG.CONFIRM' | translate }}</button>
     </mat-dialog-actions>
   `,
   styles: `
