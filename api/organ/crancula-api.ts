@@ -16,6 +16,11 @@ export type OrganLibrarySaveResult =
   /** Writing failed; the previous file is left intact. */
   | {readonly status: 'failed'; readonly reason: string};
 
+export type SetLanguageResult =
+  | {readonly status: 'set'}
+  /** The payload is not a supported language; the menu is unchanged. */
+  | {readonly status: 'rejected'; readonly reason: string};
+
 /** What the preload script exposes as `window.crancula` (ADR 4). */
 export interface CranculaApi {
   readonly organs: {
@@ -24,6 +29,6 @@ export interface CranculaApi {
   };
   readonly app: {
     /** Tells the main process the language, so it can translate the application menu. */
-    setLanguage(language: Language): Promise<void>;
+    setLanguage(language: Language): Promise<SetLanguageResult>;
   };
 }

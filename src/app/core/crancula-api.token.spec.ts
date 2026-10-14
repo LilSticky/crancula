@@ -47,6 +47,6 @@ describe('createInMemoryCranculaApi', () => {
   });
 
   it('accepts a language without effect', async () => {
-    await expect(createInMemoryCranculaApi().app.setLanguage('de')).resolves.toBeUndefined();
+    await expect(createInMemoryCranculaApi().app.setLanguage('de')).resolves.toEqual({status: 'set'});
   });
 });

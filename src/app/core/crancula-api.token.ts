@@ -19,7 +19,7 @@ export function createInMemoryCranculaApi(initial?: OrganLibrarySnapshot): Cranc
       },
     },
     app: {
-      setLanguage: () => Promise.resolve(),
+      setLanguage: () => Promise.resolve({status: 'set'}),
     },
   };
 }

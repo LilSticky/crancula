@@ -33,7 +33,7 @@ describe('registerAppHandlers', () => {
   it.each(['en', 'de'] as const)('applies the application menu in %s', async (language) => {
     const {applyMenu, setLanguage} = setup();
 
-    await setLanguage(language);
+    expect(await setLanguage(language)).toEqual({status: 'set'});
 
     expect(applyMenu).toHaveBeenCalledExactlyOnceWith(language);
   });
@@ -43,7 +43,7 @@ describe('registerAppHandlers', () => {
     async (payload) => {
       const {applyMenu, setLanguage} = setup();
 
-      await expect(setLanguage(payload)).rejects.toThrow();
+      expect(await setLanguage(payload)).toEqual({status: 'rejected', reason: expect.stringContaining('language')});
 
       expect(applyMenu).not.toHaveBeenCalled();
     },
