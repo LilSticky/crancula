@@ -19,7 +19,9 @@ Changes from the plan:
 - **Angular specs:** run in jsdom (ADR 9).
 - **Error states:** a small `crancErrorState` directive puts form fields into their error state.
 
-**Next concrete step:** T030, the leave-invalid guard test (User Story 4).
+**Next concrete step:** T031, the delete test in the Organ list spec (User Story 4).
+
+- Leaving the editor with an invalid changed draft asks for confirmation (T030, T034 done).
 
 - Pipes can be reordered and removed in the editor (T029, T033 done).
 - The tech-stack update for [#13](https://github.com/LilSticky/crancula/issues/13) is done on branch
@@ -33,10 +35,12 @@ Changes from the plan:
 - No known broken items. These are fixed on this branch and close when the slice merges into
   `main`: #4 (build), #5 (no tests), #6 (`window.require`), #7 (localStorage), #8 (`api/model`).
 - **Not done yet:**
-  - User Story 4: delete an Organ and confirm before leaving with invalid changes (T030–T032,
-    T034–T035). Reordering and removing Pipes is done.
+  - User Story 4: delete an Organ (T031, T032, T035 e2e). Reordering and removing Pipes and the
+    leave-invalid confirmation are done.
   - User Story 5: language switch.
   - Polish (T039–T042).
+- **ConfirmDialogComponent** (`src/app/features/shared/components/confirm-dialog/`) has hard-coded
+  English texts ("Confirm Action", "Cancel", "Confirm") and no i18n keys. Fix with User Story 5 or T039.
 - **German texts to review:** the German UI terms are first guesses: "Drehorgel", "Pfeife",
   "Bandbett" (Tape Bed), "Reihenabstand", "Mindestabstand", "Mindestlochlänge".
 - **`npm run i18n:check`:** lists the dynamic `ORGAN.VIOLATION.*` keys and the old prototype keys
