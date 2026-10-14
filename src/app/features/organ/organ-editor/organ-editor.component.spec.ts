@@ -185,6 +185,7 @@ describe('OrganEditorComponent', () => {
           load: () => inMemory.organs.load(),
           save: () => new Promise<OrganLibrarySaveResult>((resolve) => writes.push(resolve)),
         },
+        tapes: inMemory.tapes,
         app: inMemory.app,
       };
       TestBed.configureTestingModule({

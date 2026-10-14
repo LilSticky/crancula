@@ -282,11 +282,11 @@ the `tapes:*` IPC boundary and the `TapeLibrary` store. Every user story needs t
 
 ### Renderer adapter (`src/app/`, ng test)
 
-- [ ] T036 [P] Extend `src/app/core/crancula-api.token.spec.ts`: `createInMemoryCranculaApi`
+- [x] T036 [P] Extend `src/app/core/crancula-api.token.spec.ts`: `createInMemoryCranculaApi`
   takes an optional initial Tape snapshot and its `tapes` part behaves like its `organs` part
   (`empty` without one, `loaded` with one, `save` validates with `parseTapeLibrarySnapshot`), and
   can be told to answer `failed` or `unreadable` for tests (FR-023, FR-024).
-- [ ] T037 Implement the `tapes` part in `src/app/core/crancula-api.token.ts` until T036 is
+- [x] T037 Implement the `tapes` part in `src/app/core/crancula-api.token.ts` until T036 is
   green. Depends on T027, T036.
 - [ ] T038 Write the failing test `src/app/features/tape/tape-library.store.spec.ts` for the
   `TapeLibrary` signal store (research R10.2, R10.3, data-model.md "Tape library"):
