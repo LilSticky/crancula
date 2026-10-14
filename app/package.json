@@ -4,12 +4,11 @@
   "author": {
     "name": "Lil Sticky"
   },
-  "version": "0.1.0",
+  "version": "0.0.1",
   "main": "main.js",
   "private": true,
   "include": [
     "../api/index.ts"
   ],
-  "dependencies": {
-  }
+  "dependencies": {}
 }
