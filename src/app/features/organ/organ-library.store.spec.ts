@@ -87,6 +87,29 @@ describe('OrganLibrary', () => {
     });
   });
 
+  describe('put outcome', () => {
+    function apiSaving(result: OrganLibrarySaveResult): CranculaApi {
+      const inMemory = createInMemoryCranculaApi();
+      return {organs: {load: () => inMemory.organs.load(), save: () => Promise.resolve(result)}};
+    }
+
+    it('resolves true when the Organs were written to disk', async () => {
+      const {library} = setup(apiSaving({status: 'saved'}));
+
+      expect(await library.put(organ('First'))).toBe(true);
+    });
+
+    it('resolves false when writing failed, and keeps the Organ in memory', async () => {
+      const {library} = setup(apiSaving({status: 'failed', reason: 'disk full'}));
+      const first = organ('First');
+
+      expect(await library.put(first)).toBe(false);
+
+      expect(library.entities()).toEqual([first]);
+      expect(library.saveProblem()).toEqual({reason: 'disk full'});
+    });
+  });
+
   describe('remove', () => {
     it('removes the Organ and saves the rest', async () => {
       const {api, library} = setup();

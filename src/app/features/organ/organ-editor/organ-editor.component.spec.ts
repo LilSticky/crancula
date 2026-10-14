@@ -1,10 +1,12 @@
 import type {CdkDragDrop} from '@angular/cdk/drag-drop';
 import {CdkDropList} from '@angular/cdk/drag-drop';
-import {TestBed} from '@angular/core/testing';
+import {type ComponentFixture, TestBed} from '@angular/core/testing';
 import {By} from '@angular/platform-browser';
 import {MatDialog} from '@angular/material/dialog';
 import {provideRouter, Router} from '@angular/router';
 import {type Observable, of} from 'rxjs';
+import type {CranculaApi, OrganLibrarySaveResult} from '@api/index';
+import {CRANCULA_API, createInMemoryCranculaApi} from '../../../core/crancula-api.token';
 import {ConfirmableAction, ConfirmDialogComponent} from '../../shared/components/confirm-dialog/confirm-dialog.component';
 import {provideTestTranslations} from '../../../../testing/test-translations';
 import {testOrgan} from '../../../../testing/organs';
@@ -164,6 +166,118 @@ describe('OrganEditorComponent', () => {
       await save();
 
       expect(navigate).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('saving to disk', () => {
+    /** An API whose disk write is decided by the test: `finish` ends the pending write. */
+    function renderWithDiskWrite() {
+      const inMemory = createInMemoryCranculaApi();
+      const writes: Array<(result: OrganLibrarySaveResult) => void> = [];
+      const api: CranculaApi = {
+        organs: {
+          load: () => inMemory.organs.load(),
+          save: () => new Promise<OrganLibrarySaveResult>((resolve) => writes.push(resolve)),
+        },
+      };
+      TestBed.configureTestingModule({
+        providers: [provideRouter([]), provideTestTranslations(), {provide: CRANCULA_API, useValue: api}],
+      });
+      const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+      const finish = async (result: OrganLibrarySaveResult, fixture: ComponentFixture<OrganEditorComponent>) => {
+        writes.shift()?.(result);
+        await fixture.whenStable();
+        fixture.detectChanges();
+      };
+      /** Presses Save without waiting for the disk write. */
+      const startSaving = async (editor: Awaited<ReturnType<typeof open>>) => {
+        editor.saveButton().click();
+        await Promise.resolve();
+        editor.fixture.detectChanges();
+      };
+      return {navigate, finish, startSaving, writes};
+    }
+
+    it('keeps Save enabled and the changes unsaved when writing fails', async () => {
+      const {finish, startSaving} = renderWithDiskWrite();
+      const editor = await open();
+      await editor.fillValidOrgan();
+
+      await startSaving(editor);
+      await finish({status: 'failed', reason: 'disk full'}, editor.fixture);
+
+      expect(editor.saveButton().disabled).toBe(false);
+      expect(editor.fixture.componentInstance.unsavedChanges()).not.toBeNull();
+    });
+
+    it('does not open a new Organ by id when writing fails', async () => {
+      const {navigate, finish, startSaving} = renderWithDiskWrite();
+      const editor = await open();
+      await editor.fillValidOrgan();
+
+      await startSaving(editor);
+      await finish({status: 'failed', reason: 'disk full'}, editor.fixture);
+
+      expect(navigate).not.toHaveBeenCalled();
+    });
+
+    it('disables Save and has no unsaved changes once writing succeeded', async () => {
+      const {finish, startSaving} = renderWithDiskWrite();
+      const editor = await open();
+      await editor.fillValidOrgan();
+
+      await startSaving(editor);
+      await finish({status: 'saved'}, editor.fixture);
+
+      expect(editor.saveButton().disabled).toBe(true);
+      expect(editor.fixture.componentInstance.unsavedChanges()).toBeNull();
+    });
+
+    it('opens a new Organ by id only after writing succeeded, with no unsaved changes left', async () => {
+      const {navigate, finish, startSaving} = renderWithDiskWrite();
+      const editor = await open();
+      await editor.fillValidOrgan();
+      const unsavedAtNavigation: Array<ReturnType<OrganEditorComponent['unsavedChanges']>> = [];
+      navigate.mockImplementation(() => {
+        unsavedAtNavigation.push(editor.fixture.componentInstance.unsavedChanges());
+        return Promise.resolve(true);
+      });
+
+      await startSaving(editor);
+      expect(navigate).not.toHaveBeenCalled();
+      await finish({status: 'saved'}, editor.fixture);
+
+      expect(navigate).toHaveBeenCalledTimes(1);
+      expect(unsavedAtNavigation).toEqual([null]);
+    });
+
+    it('disables Save while the write is in flight, so that nothing is written twice', async () => {
+      const {finish, startSaving, writes} = renderWithDiskWrite();
+      const editor = await open();
+      await editor.fillValidOrgan();
+
+      await startSaving(editor);
+
+      expect(editor.saveButton().disabled).toBe(true);
+      editor.saveButton().click();
+      await Promise.resolve();
+      expect(writes).toHaveLength(1);
+      await finish({status: 'saved'}, editor.fixture);
+    });
+
+    it('enables Save again after a failed write so that the user can retry', async () => {
+      const {finish, startSaving, writes} = renderWithDiskWrite();
+      const editor = await open();
+      await editor.fillValidOrgan();
+      await startSaving(editor);
+      await finish({status: 'failed', reason: 'disk full'}, editor.fixture);
+
+      await startSaving(editor);
+      expect(writes).toHaveLength(1);
+      await finish({status: 'saved'}, editor.fixture);
+
+      expect(editor.saveButton().disabled).toBe(true);
+      expect(editor.fixture.componentInstance.unsavedChanges()).toBeNull();
     });
   });
 

@@ -17,9 +17,11 @@ export const OrganLibrary = signalStore(
   withEntities<Organ>(),
   withState<OrganLibraryState>({loadProblem: null, saveProblem: null}),
   withMethods((store, api = inject(CRANCULA_API)) => {
-    async function save(): Promise<void> {
+    /** Writes all Organs to disk; resolves `true` when that worked. */
+    async function save(): Promise<boolean> {
       const result = await api.organs.save(toSnapshot(store.entities()));
       patchState(store, {saveProblem: result.status === 'saved' ? null : {reason: result.reason}});
+      return result.status === 'saved';
     }
 
     return {
@@ -37,15 +39,15 @@ export const OrganLibrary = signalStore(
         }
       },
 
-      /** Adds or replaces a valid Organ and writes all Organs to disk. */
-      put(organ: Organ): Promise<void> {
+      /** Adds or replaces a valid Organ and writes all Organs to disk; resolves `false` when writing failed. */
+      put(organ: Organ): Promise<boolean> {
         patchState(store, setEntity(organ));
         return save();
       },
 
-      remove(id: OrganId): Promise<void> {
+      async remove(id: OrganId): Promise<void> {
         patchState(store, removeEntity(id));
-        return save();
+        await save();
       },
     };
   }),

@@ -16,14 +16,14 @@ import type {UnsavedChanges} from '../leave-unsaved.guard';
         <p>{{ 'ORGAN.LEAVE.UNSAVED' | translate }}</p>
       } @else {
         <p>{{ 'ORGAN.LEAVE.INVALID' | translate }}</p>
-        <ul>
+        <dl>
           @for (problem of data.problems; track $index) {
-            <li data-testid="leave-problem">
-              <strong>{{ problem.field.key | translate: problem.field.params }}</strong>:
-              {{ problem.message.key | translate: problem.message.params }}
-            </li>
+            <div data-testid="leave-problem">
+              <dt>{{ problem.field.key | translate: problem.field.params }}</dt>
+              <dd>{{ problem.message.key | translate: problem.message.params }}</dd>
+            </div>
           }
-        </ul>
+        </dl>
       }
     </mat-dialog-content>
     <mat-dialog-actions align="end">
@@ -34,6 +34,15 @@ import type {UnsavedChanges} from '../leave-unsaved.guard';
         {{ 'ORGAN.LEAVE.DISCARD' | translate }}
       </button>
     </mat-dialog-actions>
+  `,
+  styles: `
+    dt {
+      font-weight: 500;
+    }
+
+    dd {
+      margin-inline-start: 1rem;
+    }
   `,
 })
 export class LeaveUnsavedDialogComponent {

@@ -98,7 +98,8 @@ export class OrganEditorComponent implements UnsavedChangesCheck {
 
   private readonly validation = computed(() => validateOrgan(this.draft()));
   private readonly changed = computed(() => JSON.stringify(this.draft()) !== JSON.stringify(this.saved()));
-  protected readonly canSave = computed(() => this.changed() && this.validation().ok);
+  private readonly saving = signal(false);
+  protected readonly canSave = computed(() => this.changed() && this.validation().ok && !this.saving());
 
   /**
    * What the inputs show. It follows the draft only on structural changes (opening an Organ, adding
@@ -145,12 +146,18 @@ export class OrganEditorComponent implements UnsavedChangesCheck {
   }
 
   /** Stores the valid, changed Organ (spec FR-012). */
-  protected save(): void {
+  protected async save(): Promise<void> {
     const result = this.validation();
-    if (!result.ok || !this.changed()) return;
-    this.saved.set(this.draft());
-    void this.library.put(result.value);
-    if (!this.id()) void this.router.navigate(['/organs', result.value.id], {replaceUrl: true});
+    if (!result.ok || !this.canSave()) return;
+    const sent = this.draft();
+    this.saving.set(true);
+    try {
+      if (!(await this.library.put(result.value))) return; // Still unsaved: the library reports the storage problem.
+      this.saved.set(sent);
+    } finally {
+      this.saving.set(false);
+    }
+    if (!this.id()) await this.router.navigate(['/organs', result.value.id], {replaceUrl: true});
   }
 
   /** The rule messages to show at the field with this path. */
