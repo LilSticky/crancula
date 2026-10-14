@@ -56,7 +56,7 @@ on its own. Stories follow the spec's priority order (US1, US2 P1; US3, US4 P2; 
   `src/app/core/crancula-api.token.ts`; the import path through `@api/index` stays the same. This
   is a refactor under green: no behaviour change; `npm run test`, `npm run lint` and
   `npm run build` pass before and after. Commit as `refactor(api): move CranculaApi to api/app`.
-- [ ] T002 Write the failing test `api/song/midi/smf-test-helper.spec.ts` for a Standard MIDI File
+- [x] T002 Write the failing test `api/song/midi/smf-test-helper.spec.ts` for a Standard MIDI File
   encoder used only by tests (research R8). It asserts the exact bytes for:
   - an `MThd` header with format 0, 1 or 2 and Ticks per quarter note, or a time-code (SMPTE)
     division with the top bit set;
@@ -66,7 +66,7 @@ on its own. Stories follow the spec's priority order (US1, US2 P1; US3, US4 P2; 
     `F0`, a controller `Bn` and a program change `Cn`;
   - optional running status, an optional missing End of Track, and raw bytes appended or cut off
     (for truncated or malformed files).
-- [ ] T003 Implement `api/song/midi/smf-test-helper.ts` until T002 is green. It uses relative
+- [x] T003 Implement `api/song/midi/smf-test-helper.ts` until T002 is green. It uses relative
   imports only, so `e2e/` can import it too. It is **not** re-exported from `api/index.ts`.
 
 **Checkpoint**: `npm run test` green; the helper can build every fixture of research R8.
