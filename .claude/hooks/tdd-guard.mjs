@@ -9,10 +9,12 @@
 //     Runs lint and unit tests when this session changed code, and keeps the turn going while
 //     they fail, so nothing is reported done while red. Other sessions may share the working
 //     tree, so only files this session edited count (recorded by pre-edit, per session_id).
+//     Output is trimmed to the failures; red is reported once per state of the changed code.
 //
 // Exit code 2 blocks the action; stderr is fed back to Claude.
 import { execSync } from 'node:child_process';
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, relative, resolve } from 'node:path';
 
@@ -116,8 +118,40 @@ function run(command, cwd) {
     const output = `${error.stdout ?? ''}${error.stderr ?? ''}`;
     // An empty unit test suite is not red (e.g. only e2e tests changed so far).
     if (output.includes('No tests found matching')) return null;
-    return output.split('\n').slice(-60).join('\n');
+    return summarize(output);
   }
+}
+
+/** Lines that only cost tokens: stack frames, serialized error objects, npm banners, blanks. */
+const NOISE = /node_modules|^\s*at |^\s*(method|file|line|column):|^\s*[{}[\],]+\s*$|^\s*$|^> |^npm (ERR|error)!/;
+/** Keep at most this many lines of a failure. */
+const MAX_FAILURE_LINES = 25;
+
+/** @param {string} output @returns {string} the failing tests and first error lines, without noise */
+function summarize(output) {
+  const lines = output.split('\n').filter((line) => !NOISE.test(line));
+  const omitted = lines.length - MAX_FAILURE_LINES;
+  return lines.slice(0, MAX_FAILURE_LINES).join('\n') + (omitted > 0 ? `\n… ${omitted} more lines` : '');
+}
+
+/** @param {string[]} files @param {string} cwd @returns {string} hash of the files' current contents */
+function fingerprint(files, cwd) {
+  const hash = createHash('sha256');
+  for (const file of [...files].sort()) {
+    hash.update(file);
+    try {
+      hash.update(readFileSync(join(cwd, file)));
+    } catch {
+      hash.update('<deleted>');
+    }
+  }
+  return hash.digest('hex');
+}
+
+/** @param {unknown} sessionId @returns {string | null} file holding the fingerprint of the last red report */
+function lastRedFile(sessionId) {
+  const file = sessionFile(sessionId);
+  return file === null ? null : file.replace(/\.json$/, '.red');
 }
 
 /** @param {Record<string, any>} input */
@@ -127,14 +161,20 @@ function stop(input) {
 
   const cwd = input.cwd ?? process.cwd();
   const edited = editedBySession(input.session_id);
-  const codeChanged = changedFiles(cwd).some(
+  const changedCode = changedFiles(cwd).filter(
     (file) => (isGuarded(file) || TEST_FILE.test(file)) && edited.includes(file),
   );
-  if (!codeChanged) return 0;
+  if (changedCode.length === 0) return 0;
+
+  // Red was already reported for exactly this code; don't rerun and repeat it (e.g. a red phase on purpose).
+  const redFile = lastRedFile(input.session_id);
+  const current = fingerprint(changedCode, cwd);
+  if (redFile !== null && readText(redFile) === current) return 0;
 
   for (const command of ['npm run lint', 'npm run test']) {
     const failure = run(command, cwd);
     if (failure !== null) {
+      if (redFile !== null) writeFileSync(redFile, current);
       process.stderr.write(
         `TDD guard: "${command}" fails. Do not report the task as done while red. ` +
           'Fix it, or tell the user explicitly that it is still red and why (e.g. you are in the red phase on purpose).\n\n' +
@@ -143,7 +183,17 @@ function stop(input) {
       return 2;
     }
   }
+  if (redFile !== null) rmSync(redFile, { force: true });
   return 0;
+}
+
+/** @param {string} file @returns {string | null} */
+function readText(file) {
+  try {
+    return readFileSync(file, 'utf8');
+  } catch {
+    return null;
+  }
 }
 
 const mode = process.argv[2];

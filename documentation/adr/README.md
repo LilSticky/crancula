@@ -11,7 +11,8 @@ with a new one and update both statuses here.
 | 3 | [In-memory state as source of truth, snapshots on disk](0003-memory-first-snapshots.md) | Accepted |
 | 4 | [Strict Electron process boundary](0004-strict-electron-boundary.md) | Accepted |
 | 5 | [MIDI in and SVG out first](0005-midi-in-svg-out-first.md) | Accepted |
-| 6 | [Autonomous slices on branches, squash-merged](0006-autonomous-slices-squash-merge.md) | Accepted |
+| 6 | [Autonomous slices on branches, squash-merged](0006-autonomous-slices-squash-merge.md) | Superseded by 10 |
 | 7 | [Node Vitest for the domain and the main process](0007-node-vitest-for-domain-and-main.md) | Accepted |
 | 8 | [Snapshot write strategy](0008-snapshot-write-strategy.md) | Accepted |
 | 9 | [Angular specs run in jsdom](0009-angular-specs-in-jsdom.md) | Accepted |
+| 10 | [Merge through pull requests that reference issues](0010-merge-through-pull-requests.md) | Accepted |

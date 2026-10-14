@@ -45,3 +45,8 @@ from `main` are loaded.
 - Release builds: CI (`.github/workflows/ci.yml`) runs lint, test and build on Linux, Windows
   and macOS, and is red until the build and test items above are fixed. Packaging v0.1 as
   GitHub Releases is not set up yet ([#11](https://github.com/LilSticky/crancula/issues/11)).
+
+## Process changes
+
+- 2026-10-14: branches reach `main` only through pull requests that reference their issues
+  (`Closes #N` / `Refs #N`), then get squash-merged by the agent (ADR 10, constitution 1.1.0).
