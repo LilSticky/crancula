@@ -24,3 +24,4 @@ with a new one and update both statuses here.
 | 16 | [Dependabot pull requests merge themselves](0016-dependabot-pull-requests-merge-themselves.md) | Accepted |
 | 17 | [Own MIDI reader in the domain](0017-own-midi-reader-in-the-domain.md) | Accepted |
 | 18 | [Tape snapshot of its own, written before the Organs](0018-tape-snapshot-and-cascade-order.md) | Accepted |
+| 19 | [Releases from the changelog, tagged by the agent](0019-releases-from-the-changelog.md) | Accepted |
