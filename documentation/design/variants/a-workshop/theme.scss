@@ -1,0 +1,121 @@
+// Variant a-workshop: "The organ builder's workshop".
+// Replaces the theme block in src/styles.scss. Minimal SCSS: one mat.theme call, a handful of
+// component overrides, and the custom tokens Material has no role for (the Tape, the bench, brass).
+//
+// Palettes: generate once with
+//   ng generate @angular/material:theme-color
+//     primary #3a2f28 (walnut ink), tertiary #8c6a23 (brass), neutral #6e675c, error #7a2a24 (oxblood)
+// which writes src/styles/_theme-colors.scss with $primary-palette and $tertiary-palette
+// (and the neutral/error tones inside them). Commit the generated file.
+//
+// Fonts (to bundle in src/fonts, both OFL 1.1, see #24):
+//   Libertinus Serif Semibold  (headings; maintained fork of Linux Libertine)
+//   Noto Sans 400/500/600      (body, labels, numbers)
+// Material Icons is already bundled.
+
+@use '@angular/material' as mat;
+@use 'styles/fonts';
+@use 'styles/theme-colors' as workshop;
+
+html {
+  height: 100%;
+  color-scheme: light;
+
+  @include mat.theme((
+    color: (
+      primary: workshop.$primary-palette,
+      tertiary: workshop.$tertiary-palette,
+      theme-type: light,
+    ),
+    typography: (
+      plain-family: 'Noto Sans',
+      brand-family: 'Libertinus Serif',
+      bold-weight: 600,
+      medium-weight: 500,
+      regular-weight: 400,
+    ),
+    density: -2,
+  ));
+
+  // Roles the generated palette gets close to but not exactly; pin them to the guide.
+  @include mat.theme-overrides((
+    primary: #1e1a16,              // ink: filled buttons, checkboxes, selected toggles
+    on-primary: #fbf9f4,
+    error: #7a2a24,                // oxblood: errors, unsaved, destructive
+    surface: #d6d0c4,              // the bench (page background)
+    surface-container-lowest: #fbf9f4, // paper sheets
+    surface-container-low: #f5f1e8,
+    on-surface: #1e1a16,
+    on-surface-variant: #4a433b,
+    outline: #8f8576,
+    outline-variant: #d4ccbc,
+    corner-small: 3px,
+    corner-medium: 6px,
+  ));
+
+  // Custom tokens: no Material role exists for these.
+  --cr-paper: #fbf9f4;
+  --cr-paper-edge: #d4ccbc;
+  --cr-tape: #e8d6a4;        // manila Tape
+  --cr-tape-edge: #c4ad74;
+  --cr-hole: #1e1a16;        // ink-black Holes
+  --cr-brass: #8c6a23;       // rulers, dimension lines, focus ring (4.7:1 on paper)
+  --cr-walnut: #2e2722;      // navigation rail
+  --cr-walnut-raised: #463c35;
+  --cr-mm: 3.78px;           // 1 mm at 96 dpi, the 1:1 Tape zoom
+}
+
+body {
+  margin: 0;
+  height: 100%;
+  background: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface);
+  font: var(--mat-sys-body-medium);
+  font-variant-numeric: tabular-nums; // millimetres and MIDI notes line up in columns
+}
+
+// Headings in the brand face; Material's headline/title roles use brand-family already.
+h1, h2, h3 { font-family: var(--mat-sys-headline-small-font); font-weight: 600; }
+
+// Paper sheets: the only "surface" component. Use on mat-card (appearance="outlined").
+@include mat.card-overrides((
+  outlined-container-color: var(--cr-paper),
+  outlined-outline-color: var(--cr-paper-edge),
+  outlined-container-shape: 3px,
+));
+
+// Buttons: tool-like 6px corners instead of pills.
+@include mat.button-overrides((
+  filled-container-shape: 6px,
+  outlined-container-shape: 6px,
+  text-container-shape: 6px,
+  protected-container-shape: 6px,
+));
+@include mat.button-toggle-overrides((
+  shape: 6px,
+  selected-state-background-color: #1e1a16,
+  selected-state-text-color: #fbf9f4,
+));
+
+// Form fields: outlined appearance app-wide (MAT_FORM_FIELD_DEFAULT_OPTIONS { appearance: 'outline' }).
+@include mat.form-field-overrides((
+  outlined-container-shape: 4px,
+  outlined-focus-outline-color: #1e1a16,
+));
+
+// Navigation rail on walnut (mat-sidenav + mat-nav-list).
+@include mat.sidenav-overrides((
+  container-background-color: var(--cr-walnut),
+  container-text-color: #ede6d8,
+  container-shape: 0,
+));
+@include mat.list-overrides((
+  active-indicator-color: var(--cr-walnut-raised),
+  active-indicator-shape: 6px,
+));
+
+// One focus ring everywhere: brass, 2px, offset.
+:focus-visible { outline: 2px solid var(--cr-brass); outline-offset: 2px; }
+
+// Reorder handle in the Pipe rack (cdkDrag); the only custom component class besides the Tape.
+.cr-drag-handle { color: #9a9083; cursor: grab; }
