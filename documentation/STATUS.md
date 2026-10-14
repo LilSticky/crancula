@@ -19,18 +19,22 @@ Changes from the plan:
 - **Angular specs:** run in jsdom (ADR 9).
 - **Error states:** a small `crancErrorState` directive puts form fields into their error state.
 
-**Next concrete step:** update the tech stack and add Dependabot, on its own branch from `main`
-([#13](https://github.com/LilSticky/crancula/issues/13)). Then switch the editor back to signal forms where the newer Angular allows it
-(research R6), and continue with User Story 4 (T029). Restart the session first, so the new agents
-from `main` are loaded.
+**Next concrete step:** T030, the leave-invalid guard test (User Story 4).
+
+- Pipes can be reordered and removed in the editor (T029, T033 done).
+- The tech-stack update for [#13](https://github.com/LilSticky/crancula/issues/13) is done on branch
+  `chore/update-tech-stack` (Angular 22, Electron 44, TypeScript 6.0 because Angular 22 needs <6.1,
+  Vitest 5, ESLint 10 flat config, Dependabot). It is not pushed. It lands only after slice 001 is
+  merged into `main`. Then rebase it, apply the Angular 22 signal-forms renames (`Field` →
+  `FormField`, `[field]` → `[formField]`) and revisit research R6.
 
 ## Known broken / WIP
 
 - No known broken items. These are fixed on this branch and close when the slice merges into
   `main`: #4 (build), #5 (no tests), #6 (`window.require`), #7 (localStorage), #8 (`api/model`).
 - **Not done yet:**
-  - User Story 4: reorder and remove Pipes, delete an Organ, confirm before leaving with
-    invalid changes.
+  - User Story 4: delete an Organ and confirm before leaving with invalid changes (T030–T032,
+    T034–T035). Reordering and removing Pipes is done.
   - User Story 5: language switch.
   - Polish (T039–T042).
 - **German texts to review:** the German UI terms are first guesses: "Drehorgel", "Pfeife",
