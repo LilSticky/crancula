@@ -33,7 +33,8 @@
 # Hole
 * Each hole in the tape represents one note being played by a pipe
 * Can be extended along the row to extend the note duration
-* Has position (pipe index, start column) and dimensions (length)
+* Has position (its Pipe, start column) and dimensions (length)
+* Belongs to its Pipe, not to a row number: when the Organ's Pipes are reordered, the Hole moves with its Pipe
 * Usually placed on regular note-value boundaries; can be shifted by single Columns for finer adjustment
 * Can be moved to another pipe or column, or removed
 * Must be at least the Minimum Hole Length long and keep the Minimum Gap to the next hole in its row
@@ -44,6 +45,12 @@
 * Imported from a Song Source
 * Converted to tape format for playback on barrel organs
 * Converted to scores for human reading
+* Made of Parts
+
+# Part
+* One voice or instrument of a Song, such as melody, bass or drums
+* Has an optional name and its Notes; may be percussion
+* The user chooses which Parts go onto a Tape
 
 # Scores
 * Human-readable notation of music
@@ -73,6 +80,14 @@
 # Transposition
 * Shifting the notes of a Tape (all or a selection) by a number of semitones
 * Used to fit a song to the Organ's pipes or to make it sound better
+
+# Unplayable Note
+* A Note of a Song that no Pipe of the Organ can play, not even after the Transposition and a move by whole octaves
+* Is not put on the Tape; listed when the Song is brought onto a Tape
+
+# Quantisation
+* Moving the start and end of every Note onto Column boundaries
+* Done when a Song is brought onto a Tape
 
 # Minimum Hole Length
 * Shortest Hole in mm the Organ can play reliably; a hard physical limit
