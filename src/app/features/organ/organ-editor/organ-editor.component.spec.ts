@@ -38,6 +38,12 @@ async function open(id?: string) {
     input.dispatchEvent(new Event('input'));
     await fixture.whenStable();
   };
+  /** Enters text that a number field cannot read, like "1e" (jsdom drops such text, so the browser's verdict is stubbed). */
+  const typeUnreadableNumber = async (input: HTMLInputElement) => {
+    Object.defineProperty(input, 'validity', {value: {badInput: true}, configurable: true});
+    input.dispatchEvent(new Event('input'));
+    await fixture.whenStable();
+  };
   const click = async (testId: string) => {
     field(testId).click();
     await fixture.whenStable();
@@ -68,7 +74,7 @@ async function open(id?: string) {
   const violationAt = (path: string) =>
     [...element.querySelectorAll(`[data-testid="violation"][data-path="${path}"]`)].map((error) => error.textContent?.trim());
 
-  return {fixture, element, field, type, click, save, saveButton, pipeRows, fillValidOrgan, violationAt};
+  return {fixture, element, field, type, typeUnreadableNumber, click, save, saveButton, pipeRows, fillValidOrgan, violationAt};
 }
 
 describe('OrganEditorComponent', () => {
@@ -731,6 +737,56 @@ describe('OrganEditorComponent', () => {
 
       expect(library.entities().map(({id}) => id)).toEqual([organ.id]);
       expect(navigate).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('a number field with text that is not a number', () => {
+    it('asks for a number next to the field', async () => {
+      const {open: openEditor} = render();
+      const {field, typeUnreadableNumber, violationAt} = await openEditor();
+
+      await typeUnreadableNumber(field('tape-width'));
+
+      expect(violationAt('tapeBed.tapeWidth')).toEqual(['Enter a number.']);
+    });
+
+    it('asks for a number next to a Pipe note', async () => {
+      const {open: openEditor} = render();
+      const {field, click, typeUnreadableNumber, violationAt} = await openEditor();
+      await click('add-pipe');
+
+      await typeUnreadableNumber(field('pipe-note'));
+
+      expect(violationAt('pipes.0.note')).toEqual(['Enter a number.']);
+    });
+
+    it('disables Save and lists the problem when leaving', async () => {
+      const {open: openEditor} = render();
+      const {fixture, field, fillValidOrgan, typeUnreadableNumber, saveButton} = await openEditor();
+      await fillValidOrgan();
+
+      await typeUnreadableNumber(field('tape-width'));
+
+      expect(saveButton().disabled).toBe(true);
+      expect(fixture.componentInstance.unsavedChanges()?.problems).toEqual([
+        {
+          field: {key: 'ORGAN.EDITOR.TAPE_WIDTH', params: {}},
+          message: {key: 'ORGAN.EDITOR.NOT_A_NUMBER', params: {}},
+        },
+      ]);
+    });
+
+    it('goes away once a number is typed', async () => {
+      const {open: openEditor} = render();
+      const {field, type, typeUnreadableNumber, violationAt, saveButton, fillValidOrgan} = await openEditor();
+      await fillValidOrgan();
+      await typeUnreadableNumber(field('tape-width'));
+
+      Object.defineProperty(field('tape-width'), 'validity', {value: {badInput: false}, configurable: true});
+      await type(field('tape-width'), '120');
+
+      expect(violationAt('tapeBed.tapeWidth')).toEqual([]);
+      expect(saveButton().disabled).toBe(false);
     });
   });
 

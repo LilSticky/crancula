@@ -40,6 +40,20 @@ test.describe('I can rearrange and delete my organs', () => {
     await app.close();
   });
 
+  test('tells me when the text of a number field is not a number', async () => {
+    const {app, window} = await launchApp();
+    await window.getByRole('link', {name: 'Organs'}).click();
+    await window.getByTestId('new-organ').click();
+
+    await window.getByTestId('tape-width').pressSequentially('1e');
+
+    const message = window.locator('[data-testid="violation"][data-path="tapeBed.tapeWidth"]');
+    await expect(message).toHaveText('Enter a number.');
+    await window.getByTestId('tape-width').fill('120');
+    await expect(message).toHaveCount(0);
+    await app.close();
+  });
+
   test('deletes an Organ from the list for good', async () => {
     const first = await launchApp();
     await defineStreetOrgan(first.window);
