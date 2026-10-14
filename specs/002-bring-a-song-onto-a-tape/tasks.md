@@ -288,7 +288,7 @@ the `tapes:*` IPC boundary and the `TapeLibrary` store. Every user story needs t
   can be told to answer `failed` or `unreadable` for tests (FR-023, FR-024).
 - [x] T037 Implement the `tapes` part in `src/app/core/crancula-api.token.ts` until T036 is
   green. Depends on T027, T036.
-- [ ] T038 Write the failing test `src/app/features/tape/tape-library.store.spec.ts` for the
+- [x] T038 Write the failing test `src/app/features/tape/tape-library.store.spec.ts` for the
   `TapeLibrary` signal store (research R10.2, R10.3, data-model.md "Tape library"):
   - `load()` fills the named collections `tape` and `song` and sets `loadProblem` on
     `unreadable`; it runs after the Organs through `provideAppInitializer`;
@@ -300,7 +300,7 @@ the `tapes:*` IPC boundary and the `TapeLibrary` store. Every user story needs t
     `removeHolesOfPipes(organId, pipes)`, keeping each Tape's length;
   - insertion order is creation order (for `prefilledColumnLength`);
   - while `loadProblem` is set, nothing is saved, so `tapes.json` is never overwritten.
-- [ ] T039 Implement `src/app/features/tape/tape-library.store.ts` (`signalStore`,
+- [x] T039 Implement `src/app/features/tape/tape-library.store.ts` (`signalStore`,
   `withEntities` with named collections) and its app initializer until T038 is green.
   Depends on T037, T038.
 - [ ] T040 [P] Create `e2e/support/midi-file.ts`: builds `setInputFiles` payloads
