@@ -1,6 +1,6 @@
 name: Domain question
 description: An open question about the domain (organs, tapes, music) that blocks or shapes a slice.
-labels: [domain-question]
+labels: [domain-question, triage]
 body:
   - type: textarea
     id: question
