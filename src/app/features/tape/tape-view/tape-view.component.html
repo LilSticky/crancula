@@ -1,6 +1,37 @@
-@if (tape(); as tape) {
-  <h2 data-testid="tape-name">{{ tape.name }}</h2>
+@if (drawing(); as drawing) {
+  <h2 data-testid="tape-name">{{ drawing.tape.name }}</h2>
   @if (importSummary; as summary) {
     <cranc-import-summary data-testid="import-summary" [importSummary]="summary" />
   }
+  <ul class="parts" [attr.aria-label]="'TAPE.VIEW.PARTS' | translate">
+    @for (part of drawing.partNames; track part.index) {
+      <li data-testid="selected-part">{{ part.name ?? ('TAPE.PARTS.UNNAMED' | translate: {number: part.index + 1}) }}</li>
+    }
+  </ul>
+  <div class="drawing" [style.--row-height.px]="rowHeight">
+    <ul class="labels">
+      @for (label of drawing.labels; track label.note) {
+        <li data-testid="row-label">{{ label.name }}</li>
+      }
+    </ul>
+    <div class="scroll" data-testid="tape-scroll">
+      <svg role="img" [attr.aria-label]="'TAPE.VIEW.DRAWING' | translate: {name: drawing.tape.name}" [attr.width]="drawing.width" [attr.height]="drawing.height">
+        @for (column of drawing.marks; track column) {
+          <line class="mark" data-testid="column-mark" [attr.x1]="column * columnWidth" [attr.x2]="column * columnWidth" y1="0" [attr.y2]="drawing.height" />
+        }
+        @for (hole of drawing.holes; track $index) {
+          <rect
+            class="hole"
+            data-testid="hole"
+            [attr.data-row]="hole.row"
+            [attr.data-start]="hole.start"
+            [attr.x]="hole.start * columnWidth"
+            [attr.y]="hole.row * rowHeight"
+            [attr.width]="hole.length * columnWidth"
+            [attr.height]="rowHeight"
+          />
+        }
+      </svg>
+    </div>
+  </div>
 }

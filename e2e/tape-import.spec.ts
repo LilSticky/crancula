@@ -2,9 +2,9 @@ import {expect, test} from '@playwright/test';
 import {launchApp, type LaunchedApp} from './support/launch-app';
 import {readFile} from 'node:fs/promises';
 import {join} from 'node:path';
-import {melodyC3ToC5, notAMidiFile, threePartsWithPercussion} from './support/midi-file';
+import {longSongWithSixteenParts, melodyC3ToC5, notAMidiFile, threePartsWithPercussion} from './support/midi-file';
 import {saveOrgan} from './support/organ-editor';
-import {defineOctaveOrgan} from './support/tape-creation';
+import {createTapeFromSong, defineOctaveOrgan} from './support/tape-creation';
 
 test.describe('Bring a MIDI song onto a tape', () => {
   let launched: LaunchedApp;
@@ -83,5 +83,67 @@ test.describe('Bring a MIDI song onto a tape', () => {
     expect(tape?.selectedParts).toEqual([0]);
     // The Lead plays three Notes; the Bass, an octave below, would add three more Holes.
     expect(tape?.holes.length).toBe(3);
+  });
+});
+
+test.describe('Look at my tape', () => {
+  let launched: LaunchedApp;
+
+  test.beforeAll(async () => {
+    launched = await launchApp();
+    await defineOctaveOrgan(launched.window, 'Octave organ');
+  });
+
+  test.afterAll(async () => {
+    await launched.app.close();
+  });
+
+  test('shows the Holes of the new Tape per row, and no Import Summary when opened from the list', async () => {
+    const {window} = launched;
+    await createTapeFromSong(window, 'Scale', melodyC3ToC5());
+
+    // The scale C3 to C5 moved up an octave plays each of the 25 Pipes C4 to C6 once, rising.
+    await expect(window.getByTestId('row-label')).toHaveCount(25);
+    await expect(window.getByTestId('row-label').first()).toHaveText('C4');
+    await expect(window.getByTestId('row-label').last()).toHaveText('C6');
+    const holes = window.locator('svg [data-testid="hole"]');
+    await expect(holes).toHaveCount(25);
+    const rows = await holes.evaluateAll((rects) =>
+      rects.map((rect) => ({row: Number(rect.getAttribute('data-row')), start: Number(rect.getAttribute('data-start'))})),
+    );
+    expect(rows.map(({row}) => row)).toEqual(Array.from({length: 25}, (_, row) => row));
+    expect(rows.map(({start}) => start)).toEqual([...rows.map(({start}) => start)].sort((a, b) => a - b));
+    await expect(window.getByTestId('import-summary')).toBeVisible();
+
+    await window.getByRole('link', {name: 'Tapes'}).click();
+    await window.getByTestId('open-tape').click();
+    await expect(window.getByTestId('tape-name')).toHaveText('Scale');
+    await expect(holes).toHaveCount(25);
+    await expect(window.getByTestId('import-summary')).toHaveCount(0);
+  });
+
+  test('opens a Tape from the 5-minute 16-Part Song within 2 s and scrolls to its end (SC-006)', async () => {
+    test.setTimeout(120_000);
+    const {window} = launched;
+    await createTapeFromSong(window, 'Long song', longSongWithSixteenParts());
+    await window.getByRole('link', {name: 'Tapes'}).click();
+    await window.getByTestId('tape').filter({hasText: 'Long song'}).getByTestId('open-tape').click();
+
+    const started = Date.now();
+    await expect(window.getByTestId('tape-name')).toHaveText('Long song');
+    await expect(window.locator('svg [data-testid="hole"]').first()).toBeVisible({timeout: 2000});
+    expect(Date.now() - started).toBeLessThan(2000);
+
+    const scroll = window.getByTestId('tape-scroll');
+    await scroll.evaluate((element) => {
+      element.scrollLeft = element.scrollWidth;
+    });
+    const position = await scroll.evaluate((element) => ({
+      left: element.scrollLeft,
+      visible: element.clientWidth,
+      total: element.scrollWidth,
+    }));
+    expect(position.total).toBeGreaterThan(position.visible);
+    expect(position.left + position.visible).toBeGreaterThanOrEqual(position.total - 1);
   });
 });

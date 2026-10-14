@@ -20,6 +20,10 @@
   },
   "TAPE": {
     "NAV": "Tapes",
+    "VIEW": {
+      "PARTS": "Parts on the Tape",
+      "DRAWING": "Holes of Tape {{name}}"
+    },
     "LIST": {
       "TITLE": "Tapes",
       "EMPTY": "No Tapes yet.",

@@ -471,19 +471,19 @@ expected rows, start Columns and lengths.
 
 ### Tests for User Story 4 ⚠️
 
-- [ ] T064 [P] [US4] Extend `src/app/features/tape/tape-view/tape-view.component.spec.ts`
+- [x] T064 [P] [US4] Extend `src/app/features/tape/tape-view/tape-view.component.spec.ts`
   (FR-018, R10.9): one row per Pipe in the Organ's row order, labelled with its note name; one
   SVG `rect` per Hole with `x = start × w`, `width = length × w`, `y = row × h`; Holes of Pipes not
   on the Organ are not drawn; a mark every 8th Column; the scroll container covers the whole
   Tape length; the names of the selected Parts are shown; no control changes the Tape; a Tape
   whose Organ is unknown can't be opened.
-- [ ] T065 [P] [US4] Extend `e2e/tape-import.spec.ts`: after creating, the Tape view shows the
+- [x] T065 [P] [US4] Extend `e2e/tape-import.spec.ts`: after creating, the Tape view shows the
   expected Holes per row; opening the Tape again from the list shows no Import Summary; a Tape
   from the 5-minute 16-Part Song opens within 2 s and can be scrolled to its end (SC-006).
 
 ### Implementation for User Story 4
 
-- [ ] T066 [US4] Draw the read-only Tape in `src/app/features/tape/tape-view/tape-view.component.ts`
+- [x] T066 [US4] Draw the read-only Tape in `src/app/features/tape/tape-view/tape-view.component.ts`
   (and `.html`, minimal `.scss` for the scroll container and the fixed labels) and add the
   `TAPE.VIEW.*` keys to `en.json` and `de.json`, until T064 and T065 are green.
 

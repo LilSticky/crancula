@@ -20,6 +20,10 @@
   },
   "TAPE": {
     "NAV": "Bänder",
+    "VIEW": {
+      "PARTS": "Stimmen auf dem Band",
+      "DRAWING": "Löcher des Bandes {{name}}"
+    },
     "LIST": {
       "TITLE": "Bänder",
       "EMPTY": "Noch keine Bänder.",
