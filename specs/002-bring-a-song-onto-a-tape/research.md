@@ -499,7 +499,7 @@ and the data model.
 
   `OrganLibrary` itself stays unaware of Tapes; the Organ list and the Organ editor coordinate.
   While the Tapes can't be read, saving an Organ with removed Pipes is refused (FR-021a, settled
-  2026-10-14, ADR 17).
+  2026-10-14, ADR 18).
 - **Rationale**: children first (R7). Keeping the order in two components, each with its own
   test, is simpler than a third store.
 - **Alternatives considered**: `OrganLibrary` injecting `TapeLibrary` (a store depending on

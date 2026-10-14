@@ -1,6 +1,6 @@
 name: Infrastructure
 description: Project infrastructure that is not a slice (CI, tooling, dependencies, releases).
-labels: [infrastructure]
+labels: [infrastructure, triage]
 body:
   - type: textarea
     id: goal

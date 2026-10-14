@@ -85,8 +85,8 @@ Recorded on 2026-10-14 (status Accepted):
 
 | # | Decision | Source |
 |---|----------|--------|
-| [16](../../documentation/adr/0016-own-midi-reader-in-the-domain.md) | Read MIDI Song Sources with an own pure-TypeScript SMF reader in the domain, running in the renderer on user-picked bytes, instead of `@tonejs/midi` (settles ADR 5's open "MIDI parser library" consequence). | research R1, R10.6 |
-| [17](../../documentation/adr/0017-tape-snapshot-and-cascade-order.md) | Tapes and their Songs live in their own snapshot `tapes.json`, separate from `organs.json`, and cascades write Tapes before Organs; the snapshot-file code is shared (extends ADR 8). | research R7, R10.3, R10.4 |
+| [17](../../documentation/adr/0017-own-midi-reader-in-the-domain.md) | Read MIDI Song Sources with an own pure-TypeScript SMF reader in the domain, running in the renderer on user-picked bytes, instead of `@tonejs/midi` (settles ADR 5's open "MIDI parser library" consequence). | research R1, R10.6 |
+| [18](../../documentation/adr/0018-tape-snapshot-and-cascade-order.md) | Tapes and their Songs live in their own snapshot `tapes.json`, separate from `organs.json`, and cascades write Tapes before Organs; the snapshot-file code is shared (extends ADR 8). | research R7, R10.3, R10.4 |
 
 No snapshot migration ADR is needed: `organs.json` keeps version 1 and `tapes.json` starts at
 version 1.
