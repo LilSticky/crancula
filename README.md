@@ -1,4 +1,8 @@
 <p align="center">
+  <img src="src/assets/icons/logo.svg" alt="Crancula logo" width="96">
+</p>
+
+<p align="center">
   <img src="documentation/images/banner.svg" alt="Crancula: the word punched as holes into a strip of barrel organ tape" width="100%">
 </p>
 
