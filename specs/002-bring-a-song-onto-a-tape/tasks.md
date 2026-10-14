@@ -50,7 +50,7 @@ on its own. Stories follow the spec's priority order (US1, US2 P1; US3, US4 P2; 
 
 **Purpose**: Move `CranculaApi` to its new home and build the SMF test helper every MIDI test needs.
 
-- [ ] T001 Move `api/organ/crancula-api.ts` to `api/app/crancula-api.ts` and
+- [x] T001 Move `api/organ/crancula-api.ts` to `api/app/crancula-api.ts` and
   `api/organ/crancula-api.spec.ts` to `api/app/crancula-api.spec.ts` (research R10.1). Update the
   imports in `api/index.ts`, `app/preload.ts`, `app/main.ts`, `app/*-ipc.ts` and
   `src/app/core/crancula-api.token.ts`; the import path through `@api/index` stays the same. This

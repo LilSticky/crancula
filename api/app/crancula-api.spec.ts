@@ -1,7 +1,7 @@
 import {describe, expectTypeOf, it} from 'vitest';
 import type {CranculaApi, OrganLibraryLoadResult, OrganLibrarySaveResult, SetLanguageResult} from './crancula-api';
-import type {OrganLibrarySnapshot} from './organ-library-snapshot';
-import type {Language} from '../app/language';
+import type {OrganLibrarySnapshot} from '../organ/organ-library-snapshot';
+import type {Language} from './language';
 import * as api from '../index';
 
 describe('CranculaApi', () => {

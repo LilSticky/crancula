@@ -1,5 +1,5 @@
-import type {Language} from '../app/language';
-import type {OrganLibrarySnapshot} from './organ-library-snapshot';
+import type {Language} from './language';
+import type {OrganLibrarySnapshot} from '../organ/organ-library-snapshot';
 
 export type OrganLibraryLoadResult =
   /** The snapshot file was read and is valid. */
