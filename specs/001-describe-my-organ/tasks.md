@@ -399,8 +399,8 @@ translation key.
 - [x] T040 Remove `withStorageSync`/`@angular-architects/ngrx-toolkit` from `package.json` if they
   are no longer used, and check for `any`, non-null assertions and `console.*` leftovers in the
   changed files.
-- [ ] T041 Run the [quickstart](quickstart.md) walkthrough in Electron (`npm run electron:local`)
-  and fix anything that deviates.
+- [x] T041 ~~Run the [quickstart](quickstart.md) walkthrough in Electron~~. Replaced by the e2e
+  suite in CI on Linux, Windows and macOS (ADR 13, 2026-10-14).
 - [ ] T042 Run the Definition of Done gate: `npm run lint`, `npm run test`, `npm run build`,
   `npm run e2e`. Then:
   - update `documentation/STATUS.md`: clear the fixed "Known broken" items;

@@ -28,11 +28,12 @@ Changes from the plan:
 - **Angular specs:** run in jsdom (ADR 9).
 - **Error states:** a small `crancErrorState` directive puts form fields into their error state.
 
-Gate run on 2026-10-14: lint green, test 70 passed, build green, i18n:check 48 keys 0 errors 0 unused,
-e2e 11 passed.
+Local gate run on 2026-10-14: lint green, test 124 node + 104 Angular passed, i18n:check green,
+e2e 13 passed. The manual walkthrough (T041) is replaced by the e2e suite in CI on Linux, Windows
+and macOS (ADR 13, constitution 1.1.1).
 
-**Next concrete step:** the user's walkthrough (T041, [quickstart.md](../specs/001-describe-my-organ/quickstart.md))
-on the pull request, then squash-merge once CI is green. After that:
+**Next concrete step:** squash-merge [PR #15](https://github.com/LilSticky/crancula/pull/15) once CI,
+now including e2e, is green (T042). After that:
 - Rebase the tech-stack branch `chore/update-tech-stack` for [#13](https://github.com/LilSticky/crancula/issues/13)
   (on another computer; the user pushes it today). Apply the Angular 22 signal-forms renames (`Field` →
   `FormField`, `[field]` → `[formField]`) and revisit research R6. The rebase also has to account for
@@ -56,3 +57,5 @@ on the pull request, then squash-merge once CI is green. After that:
 
 - 2026-10-14: branches reach `main` only through pull requests that reference their issues
   (`Closes #N` / `Refs #N`), then get squash-merged by the agent (ADR 10, constitution 1.1.0).
+- 2026-10-14: the e2e suite runs in CI on Linux, Windows and macOS and replaces the manual
+  walkthrough as proof that a slice runs in Electron (ADR 13, constitution 1.1.1).
