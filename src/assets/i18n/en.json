@@ -53,6 +53,17 @@
       "NOT_TIMED_IN_BEATS": "This MIDI file is timed in clock time (SMPTE) rather than in beats, so its Notes can't be placed on Columns.",
       "NO_NOTES": "This MIDI file has no Notes in any Part that can go onto a Tape."
     },
+    "PARTS": {
+      "TITLE": "Parts",
+      "UNNAMED": "Part {{number}}",
+      "NOTES": "Notes"
+    },
+    "FIT": {
+      "TITLE": "Fit of the selected Parts",
+      "MATCHING_A_PIPE": "Notes matching a Pipe: {{count}}",
+      "MOVED_BY_OCTAVES": "Notes moved by octaves: {{count}}",
+      "UNPLAYABLE": "Unplayable Notes: {{count}}"
+    },
     "VIOLATION": {
       "NAME_REQUIRED": "Please enter a name.",
       "COLUMN_LENGTH_MUST_BE_POSITIVE": "The Column length must be greater than 0.",

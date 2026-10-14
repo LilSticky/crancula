@@ -2,17 +2,22 @@ import {ChangeDetectionStrategy, Component, computed, inject, linkedSignal, Pend
 import {type FieldTree, form, FormField} from '@angular/forms/signals';
 import {ErrorStateMatcher} from '@angular/material/core';
 import {MatButton} from '@angular/material/button';
+import {MatCheckbox} from '@angular/material/checkbox';
 import {MatError, MatFormField, MatInput, MatLabel} from '@angular/material/input';
 import {MatIcon} from '@angular/material/icon';
 import {Router, RouterLink} from '@angular/router';
 import {TranslatePipe} from '@ngx-translate/core';
 import {
   defaultSelectedParts,
+  type Fit,
+  fitOf,
   MAXIMUM_MIDI_FILE_SIZE,
   type Organ,
+  type PartIndex,
   prefilledColumnLength,
   proposeTransposition,
   readMidiSong,
+  transposition,
   type Song,
   type SongRejection,
 } from '@api/index';
@@ -34,7 +39,7 @@ const NO_SONG_DRAFT: TapeImportDraft = {name: '', columnLength: null, transposit
 @Component({
   selector: 'cranc-tape-import',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslatePipe, RouterLink, MatFormField, MatLabel, MatInput, MatError, MatButton, MatIcon, FormField],
+  imports: [TranslatePipe, RouterLink, MatFormField, MatLabel, MatInput, MatError, MatButton, MatCheckbox, MatIcon, FormField],
   templateUrl: './tape-import.component.html',
   providers: [{provide: ErrorStateMatcher, useClass: ShownViolationMatcher}],
   styles: `
@@ -67,10 +72,16 @@ export class TapeImportComponent {
   protected readonly song = signal<Song | null>(null);
   protected readonly rejection = signal<SongRejection | null>(null);
 
+  /** The selected Parts; a new Song starts with its default Parts. */
+  protected readonly selectedParts = linkedSignal<Song | null, ReadonlySet<PartIndex>>({
+    source: this.song,
+    computation: (song) => (song ? defaultSelectedParts(song) : new Set()),
+  });
+
   private readonly context = computed<TapeImportContext | null>(() => {
     const song = this.song();
     const organ = this.organ();
-    return song && organ ? {song, organ} : null;
+    return song && organ ? {song, organ, selectedParts: this.selectedParts()} : null;
   });
 
   /** The draft starts from the Song's name, the Column length of the Organ and the proposed Transposition. */
@@ -82,12 +93,21 @@ export class TapeImportComponent {
       return {
         name: sameSong ? (previous?.value.name ?? context.song.name) : context.song.name,
         columnLength: prefilledColumnLength(context.organ, this.tapes.tapeEntities()),
-        transposition: proposeTransposition(context.song, defaultSelectedParts(context.song), context.organ),
+        transposition: proposeTransposition(context.song, context.selectedParts, context.organ),
       };
     },
   });
 
   protected readonly tape: FieldTree<TapeImportDraft> = form(this.draft, tapeImportSchema(this.context));
+
+  /** How the selected Parts meet the Pipes at the Transposition now in the form; absent while it isn't a valid one. */
+  protected readonly fit = computed<Fit | null>(() => {
+    const context = this.context();
+    const semitones = transposition(this.draft().transposition ?? Number.NaN);
+    return context && semitones !== undefined
+      ? fitOf(context.song, context.selectedParts, context.organ, semitones)
+      : null;
+  });
 
   protected readonly canCreate = computed(
     () => this.context() !== null && this.tape().valid() && this.tapes.loadProblem() === null,
@@ -113,6 +133,19 @@ export class TapeImportComponent {
       this.song.set(null);
     }
     input.value = '';
+  }
+
+  protected isSelected(index: number): boolean {
+    return this.selectedParts().has(index as PartIndex);
+  }
+
+  protected togglePart(index: number, selected: boolean): void {
+    this.selectedParts.update((parts) => {
+      const next = new Set(parts);
+      if (selected) next.add(index as PartIndex);
+      else next.delete(index as PartIndex);
+      return next;
+    });
   }
 
   protected chooseOrgan(organId: string): void {

@@ -1,7 +1,10 @@
 import {expect, test} from '@playwright/test';
 import {launchApp, type LaunchedApp} from './support/launch-app';
-import {melodyC3ToC5, notAMidiFile} from './support/midi-file';
+import {readFile} from 'node:fs/promises';
+import {join} from 'node:path';
+import {melodyC3ToC5, notAMidiFile, threePartsWithPercussion} from './support/midi-file';
 import {saveOrgan} from './support/organ-editor';
+import {defineOctaveOrgan} from './support/tape-creation';
 
 test.describe('Bring a MIDI song onto a tape', () => {
   let launched: LaunchedApp;
@@ -51,5 +54,34 @@ test.describe('Bring a MIDI song onto a tape', () => {
     await expect(window).toHaveURL(/#?\/tapes\/[0-9a-f-]{36}$/);
     await expect(window.getByTestId('import-summary')).toBeVisible();
     await expect(window.getByTestId('transposition')).toContainText('+12');
+  });
+
+  test('puts only the selected Parts onto the Tape', async () => {
+    const {window, userDataDir} = launched;
+    await defineOctaveOrgan(window, 'Parts organ');
+    await window.getByRole('link', {name: 'Tapes'}).click();
+    await window.getByRole('link', {name: 'Bring a song onto a tape'}).click();
+    await window.getByTestId('organ').selectOption({label: 'Parts organ'});
+    await window.getByTestId('song-file').setInputFiles(threePartsWithPercussion());
+    await expect(window.getByTestId('part')).toHaveCount(3);
+    const checkbox = (index: number) =>
+      window.locator(`[data-testid="part"][data-index="${index}"] input[type="checkbox"]`);
+    await expect(checkbox(0)).toBeChecked();
+    await expect(checkbox(1)).toBeChecked();
+    await expect(checkbox(2)).not.toBeChecked();
+
+    await checkbox(1).uncheck();
+    await expect(checkbox(1)).not.toBeChecked();
+    await window.getByTestId('name').fill('Melody only');
+    await window.getByTestId('create-tape').click();
+    await expect(window.getByTestId('tape-name')).toHaveText('Melody only');
+
+    const stored = JSON.parse(await readFile(join(userDataDir, 'snapshots', 'tapes.json'), 'utf8')) as {
+      tapes: {name: string; selectedParts: number[]; holes: [number, number, number][]}[];
+    };
+    const tape = stored.tapes.find(({name}) => name === 'Melody only');
+    expect(tape?.selectedParts).toEqual([0]);
+    // The Lead plays three Notes; the Bass, an octave below, would add three more Holes.
+    expect(tape?.holes.length).toBe(3);
   });
 });

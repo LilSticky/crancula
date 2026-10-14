@@ -11,8 +11,8 @@ import {ErrorStateMatcher} from '@angular/material/core';
 import {
   type CreatedTape,
   createTape,
-  defaultSelectedParts,
   type Organ,
+  type PartIndex,
   type Result,
   type Song,
   transposition,
@@ -20,7 +20,7 @@ import {
 } from '@api/index';
 import type {TranslatableText} from '../../organ/leave-unsaved.guard';
 
-/** What the user enters on the import page; the Parts are the Song's default Parts. */
+/** What the user enters on the import page; the Parts are chosen apart from the form. */
 export interface TapeImportDraft {
   readonly name: string;
   /** In millimetres. */
@@ -28,10 +28,11 @@ export interface TapeImportDraft {
   readonly transposition: number | null;
 }
 
-/** The Song and the Organ the draft is checked against; present once both were chosen. */
+/** The Song, the selected Parts and the Organ the draft is checked against; present once Song and Organ were chosen. */
 export interface TapeImportContext {
   readonly song: Song;
   readonly organ: Organ;
+  readonly selectedParts: ReadonlySet<PartIndex>;
 }
 
 /** A rule of the Tape that the import form reports at a field. `kind` is the code of the domain violation. */
@@ -45,7 +46,7 @@ function isTapeFieldError(error: ValidationError): error is TapeFieldError {
 
 /** The Tape the draft makes, or the codes of the rules it breaks; the only call of `createTape` on this page. */
 export function createTapeFromDraft(
-  {song, organ}: TapeImportContext,
+  {song, organ, selectedParts}: TapeImportContext,
   {name, columnLength, transposition: semitones}: TapeImportDraft,
 ): Result<CreatedTape, readonly TapeViolationCode[]> {
   const valid = transposition(semitones ?? Number.NaN);
@@ -53,7 +54,7 @@ export function createTapeFromDraft(
   const result = createTape({
     song,
     organ,
-    selectedParts: defaultSelectedParts(song),
+    selectedParts,
     transposition: valid,
     name,
     columnLength: columnLength ?? Number.NaN,

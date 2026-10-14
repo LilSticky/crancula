@@ -442,19 +442,19 @@ become Holes.
 
 ### Tests for User Story 3 ⚠️
 
-- [ ] T061 [P] [US3] Extend `src/app/features/tape/tape-import/tape-import.component.spec.ts`
+- [x] T061 [P] [US3] Extend `src/app/features/tape/tape-import/tape-import.component.spec.ts`
   (FR-004, Story 3): each Part shows its name (if any) and its number of Notes; non-percussion
   Parts are selected and percussion not; deselecting a Part updates the proposed Transposition
   and its Fit (Notes matching a Pipe, moved by octaves, Unplayable Notes) and resets the
   Transposition to the new proposal; with no Part selected, Create is disabled; a Song with only
   percussion Parts starts with nothing selected.
-- [ ] T062 [P] [US3] Extend `e2e/tape-import.spec.ts`: three Parts (one percussion), deselect the
+- [x] T062 [P] [US3] Extend `e2e/tape-import.spec.ts`: three Parts (one percussion), deselect the
   bass, create the Tape, and `snapshots/tapes.json` holds only the melody Part in `selectedParts`
   and only melody Holes.
 
 ### Implementation for User Story 3
 
-- [ ] T063 [US3] Add the Parts selection (Material checkboxes) and the Fit display to the import
+- [x] T063 [US3] Add the Parts selection (Material checkboxes) and the Fit display to the import
   page, with the `TAPE.PARTS.*` and `TAPE.FIT.*` keys in `en.json` and `de.json`, until T061 and
   T062 are green.
 

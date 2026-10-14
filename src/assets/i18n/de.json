@@ -53,6 +53,17 @@
       "NOT_TIMED_IN_BEATS": "Diese MIDI-Datei ist in Uhrzeit (SMPTE) statt in Schlägen getaktet, daher lassen sich ihre Noten nicht auf Spalten legen.",
       "NO_NOTES": "Diese MIDI-Datei enthält in keiner Stimme Noten, die auf ein Band kommen können."
     },
+    "PARTS": {
+      "TITLE": "Stimmen",
+      "UNNAMED": "Stimme {{number}}",
+      "NOTES": "Noten"
+    },
+    "FIT": {
+      "TITLE": "Passung der gewählten Stimmen",
+      "MATCHING_A_PIPE": "Noten, die auf eine Pfeife passen: {{count}}",
+      "MOVED_BY_OCTAVES": "Um Oktaven verschobene Noten: {{count}}",
+      "UNPLAYABLE": "Nicht spielbare Noten: {{count}}"
+    },
     "VIOLATION": {
       "NAME_REQUIRED": "Bitte gib einen Namen ein.",
       "COLUMN_LENGTH_MUST_BE_POSITIVE": "Die Spaltenlänge muss größer als 0 sein.",

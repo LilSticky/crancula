@@ -33,6 +33,21 @@
       </p>
     }
 
+    @if (song(); as song) {
+      <fieldset data-testid="parts">
+        <legend>{{ 'TAPE.PARTS.TITLE' | translate }}</legend>
+        @for (part of song.parts; track $index) {
+          <div data-testid="part" [attr.data-index]="$index">
+            <mat-checkbox [checked]="isSelected($index)" (change)="togglePart($index, $event.checked)">
+              <span data-testid="part-name">{{ part.name ?? ('TAPE.PARTS.UNNAMED' | translate: {number: $index + 1}) }}</span>
+            </mat-checkbox>
+            <span data-testid="part-note-count">{{ part.notes.length }}</span>
+            {{ 'TAPE.PARTS.NOTES' | translate }}
+          </div>
+        }
+      </fieldset>
+    }
+
     <mat-form-field>
       <mat-label>{{ 'TAPE.IMPORT.NAME' | translate }}</mat-label>
       <input matInput data-testid="name" [formField]="tape.name"/>
@@ -60,6 +75,17 @@
         }
       </ng-container>
     </mat-form-field>
+
+    @if (fit(); as fit) {
+      <div data-testid="fit" [attr.data-matching-a-pipe]="fit.matchingAPipe" [attr.data-moved-by-octaves]="fit.movedByOctaves" [attr.data-unplayable]="fit.unplayable">
+        <p>{{ 'TAPE.FIT.TITLE' | translate }}</p>
+        <ul>
+          <li>{{ 'TAPE.FIT.MATCHING_A_PIPE' | translate: {count: fit.matchingAPipe} }}</li>
+          <li>{{ 'TAPE.FIT.MOVED_BY_OCTAVES' | translate: {count: fit.movedByOctaves} }}</li>
+          <li>{{ 'TAPE.FIT.UNPLAYABLE' | translate: {count: fit.unplayable} }}</li>
+        </ul>
+      </div>
+    }
 
     @if (tapes.loadProblem()) {
       <p class="rejection" data-testid="tape-load-problem">{{ 'TAPE.IMPORT.LOAD_PROBLEM' | translate }}</p>

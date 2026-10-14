@@ -2,9 +2,11 @@ import {TestBed} from '@angular/core/testing';
 import {provideRouter, Router} from '@angular/router';
 import {
   defaultSelectedParts,
+  fitOf,
   MAXIMUM_MIDI_FILE_SIZE,
   minimumHoleLength,
   type Organ,
+  type PartIndex,
   proposeTransposition,
   readMidiSong,
   type Song,
@@ -37,6 +39,30 @@ function melodyBytes(): Uint8Array {
     format: 1,
     division: {ticksPerQuarterNote: TICKS_PER_QUARTER},
     tracks: [track(0, [61, 63, 65], 'Lead'), track(PERCUSSION_CHANNEL, [36, 38], 'Drums')],
+  });
+}
+
+/**
+ * Lead one semitone above the Pipes of `testOrgan` (61, 63, 65), a Bass that sits exactly on them
+ * (twice, 60, 62, 64), and Drums: all Parts selected propose 0, only the Lead proposes -1.
+ */
+function threePartBytes(): Uint8Array {
+  return encodeSmf({
+    format: 1,
+    division: {ticksPerQuarterNote: TICKS_PER_QUARTER},
+    tracks: [
+      track(0, [61, 63, 65], 'Lead'),
+      track(1, [60, 62, 64, 60, 62, 64], 'Bass'),
+      track(PERCUSSION_CHANNEL, [36, 38], 'Drums'),
+    ],
+  });
+}
+
+function percussionOnlyBytes(): Uint8Array {
+  return encodeSmf({
+    format: 1,
+    division: {ticksPerQuarterNote: TICKS_PER_QUARTER},
+    tracks: [track(PERCUSSION_CHANNEL, [36, 38], 'Drums')],
   });
 }
 
@@ -93,6 +119,26 @@ async function render(options: {organs?: readonly Organ[]; failToSave?: boolean;
     input.dispatchEvent(new Event('change'));
     await fixture.whenStable();
   };
+  const partRow = (index: number) =>
+    element.querySelector<HTMLElement>(`[data-testid="part"][data-index="${index}"]`);
+  const partCheckbox = (index: number) => {
+    const checkbox = partRow(index)?.querySelector<HTMLInputElement>('input[type="checkbox"]');
+    if (!checkbox) throw new Error(`no checkbox for Part ${index}`);
+    return checkbox;
+  };
+  const toggle = async (index: number) => {
+    partCheckbox(index).click();
+    await fixture.whenStable();
+  };
+  const fit = () => {
+    const shown = query('fit');
+    if (!shown) throw new Error('no Fit shown');
+    return {
+      matchingAPipe: Number(shown.dataset['matchingAPipe']),
+      movedByOctaves: Number(shown.dataset['movedByOctaves']),
+      unplayable: Number(shown.dataset['unplayable']),
+    };
+  };
   const create = async () => {
     const button = field('create-tape');
     button.click();
@@ -104,7 +150,10 @@ async function render(options: {organs?: readonly Organ[]; failToSave?: boolean;
       (violation) => violation.dataset['code'],
     );
 
-  return {fixture, element, tapes, navigate, query, field, organSelect, type, choose, create, violationsAt};
+  return {
+    fixture, element, tapes, navigate, query, field, organSelect, type, choose, create, violationsAt,
+    partRow, partCheckbox, toggle, fit,
+  };
 }
 
 describe('TapeImportComponent', () => {
@@ -184,6 +233,97 @@ describe('TapeImportComponent', () => {
       await choose(midiFile(melodyBytes()));
 
       expect(query('song-rejection')).toBeNull();
+    });
+  });
+
+  describe('Parts', () => {
+    const selected = (...indices: number[]) => new Set(indices as PartIndex[]);
+    const textOf = (row: HTMLElement | null, testId: string) =>
+      row?.querySelector(`[data-testid="${testId}"]`)?.textContent?.trim();
+
+    it('shows each Part with its name and its number of Notes', async () => {
+      const {choose, partRow} = await render({organs: [testOrgan('Street organ', 3)]});
+
+      await choose(midiFile(threePartBytes()));
+
+      expect([0, 1, 2].map((index) => textOf(partRow(index), 'part-name'))).toEqual(['Lead', 'Bass', 'Drums']);
+      expect([0, 1, 2].map((index) => textOf(partRow(index), 'part-note-count'))).toEqual(['3', '6', '2']);
+    });
+
+    it('selects the Parts that are not percussion and leaves percussion unselected', async () => {
+      const {choose, partCheckbox} = await render({organs: [testOrgan('Street organ', 3)]});
+
+      await choose(midiFile(threePartBytes()));
+
+      expect([0, 1, 2].map((index) => partCheckbox(index).checked)).toEqual([true, true, false]);
+    });
+
+    it('starts with nothing selected and Create disabled for a Song of only percussion', async () => {
+      const {choose, partCheckbox, query} = await render({organs: [testOrgan('Street organ', 3)]});
+
+      await choose(midiFile(percussionOnlyBytes()));
+
+      expect(partCheckbox(0).checked).toBe(false);
+      expect(query('create-tape')?.hasAttribute('disabled')).toBe(true);
+    });
+
+    it('shows the Fit of the proposed Transposition for the selected Parts', async () => {
+      const organ = testOrgan('Street organ', 3);
+      const {choose, field, fit} = await render({organs: [organ]});
+      const song = songOf(threePartBytes(), 'melody.mid');
+
+      await choose(midiFile(threePartBytes()));
+
+      const proposed = proposeTransposition(song, selected(0, 1), organ);
+      expect(field('transposition').value).toBe(String(proposed));
+      expect(fit()).toEqual(fitOf(song, selected(0, 1), organ, proposed));
+    });
+
+    it('updates the proposed Transposition and its Fit when a Part is deselected', async () => {
+      const organ = testOrgan('Street organ', 3);
+      const {choose, field, fit, toggle} = await render({organs: [organ]});
+      const song = songOf(threePartBytes(), 'melody.mid');
+      await choose(midiFile(threePartBytes()));
+
+      await toggle(1);
+
+      const proposed = proposeTransposition(song, selected(0), organ);
+      expect(proposed).not.toBe(proposeTransposition(song, selected(0, 1), organ));
+      expect(field('transposition').value).toBe(String(proposed));
+      expect(fit()).toEqual(fitOf(song, selected(0), organ, proposed));
+      expect(fit()).toEqual({matchingAPipe: 3, movedByOctaves: 0, unplayable: 0});
+    });
+
+    it('resets a chosen Transposition to the new proposal when the selection changes', async () => {
+      const organ = testOrgan('Street organ', 3);
+      const {choose, field, type, toggle} = await render({organs: [organ]});
+      const song = songOf(threePartBytes(), 'melody.mid');
+      await choose(midiFile(threePartBytes()));
+      await type(field('transposition'), '5');
+
+      await toggle(0);
+
+      expect(field('transposition').value).toBe(String(proposeTransposition(song, selected(1), organ)));
+    });
+
+    it('disables Create while no Part is selected', async () => {
+      const {choose, toggle, query} = await render({organs: [testOrgan('Street organ', 3)]});
+      await choose(midiFile(threePartBytes()));
+
+      await toggle(0);
+      await toggle(1);
+
+      expect(query('create-tape')?.hasAttribute('disabled')).toBe(true);
+    });
+
+    it('creates the Tape with only the selected Parts', async () => {
+      const {choose, toggle, create, tapes} = await render({organs: [testOrgan('Street organ', 3)]});
+      await choose(midiFile(threePartBytes()));
+      await toggle(1);
+
+      await create();
+
+      expect(tapes.tapeEntities()[0]?.selectedParts).toEqual([0]);
     });
   });
 
