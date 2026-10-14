@@ -1,0 +1,26 @@
+name: Bug
+description: Something in Crancula does not work as it should.
+labels: [bug]
+body:
+  - type: textarea
+    id: observed
+    attributes:
+      label: What happens
+      description: Steps to reproduce and what you see. Use dictionary terms (Organ, Pipe, Tape, Hole, …).
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What should happen
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options: [Windows, macOS, Linux]

@@ -71,3 +71,7 @@ now including e2e, is green (T042). After that:
   squash merge only; merged branches are deleted. Merging with red CI is no longer possible.
 - 2026-10-14: e2e runs keep the Electron window out of sight (`CRANCULA_HEADLESS`, set by the e2e
   launcher); `HEADED=1` shows it, slowed down and traced.
+- 2026-10-14: GitHub issue tooling: issue forms per label, a pull request template, a CI check
+  that the pull request body references an issue, and the Spec Kit `github` extension
+  (`/speckit-github-taskstoissues`). Board automation and the Claude GitHub Action are still open
+  ([AGENTIC-TODO](AGENTIC-TODO.md#github)).

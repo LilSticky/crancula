@@ -24,3 +24,12 @@ Custom agents, skills and setup still to build for the spec-, test- and domain-d
 ## Hooks
 - [x] Run `npm run lint` and Vitest tests when a turn ends, so nothing is reported done while red (via `hookify` or `/update-config`)
 - [x] TDD pre-edit guard: blocks production edits while no test is changed (`.claude/hooks/tdd-guard.mjs`)
+
+## GitHub
+- [x] Spec Kit `github` extension (`/speckit-github-taskstoissues`): tasks become issues, sub-issues of the slice issue
+- [x] Issue forms per label and a pull request template (`.github/ISSUE_TEMPLATE/`, `.github/pull_request_template.md`)
+- [x] CI check that a pull request body references an issue (`.github/workflows/pr-issues.yml`, ADR 10)
+- [ ] `gh` token with the `project` scope (`gh auth refresh -s project`), so agents can manage Project board 1
+- [ ] Project board 1 workflows: auto-add issues, move to Done on close and merge (set up in the board's settings)
+- [ ] Claude GitHub Action (`/install-github-app`): `@claude` in issues and pull requests
+- [ ] Connect the GitHub MCP server of the enabled `github` plugin (needs a token)
