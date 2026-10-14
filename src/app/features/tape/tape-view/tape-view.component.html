@@ -1,0 +1,6 @@
+@if (tape(); as tape) {
+  <h2 data-testid="tape-name">{{ tape.name }}</h2>
+  @if (importSummary; as summary) {
+    <cranc-import-summary data-testid="import-summary" [importSummary]="summary" />
+  }
+}

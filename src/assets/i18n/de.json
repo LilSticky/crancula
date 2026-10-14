@@ -18,6 +18,50 @@
     "TITLE": "Etwas ist schiefgelaufen!",
     "MESSAGE": "Die Seite wurde nicht gefunden"
   },
+  "TAPE": {
+    "NAV": "Bänder",
+    "IMPORT": {
+      "TITLE": "Ein Lied auf ein Band bringen",
+      "NO_ORGAN": "Du brauchst zuerst eine Drehorgel: Das Band wird für ihre Pfeifen gestanzt.",
+      "NEW_ORGAN": "Drehorgel beschreiben",
+      "ORGAN": "Drehorgel",
+      "CHOOSE_ORGAN": "Drehorgel wählen",
+      "CHOOSE_SONG": "MIDI-Datei wählen",
+      "NAME": "Name des Bandes",
+      "COLUMN_LENGTH": "Spaltenlänge (mm)",
+      "TRANSPOSITION": "Transposition (Halbtöne)",
+      "CREATE": "Band erstellen"
+    },
+    "SONG_REJECTION": {
+      "NOT_A_MIDI_FILE": "Diese Datei ist keine MIDI-Datei, sie ist beschädigt oder größer als 16 MiB.",
+      "FORMAT_2": "Diese MIDI-Datei enthält mehrere unabhängige Sequenzen (Format 2). Speichere sie als Format 0 oder 1 und versuche es erneut.",
+      "NOT_TIMED_IN_BEATS": "Diese MIDI-Datei ist in Uhrzeit (SMPTE) statt in Schlägen getaktet, daher lassen sich ihre Noten nicht auf Spalten legen.",
+      "NO_NOTES": "Diese MIDI-Datei enthält in keiner Stimme Noten, die auf ein Band kommen können."
+    },
+    "VIOLATION": {
+      "NAME_REQUIRED": "Bitte gib einen Namen ein.",
+      "COLUMN_LENGTH_MUST_BE_POSITIVE": "Die Spaltenlänge muss größer als 0 sein.",
+      "NO_PART_SELECTED": "Wähle mindestens eine Stimme.",
+      "TRANSPOSITION_OUT_OF_RANGE": "Diese Transposition würde eine Note aus dem MIDI-Bereich (0–127) schieben.",
+      "NO_NOTE_ON_A_PIPE": "Keine einzige Note der gewählten Stimmen passt auf eine Pfeife dieser Drehorgel, auch nicht um Oktaven verschoben."
+    },
+    "SUMMARY": {
+      "TITLE": "Was beim Import geändert wurde",
+      "TRANSPOSITION": "Transposition: {{semitones}} Halbtöne",
+      "NOTES_ON_TAPE": "Noten auf dem Band: {{count}}",
+      "MOVED_BY_OCTAVES": "Um Oktaven verschobene Noten",
+      "MOVED_NOTE": "{{note}} um {{octaves}} Oktaven auf Pfeife {{pipe}} verschoben (Stimme {{part}}, Spalte {{column}})",
+      "UNPLAYABLE_NOTES": "Nicht spielbare Noten",
+      "UNPLAYABLE_NOTE": "{{note}} (Stimme {{part}}, Spalte {{column}})",
+      "HOLE_CHANGES": "Geänderte Löcher",
+      "HOLE_CHANGE": {
+        "OVERLAP_MERGED": "Überlappende Löcher auf Pfeife {{pipe}} in Spalte {{column}} zusammengeführt",
+        "LENGTHENED": "Loch auf Pfeife {{pipe}} in Spalte {{column}} von {{from}} auf {{to}} Spalten verlängert",
+        "SHORTENED": "Loch auf Pfeife {{pipe}} in Spalte {{column}} von {{from}} auf {{to}} Spalten verkürzt",
+        "REPETITION_MERGED": "Wiederholte Löcher auf Pfeife {{pipe}} in Spalte {{column}} zusammengeführt, Spalte {{lost}} entfällt"
+      }
+    }
+  },
   "ORGAN": {
     "NAV": "Drehorgeln",
     "LIST": {

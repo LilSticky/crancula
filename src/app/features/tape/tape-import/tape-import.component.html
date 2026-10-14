@@ -1,0 +1,71 @@
+<h2>{{ 'TAPE.IMPORT.TITLE' | translate }}</h2>
+
+@if (organList().length === 0) {
+  <p data-testid="no-organ-hint">
+    {{ 'TAPE.IMPORT.NO_ORGAN' | translate }}
+    <a matButton="filled" routerLink="/organs/new">{{ 'TAPE.IMPORT.NEW_ORGAN' | translate }}</a>
+  </p>
+} @else {
+  <div class="tape-import" data-testid="import-form">
+    <mat-form-field>
+      <mat-label>{{ 'TAPE.IMPORT.ORGAN' | translate }}</mat-label>
+      <select matNativeControl #organSelect data-testid="organ" [value]="organId()" (change)="chooseOrgan(organSelect.value)">
+        <option value="" [selected]="organId() === ''">{{ 'TAPE.IMPORT.CHOOSE_ORGAN' | translate }}</option>
+        @for (organ of organList(); track organ.id) {
+          <option [value]="organ.id" [selected]="organ.id === organId()">{{ organ.name }}</option>
+        }
+      </select>
+    </mat-form-field>
+
+    <div>
+      <input #songFile type="file" hidden accept=".mid,.midi" data-testid="song-file" (change)="chooseSong(songFile)"/>
+      <button matButton="tonal" type="button" data-testid="choose-song" (click)="songFile.click()">
+        <mat-icon>upload_file</mat-icon>
+        {{ 'TAPE.IMPORT.CHOOSE_SONG' | translate }}
+      </button>
+      @if (song(); as song) {
+        <span data-testid="song-name">{{ song.name }}</span>
+      }
+    </div>
+    @if (rejection(); as code) {
+      <p class="rejection" data-testid="song-rejection" [attr.data-code]="code">
+        {{ 'TAPE.SONG_REJECTION.' + code.toUpperCase().replaceAll('-', '_') | translate }}
+      </p>
+    }
+
+    <mat-form-field>
+      <mat-label>{{ 'TAPE.IMPORT.NAME' | translate }}</mat-label>
+      <input matInput data-testid="name" [formField]="tape.name"/>
+      <ng-container ngProjectAs="mat-error">
+        @for (message of messagesAt(tape.name); track message.key) {
+          <mat-error data-testid="violation" data-path="name" [attr.data-code]="message.code">{{ message.key | translate: message.params }}</mat-error>
+        }
+      </ng-container>
+    </mat-form-field>
+    <mat-form-field>
+      <mat-label>{{ 'TAPE.IMPORT.COLUMN_LENGTH' | translate }}</mat-label>
+      <input matInput type="number" data-testid="column-length" [formField]="tape.columnLength"/>
+      <ng-container ngProjectAs="mat-error">
+        @for (message of messagesAt(tape.columnLength); track message.key) {
+          <mat-error data-testid="violation" data-path="columnLength" [attr.data-code]="message.code">{{ message.key | translate: message.params }}</mat-error>
+        }
+      </ng-container>
+    </mat-form-field>
+    <mat-form-field>
+      <mat-label>{{ 'TAPE.IMPORT.TRANSPOSITION' | translate }}</mat-label>
+      <input matInput type="number" data-testid="transposition" [formField]="tape.transposition"/>
+      <ng-container ngProjectAs="mat-error">
+        @for (message of messagesAt(tape.transposition); track message.key) {
+          <mat-error data-testid="violation" data-path="transposition" [attr.data-code]="message.code">{{ message.key | translate: message.params }}</mat-error>
+        }
+      </ng-container>
+    </mat-form-field>
+
+    <div>
+      <button matButton="filled" type="button" data-testid="create-tape" [disabled]="!canCreate()" (click)="create()">
+        <mat-icon>add</mat-icon>
+        {{ 'TAPE.IMPORT.CREATE' | translate }}
+      </button>
+    </div>
+  </div>
+}

@@ -18,6 +18,50 @@
     "TITLE": "Something went wrong!",
     "MESSAGE": "Page could not be found"
   },
+  "TAPE": {
+    "NAV": "Tapes",
+    "IMPORT": {
+      "TITLE": "Bring a Song onto a Tape",
+      "NO_ORGAN": "You need an Organ first: the Tape is punched for its Pipes.",
+      "NEW_ORGAN": "Describe an Organ",
+      "ORGAN": "Organ",
+      "CHOOSE_ORGAN": "Choose an Organ",
+      "CHOOSE_SONG": "Choose a MIDI file",
+      "NAME": "Name of the Tape",
+      "COLUMN_LENGTH": "Column length (mm)",
+      "TRANSPOSITION": "Transposition (semitones)",
+      "CREATE": "Create Tape"
+    },
+    "SONG_REJECTION": {
+      "NOT_A_MIDI_FILE": "This file is not a MIDI file, or it is damaged or larger than 16 MiB.",
+      "FORMAT_2": "This MIDI file has several independent sequences (format 2). Save it as format 0 or 1 and try again.",
+      "NOT_TIMED_IN_BEATS": "This MIDI file is timed in clock time (SMPTE) rather than in beats, so its Notes can't be placed on Columns.",
+      "NO_NOTES": "This MIDI file has no Notes in any Part that can go onto a Tape."
+    },
+    "VIOLATION": {
+      "NAME_REQUIRED": "Please enter a name.",
+      "COLUMN_LENGTH_MUST_BE_POSITIVE": "The Column length must be greater than 0.",
+      "NO_PART_SELECTED": "Choose at least one Part.",
+      "TRANSPOSITION_OUT_OF_RANGE": "This Transposition would move a Note out of the MIDI range (0–127).",
+      "NO_NOTE_ON_A_PIPE": "Not a single Note of the chosen Parts fits a Pipe of this Organ, not even moved by octaves."
+    },
+    "SUMMARY": {
+      "TITLE": "What changed on import",
+      "TRANSPOSITION": "Transposition: {{semitones}} semitones",
+      "NOTES_ON_TAPE": "Notes on the Tape: {{count}}",
+      "MOVED_BY_OCTAVES": "Notes moved by octaves",
+      "MOVED_NOTE": "{{note}} moved by {{octaves}} octaves to Pipe {{pipe}} (Part {{part}}, Column {{column}})",
+      "UNPLAYABLE_NOTES": "Unplayable Notes",
+      "UNPLAYABLE_NOTE": "{{note}} (Part {{part}}, Column {{column}})",
+      "HOLE_CHANGES": "Changed Holes",
+      "HOLE_CHANGE": {
+        "OVERLAP_MERGED": "Overlapping Holes on Pipe {{pipe}} merged at Column {{column}}",
+        "LENGTHENED": "Hole on Pipe {{pipe}} at Column {{column}} lengthened from {{from}} to {{to}} Columns",
+        "SHORTENED": "Hole on Pipe {{pipe}} at Column {{column}} shortened from {{from}} to {{to}} Columns",
+        "REPETITION_MERGED": "Repeated Holes on Pipe {{pipe}} at Column {{column}} merged, Column {{lost}} lost"
+      }
+    }
+  },
   "ORGAN": {
     "NAV": "Organs",
     "LIST": {

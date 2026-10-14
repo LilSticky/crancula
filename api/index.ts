@@ -47,6 +47,7 @@ export {
   removeHolesOfPipes,
   tapeId,
   tapeLengthInMillimetres,
+  transposition,
   type Column,
   type ColumnCount,
   type Hole,

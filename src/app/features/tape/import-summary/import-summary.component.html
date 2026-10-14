@@ -1,0 +1,76 @@
+@let summary = importSummary();
+<h3>{{ 'TAPE.SUMMARY.TITLE' | translate }}</h3>
+<p data-testid="transposition" [attr.data-value]="summary.transposition">
+  {{ 'TAPE.SUMMARY.TRANSPOSITION' | translate: {semitones: signed(summary.transposition)} }}
+</p>
+<p data-testid="notes-on-tape" [attr.data-value]="summary.notesOnTape">
+  {{ 'TAPE.SUMMARY.NOTES_ON_TAPE' | translate: {count: summary.notesOnTape} }}
+</p>
+
+@if (summary.movedByOctaves.length > 0) {
+  <h4>{{ 'TAPE.SUMMARY.MOVED_BY_OCTAVES' | translate }}</h4>
+  <ul>
+    @for (moved of summary.movedByOctaves; track $index) {
+      <li data-testid="moved-note"
+          [attr.data-note-name]="noteName(moved.noteNumber)"
+          [attr.data-octaves]="moved.octaves"
+          [attr.data-part]="moved.part"
+          [attr.data-pipe-name]="noteName(moved.pipe)"
+          [attr.data-column]="moved.column + 1">
+        {{ 'TAPE.SUMMARY.MOVED_NOTE' | translate: {
+          note: noteName(moved.noteNumber), octaves: moved.octaves, pipe: noteName(moved.pipe),
+          part: moved.part + 1, column: moved.column + 1
+        } }}
+      </li>
+    }
+  </ul>
+}
+
+@if (summary.unplayableNotes.length > 0) {
+  <h4>{{ 'TAPE.SUMMARY.UNPLAYABLE_NOTES' | translate }}</h4>
+  <ul>
+    @for (unplayable of summary.unplayableNotes; track $index) {
+      <li data-testid="unplayable-note"
+          [attr.data-note-name]="noteName(unplayable.noteNumber)"
+          [attr.data-part]="unplayable.part"
+          [attr.data-column]="unplayable.column + 1">
+        {{ 'TAPE.SUMMARY.UNPLAYABLE_NOTE' | translate: {
+          note: noteName(unplayable.noteNumber), part: unplayable.part + 1, column: unplayable.column + 1
+        } }}
+      </li>
+    }
+  </ul>
+}
+
+@if (summary.holeChanges.length > 0) {
+  <h4>{{ 'TAPE.SUMMARY.HOLE_CHANGES' | translate }}</h4>
+  <ul>
+    @for (change of summary.holeChanges; track $index) {
+      <li data-testid="hole-change"
+          [attr.data-kind]="change.kind"
+          [attr.data-pipe-name]="noteName(change.pipe)"
+          [attr.data-column]="change.column + 1">
+        @switch (change.kind) {
+          @case ('overlap-merged') {
+            {{ 'TAPE.SUMMARY.HOLE_CHANGE.OVERLAP_MERGED' | translate: {pipe: noteName(change.pipe), column: change.column + 1} }}
+          }
+          @case ('lengthened') {
+            {{ 'TAPE.SUMMARY.HOLE_CHANGE.LENGTHENED' | translate: {
+              pipe: noteName(change.pipe), column: change.column + 1, from: change.from, to: change.to
+            } }}
+          }
+          @case ('shortened') {
+            {{ 'TAPE.SUMMARY.HOLE_CHANGE.SHORTENED' | translate: {
+              pipe: noteName(change.pipe), column: change.column + 1, from: change.from, to: change.to
+            } }}
+          }
+          @case ('repetition-merged') {
+            {{ 'TAPE.SUMMARY.HOLE_CHANGE.REPETITION_MERGED' | translate: {
+              pipe: noteName(change.pipe), column: change.column + 1, lost: change.lostColumn + 1
+            } }}
+          }
+        }
+      </li>
+    }
+  </ul>
+}

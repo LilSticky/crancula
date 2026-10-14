@@ -323,7 +323,7 @@ Tape's Organ, Column length, Transposition +12 and every Hole.
 
 ### Tests for User Story 1 ⚠️ (write first, must fail)
 
-- [ ] T041 [P] [US1] Write the component test
+- [x] T041 [P] [US1] Write the component test
   `src/app/features/tape/tape-import/tape-import.component.spec.ts` (research R10.6, R10.7):
   - no Organ stored → a hint with a link to `/organs/new`, no form (FR-001, scenario 9);
   - exactly one Organ → preselected;
@@ -336,16 +336,16 @@ Tape's Organ, Column length, Transposition +12 and every Hole.
   - each `TapeViolation` is shown at its field as `TAPE.VIOLATION.<CODE>`;
   - Create calls `TapeLibrary.create` and navigates to `/tapes/<id>` with the Import Summary as
     navigation state, also when the write failed (R10.8).
-- [ ] T042 [P] [US1] Write the component test
+- [x] T042 [P] [US1] Write the component test
   `src/app/features/tape/import-summary/import-summary.component.spec.ts` (FR-015): it shows the
   Transposition, the number of Notes on the Tape, every Note moved by octaves (note name,
   octaves, Part, Pipe), every Unplayable Note (note name, Part), and every `HoleChange` kind with
   its Pipe's note name; every Column is shown **plus one** (Column 1 is the Tape's first Column).
-- [ ] T043 [P] [US1] Write the component test
+- [x] T043 [P] [US1] Write the component test
   `src/app/features/tape/tape-view/tape-view.component.spec.ts`, part 1: on `/tapes/<id>` with
   an Import Summary in the navigation state it shows the Import Summary; opened without one it
   shows none; an unknown id redirects to `/tapes`.
-- [ ] T044 [P] [US1] Write the e2e test `e2e/tape-import.spec.ts`: with no Organ, the import page
+- [x] T044 [P] [US1] Write the e2e test `e2e/tape-import.spec.ts`: with no Organ, the import page
   shows the hint and its link leads to the Organ editor; then save an Organ with Pipes C4–C6
   (`e2e/support/organ-editor.ts`), bring the melody C3–C5 onto a Tape through `setInputFiles`
   (`e2e/support/midi-file.ts`), and check the Import Summary shows Transposition +12; a non-MIDI
@@ -353,19 +353,19 @@ Tape's Organ, Column length, Transposition +12 and every Hole.
 
 ### Implementation for User Story 1
 
-- [ ] T045 [US1] Add `src/app/features/tape/routes.ts` with `tapes/new` (import page) and
+- [x] T045 [US1] Add `src/app/features/tape/routes.ts` with `tapes/new` (import page) and
   `tapes/:id` (Tape view), register it in `src/app.routes.ts`, and add a navbar entry through the
   `CranculaRoute` data. Depends on T041–T043.
-- [ ] T046 [US1] Implement `src/app/features/tape/tape-import/tape-import.component.ts` (and
+- [x] T046 [US1] Implement `src/app/features/tape/tape-import/tape-import.component.ts` (and
   `.html`, plus a form helper like `organ-form.ts` if needed): a Material button that clicks a
   hidden `<input type="file" accept=".mid,.midi">`, the Song as a signal, a signal form over the
   import draft (Organ, name, Column length), `computed` default Parts and proposal, one validator
   rule fed by `createTape`'s violations, and Create, until T041 is green. Depends on T039, T045.
-- [ ] T047 [P] [US1] Implement `src/app/features/tape/import-summary/import-summary.component.ts`
+- [x] T047 [P] [US1] Implement `src/app/features/tape/import-summary/import-summary.component.ts`
   (presentational, input `ImportSummary`, uses `noteName`) until T042 is green.
-- [ ] T048 [US1] Implement `src/app/features/tape/tape-view/tape-view.component.ts` (and `.html`)
+- [x] T048 [US1] Implement `src/app/features/tape/tape-view/tape-view.component.ts` (and `.html`)
   showing the Import Summary from the navigation state, until T043 is green. Depends on T047.
-- [ ] T049 [US1] Add the `TAPE.IMPORT.*`, `TAPE.SONG_REJECTION.*`, `TAPE.VIOLATION.*`,
+- [x] T049 [US1] Add the `TAPE.IMPORT.*`, `TAPE.SONG_REJECTION.*`, `TAPE.VIOLATION.*`,
   `TAPE.SUMMARY.*` and navbar keys to `src/assets/i18n/en.json` and `de.json`; the parity test
   stays green; T044 is green. Depends on T046–T048.
 
