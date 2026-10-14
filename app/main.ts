@@ -6,6 +6,7 @@ import {registerAppHandlers} from './app-ipc';
 import {menuTemplate, SOURCE_I18N_DIRECTORY} from './application-menu';
 import {createOrganLibraryFile} from './organ-library-file';
 import {registerOrganLibraryHandlers} from './organ-library-ipc';
+import {windowOptions} from './window-options';
 
 let win: BrowserWindow | null = null;
 const args = process.argv.slice(1);
@@ -33,20 +34,10 @@ function applyMenu(language: Language): void {
 registerAppHandlers(ipcMain, applyMenu);
 
 function createWindow(): BrowserWindow {
-  const size = screen.getPrimaryDisplay().workAreaSize;
-
-  win = new BrowserWindow({
-    x: 0,
-    y: 0,
-    width: size.width,
-    height: size.height,
-    webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
-      contextIsolation: true,
-      nodeIntegration: false,
-      sandbox: true,
-    },
-  });
+  // E2E runs set CRANCULA_HEADLESS=1 to keep the window hidden (see windowOptions).
+  win = new BrowserWindow(
+    windowOptions(process.env, screen.getPrimaryDisplay().workAreaSize, path.join(__dirname, 'preload.js')),
+  );
 
   if (serve) {
     void import('electron-debug').then((debug) => {

@@ -126,7 +126,7 @@ and commits. It does not write code itself, which keeps its context small across
 - `npm run electron:build`: package the app for distribution
 - `npm run build`: build the web app (also compiles `app/`)
 - `npm run test` / `npm run test:watch`: Vitest unit and component tests
-- `npm run e2e`: Playwright end-to-end tests (production build first)
+- `npm run e2e`: Playwright end-to-end tests (production build first); the window is hidden. To watch a run, slowed down and traced: `$env:HEADED='1'; npm run e2e`
 - `npm run lint`: ESLint
 - `npm run i18n:check`: en/de translation key parity (`i18n-parity` skill)
 

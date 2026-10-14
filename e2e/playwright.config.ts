@@ -1,3 +1,6 @@
+// HEADED=1 shows the window, slowed down and fully traced; otherwise runs are hidden and at full speed.
+const headed = process.env['HEADED'] === '1';
+
 /** @type {import('@playwright/test').PlaywrightTestConfig} */
 const config = {
   testDir: '.',
@@ -6,11 +9,10 @@ const config = {
   use: {
     headless: false,
     viewport: { width: 1280, height: 720 },
-    // Slowed down locally so that a run can be watched; full speed in CI.
     launchOptions: {
-      slowMo: process.env['CI'] ? 0 : 1000,
+      slowMo: headed ? 1000 : 0,
     },
-    trace: process.env['CI'] ? 'retain-on-failure' : 'on',
+    trace: headed ? 'on' : 'retain-on-failure',
   },
   expect: {
     toMatchSnapshot: { threshold: 0.2 },
