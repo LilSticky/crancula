@@ -55,9 +55,6 @@ now including e2e, is green (T042). After that:
   and macOS and should go green with this branch. Packaging now starts locally on Windows (smoke
   launch of the packaged app). CI packaging and GitHub Releases are not set up yet
   ([#11](https://github.com/LilSticky/crancula/issues/11)).
-- `main` is not protected: GitHub allows rulesets on a private repository only with GitHub Pro.
-  Until then, "pull requests only" (ADR 10) is a convention, not enforced
-  ([#18](https://github.com/LilSticky/crancula/issues/18)).
 
 ## Process changes
 
@@ -65,3 +62,7 @@ now including e2e, is green (T042). After that:
   (`Closes #N` / `Refs #N`), then get squash-merged by the agent (ADR 10, constitution 1.1.0).
 - 2026-10-14: the e2e suite runs in CI on Linux, Windows and macOS and replaces the manual
   walkthrough as proof that a slice runs in Electron (ADR 13, constitution 1.1.1).
+- 2026-10-14: the repository is public, and the ruleset "No direct push to main" enforces ADR 10
+  ([#18](https://github.com/LilSticky/crancula/issues/18)): no direct or force pushes, no deletion,
+  pull request required (no approvals), the three CI checks "Lint, test and build" must pass,
+  squash merge only; merged branches are deleted. Merging with red CI is no longer possible.
