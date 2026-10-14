@@ -53,8 +53,7 @@ after this pull request merges. Draft PR #26 (release workflow) waits for that.
 - Release workflow ([#11](https://github.com/LilSticky/crancula/issues/11)): `.github/workflows/release.yml`
   is drafted. A pushed tag `v*` packages on Linux, Windows and macOS and creates a draft GitHub
   Release; a manual run only builds artifacts. Builds are unsigned. Untested in CI until the first
-  tag; only the Windows portable `.exe` was packaged locally. The missing portable splash image was
-  removed from `electron-builder.json`, because it broke the Windows build.
+  tag; only the Windows portable `.exe` was packaged locally.
 
 ## Process changes
 
