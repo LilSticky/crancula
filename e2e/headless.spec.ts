@@ -20,4 +20,22 @@ test.describe('Headless run', () => {
     );
     expect(painted).toBe(true);
   });
+
+  // Playwright waits for animation frames before every click; at one frame per second each click takes 2 s.
+  test('renders frames at full speed, so that clicks are not slowed down', async () => {
+    const framesInHalfASecond = await launched.window.evaluate(
+      () =>
+        new Promise<number>((resolve) => {
+          const start = performance.now();
+          let frames = 0;
+          const count = (): void => {
+            frames++;
+            if (performance.now() - start < 500) requestAnimationFrame(count);
+            else resolve(frames);
+          };
+          requestAnimationFrame(count);
+        }),
+    );
+    expect(framesInHalfASecond).toBeGreaterThan(10);
+  });
 });
