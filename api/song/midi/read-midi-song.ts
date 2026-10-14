@@ -107,6 +107,7 @@ function readTrack(chunk: Uint8Array): RawTrack {
   const reader = new ByteReader(chunk);
   const finished: RawNote[] = [];
   const sounding = new Map<number, Tick>();
+  const retriggered = new Map<number, Tick>();
   let time = 0;
   let runningStatus: number | undefined;
   let name: string | undefined;
@@ -149,9 +150,11 @@ function readTrack(chunk: Uint8Array): RawTrack {
         const key = reader.dataByte();
         const velocity = reader.dataByte();
         if (kind === 0x9 && velocity > 0) {
+          const id = channel * 128 + key;
+          if (sounding.has(id)) retriggered.set(id, now);
           release(channel, key, now);
-          sounding.set(channel * 128 + key, now);
-        } else if ((kind === 0x8 || kind === 0x9) && sounding.get(channel * 128 + key) !== now) {
+          sounding.set(id, now);
+        } else if ((kind === 0x8 || kind === 0x9) && retriggered.get(channel * 128 + key) !== now) {
           release(channel, key, now);
         }
       }

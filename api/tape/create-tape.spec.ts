@@ -115,6 +115,10 @@ describe('createTape violations', () => {
     expect(violationCodes(inputOf(songOf(quarters(66))))).toEqual(['no-note-on-a-pipe']);
   });
 
+  it('reports no-part-selected when every selected index is beyond the Parts of the Song', () => {
+    expect(violationCodes(inputOf(song, {selectedParts: parts(1, 5)}))).toEqual(['no-part-selected']);
+  });
+
   it('rejects a negative Column length', () => {
     expect(violationCodes(inputOf(song, {columnLength: -1}))).toEqual(['column-length-must-be-positive']);
   });
@@ -163,6 +167,23 @@ describe('createTape, bringing a Song onto a Tape', () => {
     const {tape, importSummary} = created(inputOf(songOf(quarters(60, 66))));
     expect(importSummary.unplayableNotes).toEqual([{part: 0, noteNumber: 66, column: 8}]);
     expect(tape.holes.map((hole) => hole.pipe)).toEqual([60]);
+  });
+
+  it('stores only the selected Part indices that are Parts of the Song', () => {
+    const {tape} = created(inputOf(songOf(quarters(60)), {selectedParts: parts(0, 3)}));
+    expect(tape.selectedParts).toEqual([0]);
+  });
+
+  it('lists a moved Note by its note number after the Transposition', () => {
+    const input = inputOf(songOf(quarters(48, 83)), {transposition: defined(transposition(12), 'transposition')});
+    expect(created(input).importSummary.movedByOctaves).toEqual([
+      {part: 0, noteNumber: 95, pipe: 83, octaves: -1, column: 8},
+    ]);
+  });
+
+  it('lists an Unplayable Note by its note number after the Transposition', () => {
+    const input = inputOf(songOf(quarters(48, 54)), {transposition: defined(transposition(12), 'transposition')});
+    expect(created(input).importSummary.unplayableNotes).toEqual([{part: 0, noteNumber: 66, column: 8}]);
   });
 
   it('lengthens a Hole shorter than the Minimum Hole Length and lists the change', () => {

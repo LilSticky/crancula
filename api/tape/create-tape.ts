@@ -1,3 +1,4 @@
+import {midiNoteNumber} from '../organ/midi-note-number';
 import {minimumHoleLength, millimetres, type Millimetres, type Organ} from '../organ/organ';
 import {err, ok, type Result} from '../result';
 import type {Note, PartIndex, Song} from '../song/song';
@@ -66,20 +67,24 @@ function selectedPartsOf(song: Song, selectedParts: ReadonlySet<PartIndex>): Sel
   );
 }
 
-function violationsOf(input: CreateTapeInput): TapeViolation[] {
+function validPartIndices(song: Song, selectedParts: ReadonlySet<PartIndex>): ReadonlySet<PartIndex> {
+  return new Set([...selectedParts].filter((index) => index < song.parts.length));
+}
+
+function violationsOf(input: CreateTapeInput, selectedParts: ReadonlySet<PartIndex>): TapeViolation[] {
   const codes: TapeViolationCode[] = [];
   if (input.name.trim() === '') codes.push('name-required');
   if (!(Number.isFinite(input.columnLength) && input.columnLength > 0)) {
     codes.push('column-length-must-be-positive');
   }
-  if (input.selectedParts.size === 0) {
+  if (selectedParts.size === 0) {
     codes.push('no-part-selected');
   } else {
-    const {lowest, highest} = allowedTranspositions(input.song, input.selectedParts);
+    const {lowest, highest} = allowedTranspositions(input.song, selectedParts);
     if (input.transposition < lowest || input.transposition > highest) {
       codes.push('transposition-out-of-range');
     } else {
-      const {matchingAPipe, movedByOctaves} = fitOf(input.song, input.selectedParts, input.organ, input.transposition);
+      const {matchingAPipe, movedByOctaves} = fitOf(input.song, selectedParts, input.organ, input.transposition);
       if (matchingAPipe + movedByOctaves === 0) codes.push('no-note-on-a-pipe');
     }
   }
@@ -98,8 +103,9 @@ function holeLimitsOf(organ: Organ, columnLength: Millimetres): HoleLimits {
  * overlap merge, then the Minimum Hole Length and Minimum Gap fixes (FR-012).
  */
 export function createTape(input: CreateTapeInput): Result<CreatedTape, readonly TapeViolation[]> {
-  const selected = selectedPartsOf(input.song, input.selectedParts);
-  const violations = violationsOf(input);
+  const selectedParts = validPartIndices(input.song, input.selectedParts);
+  const selected = selectedPartsOf(input.song, selectedParts);
+  const violations = violationsOf(input, selectedParts);
   if (violations.length > 0) return err(violations);
 
   const {song, organ, transposition} = input;
@@ -117,16 +123,16 @@ export function createTape(input: CreateTapeInput): Result<CreatedTape, readonly
     for (const each of notes) {
       const quantised = quantiseNote(each, perQuarter);
       const start = valid(column(quantised.start - origin), 'Column');
-      const transposed = each.noteNumber + transposition;
+      const transposed = valid(midiNoteNumber(each.noteNumber + transposition), 'transposed note number');
       const pipe = table[transposed];
       if (pipe === undefined) {
-        unplayableNotes.push({part, noteNumber: each.noteNumber, column: start});
+        unplayableNotes.push({part, noteNumber: transposed, column: start});
         continue;
       }
       if (pipe !== transposed) {
         movedByOctaves.push({
           part,
-          noteNumber: each.noteNumber,
+          noteNumber: transposed,
           pipe,
           octaves: (pipe - transposed) / OCTAVE,
           column: start,
@@ -150,7 +156,7 @@ export function createTape(input: CreateTapeInput): Result<CreatedTape, readonly
       name: input.name.trim(),
       organId: organ.id,
       songId: song.id,
-      selectedParts: [...input.selectedParts].sort((a, b) => a - b),
+      selectedParts: [...selectedParts].sort((a, b) => a - b),
       transposition,
       columnLength,
       length,

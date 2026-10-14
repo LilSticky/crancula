@@ -367,6 +367,13 @@ describe('readMidiSong: Notes, Parts and names', () => {
       expect(summary(songOfTracks({events: [on(7, 60), off(0, 60)]}))[0]?.notes).toEqual([[60, 7, 0]]);
     });
 
+    it('ends a Note of duration 0 at its Tick even when the track goes on', () => {
+      const song = songOfTracks({
+        events: [on(7, 60), off(0, 60), {delta: 96, event: {type: 'controller', channel: 0, controller: 7, value: 9}}],
+      });
+      expect(summary(song)[0]?.notes).toEqual([[60, 7, 0]]);
+    });
+
     it('sorts the Notes of a Part by start, then note number', () => {
       const song = songOfTracks({
         events: [on(0, 64), on(0, 60), off(10, 64), off(0, 60), on(0, 62), off(5, 62)],

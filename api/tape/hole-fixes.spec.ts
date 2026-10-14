@@ -49,7 +49,12 @@ describe('mergeOverlaps', () => {
   it('merges Notes on the same Pipe that overlap into one Hole and reports it', () => {
     const result = mergeOverlaps([hole(0, 8), hole(4, 12)]);
     expect(result.holes).toEqual([hole(0, 12)]);
-    expect(result.changes).toEqual([{kind: 'overlap-merged', pipe, column: col(4)}]);
+    expect(result.changes).toEqual([{kind: 'overlap-merged', pipe, column: col(0)}]);
+  });
+
+  it('reports an absorbed Note at the start of the resulting Hole, not at its own start', () => {
+    const result = mergeOverlaps([hole(0, 12), hole(2, 4)]);
+    expect(result.changes).toEqual([{kind: 'overlap-merged', pipe, column: col(0)}]);
   });
 
   it('keeps the later end when a Note lies inside another', () => {

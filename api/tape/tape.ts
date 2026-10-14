@@ -76,8 +76,8 @@ export function transposition(value: number): Transposition | undefined {
     : undefined;
 }
 
-export function tapeLengthInMillimetres(tape: Tape): number {
-  return tape.length * tape.columnLength;
+export function tapeLengthInMillimetres(tape: Tape): Millimetres {
+  return (tape.length * tape.columnLength) as Millimetres;
 }
 
 /** The Tape without the Holes of the given Pipes; its length stays. */

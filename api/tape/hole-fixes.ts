@@ -56,7 +56,7 @@ export function mergeOverlaps(holes: readonly Hole[]): HoleFixResult {
     let current: Hole | undefined;
     for (const hole of row) {
       if (current !== undefined && hole.start < endOf(current)) {
-        changes.push({kind: 'overlap-merged', pipe: hole.pipe, column: hole.start});
+        changes.push({kind: 'overlap-merged', pipe: hole.pipe, column: current.start});
         current = holeUntil(current, Math.max(endOf(current), endOf(hole)));
         continue;
       }
