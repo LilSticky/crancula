@@ -117,6 +117,10 @@
     </button>
   </div>
   <div>
+    <button matButton="filled" type="button" data-testid="save-organ" [disabled]="!canSave()" (click)="save()">
+      <mat-icon>save</mat-icon>
+      {{ 'ORGAN.EDITOR.SAVE' | translate }}
+    </button>
     <button matButton="outlined" type="button" data-testid="delete-organ" (click)="deleteOrgan()">
       <mat-icon>delete</mat-icon>
       {{ 'ORGAN.EDITOR.DELETE' | translate }}

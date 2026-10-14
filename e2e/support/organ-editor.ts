@@ -27,5 +27,12 @@ export async function defineStreetOrgan(window: Page): Promise<void> {
     await window.getByTestId('add-pipe').click();
     await window.getByTestId('pipe-note').nth(row).fill(note);
   }
+  await saveOrgan(window);
   await expect(window).toHaveURL(/#?\/organs\/[0-9a-f-]{36}$/);
+}
+
+/** Presses Save in the Organ editor and waits until the changes count as stored. */
+export async function saveOrgan(window: Page): Promise<void> {
+  await window.getByTestId('save-organ').click();
+  await expect(window.getByTestId('save-organ')).toBeDisabled();
 }

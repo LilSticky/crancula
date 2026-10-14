@@ -47,7 +47,16 @@
       "MOVE_PIPE_DOWN": "Move Pipe down",
       "REMOVE_PIPE": "Remove Pipe",
       "DRAG_PIPE": "Drag Pipe to another row",
-      "DELETE": "Delete Organ"
+      "DELETE": "Delete Organ",
+      "SAVE": "Save"
+    },
+    "LEAVE": {
+      "TITLE": "Unsaved changes",
+      "UNSAVED": "Your changes are not saved. Press Save in the editor to keep them, or discard them.",
+      "INVALID": "Your changes can't be saved yet. Fix the problems listed below and press Save, or discard your changes.",
+      "PIPE_FIELD": "Row {{row}} · MIDI note",
+      "STAY": "Stay",
+      "DISCARD": "Discard changes"
     },
     "VIOLATION": {
       "NAME_REQUIRED": "Please enter a name.",

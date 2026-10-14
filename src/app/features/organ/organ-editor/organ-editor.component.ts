@@ -14,27 +14,30 @@ import {
   movePipe,
   newOrganId,
   noteName,
-  type Organ,
   type OrganDraft,
   type OrganViolation,
   type OrganViolationCode,
   removePipe,
   toDraft,
-  toSnapshot,
   validateOrgan,
 } from '@api/index';
 import {ConfirmableAction, ConfirmDialogComponent} from '../../shared/components/confirm-dialog/confirm-dialog.component';
 import {ErrorStateDirective} from '../../shared/directives/error-state.directive';
-import {type DraftLeaveCheck} from '../leave-invalid.guard';
+import type {LeaveProblem, TranslatableText, UnsavedChanges, UnsavedChangesCheck} from '../leave-unsaved.guard';
 import {OrganLibrary} from '../organ-library.store';
 
 type TapeBedField = keyof OrganDraft['tapeBed'];
 
-/** A rule message ready for the translate pipe. */
-interface ViolationMessage {
-  readonly key: string;
-  readonly params: Readonly<Record<string, string | number>>;
-}
+/** The label key of each field that has one fixed label; Pipe notes are labelled by their row. */
+const FIELD_LABEL_KEYS: Readonly<Record<string, string>> = {
+  name: 'ORGAN.EDITOR.NAME',
+  'tapeBed.tapeWidth': 'ORGAN.EDITOR.TAPE_WIDTH',
+  'tapeBed.border': 'ORGAN.EDITOR.BORDER',
+  'tapeBed.holeDiameter': 'ORGAN.EDITOR.HOLE_DIAMETER',
+  'tapeBed.rowSpacing': 'ORGAN.EDITOR.ROW_SPACING',
+  minimumGap: 'ORGAN.EDITOR.MINIMUM_GAP',
+  pipes: 'ORGAN.EDITOR.PIPES',
+};
 
 /** Violations about missing input wait until their field was touched; wrong values show right away. */
 const MISSING_VALUE_CODES: ReadonlySet<OrganViolationCode> = new Set([
@@ -71,7 +74,7 @@ const MISSING_VALUE_CODES: ReadonlySet<OrganViolationCode> = new Set([
     }
   `,
 })
-export class OrganEditorComponent implements DraftLeaveCheck {
+export class OrganEditorComponent implements UnsavedChangesCheck {
   /** Route parameter; absent for a new Organ. */
   readonly id = input<string>();
 
@@ -90,6 +93,13 @@ export class OrganEditorComponent implements DraftLeaveCheck {
   /** The Organ as entered; may be invalid. */
   protected readonly draft = linkedSignal<OrganDraft>(() => this.opened());
 
+  /** The last saved version of the draft: what "unchanged" is measured against. */
+  private readonly saved = linkedSignal<OrganDraft>(() => this.opened());
+
+  private readonly validation = computed(() => validateOrgan(this.draft()));
+  private readonly changed = computed(() => JSON.stringify(this.draft()) !== JSON.stringify(this.saved()));
+  protected readonly canSave = computed(() => this.changed() && this.validation().ok);
+
   /**
    * What the inputs show. It follows the draft only on structural changes (opening an Organ, adding
    * Pipes), so that re-rendering never rewrites a number while it is being typed.
@@ -99,10 +109,10 @@ export class OrganEditorComponent implements DraftLeaveCheck {
   /** Paths of the fields the user has edited. */
   private readonly touched = signal<ReadonlySet<string>>(new Set());
 
-  private readonly shownViolations = computed<ReadonlyMap<string, readonly ViolationMessage[]>>(() => {
-    const result = validateOrgan(this.draft());
+  private readonly shownViolations = computed<ReadonlyMap<string, readonly TranslatableText[]>>(() => {
+    const result = this.validation();
     const touched = this.touched();
-    const byPath = new Map<string, ViolationMessage[]>();
+    const byPath = new Map<string, TranslatableText[]>();
     for (const violation of result.ok ? [] : result.error) {
       if (!isShown(violation, touched)) continue;
       byPath.set(violation.path, [...(byPath.get(violation.path) ?? []), toMessage(violation)]);
@@ -125,21 +135,26 @@ export class OrganEditorComponent implements DraftLeaveCheck {
         void this.router.navigate(['/organs'], {replaceUrl: true});
       }
     });
-
-    // Store the Organ whenever it is valid (spec FR-012); there is no Save button.
-    effect(() => {
-      const result = validateOrgan(this.draft());
-      if (result.ok) untracked(() => this.store(result.value));
-    });
   }
 
-  /** Whether the user changed the Organ into a state that is not stored; leaving would discard it. */
-  hasInvalidDraft(): boolean {
-    return !this.deleted && JSON.stringify(this.draft()) !== JSON.stringify(this.opened()) && !validateOrgan(this.draft()).ok;
+  /** What leaving would lose (spec FR-012a), or `null` when there is no unsaved change. */
+  unsavedChanges(): UnsavedChanges | null {
+    if (this.deleted || !this.changed()) return null;
+    const result = this.validation();
+    return {problems: result.ok ? [] : result.error.map(toProblem)};
+  }
+
+  /** Stores the valid, changed Organ (spec FR-012). */
+  protected save(): void {
+    const result = this.validation();
+    if (!result.ok || !this.changed()) return;
+    this.saved.set(this.draft());
+    void this.library.put(result.value);
+    if (!this.id()) void this.router.navigate(['/organs', result.value.id], {replaceUrl: true});
   }
 
   /** The rule messages to show at the field with this path. */
-  protected violationsAt(path: string): readonly ViolationMessage[] {
+  protected violationsAt(path: string): readonly TranslatableText[] {
     return this.shownViolations().get(path) ?? [];
   }
 
@@ -226,13 +241,6 @@ export class OrganEditorComponent implements DraftLeaveCheck {
     this.draft.update(change);
     this.displayed.set(this.draft());
   }
-
-  private store(organ: Organ): void {
-    const stored = this.library.entityMap()[organ.id];
-    if (stored && sameOrgan(stored, organ)) return;
-    void this.library.put(organ);
-    if (!this.id()) void this.router.navigate(['/organs', organ.id], {replaceUrl: true});
-  }
 }
 
 /** Where the Pipe in `row` ends up when the Pipe in `fromRow` moves to `toRow`. */
@@ -249,15 +257,19 @@ function isShown(violation: OrganViolation, touched: ReadonlySet<string>): boole
   return violation.path === 'pipes' ? touched.size > 0 : touched.has(violation.path);
 }
 
-function toMessage(violation: OrganViolation): ViolationMessage {
+function toMessage(violation: OrganViolation): TranslatableText {
   return {key: `ORGAN.VIOLATION.${violation.code.toUpperCase().replace(/-/g, '_')}`, params: violation.params ?? {}};
+}
+
+function toProblem(violation: OrganViolation): LeaveProblem {
+  const pipeRow = /^pipes\.(\d+)\./.exec(violation.path);
+  const field: TranslatableText = pipeRow
+    ? {key: 'ORGAN.LEAVE.PIPE_FIELD', params: {row: Number(pipeRow[1]) + 1}}
+    : {key: FIELD_LABEL_KEYS[violation.path] ?? violation.path, params: {}};
+  return {field, message: toMessage(violation)};
 }
 
 /** Empty input → `null`; anything else as typed, so that validation can report it. */
 function toNumber(value: string): number | null {
   return value.trim() === '' ? null : Number(value);
-}
-
-function sameOrgan(a: Organ, b: Organ): boolean {
-  return JSON.stringify(toSnapshot([a])) === JSON.stringify(toSnapshot([b]));
 }

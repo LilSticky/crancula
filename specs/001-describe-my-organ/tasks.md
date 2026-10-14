@@ -417,23 +417,23 @@ translation key.
 
 ### Explicit Save and the leave warning
 
-- [ ] T043 [US1] Extend `organ-editor.component.spec.ts`:
+- [x] T043 [US1] Extend `organ-editor.component.spec.ts`:
   - a valid change is **not** stored until `save` is pressed; then it is stored;
   - the Save button is disabled when unchanged, disabled when invalid, enabled when changed and
     valid, and disabled again after saving;
   - a new Organ navigates to `/organs/<id>` only after its first save;
   - replace the specs that relied on autosave so that they press Save.
-- [ ] T044 [US4] Rewrite `leave-invalid.guard.spec.ts` as `leave-unsaved.guard.spec.ts`:
+- [x] T044 [US4] Rewrite `leave-invalid.guard.spec.ts` as `leave-unsaved.guard.spec.ts`:
   - no unsaved changes → leave without a dialog;
   - valid unsaved changes → dialog says they aren't saved; "stay" stays, "discard" leaves;
   - invalid unsaved changes → dialog lists each broken rule with its field label (e.g.
     "Row 3 · MIDI note: Another Pipe already plays C4."); "stay" is the default;
   - after discarding, the last saved version is unchanged.
-- [ ] T045 [US1] Implement: remove the autosave effect, add a Save button
+- [x] T045 [US1] Implement: remove the autosave effect, add a Save button
   (`data-testid="save-organ"`, `matButton="filled"`), keep the saved draft as the new baseline,
   and expose `unsavedChanges(): {invalid: readonly ViolationMessage[]} | {invalid: []} | null`
   (or a similar typed result) for the guard.
-- [ ] T046 [US4] Implement `leave-unsaved.guard.ts` and a `LeaveUnsavedDialogComponent` (Material
+- [x] T046 [US4] Implement `leave-unsaved.guard.ts` and a `LeaveUnsavedDialogComponent` (Material
   dialog, "Stay and fix"/"Stay" default focus, "Discard changes" warn). Wire it into
   `routes.ts`, and add the i18n keys to `en.json` and `de.json`.
 - [ ] T047 [US1] Update the e2e tests that create or edit Organs (`organ-define`, `organ-edit`,

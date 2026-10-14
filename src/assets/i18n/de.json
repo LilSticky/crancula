@@ -47,7 +47,16 @@
       "MOVE_PIPE_DOWN": "Pfeife nach unten verschieben",
       "REMOVE_PIPE": "Pfeife entfernen",
       "DRAG_PIPE": "Pfeife in eine andere Reihe ziehen",
-      "DELETE": "Drehorgel löschen"
+      "DELETE": "Drehorgel löschen",
+      "SAVE": "Speichern"
+    },
+    "LEAVE": {
+      "TITLE": "Nicht gespeicherte Änderungen",
+      "UNSAVED": "Deine Änderungen sind nicht gespeichert. Drücke im Editor auf Speichern, um sie zu behalten, oder verwirf sie.",
+      "INVALID": "Deine Änderungen können noch nicht gespeichert werden. Behebe die unten aufgeführten Probleme und drücke auf Speichern, oder verwirf deine Änderungen.",
+      "PIPE_FIELD": "Reihe {{row}} · MIDI-Note",
+      "STAY": "Bleiben",
+      "DISCARD": "Änderungen verwerfen"
     },
     "VIOLATION": {
       "NAME_REQUIRED": "Bitte gib einen Namen ein.",
