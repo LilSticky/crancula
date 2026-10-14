@@ -523,17 +523,17 @@ English.
 
 ### Tests for User Story 6 ⚠️
 
-- [ ] T069 [P] [US6] Write the test `src/app/features/tape/tape-i18n.spec.ts`: every
+- [x] T069 [P] [US6] Write the test `src/app/features/tape/tape-i18n.spec.ts`: every
   `SongRejection`, `TapeViolationCode` and `HoleChange` kind has a key in `en.json` and `de.json`,
   and the German texts differ from the English ones.
-- [ ] T070 [P] [US6] Write the e2e test `e2e/tape-german.spec.ts` (SC-008): switch to German,
+- [x] T070 [P] [US6] Write the e2e test `e2e/tape-german.spec.ts` (SC-008): switch to German,
   bring a Song onto a Tape, trigger a Song rejection and a `TapeViolation`, open the Tape list and
   the Tape view; no visible text matches `TAPE.` or `ORGAN.` key patterns, and the messages are
   German.
 
 ### Implementation for User Story 6
 
-- [ ] T071 [US6] Fill every missing or untranslated key in `src/assets/i18n/de.json` (and
+- [x] T071 [US6] Fill every missing or untranslated key in `src/assets/i18n/de.json` (and
   `en.json`) until T069 and T070 are green.
 
 **Checkpoint**: all user stories green.
