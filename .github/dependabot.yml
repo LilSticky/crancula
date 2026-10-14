@@ -29,6 +29,13 @@ updates:
         patterns:
           - "playwright"
           - "@playwright/*"
+    ignore:
+      # Hold until the Electron Node runtime moves beyond 24.
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
+      # Hold until the main process is ESM (#47).
+      - dependency-name: "electron-reloader"
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: npm
     directory: /app
     schedule:
