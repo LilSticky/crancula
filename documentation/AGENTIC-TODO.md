@@ -32,11 +32,9 @@ Custom agents, skills and setup still to build for the spec-, test- and domain-d
 - [x] CI check that a pull request body references an issue (`.github/workflows/pr-issues.yml`, ADR 10)
 - [x] `gh` token with the `project` scope (`gh auth refresh -s project`), so agents can manage Project board 1
 - [x] Project board 1 workflows: Todo when an item is added, Done on close and merge, sub-issues added automatically
-- [ ] Project board 1 "Auto-add to project" workflow for new issues in this repository (board settings → Workflows; not
-  possible through the API). Until then, add each new issue: `gh project item-add 1 --owner LilSticky --url <issue URL>`.
-  `gh project item-list` returns stale items, so check membership with GraphQL (`issue.projectItems`)
+- [x] Project board 1 "Auto-add to project" workflow for new issues in this repository (enabled in the board settings)
 - [x] Claude GitHub Action: issue triage (`.github/workflows/claude-triage.yml`, `triage` skill) and `@claude` in issues
   and pull requests (`.github/workflows/claude.yml`), ADR 15
 - [x] Secret `CLAUDE_CODE_OAUTH_TOKEN` (`claude setup-token`, then `gh secret set CLAUDE_CODE_OAUTH_TOKEN`); triage verified on [#37](https://github.com/LilSticky/crancula/issues/37)
-- [ ] Confirm the Claude GitHub App (https://github.com/apps/claude) is installed, then try `@claude` in an issue; user step
+- [x] Claude GitHub App installed; `@claude` works in issues and pull requests
 - [x] Connect the GitHub MCP server of the enabled `github` plugin
