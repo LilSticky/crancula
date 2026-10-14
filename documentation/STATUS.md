@@ -76,7 +76,8 @@ research R6 revised): `form()` over `OrganDraft`, `[formField]` inputs, one `val
   locally; `@claude` works in issues and pull requests. Triage verified on [#37](https://github.com/LilSticky/crancula/issues/37) (labelled, commented, `triage` removed). The first runs failed with HTTP 429 because the Claude subscription had hit its session limit; triage shares the user's subscription quota. The Claude GitHub App is installed (`@claude` works) and the board adds new issues itself.
 - 2026-10-14: Dependabot pull requests skip the issue reference check, and patch and minor updates
   squash-merge automatically once CI is green; major updates stay manual (ADR 16, amends ADR 10 and 14).
-  Needs the repository setting "Allow auto-merge" to be on.
+  The repository setting "Allow auto-merge" is on (checked 2026-10-15); no patch or minor update has
+  merged itself yet.
 - 2026-10-14: Dependabot major updates evaluated ([#49](https://github.com/LilSticky/crancula/issues/49)):
   `actions/checkout`, `setup-node` and `upload-artifact` moved to v7. Majors of `@types/node` (until the
   Electron Node runtime moves beyond 24) and `electron-reloader` are held in `dependabot.yml`;
