@@ -1,89 +1,102 @@
-// noinspection ES6PreferShortImport
-
-import {app, BrowserWindow, screen} from 'electron';
-import * as path from 'path';
+import {app, BrowserWindow, ipcMain, Menu, screen} from 'electron';
 import * as fs from 'fs';
+import * as path from 'path';
+import type {Language} from '../api';
+import {registerAppHandlers} from './app-ipc';
+import {menuTemplate, SOURCE_I18N_DIRECTORY} from './application-menu';
+import {createOrganLibraryFile} from './organ-library-file';
+import {registerOrganLibraryHandlers} from './organ-library-ipc';
 
 let win: BrowserWindow | null = null;
-const args = process.argv.slice(1),
-  serve = args.some(val => val === '--serve');
+const args = process.argv.slice(1);
+const serve = args.some((val) => val === '--serve');
+
+// Tests run with their own userData folder (ADR 8).
+if (process.env['CRANCULA_USER_DATA']) {
+  app.setPath('userData', process.env['CRANCULA_USER_DATA']);
+}
+
+const organLibraryFile = createOrganLibraryFile(path.join(app.getPath('userData'), 'snapshots'));
+registerOrganLibraryHandlers(ipcMain, organLibraryFile);
+
+/** The folder the renderer's translation files are loaded from: the sources when serving, else the built assets. */
+function i18nDirectory(): string {
+  if (serve) return SOURCE_I18N_DIRECTORY;
+  const built = path.join(__dirname, '../dist/browser/assets/i18n');
+  return fs.existsSync(built) ? built : path.join(__dirname, 'browser/assets/i18n');
+}
+
+function applyMenu(language: Language): void {
+  Menu.setApplicationMenu(Menu.buildFromTemplate(menuTemplate(language, process.platform, i18nDirectory())));
+}
+
+registerAppHandlers(ipcMain, applyMenu);
 
 function createWindow(): BrowserWindow {
-
   const size = screen.getPrimaryDisplay().workAreaSize;
 
-  // Create the browser window.
   win = new BrowserWindow({
     x: 0,
     y: 0,
     width: size.width,
     height: size.height,
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js')
+      preload: path.join(__dirname, 'preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: true,
     },
   });
 
   if (serve) {
-    import('electron-debug').then(debug => {
+    void import('electron-debug').then((debug) => {
       debug.default({isEnabled: true, showDevTools: true});
     });
-
-    import('electron-reloader').then(reloader => {
-      const reloaderFn = (reloader as any).default || reloader;
-      reloaderFn(module);
+    void import('electron-reloader').then((reloader: {default?: (target: typeof module) => void}) => {
+      reloader.default?.(module);
     });
-    win.loadURL('http://localhost:4200');
+    void win.loadURL('http://localhost:4200');
   } else {
-    // Path when running electron executable
+    // Path when running the packaged executable
     let pathIndex = './browser/index.html';
-
     if (fs.existsSync(path.join(__dirname, '../dist/browser/index.html'))) {
-      // Path when running electron in local folder
+      // Path when running electron in the local folder
       pathIndex = '../dist/browser/index.html';
     }
-
     const fullPath = path.join(__dirname, pathIndex);
-    const url = `file://${path.resolve(fullPath).replace(/\\/g, '/')}`;
-    win.loadURL(url);
+    void win.loadURL(`file://${path.resolve(fullPath).replace(/\\/g, '/')}`);
   }
 
-  // Emitted when the window is closed.
   win.on('closed', () => {
-    // Dereference the window object, usually you would store window
-    // in an array if your app supports multi windows, this is the time
-    // when you should delete the corresponding element.
     win = null;
   });
 
   return win;
 }
 
-try {
-  app.whenReady().then(() => {
-    // This method will be called when Electron has finished initialization and is ready to create browser windows.
-    // Some APIs can only be used after this event occurs. Added 400 ms to fix the black background issue while using transparent window.
-    // More details at https://github.com/electron/electron/issues/15947
-    setTimeout(createWindow, 400);
-
-    app.on('activate', () => {
-      // On OS X it's common to re-create a window in the app when the
-      // dock icon is clicked and there are no other windows open.
-      if (win === null) {
-        createWindow();
-      }
-    });
-
-  })
-  // Quit when all windows are closed.
-  app.on('window-all-closed', () => {
-    // On OS X it is common for applications and their menu bar
-    // to stay active until the user quits explicitly with Cmd + Q
-    if (process.platform !== 'darwin') {
-      app.quit();
-    }
+let flushedBeforeQuit = false;
+app.on('before-quit', (event) => {
+  if (flushedBeforeQuit) return;
+  event.preventDefault();
+  void organLibraryFile.flush().finally(() => {
+    flushedBeforeQuit = true;
+    app.quit();
   });
+});
 
-} catch (e) {
-  // Catch Error
-  // throw e;
-}
+void app.whenReady().then(() => {
+  // A short delay avoids a black background with transparent windows:
+  // https://github.com/electron/electron/issues/15947
+  applyMenu('en'); // until the renderer reports its language
+  setTimeout(createWindow, 400);
+
+  app.on('activate', () => {
+    // On macOS, re-create a window when the dock icon is clicked and no window is open.
+    if (win === null) createWindow();
+  });
+});
+
+app.on('window-all-closed', () => {
+  // On macOS, apps stay active until the user quits explicitly with Cmd + Q.
+  if (process.platform !== 'darwin') app.quit();
+});

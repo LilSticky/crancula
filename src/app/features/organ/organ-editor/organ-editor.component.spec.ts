@@ -1,0 +1,860 @@
+import type {CdkDragDrop} from '@angular/cdk/drag-drop';
+import {CdkDropList} from '@angular/cdk/drag-drop';
+import {type ComponentFixture, TestBed} from '@angular/core/testing';
+import {By} from '@angular/platform-browser';
+import {MatDialog} from '@angular/material/dialog';
+import {provideRouter, Router} from '@angular/router';
+import {type Observable, of} from 'rxjs';
+import type {CranculaApi, OrganLibrarySaveResult} from '@api/index';
+import {CRANCULA_API, createInMemoryCranculaApi} from '../../../core/crancula-api.token';
+import {ConfirmableAction, ConfirmDialogComponent} from '../../shared/components/confirm-dialog/confirm-dialog.component';
+import {provideTestTranslations} from '../../../../testing/test-translations';
+import {testOrgan} from '../../../../testing/organs';
+import {OrganLibrary} from '../organ-library.store';
+import {OrganEditorComponent} from './organ-editor.component';
+
+function render() {
+  TestBed.configureTestingModule({providers: [provideRouter([]), provideTestTranslations()]});
+  const library = TestBed.inject(OrganLibrary);
+  const router = TestBed.inject(Router);
+  const navigate = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+  return {library, navigate, open};
+}
+
+async function open(id?: string) {
+  const fixture = TestBed.createComponent(OrganEditorComponent);
+  if (id) fixture.componentRef.setInput('id', id);
+  fixture.autoDetectChanges();
+  await fixture.whenStable();
+  const element = fixture.nativeElement as HTMLElement;
+
+  const field = (testId: string) => {
+    const input = element.querySelector<HTMLInputElement>(`[data-testid="${testId}"]`);
+    if (!input) throw new Error(`no field ${testId}`);
+    return input;
+  };
+  const type = async (input: HTMLInputElement, value: string) => {
+    input.value = value;
+    input.dispatchEvent(new Event('input'));
+    await fixture.whenStable();
+  };
+  const click = async (testId: string) => {
+    field(testId).click();
+    await fixture.whenStable();
+  };
+  const saveButton = () => {
+    const button = element.querySelector<HTMLButtonElement>('[data-testid="save-organ"]');
+    if (!button) throw new Error('no Save button');
+    return button;
+  };
+  const save = async () => {
+    saveButton().click();
+    await fixture.whenStable();
+  };
+  const pipeRows = () => [...element.querySelectorAll<HTMLElement>('[data-testid="pipe"]')];
+
+  async function fillValidOrgan() {
+    await type(field('name'), 'Street organ');
+    await type(field('tape-width'), '120');
+    await type(field('border'), '5');
+    await type(field('hole-diameter'), '2.5');
+    await type(field('row-spacing'), '3.5');
+    await type(field('minimum-gap'), '1.5');
+    await click('add-pipe');
+    await type(field('pipe-note'), '60');
+  }
+
+  /** The rule message shown at a field, by the field's path in the Organ. */
+  const violationAt = (path: string) =>
+    [...element.querySelectorAll(`[data-testid="violation"][data-path="${path}"]`)].map((error) => error.textContent?.trim());
+
+  return {fixture, element, field, type, click, save, saveButton, pipeRows, fillValidOrgan, violationAt};
+}
+
+describe('OrganEditorComponent', () => {
+  describe('a new Organ', () => {
+    it('has empty fields for name, Tape Bed and Minimum Gap', async () => {
+      const {open: openEditor} = render();
+      const {field} = await openEditor();
+
+      for (const testId of ['name', 'tape-width', 'border', 'hole-diameter', 'row-spacing', 'minimum-gap']) {
+        expect(field(testId).value).toBe('');
+      }
+    });
+
+    it('shows the Minimum Hole Length as the read-only hole diameter', async () => {
+      const {open: openEditor} = render();
+      const {field, type} = await openEditor();
+
+      await type(field('hole-diameter'), '2.5');
+
+      expect(field('minimum-hole-length').readOnly).toBe(true);
+      expect(field('minimum-hole-length').value).toBe('2.5');
+    });
+
+    it('adds Pipes as last rows and names their notes', async () => {
+      const {open: openEditor} = render();
+      const {element, click, pipeRows, type} = await openEditor();
+
+      await click('add-pipe');
+      await click('add-pipe');
+      const notes = element.querySelectorAll<HTMLInputElement>('[data-testid="pipe-note"]');
+      await type(notes[0], '60');
+      await type(notes[1], '61');
+
+      expect(pipeRows().map((row) => row.querySelector('[data-testid="pipe-note-name"]')?.textContent?.trim())).toEqual([
+        'C4',
+        'C#4',
+      ]);
+    });
+  });
+
+  describe('saving', () => {
+    it('stores nothing while a valid Organ is only edited', async () => {
+      const {open: openEditor, library, navigate} = render();
+      const {fillValidOrgan} = await openEditor();
+
+      await fillValidOrgan();
+
+      expect(library.entities()).toEqual([]);
+      expect(navigate).not.toHaveBeenCalled();
+    });
+
+    it('stores a new Organ when Save is pressed and opens it by id', async () => {
+      const {open: openEditor, library, navigate} = render();
+      const {fillValidOrgan, save} = await openEditor();
+      await fillValidOrgan();
+
+      await save();
+
+      const [stored] = library.entities();
+      expect(stored?.name).toBe('Street organ');
+      expect(stored?.pipes.map((pipe) => pipe.note)).toEqual([60]);
+      expect(navigate).toHaveBeenCalledWith(['/organs', stored?.id], {replaceUrl: true});
+    });
+
+    it('does not open a new Organ by id before its first save', async () => {
+      const {open: openEditor, navigate} = render();
+      const {fillValidOrgan} = await openEditor();
+
+      await fillValidOrgan();
+
+      expect(navigate).not.toHaveBeenCalledWith(['/organs', expect.anything()], expect.anything());
+    });
+
+    it('stores a changed stored Organ under the same id when Save is pressed', async () => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 2);
+      await library.put(organ);
+      const {field, type, save} = await openEditor(organ.id);
+
+      await type(field('name'), 'Renamed');
+      expect(library.entities().map(({name}) => name)).toEqual(['Street organ']);
+      await save();
+
+      expect(library.entities().map(({id, name}) => ({id, name}))).toEqual([{id: organ.id, name: 'Renamed'}]);
+    });
+
+    it('does not navigate when a stored Organ is saved', async () => {
+      const {open: openEditor, library, navigate} = render();
+      const organ = testOrgan('Street organ', 2);
+      await library.put(organ);
+      const {field, type, save} = await openEditor(organ.id);
+      navigate.mockClear();
+
+      await type(field('name'), 'Renamed');
+      await save();
+
+      expect(navigate).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('saving to disk', () => {
+    /** An API whose disk write is decided by the test: `finish` ends the pending write. */
+    function renderWithDiskWrite() {
+      const inMemory = createInMemoryCranculaApi();
+      const writes: Array<(result: OrganLibrarySaveResult) => void> = [];
+      const api: CranculaApi = {
+        organs: {
+          load: () => inMemory.organs.load(),
+          save: () => new Promise<OrganLibrarySaveResult>((resolve) => writes.push(resolve)),
+        },
+        app: inMemory.app,
+      };
+      TestBed.configureTestingModule({
+        providers: [provideRouter([]), provideTestTranslations(), {provide: CRANCULA_API, useValue: api}],
+      });
+      const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+      const finish = async (result: OrganLibrarySaveResult, fixture: ComponentFixture<OrganEditorComponent>) => {
+        writes.shift()?.(result);
+        await fixture.whenStable();
+        fixture.detectChanges();
+      };
+      /** Presses Save without waiting for the disk write. */
+      const startSaving = async (editor: Awaited<ReturnType<typeof open>>) => {
+        editor.saveButton().click();
+        await Promise.resolve();
+        editor.fixture.detectChanges();
+      };
+      return {navigate, finish, startSaving, writes};
+    }
+
+    it('keeps Save enabled and the changes unsaved when writing fails', async () => {
+      const {finish, startSaving} = renderWithDiskWrite();
+      const editor = await open();
+      await editor.fillValidOrgan();
+
+      await startSaving(editor);
+      await finish({status: 'failed', reason: 'disk full'}, editor.fixture);
+
+      expect(editor.saveButton().disabled).toBe(false);
+      expect(editor.fixture.componentInstance.unsavedChanges()).not.toBeNull();
+    });
+
+    it('does not open a new Organ by id when writing fails', async () => {
+      const {navigate, finish, startSaving} = renderWithDiskWrite();
+      const editor = await open();
+      await editor.fillValidOrgan();
+
+      await startSaving(editor);
+      await finish({status: 'failed', reason: 'disk full'}, editor.fixture);
+
+      expect(navigate).not.toHaveBeenCalled();
+    });
+
+    it('disables Save and has no unsaved changes once writing succeeded', async () => {
+      const {finish, startSaving} = renderWithDiskWrite();
+      const editor = await open();
+      await editor.fillValidOrgan();
+
+      await startSaving(editor);
+      await finish({status: 'saved'}, editor.fixture);
+
+      expect(editor.saveButton().disabled).toBe(true);
+      expect(editor.fixture.componentInstance.unsavedChanges()).toBeNull();
+    });
+
+    it('opens a new Organ by id only after writing succeeded, with no unsaved changes left', async () => {
+      const {navigate, finish, startSaving} = renderWithDiskWrite();
+      const editor = await open();
+      await editor.fillValidOrgan();
+      const unsavedAtNavigation: Array<ReturnType<OrganEditorComponent['unsavedChanges']>> = [];
+      navigate.mockImplementation(() => {
+        unsavedAtNavigation.push(editor.fixture.componentInstance.unsavedChanges());
+        return Promise.resolve(true);
+      });
+
+      await startSaving(editor);
+      expect(navigate).not.toHaveBeenCalled();
+      await finish({status: 'saved'}, editor.fixture);
+
+      expect(navigate).toHaveBeenCalledTimes(1);
+      expect(unsavedAtNavigation).toEqual([null]);
+    });
+
+    it('disables Save while the write is in flight, so that nothing is written twice', async () => {
+      const {finish, startSaving, writes} = renderWithDiskWrite();
+      const editor = await open();
+      await editor.fillValidOrgan();
+
+      await startSaving(editor);
+
+      expect(editor.saveButton().disabled).toBe(true);
+      editor.saveButton().click();
+      await Promise.resolve();
+      expect(writes).toHaveLength(1);
+      await finish({status: 'saved'}, editor.fixture);
+    });
+
+    it('enables Save again after a failed write so that the user can retry', async () => {
+      const {finish, startSaving, writes} = renderWithDiskWrite();
+      const editor = await open();
+      await editor.fillValidOrgan();
+      await startSaving(editor);
+      await finish({status: 'failed', reason: 'disk full'}, editor.fixture);
+
+      await startSaving(editor);
+      expect(writes).toHaveLength(1);
+      await finish({status: 'saved'}, editor.fixture);
+
+      expect(editor.saveButton().disabled).toBe(true);
+      expect(editor.fixture.componentInstance.unsavedChanges()).toBeNull();
+    });
+  });
+
+  describe('the Save button', () => {
+    it('is disabled while nothing was changed', async () => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 2);
+      await library.put(organ);
+      const {saveButton} = await openEditor(organ.id);
+
+      expect(saveButton().disabled).toBe(true);
+    });
+
+    it('is disabled on an untouched new Organ', async () => {
+      const {open: openEditor} = render();
+      const {saveButton} = await openEditor();
+
+      expect(saveButton().disabled).toBe(true);
+    });
+
+    it('is disabled while the Organ is changed but invalid', async () => {
+      const {open: openEditor} = render();
+      const {field, type, saveButton} = await openEditor();
+
+      await type(field('name'), 'Street organ');
+
+      expect(saveButton().disabled).toBe(true);
+    });
+
+    it('is enabled once the Organ is changed and valid', async () => {
+      const {open: openEditor} = render();
+      const {fillValidOrgan, saveButton} = await openEditor();
+
+      await fillValidOrgan();
+
+      expect(saveButton().disabled).toBe(false);
+    });
+
+    it('is disabled again after saving', async () => {
+      const {open: openEditor} = render();
+      const {fillValidOrgan, save, saveButton} = await openEditor();
+      await fillValidOrgan();
+
+      await save();
+
+      expect(saveButton().disabled).toBe(true);
+    });
+
+    it('is enabled again by a further change after saving', async () => {
+      const {open: openEditor} = render();
+      const {fillValidOrgan, save, saveButton, field, type} = await openEditor();
+      await fillValidOrgan();
+      await save();
+
+      await type(field('name'), 'Renamed');
+
+      expect(saveButton().disabled).toBe(false);
+    });
+
+    it('is disabled again when the change is reverted', async () => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 2);
+      await library.put(organ);
+      const {field, type, saveButton} = await openEditor(organ.id);
+
+      await type(field('name'), 'Renamed');
+      await type(field('name'), 'Street organ');
+
+      expect(saveButton().disabled).toBe(true);
+    });
+  });
+
+  describe('unsavedChanges', () => {
+    it('is null for a pristine new draft', async () => {
+      const {open: openEditor} = render();
+      const {fixture} = await openEditor();
+
+      expect(fixture.componentInstance.unsavedChanges()).toBeNull();
+    });
+
+    it('is null when a stored Organ is reopened without changes', async () => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 2);
+      await library.put(organ);
+      const {fixture} = await openEditor(organ.id);
+
+      expect(fixture.componentInstance.unsavedChanges()).toBeNull();
+    });
+
+    it('is null after only focusing and blurring a field of a pristine new draft', async () => {
+      const {open: openEditor} = render();
+      const {fixture, field} = await openEditor();
+      const name = field('name');
+
+      name.dispatchEvent(new Event('focus'));
+      name.dispatchEvent(new Event('blur'));
+      await fixture.whenStable();
+
+      expect(fixture.componentInstance.unsavedChanges()).toBeNull();
+    });
+
+    it('has no problems after a change that leaves the Organ valid', async () => {
+      const {open: openEditor} = render();
+      const {fixture, fillValidOrgan} = await openEditor();
+
+      await fillValidOrgan();
+
+      expect(fixture.componentInstance.unsavedChanges()).toEqual({problems: []});
+    });
+
+    it('is null after saving', async () => {
+      const {open: openEditor} = render();
+      const {fixture, fillValidOrgan, save} = await openEditor();
+      await fillValidOrgan();
+
+      await save();
+
+      expect(fixture.componentInstance.unsavedChanges()).toBeNull();
+    });
+
+    it('is null again when a change is reverted to the saved version', async () => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 2);
+      await library.put(organ);
+      const {fixture, field, type} = await openEditor(organ.id);
+
+      await type(field('name'), 'Renamed');
+      await type(field('name'), 'Street organ');
+
+      expect(fixture.componentInstance.unsavedChanges()).toBeNull();
+    });
+
+    it('lists the broken rule with the label of its field', async () => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 2);
+      await library.put(organ);
+      const {fixture, field, type} = await openEditor(organ.id);
+
+      await type(field('name'), '');
+
+      expect(fixture.componentInstance.unsavedChanges()).toEqual({
+        problems: [
+          {
+            field: {key: 'ORGAN.EDITOR.NAME', params: {}},
+            message: {key: 'ORGAN.VIOLATION.NAME_REQUIRED', params: {}},
+          },
+        ],
+      });
+    });
+
+    it('labels a Tape Bed field with its own label', async () => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 2);
+      await library.put(organ);
+      const {fixture, field, type} = await openEditor(organ.id);
+
+      await type(field('tape-width'), '0');
+
+      expect(fixture.componentInstance.unsavedChanges()?.problems).toEqual([
+        {
+          field: {key: 'ORGAN.EDITOR.TAPE_WIDTH', params: {}},
+          message: {key: 'ORGAN.VIOLATION.MUST_BE_POSITIVE', params: {}},
+        },
+      ]);
+    });
+
+    it('labels a Pipe problem with its 1-based row and lists every Pipe of a duplicate', async () => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 3);
+      await library.put(organ);
+      const {fixture, pipeRows, type} = await openEditor(organ.id);
+      const noteOfRow = (row: number) => {
+        const input = pipeRows()[row]?.querySelector<HTMLInputElement>('[data-testid="pipe-note"]');
+        if (!input) throw new Error(`no note field in row ${row}`);
+        return input;
+      };
+
+      await type(noteOfRow(2), '60');
+
+      const message = {key: 'ORGAN.VIOLATION.DUPLICATE_PIPE', params: {noteName: 'C4'}};
+      expect(fixture.componentInstance.unsavedChanges()?.problems).toEqual([
+        {field: {key: 'ORGAN.LEAVE.PIPE_FIELD', params: {row: 1}}, message},
+        {field: {key: 'ORGAN.LEAVE.PIPE_FIELD', params: {row: 3}}, message},
+      ]);
+    });
+
+    it('labels the missing Pipes with the Pipes label', async () => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 1);
+      await library.put(organ);
+      const {fixture, click} = await openEditor(organ.id);
+
+      await click('remove-pipe');
+
+      expect(fixture.componentInstance.unsavedChanges()?.problems).toEqual([
+        {
+          field: {key: 'ORGAN.EDITOR.PIPES', params: {}},
+          message: {key: 'ORGAN.VIOLATION.PIPES_REQUIRED', params: {}},
+        },
+      ]);
+    });
+
+    it('lists missing values the user never touched', async () => {
+      const {open: openEditor} = render();
+      const {fixture, field, type} = await openEditor();
+
+      await type(field('name'), 'Street organ');
+
+      const problems = fixture.componentInstance.unsavedChanges()?.problems ?? [];
+      expect(problems).toContainEqual({
+        field: {key: 'ORGAN.EDITOR.TAPE_WIDTH', params: {}},
+        message: {key: 'ORGAN.VIOLATION.VALUE_REQUIRED', params: {}},
+      });
+      expect(problems).toContainEqual({
+        field: {key: 'ORGAN.EDITOR.PIPES', params: {}},
+        message: {key: 'ORGAN.VIOLATION.PIPES_REQUIRED', params: {}},
+      });
+    });
+
+    it('lists an empty Pipe row added to a stored Organ', async () => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 2);
+      await library.put(organ);
+      const {fixture, click} = await openEditor(organ.id);
+
+      await click('add-pipe');
+
+      expect(fixture.componentInstance.unsavedChanges()?.problems).toEqual([
+        {
+          field: {key: 'ORGAN.LEAVE.PIPE_FIELD', params: {row: 3}},
+          message: {key: 'ORGAN.VIOLATION.PIPE_NOTE_REQUIRED', params: {}},
+        },
+      ]);
+    });
+  });
+
+  describe('an unknown id', () => {
+    it('goes back to the Organ list', async () => {
+      const {open: openEditor, navigate} = render();
+
+      await openEditor('3f2b8c1e-9d4a-4f6b-8e2c-1a2b3c4d5e6f');
+
+      expect(navigate).toHaveBeenCalledWith(['/organs'], {replaceUrl: true});
+    });
+  });
+
+  describe('a stored Organ', () => {
+    it('shows its values', async () => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 2);
+      await library.put(organ);
+
+      const {field, pipeRows} = await openEditor(organ.id);
+
+      expect(field('name').value).toBe('Street organ');
+      expect(field('tape-width').value).toBe('120');
+      expect(pipeRows()).toHaveLength(2);
+    });
+  });
+
+  describe('arranging Pipes', () => {
+    async function openWithPipes() {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 3);
+      await library.put(organ);
+      const editor = await openEditor(organ.id);
+      const notesInRows = () =>
+        editor.pipeRows().map((row) => Number(row.querySelector<HTMLInputElement>('[data-testid="pipe-note"]')?.value));
+      const storedNotes = () => library.entities()[0]?.pipes.map((pipe) => pipe.note);
+      const saved = async () => {
+        await editor.save();
+        return storedNotes();
+      };
+      const press = async (row: number, testId: string) => {
+        const button = editor.pipeRows()[row]?.querySelector<HTMLButtonElement>(`[data-testid="${testId}"]`);
+        if (!button) throw new Error(`no ${testId} in row ${row}`);
+        button.click();
+        await editor.fixture.whenStable();
+      };
+      const drop = async (previousIndex: number, currentIndex: number) => {
+        const list = editor.fixture.debugElement.query(By.directive(CdkDropList));
+        const dropList: CdkDropList = list.injector.get(CdkDropList);
+        dropList.dropped.emit({previousIndex, currentIndex} as CdkDragDrop<unknown>);
+        await editor.fixture.whenStable();
+      };
+      return {...editor, notesInRows, storedNotes, saved, press, drop, original: organ.pipes.map((pipe) => pipe.note)};
+    }
+
+    it('moves a Pipe up one row with its move-up button and saves the order', async () => {
+      const {press, notesInRows, storedNotes, saved, original} = await openWithPipes();
+
+      await press(2, 'move-up');
+      expect(storedNotes()).toEqual(original);
+
+      const expected = [original[0], original[2], original[1]];
+      expect(notesInRows()).toEqual(expected);
+      expect(await saved()).toEqual(expected);
+    });
+
+    it('moves a Pipe down one row with its move-down button and saves the order', async () => {
+      const {press, notesInRows, saved, original} = await openWithPipes();
+
+      await press(0, 'move-down');
+
+      const expected = [original[1], original[0], original[2]];
+      expect(notesInRows()).toEqual(expected);
+      expect(await saved()).toEqual(expected);
+    });
+
+    it('disables move-up on the first row and move-down on the last row', async () => {
+      const {pipeRows} = await openWithPipes();
+      const rows = pipeRows();
+      const button = (row: number, testId: string) =>
+        rows[row]?.querySelector<HTMLButtonElement>(`[data-testid="${testId}"]`);
+
+      expect(button(0, 'move-up')?.disabled).toBe(true);
+      expect(button(0, 'move-down')?.disabled).toBe(false);
+      expect(button(1, 'move-up')?.disabled).toBe(false);
+      expect(button(1, 'move-down')?.disabled).toBe(false);
+      expect(button(2, 'move-up')?.disabled).toBe(false);
+      expect(button(2, 'move-down')?.disabled).toBe(true);
+    });
+
+    it('moves a Pipe to the dropped row when dragged and saves the order', async () => {
+      const {drop, notesInRows, saved, original} = await openWithPipes();
+
+      await drop(2, 0);
+
+      const expected = [original[2], original[0], original[1]];
+      expect(notesInRows()).toEqual(expected);
+      expect(await saved()).toEqual(expected);
+    });
+
+    async function clearNoteOfRow(editor: Awaited<ReturnType<typeof openWithPipes>>, row: number) {
+      const input = editor.pipeRows()[row]?.querySelector<HTMLInputElement>('[data-testid="pipe-note"]');
+      if (!input) throw new Error(`no note field in row ${row}`);
+      await editor.type(input, '');
+    }
+
+    it('shows the missing-note message on the row the moved Pipe now holds', async () => {
+      const editor = await openWithPipes();
+      await clearNoteOfRow(editor, 2);
+      expect(editor.violationAt('pipes.2.note')).toHaveLength(1);
+
+      await editor.press(2, 'move-up');
+
+      expect(editor.violationAt('pipes.1.note')).toEqual(['Enter the MIDI note of this Pipe.']);
+      expect(editor.violationAt('pipes.2.note')).toEqual([]);
+    });
+
+    it('shows the missing-note message on the row the Pipe holds after an earlier row was removed', async () => {
+      const editor = await openWithPipes();
+      await clearNoteOfRow(editor, 2);
+      expect(editor.violationAt('pipes.2.note')).toHaveLength(1);
+
+      await editor.press(0, 'remove-pipe');
+
+      expect(editor.violationAt('pipes.1.note')).toEqual(['Enter the MIDI note of this Pipe.']);
+      expect(editor.violationAt('pipes.0.note')).toEqual([]);
+    });
+
+    it('removes a Pipe, keeps the other rows contiguous and saves the result', async () => {
+      const {press, pipeRows, notesInRows, saved, original} = await openWithPipes();
+
+      await press(1, 'remove-pipe');
+
+      const expected = [original[0], original[2]];
+      expect(pipeRows()).toHaveLength(2);
+      expect(notesInRows()).toEqual(expected);
+      expect(await saved()).toEqual(expected);
+    });
+  });
+
+  describe('deleting the Organ', () => {
+    async function openWithDialog(confirmed: boolean) {
+      const dialog = vi.fn<(component: unknown, config: unknown) => {afterClosed: () => Observable<boolean>}>(() => ({afterClosed: () => of(confirmed)}));
+      TestBed.configureTestingModule({
+        providers: [provideRouter([]), provideTestTranslations(), {provide: MatDialog, useValue: {open: dialog}}],
+      });
+      const library = TestBed.inject(OrganLibrary);
+      const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+      const organ = testOrgan('Street organ', 2);
+      await library.put(organ);
+      const editor = await open(organ.id);
+      navigate.mockClear();
+      await editor.click('delete-organ');
+      return {library, navigate, organ, dialog};
+    }
+
+    it('opens the confirm dialog for deleting the Organ', async () => {
+      const {dialog, organ} = await openWithDialog(false);
+
+      expect(dialog.mock.calls[0]?.[0]).toBe(ConfirmDialogComponent);
+      expect(dialog.mock.calls[0]?.[1]).toMatchObject({
+        data: {action: ConfirmableAction.DELETE, entity: {id: organ.id, name: 'Street organ'}},
+      });
+    });
+
+    it('removes the Organ and goes to the Organ list when confirmed', async () => {
+      const {library, navigate} = await openWithDialog(true);
+
+      expect(library.entities()).toEqual([]);
+      expect(navigate).toHaveBeenCalledWith(['/organs']);
+    });
+
+    it('does not navigate and keeps the unsaved changes when removing fails', async () => {
+      const dialog = vi.fn<(component: unknown, config: unknown) => {afterClosed: () => Observable<boolean>}>(() => ({
+        afterClosed: () => of(true),
+      }));
+      TestBed.configureTestingModule({
+        providers: [provideRouter([]), provideTestTranslations(), {provide: MatDialog, useValue: {open: dialog}}],
+      });
+      const library = TestBed.inject(OrganLibrary);
+      const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+      const organ = testOrgan('Street organ', 2);
+      await library.put(organ);
+      const {fixture, field, type, click} = await open(organ.id);
+      await type(field('name'), '');
+      expect(fixture.componentInstance.unsavedChanges()).not.toBeNull();
+      vi.spyOn(library, 'remove').mockRejectedValue(new Error('disk full'));
+      navigate.mockClear();
+
+      await click('delete-organ');
+
+      expect(navigate).not.toHaveBeenCalled();
+      expect(fixture.componentInstance.unsavedChanges()).not.toBeNull();
+    });
+
+    it('has no unsaved changes after the Organ was deleted', async () => {
+      const dialog = vi.fn<(component: unknown, config: unknown) => {afterClosed: () => Observable<boolean>}>(() => ({
+        afterClosed: () => of(true),
+      }));
+      TestBed.configureTestingModule({
+        providers: [provideRouter([]), provideTestTranslations(), {provide: MatDialog, useValue: {open: dialog}}],
+      });
+      const library = TestBed.inject(OrganLibrary);
+      vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+      const organ = testOrgan('Street organ', 2);
+      await library.put(organ);
+      const {fixture, field, type, click} = await open(organ.id);
+      await type(field('name'), 'Renamed');
+
+      await click('delete-organ');
+
+      expect(fixture.componentInstance.unsavedChanges()).toBeNull();
+    });
+
+    it('keeps the Organ and stays in the editor when cancelled', async () => {
+      const {library, navigate, organ} = await openWithDialog(false);
+
+      expect(library.entities().map(({id}) => id)).toEqual([organ.id]);
+      expect(navigate).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('rule violations', () => {
+    it('shows no "missing value" messages on an untouched new Organ', async () => {
+      const {open: openEditor} = render();
+      const {element} = await openEditor();
+      expect(element.querySelectorAll('[data-testid="violation"]')).toHaveLength(0);
+    });
+
+    it('asks for a name once the name was cleared', async () => {
+      const {open: openEditor} = render();
+      const {field, type, violationAt} = await openEditor();
+
+      await type(field('name'), 'x');
+      await type(field('name'), '');
+
+      expect(violationAt('name')).toEqual(['Please enter a name.']);
+    });
+
+    it('asks for a value once a measurement was cleared', async () => {
+      const {open: openEditor} = render();
+      const {field, type, violationAt} = await openEditor();
+
+      await type(field('tape-width'), '1');
+      await type(field('tape-width'), '');
+
+      expect(violationAt('tapeBed.tapeWidth')).toEqual(['Please enter a value.']);
+    });
+
+    it('asks for Pipes once the Organ was edited', async () => {
+      const {open: openEditor} = render();
+      const {field, type, violationAt} = await openEditor();
+
+      await type(field('name'), 'Street organ');
+
+      expect(violationAt('pipes')).toEqual(['Add at least one Pipe.']);
+    });
+
+    it('asks for the note of a new Pipe once it was cleared', async () => {
+      const {open: openEditor} = render();
+      const {field, type, click, violationAt} = await openEditor();
+
+      await click('add-pipe');
+      await type(field('pipe-note'), '6');
+      await type(field('pipe-note'), '');
+
+      expect(violationAt('pipes.0.note')).toEqual(['Enter the MIDI note of this Pipe.']);
+    });
+
+    it('rejects a note outside 0–127 right away', async () => {
+      const {open: openEditor} = render();
+      const {field, type, click, violationAt} = await openEditor();
+
+      await click('add-pipe');
+      await type(field('pipe-note'), '128');
+
+      expect(violationAt('pipes.0.note')).toEqual(['128 is not a MIDI note (0–127).']);
+    });
+
+    it('marks both Pipes of a duplicate note', async () => {
+      const {open: openEditor} = render();
+      const {element, type, click, violationAt} = await openEditor();
+
+      await click('add-pipe');
+      await click('add-pipe');
+      const notes = element.querySelectorAll<HTMLInputElement>('[data-testid="pipe-note"]');
+      await type(notes[0], '60');
+      await type(notes[1], '60');
+
+      expect(violationAt('pipes.0.note')).toEqual(['Another Pipe already plays C4.']);
+      expect(violationAt('pipes.1.note')).toEqual(['Another Pipe already plays C4.']);
+    });
+
+    it('requires positive measurements and a border that is not negative', async () => {
+      const {open: openEditor} = render();
+      const {field, type, violationAt} = await openEditor();
+
+      await type(field('minimum-gap'), '0');
+      await type(field('border'), '-1');
+
+      expect(violationAt('minimumGap')).toEqual(['Must be greater than 0.']);
+      expect(violationAt('tapeBed.border')).toEqual(['Must not be negative.']);
+    });
+
+    it('requires a row spacing of at least the hole diameter', async () => {
+      const {open: openEditor} = render();
+      const {field, type, violationAt} = await openEditor();
+
+      await type(field('hole-diameter'), '3');
+      await type(field('row-spacing'), '2.5');
+
+      expect(violationAt('tapeBed.rowSpacing')).toEqual([
+        'Must be at least the hole diameter (3 mm), or neighbouring holes overlap.',
+      ]);
+    });
+
+    it('shows how much tape width the Pipes need', async () => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 31);
+      await library.put(organ);
+      const {field, type, violationAt} = await openEditor(organ.id);
+
+      await type(field('tape-width'), '100');
+
+      expect(violationAt('tapeBed.tapeWidth')).toEqual(['The Pipes need 117.5 mm, but the tape is only 100 mm wide.']);
+    });
+
+    it('stores only the fixed version of a stored Organ edited into an invalid state, once saved', async () => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ');
+      await library.put(organ);
+      const put = vi.spyOn(library, 'put');
+      const {field, type, save, saveButton} = await openEditor(organ.id);
+
+      await type(field('name'), '');
+      expect(saveButton().disabled).toBe(true);
+      expect(put).not.toHaveBeenCalled();
+      expect(library.entities()[0]?.name).toBe('Street organ');
+
+      await type(field('name'), 'Fixed');
+      await save();
+      expect(put).toHaveBeenCalledTimes(1);
+      expect(library.entities()[0]?.name).toBe('Fixed');
+    });
+  });
+});
