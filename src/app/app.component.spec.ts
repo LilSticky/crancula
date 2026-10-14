@@ -1,6 +1,9 @@
 import {TestBed} from '@angular/core/testing';
+import {MatSnackBar} from '@angular/material/snack-bar';
 import {provideRouter} from '@angular/router';
+import {TranslateService} from '@ngx-translate/core';
 import type {CranculaApi} from '@api/index';
+import {firstValueFrom} from 'rxjs';
 import {vi} from 'vitest';
 import {provideTestTranslations} from '../testing/test-translations';
 import {testOrgan} from '../testing/organs';
@@ -37,6 +40,20 @@ describe('AppComponent', () => {
     expect(document.body.textContent).toContain(
       "Your Organs couldn't be loaded. The file was kept at C:/data/organs.unreadable.json.",
     );
+  });
+
+  it('tells the user only once when the Organs could not be loaded', async () => {
+    const api = createInMemoryCranculaApi();
+    api.organs.load = () => Promise.resolve({status: 'unreadable', backupPath: 'C:/data/organs.unreadable.json', reason: 'bad JSON'});
+    const {fixture, library} = await render(api);
+    const open = vi.spyOn(TestBed.inject(MatSnackBar), 'open');
+
+    await library.load();
+    await fixture.whenStable();
+    await firstValueFrom(TestBed.inject(TranslateService).use('de'));
+    await fixture.whenStable();
+
+    expect(open).toHaveBeenCalledTimes(1);
   });
 
   it('tells the user when changes could not be saved', async () => {
