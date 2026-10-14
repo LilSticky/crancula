@@ -32,8 +32,6 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           # Anyone may open an issue; the tools below only read the repository and label or comment.
           allowed_non_write_users: '*'
-          # Temporary, to diagnose the failing triage run (#34).
-          show_full_output: true
           prompt: /triage ${{ github.event.issue.number }}
           claude_args: |
             --model claude-sonnet-5-5
