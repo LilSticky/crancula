@@ -69,3 +69,6 @@ slice 002. Draft PR #26 (release workflow) waits for that.
   issue forms add `triage`, the Claude triage Action labels and comments, `/triage` does the same
   locally; `@claude` works in issues and pull requests. Waits on the user for the
   `CLAUDE_CODE_OAUTH_TOKEN` secret, the Claude GitHub App and the board's auto-add workflow.
+- 2026-10-14: Dependabot pull requests skip the issue reference check, and patch and minor updates
+  squash-merge automatically once CI is green; major updates stay manual (ADR 16, amends ADR 10 and 14).
+  Needs the repository setting "Allow auto-merge" to be on.
