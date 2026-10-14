@@ -67,7 +67,8 @@ after this pull request merges. Draft PR #26 (release workflow) waits for that.
   walkthrough as proof that a slice runs in Electron (ADR 13, constitution 1.1.1).
 - 2026-10-14: the repository is public, and the ruleset "No direct push to main" enforces ADR 10
   ([#18](https://github.com/LilSticky/crancula/issues/18)): no direct or force pushes, no deletion,
-  pull request required (no approvals), the three CI checks "Lint, test and build" must pass,
+  pull request required (no approvals), the three CI checks "Lint, test and build" and
+  "References an issue (ADR 10)" must pass,
   squash merge only; merged branches are deleted. Merging with red CI is no longer possible.
 - 2026-10-14: e2e runs keep the Electron window out of sight (`CRANCULA_HEADLESS`, set by the e2e
   launcher); `HEADED=1` shows it, slowed down and traced.
