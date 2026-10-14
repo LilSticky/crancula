@@ -3,8 +3,9 @@
 Each entry gives the decision, the reason for it, and the alternatives considered. This is the
 **stack-independent** part of Phase 0. Anything that depends on the tech-stack upgrade
 ([#13](https://github.com/LilSticky/crancula/issues/13), Angular 22 and friends) is marked
-"decided in /speckit-plan after #13". Names follow `documentation/DICTIONARY.md`; terms that are
-missing there are listed under [Spec questions](#spec-questions), not invented.
+"decided in /speckit-plan after #13". Names follow `documentation/DICTIONARY.md`; the terms that
+were missing there (Tick, Fit, Import Summary) were added with the user's approval, see
+[Spec questions](#spec-questions).
 
 Facts about libraries were checked on 2026-10-14 against the npm registry and the libraries'
 sources on GitHub.
@@ -14,8 +15,9 @@ sources on GitHub.
 - **Decision**: Write a small Standard MIDI File (SMF) reader in pure TypeScript,
   `readMidiSong(bytes: Uint8Array, fileName: string): Result<Song, SongRejection>`. It
   supports:
-  - the header chunk `MThd` with format 0 and 1 (format 2: see Spec questions);
-  - time division in ticks per quarter note; time-code (SMPTE) division, top bit of the division
+  - the header chunk `MThd` with format 0 and 1; format 2 (several independent sequences) is
+    rejected with its own reason (FR-002, Spec question 1);
+  - time division in Ticks per quarter note; time-code (SMPTE) division, top bit of the division
     set, is rejected as "not timed in beats" (FR-002);
   - track chunks `MTrk`, delta times as variable-length quantities, and **running status**
     (kept across meta and SysEx events, as most real files expect);
@@ -26,7 +28,7 @@ sources on GitHub.
   - unknown chunk types are skipped by their length, as the SMF spec requires.
 
   Tempo, time signature, key signature, program changes, velocity and controllers are read past
-  and ignored (FR-003). Only the ticks per quarter note from the header matter for time.
+  and ignored (FR-003). Only the Ticks per quarter note from the header matter for time.
 
   Robustness for untrusted bytes: every read is bounds-checked; a chunk length beyond the end of
   the file, a data byte ≥ `0x80` where a data byte is expected, running status before any status
@@ -68,10 +70,10 @@ sources on GitHub.
       melody with a program change becomes two Parts, against the spec's track × channel;
     - it silently drops a note-on that never gets a note-off (violates SC-003);
     - it reads only `ticksPerBeat` and never checks for SMPTE division, so a time-code file gives
-      `undefined` ticks per quarter and NaN times instead of a rejection;
+      `undefined` Ticks per quarter and NaN times instead of a rejection;
     - it pairs overlapping same-pitch notes first-in-first-out with the first later note-off,
       which can merge a repeated note into one long note (see R2 for the rule we want);
-    - it converts ticks to seconds with tempo, which the Tape doesn't use;
+    - it converts Ticks to seconds with tempo, which the Tape doesn't use;
     - it is unmaintained for over four years.
   - **`midi-file`** (1.2.4, MIT, last release 2023-03-15, about 47 kB unpacked, JS with a
     hand-written `index.d.ts`). It is a plain event parser, handles running status, turns note-on
@@ -104,18 +106,18 @@ sources on GitHub.
   - **Note start and end**: a note-on with velocity > 0 starts a Note; a note-off, or a note-on
     with **velocity 0**, ends the sounding Note with the same key on the same track and channel.
   - **Overlapping same-pitch Notes** (a second note-on while the key is still sounding on the
-    same track and channel): the sounding Note ends at that tick and a new Note starts
+    same track and channel): the sounding Note ends at that Tick and a new Note starts
     ("re-trigger"). One Pipe can't sound twice, and this keeps the repetition as two Notes, so
     FR-012 can keep a gap between them instead of hiding it in an overlap merge.
-  - **Same-tick ordering**: if a note-off at tick *t* would end a Note that a re-trigger started
-    at the same tick *t*, it is taken as the late note-off of the previous Note and ignored.
-    (Many files write "note-on, note-off" at the same tick for a repeated note.)
+  - **Same-Tick ordering**: if a note-off at Tick *t* would end a Note that a re-trigger started
+    at the same Tick *t*, it is taken as the late note-off of the previous Note and ignored.
+    (Many files write "note-on, note-off" at the same Tick for a repeated note.)
   - A note-off with no sounding Note is ignored.
-  - **Notes never released**: they end at their track's End of Track tick, or at the track's last
-    event when End of Track is missing. A Note may have duration 0 ticks (a note-on and note-off
-    at the same tick, typical for drum hits); Quantisation makes it one Column long (R3).
-  - Time is stored on the Song in **ticks** together with its **ticks per quarter note**, as
-    integers. Absolute tick values above 2³¹ reject the file as not readable (only corrupt files
+  - **Notes never released**: they end at their track's End of Track Tick, or at the track's last
+    event when End of Track is missing. A Note may have duration 0 Ticks (a note-on and note-off
+    at the same Tick, typical for drum hits); Quantisation makes it one Column long (R3).
+  - Time is stored on the Song in **Ticks** together with its **Ticks per quarter note**, as
+    integers. Absolute Tick values above 2³¹ reject the file as not readable (only corrupt files
     get there).
 - **Rationale**: the spec fixes track × channel and channel 10 (Assumptions). The remaining rules
   make sure every note-on becomes exactly one Note (SC-003) and that repeated notes survive into
@@ -128,12 +130,12 @@ sources on GitHub.
   - Splitting Parts by program (instrument) changes: the spec says instruments must not affect
     the Tape (FR-003), and a Part per track × channel is what the spec assumes.
   - Normalising Song time to a fixed resolution (for example 1/32 Columns) at import: the Song
-    "holds no Columns" (spec, Key Entities), and keeping ticks lets a later slice re-quantise.
+    "holds no Columns" (spec, Key Entities), and keeping Ticks lets a later slice re-quantise.
 
 ## R3 Quantisation onto the Column grid
 
 - **Decision**: One Column is a 1/32 note, so one quarter note is 8 Columns and a Column
-  boundary *c* lies at tick `c × ticksPerQuarter / 8`. The start tick and the end tick
+  boundary *c* lies at Tick `c × ticksPerQuarter / 8`. The start Tick and the end Tick
   (start + duration) of a Note are rounded **separately** to the nearest Column, ties rounding
   **up** (to the later Column), in exact integer arithmetic:
 
@@ -142,17 +144,17 @@ sources on GitHub.
   ```
 
   If the rounded end is not after the rounded start, the end becomes start + 1 (FR-005: a Note
-  is at least one Column long). Columns at this stage are counted from the Song's tick 0; R6
-  moves them so the Tape starts at its first Hole (FR-013).
-- **Worked examples** (ticks per quarter 480, so one Column is 60 ticks):
-  - quarter Note at tick 480, duration 480 → Columns 8 to 16: start 8, length 8 (scenario 3);
+  is at least one Column long). Columns are counted from the Song's Tick 0, and they stay that
+  way: the Tape starts with the Song's start (FR-013), so Song and Tape share their Columns.
+- **Worked examples** (Ticks per quarter note 480, so one Column is 60 Ticks):
+  - quarter Note at Tick 480, duration 480 → Columns 8 to 16: start 8, length 8 (scenario 3);
   - start 29 → Column 0; start 30 (exactly half) → Column 1; start 31 → Column 1;
-  - a 1/64 Note at tick 0, duration 30 → start 0, end round(0.5) = 1 → length 1;
-  - a grace Note of 10 ticks → end rounds to 0, so it becomes Columns 0 to 1 (FR-005, edge case);
-  - eighth-note triplets (160 ticks each) starting at 0, 160, 320 → Columns 0, 3 (2.67), 5
+  - a 1/64 Note at Tick 0, duration 30 → start 0, end round(0.5) = 1 → length 1;
+  - a grace Note of 10 Ticks → end rounds to 0, so it becomes Columns 0 to 1 (FR-005, edge case);
+  - eighth-note triplets (160 Ticks each) starting at 0, 160, 320 → Columns 0, 3 (2.67), 5
     (5.33), ending at 8: lengths 3, 2, 3. Swung eighths are rounded the same way. The spec says
     this rounding isn't reported.
-- **Rationale**: integer arithmetic is exact for every ticks-per-quarter value, including ones
+- **Rationale**: integer arithmetic is exact for every Ticks-per-quarter value, including ones
   not divisible by 8 (for example 25 or 100). Rounding start and end separately is what the spec
   asks (scenario 4) and keeps back-to-back Notes back to back.
 - **Alternatives considered**:
@@ -169,14 +171,14 @@ sources on GitHub.
   - Count the selected Notes per MIDI note number: a histogram `h[0..127]` in O(N).
   - The **allowed Transpositions** are the whole numbers *s* that keep every selected Note
     within 0–127: `−min ≤ s ≤ 127 − max` over the selected Notes (spec Assumptions). It always
-    contains 0. The user's own choice (FR-007) is limited to the same range (see Spec questions).
+    contains 0. The user's own choice (FR-007) is limited to the same range (Spec question 3).
   - Score of *s* = number of selected Notes whose note number + *s* is a Pipe of the Organ:
     `Σ over Pipes p of h[p − s]`.
   - Visit *s* in the order 0, +1, −1, +2, −2, … and keep the first strictly higher score. This
     gives "most Notes", then "fewest semitones", then "upward over downward" (FR-006, edge case)
     without a separate tie-break step.
   - Complexity: O(N) for the histogram plus at most 255 shifts × at most 128 Pipes ≈ 33 000
-    steps, independent of Song length. Re-running it on every change of the Part selection
+    steps, independent of Song length. Re-running it whenever the selected Parts change
     (Story 3) is instant.
 - **Worked example** (scenario 1): Pipes C4–C6 (60–84), melody 48–72 using both ends. *s* = +12
   matches every Note; +11 and +13 lose Note 48 or 72; 0 matches only 60–72. Proposal +12.
@@ -194,21 +196,22 @@ sources on GitHub.
   - otherwise none: the Note is an Unplayable Note.
 
   That is a 128-entry table built in O(128 × Pipes); each Note then needs O(1). The Note keeps
-  its Columns; only its Pipe changes. Each moved Note is reported with its note name after the
-  Transposition, its Pipe, the number of octaves (signed), its Part and its Column (FR-015).
+  its Columns; only its Pipe changes. Each moved Note is listed in the Import Summary with its
+  note name after the Transposition, its Pipe, the number of octaves (signed), its Part and its
+  Column (FR-015).
   Unplayable Notes are reported with their note name after the Transposition, Part and Column
   (FR-009).
 - **Worked examples**: Pipes C4–C6 (60–84): B6 (95) → B5 (83), one octave down (scenario 5).
   Pipes C4, C6 only: a C5 (72) has C4 and C6 equally near → C6 (upward). No F# Pipe: F#4 is an
   Unplayable Note (scenario 6).
 - **Rationale**: direct translation of FR-009 and its edge case; the table makes FR-007's live
-  counts (matching, moved, Unplayable) cheap for every Transposition the user tries.
+  Fit (matching, moved, Unplayable) cheap for every Transposition the user tries.
 
 ## R6 From Notes to Holes: overlaps, then Minimum Hole Length and Minimum Gap (FR-008, FR-012)
 
 - **Decision**: the pipeline follows the spec's order (Assumptions): Quantisation (R3) →
-  Transposition (R4) → octave moves (R5) → merging overlaps → FR-012 fixes → moving the Tape
-  start to Column 0 (FR-013).
+  Transposition (R4) → octave moves (R5) → merging overlaps → FR-012 fixes → the Tape's length
+  in Columns (FR-013).
   - **Units**: from the Organ and the Tape's Column length *c* (mm, > 0):
     - `L` = Minimum Hole Length in Columns = the smallest whole number with `L × c ≥ Minimum
       Hole Length`;
@@ -248,9 +251,10 @@ sources on GitHub.
     gone). Once *i* moves past a Hole, its end never changes again, and later steps only change
     ends of later Holes, never their starts, so its length ≥ L and its gap to the next Hole ≥ G
     stay true. Rows are independent. Sorting makes the whole step O(H log H) for H Holes.
-  - **Tape start**: starts never move and merges keep the earlier start, so subtracting the
-    smallest start of all rows before or after the fixes gives the same Tape. Only the last
-    Hole of a row can grow past the previous end of the Tape (FR-013 measures after the fixes).
+  - **Tape start and length**: the Tape starts at the Song's Column 0 (FR-013, Spec question 2),
+    so no Column is shifted. Its length in Columns is the largest Hole end after the fixes: only
+    the last Hole of a row can grow past the previous end. The length is stored on the Tape and
+    stays the same when Holes are removed later (FR-021, Spec question 4).
   - Every fix is reported once per step applied, with Pipe and Column and the length before and
     after (SC-004). A Hole that is lengthened and then merged gets both reports.
 - **Worked examples**: Column length *c* = 2 mm, Minimum Hole Length 3 mm → L = 2, Minimum Gap
@@ -297,14 +301,17 @@ sources on GitHub.
       ],
       "tapes": [
         {"id": "<uuid>", "name": "Greensleeves", "organId": "<uuid>", "songId": "<uuid>",
-         "transposition": 12, "columnLength": 3,
+         "selectedParts": [0], "transposition": 12, "columnLength": 3, "length": 24,
          "holes": [[69, 0, 8], [72, 8, 16]]}
       ]
     }
     ```
 
     Notes are `[noteNumber, startTick, durationTicks]` and Holes `[pipe, startColumn,
-    lengthInColumns]` triples, sorted by Pipe, then start, so the file is deterministic.
+    lengthInColumns]` triples, sorted by Pipe, then start, so the file is deterministic. A
+    Tape's `selectedParts` are the positions of its selected Parts in the Song (Spec
+    question 6), and `length` is its length in Columns, stored because removing Holes must not
+    change it (Spec question 4).
   - **Size**: a dense 5-minute Song with 16 Parts has roughly 10 000 Notes. As triples that is
     about 16 bytes per Note, about 160 kB; as objects with field names it would be about 480 kB.
     The Tape's Holes are fewer (only selected, merged Notes), well under 100 kB. Ten such Tapes
@@ -317,12 +324,16 @@ sources on GitHub.
     the data model (ids are UUIDs and unique, every `songId` exists, Holes valid and not
     overlapping in their row, Notes valid). It does **not** check Organ-relative rules (Pipe
     exists, Minimum Hole Length, Minimum Gap): Tapes are not re-checked after Organ changes
-    (spec Assumptions), and the Organs may be unreadable.
+    (spec Assumptions), and the Organs may be unreadable. Tapes whose Organ is unknown, because
+    `organs.json` couldn't be read, stay in memory and on disk unchanged, are listed, and can't
+    be opened until their Organ is readable (FR-023, Spec question 5).
   - **Cascades** (FR-020, FR-021): the renderer writes **children first**: the Tape snapshot
     without the removed Tapes or Holes, and only after it was written, the Organ snapshot. If the
     Tape write fails, the Organ change is not saved either and the user is told (FR-024). A crash
     between the two writes leaves an Organ whose Tapes or Holes are already gone, which the user
-    asked for anyway; the reverse order could leave Tapes without their Organ.
+    asked for anyway; the reverse order could leave Tapes without their Organ. While the Tapes
+    can't be read, deleting an Organ is refused, since its Tapes couldn't be removed with it
+    (FR-020, Spec question 7).
   - Holes refer to their Pipe by its MIDI note number (the Pipe's identity, dictionary), so
     reordering Pipes needs no change to Tapes (FR-021).
   - IPC channel names (`tapes:load`, `tapes:save`, following 001's `organs:*`), the renderer
@@ -345,14 +356,14 @@ sources on GitHub.
 
 - **Decision**:
   - **Hand-built bytes in unit tests**: a small test helper encodes an SMF from a readable
-    description (format, ticks per quarter, tracks of `{delta, event}`), including
+    description (format, Ticks per quarter, tracks of `{delta, event}`), including
     variable-length quantities and optional running status. Fixtures:
     1. format 0, one melody C3–C5 in quarter Notes (scenario 1, Transposition +12);
     2. two quarter Notes on beats 1 and 2 (scenario 3);
     3. format 1: conductor track with Song name and tempo, melody, bass, drums on channel 10
        (Story 3, FR-004);
     4. the same melody with running status and note-on velocity 0 as note-off;
-    5. a re-triggered note, a note-on/note-off pair at the same tick, a never-released note;
+    5. a re-triggered note, a note-on/note-off pair at the same Tick, a never-released note;
     6. triplets and a 1/64 Note (R3);
     7. rejections: time-code division, no `MThd`, a truncated track, a file with only a
        conductor track (no Notes);
@@ -377,8 +388,9 @@ sources on GitHub.
 
 ## R9 Stack-dependent items left for /speckit-plan after #13
 
-- The renderer store for Tapes (001 used `@ngrx/signals`), the file-picking component, the Part
-  selection and Transposition form (signal forms, see 001 research R6), and the dialogs.
+- The renderer store for Tapes (001 used `@ngrx/signals`), the file-picking component, the form
+  for the selected Parts and the Transposition (signal forms, see 001 research R6), and the
+  dialogs.
 - How the read-only Tape view draws thousands of Columns × up to about 100 rows within 2 seconds
   (SC-006): canvas, SVG or a virtualised grid.
 - IPC channel names, preload API shape and the shared snapshot-file code in `app/` (ADR 12
@@ -388,44 +400,52 @@ sources on GitHub.
 
 ## Spec questions
 
-Gaps or ambiguities found while researching. spec.md is unchanged; each needs an answer (or the
-proposed default confirmed) before or during /speckit-plan.
+Gaps or ambiguities found while researching. All are **resolved** (2026-10-14): question 4 by the
+user, the others by the defaults below; spec.md records them under Clarifications and
+Assumptions.
 
-1. **MIDI format 2** (several independent sequences in one file) is not mentioned. Proposed:
-   reject it as "not a readable MIDI file" (or a new reason "unsupported kind of MIDI file").
-   Treating its tracks as parallel would put unrelated patterns on top of each other.
-2. **Which Columns does the summary use?** FR-009/FR-015 list Notes and Holes "with their
-   Column". Tape Columns start at the first Hole (FR-013), so an Unplayable Note before the
-   first Hole would get a negative Column. Proposed: all summary Columns are Tape Columns, and
-   Unplayable Notes before the Tape's start are listed as "before the Tape".
-3. **Range of the user's Transposition (FR-007, "any other number")**: proposed to limit it to
-   the range that keeps all selected Notes within MIDI note numbers 0–127, as the Assumptions
-   already do for the proposal. Otherwise a transposed Note has no note number.
-4. **Tape after a Pipe is removed (FR-021)**: removing Holes can leave a Tape whose first or last
-   Hole no longer sits at its start or end (FR-013), or a Tape without any Hole. Proposed: the
-   Tape keeps its Columns from 0 (its length shrinks only at the end, to the end of its last
-   Hole), and a Tape without Holes is kept but shown as empty. Alternatively: warn that such a
-   Tape will be removed.
+1. **MIDI format 2** (several independent sequences in one file) was not mentioned. Treating its
+   tracks as parallel would put unrelated patterns on top of each other.
+   **Resolved**: rejected with a message naming the reason, like other unreadable files (FR-002;
+   data model `SongRejection` `format-2`).
+2. **Which Columns does the Import Summary use?** FR-009/FR-015 list Notes and Holes "with their
+   Column". If the Tape started at its first Hole, an Unplayable Note before it would get a
+   negative Column.
+   **Resolved**: Columns are counted from the Song's start, Column 1 being the Song's first
+   Column, and the Tape starts with the Song's start (FR-013, FR-015), so no Column is negative.
+   Internally Columns stay counted from 0 (R3); the UI shows them plus one.
+3. **Range of the user's Transposition (FR-007, "any other number")**: otherwise a transposed
+   Note has no note number.
+   **Resolved**: limited to the range that keeps every selected Note within MIDI note numbers
+   0–127, as for the proposal (R4, FR-007).
+4. **Tape after a Pipe is removed (FR-021)**: removing Holes can leave a Tape whose last Hole no
+   longer sits at its end, or a Tape without any Hole.
+   **Resolved by the user**: before saving, the Organ editor says how many Tapes and Holes are
+   affected; after confirmation those Holes are removed and the Tapes keep everything else. The
+   Tape's length in Columns is unchanged, so it is stored (data model). A Tape left without Holes
+   stays; the user can remove it.
 5. **Tapes without their Organ**: if `organs.json` is unreadable at startup (slice 001 then
-   starts with no Organs), every Tape references an unknown Organ. They must not be deleted (FR-023, SC-007).
-   Proposed: such Tapes stay in memory and on disk unchanged, are listed with "Organ missing",
-   can be removed, but can't be opened.
-6. **Should the Tape remember which Parts were selected?** FR-016 keeps the Song and the
-   Transposition, but not the selection. A later "Edit a tape" would likely need it. Proposed:
-   store the selected Parts on the Tape (cheap); confirm or drop.
+   starts with no Organs), every Tape references an unknown Organ. They must not be deleted
+   (FR-023, SC-007).
+   **Resolved**: such Tapes stay stored and listed, but can't be opened until their Organ is
+   readable; nothing is deleted (FR-023).
+6. **Should the Tape remember which Parts were selected?** FR-016 kept the Song and the
+   Transposition, but not the selected Parts. A later "Edit a tape" would likely need them.
+   **Resolved**: the Tape stores its selected Parts and shows them when the user looks at it
+   (FR-016, FR-018).
 7. **Organ deletion while the Tapes are unreadable** (FR-020 vs FR-023): the confirmation can't
-   name the number of Tapes. Proposed: say that the Tapes could not be read and that any Tapes
-   of this Organ in the backup file are not affected.
+   name the number of Tapes.
+   **Resolved**: the deletion is refused with a message, so no Tape is lost; the user deletes the
+   Organ once the Tapes are readable (FR-020).
 
 ### Missing dictionary terms
 
-Not added to the dictionary (needs the user's approval, `dictionary` skill):
+**Resolved**: the user approved three new terms on 2026-10-14, now in `DICTIONARY.md`:
 
-- **Tick** and **ticks per quarter note**: the unit in which a Song stores the start and duration
-  of its Notes (R2). The spec says "musical time". Needed in code for the Song model.
-- **Summary** (what bringing a Song onto a Tape reports, FR-015): used throughout the spec, but
-  not in the dictionary. Code needs a name for it (proposed "Summary"; the brief calls it "import
-  summary").
-- **Selection** of Parts (Story 3): plain English, probably fine without an entry; confirm.
-- The counts shown per Transposition (FR-007: matching a Pipe, moved by octaves, Unplayable): a
-  name for this group is needed in code (proposed: none; three named counts on the proposal).
+- **Tick**: the MIDI unit of musical time; the Song Source gives the Ticks per quarter note.
+  Used for the Song's Note starts and durations (R2); Quantisation turns Ticks into Columns.
+- **Fit**: the three counts shown for a Transposition (FR-007): Notes that match a Pipe, Notes
+  moved by octaves, Unplayable Notes.
+- **Import Summary**: what the user sees after a Song is brought onto a Tape (FR-015).
+
+"Selection" is not a term: specs and code say "the selected Parts".
