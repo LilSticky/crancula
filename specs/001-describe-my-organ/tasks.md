@@ -451,7 +451,7 @@ translation key.
 - [x] T050 [US5] Implement `app/application-menu.ts`, the IPC handler and the preload method; the
   navbar calls `setLanguage` on start and on every switch. Add the `MENU.*` keys to both language
   files. Extend `e2e/organ-german.spec.ts`: after switching to German, the menu labels are German.
-- [ ] T051 Update `quickstart.md`, `plan.md` (no autosave) and research R6/R-autosave notes to the
+- [x] T051 Update `quickstart.md`, `plan.md` (no autosave) and research R6/R-autosave notes to the
   new save model.
 
 **Checkpoint**: all user stories green with explicit Save; then T041 and T042.

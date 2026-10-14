@@ -7,7 +7,10 @@
 ## Summary
 
 The user can define Organs: their Pipes, Tape Bed and Minimum Gap. Invalid Organs are never
-stored, valid ones are stored automatically, and they survive a restart.
+stored, valid ones are stored when the user presses Save, and they survive a restart.
+
+> Changed 2026-10-14 (MVP review): storing is explicit. The autosave effect was removed. Leaving
+> with unsaved changes warns (FR-012a), and a change counts as saved only after the write succeeded.
 
 - **Domain:** a pure TypeScript domain in `api/organ/` holds the rules (`validateOrgan`, note
   names, snapshot parser).
@@ -104,7 +107,7 @@ src/app/
 └── features/organ/
     ├── organ-library.store.ts   # signalStore: load/put/remove → save
     ├── organ-list/              # list page with delete
-    ├── organ-editor/            # signal-form editor, violations → i18n, autosave effect
+    ├── organ-editor/            # signal-form editor, violations → i18n, Save button (no autosave)
     ├── leave-invalid.guard.ts   # CanDeactivate confirm
     └── routes.ts
 

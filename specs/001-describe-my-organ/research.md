@@ -45,8 +45,9 @@ Each entry gives the decision, the reason for it, and the alternatives considere
     use it.
   - **Format**: `{ "version": 1, "organs": [...] }`. `version` is the snapshot format version,
     and the parser rejects unknown versions.
-  - **When it's written**: whenever the in-memory Organ library changes (only valid Organs ever
-    get there; FR-012), the renderer sends the full library snapshot over IPC.
+  - **When it's written**: when the user presses Save on a valid Organ (only valid Organs ever
+    get there; FR-012). The renderer then sends the full library snapshot over IPC.
+    Changed 2026-10-14 (MVP review): this replaces writing on every change (autosave).
   - **How the main process writes**:
     - It coalesces writes: only the latest pending snapshot is written, at most one write runs at
       a time, and there is a short trailing debounce of about 250 ms.
@@ -56,7 +57,8 @@ Each entry gives the decision, the reason for it, and the alternatives considere
     process renames it to `organs.unreadable-<timestamp>.json`, starts with an empty library, and
     returns the backup path so the UI can tell the user.
   - **Failed write**: the save reply is an error, and the UI shows a message. The in-memory state
-    stays as it is.
+    stays as it is. A change counts as saved only after the write succeeded (MVP review,
+    2026-10-14).
 - **Rationale**:
   - The library is small (a few organs with about 100 pipes), so writing the full snapshot is
     simple and robust.
@@ -108,8 +110,8 @@ Each entry gives the decision, the reason for it, and the alternatives considere
     store.
 - **Alternatives**:
   - A plain service with signals: also fine, but the entity helpers save code.
-  - Keeping the old slices: they don't fit autosave, and they mix selection state into the
-    library.
+  - Keeping the old slices: they mix selection state into the library and don't fit the explicit
+    Save model (changed 2026-10-14, MVP review).
 
 ## R6 Editor and validation
 
@@ -124,10 +126,14 @@ Each entry gives the decision, the reason for it, and the alternatives considere
   - **Signal forms**: Angular's signal forms (`@angular/forms/signals`) bind the draft. A single
     custom validator converts domain violations into field errors. Rules are not duplicated as
     built-in validators.
-  - **Autosave**: an `effect` in the editor puts the Organ into `OrganLibrary` whenever
-    `validateOrgan` succeeds and the result differs from what is stored.
-  - **Leaving with invalid changes**: a `CanDeactivate` guard asks for confirmation (FR-012).
-    It reuses the confirm dialog from `@shared`.
+  - **Save** (changed 2026-10-14, MVP review; this replaces the former autosave effect): the editor
+    has a Save button (`data-testid="save-organ"`). It is enabled only when the draft differs from
+    the last saved Organ, is valid, and no write is running. A new Organ navigates to its page only
+    after its first save. The saved draft becomes the new baseline.
+  - **Leaving with unsaved changes** (FR-012a, changed 2026-10-14): a `CanDeactivate` guard warns.
+    Valid unsaved changes show a dialog saying they aren't saved. Invalid unsaved changes list each
+    broken rule with its field label; "Stay" is the default. "Discard changes" leaves and keeps the
+    last saved version. The dialog reuses the confirm dialog from `@shared`.
 - **Rationale**: one source of truth for the rules, which keeps them testable in plain Vitest and
   makes the UI and the main process agree.
 - **Alternatives**: built-in signal-form validators for each rule. They would duplicate the
