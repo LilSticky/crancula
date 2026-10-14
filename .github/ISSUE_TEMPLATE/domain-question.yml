@@ -1,0 +1,15 @@
+name: Domain question
+description: An open question about the domain (organs, tapes, music) that blocks or shapes a slice.
+labels: [domain-question]
+body:
+  - type: textarea
+    id: question
+    attributes:
+      label: Question
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Why it matters
+      description: Which slice, spec or term in DICTIONARY.md it affects.
