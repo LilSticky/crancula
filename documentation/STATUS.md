@@ -48,7 +48,8 @@ research R6 revised): `form()` over `OrganDraft`, `[formField]` inputs, one `val
 - Release workflow ([#11](https://github.com/LilSticky/crancula/issues/11)): `.github/workflows/release.yml`
   packages on Linux, Windows and macOS. A pushed tag `v*` also creates a draft GitHub Release; a
   manual run, or a pull request that changes the workflow or `electron-builder.json`, only builds
-  artifacts. Builds are unsigned. Publishing is untested until the first tag.
+  artifacts. Builds are unsigned. v0.0.1 (2026-10-14) is the first release from a tag; v0.1 follows
+  when all v0.1 slices are done.
 
 ## Process changes
 
@@ -72,7 +73,7 @@ research R6 revised): `form()` over `OrganDraft`, `[formField]` inputs, one `val
   ([AGENTIC-TODO](AGENTIC-TODO.md#github)).
 - 2026-10-14: automatic issue triage ([#34](https://github.com/LilSticky/crancula/issues/34), ADR 15):
   issue forms add `triage`, the Claude triage Action labels and comments, `/triage` does the same
-  locally; `@claude` works in issues and pull requests. Triage verified on [#37](https://github.com/LilSticky/crancula/issues/37) (labelled, commented, `triage` removed). The first runs failed with HTTP 429 because the Claude subscription had hit its session limit; triage shares the user's subscription quota. Still open for the user: confirm the Claude GitHub App for `@claude`, and the board's auto-add workflow.
+  locally; `@claude` works in issues and pull requests. Triage verified on [#37](https://github.com/LilSticky/crancula/issues/37) (labelled, commented, `triage` removed). The first runs failed with HTTP 429 because the Claude subscription had hit its session limit; triage shares the user's subscription quota. The Claude GitHub App is installed (`@claude` works) and the board adds new issues itself.
 - 2026-10-14: Dependabot pull requests skip the issue reference check, and patch and minor updates
   squash-merge automatically once CI is green; major updates stay manual (ADR 16, amends ADR 10 and 14).
   Needs the repository setting "Allow auto-merge" to be on.
