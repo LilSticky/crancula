@@ -35,5 +35,8 @@ Custom agents, skills and setup still to build for the spec-, test- and domain-d
 - [ ] Project board 1 "Auto-add to project" workflow for new issues in this repository (board settings → Workflows; not
   possible through the API). Until then, add each new issue: `gh project item-add 1 --owner LilSticky --url <issue URL>`.
   `gh project item-list` returns stale items, so check membership with GraphQL (`issue.projectItems`)
-- [ ] Claude GitHub Action (`/install-github-app`): `@claude` in issues and pull requests
-- [ ] Connect the GitHub MCP server of the enabled `github` plugin (needs a token)
+- [x] Claude GitHub Action: issue triage (`.github/workflows/claude-triage.yml`, `triage` skill) and `@claude` in issues
+  and pull requests (`.github/workflows/claude.yml`), ADR 14
+- [ ] Secret `CLAUDE_CODE_OAUTH_TOKEN` (`claude setup-token`, then `gh secret set CLAUDE_CODE_OAUTH_TOKEN`) and the
+  Claude GitHub App (https://github.com/apps/claude) installed on the repository; user step
+- [x] Connect the GitHub MCP server of the enabled `github` plugin

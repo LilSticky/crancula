@@ -69,3 +69,7 @@ waits for that.
   that the pull request body references an issue, and the Spec Kit `github` extension
   (`/speckit-github-taskstoissues`). Board automation and the Claude GitHub Action are still open
   ([AGENTIC-TODO](AGENTIC-TODO.md#github)).
+- 2026-10-14: automatic issue triage ([#34](https://github.com/LilSticky/crancula/issues/34), ADR 14):
+  issue forms add `triage`, the Claude triage Action labels and comments, `/triage` does the same
+  locally; `@claude` works in issues and pull requests. Waits on the user for the
+  `CLAUDE_CODE_OAUTH_TOKEN` secret, the Claude GitHub App and the board's auto-add workflow.
