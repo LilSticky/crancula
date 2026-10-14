@@ -1,12 +1,11 @@
 import {ChangeDetectionStrategy, Component, inject} from '@angular/core';
 import {MatButton, MatIconButton} from '@angular/material/button';
-import {MatDialog} from '@angular/material/dialog';
 import {MatIcon} from '@angular/material/icon';
 import {MatListItem, MatListItemLine, MatListItemTitle, MatNavList} from '@angular/material/list';
 import {RouterLink} from '@angular/router';
 import {TranslatePipe} from '@ngx-translate/core';
 import type {Organ} from '@api/index';
-import {ConfirmableAction, ConfirmDialogComponent} from '../../shared/components/confirm-dialog/confirm-dialog.component';
+import {OrganDeletion} from '../organ-deletion';
 import {OrganLibrary} from '../organ-library.store';
 
 @Component({
@@ -52,14 +51,9 @@ import {OrganLibrary} from '../organ-library.store';
 })
 export class OrganListComponent {
   protected readonly library = inject(OrganLibrary);
-  private readonly dialog = inject(MatDialog);
+  private readonly deletion = inject(OrganDeletion);
 
   protected delete(organ: Organ): void {
-    this.dialog
-      .open(ConfirmDialogComponent, {data: {action: ConfirmableAction.DELETE, entity: {id: organ.id, name: organ.name}}})
-      .afterClosed()
-      .subscribe((confirmed) => {
-        if (confirmed === true) void this.library.remove(organ.id);
-      });
+    void this.deletion.confirmAndDelete(organ);
   }
 }

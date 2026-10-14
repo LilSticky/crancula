@@ -6,6 +6,8 @@ import {registerAppHandlers} from './app-ipc';
 import {menuTemplate, SOURCE_I18N_DIRECTORY} from './application-menu';
 import {createOrganLibraryFile} from './organ-library-file';
 import {registerOrganLibraryHandlers} from './organ-library-ipc';
+import {createTapeLibraryFile} from './tape-library-file';
+import {registerTapeLibraryHandlers} from './tape-library-ipc';
 import {windowOptions} from './window-options';
 
 let win: BrowserWindow | null = null;
@@ -19,6 +21,8 @@ if (process.env['CRANCULA_USER_DATA']) {
 
 const organLibraryFile = createOrganLibraryFile(path.join(app.getPath('userData'), 'snapshots'));
 registerOrganLibraryHandlers(ipcMain, organLibraryFile);
+const tapeLibraryFile = createTapeLibraryFile(path.join(app.getPath('userData'), 'snapshots'));
+registerTapeLibraryHandlers(ipcMain, tapeLibraryFile);
 
 /** The folder the renderer's translation files are loaded from: the sources when serving, else the built assets. */
 function i18nDirectory(): string {
@@ -74,10 +78,12 @@ let flushedBeforeQuit = false;
 app.on('before-quit', (event) => {
   if (flushedBeforeQuit) return;
   event.preventDefault();
-  void organLibraryFile.flush().finally(() => {
-    flushedBeforeQuit = true;
-    app.quit();
-  });
+  void Promise.all([organLibraryFile.flush(), tapeLibraryFile.flush()])
+    .catch((error: unknown) => console.error('Could not write the snapshots before quitting', error))
+    .finally(() => {
+      flushedBeforeQuit = true;
+      app.quit();
+    });
 });
 
 void app.whenReady().then(() => {

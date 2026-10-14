@@ -17,7 +17,13 @@ const KEY_USAGE = [
 ];
 /** Key prefixes whose keys are built at run time, so they never appear as literals. */
 /** MENU.* is read by the Electron main process (app/application-menu.ts), which this script doesn't scan. */
-const DYNAMIC_PREFIXES = ['ORGAN.VIOLATION.', 'CONFIRMATION_DIALOG.', 'MENU.'];
+const DYNAMIC_PREFIXES = [
+  'ORGAN.VIOLATION.',
+  'TAPE.VIOLATION.',
+  'TAPE.SONG_REJECTION.',
+  'CONFIRMATION_DIALOG.',
+  'MENU.',
+];
 /** Any quoted string shaped like a key; counts as a use when the key exists (e.g. `label="KEY"`). */
 const KEY_LITERAL = /['"`]([A-Z][A-Z0-9_]*(?:\.[A-Z0-9_]+)*)['"`]/g;
 

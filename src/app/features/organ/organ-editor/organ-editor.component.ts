@@ -6,8 +6,9 @@ import {MatButton, MatIconButton} from '@angular/material/button';
 import {MatError, MatFormField, MatHint, MatInput, MatLabel} from '@angular/material/input';
 import {MatDialog} from '@angular/material/dialog';
 import {MatIcon} from '@angular/material/icon';
+import {MatSnackBar} from '@angular/material/snack-bar';
 import {Router} from '@angular/router';
-import {TranslatePipe} from '@ngx-translate/core';
+import {TranslatePipe, TranslateService} from '@ngx-translate/core';
 import {firstValueFrom} from 'rxjs';
 import {
   addPipe,
@@ -16,6 +17,7 @@ import {
   movePipe,
   newOrganId,
   noteName,
+  type Organ,
   type OrganDraft,
   removePipe,
   toDraft,
@@ -23,6 +25,8 @@ import {
 } from '@api/index';
 import {ConfirmableAction, ConfirmDialogComponent} from '../../shared/components/confirm-dialog/confirm-dialog.component';
 import type {LeaveProblem, TranslatableText, UnsavedChanges, UnsavedChangesCheck} from '../leave-unsaved.guard';
+import {TapeLibrary} from '../../tape/tape-library.store';
+import {OrganDeletion} from '../organ-deletion';
 import {OrganLibrary} from '../organ-library.store';
 import {type FieldProblem, organFormSchema, organProblems, shownMessages, ShownViolationMatcher} from './organ-form';
 
@@ -72,6 +76,10 @@ export class OrganEditorComponent implements UnsavedChangesCheck {
   private readonly library = inject(OrganLibrary);
   private readonly router = inject(Router);
   private readonly dialog = inject(MatDialog);
+  private readonly tapes = inject(TapeLibrary);
+  private readonly deletion = inject(OrganDeletion);
+  private readonly snackBar = inject(MatSnackBar);
+  private readonly translate = inject(TranslateService);
   private deleted = false;
 
   /** The Organ as it was when opened: the stored one, or a new one with its id already assigned. */
@@ -118,12 +126,43 @@ export class OrganEditorComponent implements UnsavedChangesCheck {
     const sent = this.draft();
     this.saving.set(true);
     try {
+      if (!(await this.removeHolesOfRemovedPipes(result.value))) return;
       if (!(await this.library.put(result.value))) return; // Still unsaved: the library reports the storage problem.
       this.saved.set(sent);
     } finally {
       this.saving.set(false);
     }
     if (!this.id()) await this.router.navigate(['/organs', result.value.id], {replaceUrl: true});
+  }
+
+  /**
+   * Asks, then removes the Holes on the Pipes this save removes from the Organ's Tapes. Tapes are written first and the
+   * Organ only if that worked (ADR 18). Resolves `false` when the save must not go on.
+   */
+  private async removeHolesOfRemovedPipes(organ: Organ): Promise<boolean> {
+    const stored = this.library.entityMap()[organ.id];
+    if (!stored) return true;
+    const kept = new Set(organ.pipes.map((pipe) => pipe.note));
+    const removed = new Set(stored.pipes.map((pipe) => pipe.note).filter((note) => !kept.has(note)));
+    if (removed.size === 0) return true;
+    if (this.tapes.loadProblem() !== null) {
+      this.snackBar.open(String(this.translate.instant('ORGAN.EDITOR.SAVE_BLOCKED')), String(this.translate.instant('ORGAN.STORAGE.DISMISS')));
+      return false;
+    }
+    const affected = this.tapes.affectedByRemovingPipes(organ.id, removed);
+    if (affected.holes === 0) return true;
+    const confirmed = await firstValueFrom(
+      this.dialog
+        .open(ConfirmDialogComponent, {
+          data: {
+            action: ConfirmableAction.DISCARD,
+            entity: {id: organ.id, name: organ.name},
+            consequence: {key: 'ORGAN.EDITOR.REMOVE_PIPES_HOLES', params: affected},
+          },
+        })
+        .afterClosed(),
+    );
+    return confirmed === true && (await this.tapes.removeHolesOfPipes(organ.id, removed));
   }
 
   /** The messages to show at a field now. */
@@ -155,16 +194,7 @@ export class OrganEditorComponent implements UnsavedChangesCheck {
 
   protected async deleteOrgan(): Promise<void> {
     const {id, name} = this.draft();
-    if (!id) return;
-    const confirmed = await firstValueFrom(
-      this.dialog.open(ConfirmDialogComponent, {data: {action: ConfirmableAction.DELETE, entity: {id, name}}}).afterClosed(),
-    );
-    if (confirmed !== true) return;
-    try {
-      await this.library.remove(id);
-    } catch {
-      return; // The Organ is still stored: stay here; the library reports the storage problem.
-    }
+    if (!id || !(await this.deletion.confirmAndDelete({id, name}))) return;
     this.deleted = true;
     await this.router.navigate(['/organs']);
   }

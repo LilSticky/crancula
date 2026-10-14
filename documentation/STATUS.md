@@ -6,8 +6,11 @@ Issues: [GitHub](https://github.com/LilSticky/crancula/issues)
 
 ## Current slice
 
-**Bring a song onto a tape** ([#2](https://github.com/LilSticky/crancula/issues/2)) on branch
-`002-bring-a-song-onto-a-tape`: spec clarified, research and data model written (docs only, no code yet).
+**Done:** [Bring a song onto a tape](../specs/002-bring-a-song-onto-a-tape/spec.md)
+([#2](https://github.com/LilSticky/crancula/issues/2), PR #51, 2026-10-14): all 78 tasks. MIDI Song
+import, Tape domain (Quantisation, Transposition, Fit, Hole fixes), Tape library snapshot, IPC and
+UI in German and English. Gate: lint, i18n (136 keys), 456 node and 251 Angular tests, build and
+31 e2e green locally. The slice's ADRs are 17 and 18.
 
 **Done:** [Describe my organ](../specs/001-describe-my-organ/spec.md) (PR #15, 2026-10-14). Change from
 the plan: Angular specs in jsdom ([ADR 9](adr/0009-angular-specs-in-jsdom.md)).
@@ -28,12 +31,15 @@ research R6 revised): `form()` over `OrganDraft`, `[formField]` inputs, one `val
 `validateOrgan`, a `ShownViolationMatcher` instead of the `crancErrorState` directive. Lint, i18n,
 120 Angular tests and 18 e2e green. Unreadable number text shows "Enter a number.".
 
-**Next concrete step:** rebase `002-bring-a-song-onto-a-tape` onto `main` and run `/speckit-plan` for
-slice 002. Draft PR #26 (release workflow) waits for that.
+**Next concrete step:** `/speckit-specify` for "Punch a tape" ([#3](https://github.com/LilSticky/crancula/issues/3))
+after this pull request merges. Draft PR #26 (release workflow) waits for that.
 
 ## Known broken / WIP
 
-- No known broken items. Fixed on 2026-10-14: fonts no longer load from Google; Roboto and Material
+- `e2e/fonts.spec.ts` "requests no font from an external origin" failed intermittently twice locally
+  (`ERR_FILE_NOT_FOUND` on reload). Not reproducible yet.
+- Claude triage Action failed with `429 usage_limit_reached` on [#37](https://github.com/LilSticky/crancula/issues/37).
+- Fixed on 2026-10-14: fonts no longer load from Google; Roboto and Material
   Icons ship with the app from `src/fonts/`, licenses in `src/assets/fonts/`
   ([#24](https://github.com/LilSticky/crancula/issues/24)).
 

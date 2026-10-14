@@ -90,7 +90,11 @@ describe('OrganLibrary', () => {
   describe('put outcome', () => {
     function apiSaving(result: OrganLibrarySaveResult): CranculaApi {
       const inMemory = createInMemoryCranculaApi();
-      return {organs: {load: () => inMemory.organs.load(), save: () => Promise.resolve(result)}, app: inMemory.app};
+      return {
+        organs: {load: () => inMemory.organs.load(), save: () => Promise.resolve(result)},
+        tapes: inMemory.tapes,
+        app: inMemory.app,
+      };
     }
 
     it('resolves true when the Organs were written to disk', async () => {
@@ -134,6 +138,7 @@ describe('OrganLibrary', () => {
           load: () => inMemory.organs.load(),
           save: (snapshot) => (next.status === 'saved' ? inMemory.organs.save(snapshot) : Promise.resolve(next)),
         },
+        tapes: inMemory.tapes,
         app: inMemory.app,
       };
       const {library} = setup(api);

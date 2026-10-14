@@ -4,6 +4,7 @@ const headed = process.env['HEADED'] === '1';
 /** @type {import('@playwright/test').PlaywrightTestConfig} */
 const config = {
   testDir: '.',
+  testIgnore: 'support/**',
   timeout: 45000,
   outputDir: './screenshots',
   use: {

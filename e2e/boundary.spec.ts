@@ -24,4 +24,20 @@ test.describe('Electron boundary', () => {
     });
     expect(result).toEqual({status: 'empty'});
   });
+
+  test('exposes the typed Tape library API', async () => {
+    const result = await launched.window.evaluate(async () => {
+      const tapes = (window as {crancula?: {tapes?: {load?: unknown; save?: unknown}}}).crancula?.tapes;
+      if (typeof tapes?.load !== 'function' || typeof tapes.save !== 'function') return 'missing';
+      return (tapes.load as () => Promise<unknown>)();
+    });
+    expect(result).toEqual({status: 'empty'});
+  });
+
+  test('exposes no members beyond organs, tapes and app', async () => {
+    const keys = await launched.window.evaluate(() =>
+      Object.keys((window as {crancula?: object}).crancula ?? {}).sort(),
+    );
+    expect(keys).toEqual(['app', 'organs', 'tapes']);
+  });
 });

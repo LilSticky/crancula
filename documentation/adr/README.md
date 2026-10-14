@@ -22,3 +22,5 @@ with a new one and update both statuses here.
 | 14 | [Stay on current major versions with Dependabot](0014-current-major-versions-with-dependabot.md) | Accepted |
 | 15 | [Issue triage with the Claude GitHub Action](0015-issue-triage-with-claude-action.md) | Accepted |
 | 16 | [Dependabot pull requests merge themselves](0016-dependabot-pull-requests-merge-themselves.md) | Accepted |
+| 17 | [Own MIDI reader in the domain](0017-own-midi-reader-in-the-domain.md) | Accepted |
+| 18 | [Tape snapshot of its own, written before the Organs](0018-tape-snapshot-and-cascade-order.md) | Accepted |
