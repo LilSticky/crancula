@@ -25,20 +25,51 @@ async function startApp(api = createInMemoryCranculaApi()) {
     (option.tagName === 'BUTTON' ? option : (option.querySelector<HTMLElement>('button') ?? option)).click();
     await fixture.whenStable();
   };
-  return {translate, choose};
+  return {translate, choose, element};
 }
 
-describe('NavbarComponent language switch', () => {
-  beforeEach(() => {
-    // jsdom's localStorage is unavailable here, so the app's UI preference store is an in-memory stand-in.
-    const store = new Map<string, string>();
-    const storage: Pick<Storage, 'getItem' | 'setItem' | 'removeItem'> = {
-      getItem: (key) => store.get(key) ?? null,
-      setItem: (key, value) => void store.set(key, value),
-      removeItem: (key) => void store.delete(key),
-    };
-    vi.stubGlobal('localStorage', storage);
+// jsdom's localStorage is unavailable here, so the app's UI preference store is an in-memory stand-in.
+function stubLocalStorage(): void {
+  const store = new Map<string, string>();
+  const storage: Pick<Storage, 'getItem' | 'setItem' | 'removeItem'> = {
+    getItem: (key) => store.get(key) ?? null,
+    setItem: (key, value) => void store.set(key, value),
+    removeItem: (key) => void store.delete(key),
+  };
+  vi.stubGlobal('localStorage', storage);
+}
+
+describe('NavbarComponent brand', () => {
+  beforeEach(stubLocalStorage);
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('links the logo and the app name to the home route as one brand', async () => {
+    const {element} = await startApp();
+
+    const brand = element.querySelector<HTMLAnchorElement>('a[data-testid="brand"]');
+    expect(brand?.getAttribute('href')).toBe('/home');
+    expect(brand?.querySelector('img')?.getAttribute('src')).toBe('assets/icons/logo.svg');
+    expect(brand?.textContent?.trim()).toBe('Crancula');
   });
+
+  it('puts the brand before the navigation links', async () => {
+    const {element} = await startApp();
+
+    const first = element.querySelector<HTMLElement>('[data-testid="navbar"] > *');
+    expect(first?.getAttribute('data-testid')).toBe('brand');
+  });
+
+  it('keeps the logo decorative so the link is named by the app name alone', async () => {
+    const {element} = await startApp();
+
+    const brand = element.querySelector<HTMLAnchorElement>('[data-testid="brand"]');
+    expect(brand?.querySelector('img')?.getAttribute('alt')).toBe('');
+    expect(brand?.textContent?.trim()).toBe('Crancula');
+  });
+});
+
+describe('NavbarComponent language switch', () => {
+  beforeEach(stubLocalStorage);
   afterEach(() => vi.unstubAllGlobals());
 
   it('starts in the default language when no choice was stored', async () => {
