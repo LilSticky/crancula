@@ -1,6 +1,10 @@
-import {Component} from '@angular/core';
+import {Component, effect, inject} from '@angular/core';
+import {MatSnackBar} from '@angular/material/snack-bar';
 import {RouterOutlet} from '@angular/router';
-import {NavbarComponent} from "./features/navbar/navbar.component";
+import {TranslateService} from '@ngx-translate/core';
+import {firstValueFrom} from 'rxjs';
+import {OrganLibrary} from './features/organ/organ-library.store';
+import {NavbarComponent} from './features/navbar/navbar.component';
 
 @Component({
   // eslint-disable-next-line @angular-eslint/component-selector
@@ -12,20 +16,35 @@ import {NavbarComponent} from "./features/navbar/navbar.component";
     </div>
   `,
   styles: `
-
     .page-container {
       width: 80%;
       margin: auto;
     }
-
-    :host {
-    }
   `,
-  standalone: true,
-  imports: [RouterOutlet, NavbarComponent]
+  imports: [RouterOutlet, NavbarComponent],
 })
 export class AppComponent {
+  private readonly library = inject(OrganLibrary);
+  private readonly snackBar = inject(MatSnackBar);
+  private readonly translate = inject(TranslateService);
 
   constructor() {
+    // Storage problems are reported to the user (spec FR-014, FR-015).
+    effect(() => {
+      const problem = this.library.loadProblem();
+      if (problem) void this.notify('ORGAN.STORAGE.LOAD_PROBLEM', {backupPath: problem.backupPath});
+    });
+    effect(() => {
+      const problem = this.library.saveProblem();
+      if (problem) void this.notify('ORGAN.STORAGE.SAVE_PROBLEM', {reason: problem.reason});
+    });
+  }
+
+  private async notify(key: string, params: Record<string, string>): Promise<void> {
+    const [message, dismiss] = await Promise.all([
+      firstValueFrom(this.translate.get(key, params)) as Promise<string>,
+      firstValueFrom(this.translate.get('ORGAN.STORAGE.DISMISS')) as Promise<string>,
+    ]);
+    this.snackBar.open(message, dismiss);
   }
 }

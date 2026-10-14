@@ -52,9 +52,10 @@ step**, known broken/WIP items, and open questions. Then read only what that ste
   merge or a direct push. Open it with `gh pr create`; the body lists every issue it touches,
   `Closes #N` for resolved ones and `Refs #N` for the rest. A slice has its own issue.
 - **Merging**: when the Definition of Done gate is green and CI passes, squash-merge the pull
-  request yourself (`gh pr merge --squash --delete-branch`). The gate: runs in Electron; tests and
-  lint green; STATUS/ROADMAP/DICTIONARY/ADRs updated; committed. If you merge with something red,
-  say so explicitly in the pull request and record it in STATUS.
+  request yourself (`gh pr merge --squash --delete-branch`). The gate: runs in Electron (the e2e
+  suite is green in CI, ADR 13); tests and lint green; STATUS/ROADMAP/DICTIONARY/ADRs updated;
+  committed. If you merge with something red, say so explicitly in the pull request and record it
+  in STATUS.
 - **Talking to the user**: work autonomously. Ask only about domain questions, dictionary changes
   and scope changes. Always ask through interactive prompts, never only in prose, and keep chat
   output short. Detail belongs in files.

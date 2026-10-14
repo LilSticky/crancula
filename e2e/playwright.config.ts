@@ -6,10 +6,11 @@ const config = {
   use: {
     headless: false,
     viewport: { width: 1280, height: 720 },
+    // Slowed down locally so that a run can be watched; full speed in CI.
     launchOptions: {
-      slowMo: 1000,
+      slowMo: process.env['CI'] ? 0 : 1000,
     },
-    trace: 'on',
+    trace: process.env['CI'] ? 'retain-on-failure' : 'on',
   },
   expect: {
     toMatchSnapshot: { threshold: 0.2 },

@@ -1,25 +1,24 @@
 {
   "compilerOptions": {
+    "noEmit": true,
     "sourceMap": true,
     "declaration": false,
     "moduleResolution": "node",
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
     "module": "commonjs",
     "esModuleInterop": true,
-    "target": "es2015",
+    "strict": true,
+    "target": "ES2022",
     "types": [
       "node"
     ],
     "lib": [
-      "es2017",
-      "es2016",
-      "es2015",
-      "dom"
+      "ES2022",
+      "DOM"
     ]
   },
   "files": [
-    "app/main.ts"
+    "app/main.ts",
+    "app/preload.ts"
   ],
   "exclude": [
     "node_modules",

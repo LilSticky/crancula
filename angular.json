@@ -106,9 +106,6 @@
           "options": {
             "runner": "vitest",
             "tsConfig": "src/tsconfig.spec.json",
-            "browsers": [
-              "chromium"
-            ],
             "buildTarget": "crancula:build:testing",
             "coverage": true,
             "coverageReporters": [

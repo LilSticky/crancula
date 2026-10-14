@@ -6,44 +6,56 @@ Issues: [GitHub](https://github.com/LilSticky/crancula/issues)
 
 ## Current slice
 
-**Describe my organ** (next up; Foundation is done)
+**Describe my organ** is done on branch `001-describe-my-organ` and in review through a pull request
+(ADR 10). The spec is clarified: [spec.md](../specs/001-describe-my-organ/spec.md).
 
-**Next concrete step:** run `/speckit-specify` for "Describe my organ": define an Organ with its
-Pipes (MIDI note numbers), Tape Bed, Minimum Hole Length and Minimum Gap, editable in the app
-and kept as a snapshot on disk (ADR 3, ADR 4).
+All user stories 1–5 are done:
+- Define an Organ; invalid Organs are never stored and show their broken rules.
+- Survives a restart; an unreadable snapshot is reported and kept.
+- Change and remove an Organ, including delete with confirmation.
+- Reorder and remove Pipes in the editor; leaving an invalid changed draft asks for confirmation.
+- Switch between German and English, remembered between starts ([ADR 11](adr/0011-ui-preferences-in-local-storage.md)).
+
+MVP review (Phase 9, T043–T051, 2026-10-14):
+- Explicit **Save** replaces autosave (FR-012); leaving with unsaved changes warns and lists broken
+  rules with their fields (FR-012a); a change counts as saved only after the write succeeded.
+- The application menu is translated and follows the language switch, also after restart (FR-016).
+- Main and preload are bundled with esbuild so the packaged app starts ([ADR 12](adr/0012-bundle-electron-main-and-preload.md)).
+  Before this, the packaged app crashed: it couldn't find `../api`.
+
+Changes from the plan:
+- **Editor:** plain signals instead of signal forms (research R6).
+- **Angular specs:** run in jsdom (ADR 9).
+- **Error states:** a small `crancErrorState` directive puts form fields into their error state.
+
+Local gate run on 2026-10-14: lint green, test 124 node + 104 Angular passed, i18n:check green,
+e2e 13 passed. The manual walkthrough (T041) is replaced by the e2e suite in CI on Linux, Windows
+and macOS (ADR 13, constitution 1.1.1).
+
+**Next concrete step:** squash-merge [PR #15](https://github.com/LilSticky/crancula/pull/15) once CI,
+now including e2e, is green (T042). After that:
+- Rebase the tech-stack branch `chore/update-tech-stack` for [#13](https://github.com/LilSticky/crancula/issues/13)
+  (on another computer; the user pushes it today). Apply the Angular 22 signal-forms renames (`Field` →
+  `FormField`, `[field]` → `[formField]`) and revisit research R6. The rebase also has to account for
+  `scripts/bundle-electron.mjs` / `electron:bundle`, which replace `electron:serve-tsc`.
+- Then slice 002 "Bring a song onto a tape" ([#2](https://github.com/LilSticky/crancula/issues/2)).
 
 ## Known broken / WIP
 
-- **The app does not build** (`npm run build`), a leftover from the prototype:
-  - `pipes-form.component.html` calls a non-existent `pipes()`;
-  - a required `model` is unbound (NG8118);
-  - `FormTouchedModel` typing errors (TS7053).
-
-  The prototype organ feature is a quarry (constitution, principle VII); the "Describe my organ"
-  slice replaces it rather than patching it.
-- **`npm run test` exits with an error** because there are no unit tests yet ("No tests found").
-  The first TDD cycle fixes this.
-- **`ElectronService` uses `window.require`**, which ADR 4 forbids; it is to be replaced by a
-  typed preload API.
-- **Organs persist to localStorage** via `withStorageSync`, which ADR 3 replaces with file
-  snapshots.
-- **`api/model` contradicts the dictionary:**
-  - `Hole` has no position and has an `opened` flag;
-  - `Tape` has no mm per Column;
-  - `Tape`/`Grid` are unexported sketches.
+- No known broken items. #4–#8 are fixed on this branch and close with the merge.
 
 ## Open questions
 
-- Is Minimum Hole Length simply the hole diameter of the Tape Bed? If so, drop one of the two.
-- Snapshot location (Electron `userData` vs. a folder chosen by the user) and write timing
-  (debounced on change, on quit). Decide in "Describe my organ".
 - **Air Demand:** how "too many Pipes at once" depends on which Pipes play. Domain discovery is
   not finished; not in v0.1.
 - Release builds: CI (`.github/workflows/ci.yml`) runs lint, test and build on Linux, Windows
-  and macOS, and is red until the build and test items above are fixed. Packaging v0.1 as
-  GitHub Releases is not set up yet ([#11](https://github.com/LilSticky/crancula/issues/11)).
+  and macOS and should go green with this branch. Packaging now starts locally on Windows (smoke
+  launch of the packaged app). CI packaging and GitHub Releases are not set up yet
+  ([#11](https://github.com/LilSticky/crancula/issues/11)).
 
 ## Process changes
 
 - 2026-10-14: branches reach `main` only through pull requests that reference their issues
   (`Closes #N` / `Refs #N`), then get squash-merged by the agent (ADR 10, constitution 1.1.0).
+- 2026-10-14: the e2e suite runs in CI on Linux, Windows and macOS and replaces the manual
+  walkthrough as proof that a slice runs in Electron (ADR 13, constitution 1.1.1).

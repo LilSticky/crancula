@@ -1,53 +1,104 @@
 {
-  "TITLE": "Crancula",
   "PAGES": {
     "HOME": {
       "TITLE": "Overview"
-    },
-    "ORGANS": {
-      "TITLE": "Organs",
-      "BACK_TO_HOME": "Back to Home",
-      "TABLE": {
-        "NAME": "Name",
-        "PIPES": "Pipe Count",
-        "TAPE_WIDTH": "Tape width",
-        "HOLE_DIAMETER": "Hole diameter",
-        "EDIT": "Edit",
-        "DELETE": "Delete",
-        "NEW": "New Organ"
-      }
-    },
-    "ORGAN": {
-      "FORM": {
-        "SAVE": "Save",
-        "DISCARD": "Discard",
-        "TITLE": "Edit Organ",
-        "GENERAL_SETTINGS": "General settings:",
-        "NAME": "Name",
-        "TAPE_SETTINGS": "Tape settings:",
-        "TAPE_WIDTH_MM": "Width (mm)",
-        "TAPE_BORDER_MM": "Border (mm)",
-        "HOLE_SETTINGS": "Hole settings:",
-        "HOLE_DIAMETER_MM": "Diameter (mm)",
-        "HOLE_SPACING_MM": "Spacing (mm)",
-        "PIPE_SETTINGS": "Pipe settings:",
-        "PIPE_NAME": "Name",
-        "PIPE_PITCH": "Pitch",
-        "NEW_PIPE": "New Pipe",
-        "LOADING": "Loading, please wait...",
-        "ERROR": {
-          "NO_ORGAN_SELECTED": "No organ was selected to edit yet."
-        }
-      }
     }
   },
   "CONFIRMATION_DIALOG": {
+    "TITLE": "Confirm Action",
+    "CANCEL": "Cancel",
+    "CONFIRM": "Confirm",
     "DELETE": "Are you sure you want to delete {{ref}} forever?",
     "DISCARD": "Are you sure you want to discard all changes to {{ref}}?"
   },
-  "FORM_VALIDATION": {
-    "MIN_LENGTH": "This value needs to be longer",
-    "MIN_VALUE": "This value needs to be greater",
-    "REQUIRED": "This value is required"
+  "NAVBAR": {
+    "LANGUAGE": "Language"
+  },
+  "NOT_FOUND": {
+    "TITLE": "Something went wrong!",
+    "MESSAGE": "Page could not be found"
+  },
+  "ORGAN": {
+    "NAV": "Organs",
+    "LIST": {
+      "TITLE": "Organs",
+      "EMPTY": "No Organs yet.",
+      "NEW": "New Organ",
+      "PIPE_COUNT": "{{count}} Pipes",
+      "DELETE": "Delete Organ {{name}}"
+    },
+    "EDITOR": {
+      "TITLE_NEW": "New Organ",
+      "TITLE": "Organ",
+      "NAME": "Name",
+      "TAPE_BED": "Tape Bed",
+      "TAPE_WIDTH": "Tape width (mm)",
+      "BORDER": "Border (mm)",
+      "HOLE_DIAMETER": "Hole diameter (mm)",
+      "ROW_SPACING": "Spacing between rows (mm)",
+      "MINIMUM_GAP": "Minimum Gap (mm)",
+      "MINIMUM_HOLE_LENGTH": "Minimum Hole Length (mm)",
+      "MINIMUM_HOLE_LENGTH_HINT": "Equals the hole diameter",
+      "PIPES": "Pipes",
+      "ROW": "Row {{row}}",
+      "PIPE_NOTE": "MIDI note",
+      "ADD_PIPE": "Add Pipe",
+      "MOVE_PIPE_UP": "Move Pipe up",
+      "MOVE_PIPE_DOWN": "Move Pipe down",
+      "REMOVE_PIPE": "Remove Pipe",
+      "DRAG_PIPE": "Drag Pipe to another row",
+      "DELETE": "Delete Organ",
+      "SAVE": "Save"
+    },
+    "LEAVE": {
+      "TITLE": "Unsaved changes",
+      "UNSAVED": "Your changes are not saved. Press Save in the editor to keep them, or discard them.",
+      "INVALID": "Your changes can't be saved yet. Fix the problems listed below and press Save, or discard your changes.",
+      "PIPE_FIELD": "Row {{row}} · MIDI note",
+      "STAY": "Stay",
+      "DISCARD": "Discard changes"
+    },
+    "VIOLATION": {
+      "NAME_REQUIRED": "Please enter a name.",
+      "PIPES_REQUIRED": "Add at least one Pipe.",
+      "PIPE_NOTE_REQUIRED": "Enter the MIDI note of this Pipe.",
+      "PIPE_NOTE_OUT_OF_RANGE": "{{note}} is not a MIDI note (0–127).",
+      "DUPLICATE_PIPE": "Another Pipe already plays {{noteName}}.",
+      "VALUE_REQUIRED": "Please enter a value.",
+      "MUST_BE_POSITIVE": "Must be greater than 0.",
+      "MUST_NOT_BE_NEGATIVE": "Must not be negative.",
+      "ROW_SPACING_BELOW_HOLE_DIAMETER": "Must be at least the hole diameter ({{holeDiameter}} mm), or neighbouring holes overlap.",
+      "PIPES_EXCEED_TAPE_WIDTH": "The Pipes need {{requiredWidth}} mm, but the tape is only {{availableWidth}} mm wide."
+    },
+    "STORAGE": {
+      "LOAD_PROBLEM": "Your Organs couldn't be loaded. The file was kept at {{backupPath}}.",
+      "SAVE_PROBLEM": "Your changes couldn't be saved: {{reason}}",
+      "DISMISS": "OK"
+    }
+  },
+  "MENU": {
+    "APP": "Crancula",
+    "HIDE": "Hide Crancula",
+    "HIDE_OTHERS": "Hide Others",
+    "SHOW_ALL": "Show All",
+    "FILE": "File",
+    "EDIT": "Edit",
+    "VIEW": "View",
+    "WINDOW": "Window",
+    "UNDO": "Undo",
+    "REDO": "Redo",
+    "CUT": "Cut",
+    "COPY": "Copy",
+    "PASTE": "Paste",
+    "SELECT_ALL": "Select All",
+    "RELOAD": "Reload",
+    "TOGGLE_DEV_TOOLS": "Toggle Developer Tools",
+    "ACTUAL_SIZE": "Actual Size",
+    "ZOOM_IN": "Zoom In",
+    "ZOOM_OUT": "Zoom Out",
+    "TOGGLE_FULLSCREEN": "Toggle Full Screen",
+    "MINIMIZE": "Minimize",
+    "CLOSE": "Close",
+    "QUIT": "Quit"
   }
 }

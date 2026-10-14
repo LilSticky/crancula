@@ -32,3 +32,20 @@ jobs:
       - name: Build
         run: npm run build
         if: always()
+      # The e2e suite drives the real Electron app; it replaces a manual walkthrough (ADR 13).
+      - name: Allow the Electron sandbox (Linux)
+        if: runner.os == 'Linux'
+        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+      - name: End-to-end tests (Linux)
+        if: always() && runner.os == 'Linux'
+        run: xvfb-run --auto-servernum npm run e2e
+      - name: End-to-end tests
+        if: always() && runner.os != 'Linux'
+        run: npm run e2e
+      - name: Upload e2e traces
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-traces-${{ matrix.os }}
+          path: e2e/screenshots/
+          retention-days: 7

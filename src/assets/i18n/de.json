@@ -1,53 +1,104 @@
 {
-  "TITLE": "Crancula",
   "PAGES": {
     "HOME": {
       "TITLE": "Übersicht"
-    },
-    "ORGANS": {
-      "TITLE": "Organ",
-      "BACK_TO_HOME": "Zurück zum Start",
-      "TABLE": {
-        "NAME": "Name",
-        "PIPES": "Pfeifenanzahl",
-        "TAPE_WIDTH": "Bandbreite",
-        "HOLE_DIAMETER": "Lochweite",
-        "EDIT": "Bearbeiten",
-        "DELETE": "Löschen",
-        "NEW": "Neue Orgel"
-      }
-    },
-    "ORGAN": {
-      "FORM": {
-        "SAVE": "Speichern",
-        "DISCARD": "Verwerfen",
-        "TITLE": "Orgel bearbeiten",
-        "GENERAL_SETTINGS": "Generelle Einstellungen:",
-        "NAME": "Name",
-        "TAPE_SETTINGS": "Band Einstellungen:",
-        "TAPE_WIDTH_MM": "Breite (mm)",
-        "TAPE_BORDER_MM": "Rand (mm)",
-        "HOLE_SETTINGS": "Loch Einstellungen:",
-        "HOLE_DIAMETER_MM": "Durchmesser (mm)",
-        "HOLE_SPACING_MM": "Abstand (mm)",
-        "PIPE_SETTINGS": "Pfeifen Einstellungen:",
-        "PIPE_NAME": "Name",
-        "PIPE_PITCH": "Tonhöhe",
-        "NEW_PIPE": "Neue Pfeife",
-        "LOADING": "Lädt, bitte warten...",
-        "ERROR": {
-          "NO_ORGAN_SELECTED": "Es wurde noch keine Orgel zum bearbeiten ausgewählt."
-        }
-      }
     }
   },
   "CONFIRMATION_DIALOG": {
+    "TITLE": "Aktion bestätigen",
+    "CANCEL": "Abbrechen",
+    "CONFIRM": "Bestätigen",
     "DELETE": "Bist du sicher, dass du {{ref}} für immer löschen möchtest?",
     "DISCARD": "Bist du sicher, dass du alle Änderungen an {{ref}} verwerfen möchtest?"
   },
-  "FORM_VALIDATION": {
-    "MIN_LENGTH": "Dieser Wert muss länger sein",
-    "MIN_VALUE": "Dieser Wert muss größer sein",
-    "REQUIRED": "Dieser Wert muss angegeben werden"
+  "NAVBAR": {
+    "LANGUAGE": "Sprache"
+  },
+  "NOT_FOUND": {
+    "TITLE": "Etwas ist schiefgelaufen!",
+    "MESSAGE": "Die Seite wurde nicht gefunden"
+  },
+  "ORGAN": {
+    "NAV": "Drehorgeln",
+    "LIST": {
+      "TITLE": "Drehorgeln",
+      "EMPTY": "Noch keine Drehorgeln.",
+      "NEW": "Neue Drehorgel",
+      "PIPE_COUNT": "{{count}} Pfeifen",
+      "DELETE": "Drehorgel {{name}} löschen"
+    },
+    "EDITOR": {
+      "TITLE_NEW": "Neue Drehorgel",
+      "TITLE": "Drehorgel",
+      "NAME": "Name",
+      "TAPE_BED": "Bandbett",
+      "TAPE_WIDTH": "Bandbreite (mm)",
+      "BORDER": "Rand (mm)",
+      "HOLE_DIAMETER": "Lochdurchmesser (mm)",
+      "ROW_SPACING": "Reihenabstand (mm)",
+      "MINIMUM_GAP": "Mindestabstand (mm)",
+      "MINIMUM_HOLE_LENGTH": "Mindestlochlänge (mm)",
+      "MINIMUM_HOLE_LENGTH_HINT": "Entspricht dem Lochdurchmesser",
+      "PIPES": "Pfeifen",
+      "ROW": "Reihe {{row}}",
+      "PIPE_NOTE": "MIDI-Note",
+      "ADD_PIPE": "Pfeife hinzufügen",
+      "MOVE_PIPE_UP": "Pfeife nach oben verschieben",
+      "MOVE_PIPE_DOWN": "Pfeife nach unten verschieben",
+      "REMOVE_PIPE": "Pfeife entfernen",
+      "DRAG_PIPE": "Pfeife in eine andere Reihe ziehen",
+      "DELETE": "Drehorgel löschen",
+      "SAVE": "Speichern"
+    },
+    "LEAVE": {
+      "TITLE": "Nicht gespeicherte Änderungen",
+      "UNSAVED": "Deine Änderungen sind nicht gespeichert. Drücke im Editor auf Speichern, um sie zu behalten, oder verwirf sie.",
+      "INVALID": "Deine Änderungen können noch nicht gespeichert werden. Behebe die unten aufgeführten Probleme und drücke auf Speichern, oder verwirf deine Änderungen.",
+      "PIPE_FIELD": "Reihe {{row}} · MIDI-Note",
+      "STAY": "Bleiben",
+      "DISCARD": "Änderungen verwerfen"
+    },
+    "VIOLATION": {
+      "NAME_REQUIRED": "Bitte gib einen Namen ein.",
+      "PIPES_REQUIRED": "Füge mindestens eine Pfeife hinzu.",
+      "PIPE_NOTE_REQUIRED": "Gib die MIDI-Note dieser Pfeife ein.",
+      "PIPE_NOTE_OUT_OF_RANGE": "{{note}} ist keine MIDI-Note (0–127).",
+      "DUPLICATE_PIPE": "Eine andere Pfeife spielt bereits {{noteName}}.",
+      "VALUE_REQUIRED": "Bitte gib einen Wert ein.",
+      "MUST_BE_POSITIVE": "Muss größer als 0 sein.",
+      "MUST_NOT_BE_NEGATIVE": "Darf nicht negativ sein.",
+      "ROW_SPACING_BELOW_HOLE_DIAMETER": "Muss mindestens so groß wie der Lochdurchmesser ({{holeDiameter}} mm) sein, sonst überlappen benachbarte Löcher.",
+      "PIPES_EXCEED_TAPE_WIDTH": "Die Pfeifen brauchen {{requiredWidth}} mm, das Band ist aber nur {{availableWidth}} mm breit."
+    },
+    "STORAGE": {
+      "LOAD_PROBLEM": "Deine Drehorgeln konnten nicht geladen werden. Die Datei wurde unter {{backupPath}} aufbewahrt.",
+      "SAVE_PROBLEM": "Deine Änderungen konnten nicht gespeichert werden: {{reason}}",
+      "DISMISS": "OK"
+    }
+  },
+  "MENU": {
+    "APP": "Crancula",
+    "HIDE": "Crancula ausblenden",
+    "HIDE_OTHERS": "Andere ausblenden",
+    "SHOW_ALL": "Alle einblenden",
+    "FILE": "Datei",
+    "EDIT": "Bearbeiten",
+    "VIEW": "Ansicht",
+    "WINDOW": "Fenster",
+    "UNDO": "Rückgängig",
+    "REDO": "Wiederholen",
+    "CUT": "Ausschneiden",
+    "COPY": "Kopieren",
+    "PASTE": "Einfügen",
+    "SELECT_ALL": "Alles auswählen",
+    "RELOAD": "Neu laden",
+    "TOGGLE_DEV_TOOLS": "Entwicklertools ein/aus",
+    "ACTUAL_SIZE": "Originalgröße",
+    "ZOOM_IN": "Vergrößern",
+    "ZOOM_OUT": "Verkleinern",
+    "TOGGLE_FULLSCREEN": "Vollbild ein/aus",
+    "MINIMIZE": "Minimieren",
+    "CLOSE": "Schließen",
+    "QUIT": "Beenden"
   }
 }
