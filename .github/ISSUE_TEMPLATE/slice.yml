@@ -1,0 +1,21 @@
+name: Slice
+description: A domain slice from documentation/ROADMAP.md, named after what it lets the user do.
+title: "Slice: "
+labels: [slice]
+body:
+  - type: textarea
+    id: capability
+    attributes:
+      label: What the user can do afterwards
+      description: One or two sentences in dictionary terms. Not a layer or format.
+    validations:
+      required: true
+  - type: input
+    id: spec
+    attributes:
+      label: Spec folder
+      placeholder: specs/NNN-slice-name/
+  - type: textarea
+    id: scope
+    attributes:
+      label: In and out of scope
