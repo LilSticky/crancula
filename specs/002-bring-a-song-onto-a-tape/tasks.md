@@ -153,15 +153,15 @@ the `tapes:*` IPC boundary and the `TapeLibrary` store. Every user story needs t
 - [x] T011 Implement `api/tape/tape.ts` (types, `tapeId`, `tapeLengthInMillimetres`,
   `removeHolesOfPipes`, internal brand helpers) until T010 is green. The `Tape` type is branded
   like `Organ`, so only `createTape` and the snapshot parser can build one. Depends on T005, T010.
-- [ ] T012 [P] Write the failing test `api/tape/quantisation.spec.ts` with the worked examples of
+- [x] T012 [P] Write the failing test `api/tape/quantisation.spec.ts` with the worked examples of
   research R3 (Ticks per quarter note 480): `column(t) = floor((16·t + ticksPerQuarter) /
   (2·ticksPerQuarter))`; quarter Note at Tick 480 → start 8, length 8 (Story 1 scenario 3);
   starts 29 → 0, 30 → 1, 31 → 1; a 1/64 Note → length 1; a grace Note of 10 Ticks → Columns 0 to 1
   (FR-005 "A Note that would become shorter than one Column MUST be one Column long"); eighth-note
   triplets → lengths 3, 2, 3; Ticks per quarter note 25 and 100 are exact.
-- [ ] T013 Implement `api/tape/quantisation.ts` until T012 is green. Integer arithmetic only.
+- [x] T013 Implement `api/tape/quantisation.ts` until T012 is green. Integer arithmetic only.
   Depends on T011, T012.
-- [ ] T014 [P] Write the failing test `api/tape/transposition.spec.ts` (research R4, FR-006,
+- [x] T014 [P] Write the failing test `api/tape/transposition.spec.ts` (research R4, FR-006,
   FR-007):
   - `allowedTranspositions(song, selectedParts)` is "the range that keeps every selected Note
     within 0–127"; it always contains 0; a highest selected Note G9 (127) gives `highest` 0
@@ -170,13 +170,13 @@ the `tapes:*` IPC boundary and the `TapeLibrary` store. Every user story needs t
     (Story 1 scenario 1); a Song whose Notes all match gives 0 (scenario 2); ties go to the
     fewest semitones, then upward (−6 vs +6 → +6); only directly matching Notes count, not
     durations or octave moves; only selected Parts count.
-- [ ] T015 Implement `api/tape/transposition.ts` (histogram, visiting order 0, +1, −1, +2, …)
+- [x] T015 Implement `api/tape/transposition.ts` (histogram, visiting order 0, +1, −1, +2, …)
   until T014 is green. Depends on T011, T014.
-- [ ] T016 [P] Write the failing test `api/tape/octave-moves.spec.ts` (research R5, FR-009): a
+- [x] T016 [P] Write the failing test `api/tape/octave-moves.spec.ts` (research R5, FR-009): a
   128-entry table per Organ; a Pipe maps to itself; B6 (95) with Pipes C4–C6 → B5 (83), −1
   octave (Story 1 scenario 5); Pipes C4 and C6 only, C5 → C6 (upward on a tie); no F# Pipe →
   F#4 is an Unplayable Note (scenario 6).
-- [ ] T017 Implement `api/tape/octave-moves.ts` until T016 is green. Depends on T011, T016.
+- [x] T017 Implement `api/tape/octave-moves.ts` until T016 is green. Depends on T011, T016.
 - [ ] T018 Write the failing test `api/tape/fit.spec.ts`: `fitOf(song, selectedParts, organ,
   transposition)` returns `matchingAPipe` "Notes whose transposed note number is a Pipe",
   `movedByOctaves` "Notes moved by whole octaves onto a Pipe (FR-009)" and `unplayable`
