@@ -59,7 +59,8 @@
       "TITLE": "Drehorgeln",
       "EMPTY": "Noch keine Drehorgeln.",
       "NEW": "Neue Drehorgel",
-      "PIPE_COUNT": "{{count}} Pfeifen"
+      "PIPE_COUNT": "{{count}} Pfeifen",
+      "DELETE": "Drehorgel {{name}} löschen"
     },
     "EDITOR": {
       "TITLE_NEW": "Neue Drehorgel",
@@ -80,7 +81,8 @@
       "MOVE_PIPE_UP": "Pfeife nach oben verschieben",
       "MOVE_PIPE_DOWN": "Pfeife nach unten verschieben",
       "REMOVE_PIPE": "Pfeife entfernen",
-      "DRAG_PIPE": "Pfeife in eine andere Reihe ziehen"
+      "DRAG_PIPE": "Pfeife in eine andere Reihe ziehen",
+      "DELETE": "Drehorgel löschen"
     },
     "VIOLATION": {
       "NAME_REQUIRED": "Bitte gib einen Namen ein.",

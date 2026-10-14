@@ -2,9 +2,11 @@ import {ChangeDetectionStrategy, Component, computed, effect, inject, input, lin
 import {CdkDrag, CdkDragDrop, CdkDragHandle, CdkDropList} from '@angular/cdk/drag-drop';
 import {MatButton, MatIconButton} from '@angular/material/button';
 import {MatError, MatFormField, MatHint, MatInput, MatLabel} from '@angular/material/input';
+import {MatDialog} from '@angular/material/dialog';
 import {MatIcon} from '@angular/material/icon';
 import {Router} from '@angular/router';
 import {TranslatePipe} from '@ngx-translate/core';
+import {firstValueFrom} from 'rxjs';
 import {
   addPipe,
   emptyOrganDraft,
@@ -21,6 +23,7 @@ import {
   toSnapshot,
   validateOrgan,
 } from '@api/index';
+import {ConfirmableAction, ConfirmDialogComponent} from '../../shared/components/confirm-dialog/confirm-dialog.component';
 import {ErrorStateDirective} from '../../shared/directives/error-state.directive';
 import {type DraftLeaveCheck} from '../leave-invalid.guard';
 import {OrganLibrary} from '../organ-library.store';
@@ -74,6 +77,8 @@ export class OrganEditorComponent implements DraftLeaveCheck {
 
   private readonly library = inject(OrganLibrary);
   private readonly router = inject(Router);
+  private readonly dialog = inject(MatDialog);
+  private deleted = false;
 
   /** The Organ as it was when opened: the stored one, or a new one with its id already assigned. */
   private readonly opened = computed<OrganDraft>(() => {
@@ -130,7 +135,7 @@ export class OrganEditorComponent implements DraftLeaveCheck {
 
   /** Whether the user changed the Organ into a state that is not stored; leaving would discard it. */
   hasInvalidDraft(): boolean {
-    return JSON.stringify(this.draft()) !== JSON.stringify(this.opened()) && !validateOrgan(this.draft()).ok;
+    return !this.deleted && JSON.stringify(this.draft()) !== JSON.stringify(this.opened()) && !validateOrgan(this.draft()).ok;
   }
 
   /** The rule messages to show at the field with this path. */
@@ -177,6 +182,22 @@ export class OrganEditorComponent implements DraftLeaveCheck {
 
   protected dropPipe(event: CdkDragDrop<unknown>): void {
     this.movePipe(event.previousIndex, event.currentIndex);
+  }
+
+  protected async deleteOrgan(): Promise<void> {
+    const {id, name} = this.draft();
+    if (!id) return;
+    const confirmed = await firstValueFrom(
+      this.dialog.open(ConfirmDialogComponent, {data: {action: ConfirmableAction.DELETE, entity: {id, name}}}).afterClosed(),
+    );
+    if (confirmed !== true) return;
+    try {
+      await this.library.remove(id);
+    } catch {
+      return; // The Organ is still stored: stay here; the library reports the storage problem.
+    }
+    this.deleted = true;
+    await this.router.navigate(['/organs']);
   }
 
   private touch(path: string): void {

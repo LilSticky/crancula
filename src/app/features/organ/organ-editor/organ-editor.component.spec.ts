@@ -2,7 +2,10 @@ import type {CdkDragDrop} from '@angular/cdk/drag-drop';
 import {CdkDropList} from '@angular/cdk/drag-drop';
 import {TestBed} from '@angular/core/testing';
 import {By} from '@angular/platform-browser';
+import {MatDialog} from '@angular/material/dialog';
 import {provideRouter, Router} from '@angular/router';
+import {type Observable, of} from 'rxjs';
+import {ConfirmableAction, ConfirmDialogComponent} from '../../shared/components/confirm-dialog/confirm-dialog.component';
 import {provideTestTranslations} from '../../../../testing/test-translations';
 import {testOrgan} from '../../../../testing/organs';
 import {OrganLibrary} from '../organ-library.store';
@@ -334,6 +337,69 @@ describe('OrganEditorComponent', () => {
       expect(pipeRows()).toHaveLength(2);
       expect(notesInRows()).toEqual(expected);
       expect(storedNotes()).toEqual(expected);
+    });
+  });
+
+  describe('deleting the Organ', () => {
+    async function openWithDialog(confirmed: boolean) {
+      const dialog = vi.fn<(component: unknown, config: unknown) => {afterClosed: () => Observable<boolean>}>(() => ({afterClosed: () => of(confirmed)}));
+      TestBed.configureTestingModule({
+        providers: [provideRouter([]), provideTestTranslations(), {provide: MatDialog, useValue: {open: dialog}}],
+      });
+      const library = TestBed.inject(OrganLibrary);
+      const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+      const organ = testOrgan('Street organ', 2);
+      await library.put(organ);
+      const editor = await open(organ.id);
+      navigate.mockClear();
+      await editor.click('delete-organ');
+      return {library, navigate, organ, dialog};
+    }
+
+    it('opens the confirm dialog for deleting the Organ', async () => {
+      const {dialog, organ} = await openWithDialog(false);
+
+      expect(dialog.mock.calls[0]?.[0]).toBe(ConfirmDialogComponent);
+      expect(dialog.mock.calls[0]?.[1]).toMatchObject({
+        data: {action: ConfirmableAction.DELETE, entity: {id: organ.id, name: 'Street organ'}},
+      });
+    });
+
+    it('removes the Organ and goes to the Organ list when confirmed', async () => {
+      const {library, navigate} = await openWithDialog(true);
+
+      expect(library.entities()).toEqual([]);
+      expect(navigate).toHaveBeenCalledWith(['/organs']);
+    });
+
+    it('does not navigate and keeps asking before leaving invalid changes when removing fails', async () => {
+      const dialog = vi.fn<(component: unknown, config: unknown) => {afterClosed: () => Observable<boolean>}>(() => ({
+        afterClosed: () => of(true),
+      }));
+      TestBed.configureTestingModule({
+        providers: [provideRouter([]), provideTestTranslations(), {provide: MatDialog, useValue: {open: dialog}}],
+      });
+      const library = TestBed.inject(OrganLibrary);
+      const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+      const organ = testOrgan('Street organ', 2);
+      await library.put(organ);
+      const {fixture, field, type, click} = await open(organ.id);
+      await type(field('name'), '');
+      expect(fixture.componentInstance.hasInvalidDraft()).toBe(true);
+      vi.spyOn(library, 'remove').mockRejectedValue(new Error('disk full'));
+      navigate.mockClear();
+
+      await click('delete-organ');
+
+      expect(navigate).not.toHaveBeenCalled();
+      expect(fixture.componentInstance.hasInvalidDraft()).toBe(true);
+    });
+
+    it('keeps the Organ and stays in the editor when cancelled', async () => {
+      const {library, navigate, organ} = await openWithDialog(false);
+
+      expect(library.entities().map(({id}) => id)).toEqual([organ.id]);
+      expect(navigate).not.toHaveBeenCalled();
     });
   });
 

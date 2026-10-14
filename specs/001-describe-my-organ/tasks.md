@@ -342,9 +342,9 @@ restart and check; then delete with cancel and with confirm.
   - leaving with an invalid draft opens the confirm dialog;
   - **cancel** stays on the page;
   - **confirm** leaves, and the last stored version is unchanged.
-- [ ] T031 [P] [US4] Extend the list spec: "delete" opens the confirm dialog; cancel changes
+- [x] T031 [P] [US4] Extend the list spec: "delete" opens the confirm dialog; cancel changes
   nothing; confirm calls `OrganLibrary.remove`.
-- [ ] T032 [P] [US4] Write the e2e test `e2e/organ-edit.spec.ts`:
+- [x] T032 [P] [US4] Write the e2e test `e2e/organ-edit.spec.ts`:
   - reorder and remove Pipes, then restart, and the order is kept;
   - delete an Organ, then restart, and it is gone.
 
@@ -355,7 +355,7 @@ restart and check; then delete with cancel and with confirm.
 - [x] T034 [US4] Implement `src/app/features/organ/leave-invalid.guard.ts` (`CanDeactivateFn`),
   reusing `src/app/features/shared/components/confirm-dialog/`, and wire it into
   `src/app/features/organ/routes.ts`.
-- [ ] T035 [US4] Add delete with a confirm dialog to the Organ list and the editor, then navigate
+- [x] T035 [US4] Add delete with a confirm dialog to the Organ list and the editor, then navigate
   to `/organs`. Add the i18n keys to `en.json` and `de.json`.
 
 **Checkpoint**: US1 to US4 green.

@@ -59,7 +59,8 @@
       "TITLE": "Organs",
       "EMPTY": "No Organs yet.",
       "NEW": "New Organ",
-      "PIPE_COUNT": "{{count}} Pipes"
+      "PIPE_COUNT": "{{count}} Pipes",
+      "DELETE": "Delete Organ {{name}}"
     },
     "EDITOR": {
       "TITLE_NEW": "New Organ",
@@ -80,7 +81,8 @@
       "MOVE_PIPE_UP": "Move Pipe up",
       "MOVE_PIPE_DOWN": "Move Pipe down",
       "REMOVE_PIPE": "Remove Pipe",
-      "DRAG_PIPE": "Drag Pipe to another row"
+      "DRAG_PIPE": "Drag Pipe to another row",
+      "DELETE": "Delete Organ"
     },
     "VIOLATION": {
       "NAME_REQUIRED": "Please enter a name.",
