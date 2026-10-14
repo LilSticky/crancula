@@ -401,7 +401,7 @@ translation key.
   changed files.
 - [x] T041 ~~Run the [quickstart](quickstart.md) walkthrough in Electron~~. Replaced by the e2e
   suite in CI on Linux, Windows and macOS (ADR 13, 2026-10-14).
-- [ ] T042 Run the Definition of Done gate: `npm run lint`, `npm run test`, `npm run build`,
+- [x] T042 Run the Definition of Done gate: `npm run lint`, `npm run test`, `npm run build`,
   `npm run e2e`. Then:
   - update `documentation/STATUS.md`: clear the fixed "Known broken" items;
   - set "Describe my organ" to `done` in `documentation/ROADMAP.md`;
@@ -436,7 +436,7 @@ translation key.
 - [x] T046 [US4] Implement `leave-unsaved.guard.ts` and a `LeaveUnsavedDialogComponent` (Material
   dialog, "Stay and fix"/"Stay" default focus, "Discard changes" warn). Wire it into
   `routes.ts`, and add the i18n keys to `en.json` and `de.json`.
-- [ ] T047 [US1] Update the e2e tests that create or edit Organs (`organ-define`, `organ-edit`,
+- [x] T047 [US1] Update the e2e tests that create or edit Organs (`organ-define`, `organ-edit`,
   `organ-restart`, `organ-german`, `e2e/support/organ-editor.ts`) to press Save, and add a
   scenario: leaving with invalid changes shows the listed problems.
 
