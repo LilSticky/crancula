@@ -140,7 +140,7 @@ the `tapes:*` IPC boundary and the `TapeLibrary` store. Every user story needs t
 
 ### Tape domain (`api/tape/`, Node Vitest)
 
-- [ ] T010 [P] Write the failing test `api/tape/tape.spec.ts` (data-model.md "Value types",
+- [x] T010 [P] Write the failing test `api/tape/tape.spec.ts` (data-model.md "Value types",
   "Hole", "Tape"):
   - `tapeId(value)`: `TapeId` is a branded "UUID".
   - `Column`: "integer ≥ 0; a position on the Tape, counted from 0 at the Tape's start, the first
@@ -150,7 +150,7 @@ the `tapes:*` IPC boundary and the `TapeLibrary` store. Every user story needs t
   - `tapeLengthInMillimetres(tape)` = "`length × columnLength` (FR-017)".
   - `removeHolesOfPipes(tape, pipes)` removes exactly the Holes whose `pipe` is in `pipes` and
     "Keeps everything else, including `length`; the result may have no Hole" (FR-021).
-- [ ] T011 Implement `api/tape/tape.ts` (types, `tapeId`, `tapeLengthInMillimetres`,
+- [x] T011 Implement `api/tape/tape.ts` (types, `tapeId`, `tapeLengthInMillimetres`,
   `removeHolesOfPipes`, internal brand helpers) until T010 is green. The `Tape` type is branded
   like `Organ`, so only `createTape` and the snapshot parser can build one. Depends on T005, T010.
 - [ ] T012 [P] Write the failing test `api/tape/quantisation.spec.ts` with the worked examples of
