@@ -11,7 +11,7 @@ States: `planned` · `in progress` · `done`
 | Slice | Lets the user… | Domain | Adapters | State |
 |-------|----------------|--------|----------|-------|
 | Foundation | rely on a written process | constitution, dictionary, ADRs | – | done |
-| Describe my organ | define an Organ: Pipes (MIDI note numbers), Tape Bed, Minimum Hole Length, Minimum Gap | Organ | Angular form, snapshot persistence over IPC | planned |
+| Describe my organ | define an Organ: Pipes (MIDI note numbers), Tape Bed, Minimum Hole Length, Minimum Gap | Organ | Angular form, snapshot persistence over IPC | done |
 | Bring a song onto a tape | import a MIDI Song Source onto a Tape for an Organ, with automatic Transposition to fit the Pipes | Tape, Song | MIDI import, snapshot persistence | planned |
 | Punch a tape | export a Tape as an SVG in mm for a vinyl cutter | Tape | SVG export | planned |
 

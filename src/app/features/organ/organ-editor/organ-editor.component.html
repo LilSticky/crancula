@@ -1,0 +1,129 @@
+<div class="organ-editor">
+  <h2>{{ (id() ? 'ORGAN.EDITOR.TITLE' : 'ORGAN.EDITOR.TITLE_NEW') | translate }}</h2>
+
+  <mat-form-field>
+    <mat-label>{{ 'ORGAN.EDITOR.NAME' | translate }}</mat-label>
+    <input matInput #name data-testid="name" [value]="displayed().name" (input)="setName(name.value)"
+           [crancErrorState]="violationsAt('name').length > 0"/>
+    <ng-container ngProjectAs="mat-error">
+      @for (violation of violationsAt('name'); track violation.key) {
+        <mat-error data-testid="violation" data-path="name">{{ violation.key | translate: violation.params }}</mat-error>
+      }
+    </ng-container>
+  </mat-form-field>
+
+  <h3>{{ 'ORGAN.EDITOR.TAPE_BED' | translate }}</h3>
+  <mat-form-field>
+    <mat-label>{{ 'ORGAN.EDITOR.TAPE_WIDTH' | translate }}</mat-label>
+    <input matInput #tapeWidth type="number" data-testid="tape-width"
+           [value]="displayed().tapeBed.tapeWidth ?? ''" (input)="setTapeBed('tapeWidth', tapeWidth.value)"
+           [crancErrorState]="violationsAt('tapeBed.tapeWidth').length > 0"/>
+    <ng-container ngProjectAs="mat-error">
+      @for (violation of violationsAt('tapeBed.tapeWidth'); track violation.key) {
+        <mat-error data-testid="violation" data-path="tapeBed.tapeWidth">{{ violation.key | translate: violation.params }}</mat-error>
+      }
+    </ng-container>
+  </mat-form-field>
+  <mat-form-field>
+    <mat-label>{{ 'ORGAN.EDITOR.BORDER' | translate }}</mat-label>
+    <input matInput #border type="number" data-testid="border"
+           [value]="displayed().tapeBed.border ?? ''" (input)="setTapeBed('border', border.value)"
+           [crancErrorState]="violationsAt('tapeBed.border').length > 0"/>
+    <ng-container ngProjectAs="mat-error">
+      @for (violation of violationsAt('tapeBed.border'); track violation.key) {
+        <mat-error data-testid="violation" data-path="tapeBed.border">{{ violation.key | translate: violation.params }}</mat-error>
+      }
+    </ng-container>
+  </mat-form-field>
+  <mat-form-field>
+    <mat-label>{{ 'ORGAN.EDITOR.HOLE_DIAMETER' | translate }}</mat-label>
+    <input matInput #holeDiameter type="number" data-testid="hole-diameter"
+           [value]="displayed().tapeBed.holeDiameter ?? ''" (input)="setTapeBed('holeDiameter', holeDiameter.value)"
+           [crancErrorState]="violationsAt('tapeBed.holeDiameter').length > 0"/>
+    <ng-container ngProjectAs="mat-error">
+      @for (violation of violationsAt('tapeBed.holeDiameter'); track violation.key) {
+        <mat-error data-testid="violation" data-path="tapeBed.holeDiameter">{{ violation.key | translate: violation.params }}</mat-error>
+      }
+    </ng-container>
+  </mat-form-field>
+  <mat-form-field>
+    <mat-label>{{ 'ORGAN.EDITOR.ROW_SPACING' | translate }}</mat-label>
+    <input matInput #rowSpacing type="number" data-testid="row-spacing"
+           [value]="displayed().tapeBed.rowSpacing ?? ''" (input)="setTapeBed('rowSpacing', rowSpacing.value)"
+           [crancErrorState]="violationsAt('tapeBed.rowSpacing').length > 0"/>
+    <ng-container ngProjectAs="mat-error">
+      @for (violation of violationsAt('tapeBed.rowSpacing'); track violation.key) {
+        <mat-error data-testid="violation" data-path="tapeBed.rowSpacing">{{ violation.key | translate: violation.params }}</mat-error>
+      }
+    </ng-container>
+  </mat-form-field>
+  <mat-form-field>
+    <mat-label>{{ 'ORGAN.EDITOR.MINIMUM_GAP' | translate }}</mat-label>
+    <input matInput #minimumGap type="number" data-testid="minimum-gap"
+           [value]="displayed().minimumGap ?? ''" (input)="setMinimumGap(minimumGap.value)"
+           [crancErrorState]="violationsAt('minimumGap').length > 0"/>
+    <ng-container ngProjectAs="mat-error">
+      @for (violation of violationsAt('minimumGap'); track violation.key) {
+        <mat-error data-testid="violation" data-path="minimumGap">{{ violation.key | translate: violation.params }}</mat-error>
+      }
+    </ng-container>
+  </mat-form-field>
+  <mat-form-field>
+    <mat-label>{{ 'ORGAN.EDITOR.MINIMUM_HOLE_LENGTH' | translate }}</mat-label>
+    <input matInput readonly data-testid="minimum-hole-length" [value]="minimumHoleLength()"/>
+    <mat-hint>{{ 'ORGAN.EDITOR.MINIMUM_HOLE_LENGTH_HINT' | translate }}</mat-hint>
+  </mat-form-field>
+
+  <h3>{{ 'ORGAN.EDITOR.PIPES' | translate }}</h3>
+  @for (violation of violationsAt('pipes'); track violation.key) {
+    <p class="violation" data-testid="violation" data-path="pipes">{{ violation.key | translate: violation.params }}</p>
+  }
+  <div cdkDropList (cdkDropListDropped)="dropPipe($event)">
+    @for (pipe of displayed().pipes; track $index; let row = $index; let first = $first; let last = $last) {
+      <div class="pipe" data-testid="pipe" cdkDrag>
+        <mat-icon cdkDragHandle class="drag-handle" [attr.aria-label]="'ORGAN.EDITOR.DRAG_PIPE' | translate">drag_indicator</mat-icon>
+        <span>{{ 'ORGAN.EDITOR.ROW' | translate: {row: row + 1} }}</span>
+        <mat-form-field>
+          <mat-label>{{ 'ORGAN.EDITOR.PIPE_NOTE' | translate }}</mat-label>
+          <input matInput #note type="number" data-testid="pipe-note"
+                 [value]="pipe.note ?? ''" (input)="setPipeNote(row, note.value)"
+                 [crancErrorState]="violationsAt('pipes.' + row + '.note').length > 0"/>
+          <ng-container ngProjectAs="mat-error">
+            @for (violation of violationsAt('pipes.' + row + '.note'); track violation.key) {
+              <mat-error data-testid="violation" [attr.data-path]="'pipes.' + row + '.note'">{{ violation.key | translate: violation.params }}</mat-error>
+            }
+          </ng-container>
+        </mat-form-field>
+        <span data-testid="pipe-note-name">{{ noteNames()[row] }}</span>
+        <button matIconButton type="button" data-testid="move-up" [disabled]="first"
+                [attr.aria-label]="'ORGAN.EDITOR.MOVE_PIPE_UP' | translate" (click)="movePipe(row, row - 1)">
+          <mat-icon>arrow_upward</mat-icon>
+        </button>
+        <button matIconButton type="button" data-testid="move-down" [disabled]="last"
+                [attr.aria-label]="'ORGAN.EDITOR.MOVE_PIPE_DOWN' | translate" (click)="movePipe(row, row + 1)">
+          <mat-icon>arrow_downward</mat-icon>
+        </button>
+        <button matIconButton type="button" data-testid="remove-pipe"
+                [attr.aria-label]="'ORGAN.EDITOR.REMOVE_PIPE' | translate" (click)="removePipe(row)">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </div>
+    }
+  </div>
+  <div>
+    <button matButton="tonal" type="button" data-testid="add-pipe" (click)="addPipe()">
+      <mat-icon>add</mat-icon>
+      {{ 'ORGAN.EDITOR.ADD_PIPE' | translate }}
+    </button>
+  </div>
+  <div>
+    <button matButton="filled" type="button" data-testid="save-organ" [disabled]="!canSave()" (click)="save()">
+      <mat-icon>save</mat-icon>
+      {{ 'ORGAN.EDITOR.SAVE' | translate }}
+    </button>
+    <button matButton="outlined" type="button" data-testid="delete-organ" (click)="deleteOrgan()">
+      <mat-icon>delete</mat-icon>
+      {{ 'ORGAN.EDITOR.DELETE' | translate }}
+    </button>
+  </div>
+</div>

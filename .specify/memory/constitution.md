@@ -96,7 +96,8 @@ Rationale: frequent, visible progress keeps momentum.
 - Agents work mostly autonomously. They MUST ask the user only for domain questions,
   dictionary changes and decisions that change scope.
 - A slice is Done only when ALL of these hold (the gate):
-  1. It runs end to end in the Electron app.
+  1. It runs end to end in the Electron app: the e2e suite passes in CI on Linux, Windows and
+     macOS (ADR 13).
   2. Unit, component and e2e tests and lint are green.
   3. STATUS, ROADMAP, DICTIONARY and any affected ADRs are updated.
   4. It is committed on the slice branch and merged into `main` through a pull request that
@@ -114,4 +115,4 @@ Rationale: frequent, visible progress keeps momentum.
 - Every spec, plan and implementation MUST be checked against these principles (the Constitution
   Check in `/speckit-plan`); any deviation MUST be justified in the plan or rejected.
 
-**Version**: 1.1.0 | **Ratified**: 2026-10-13 | **Last Amended**: 2026-10-14
+**Version**: 1.1.1 | **Ratified**: 2026-10-13 | **Last Amended**: 2026-10-14
