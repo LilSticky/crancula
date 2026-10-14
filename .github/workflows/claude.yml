@@ -1,6 +1,6 @@
 name: Claude
 
-# ADR 14: `@claude` in an issue, pull request or review comment starts Claude Code with the
+# ADR 15: `@claude` in an issue, pull request or review comment starts Claude Code with the
 # repository's agents, skills and hooks. Only users with write access can trigger it.
 on:
   issue_comment:

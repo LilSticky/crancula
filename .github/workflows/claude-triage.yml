@@ -1,6 +1,6 @@
 name: Issue triage
 
-# ADR 14: Claude triages every issue that carries the `triage` label. Issue forms add the label;
+# ADR 15: Claude triages every issue that carries the `triage` label. Issue forms add the label;
 # add it by hand to triage an issue again. The `triage` skill does the work and removes the label.
 on:
   issues:

@@ -50,7 +50,7 @@ step**, known broken/WIP items, and open questions. Then read only what that ste
   file if needed. Commits are authored as `LilSticky <58908604+LilSticky@users.noreply.github.com>`,
   set per repository (`git config user.name` / `user.email`) on every machine, so that a work
   identity in the global Git config never reaches the public history.
-- **Tickets** (ADR 14): GitHub Issues are the ticket system. Issue forms add `triage`; the Claude
+- **Tickets** (ADR 15): GitHub Issues are the ticket system. Issue forms add `triage`; the Claude
   triage Action labels the issue, flags `duplicate` and `needs-info`, and comments. Run `/triage`
   locally to triage what the Action missed. Take work from triaged issues without `needs-info`;
   `@claude` in an issue or pull request runs the harness in GitHub Actions.

@@ -1,11 +1,11 @@
 ---
 name: triage
-description: Triage GitHub issues of LilSticky/crancula — set the type label, flag likely duplicates and missing information, check wording against documentation/DICTIONARY.md, and post one short triage comment. Use with an issue number (`/triage 42`), or without one to triage every open issue labelled `triage`. Runs in the Claude triage GitHub Action (ADR 14) and from local sessions.
+description: Triage GitHub issues of LilSticky/crancula — set the type label, flag likely duplicates and missing information, check wording against documentation/DICTIONARY.md, and post one short triage comment. Use with an issue number (`/triage 42`), or without one to triage every open issue labelled `triage`. Runs in the Claude triage GitHub Action (ADR 15) and from local sessions.
 ---
 
 # Triage
 
-Issues are the ticketing system (ADR 10, ADR 14). Triage makes a new issue ready for an agent to
+Issues are the ticketing system (ADR 10, ADR 15). Triage makes a new issue ready for an agent to
 pick up. It labels and comments; it **never** closes an issue, edits its title or body, assigns
 people, or changes code.
 
