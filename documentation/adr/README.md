@@ -21,3 +21,4 @@ with a new one and update both statuses here.
 | 13 | [End-to-end tests in CI replace the manual walkthrough](0013-e2e-in-ci-replaces-manual-walkthrough.md) | Accepted |
 | 14 | [Stay on current major versions with Dependabot](0014-current-major-versions-with-dependabot.md) | Accepted |
 | 15 | [Issue triage with the Claude GitHub Action](0015-issue-triage-with-claude-action.md) | Accepted |
+| 16 | [Dependabot pull requests merge themselves](0016-dependabot-pull-requests-merge-themselves.md) | Accepted |
