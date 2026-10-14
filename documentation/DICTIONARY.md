@@ -8,12 +8,14 @@
   * holes in tape control airflow
   * airflow reaches selected pipes
   * those pipes produce a note
+* German: Drehorgel
 
 # Pipe
 * Can play one musical note
 * Identified by the MIDI note number of the note it plays
 * Part of Organ
 * On Tape represented by one row
+* German: Pfeife
 
 # Tape
 * Represents a song to a specific barrel organ
@@ -62,6 +64,7 @@
 # Tape Bed
 * The surface in the Organ the Tape runs over while being played
 * Defines tape width, border, hole diameter and spacing between rows
+* German: Bandbett; its spacing between rows: Reihenabstand
 
 # Song Source
 * The material a Song is imported from: MIDI, MusicXML, PDF or printed Scores
@@ -76,9 +79,11 @@
 * Equals the hole diameter of the Tape Bed; not set separately
 * Together with the Crank speed it gives the shortest note duration
 * Limits a Hole's length, not where it starts: a Hole's start can be shifted by less than this length
+* German: Mindestlochlänge
 
 # Minimum Gap
 * Shortest space in mm between two Holes in the same row the Organ can separate; a hard physical limit
+* German: Mindestabstand
 
 # Crank
 * Turned by the musician to draw the Tape through the Organ

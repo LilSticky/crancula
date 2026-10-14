@@ -41,8 +41,6 @@ Changes from the plan:
   - Polish (T039–T042).
 - **ConfirmDialogComponent** (`src/app/features/shared/components/confirm-dialog/`) has hard-coded
   English texts ("Confirm Action", "Cancel", "Confirm") and no i18n keys. Fix with User Story 5 or T039.
-- **German texts to review:** the German UI terms are first guesses: "Drehorgel", "Pfeife",
-  "Bandbett" (Tape Bed), "Reihenabstand", "Mindestabstand", "Mindestlochlänge".
 - **`npm run i18n:check`:** lists the dynamic `ORGAN.VIOLATION.*` keys and the old prototype keys
   as unused. T039 cleans up the old keys.
 
