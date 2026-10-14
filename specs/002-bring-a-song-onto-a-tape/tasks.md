@@ -403,13 +403,13 @@ and restart again.
   cancel changes neither the Organ nor its Tapes; reordering or adding Pipes asks nothing; while
   the Tapes can't be read, saving with removed Pipes is refused with a message and other changes
   still save.
-- [ ] T054 [P] [US2] Write the e2e test `e2e/tape-restart.spec.ts`: create a Tape, relaunch with
+- [x] T054 [P] [US2] Write the e2e test `e2e/tape-restart.spec.ts`: create a Tape, relaunch with
   the same `CRANCULA_USER_DATA`, the Tape is listed with identical Holes, Column length,
   Transposition and Organ (read from `snapshots/tapes.json`, SC-005); remove with cancel, then
   confirm, then restart, it is gone; write `{oops` to `tapes.json`, launch, see the message, the
   Organs work, `tapes.unreadable-*.json` contains exactly `{oops` (SC-007); with an unreadable
   `organs.json`, the Tapes are listed, can't be opened and `tapes.json` is unchanged (FR-023).
-- [ ] T055 [P] [US2] Write the e2e test `e2e/tape-organ-changes.spec.ts`: delete an Organ with
+- [x] T055 [P] [US2] Write the e2e test `e2e/tape-organ-changes.spec.ts`: delete an Organ with
   two Tapes, the confirmation names 2 Tapes, both are gone after a restart; remove a Pipe that
   has 5 Holes on 2 Tapes, the question names 2 Tapes and 5 Holes, after confirming and restarting
   those Holes are gone and both Tapes keep their name, other Holes and length in Columns.
@@ -425,7 +425,7 @@ and restart again.
   `src/app/features/organ/organ-list/organ-list.component.ts` until T052 is green.
 - [x] T059 [US2] Implement the removed-Pipes question and cascade in
   `src/app/features/organ/organ-editor/organ-editor.component.ts` until T053 is green.
-- [ ] T060 [US2] Add the `TAPE.LIST.*`, `TAPE.STORAGE.*` and the new `ORGAN.*` cascade keys to
+- [x] T060 [US2] Add the `TAPE.LIST.*`, `TAPE.STORAGE.*` and the new `ORGAN.*` cascade keys to
   `en.json` and `de.json`; T054 and T055 are green. Depends on T056–T059.
 
 **Checkpoint**: The P1 stories are complete. This is the MVP of the slice: bring a Song onto a

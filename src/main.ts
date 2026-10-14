@@ -11,6 +11,7 @@ import {provideTranslateService} from '@ngx-translate/core';
 import {provideTranslateHttpLoader} from '@ngx-translate/http-loader';
 import {routes} from "./app.routes";
 import {provideOrganLibrary} from "./app/features/organ/organ-library.store";
+import {provideTapeLibrary} from "./app/features/tape/tape-library.store";
 
 if (APP_CONFIG.production) {
   enableProdMode();
@@ -30,6 +31,7 @@ bootstrapApplication(AppComponent, {
     }),
     provideRouter(routes, withComponentInputBinding()),
     provideOrganLibrary(),
+    provideTapeLibrary(),
     importProvidersFrom(
       CoreModule,
       SharedModule

@@ -785,6 +785,81 @@ describe('OrganEditorComponent', () => {
     });
   });
 
+  describe('deleting the Organ that has Tapes', () => {
+    async function openAndDelete(options: {confirmed?: boolean; failures?: InMemoryCranculaApiFailures; unreadable?: boolean} = {}) {
+      const organ = testOrgan('Street organ', 3);
+      const first = tapeFor(organ, 'First', [60, 62]);
+      const second = tapeFor(organ, 'Second', [62, 64]);
+      const snapshot = toTapeLibrarySnapshot([first.tape, second.tape], [first.song, second.song]);
+      const failures: InMemoryCranculaApiFailures = options.unreadable ? {tapes: {load: 'unreadable'}} : (options.failures ?? {});
+      const dialog = vi.fn<(component: unknown, config: unknown) => {afterClosed: () => Observable<boolean>}>(() => ({
+        afterClosed: () => of(options.confirmed === true),
+      }));
+      TestBed.configureTestingModule({
+        providers: [
+          provideRouter([]),
+          provideTestTranslations(),
+          {provide: CRANCULA_API, useValue: createInMemoryCranculaApi(undefined, snapshot, failures)},
+          {provide: MatDialog, useValue: {open: dialog}},
+        ],
+      });
+      const library = TestBed.inject(OrganLibrary);
+      const tapes = TestBed.inject(TapeLibrary);
+      await tapes.load();
+      await library.put(organ);
+      const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+      const snackBarOpen = vi.spyOn(TestBed.inject(MatSnackBar), 'open');
+      const editor = await open(organ.id);
+      navigate.mockClear();
+      await editor.click('delete-organ');
+      return {organ, library, tapes, dialog, navigate, snackBarOpen};
+    }
+
+    it('names the number of the Organ\'s Tapes in the confirmation', async () => {
+      const {dialog, organ} = await openAndDelete();
+
+      expect(dialog).toHaveBeenCalledTimes(1);
+      expect(dialog.mock.calls[0]?.[1]).toMatchObject({
+        data: {
+          action: ConfirmableAction.DELETE,
+          entity: {id: organ.id, name: 'Street organ'},
+          consequence: {params: {count: 2}},
+        },
+      });
+    });
+
+    it('removes the Organ\'s Tapes and then the Organ when confirmed', async () => {
+      const {library, tapes, navigate} = await openAndDelete({confirmed: true});
+
+      expect(tapes.tapeEntities()).toEqual([]);
+      expect(library.entities()).toEqual([]);
+      expect(navigate).toHaveBeenCalledWith(['/organs']);
+    });
+
+    it('keeps the Organ and its Tapes when cancelled', async () => {
+      const {organ, library, tapes} = await openAndDelete({confirmed: false});
+
+      expect(tapes.tapeEntities()).toHaveLength(2);
+      expect(library.entities().map(({id}) => id)).toEqual([organ.id]);
+    });
+
+    it('keeps the Organ when removing its Tapes could not be written', async () => {
+      const {organ, library, navigate} = await openAndDelete({confirmed: true, failures: {tapes: {save: 'failed'}}});
+
+      expect(library.entities().map(({id}) => id)).toEqual([organ.id]);
+      expect(navigate).not.toHaveBeenCalled();
+    });
+
+    it('refuses to delete while the Tapes could not be read, with a message and no change', async () => {
+      const {organ, library, dialog, snackBarOpen, navigate} = await openAndDelete({confirmed: true, unreadable: true});
+
+      expect(dialog).not.toHaveBeenCalled();
+      expect(snackBarOpen).toHaveBeenCalledTimes(1);
+      expect(library.entities().map(({id}) => id)).toEqual([organ.id]);
+      expect(navigate).not.toHaveBeenCalled();
+    });
+  });
+
   describe('saving with removed Pipes that have Holes', () => {
     /** An Organ with the Pipes 60, 62, 64, 66, and two Tapes on it: 3 Holes on 60, 62, 64 and 2 Holes on 60, 62. */
     async function openWithTapes(options: {confirmed?: boolean; failures?: InMemoryCranculaApiFailures; unreadable?: boolean} = {}) {

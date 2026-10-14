@@ -26,6 +26,7 @@ import {
 import {ConfirmableAction, ConfirmDialogComponent} from '../../shared/components/confirm-dialog/confirm-dialog.component';
 import type {LeaveProblem, TranslatableText, UnsavedChanges, UnsavedChangesCheck} from '../leave-unsaved.guard';
 import {TapeLibrary} from '../../tape/tape-library.store';
+import {OrganDeletion} from '../organ-deletion';
 import {OrganLibrary} from '../organ-library.store';
 import {type FieldProblem, organFormSchema, organProblems, shownMessages, ShownViolationMatcher} from './organ-form';
 
@@ -76,6 +77,7 @@ export class OrganEditorComponent implements UnsavedChangesCheck {
   private readonly router = inject(Router);
   private readonly dialog = inject(MatDialog);
   private readonly tapes = inject(TapeLibrary);
+  private readonly deletion = inject(OrganDeletion);
   private readonly snackBar = inject(MatSnackBar);
   private readonly translate = inject(TranslateService);
   private deleted = false;
@@ -192,16 +194,7 @@ export class OrganEditorComponent implements UnsavedChangesCheck {
 
   protected async deleteOrgan(): Promise<void> {
     const {id, name} = this.draft();
-    if (!id) return;
-    const confirmed = await firstValueFrom(
-      this.dialog.open(ConfirmDialogComponent, {data: {action: ConfirmableAction.DELETE, entity: {id, name}}}).afterClosed(),
-    );
-    if (confirmed !== true) return;
-    try {
-      await this.library.remove(id);
-    } catch {
-      return; // The Organ is still stored: stay here; the library reports the storage problem.
-    }
+    if (!id || !(await this.deletion.confirmAndDelete({id, name}))) return;
     this.deleted = true;
     await this.router.navigate(['/organs']);
   }
