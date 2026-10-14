@@ -14,6 +14,7 @@ Custom agents, skills and setup still to build for the spec-, test- and domain-d
 - [x] `spec-auditor` - after `/speckit-implement`, compares code and tests against `spec.md` acceptance criteria and reports gaps
 - [x] `implementer` - TDD green and refactor phase for one task (sonnet)
 - [x] `housekeeper` - STATUS/ROADMAP upkeep, GitHub Issues and board, i18n parity (haiku)
+- [x] `ux-designer` - one design variant per run (guide, `mat.theme`, HTML mockup, self-review); preloads `frontend-design` and `ux-review`; run several in parallel (opus, [#12](https://github.com/LilSticky/crancula/issues/12))
 
 ## Skills (`.claude/skills/`)
 - [x] `i18n-parity` - check and fix en/de translation keys
@@ -21,6 +22,7 @@ Custom agents, skills and setup still to build for the spec-, test- and domain-d
 - [x] `adr` - create, supersede and look up Nygard ADRs in `documentation/adr/` and keep the index in sync
 - [x] `tdd` - red/green/refactor loop; documents the guard hooks
 - [x] `release` - version, `CHANGELOG.md`, release pull request, tag, publish (ADR 19); adapted from github/awesome-copilot `github-release`
+- [x] `ux-review` - heuristic UX review with a fixed 10-point rubric (max 50) of the app (`npm run ux:screens`) or an HTML mockup, so design variants compare ([#12](https://github.com/LilSticky/crancula/issues/12))
 - [x] Remove the deprecated `speckit-taskstoissues` skill; `speckit-github-taskstoissues` replaces it. A Spec Kit upgrade may bring it back; delete it again ([#37](https://github.com/LilSticky/crancula/issues/37))
 
 ## Hooks
