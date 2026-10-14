@@ -56,3 +56,6 @@ Thumbs.db
 
 # Spec Kit extension catalog cache
 /.specify/extensions/.cache
+
+# Vitest 5 reports (coverage, UI)
+/.vitest
