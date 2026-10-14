@@ -16,10 +16,15 @@ export interface LaunchedApp {
  */
 export async function launchApp(userDataDir?: string): Promise<LaunchedApp> {
   const dir = userDataDir ?? (await mkdtemp(join(tmpdir(), 'crancula-e2e-')));
-  const headless = process.env['HEADED'] === '1' ? {} : {CRANCULA_HEADLESS: '1'};
+  const env: Record<string, string> = {};
+  for (const [name, value] of Object.entries(process.env)) {
+    if (value !== undefined) env[name] = value;
+  }
+  env['CRANCULA_USER_DATA'] = dir;
+  if (process.env['HEADED'] !== '1') env['CRANCULA_HEADLESS'] = '1';
   const app = await electron.launch({
     args: [join(__dirname, '../../app/main.js')],
-    env: {...process.env, CRANCULA_USER_DATA: dir, ...headless},
+    env,
   });
   const window = await app.firstWindow();
   await window.waitForLoadState('domcontentloaded');

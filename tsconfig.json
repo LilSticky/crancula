@@ -16,10 +16,9 @@
       "node_modules/@types"
     ],
     "useDefineForClassFields": false,
-    "baseUrl": "./",
     "paths": {
-      "@api/*": ["api/*"],
-      "@shared/*": ["src/app/features/shared/*"]
+      "@api/*": ["./api/*"],
+      "@shared/*": ["./src/app/features/shared/*"]
     },
   },
   "exclude": [

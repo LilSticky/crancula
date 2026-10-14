@@ -80,7 +80,8 @@ Rationale: frequent, visible progress keeps momentum.
 
 ## Product & Technical Constraints
 
-- Platform: Electron desktop app with Angular 21, built with the Angular application builder.
+- Platform: Electron desktop app with Angular, built with the Angular application builder. The
+  stack stays on current major versions (ADR 14).
 - UI: Angular Material with minimal SCSS customizations; signals and signal forms preferred.
 - i18n: every translation key MUST exist in both `en.json` and `de.json`.
 - Releases: cross-platform (Windows, macOS, Linux) builds published as GitHub Releases and built
@@ -115,4 +116,4 @@ Rationale: frequent, visible progress keeps momentum.
 - Every spec, plan and implementation MUST be checked against these principles (the Constitution
   Check in `/speckit-plan`); any deviation MUST be justified in the plan or rejected.
 
-**Version**: 1.1.1 | **Ratified**: 2026-10-13 | **Last Amended**: 2026-10-14
+**Version**: 1.1.2 | **Ratified**: 2026-10-13 | **Last Amended**: 2026-10-14

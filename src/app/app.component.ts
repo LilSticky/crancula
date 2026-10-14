@@ -1,4 +1,4 @@
-import {Component, effect, inject} from '@angular/core';
+import {Component, effect, inject, untracked} from '@angular/core';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {RouterOutlet} from '@angular/router';
 import {TranslateService} from '@ngx-translate/core';
@@ -29,14 +29,15 @@ export class AppComponent {
   private readonly translate = inject(TranslateService);
 
   constructor() {
-    // Storage problems are reported to the user (spec FR-014, FR-015).
+    // Storage problems are reported to the user (spec FR-014, FR-015). Notifying is untracked: translating
+    // reads signals of the translate service, which must not re-run the effect and report a problem twice.
     effect(() => {
       const problem = this.library.loadProblem();
-      if (problem) void this.notify('ORGAN.STORAGE.LOAD_PROBLEM', {backupPath: problem.backupPath});
+      if (problem) untracked(() => void this.notify('ORGAN.STORAGE.LOAD_PROBLEM', {backupPath: problem.backupPath}));
     });
     effect(() => {
       const problem = this.library.saveProblem();
-      if (problem) void this.notify('ORGAN.STORAGE.SAVE_PROBLEM', {reason: problem.reason});
+      if (problem) untracked(() => void this.notify('ORGAN.STORAGE.SAVE_PROBLEM', {reason: problem.reason}));
     });
   }
 

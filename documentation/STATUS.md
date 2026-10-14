@@ -6,45 +6,34 @@ Issues: [GitHub](https://github.com/LilSticky/crancula/issues)
 
 ## Current slice
 
-**Describe my organ** is done on branch `001-describe-my-organ` and in review through a pull request
-(ADR 10). The spec is clarified: [spec.md](../specs/001-describe-my-organ/spec.md).
+**Bring a song onto a tape** ([#2](https://github.com/LilSticky/crancula/issues/2)) on branch
+`002-bring-a-song-onto-a-tape`: spec clarified, research and data model written (docs only, no code yet).
 
-All user stories 1–5 are done:
-- Define an Organ; invalid Organs are never stored and show their broken rules.
-- Survives a restart; an unreadable snapshot is reported and kept.
-- Change and remove an Organ, including delete with confirmation.
-- Reorder and remove Pipes in the editor; leaving an invalid changed draft asks for confirmation.
-- Switch between German and English, remembered between starts ([ADR 11](adr/0011-ui-preferences-in-local-storage.md)).
+**Done:** [Describe my organ](../specs/001-describe-my-organ/spec.md) (PR #15, 2026-10-14). Changes from
+the plan: plain signals instead of signal forms in the editor (research R6), Angular specs in jsdom
+([ADR 9](adr/0009-angular-specs-in-jsdom.md)), a small `crancErrorState` directive for error states.
 
-MVP review (Phase 9, T043–T051, 2026-10-14):
-- Explicit **Save** replaces autosave (FR-012); leaving with unsaved changes warns and lists broken
-  rules with their fields (FR-012a); a change counts as saved only after the write succeeded.
-- The application menu is translated and follows the language switch, also after restart (FR-016).
-- Main and preload are bundled with esbuild so the packaged app starts ([ADR 12](adr/0012-bundle-electron-main-and-preload.md)).
-  Before this, the packaged app crashed: it couldn't find `../api`.
+**Tech stack updated** (2026-10-14, [#13](https://github.com/LilSticky/crancula/issues/13),
+[ADR 14](adr/0014-current-major-versions-with-dependabot.md)): Angular 22, Material 22, NgRx Signals 22,
+ngx-translate 18, Electron 44, TypeScript 6, Vitest 5, Playwright 1.64, ESLint 10 flat config, Node 24;
+Dependabot opens weekly grouped updates. Migration fixes: ngx-translate 18 standalone `TranslatePipe`,
+`withXhr()` for the HTTP loader, TS 6 `paths` without `baseUrl`, `node16` modules for the main process,
+and a storage problem is reported once again (an effect re-ran on language changes). Local gate:
+lint, i18n, 130 node + 108 Angular tests and 16 e2e green.
 
-Changes from the plan:
-- **Editor:** plain signals instead of signal forms (research R6).
-- **Angular specs:** run in jsdom (ADR 9).
-- **Error states:** a small `crancErrorState` directive puts form fields into their error state.
+Other changes on 2026-10-14: README for organ owners and MIT license; punched-tape logo, favicon and
+app icon; splash for the portable Windows build; fonts ship with the app (#24).
 
-Local gate run on 2026-10-14: lint green, test 124 node + 104 Angular passed, i18n:check green,
-e2e 13 passed. The manual walkthrough (T041) is replaced by the e2e suite in CI on Linux, Windows
-and macOS (ADR 13, constitution 1.1.1).
+- Linux e2e timeouts are fixed: the hidden window stays opaque on Linux (`273b4df`). An intermittent
+  macOS failure (hidden window rendered 1 frame in 500 ms) is fixed by turning off background
+  throttling in headless runs (`f66eb98`). The e2e tsc error in `e2e/support/launch-app.ts` and the
+  IDE argument-count errors in `app/window-options.spec.ts` no longer reproduce (tsc clean, all
+  calls pass 4 arguments).
 
-README rewritten for organ owners (2026-10-14): punched-tape banner (`documentation/images/banner.svg`),
-roadmap checklist, glossary and build-from-source steps. The repository is now MIT-licensed (`LICENSE`).
-Logo (2026-10-14): a tile of tape with a punched C (`src/assets/icons/logo.svg`) replaces the
-Angular icons (favicon, ico, icns, png) and shows with the name as a home link in the navbar.
-The portable Windows build shows a splash in the same style while it unpacks (`src/assets/icons/electron.bmp`).
-
-**Next concrete step:** squash-merge [PR #15](https://github.com/LilSticky/crancula/pull/15) once CI,
-now including e2e, is green (T042). After that:
-- Rebase the tech-stack branch `chore/update-tech-stack` for [#13](https://github.com/LilSticky/crancula/issues/13)
-  (on another computer; the user pushes it today). Apply the Angular 22 signal-forms renames (`Field` →
-  `FormField`, `[field]` → `[formField]`) and revisit research R6. The rebase also has to account for
-  `scripts/bundle-electron.mjs` / `electron:bundle`, which replace `electron:serve-tsc`.
-- Then slice 002 "Bring a song onto a tape" ([#2](https://github.com/LilSticky/crancula/issues/2)).
+**Next concrete step:** rebase `refactor/organ-editor-signal-forms` (R6, Organ editor on signal forms,
+pushed and reviewed) onto `main`, open its PR (`Refs #13`) and merge it. Then rebase
+`002-bring-a-song-onto-a-tape` and run `/speckit-plan` for slice 002. Draft PR #26 (release workflow)
+waits for that.
 
 ## Known broken / WIP
 
