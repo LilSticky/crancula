@@ -20,7 +20,7 @@ Custom agents, skills and setup still to build for the spec-, test- and domain-d
 - [x] `dictionary` - add or rename a domain term in `documentation/DICTIONARY.md` and propagate it through the code
 - [x] `adr` - create, supersede and look up Nygard ADRs in `documentation/adr/` and keep the index in sync
 - [x] `tdd` - red/green/refactor loop; documents the guard hooks
-- [ ] Remove the deprecated `speckit-taskstoissues` skill; `speckit-github-taskstoissues` replaces it
+- [ ] Remove the deprecated `speckit-taskstoissues` skill; `speckit-github-taskstoissues` replaces it ([#37](https://github.com/LilSticky/crancula/issues/37))
 
 ## Hooks
 - [x] Run `npm run lint` and Vitest tests when a turn ends, so nothing is reported done while red (`.claude/hooks/tdd-guard.mjs stop`)
@@ -37,6 +37,6 @@ Custom agents, skills and setup still to build for the spec-, test- and domain-d
   `gh project item-list` returns stale items, so check membership with GraphQL (`issue.projectItems`)
 - [x] Claude GitHub Action: issue triage (`.github/workflows/claude-triage.yml`, `triage` skill) and `@claude` in issues
   and pull requests (`.github/workflows/claude.yml`), ADR 15
-- [ ] Secret `CLAUDE_CODE_OAUTH_TOKEN` (`claude setup-token`, then `gh secret set CLAUDE_CODE_OAUTH_TOKEN`) and the
-  Claude GitHub App (https://github.com/apps/claude) installed on the repository; user step
+- [x] Secret `CLAUDE_CODE_OAUTH_TOKEN` (`claude setup-token`, then `gh secret set CLAUDE_CODE_OAUTH_TOKEN`); triage verified on [#37](https://github.com/LilSticky/crancula/issues/37)
+- [ ] Confirm the Claude GitHub App (https://github.com/apps/claude) is installed, then try `@claude` in an issue; user step
 - [x] Connect the GitHub MCP server of the enabled `github` plugin
