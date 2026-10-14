@@ -1,4 +1,7 @@
+import type {CdkDragDrop} from '@angular/cdk/drag-drop';
+import {CdkDropList} from '@angular/cdk/drag-drop';
 import {TestBed} from '@angular/core/testing';
+import {By} from '@angular/platform-browser';
 import {provideRouter, Router} from '@angular/router';
 import {provideTestTranslations} from '../../../../testing/test-translations';
 import {testOrgan} from '../../../../testing/organs';
@@ -150,6 +153,114 @@ describe('OrganEditorComponent', () => {
       await type(field('name'), 'Renamed');
 
       expect(library.entities().map(({id, name}) => ({id, name}))).toEqual([{id: organ.id, name: 'Renamed'}]);
+    });
+  });
+
+  describe('arranging Pipes', () => {
+    async function openWithPipes() {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 3);
+      await library.put(organ);
+      const editor = await openEditor(organ.id);
+      const notesInRows = () =>
+        editor.pipeRows().map((row) => Number(row.querySelector<HTMLInputElement>('[data-testid="pipe-note"]')?.value));
+      const storedNotes = () => library.entities()[0]?.pipes.map((pipe) => pipe.note);
+      const press = async (row: number, testId: string) => {
+        const button = editor.pipeRows()[row]?.querySelector<HTMLButtonElement>(`[data-testid="${testId}"]`);
+        if (!button) throw new Error(`no ${testId} in row ${row}`);
+        button.click();
+        await editor.fixture.whenStable();
+      };
+      const drop = async (previousIndex: number, currentIndex: number) => {
+        const list = editor.fixture.debugElement.query(By.directive(CdkDropList));
+        const dropList: CdkDropList = list.injector.get(CdkDropList);
+        dropList.dropped.emit({previousIndex, currentIndex} as CdkDragDrop<unknown>);
+        await editor.fixture.whenStable();
+      };
+      return {...editor, notesInRows, storedNotes, press, drop, original: organ.pipes.map((pipe) => pipe.note)};
+    }
+
+    it('moves a Pipe up one row with its move-up button and stores the order', async () => {
+      const {press, notesInRows, storedNotes, original} = await openWithPipes();
+
+      await press(2, 'move-up');
+
+      const expected = [original[0], original[2], original[1]];
+      expect(notesInRows()).toEqual(expected);
+      expect(storedNotes()).toEqual(expected);
+    });
+
+    it('moves a Pipe down one row with its move-down button and stores the order', async () => {
+      const {press, notesInRows, storedNotes, original} = await openWithPipes();
+
+      await press(0, 'move-down');
+
+      const expected = [original[1], original[0], original[2]];
+      expect(notesInRows()).toEqual(expected);
+      expect(storedNotes()).toEqual(expected);
+    });
+
+    it('disables move-up on the first row and move-down on the last row', async () => {
+      const {pipeRows} = await openWithPipes();
+      const rows = pipeRows();
+      const button = (row: number, testId: string) =>
+        rows[row]?.querySelector<HTMLButtonElement>(`[data-testid="${testId}"]`);
+
+      expect(button(0, 'move-up')?.disabled).toBe(true);
+      expect(button(0, 'move-down')?.disabled).toBe(false);
+      expect(button(1, 'move-up')?.disabled).toBe(false);
+      expect(button(1, 'move-down')?.disabled).toBe(false);
+      expect(button(2, 'move-up')?.disabled).toBe(false);
+      expect(button(2, 'move-down')?.disabled).toBe(true);
+    });
+
+    it('moves a Pipe to the dropped row when dragged and stores the order', async () => {
+      const {drop, notesInRows, storedNotes, original} = await openWithPipes();
+
+      await drop(2, 0);
+
+      const expected = [original[2], original[0], original[1]];
+      expect(notesInRows()).toEqual(expected);
+      expect(storedNotes()).toEqual(expected);
+    });
+
+    async function clearNoteOfRow(editor: Awaited<ReturnType<typeof openWithPipes>>, row: number) {
+      const input = editor.pipeRows()[row]?.querySelector<HTMLInputElement>('[data-testid="pipe-note"]');
+      if (!input) throw new Error(`no note field in row ${row}`);
+      await editor.type(input, '');
+    }
+
+    it('shows the missing-note message on the row the moved Pipe now holds', async () => {
+      const editor = await openWithPipes();
+      await clearNoteOfRow(editor, 2);
+      expect(editor.violationAt('pipes.2.note')).toHaveLength(1);
+
+      await editor.press(2, 'move-up');
+
+      expect(editor.violationAt('pipes.1.note')).toEqual(['Enter the MIDI note of this Pipe.']);
+      expect(editor.violationAt('pipes.2.note')).toEqual([]);
+    });
+
+    it('shows the missing-note message on the row the Pipe holds after an earlier row was removed', async () => {
+      const editor = await openWithPipes();
+      await clearNoteOfRow(editor, 2);
+      expect(editor.violationAt('pipes.2.note')).toHaveLength(1);
+
+      await editor.press(0, 'remove-pipe');
+
+      expect(editor.violationAt('pipes.1.note')).toEqual(['Enter the MIDI note of this Pipe.']);
+      expect(editor.violationAt('pipes.0.note')).toEqual([]);
+    });
+
+    it('removes a Pipe, keeps the other rows contiguous and stores the result', async () => {
+      const {press, pipeRows, notesInRows, storedNotes, original} = await openWithPipes();
+
+      await press(1, 'remove-pipe');
+
+      const expected = [original[0], original[2]];
+      expect(pipeRows()).toHaveLength(2);
+      expect(notesInRows()).toEqual(expected);
+      expect(storedNotes()).toEqual(expected);
     });
   });
 

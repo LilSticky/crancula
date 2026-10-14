@@ -78,23 +78,38 @@
   @for (violation of violationsAt('pipes'); track violation.key) {
     <p class="violation" data-testid="violation" data-path="pipes">{{ violation.key | translate: violation.params }}</p>
   }
-  @for (pipe of displayed().pipes; track $index; let row = $index) {
-    <div class="pipe" data-testid="pipe">
-      <span>{{ 'ORGAN.EDITOR.ROW' | translate: {row: row + 1} }}</span>
-      <mat-form-field>
-        <mat-label>{{ 'ORGAN.EDITOR.PIPE_NOTE' | translate }}</mat-label>
-        <input matInput #note type="number" data-testid="pipe-note"
-               [value]="pipe.note ?? ''" (input)="setPipeNote(row, note.value)"
-               [crancErrorState]="violationsAt('pipes.' + row + '.note').length > 0"/>
-        <ng-container ngProjectAs="mat-error">
-          @for (violation of violationsAt('pipes.' + row + '.note'); track violation.key) {
-            <mat-error data-testid="violation" [attr.data-path]="'pipes.' + row + '.note'">{{ violation.key | translate: violation.params }}</mat-error>
-          }
-        </ng-container>
-      </mat-form-field>
-      <span data-testid="pipe-note-name">{{ noteNames()[row] }}</span>
-    </div>
-  }
+  <div cdkDropList (cdkDropListDropped)="dropPipe($event)">
+    @for (pipe of displayed().pipes; track $index; let row = $index; let first = $first; let last = $last) {
+      <div class="pipe" data-testid="pipe" cdkDrag>
+        <mat-icon cdkDragHandle class="drag-handle" [attr.aria-label]="'ORGAN.EDITOR.DRAG_PIPE' | translate">drag_indicator</mat-icon>
+        <span>{{ 'ORGAN.EDITOR.ROW' | translate: {row: row + 1} }}</span>
+        <mat-form-field>
+          <mat-label>{{ 'ORGAN.EDITOR.PIPE_NOTE' | translate }}</mat-label>
+          <input matInput #note type="number" data-testid="pipe-note"
+                 [value]="pipe.note ?? ''" (input)="setPipeNote(row, note.value)"
+                 [crancErrorState]="violationsAt('pipes.' + row + '.note').length > 0"/>
+          <ng-container ngProjectAs="mat-error">
+            @for (violation of violationsAt('pipes.' + row + '.note'); track violation.key) {
+              <mat-error data-testid="violation" [attr.data-path]="'pipes.' + row + '.note'">{{ violation.key | translate: violation.params }}</mat-error>
+            }
+          </ng-container>
+        </mat-form-field>
+        <span data-testid="pipe-note-name">{{ noteNames()[row] }}</span>
+        <button matIconButton type="button" data-testid="move-up" [disabled]="first"
+                [attr.aria-label]="'ORGAN.EDITOR.MOVE_PIPE_UP' | translate" (click)="movePipe(row, row - 1)">
+          <mat-icon>arrow_upward</mat-icon>
+        </button>
+        <button matIconButton type="button" data-testid="move-down" [disabled]="last"
+                [attr.aria-label]="'ORGAN.EDITOR.MOVE_PIPE_DOWN' | translate" (click)="movePipe(row, row + 1)">
+          <mat-icon>arrow_downward</mat-icon>
+        </button>
+        <button matIconButton type="button" data-testid="remove-pipe"
+                [attr.aria-label]="'ORGAN.EDITOR.REMOVE_PIPE' | translate" (click)="removePipe(row)">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </div>
+    }
+  </div>
   <div>
     <button matButton="tonal" type="button" data-testid="add-pipe" (click)="addPipe()">
       <mat-icon>add</mat-icon>

@@ -73,7 +73,11 @@
       "PIPES": "Pfeifen",
       "ROW": "Reihe {{row}}",
       "PIPE_NOTE": "MIDI-Note",
-      "ADD_PIPE": "Pfeife hinzufügen"
+      "ADD_PIPE": "Pfeife hinzufügen",
+      "MOVE_PIPE_UP": "Pfeife nach oben verschieben",
+      "MOVE_PIPE_DOWN": "Pfeife nach unten verschieben",
+      "REMOVE_PIPE": "Pfeife entfernen",
+      "DRAG_PIPE": "Pfeife in eine andere Reihe ziehen"
     },
     "VIOLATION": {
       "NAME_REQUIRED": "Bitte gib einen Namen ein.",

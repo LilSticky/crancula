@@ -1,5 +1,6 @@
 import {ChangeDetectionStrategy, Component, computed, effect, inject, input, linkedSignal, signal, untracked} from '@angular/core';
-import {MatButton} from '@angular/material/button';
+import {CdkDrag, CdkDragDrop, CdkDragHandle, CdkDropList} from '@angular/cdk/drag-drop';
+import {MatButton, MatIconButton} from '@angular/material/button';
 import {MatError, MatFormField, MatHint, MatInput, MatLabel} from '@angular/material/input';
 import {MatIcon} from '@angular/material/icon';
 import {Router} from '@angular/router';
@@ -8,12 +9,14 @@ import {
   addPipe,
   emptyOrganDraft,
   midiNoteNumber,
+  movePipe,
   newOrganId,
   noteName,
   type Organ,
   type OrganDraft,
   type OrganViolation,
   type OrganViolationCode,
+  removePipe,
   toDraft,
   toSnapshot,
   validateOrgan,
@@ -40,7 +43,7 @@ const MISSING_VALUE_CODES: ReadonlySet<OrganViolationCode> = new Set([
 @Component({
   selector: 'cranc-organ-editor',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslatePipe, MatFormField, MatLabel, MatInput, MatHint, MatError, MatButton, MatIcon, ErrorStateDirective],
+  imports: [TranslatePipe, MatFormField, MatLabel, MatInput, MatHint, MatError, MatButton, MatIconButton, MatIcon, ErrorStateDirective, CdkDropList, CdkDrag, CdkDragHandle],
   templateUrl: './organ-editor.component.html',
   styles: `
     .organ-editor {
@@ -57,6 +60,10 @@ const MISSING_VALUE_CODES: ReadonlySet<OrganViolationCode> = new Set([
       display: flex;
       align-items: baseline;
       gap: 1rem;
+    }
+
+    .drag-handle {
+      cursor: grab;
     }
   `,
 })
@@ -152,8 +159,39 @@ export class OrganEditorComponent {
     this.changeStructure(addPipe);
   }
 
+  protected movePipe(fromRow: number, toRow: number): void {
+    this.remapTouched((row) => movedRow(row, fromRow, toRow));
+    this.changeStructure((draft) => movePipe(draft, fromRow, toRow));
+  }
+
+  protected removePipe(row: number): void {
+    this.remapTouched((touchedRow) => (touchedRow === row ? undefined : touchedRow > row ? touchedRow - 1 : touchedRow));
+    this.changeStructure((draft) => removePipe(draft, row));
+  }
+
+  protected dropPipe(event: CdkDragDrop<unknown>): void {
+    this.movePipe(event.previousIndex, event.currentIndex);
+  }
+
   private touch(path: string): void {
     this.touched.update((touched) => new Set(touched).add(path));
+  }
+
+  /** Lets the touched `pipes.<row>.…` paths follow their Pipe to its new row; `undefined` drops the path. */
+  private remapTouched(newRow: (row: number) => number | undefined): void {
+    this.touched.update((touched) => {
+      const result = new Set<string>();
+      for (const path of touched) {
+        const match = /^pipes\.(\d+)(\..*)?$/.exec(path);
+        if (!match) {
+          result.add(path);
+          continue;
+        }
+        const row = newRow(Number(match[1]));
+        if (row !== undefined) result.add(`pipes.${row}${match[2] ?? ''}`);
+      }
+      return result;
+    });
   }
 
   /** Applies a change to the rows and shows the result in the inputs. */
@@ -168,6 +206,14 @@ export class OrganEditorComponent {
     void this.library.put(organ);
     if (!this.id()) void this.router.navigate(['/organs', organ.id], {replaceUrl: true});
   }
+}
+
+/** Where the Pipe in `row` ends up when the Pipe in `fromRow` moves to `toRow`. */
+function movedRow(row: number, fromRow: number, toRow: number): number {
+  if (row === fromRow) return toRow;
+  if (fromRow < toRow && row > fromRow && row <= toRow) return row - 1;
+  if (fromRow > toRow && row >= toRow && row < fromRow) return row + 1;
+  return row;
 }
 
 function isShown(violation: OrganViolation, touched: ReadonlySet<string>): boolean {

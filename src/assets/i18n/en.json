@@ -73,7 +73,11 @@
       "PIPES": "Pipes",
       "ROW": "Row {{row}}",
       "PIPE_NOTE": "MIDI note",
-      "ADD_PIPE": "Add Pipe"
+      "ADD_PIPE": "Add Pipe",
+      "MOVE_PIPE_UP": "Move Pipe up",
+      "MOVE_PIPE_DOWN": "Move Pipe down",
+      "REMOVE_PIPE": "Remove Pipe",
+      "DRAG_PIPE": "Drag Pipe to another row"
     },
     "VIOLATION": {
       "NAME_REQUIRED": "Please enter a name.",

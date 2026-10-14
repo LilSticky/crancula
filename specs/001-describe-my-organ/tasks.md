@@ -332,7 +332,7 @@ restart and check; then delete with cancel and with confirm.
 
 ### Tests for User Story 4 ⚠️
 
-- [ ] T029 [P] [US4] Extend the editor spec:
+- [x] T029 [P] [US4] Extend the editor spec:
   - "move up" and "move down" buttons and drag-and-drop reorder the rows, with move-up disabled on
     the first row and move-down disabled on the last;
   - "remove" deletes a row and keeps the rest contiguous;
@@ -350,7 +350,7 @@ restart and check; then delete with cancel and with confirm.
 
 ### Implementation for User Story 4
 
-- [ ] T033 [US4] Add reorder and remove controls to the editor: Material icon buttons plus
+- [x] T033 [US4] Add reorder and remove controls to the editor: Material icon buttons plus
   `cdkDropList`, using `movePipe` and `removePipe` from `api/organ/organ-draft.ts`.
 - [ ] T034 [US4] Implement `src/app/features/organ/leave-invalid.guard.ts` (`CanDeactivateFn`),
   reusing `src/app/features/shared/components/confirm-dialog/`, and wire it into
