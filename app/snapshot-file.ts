@@ -48,28 +48,39 @@ export function createSnapshotFile<S, V>(
   let pending: PendingSave<S> | undefined;
   let timer: ReturnType<typeof setTimeout> | undefined;
   let writing: Promise<void> | undefined;
+  let blockedReason: string | undefined;
 
   async function load(): Promise<SnapshotLoadResult<S>> {
-    let content: string;
+    let problem: string;
     try {
-      content = await fs.readFile(filePath, 'utf8');
+      const content = await fs.readFile(filePath, 'utf8');
+      const parsed = parseJson(content);
+      const snapshot = parsed.ok ? parse(parsed.value) : parsed;
+      if (snapshot.ok) return {status: 'loaded', snapshot: normalise(snapshot.value)};
+      problem = snapshot.error;
     } catch (error) {
       if (isMissingFile(error)) return {status: 'empty'};
-      return {status: 'unreadable', backupPath: filePath, reason: messageOf(error)};
+      problem = messageOf(error);
     }
+    return moveAside(problem);
+  }
 
-    const parsed = parseJson(content);
-    const snapshot = parsed.ok ? parse(parsed.value) : parsed;
-    if (snapshot.ok) return {status: 'loaded', snapshot: normalise(snapshot.value)};
-
+  /** Moves the unusable file out of the way; if that fails, saving stays blocked so the file is never overwritten. */
+  async function moveAside(problem: string): Promise<SnapshotLoadResult<S>> {
     const backupPath = join(dir, `${baseName}.unreadable-${now().toISOString().replace(/[:.]/g, '-')}.json`);
-    await fs.rename(filePath, backupPath);
-    return {status: 'unreadable', backupPath, reason: snapshot.error};
+    try {
+      await fs.rename(filePath, backupPath);
+    } catch (error) {
+      blockedReason = `the unreadable ${fileName} could not be moved aside: ${messageOf(error)}`;
+      return {status: 'unreadable', backupPath: filePath, reason: `${problem}; ${blockedReason}`};
+    }
+    return {status: 'unreadable', backupPath, reason: problem};
   }
 
   function save(input: unknown): Promise<SnapshotSaveResult> {
     const parsed = parse(input);
     if (!parsed.ok) return Promise.resolve({status: 'rejected', reason: parsed.error});
+    if (blockedReason) return Promise.resolve({status: 'failed', reason: blockedReason});
 
     return new Promise((resolve) => {
       pending = {snapshot: normalise(parsed.value), waiters: [...(pending?.waiters ?? []), resolve]};
@@ -91,7 +102,11 @@ export function createSnapshotFile<S, V>(
 
     const job = pending;
     pending = undefined;
-    writing = write(job.snapshot).then((result) => job.waiters.forEach((resolve) => resolve(result)));
+    writing = write(job.snapshot).then((result) => {
+      // A failed write stays pending for the next flush; it is not retried on its own, so there is no retry loop.
+      if (result.status === 'failed') pending ??= {snapshot: job.snapshot, waiters: []};
+      job.waiters.forEach((resolve) => resolve(result));
+    });
     await writing;
     writing = undefined;
   }

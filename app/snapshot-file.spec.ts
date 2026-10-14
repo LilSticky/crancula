@@ -1,5 +1,6 @@
 import {mkdtemp, readdir, readFile, rm, writeFile} from 'node:fs/promises';
 import * as nodeFs from 'node:fs/promises';
+import type {PathLike} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
@@ -77,6 +78,68 @@ describe('load', () => {
   });
 });
 
+/** An fs error carrying a Node error code, e.g. EACCES. */
+function fsError(code: string): Error {
+  return Object.assign(new Error(`${code}: simulated`), {code});
+}
+
+/** contracts/tape-library-snapshot.md FR-023, SC-007; ADR 4: the main process must survive a damaged snapshot and never overwrite it. */
+describe('load when the snapshot cannot be moved aside', () => {
+  const backupPattern = /unreadable/;
+  const failingBackupRename = (): FileSystem => ({
+    ...nodeFs,
+    rename: vi.fn((from: PathLike, to: PathLike) =>
+      backupPattern.test(String(to)) ? Promise.reject(fsError('EPERM')) : nodeFs.rename(from, to)),
+  });
+
+  it('does not reject and reports the snapshot as unreadable with a reason', async () => {
+    await writeFile(toysFile(), '{oops');
+
+    const result = await create(dir, {fs: failingBackupRename()}).load();
+
+    expect(result).toEqual({status: 'unreadable', backupPath: expect.any(String), reason: expect.stringContaining('EPERM')});
+    expect(await readFile(toysFile(), 'utf8')).toBe('{oops');
+  });
+
+  it('does not overwrite the unreadable file on a later save', async () => {
+    await writeFile(toysFile(), '{oops');
+    const file = create(dir, {debounceMs: 5, fs: failingBackupRename()});
+    await file.load();
+
+    const result = await file.save(snapshot('new'));
+
+    expect(result).toEqual({status: 'failed', reason: expect.any(String)});
+    expect(await readFile(toysFile(), 'utf8')).toBe('{oops');
+    expect((await readdir(dir)).filter((name) => backupPattern.test(name))).toEqual([]);
+  });
+
+  it('treats a read error other than a missing file like an unparseable file and moves it aside', async () => {
+    await writeFile(toysFile(), JSON.stringify(snapshot('a')));
+    const fs: FileSystem = {...nodeFs, readFile: vi.fn().mockRejectedValue(fsError('EACCES'))};
+    const now = () => new Date('2026-10-14T12:34:56.789Z');
+
+    const result = await create(dir, {fs, now}).load();
+
+    const backupPath = join(dir, 'toys.unreadable-2026-10-14T12-34-56-789Z.json');
+    expect(result).toEqual({status: 'unreadable', backupPath, reason: expect.stringContaining('EACCES')});
+    expect(await readdir(dir)).toEqual(['toys.unreadable-2026-10-14T12-34-56-789Z.json']);
+  });
+
+  it('does not reject when the file behind a read error cannot be moved either, and a later save does not overwrite it', async () => {
+    await writeFile(toysFile(), JSON.stringify(snapshot('a')));
+    const fs: FileSystem = {
+      ...nodeFs,
+      readFile: vi.fn().mockRejectedValue(fsError('EBUSY')),
+      rename: failingBackupRename().rename,
+    };
+    const file = create(dir, {debounceMs: 5, fs});
+
+    expect(await file.load()).toEqual({status: 'unreadable', backupPath: expect.any(String), reason: expect.any(String)});
+    expect(await file.save(snapshot('new'))).toEqual({status: 'failed', reason: expect.any(String)});
+    expect(await readSnapshot()).toEqual(snapshot('a'));
+  });
+});
+
 describe('save', () => {
   it('writes a snapshot that load reads back', async () => {
     const file = create(dir, {debounceMs: 5});
@@ -140,6 +203,19 @@ describe('flush', () => {
 
     expect(await readSnapshot()).toEqual(snapshot('a', 'b'));
     expect(await saved).toEqual({status: 'saved'});
+  });
+
+  it('keeps a snapshot pending when its write fails, so a later flush retries it (SC-007)', async () => {
+    const writeFileOnce = vi.fn(nodeFs.writeFile).mockRejectedValueOnce(new Error('disk full'));
+    const fs: FileSystem = {...nodeFs, writeFile: writeFileOnce};
+    const file = create(dir, {debounceMs: 60_000, fs});
+    const saved = file.save(snapshot('a', 'b'));
+
+    await file.flush();
+    expect(await saved).toEqual({status: 'failed', reason: expect.stringContaining('disk full')});
+
+    await file.flush();
+    expect(await readSnapshot()).toEqual(snapshot('a', 'b'));
   });
 
   it('does nothing without pending snapshots', async () => {

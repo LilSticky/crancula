@@ -78,10 +78,12 @@ let flushedBeforeQuit = false;
 app.on('before-quit', (event) => {
   if (flushedBeforeQuit) return;
   event.preventDefault();
-  void Promise.all([organLibraryFile.flush(), tapeLibraryFile.flush()]).finally(() => {
-    flushedBeforeQuit = true;
-    app.quit();
-  });
+  void Promise.all([organLibraryFile.flush(), tapeLibraryFile.flush()])
+    .catch((error: unknown) => console.error('Could not write the snapshots before quitting', error))
+    .finally(() => {
+      flushedBeforeQuit = true;
+      app.quit();
+    });
 });
 
 void app.whenReady().then(() => {
