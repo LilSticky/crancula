@@ -6,51 +6,42 @@ Issues: [GitHub](https://github.com/LilSticky/crancula/issues)
 
 ## Current slice
 
-**Describe my organ**, on branch `001-describe-my-organ`. The spec is clarified:
-[spec.md](../specs/001-describe-my-organ/spec.md).
+**Describe my organ** is done on branch `001-describe-my-organ` and in review through a pull request
+(ADR 10). The spec is clarified: [spec.md](../specs/001-describe-my-organ/spec.md).
 
-The **MVP is done** (T001–T028, User Stories 1–3) and waits for the user's review in Electron
-(`npm run electron:local`; walkthrough in [quickstart.md](../specs/001-describe-my-organ/quickstart.md)).
-Organs can be defined, invalid ones are never stored and show their broken rules, and they survive a
-restart. An unreadable snapshot is reported and kept.
+All user stories 1–5 are done:
+- Define an Organ; invalid Organs are never stored and show their broken rules.
+- Survives a restart; an unreadable snapshot is reported and kept.
+- Change and remove an Organ, including delete with confirmation.
+- Reorder and remove Pipes in the editor; leaving an invalid changed draft asks for confirmation.
+- Switch between German and English, remembered between starts ([ADR 11](adr/0011-ui-preferences-in-local-storage.md)).
 
 Changes from the plan:
 - **Editor:** plain signals instead of signal forms (research R6).
 - **Angular specs:** run in jsdom (ADR 9).
 - **Error states:** a small `crancErrorState` directive puts form fields into their error state.
 
-**Next concrete step:** T031, the delete test in the Organ list spec (User Story 4).
+Gate run on 2026-10-14: lint green, test 70 passed, build green, i18n:check 48 keys 0 errors 0 unused,
+e2e 11 passed.
 
-- Leaving the editor with an invalid changed draft asks for confirmation (T030, T034 done).
-
-- Pipes can be reordered and removed in the editor (T029, T033 done).
-- The tech-stack update for [#13](https://github.com/LilSticky/crancula/issues/13) is done on branch
-  `chore/update-tech-stack` (Angular 22, Electron 44, TypeScript 6.0 because Angular 22 needs <6.1,
-  Vitest 5, ESLint 10 flat config, Dependabot). It is not pushed. It lands only after slice 001 is
-  merged into `main`. Then rebase it, apply the Angular 22 signal-forms renames (`Field` →
+**Next concrete step:** the user's walkthrough (T041, [quickstart.md](../specs/001-describe-my-organ/quickstart.md))
+on the pull request, then squash-merge once CI is green. After that:
+- Rebase the tech-stack branch `chore/update-tech-stack` for [#13](https://github.com/LilSticky/crancula/issues/13)
+  (on another computer; the user pushes it today). Apply the Angular 22 signal-forms renames (`Field` →
   `FormField`, `[field]` → `[formField]`) and revisit research R6.
+- Then slice 002 "Bring a song onto a tape" ([#2](https://github.com/LilSticky/crancula/issues/2)).
 
 ## Known broken / WIP
 
-- No known broken items. These are fixed on this branch and close when the slice merges into
-  `main`: #4 (build), #5 (no tests), #6 (`window.require`), #7 (localStorage), #8 (`api/model`).
-- **Not done yet:**
-  - User Story 4: delete an Organ (T031, T032, T035 e2e). Reordering and removing Pipes and the
-    leave-invalid confirmation are done.
-  - User Story 5: language switch.
-  - Polish (T039–T042).
-- **ConfirmDialogComponent** (`src/app/features/shared/components/confirm-dialog/`) has hard-coded
-  English texts ("Confirm Action", "Cancel", "Confirm") and no i18n keys. Fix with User Story 5 or T039.
-- **`npm run i18n:check`:** lists the dynamic `ORGAN.VIOLATION.*` keys and the old prototype keys
-  as unused. T039 cleans up the old keys.
+- No known broken items. #4–#8 are fixed on this branch and close with the merge.
 
 ## Open questions
 
 - **Air Demand:** how "too many Pipes at once" depends on which Pipes play. Domain discovery is
   not finished; not in v0.1.
 - Release builds: CI (`.github/workflows/ci.yml`) runs lint, test and build on Linux, Windows
-  and macOS, and is red until the build and test items above are fixed. Packaging v0.1 as
-  GitHub Releases is not set up yet ([#11](https://github.com/LilSticky/crancula/issues/11)).
+  and macOS and should go green with this branch. Packaging v0.1 as GitHub Releases is not set up
+  yet ([#11](https://github.com/LilSticky/crancula/issues/11)).
 
 ## Process changes
 
