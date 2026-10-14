@@ -30,6 +30,7 @@ step**, known broken/WIP items, and open questions. Then read only what that ste
 | `documentation/adr/` | Architecture decisions (Nygard) | A significant decision is made (`adr` skill) |
 | `.specify/memory/constitution.md` | Principles, Definition of Done, governance | Only through an ADR plus a version bump |
 | `specs/NNN-slice/` | Spec Kit artifacts per slice (spec, plan, tasks) | During the slice |
+| `CHANGELOG.md` | What changed for organ owners per release; source of the release notes | A release (`release` skill), optionally a user-visible change under `[Unreleased]` |
 | `documentation/AGENTIC-TODO.md` | Agent tooling still to build | Tooling is added |
 | [GitHub Issues](https://github.com/LilSticky/crancula/issues) | Bugs, slices, open questions (`gh issue`) | A bug or question is found or resolved |
 
@@ -57,6 +58,8 @@ step**, known broken/WIP items, and open questions. Then read only what that ste
 - **Pull requests** (ADR 10): every branch reaches `main` through a pull request, never a local
   merge or a direct push. Open it with `gh pr create`; the body lists every issue it touches,
   `Closes #N` for resolved ones and `Refs #N` for the rest. A slice has its own issue.
+- **Releases** (ADR 19): `/release` proposes the version and changelog section, bumps the version
+  through a pull request, tags the squash commit, and publishes the draft the release workflow builds.
 - **Merging**: when the Definition of Done gate is green and CI passes, squash-merge the pull
   request yourself (`gh pr merge --squash --delete-branch`). The gate: runs in Electron (the e2e
   suite is green in CI, ADR 13); tests and lint green; STATUS/ROADMAP/DICTIONARY/ADRs updated;
