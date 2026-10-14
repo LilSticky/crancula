@@ -11,10 +11,10 @@ export interface LaunchedApp {
 }
 
 /**
- * Linux runs (xvfb in CI) ask for X11 explicitly. Without it, Electron 44's own platform choice lets the
- * off-screen window render only 1 to 2 frames per second, and every click waits about 2 s for them.
+ * Under xvfb (Linux CI) with Electron 44 the hidden window renders only 1 to 2 frames per second, and every
+ * click waits about 2 s for them. Frames that do not wait for the display's vsync avoid that.
  */
-const LINUX_DISPLAY_ARGS = process.platform === 'linux' ? ['--ozone-platform=x11'] : [];
+const LINUX_DISPLAY_ARGS = process.platform === 'linux' ? ['--disable-gpu-vsync'] : [];
 
 /**
  * Starts the built Electron app with its own `userData` folder (`CRANCULA_USER_DATA`).
