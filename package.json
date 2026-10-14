@@ -32,7 +32,6 @@
     "i18n:check": "node scripts/check-i18n.mjs"
   },
   "dependencies": {
-    "@angular-architects/ngrx-toolkit": "21.0.1",
     "@angular/cdk": "21.2.0",
     "@angular/common": "21.0.3",
     "@angular/compiler": "21.0.3",
