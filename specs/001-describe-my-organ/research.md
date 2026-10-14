@@ -163,8 +163,11 @@ Each entry gives the decision, the reason for it, and the alternatives considere
     its item on reorder and is dropped on removal, so the manual path remapping is gone, and so
     is the `displayed` copy of the draft. The DOM is written only when the parsed number changes,
     so typing `3.50` keeps the text (e2e guard).
-  - **Not covered**: text a number input cannot parse (Chromium reports `badInput`) is a parse
-    error that leaves the model unchanged and the form invalid; it shows no message.
+  - **Unreadable number text**: text a number input cannot parse (Chromium reports `badInput`, e.g.
+    "1e") is a `parse` error of the field: the model keeps its previous value and the form is
+    invalid. The editor shows "Enter a number." (`ORGAN.EDITOR.NOT_A_NUMBER`) next to the field right
+    away and lists it in the leave dialog with the field's label, so a disabled Save always has a
+    visible reason.
 
 ## R7 Note names
 

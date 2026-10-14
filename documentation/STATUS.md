@@ -26,7 +26,7 @@ app icon; splash for the portable Windows build; fonts ship with the app (#24).
 **Organ editor on signal forms** (2026-10-14, [#13](https://github.com/LilSticky/crancula/issues/13),
 research R6 revised): `form()` over `OrganDraft`, `[formField]` inputs, one `validateTree` rule fed by
 `validateOrgan`, a `ShownViolationMatcher` instead of the `crancErrorState` directive. Lint, i18n,
-116 Angular tests and 17 e2e green.
+120 Angular tests and 18 e2e green. Unreadable number text shows "Enter a number.".
 
 **Next concrete step:** rebase `002-bring-a-song-onto-a-tape` onto `main` and run `/speckit-plan` for
 slice 002. Draft PR #26 (release workflow) waits for that.
