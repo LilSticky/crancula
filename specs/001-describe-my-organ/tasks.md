@@ -392,7 +392,7 @@ translation key.
 
 ## Phase 8: Polish & Cross-Cutting Concerns
 
-- [ ] T039 Remove i18n keys that nothing uses any more from both language files, and check that
+- [x] T039 Remove i18n keys that nothing uses any more from both language files, and check that
   the parity test is green.
 - [ ] T040 Remove `withStorageSync`/`@angular-architects/ngrx-toolkit` from `package.json` if they
   are no longer used, and check for `any`, non-null assertions and `console.*` leftovers in the

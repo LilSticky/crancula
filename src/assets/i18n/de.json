@@ -1,57 +1,13 @@
 {
-  "TITLE": "Crancula",
   "PAGES": {
     "HOME": {
       "TITLE": "Übersicht"
-    },
-    "ORGANS": {
-      "TITLE": "Organ",
-      "BACK_TO_HOME": "Zurück zum Start",
-      "TABLE": {
-        "NAME": "Name",
-        "PIPES": "Pfeifenanzahl",
-        "TAPE_WIDTH": "Bandbreite",
-        "HOLE_DIAMETER": "Lochweite",
-        "EDIT": "Bearbeiten",
-        "DELETE": "Löschen",
-        "NEW": "Neue Orgel"
-      }
-    },
-    "ORGAN": {
-      "FORM": {
-        "SAVE": "Speichern",
-        "DISCARD": "Verwerfen",
-        "TITLE": "Orgel bearbeiten",
-        "GENERAL_SETTINGS": "Generelle Einstellungen:",
-        "NAME": "Name",
-        "TAPE_SETTINGS": "Band Einstellungen:",
-        "TAPE_WIDTH_MM": "Breite (mm)",
-        "TAPE_BORDER_MM": "Rand (mm)",
-        "HOLE_SETTINGS": "Loch Einstellungen:",
-        "HOLE_DIAMETER_MM": "Durchmesser (mm)",
-        "HOLE_SPACING_MM": "Abstand (mm)",
-        "PIPE_SETTINGS": "Pfeifen Einstellungen:",
-        "PIPE_NAME": "Name",
-        "PIPE_PITCH": "Tonhöhe",
-        "NEW_PIPE": "Neue Pfeife",
-        "LOADING": "Lädt, bitte warten...",
-        "ERROR": {
-          "NO_ORGAN_SELECTED": "Es wurde noch keine Orgel zum bearbeiten ausgewählt."
-        }
-      }
     }
   },
   "CONFIRMATION_DIALOG": {
     "TITLE": "Aktion bestätigen",
     "CANCEL": "Abbrechen",
-    "CONFIRM": "Bestätigen",
-    "DELETE": "Bist du sicher, dass du {{ref}} für immer löschen möchtest?",
-    "DISCARD": "Bist du sicher, dass du alle Änderungen an {{ref}} verwerfen möchtest?"
-  },
-  "FORM_VALIDATION": {
-    "MIN_LENGTH": "Dieser Wert muss länger sein",
-    "MIN_VALUE": "Dieser Wert muss größer sein",
-    "REQUIRED": "Dieser Wert muss angegeben werden"
+    "CONFIRM": "Bestätigen"
   },
   "NAVBAR": {
     "LANGUAGE": "Sprache"

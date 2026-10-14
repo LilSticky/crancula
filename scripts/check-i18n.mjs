@@ -4,7 +4,7 @@
 //   - no translation is empty (errors),
 //   - every key used in src/ via `'KEY' | translate` or `.instant('KEY')`/`.get('KEY')`/`.stream('KEY')`
 //     exists (errors),
-//   - keys that no code mentions as a quoted string (warnings; keys built dynamically show up here too).
+//   - keys that no code mentions as a quoted string (warnings; prefixes in DYNAMIC_PREFIXES are exempt).
 // Exit code 1 on errors. Usage: node scripts/check-i18n.mjs
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -15,6 +15,8 @@ const KEY_USAGE = [
   /['"]([A-Z0-9_]+(?:\.[A-Z0-9_]+)*)['"]\s*\|\s*translate\b/g,
   /\.(?:instant|get|stream)\(\s*['"]([A-Z0-9_]+(?:\.[A-Z0-9_]+)*)['"]/g,
 ];
+/** Key prefixes whose keys are built at run time, so they never appear as literals. */
+const DYNAMIC_PREFIXES = ['ORGAN.VIOLATION.'];
 /** Any quoted string shaped like a key; counts as a use when the key exists (e.g. `label="KEY"`). */
 const KEY_LITERAL = /['"`]([A-Z][A-Z0-9_]*(?:\.[A-Z0-9_]+)*)['"`]/g;
 
@@ -59,7 +61,9 @@ for (const path of sourceFiles(SOURCE_DIR)) {
   for (const [, key] of text.matchAll(KEY_LITERAL)) if (allKeys.has(key)) used.set(key, path);
 }
 for (const [key, path] of used) if (!allKeys.has(key)) errors.push(`${path}: uses unknown key ${key}`);
-const unused = [...allKeys].filter((key) => !used.has(key));
+const unused = [...allKeys].filter(
+  (key) => !used.has(key) && !DYNAMIC_PREFIXES.some((prefix) => key.startsWith(prefix)),
+);
 
 for (const key of unused) console.warn(`warning: unused key ${key}`);
 for (const error of errors) console.error(`error: ${error}`);
