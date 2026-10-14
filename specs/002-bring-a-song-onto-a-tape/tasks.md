@@ -392,11 +392,11 @@ and restart again.
 - [x] T051 [P] [US2] Extend `src/app/app.component.spec.ts`: a `TapeLibrary.loadProblem` shows a
   snackbar with the backup path, saying the Organs still work (FR-023); a `saveProblem` shows a
   snackbar (FR-024).
-- [ ] T052 [P] [US2] Extend `src/app/features/organ/organ-list/organ-list.component.spec.ts`
+- [x] T052 [P] [US2] Extend `src/app/features/organ/organ-list/organ-list.component.spec.ts`
   (FR-020, R10.3): the delete confirmation names the number of the Organ's Tapes; confirm calls
   `TapeLibrary.removeTapesOf` first and `OrganLibrary.remove` only if that write succeeded; while
   `TapeLibrary.loadProblem` is set, deleting is refused with a message and nothing changes.
-- [ ] T053 [P] [US2] Extend `src/app/features/organ/organ-editor/organ-editor.component.spec.ts`
+- [x] T053 [P] [US2] Extend `src/app/features/organ/organ-editor/organ-editor.component.spec.ts`
   (FR-021, FR-021a, Story 2 scenario 5): saving with removed Pipes that have Holes asks first,
   naming the number of Tapes and Holes (2 Tapes, 5 Holes); confirm calls
   `TapeLibrary.removeHolesOfPipes` first and `OrganLibrary.put` only if that write succeeded;
@@ -421,9 +421,9 @@ and restart again.
   `src/app/features/tape/routes.ts` and point the navbar entry at it, until T050 is green.
 - [x] T057 [US2] Show `TapeLibrary.loadProblem` and `saveProblem` from
   `src/app/app.component.ts` with `MatSnackBar` until T051 is green.
-- [ ] T058 [US2] Implement the delete cascade in
+- [x] T058 [US2] Implement the delete cascade in
   `src/app/features/organ/organ-list/organ-list.component.ts` until T052 is green.
-- [ ] T059 [US2] Implement the removed-Pipes question and cascade in
+- [x] T059 [US2] Implement the removed-Pipes question and cascade in
   `src/app/features/organ/organ-editor/organ-editor.component.ts` until T053 is green.
 - [ ] T060 [US2] Add the `TAPE.LIST.*`, `TAPE.STORAGE.*` and the new `ORGAN.*` cascade keys to
   `en.json` and `de.json`; T054 and T055 are green. Depends on T056–T059.

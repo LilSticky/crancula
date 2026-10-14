@@ -2,11 +2,13 @@ import {ChangeDetectionStrategy, Component, inject} from '@angular/core';
 import {MatButton, MatIconButton} from '@angular/material/button';
 import {MatDialog} from '@angular/material/dialog';
 import {MatIcon} from '@angular/material/icon';
+import {MatSnackBar} from '@angular/material/snack-bar';
 import {MatListItem, MatListItemLine, MatListItemTitle, MatNavList} from '@angular/material/list';
 import {RouterLink} from '@angular/router';
-import {TranslatePipe} from '@ngx-translate/core';
+import {TranslatePipe, TranslateService} from '@ngx-translate/core';
 import type {Organ} from '@api/index';
 import {ConfirmableAction, ConfirmDialogComponent} from '../../shared/components/confirm-dialog/confirm-dialog.component';
+import {TapeLibrary} from '../../tape/tape-library.store';
 import {OrganLibrary} from '../organ-library.store';
 
 @Component({
@@ -52,14 +54,29 @@ import {OrganLibrary} from '../organ-library.store';
 })
 export class OrganListComponent {
   protected readonly library = inject(OrganLibrary);
+  private readonly tapes = inject(TapeLibrary);
   private readonly dialog = inject(MatDialog);
+  private readonly snackBar = inject(MatSnackBar);
+  private readonly translate = inject(TranslateService);
 
+  /** Deletes the Organ after confirmation, with its Tapes: those first, the Organ only once they are gone (ADR 18). */
   protected delete(organ: Organ): void {
+    if (this.tapes.loadProblem() !== null) {
+      this.snackBar.open(String(this.translate.instant('ORGAN.LIST.DELETE_BLOCKED')), String(this.translate.instant('ORGAN.STORAGE.DISMISS')));
+      return;
+    }
+    const count = this.tapes.tapesOf(organ.id).length;
+    const consequence = count > 0 ? {key: 'ORGAN.LIST.DELETE_TAPES', params: {count}} : undefined;
     this.dialog
-      .open(ConfirmDialogComponent, {data: {action: ConfirmableAction.DELETE, entity: {id: organ.id, name: organ.name}}})
+      .open(ConfirmDialogComponent, {data: {action: ConfirmableAction.DELETE, entity: {id: organ.id, name: organ.name}, consequence}})
       .afterClosed()
       .subscribe((confirmed) => {
-        if (confirmed === true) void this.library.remove(organ.id);
+        if (confirmed === true) void this.remove(organ);
       });
+  }
+
+  private async remove(organ: Organ): Promise<void> {
+    if (!(await this.tapes.removeTapesOf(organ.id))) return; // The Organ stays: the Tape library reports the storage problem.
+    await this.library.remove(organ.id);
   }
 }

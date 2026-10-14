@@ -84,7 +84,9 @@
       "EMPTY": "No Organs yet.",
       "NEW": "New Organ",
       "PIPE_COUNT": "{{count}} Pipes",
-      "DELETE": "Delete Organ {{name}}"
+      "DELETE": "Delete Organ {{name}}",
+      "DELETE_BLOCKED": "Your Tapes couldn't be loaded, so this Organ can't be deleted for now.",
+      "DELETE_TAPES": "This also deletes its Tapes ({{count}}) forever."
     },
     "EDITOR": {
       "TITLE_NEW": "New Organ",
@@ -108,7 +110,9 @@
       "REMOVE_PIPE": "Remove Pipe",
       "DRAG_PIPE": "Drag Pipe to another row",
       "DELETE": "Delete Organ",
-      "SAVE": "Save"
+      "SAVE": "Save",
+      "SAVE_BLOCKED": "Your Tapes couldn't be loaded, so Pipes with Holes can't be removed for now.",
+      "REMOVE_PIPES_HOLES": "Removing these Pipes also removes their Holes ({{holes}}) from Tapes ({{tapes}}) of this Organ."
     },
     "LEAVE": {
       "TITLE": "Unsaved changes",

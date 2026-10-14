@@ -84,7 +84,9 @@
       "EMPTY": "Noch keine Drehorgeln.",
       "NEW": "Neue Drehorgel",
       "PIPE_COUNT": "{{count}} Pfeifen",
-      "DELETE": "Drehorgel {{name}} löschen"
+      "DELETE": "Drehorgel {{name}} löschen",
+      "DELETE_BLOCKED": "Deine Bänder konnten nicht geladen werden, darum kann diese Drehorgel vorerst nicht gelöscht werden.",
+      "DELETE_TAPES": "Dabei werden auch ihre Bänder ({{count}}) für immer gelöscht."
     },
     "EDITOR": {
       "TITLE_NEW": "Neue Drehorgel",
@@ -108,7 +110,9 @@
       "REMOVE_PIPE": "Pfeife entfernen",
       "DRAG_PIPE": "Pfeife in eine andere Reihe ziehen",
       "DELETE": "Drehorgel löschen",
-      "SAVE": "Speichern"
+      "SAVE": "Speichern",
+      "SAVE_BLOCKED": "Deine Bänder konnten nicht geladen werden, darum können Pfeifen mit Löchern vorerst nicht entfernt werden.",
+      "REMOVE_PIPES_HOLES": "Beim Entfernen dieser Pfeifen werden auch ihre Löcher ({{holes}}) aus Bändern ({{tapes}}) dieser Drehorgel entfernt."
     },
     "LEAVE": {
       "TITLE": "Nicht gespeicherte Änderungen",

@@ -3,15 +3,59 @@ import {CdkDropList} from '@angular/cdk/drag-drop';
 import {type ComponentFixture, TestBed} from '@angular/core/testing';
 import {By} from '@angular/platform-browser';
 import {MatDialog} from '@angular/material/dialog';
+import {MatSnackBar} from '@angular/material/snack-bar';
 import {provideRouter, Router} from '@angular/router';
 import {type Observable, of} from 'rxjs';
-import type {CranculaApi, OrganLibrarySaveResult} from '@api/index';
-import {CRANCULA_API, createInMemoryCranculaApi} from '../../../core/crancula-api.token';
+import {
+  type CranculaApi,
+  createTape,
+  defaultSelectedParts,
+  type Organ,
+  type OrganLibrarySaveResult,
+  proposeTransposition,
+  readMidiSong,
+  toTapeLibrarySnapshot,
+} from '@api/index';
+import {encodeSmf} from '../../../../../api/song/midi/smf-test-helper';
+import {CRANCULA_API, createInMemoryCranculaApi, type InMemoryCranculaApiFailures} from '../../../core/crancula-api.token';
 import {ConfirmableAction, ConfirmDialogComponent} from '../../shared/components/confirm-dialog/confirm-dialog.component';
 import {provideTestTranslations} from '../../../../testing/test-translations';
 import {testOrgan} from '../../../../testing/organs';
+import {TapeLibrary} from '../../tape/tape-library.store';
 import {OrganLibrary} from '../organ-library.store';
 import {OrganEditorComponent} from './organ-editor.component';
+
+const TICKS_PER_QUARTER = 480;
+
+/** A valid Tape of the Organ with one Hole per note (the notes must be Pipes of the Organ), and its Song. */
+function tapeFor(organ: Organ, name: string, notes: readonly number[]) {
+  const bytes = encodeSmf({
+    format: 1,
+    division: {ticksPerQuarterNote: TICKS_PER_QUARTER},
+    tracks: [
+      {
+        events: notes.flatMap((note) => [
+          {delta: 0, event: {type: 'noteOn' as const, channel: 0, note, velocity: 80}},
+          {delta: TICKS_PER_QUARTER, event: {type: 'noteOff' as const, channel: 0, note, velocity: 0}},
+        ]),
+      },
+    ],
+  });
+  const read = readMidiSong(bytes, `${name}.mid`);
+  if (!read.ok) throw new Error(`invalid test Song: ${read.error}`);
+  const song = read.value;
+  const selectedParts = defaultSelectedParts(song);
+  const created = createTape({
+    song,
+    selectedParts,
+    organ,
+    transposition: proposeTransposition(song, selectedParts, organ),
+    name,
+    columnLength: 2.5,
+  });
+  if (!created.ok) throw new Error(`invalid test Tape: ${JSON.stringify(created.error)}`);
+  return {tape: created.value.tape, song};
+}
 
 function render() {
   TestBed.configureTestingModule({providers: [provideRouter([]), provideTestTranslations()]});
@@ -739,6 +783,146 @@ describe('OrganEditorComponent', () => {
       expect(library.entities().map(({id}) => id)).toEqual([organ.id]);
       expect(navigate).not.toHaveBeenCalled();
     });
+  });
+
+  describe('saving with removed Pipes that have Holes', () => {
+    /** An Organ with the Pipes 60, 62, 64, 66, and two Tapes on it: 3 Holes on 60, 62, 64 and 2 Holes on 60, 62. */
+    async function openWithTapes(options: {confirmed?: boolean; failures?: InMemoryCranculaApiFailures; unreadable?: boolean} = {}) {
+      const organ = testOrgan('Street organ', 4);
+      const first = tapeFor(organ, 'First', [60, 62, 64]);
+      const second = tapeFor(organ, 'Second', [60, 62]);
+      const snapshot = toTapeLibrarySnapshot([first.tape, second.tape], [first.song, second.song]);
+      const failures: InMemoryCranculaApiFailures = options.unreadable ? {tapes: {load: 'unreadable'}} : (options.failures ?? {});
+      const dialog = vi.fn<(component: unknown, config: unknown) => {afterClosed: () => Observable<boolean>}>(() => ({
+        afterClosed: () => of(options.confirmed === true),
+      }));
+      TestBed.configureTestingModule({
+        providers: [
+          provideRouter([]),
+          provideTestTranslations(),
+          {provide: CRANCULA_API, useValue: createInMemoryCranculaApi(undefined, snapshot, failures)},
+          {provide: MatDialog, useValue: {open: dialog}},
+        ],
+      });
+      const library = TestBed.inject(OrganLibrary);
+      const tapes = TestBed.inject(TapeLibrary);
+      await tapes.load();
+      await library.put(organ);
+      vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+      const snackBarOpen = vi.spyOn(TestBed.inject(MatSnackBar), 'open');
+      const editor = await open(organ.id);
+      const removeRows = async (count: number) => {
+        for (let removed = 0; removed < count; removed++) await editor.click('remove-pipe');
+      };
+      const storedNotes = () => library.entities()[0]?.pipes.map((pipe) => pipe.note);
+      const holeCount = () => tapes.tapeEntities().reduce((sum, tape) => sum + tape.holes.length, 0);
+      return {...editor, organ, library, tapes, dialog, snackBarOpen, removeRows, storedNotes, holeCount};
+    }
+
+    it('asks first, naming the number of Tapes and Holes', async () => {
+      const {removeRows, save, dialog, organ} = await openWithTapes();
+      await removeRows(3);
+
+      await save();
+
+      expect(dialog).toHaveBeenCalledTimes(1);
+      expect(dialog.mock.calls[0]?.[0]).toBe(ConfirmDialogComponent);
+      expect(dialog.mock.calls[0]?.[1]).toMatchObject({
+        data: {entity: {id: organ.id, name: 'Street organ'}, consequence: {params: {tapes: 2, holes: 5}}},
+      });
+    });
+
+    it('removes the Holes of the removed Pipes, keeps the Tapes, and then saves the Organ when confirmed', async () => {
+      const {removeRows, save, tapes, storedNotes, holeCount} = await openWithTapes({confirmed: true});
+      await removeRows(3);
+
+      await save();
+
+      expect(holeCount()).toBe(0);
+      expect(tapes.tapeEntities()).toHaveLength(2);
+      expect(storedNotes()).toEqual([66]);
+    });
+
+    it('changes neither the Organ nor its Tapes when cancelled', async () => {
+      const {removeRows, save, storedNotes, holeCount, fixture} = await openWithTapes({confirmed: false});
+      await removeRows(3);
+
+      await save();
+
+      expect(holeCount()).toBe(5);
+      expect(storedNotes()).toEqual([60, 62, 64, 66]);
+      expect(fixture.componentInstance.unsavedChanges()).not.toBeNull();
+    });
+
+    it('does not save the Organ when removing the Holes could not be written', async () => {
+      const {removeRows, save, storedNotes, fixture} = await openWithTapes({confirmed: true, failures: {tapes: {save: 'failed'}}});
+      await removeRows(3);
+
+      await save();
+
+      expect(storedNotes()).toEqual([60, 62, 64, 66]);
+      expect(fixture.componentInstance.unsavedChanges()).not.toBeNull();
+    });
+
+    it('asks nothing when removed Pipes have no Holes', async () => {
+      const {pipeRows, fixture, save, dialog, storedNotes} = await openWithTapes();
+      // The last row (note 66) is a Pipe without Holes.
+      const last = pipeRows()[3]?.querySelector<HTMLButtonElement>('[data-testid="remove-pipe"]');
+      if (!last) throw new Error('no remove-pipe in the last row');
+      last.click();
+      await fixture.whenStable();
+
+      await save();
+
+      expect(dialog).not.toHaveBeenCalled();
+      expect(storedNotes()).toEqual([60, 62, 64]);
+    });
+
+    it('asks nothing when Pipes are only reordered or added', async () => {
+      const {press, click, element, type, save, dialog, storedNotes} = await openWithTapesForArranging();
+      await press(0, 'move-down');
+      await click('add-pipe');
+      const notes = element.querySelectorAll<HTMLInputElement>('[data-testid="pipe-note"]');
+      const added = notes[notes.length - 1];
+      if (!added) throw new Error('no note field for the added Pipe');
+      await type(added, '68');
+
+      await save();
+
+      expect(dialog).not.toHaveBeenCalled();
+      expect(storedNotes()).toEqual([62, 60, 64, 66, 68]);
+    });
+
+    it('refuses to save removed Pipes while the Tapes could not be read, with a message and no change', async () => {
+      const {removeRows, save, dialog, snackBarOpen, storedNotes} = await openWithTapes({confirmed: true, unreadable: true});
+      await removeRows(3);
+
+      await save();
+
+      expect(dialog).not.toHaveBeenCalled();
+      expect(snackBarOpen).toHaveBeenCalledTimes(1);
+      expect(storedNotes()).toEqual([60, 62, 64, 66]);
+    });
+
+    it('still saves other changes while the Tapes could not be read', async () => {
+      const {field, type, save, library} = await openWithTapes({unreadable: true});
+
+      await type(field('name'), 'Renamed');
+      await save();
+
+      expect(library.entities()[0]?.name).toBe('Renamed');
+    });
+
+    async function openWithTapesForArranging() {
+      const editor = await openWithTapes();
+      const press = async (row: number, testId: string) => {
+        const button = editor.pipeRows()[row]?.querySelector<HTMLButtonElement>(`[data-testid="${testId}"]`);
+        if (!button) throw new Error(`no ${testId} in row ${row}`);
+        button.click();
+        await editor.fixture.whenStable();
+      };
+      return {...editor, press};
+    }
   });
 
   describe('a number field with text that is not a number', () => {
