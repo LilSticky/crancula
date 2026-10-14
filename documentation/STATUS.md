@@ -7,7 +7,8 @@ Issues: [GitHub](https://github.com/LilSticky/crancula/issues)
 ## Current slice
 
 **Bring a song onto a tape** ([#2](https://github.com/LilSticky/crancula/issues/2)) on branch
-`002-bring-a-song-onto-a-tape`: spec clarified, research and data model written (docs only, no code yet).
+`002-bring-a-song-onto-a-tape`: spec, plan and tasks written (78 tasks; docs only, no code yet). Branch
+merged with `main`; the slice's ADRs are 17 and 18.
 
 **Done:** [Describe my organ](../specs/001-describe-my-organ/spec.md) (PR #15, 2026-10-14). Change from
 the plan: Angular specs in jsdom ([ADR 9](adr/0009-angular-specs-in-jsdom.md)).
@@ -28,8 +29,8 @@ research R6 revised): `form()` over `OrganDraft`, `[formField]` inputs, one `val
 `validateOrgan`, a `ShownViolationMatcher` instead of the `crancErrorState` directive. Lint, i18n,
 120 Angular tests and 18 e2e green. Unreadable number text shows "Enter a number.".
 
-**Next concrete step:** rebase `002-bring-a-song-onto-a-tape` onto `main` and run `/speckit-plan` for
-slice 002. Draft PR #26 (release workflow) waits for that.
+**Next concrete step:** implement slice 002 from `specs/002-bring-a-song-onto-a-tape/tasks.md`,
+starting at T001 (MVP = Phases 1–4, US1 + US2). Draft PR #26 (release workflow) waits for that.
 
 ## Known broken / WIP
 
