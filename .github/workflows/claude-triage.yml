@@ -1,0 +1,39 @@
+name: Issue triage
+
+# ADR 15: Claude triages every issue that carries the `triage` label. Issue forms add the label;
+# add it by hand to triage an issue again. The `triage` skill does the work and removes the label.
+on:
+  issues:
+    types: [labeled]
+
+concurrency:
+  group: triage-${{ github.event.issue.number }}
+
+jobs:
+  triage:
+    name: Triage issue
+    if: github.event.label.name == 'triage' && github.event.issue.state == 'open'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      issues: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+
+      - uses: anthropics/claude-code-action@v1
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          # Anyone may open an issue; the tools below only read the repository and label or comment.
+          allowed_non_write_users: '*'
+          prompt: /triage ${{ github.event.issue.number }}
+          claude_args: |
+            --model claude-sonnet-5-5
+            --max-turns 30
+            --allowedTools "Skill,Read,Grep,Glob,Bash(gh issue view:*),Bash(gh issue list:*),Bash(gh search issues:*),Bash(gh issue edit:*),Bash(gh issue comment:*)"

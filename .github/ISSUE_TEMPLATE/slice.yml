@@ -1,7 +1,7 @@
 name: Slice
 description: A domain slice from documentation/ROADMAP.md, named after what it lets the user do.
 title: "Slice: "
-labels: [slice]
+labels: [slice, triage]
 body:
   - type: textarea
     id: capability

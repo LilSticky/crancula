@@ -20,3 +20,4 @@ with a new one and update both statuses here.
 | 12 | [Bundle the Electron main process and preload](0012-bundle-electron-main-and-preload.md) | Accepted |
 | 13 | [End-to-end tests in CI replace the manual walkthrough](0013-e2e-in-ci-replaces-manual-walkthrough.md) | Accepted |
 | 14 | [Stay on current major versions with Dependabot](0014-current-major-versions-with-dependabot.md) | Accepted |
+| 15 | [Issue triage with the Claude GitHub Action](0015-issue-triage-with-claude-action.md) | Accepted |
