@@ -177,13 +177,13 @@ the `tapes:*` IPC boundary and the `TapeLibrary` store. Every user story needs t
   octave (Story 1 scenario 5); Pipes C4 and C6 only, C5 → C6 (upward on a tie); no F# Pipe →
   F#4 is an Unplayable Note (scenario 6).
 - [x] T017 Implement `api/tape/octave-moves.ts` until T016 is green. Depends on T011, T016.
-- [ ] T018 Write the failing test `api/tape/fit.spec.ts`: `fitOf(song, selectedParts, organ,
+- [x] T018 Write the failing test `api/tape/fit.spec.ts`: `fitOf(song, selectedParts, organ,
   transposition)` returns `matchingAPipe` "Notes whose transposed note number is a Pipe",
   `movedByOctaves` "Notes moved by whole octaves onto a Pipe (FR-009)" and `unplayable`
   "Unplayable Notes"; "The three counts add up to the number of selected Notes" (SC-003); Notes of
   unselected Parts don't count.
-- [ ] T019 Implement `api/tape/fit.ts` until T018 is green. Depends on T015, T017, T018.
-- [ ] T020 [P] Write the failing test `api/tape/hole-fixes.spec.ts` (research R6, FR-008,
+- [x] T019 Implement `api/tape/fit.ts` until T018 is green. Depends on T015, T017, T018.
+- [x] T020 [P] Write the failing test `api/tape/hole-fixes.spec.ts` (research R6, FR-008,
   FR-012):
   - `L` and `G` are "the smallest whole number with `L × c ≥ Minimum Hole Length`" and
     "… `G × c ≥ Minimum Gap`", computed as `ceil(mm / c − 1e-9)`: 1.1 mm / 0.1 mm gives 11.
@@ -196,7 +196,7 @@ the `tapes:*` IPC boundary and the `TapeLibrary` store. Every user story needs t
   - "The start of a Hole MUST NOT be moved"; afterwards no Hole is shorter than `L` and no gap is
     below `G` (SC-004); every fix is reported in the order applied, with `from`/`to` or
     `lostColumn`.
-- [ ] T021 Implement `api/tape/hole-fixes.ts` (overlap merge, the FR-012 loop of R6) and the
+- [x] T021 Implement `api/tape/hole-fixes.ts` (overlap merge, the FR-012 loop of R6) and the
   `HoleChange` union in `api/tape/import-summary.ts` until T020 is green. Depends on T011, T020.
 - [ ] T022 Write the failing test `api/tape/create-tape.spec.ts` for `createTape(input)` and
   `prefilledColumnLength(organ, tapes)` (contracts/domain-api.md, data-model.md):
