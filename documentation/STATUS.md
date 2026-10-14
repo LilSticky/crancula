@@ -7,8 +7,11 @@ Issues: [GitHub](https://github.com/LilSticky/crancula/issues)
 ## Current slice
 
 **Bring a song onto a tape** ([#2](https://github.com/LilSticky/crancula/issues/2)) on branch
-`002-bring-a-song-onto-a-tape`: spec, plan and tasks written (78 tasks; docs only, no code yet). Branch
-merged with `main`; the slice's ADRs are 17 and 18.
+`002-bring-a-song-onto-a-tape`, in progress: Phases 1–2 of 9 done (T001–T040). Done: MIDI reader, Tape
+domain (Quantisation, Transposition, octave moves, Fit, Hole fixes, createTape), Tape library snapshot
+(shared snapshot file plus `tapes.json`), IPC and preload wiring, in-memory API, Tape library store.
+Review fixes applied; `app/snapshot-file.ts` no longer overwrites a snapshot it could not move aside.
+Gate: 456 node tests, 146 Angular tests, 21 e2e, lint clean. The slice's ADRs are 17 and 18.
 
 **Done:** [Describe my organ](../specs/001-describe-my-organ/spec.md) (PR #15, 2026-10-14). Change from
 the plan: Angular specs in jsdom ([ADR 9](adr/0009-angular-specs-in-jsdom.md)).
@@ -29,8 +32,8 @@ research R6 revised): `form()` over `OrganDraft`, `[formField]` inputs, one `val
 `validateOrgan`, a `ShownViolationMatcher` instead of the `crancErrorState` directive. Lint, i18n,
 120 Angular tests and 18 e2e green. Unreadable number text shows "Enter a number.".
 
-**Next concrete step:** implement slice 002 from `specs/002-bring-a-song-onto-a-tape/tasks.md`,
-starting at T001 (MVP = Phases 1–4, US1 + US2). Draft PR #26 (release workflow) waits for that.
+**Next concrete step:** Phase 3 (US1) of slice 002, starting at T041 in
+`specs/002-bring-a-song-onto-a-tape/tasks.md`. Draft PR #26 (release workflow) waits for that.
 
 ## Known broken / WIP
 
