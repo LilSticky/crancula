@@ -17,3 +17,4 @@ with a new one and update both statuses here.
 | 9 | [Angular specs run in jsdom](0009-angular-specs-in-jsdom.md) | Accepted |
 | 10 | [Merge through pull requests that reference issues](0010-merge-through-pull-requests.md) | Accepted |
 | 11 | [UI preferences in localStorage](0011-ui-preferences-in-local-storage.md) | Accepted |
+| 12 | [Bundle the Electron main process and preload](0012-bundle-electron-main-and-preload.md) | Accepted |
