@@ -63,6 +63,9 @@ now including e2e, is green (T042). After that:
 
 ## Process changes
 
+- 2026-10-14: commits are authored as LilSticky with the GitHub noreply address, set per repository.
+  `main` was rewritten once (force-push with the ruleset paused) to remove `Co-authored-by` lines
+  with a work email; the trees are unchanged, all commit SHAs changed. Open branches were rewritten too.
 - 2026-10-14: branches reach `main` only through pull requests that reference their issues
   (`Closes #N` / `Refs #N`), then get squash-merged by the agent (ADR 10, constitution 1.1.0).
 - 2026-10-14: the e2e suite runs in CI on Linux, Windows and macOS and replaces the manual

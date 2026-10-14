@@ -47,7 +47,9 @@ step**, known broken/WIP items, and open questions. Then read only what that ste
   approves before `DICTIONARY.md` changes.
 - **Commits**: small, one concern each, conventional-commit style (`feat:`, `fix:`, `docs:`,
   `chore:`, …, with an optional scope). Never bundle unrelated changes; split even within one
-  file if needed.
+  file if needed. Commits are authored as `LilSticky <58908604+LilSticky@users.noreply.github.com>`,
+  set per repository (`git config user.name` / `user.email`) on every machine, so that a work
+  identity in the global Git config never reaches the public history.
 - **Pull requests** (ADR 10): every branch reaches `main` through a pull request, never a local
   merge or a direct push. Open it with `gh pr create`; the body lists every issue it touches,
   `Closes #N` for resolved ones and `Refs #N` for the rest. A slice has its own issue.
