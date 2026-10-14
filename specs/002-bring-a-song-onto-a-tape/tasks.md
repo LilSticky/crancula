@@ -226,7 +226,7 @@ the `tapes:*` IPC boundary and the `TapeLibrary` store. Every user story needs t
   `TapeViolation`) and complete `api/tape/import-summary.ts` until T022 is green. Re-export the
   Tape API listed in contracts/domain-api.md from `api/index.ts`. Depends on T009, T013, T019,
   T021, T022.
-- [ ] T024 Write the failing test `api/tape/tape-library-snapshot.spec.ts`
+- [x] T024 Write the failing test `api/tape/tape-library-snapshot.spec.ts`
   (contracts/tape-library-snapshot.md): `parseTapeLibrarySnapshot` rejects with a reason a wrong
   shape, `version !== 1`, and each parser rule of the contract (duplicate or non-UUID ids, an
   unknown `songId`, `songId` without `selectedParts` or the reverse, unsorted or duplicate
@@ -237,7 +237,7 @@ the `tapes:*` IPC boundary and the `TapeLibrary` store. Every user story needs t
   never checks Organ-relative rules. `toTapeLibrarySnapshot` writes only referenced Songs,
   sorted Holes, omits absent optional fields; round trip `parse(toTapeLibrarySnapshot(x))` gives
   `x`.
-- [ ] T025 Implement `api/tape/tape-library-snapshot.ts` (`TapeLibrarySnapshot`,
+- [x] T025 Implement `api/tape/tape-library-snapshot.ts` (`TapeLibrarySnapshot`,
   `SongSnapshot`, `TapeSnapshot`, `parseTapeLibrarySnapshot`, `toTapeLibrarySnapshot`) until T024
   is green, and re-export it from `api/index.ts`. Depends on T011, T024.
 - [ ] T026 Extend `api/app/crancula-api.spec.ts` with `expectTypeOf` checks: `CranculaApi.tapes`
