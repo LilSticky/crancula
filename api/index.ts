@@ -20,7 +20,16 @@ export {
   type OrganLibrarySnapshot,
   type OrganSnapshot,
 } from './organ/organ-library-snapshot';
-export type {CranculaApi, OrganLibraryLoadResult, OrganLibrarySaveResult, SetLanguageResult} from './app/crancula-api';
+export type {
+  CranculaApi,
+  OrganLibraryLoadResult,
+  OrganLibrarySaveResult,
+  SetLanguageResult,
+  SnapshotLoadResult,
+  SnapshotSaveResult,
+  TapeLibraryLoadResult,
+  TapeLibrarySaveResult,
+} from './app/crancula-api';
 export {isLanguage, type Language} from './app/language';
 export {
   defaultSelectedParts,

@@ -1,5 +1,13 @@
 import {describe, expectTypeOf, it} from 'vitest';
-import type {CranculaApi, OrganLibraryLoadResult, OrganLibrarySaveResult, SetLanguageResult} from './crancula-api';
+import type {
+  CranculaApi,
+  OrganLibraryLoadResult,
+  OrganLibrarySaveResult,
+  SetLanguageResult,
+  TapeLibraryLoadResult,
+  TapeLibrarySaveResult,
+} from './crancula-api';
+import type {TapeLibrarySnapshot} from '../tape/tape-library-snapshot';
 import type {OrganLibrarySnapshot} from '../organ/organ-library-snapshot';
 import type {Language} from './language';
 import * as api from '../index';
@@ -9,6 +17,29 @@ describe('CranculaApi', () => {
     expectTypeOf<CranculaApi['organs']['load']>().toEqualTypeOf<() => Promise<OrganLibraryLoadResult>>();
     expectTypeOf<CranculaApi['organs']['save']>().toEqualTypeOf<
       (snapshot: OrganLibrarySnapshot) => Promise<OrganLibrarySaveResult>
+    >();
+  });
+
+  it('loads and saves the Tape library', () => {
+    expectTypeOf<CranculaApi['tapes']['load']>().toEqualTypeOf<() => Promise<TapeLibraryLoadResult>>();
+    expectTypeOf<CranculaApi['tapes']['save']>().toEqualTypeOf<
+      (snapshot: TapeLibrarySnapshot) => Promise<TapeLibrarySaveResult>
+    >();
+  });
+
+  it('describes every Tape library load outcome', () => {
+    expectTypeOf<TapeLibraryLoadResult>().toEqualTypeOf<
+      | {readonly status: 'loaded'; readonly snapshot: TapeLibrarySnapshot}
+      | {readonly status: 'empty'}
+      | {readonly status: 'unreadable'; readonly backupPath: string; readonly reason: string}
+    >();
+  });
+
+  it('describes every Tape library save outcome', () => {
+    expectTypeOf<TapeLibrarySaveResult>().toEqualTypeOf<
+      | {readonly status: 'saved'}
+      | {readonly status: 'rejected'; readonly reason: string}
+      | {readonly status: 'failed'; readonly reason: string}
     >();
   });
 

@@ -240,12 +240,12 @@ the `tapes:*` IPC boundary and the `TapeLibrary` store. Every user story needs t
 - [x] T025 Implement `api/tape/tape-library-snapshot.ts` (`TapeLibrarySnapshot`,
   `SongSnapshot`, `TapeSnapshot`, `parseTapeLibrarySnapshot`, `toTapeLibrarySnapshot`) until T024
   is green, and re-export it from `api/index.ts`. Depends on T011, T024.
-- [ ] T026 Extend `api/app/crancula-api.spec.ts` with `expectTypeOf` checks: `CranculaApi.tapes`
+- [x] T026 Extend `api/app/crancula-api.spec.ts` with `expectTypeOf` checks: `CranculaApi.tapes`
   has `load(): Promise<TapeLibraryLoadResult>` and `save(snapshot: TapeLibrarySnapshot):
   Promise<TapeLibrarySaveResult>`, with the result unions of contracts/tape-library-ipc.md
   (`loaded | empty | unreadable{backupPath, reason}`, `saved | rejected{reason} |
   failed{reason}`).
-- [ ] T027 Implement the `tapes` part and the result types in `api/app/crancula-api.ts` (generic
+- [x] T027 Implement the `tapes` part and the result types in `api/app/crancula-api.ts` (generic
   `SnapshotLoadResult<S>`/`SnapshotSaveResult` with named aliases is allowed) and re-export them
   from `api/index.ts` until T026 is green. Depends on T001, T025, T026.
 
