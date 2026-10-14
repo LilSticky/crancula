@@ -383,13 +383,13 @@ and restart again.
 
 ### Tests for User Story 2 ⚠️
 
-- [ ] T050 [P] [US2] Write the component test
+- [x] T050 [P] [US2] Write the component test
   `src/app/features/tape/tape-list/tape-list.component.spec.ts` (FR-017, FR-019, R10.10): an
   empty-state text; each Tape with its name, its Organ's name, its length in Columns and in mm;
   a Tape whose Organ is unknown shows "Organ not available" and its open action is disabled
   (FR-023); "Bring a song onto a tape" navigates to `/tapes/new`; remove opens the confirm dialog,
   cancel changes nothing, confirm calls `TapeLibrary.remove`.
-- [ ] T051 [P] [US2] Extend `src/app/app.component.spec.ts`: a `TapeLibrary.loadProblem` shows a
+- [x] T051 [P] [US2] Extend `src/app/app.component.spec.ts`: a `TapeLibrary.loadProblem` shows a
   snackbar with the backup path, saying the Organs still work (FR-023); a `saveProblem` shows a
   snackbar (FR-024).
 - [ ] T052 [P] [US2] Extend `src/app/features/organ/organ-list/organ-list.component.spec.ts`
@@ -416,10 +416,10 @@ and restart again.
 
 ### Implementation for User Story 2
 
-- [ ] T056 [US2] Implement `src/app/features/tape/tape-list/tape-list.component.ts` (Material
+- [x] T056 [US2] Implement `src/app/features/tape/tape-list/tape-list.component.ts` (Material
   list or table, shared `ConfirmDialogComponent`), add the `tapes` route to
   `src/app/features/tape/routes.ts` and point the navbar entry at it, until T050 is green.
-- [ ] T057 [US2] Show `TapeLibrary.loadProblem` and `saveProblem` from
+- [x] T057 [US2] Show `TapeLibrary.loadProblem` and `saveProblem` from
   `src/app/app.component.ts` with `MatSnackBar` until T051 is green.
 - [ ] T058 [US2] Implement the delete cascade in
   `src/app/features/organ/organ-list/organ-list.component.ts` until T052 is green.

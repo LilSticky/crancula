@@ -20,6 +20,20 @@
   },
   "TAPE": {
     "NAV": "Tapes",
+    "LIST": {
+      "TITLE": "Tapes",
+      "EMPTY": "No Tapes yet.",
+      "NEW": "Bring a song onto a tape",
+      "ORGAN_NOT_AVAILABLE": "Organ not available",
+      "LENGTH_COLUMNS": "{{count}} Columns",
+      "LENGTH_MM": "{{length}} mm",
+      "OPEN": "Open",
+      "REMOVE": "Remove Tape {{name}}"
+    },
+    "STORAGE": {
+      "LOAD_PROBLEM": "Your Tapes couldn't be loaded. The file was kept at {{backupPath}}. Your Organs still work.",
+      "SAVE_PROBLEM": "Your Tapes couldn't be saved: {{reason}}"
+    },
     "IMPORT": {
       "TITLE": "Bring a Song onto a Tape",
       "NO_ORGAN": "You need an Organ first: the Tape is punched for its Pipes.",

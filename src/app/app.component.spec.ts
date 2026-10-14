@@ -10,6 +10,7 @@ import {testOrgan} from '../testing/organs';
 import {AppComponent} from './app.component';
 import {CRANCULA_API, createInMemoryCranculaApi} from './core/crancula-api.token';
 import {OrganLibrary} from './features/organ/organ-library.store';
+import {TapeLibrary} from './features/tape/tape-library.store';
 
 async function render(api: CranculaApi) {
   TestBed.configureTestingModule({
@@ -65,5 +66,26 @@ describe('AppComponent', () => {
     await fixture.whenStable();
 
     expect(document.body.textContent).toContain("Your changes couldn't be saved: disk full");
+  });
+
+  it('tells the user when the Tapes could not be loaded, and that the Organs still work', async () => {
+    const api = createInMemoryCranculaApi(undefined, undefined, {tapes: {load: 'unreadable'}});
+    const {fixture} = await render(api);
+
+    await TestBed.inject(TapeLibrary).load();
+    await fixture.whenStable();
+
+    expect(document.body.textContent).toContain('tapes.json.bak');
+    expect(document.body.textContent).toContain('Your Organs still work.');
+  });
+
+  it('tells the user when the Tapes could not be saved', async () => {
+    const api = createInMemoryCranculaApi(undefined, undefined, {tapes: {save: 'failed'}});
+    const {fixture} = await render(api);
+
+    await TestBed.inject(TapeLibrary).removeTapesOf(testOrgan('Street organ').id);
+    await fixture.whenStable();
+
+    expect(document.body.textContent).toContain("Your Tapes couldn't be saved: the Tape library could not be written");
   });
 });

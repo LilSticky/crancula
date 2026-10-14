@@ -20,6 +20,20 @@
   },
   "TAPE": {
     "NAV": "Bänder",
+    "LIST": {
+      "TITLE": "Bänder",
+      "EMPTY": "Noch keine Bänder.",
+      "NEW": "Ein Lied auf ein Band bringen",
+      "ORGAN_NOT_AVAILABLE": "Drehorgel nicht verfügbar",
+      "LENGTH_COLUMNS": "{{count}} Spalten",
+      "LENGTH_MM": "{{length}} mm",
+      "OPEN": "Öffnen",
+      "REMOVE": "Band {{name}} entfernen"
+    },
+    "STORAGE": {
+      "LOAD_PROBLEM": "Deine Bänder konnten nicht geladen werden. Die Datei wurde unter {{backupPath}} aufbewahrt. Deine Drehorgeln funktionieren weiterhin.",
+      "SAVE_PROBLEM": "Deine Bänder konnten nicht gespeichert werden: {{reason}}"
+    },
     "IMPORT": {
       "TITLE": "Ein Lied auf ein Band bringen",
       "NO_ORGAN": "Du brauchst zuerst eine Drehorgel: Das Band wird für ihre Pfeifen gestanzt.",
