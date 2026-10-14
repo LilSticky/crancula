@@ -1,3 +1,4 @@
+import type {Language} from '../app/language';
 import type {OrganLibrarySnapshot} from './organ-library-snapshot';
 
 export type OrganLibraryLoadResult =
@@ -20,5 +21,9 @@ export interface CranculaApi {
   readonly organs: {
     load(): Promise<OrganLibraryLoadResult>;
     save(snapshot: OrganLibrarySnapshot): Promise<OrganLibrarySaveResult>;
+  };
+  readonly app: {
+    /** Tells the main process the language, so it can translate the application menu. */
+    setLanguage(language: Language): Promise<void>;
   };
 }

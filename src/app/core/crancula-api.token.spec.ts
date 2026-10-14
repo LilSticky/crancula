@@ -45,4 +45,8 @@ describe('createInMemoryCranculaApi', () => {
   it('starts with an initial snapshot', async () => {
     expect(await createInMemoryCranculaApi(snapshot).organs.load()).toEqual({status: 'loaded', snapshot});
   });
+
+  it('accepts a language without effect', async () => {
+    await expect(createInMemoryCranculaApi().app.setLanguage('de')).resolves.toBeUndefined();
+  });
 });

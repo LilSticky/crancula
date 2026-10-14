@@ -1,6 +1,7 @@
 import {describe, expectTypeOf, it} from 'vitest';
 import type {CranculaApi, OrganLibraryLoadResult, OrganLibrarySaveResult} from './crancula-api';
 import type {OrganLibrarySnapshot} from './organ-library-snapshot';
+import type {Language} from '../app/language';
 import * as api from '../index';
 
 describe('CranculaApi', () => {
@@ -9,6 +10,10 @@ describe('CranculaApi', () => {
     expectTypeOf<CranculaApi['organs']['save']>().toEqualTypeOf<
       (snapshot: OrganLibrarySnapshot) => Promise<OrganLibrarySaveResult>
     >();
+  });
+
+  it('sets the language of the application menu', () => {
+    expectTypeOf<CranculaApi['app']['setLanguage']>().toEqualTypeOf<(language: Language) => Promise<void>>();
   });
 
   it('describes every load outcome', () => {

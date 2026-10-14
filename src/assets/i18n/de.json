@@ -75,5 +75,30 @@
       "SAVE_PROBLEM": "Deine Änderungen konnten nicht gespeichert werden: {{reason}}",
       "DISMISS": "OK"
     }
+  },
+  "MENU": {
+    "APP": "Crancula",
+    "HIDE": "Crancula ausblenden",
+    "HIDE_OTHERS": "Andere ausblenden",
+    "SHOW_ALL": "Alle einblenden",
+    "FILE": "Datei",
+    "EDIT": "Bearbeiten",
+    "VIEW": "Ansicht",
+    "WINDOW": "Fenster",
+    "UNDO": "Rückgängig",
+    "REDO": "Wiederholen",
+    "CUT": "Ausschneiden",
+    "COPY": "Kopieren",
+    "PASTE": "Einfügen",
+    "SELECT_ALL": "Alles auswählen",
+    "RELOAD": "Neu laden",
+    "TOGGLE_DEV_TOOLS": "Entwicklertools ein/aus",
+    "ACTUAL_SIZE": "Originalgröße",
+    "ZOOM_IN": "Vergrößern",
+    "ZOOM_OUT": "Verkleinern",
+    "TOGGLE_FULLSCREEN": "Vollbild ein/aus",
+    "MINIMIZE": "Minimieren",
+    "CLOSE": "Schließen",
+    "QUIT": "Beenden"
   }
 }

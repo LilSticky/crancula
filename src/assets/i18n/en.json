@@ -75,5 +75,30 @@
       "SAVE_PROBLEM": "Your changes couldn't be saved: {{reason}}",
       "DISMISS": "OK"
     }
+  },
+  "MENU": {
+    "APP": "Crancula",
+    "HIDE": "Hide Crancula",
+    "HIDE_OTHERS": "Hide Others",
+    "SHOW_ALL": "Show All",
+    "FILE": "File",
+    "EDIT": "Edit",
+    "VIEW": "View",
+    "WINDOW": "Window",
+    "UNDO": "Undo",
+    "REDO": "Redo",
+    "CUT": "Cut",
+    "COPY": "Copy",
+    "PASTE": "Paste",
+    "SELECT_ALL": "Select All",
+    "RELOAD": "Reload",
+    "TOGGLE_DEV_TOOLS": "Toggle Developer Tools",
+    "ACTUAL_SIZE": "Actual Size",
+    "ZOOM_IN": "Zoom In",
+    "ZOOM_OUT": "Zoom Out",
+    "TOGGLE_FULLSCREEN": "Toggle Full Screen",
+    "MINIMIZE": "Minimize",
+    "CLOSE": "Close",
+    "QUIT": "Quit"
   }
 }

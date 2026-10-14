@@ -18,5 +18,8 @@ export function createInMemoryCranculaApi(initial?: OrganLibrarySnapshot): Cranc
         return Promise.resolve({status: 'saved'});
       },
     },
+    app: {
+      setLanguage: () => Promise.resolve(),
+    },
   };
 }

@@ -442,13 +442,13 @@ translation key.
 
 ### The application menu follows the language
 
-- [ ] T048 [US5] Node test `app/application-menu.spec.ts`: `menuTemplate(language)` builds the
+- [x] T048 [US5] Node test `app/application-menu.spec.ts`: `menuTemplate(language)` builds the
   menu from the en/de JSON files with translated labels (File, Edit, View, Window, Help and their
   items), and an unknown language falls back to English.
-- [ ] T049 [US5] Node test for a new allow-listed channel `app:set-language`: the handler accepts
+- [x] T049 [US5] Node test for a new allow-listed channel `app:set-language`: the handler accepts
   only `'en' | 'de'` and rebuilds the menu; anything else is rejected. Extend
   `api/organ/crancula-api.ts` (or a new `api/app/`) with `setLanguage(language)`.
-- [ ] T050 [US5] Implement `app/application-menu.ts`, the IPC handler and the preload method; the
+- [x] T050 [US5] Implement `app/application-menu.ts`, the IPC handler and the preload method; the
   navbar calls `setLanguage` on start and on every switch. Add the `MENU.*` keys to both language
   files. Extend `e2e/organ-german.spec.ts`: after switching to German, the menu labels are German.
 - [ ] T051 Update `quickstart.md`, `plan.md` (no autosave) and research R6/R-autosave notes to the

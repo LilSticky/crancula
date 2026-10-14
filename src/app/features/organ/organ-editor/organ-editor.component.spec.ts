@@ -179,6 +179,7 @@ describe('OrganEditorComponent', () => {
           load: () => inMemory.organs.load(),
           save: () => new Promise<OrganLibrarySaveResult>((resolve) => writes.push(resolve)),
         },
+        app: inMemory.app,
       };
       TestBed.configureTestingModule({
         providers: [provideRouter([]), provideTestTranslations(), {provide: CRANCULA_API, useValue: api}],

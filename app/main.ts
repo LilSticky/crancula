@@ -1,6 +1,9 @@
-import {app, BrowserWindow, ipcMain, screen} from 'electron';
+import {app, BrowserWindow, ipcMain, Menu, screen} from 'electron';
 import * as fs from 'fs';
 import * as path from 'path';
+import type {Language} from '../api';
+import {registerAppHandlers} from './app-ipc';
+import {menuTemplate, SOURCE_I18N_DIRECTORY} from './application-menu';
 import {createOrganLibraryFile} from './organ-library-file';
 import {registerOrganLibraryHandlers} from './organ-library-ipc';
 
@@ -15,6 +18,19 @@ if (process.env['CRANCULA_USER_DATA']) {
 
 const organLibraryFile = createOrganLibraryFile(path.join(app.getPath('userData'), 'snapshots'));
 registerOrganLibraryHandlers(ipcMain, organLibraryFile);
+
+/** The folder the renderer's translation files are loaded from: the sources when serving, else the built assets. */
+function i18nDirectory(): string {
+  if (serve) return SOURCE_I18N_DIRECTORY;
+  const built = path.join(__dirname, '../dist/browser/assets/i18n');
+  return fs.existsSync(built) ? built : path.join(__dirname, 'browser/assets/i18n');
+}
+
+function applyMenu(language: Language): void {
+  Menu.setApplicationMenu(Menu.buildFromTemplate(menuTemplate(language, process.platform, i18nDirectory())));
+}
+
+registerAppHandlers(ipcMain, applyMenu);
 
 function createWindow(): BrowserWindow {
   const size = screen.getPrimaryDisplay().workAreaSize;
@@ -71,6 +87,7 @@ app.on('before-quit', (event) => {
 void app.whenReady().then(() => {
   // A short delay avoids a black background with transparent windows:
   // https://github.com/electron/electron/issues/15947
+  applyMenu('en'); // until the renderer reports its language
   setTimeout(createWindow, 400);
 
   app.on('activate', () => {

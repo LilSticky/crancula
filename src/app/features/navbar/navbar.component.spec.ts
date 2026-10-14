@@ -2,14 +2,17 @@ import {TestBed} from '@angular/core/testing';
 import {provideRouter} from '@angular/router';
 import {TranslateService} from '@ngx-translate/core';
 import {vi} from 'vitest';
+import {CRANCULA_API, createInMemoryCranculaApi} from '../../core/crancula-api.token';
 import {provideTestTranslations} from '../../../testing/test-translations';
 import {NavbarComponent} from './navbar.component';
 
 const LANGUAGE_KEY = 'crancula.language';
 
-async function startApp() {
+async function startApp(api = createInMemoryCranculaApi()) {
   TestBed.resetTestingModule();
-  TestBed.configureTestingModule({providers: [provideRouter([]), provideTestTranslations('en')]});
+  TestBed.configureTestingModule({
+    providers: [provideRouter([]), provideTestTranslations('en'), {provide: CRANCULA_API, useValue: api}],
+  });
   const translate = TestBed.inject(TranslateService);
   const fixture = TestBed.createComponent(NavbarComponent);
   fixture.autoDetectChanges();
@@ -69,5 +72,39 @@ describe('NavbarComponent language switch', () => {
     const {translate} = await startApp();
 
     expect(translate.getCurrentLang()).toBe('de');
+  });
+
+  it('tells the main process the language on start', async () => {
+    const api = createInMemoryCranculaApi();
+    const setLanguage = vi.spyOn(api.app, 'setLanguage');
+
+    await startApp(api);
+
+    expect(setLanguage).toHaveBeenCalledWith('en');
+  });
+
+  it('tells the main process the stored language on start', async () => {
+    const first = await startApp();
+    await first.choose('de');
+    const api = createInMemoryCranculaApi();
+    const setLanguage = vi.spyOn(api.app, 'setLanguage');
+
+    await startApp(api);
+
+    expect(setLanguage).toHaveBeenCalledWith('de');
+  });
+
+  it('tells the main process on every switch', async () => {
+    const api = createInMemoryCranculaApi();
+    const setLanguage = vi.spyOn(api.app, 'setLanguage');
+    const {choose} = await startApp(api);
+    setLanguage.mockClear();
+
+    await choose('de');
+    expect(setLanguage).toHaveBeenLastCalledWith('de');
+
+    await choose('en');
+    expect(setLanguage).toHaveBeenLastCalledWith('en');
+    expect(setLanguage).toHaveBeenCalledTimes(2);
   });
 });

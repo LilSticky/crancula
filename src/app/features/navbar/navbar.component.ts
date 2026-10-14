@@ -6,13 +6,10 @@ import {RouterLink, RouterLinkActive} from "@angular/router";
 import {MatButton} from "@angular/material/button";
 import {CranculaNavigations} from "./model/crancula-navigations";
 import {CranculaNavigation} from "./model/crancula-navigation";
+import {isLanguage, type Language} from "@api/index";
+import {CRANCULA_API} from "../../core/crancula-api.token";
 
 const LANGUAGE_KEY = 'crancula.language';
-type Language = 'en' | 'de';
-
-function isLanguage(value: string | null | undefined): value is Language {
-  return value === 'en' || value === 'de';
-}
 
 @Component({
   selector: 'cranc-navbar',
@@ -57,6 +54,7 @@ export class NavbarComponent {
   protected readonly items: CranculaNavigation[];
 
   private readonly translate = inject(TranslateService);
+  private readonly api = inject(CRANCULA_API);
   protected readonly language = signal<Language>('en');
 
   constructor() {
@@ -66,11 +64,13 @@ export class NavbarComponent {
     const initial: Language = isLanguage(stored) ? stored : isLanguage(current) ? current : 'en';
     this.language.set(initial);
     void firstValueFrom(this.translate.use(initial));
+    void this.api.app.setLanguage(initial);
   }
 
   protected choose(language: Language): void {
     localStorage.setItem(LANGUAGE_KEY, language);
     this.language.set(language);
     void firstValueFrom(this.translate.use(language));
+    void this.api.app.setLanguage(language);
   }
 }
