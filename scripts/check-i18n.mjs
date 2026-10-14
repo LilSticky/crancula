@@ -16,7 +16,7 @@ const KEY_USAGE = [
   /\.(?:instant|get|stream)\(\s*['"]([A-Z0-9_]+(?:\.[A-Z0-9_]+)*)['"]/g,
 ];
 /** Key prefixes whose keys are built at run time, so they never appear as literals. */
-const DYNAMIC_PREFIXES = ['ORGAN.VIOLATION.'];
+const DYNAMIC_PREFIXES = ['ORGAN.VIOLATION.', 'CONFIRMATION_DIALOG.'];
 /** Any quoted string shaped like a key; counts as a use when the key exists (e.g. `label="KEY"`). */
 const KEY_LITERAL = /['"`]([A-Z][A-Z0-9_]*(?:\.[A-Z0-9_]+)*)['"`]/g;
 
