@@ -82,7 +82,7 @@ the `tapes:*` IPC boundary and the `TapeLibrary` store. Every user story needs t
 
 ### Song domain (`api/song/`, Node Vitest)
 
-- [ ] T004 [P] Write the failing test `api/song/song.spec.ts` for the Song model
+- [x] T004 [P] Write the failing test `api/song/song.spec.ts` for the Song model
   (data-model.md "Value types" and "Song"):
   - `songId(value)`: `SongId` is a branded `string`, "UUID, like `OrganId`"; anything else gives
     `undefined`.
@@ -96,7 +96,7 @@ the `tapes:*` IPC boundary and the `TapeLibrary` store. Every user story needs t
   - `Song`: `name` "trimmed, non-empty"; `parts` "non-empty; order = track, then channel".
   - `defaultSelectedParts(song)` returns every non-percussion `PartIndex` and no percussion Part
     (FR-004); a Song with only percussion Parts gives an empty set.
-- [ ] T005 Implement `api/song/song.ts` (types, `songId`, `defaultSelectedParts`, the internal
+- [x] T005 Implement `api/song/song.ts` (types, `songId`, `defaultSelectedParts`, the internal
   brand helpers) until T004 is green. A valid `Song` can only be built by the MIDI reader or the
   snapshot parser (branded, non-exported constructor, like `Organ`). Depends on T004.
 - [ ] T006 Write the failing test `api/song/midi/read-midi-song.spec.ts`, part 1: the file level
