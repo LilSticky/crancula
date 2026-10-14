@@ -55,7 +55,7 @@ step**, known broken/WIP items, and open questions. Then read only what that ste
   request yourself (`gh pr merge --squash --delete-branch`). The gate: runs in Electron (the e2e
   suite is green in CI, ADR 13); tests and lint green; STATUS/ROADMAP/DICTIONARY/ADRs updated;
   committed. If you merge with something red, say so explicitly in the pull request and record it
-  in STATUS.
+  in STATUS. A ruleset on `main` (#18) enforces this: pull request, green CI checks, squash only.
 - **Talking to the user**: work autonomously. Ask only about domain questions, dictionary changes
   and scope changes. Always ask through interactive prompts, never only in prose, and keep chat
   output short. Detail belongs in files.
