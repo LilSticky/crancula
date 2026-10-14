@@ -6,8 +6,6 @@ const config = {
   testDir: '.',
   timeout: 45000,
   outputDir: './screenshots',
-  // Under xvfb (Linux CI) a hidden window renders about one frame per second while a second app runs.
-  workers: process.platform === 'linux' ? 1 : undefined,
   use: {
     headless: false,
     viewport: { width: 1280, height: 720 },
