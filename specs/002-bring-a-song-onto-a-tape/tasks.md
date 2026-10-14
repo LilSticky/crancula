@@ -551,10 +551,10 @@ English.
 - [x] T075 Run `npm run e2e`; the whole suite, including the 001 tests, is green.
 - [x] T076 Run the `spec-auditor` agent on the slice against `spec.md` and this file; fix every
   gap through a new test+implementation task pair appended to this file.
-- [ ] T077 Through the `housekeeper` agent: update `documentation/STATUS.md` (slice done, next
+- [x] T077 Through the `housekeeper` agent: update `documentation/STATUS.md` (slice done, next
   step "Punch a tape") and set "Bring a song onto a tape" to `done` in
   `documentation/ROADMAP.md`.
-- [ ] T078 Open a pull request (ADR 10) with `gh pr create`; the body has `Closes #2` and refs for
+- [x] T078 Open a pull request (ADR 10) with `gh pr create`; the body has `Closes #2` and refs for
   any other issue touched. Squash-merge it with `gh pr merge --squash --delete-branch` once CI
   (e2e on Linux, Windows and macOS, ADR 13) is green.
 
