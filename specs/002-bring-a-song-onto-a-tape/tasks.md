@@ -303,7 +303,7 @@ the `tapes:*` IPC boundary and the `TapeLibrary` store. Every user story needs t
 - [x] T039 Implement `src/app/features/tape/tape-library.store.ts` (`signalStore`,
   `withEntities` with named collections) and its app initializer until T038 is green.
   Depends on T037, T038.
-- [ ] T040 [P] Create `e2e/support/midi-file.ts`: builds `setInputFiles` payloads
+- [x] T040 [P] Create `e2e/support/midi-file.ts`: builds `setInputFiles` payloads
   (`{name, mimeType: 'audio/midi', buffer}`) from the SMF test helper (T003), with named fixtures
   for the e2e tests: melody C3–C5, three Parts with percussion, a long 5-minute Song with
   16 Parts, and a non-MIDI file. Test-support code only. Depends on T003.
