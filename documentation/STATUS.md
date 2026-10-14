@@ -52,6 +52,9 @@ now including e2e, is green (T042). After that:
   and macOS and should go green with this branch. Packaging now starts locally on Windows (smoke
   launch of the packaged app). CI packaging and GitHub Releases are not set up yet
   ([#11](https://github.com/LilSticky/crancula/issues/11)).
+- `main` is not protected: GitHub allows rulesets on a private repository only with GitHub Pro.
+  Until then, "pull requests only" (ADR 10) is a convention, not enforced
+  ([#18](https://github.com/LilSticky/crancula/issues/18)).
 
 ## Process changes
 
