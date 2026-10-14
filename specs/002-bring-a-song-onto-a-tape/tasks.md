@@ -542,10 +542,10 @@ English.
 
 ## Phase 9: Polish & Cross-Cutting Concerns
 
-- [ ] T072 [P] Remove i18n keys nothing uses any more; check the changed files for `any`,
+- [x] T072 [P] Remove i18n keys nothing uses any more; check the changed files for `any`,
   non-null assertions and `console.*`; check that `api/song/` and `api/tape/` import no Angular,
   Electron or Node module.
-- [ ] T073 [P] Update `quickstart.md` and `data-model.md` where the implementation settled a detail
+- [x] T073 [P] Update `quickstart.md` and `data-model.md` where the implementation settled a detail
   (for example the remaining "decided in /speckit-plan after #13" notes, i18n key names).
 - [ ] T074 Run `npm run lint`, `npm run i18n:check`, `npm run test` and `npm run build`; all green.
 - [ ] T075 Run `npm run e2e`; the whole suite, including the 001 tests, is green.

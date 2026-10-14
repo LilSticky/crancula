@@ -7,8 +7,8 @@ for a Tape are "the selected Parts" (`selectedParts`), not a term of their own. 
 slice 001, valid domain objects are immutable and can only be created through the functions named
 here or through the snapshot parser.
 
-Folder layout, file names and the exact export list in `api/index.ts` are decided in
-/speckit-plan after #13. Existing types are reused: `MidiNoteNumber`, `noteName`, `Millimetres`,
+Folder layout and file names are settled in [research R10.1](research.md#r101-domain-folders).
+Existing types are reused: `MidiNoteNumber`, `noteName`, `Millimetres`,
 `Organ`, `OrganId`, `Pipe`, `minimumHoleLength` and `Result` from `api/`.
 
 ## Value types
@@ -72,8 +72,8 @@ Invariant: `start + duration` < 2³¹. Loudness, instrument and tempo are not pa
 | `not-timed-in-beats` | time-code (SMPTE) division | FR-002 |
 | `no-notes` | no Part with a Note | FR-002 |
 
-The UI shows each with an i18n key in en and de (FR-025); key names are decided in /speckit-plan
-after #13.
+The UI shows each with an i18n key in en and de (FR-025); the key is `TAPE.SONG_REJECTION.<CODE>`
+(the code upper-cased, `-` as `_`); violations use `TAPE.VIOLATION.<CODE>` the same way.
 
 ## Bringing a Song onto a Tape (pure functions, no state)
 
@@ -114,6 +114,11 @@ These run before the Tape exists, whenever the selected Parts or the Transpositi
   | `no-part-selected` | FR-004 |
   | `transposition-out-of-range` | FR-007, spec Assumptions |
   | `no-note-on-a-pipe` (every selected Note is an Unplayable Note) | edge case "not a single Note" |
+
+  Settled in implementation: `no-note-on-a-pipe` is judged only for an in-range Transposition (an
+  out-of-range one reports `transposition-out-of-range` alone). Part indices outside the Song are
+  ignored. `overlap-merged` reports the start of the merged Hole. The Tape view draws a Hole
+  with the constants w=8 per Column and h=16 per Pipe row.
 
 - Prefilled Column length (FR-010): the Column length of the last Tape created for the Organ,
   else `minimumHoleLength(organ.tapeBed)`. "Last created" needs creation order; the Tape list
@@ -199,8 +204,9 @@ re-checked, spec Assumptions):
 ## Tape library (renderer state)
 
 Holds all Tapes and the Songs they reference, keyed by id. It is the in-memory source of truth
-(ADR 3) and a snapshot adapter, not a domain aggregate. Its store technology is decided in
-/speckit-plan after #13.
+(ADR 3) and a snapshot adapter, not a domain aggregate. It is an NgRx signal store
+(research R10). A failed snapshot write stays pending and is retried; a snapshot that can't be
+moved aside blocks saves, so it is never overwritten.
 
 - `tapesOf(organId)`: for the FR-020 confirmation.
 - `affectedByRemovingPipes(organId, pipes): {tapes: number; holes: number}`: for the FR-021

@@ -1,9 +1,9 @@
 # Research: Bring a song onto a tape
 
 Each entry gives the decision, the reason for it, and the alternatives considered. This is the
-**stack-independent** part of Phase 0. Anything that depends on the tech-stack upgrade
-([#13](https://github.com/LilSticky/crancula/issues/13), Angular 22 and friends) is marked
-"decided in /speckit-plan after #13". Names follow `documentation/DICTIONARY.md`; the terms that
+**stack-independent** part of Phase 0. Items that depended on the tech-stack upgrade
+([#13](https://github.com/LilSticky/crancula/issues/13), Angular 22 and friends) were settled in
+R10 (R1, R7 and the data model refer to it). Names follow `documentation/DICTIONARY.md`; the terms that
 were missing there (Tick, Fit, Import Summary) were added with the user's approval, see
 [Spec questions](#spec-questions).
 
@@ -48,12 +48,10 @@ sources on GitHub.
     and the browser dev server keeps working.
   - Files larger than 16 MiB are rejected before reading (as "not a readable MIDI file"); real
     MIDI files are a few hundred kB at most.
-  - The exact file-picking component (Material button plus hidden input) is decided in
-    /speckit-plan after #13.
+  - The exact file-picking component (Material button plus hidden input) is settled in R10.
 - **Where the code lives**: the Song model in `api/song/`, the MIDI reader beside it as an
   adapter (`api/song/midi/`) that depends on the Song model, never the reverse (ADR 2). Files
-  import each other relatively (001 research R1). Final folder names are decided in
-  /speckit-plan after #13.
+  import each other relatively (001 research R1). Final folder names are settled in R10.1.
 - **Rationale**:
   - The spec needs semantics no library gives as-is: a Part per track × channel (R2), no Note
     lost silently (SC-003), explicit rejection of time-code files (FR-002), and typed reasons
@@ -84,7 +82,7 @@ sources on GitHub.
     byte-level loop.
   - **Parsing in the main process** with a native open dialog (`songs:open` returning the parsed
     Song): adds an IPC channel, a payload validator for a whole Song, and dialog mocking in e2e,
-    with no benefit since the reader is pure. If /speckit-plan prefers a native dialog after #13,
+    with no benefit since the reader is pure. If a native dialog is preferred later (see R10),
     the channel should return `{fileName, bytes: Uint8Array}` only, and parsing stays in the
     renderer.
 - **Follow-up**: record the choice in an ADR during /speckit-plan (it settles ADR 5's open
@@ -341,8 +339,7 @@ sources on GitHub.
   - Holes refer to their Pipe by its MIDI note number (the Pipe's identity, dictionary), so
     reordering Pipes needs no change to Tapes (FR-021).
   - IPC channel names (`tapes:load`, `tapes:save`, following 001's `organs:*`), the renderer
-    store and whether the file logic is shared with `organs.json` are decided in /speckit-plan
-    after #13.
+    store and whether the file logic is shared with `organs.json` are settled in R10.
 - **Rationale**: keeps ADR 8's proven pattern, satisfies FR-016 and FR-023 at the same time, and
   stays small enough to rewrite whole.
 - **Alternatives considered**:
@@ -458,7 +455,7 @@ Assumptions.
 ## R10 Stack-dependent items, settled in /speckit-plan (after #13)
 
 Added 2026-10-14 by /speckit-plan, on the upgraded stack (Angular 22, NgRx Signals 22, Electron 44,
-TypeScript 6, Vitest 5). Settles R9 and the "decided in /speckit-plan after #13" notes in R1, R7
+TypeScript 6, Vitest 5). Settles R9 and the notes in R1, R7
 and the data model.
 
 ### R10.1 Domain folders

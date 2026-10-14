@@ -54,7 +54,7 @@ describe('Tape texts', () => {
         });
 
         it(`${kind} has a German text at ${key} that differs from the English one`, () => {
-          const german = textAt(de as TranslationTree, key);
+          const german = textAt(de, key);
           expect(german).toBeTruthy();
           expect(german).not.toBe(textAt(en as TranslationTree, key));
         });

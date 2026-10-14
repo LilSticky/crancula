@@ -17,7 +17,7 @@ How to prove the slice works end to end. It refers to the [spec](spec.md),
 | Command | Expected |
 |---------|----------|
 | `npm run lint` | no errors |
-| `npm run i18n:check` | every new `TAPE.*` key in `en.json` and `de.json` |
+| `npm run i18n:check` | every new `TAPE.*` key in `en.json` and `de.json`, no unused key (`TAPE.VIOLATION.*` and `TAPE.SONG_REJECTION.*` are built from the error code and listed in `DYNAMIC_PREFIXES` in `scripts/check-i18n.mjs`) |
 | `npm run test` | Node tests (`api/song`, `api/tape`, `app/`) and Angular tests (`src/`) green, including the 001 tests unchanged |
 | `npm run build` | build succeeds |
 | `npm run e2e` | Electron flows green: import → Import Summary → Tape view, restart, remove Tape, delete Organ with Tapes, remove a Pipe with Holes, unreadable `tapes.json`, German |
