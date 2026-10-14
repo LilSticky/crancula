@@ -454,3 +454,137 @@ Assumptions.
 - **Import Summary**: what the user sees after a Song is brought onto a Tape (FR-015).
 
 "Selection" is not a term: specs and code say "the selected Parts".
+
+## R10 Stack-dependent items, settled in /speckit-plan (after #13)
+
+Added 2026-10-14 by /speckit-plan, on the upgraded stack (Angular 22, NgRx Signals 22, Electron 44,
+TypeScript 6, Vitest 5). Settles R9 and the "decided in /speckit-plan after #13" notes in R1, R7
+and the data model.
+
+### R10.1 Domain folders
+
+- **Decision**: `api/song/` holds the Song model; the MIDI reader is an adapter beside it in
+  `api/song/midi/` and imports from `api/song/`, never the reverse. `api/tape/` holds the Tape,
+  the import pipeline (Quantisation, Transposition, octave moves, Hole fixes, `createTape`), the
+  Import Summary and the Tape snapshot. `CranculaApi` moves from `api/organ/crancula-api.ts` to
+  `api/app/crancula-api.ts`, because it now spans Organs, Tapes and the app. Files import each
+  other relatively; `api/index.ts` re-exports the public API
+  ([contracts/domain-api.md](contracts/domain-api.md)).
+- **Rationale**: one folder per aggregate, as in 001 (`api/organ/`); the reader depends on the
+  model (ADR 2, constitution III).
+- **Alternatives considered**: one `api/tape/` folder for everything (mixes the Song Source
+  adapter into the Tape domain); keeping `CranculaApi` under `organ/` (misleading once it holds
+  Tapes).
+
+### R10.2 Renderer store for Tapes
+
+- **Decision**: a root `TapeLibrary` signal store (`@ngrx/signals` 22) with two named entity
+  collections, `tape` and `song`, plus `loadProblem` and `saveProblem` like `OrganLibrary`. It is
+  loaded by `provideAppInitializer`, after the Organs. Every change writes the whole snapshot
+  through `tapes:save` and resolves `false` when writing failed; the in-memory change stays
+  (FR-024). Insertion order of the `tape` collection is creation order (data model, FR-010).
+- **Rationale**: same pattern as `OrganLibrary`, which works and is tested; named collections keep
+  Songs and Tapes in one store, so they are always written together (R7).
+- **Alternatives considered**: two stores (Song and Tape), which could drift apart between two
+  writes; a plain service with signals (loses the `withEntities` helpers used in 001).
+
+### R10.3 Cascades between Organs and Tapes (FR-020, FR-021)
+
+- **Decision**: the Organ feature calls `TapeLibrary` **before** `OrganLibrary`:
+  - deleting an Organ: `TapeLibrary.removeTapesOf(organId)`, and only if that write succeeded,
+    `OrganLibrary.remove(organId)`. Refused while `TapeLibrary.loadProblem` is set (FR-020).
+  - saving an Organ with removed Pipes: `TapeLibrary.affectedByRemovingPipes` feeds the
+    confirmation; after confirming, `TapeLibrary.removeHolesOfPipes(organId, pipes)`, then
+    `OrganLibrary.put(organ)` only if the Tape write succeeded.
+
+  `OrganLibrary` itself stays unaware of Tapes; the Organ list and the Organ editor coordinate.
+  While the Tapes can't be read, saving an Organ with removed Pipes is refused (FR-021a, settled
+  2026-10-14, ADR 17).
+- **Rationale**: children first (R7). Keeping the order in two components, each with its own
+  test, is simpler than a third store.
+- **Alternatives considered**: `OrganLibrary` injecting `TapeLibrary` (a store depending on
+  another store's write order is harder to test); one combined snapshot file (rejected in R7).
+
+### R10.4 Shared snapshot-file code in `app/`
+
+- **Decision**: extract the load, coalesce, atomic-write and quarantine logic of
+  `app/organ-library-file.ts` into a generic `app/snapshot-file.ts`
+  (`createSnapshotFile<S>(dir, {fileName, parse, normalise}, options)`). `organ-library-file.ts`
+  and the new `tape-library-file.ts` become thin configurations of it. `before-quit` flushes both
+  files. The existing `organ-library-file.spec.ts` stays green unchanged (refactor under green).
+- **Rationale**: ADR 8 says later aggregates follow the same pattern and the file logic can be
+  shared; a copy would drift.
+- **Alternatives considered**: copy and paste (two places to fix bugs); one class with an
+  aggregate switch (less type-safe).
+
+### R10.5 IPC channels and payload size
+
+- **Decision**: `tapes:load` and `tapes:save`, mirroring `organs:*`, with the same result shapes
+  ([contracts/tape-library-ipc.md](contracts/tape-library-ipc.md)). The full snapshot is sent on
+  every change. At about 2–3 MB for ten long Tapes with their Songs (R7) that is fine for
+  Electron's structured clone, and Tapes only change on create, remove and the cascades.
+- **Rationale**: same boundary shape as 001, validated in main with `parseTapeLibrarySnapshot`
+  (ADR 4).
+- **Alternatives considered**: per-Tape channels (`tapes:put`, `tapes:remove`): smaller payloads,
+  but partial state in main and more validation code, unnecessary at this size.
+
+### R10.6 Picking the MIDI file
+
+- **Decision**: a Material button that clicks a hidden `<input type="file" accept=".mid,.midi">`.
+  The renderer checks `File.size` (over 16 MiB is `not-a-midi-file`), reads `File.name` and
+  `File.arrayBuffer()`, and calls `readMidiSong`. No IPC (R1).
+- **Rationale**: no new channel, works in the dev server, and Playwright feeds it with
+  `setInputFiles` (R8).
+- **Alternatives considered**: Electron's native open dialog (adds a channel and dialog mocking,
+  R1).
+
+### R10.7 The import form
+
+- **Decision**: one page, `tapes/new`, with a signal form (`form()` from `@angular/forms/signals`,
+  as the Organ editor since #13) over an import draft: Organ, selected Parts, Transposition, name,
+  Column length. The Song is a separate signal, set by the file input. `computed` signals derive
+  `allowedTranspositions`, the proposal and `fitOf` for the current Transposition (Stories 3 and
+  5). One validator rule feeds `createTape`'s `TapeViolation`s into the fields, as
+  `validateOrgan` does in the Organ editor. Changing the selected Parts resets the Transposition
+  to the new proposal (Story 3 scenario 2). With exactly one Organ it is preselected; with none,
+  the page shows the FR-001 hint with a link to `organs/new`.
+- **Rationale**: same form technology and violation mapping as the Organ editor. Everything is a
+  pure function of the draft and fast enough (R4: about 33 000 steps per proposal), so no Web
+  Worker is needed (R9).
+- **Alternatives considered**: a multi-step wizard (Material stepper): more UI states and tests,
+  and no requirement asks for steps.
+
+### R10.8 Showing the Import Summary once
+
+- **Decision**: after `createTape` succeeded and the Tape was put into `TapeLibrary`, the page
+  navigates to `tapes/:id` and passes the Import Summary as router navigation state. The Tape view
+  shows it above the Tape when present; opening the Tape later shows none (spec Assumptions: shown
+  once, not stored). If the write failed, the Tape stays in memory, the storage problem is shown
+  (FR-024), and the navigation still happens.
+- **Rationale**: no transient state in a store; the summary lives exactly as long as that
+  navigation.
+- **Alternatives considered**: a dialog after creating (hides the Tape the summary talks about);
+  a "last summary" field in `TapeLibrary` (state that must be cleared again).
+
+### R10.9 Drawing the read-only Tape view (FR-018, SC-006)
+
+- **Decision**: one inline SVG per Tape, generated by the Angular template: one `rect` per Hole,
+  `x = start × w`, `width = length × w`, `y = row × h`, with fixed pixel sizes per Column (`w`)
+  and per row (`h`), inside a horizontally scrolling container. Row labels (note names, in the
+  Organ's row order) stay fixed on the left. Holes whose Pipe is not on the Organ are not drawn
+  (the parser doesn't check Organ-relative rules, R7). A light mark every 8th Column (a quarter
+  note) helps orientation; no bar lines (spec Assumptions).
+- **Rationale**: a 5-minute Song is about 5 000 Columns and a few thousand Holes. A few thousand
+  SVG elements render well under 2 s in Chromium. SVG elements can be queried in jsdom component
+  tests and in Playwright (row, start, length per Hole); a canvas can't.
+- **Alternatives considered**: canvas (fast, but not testable by element); a virtualised grid of
+  cells (Columns × rows = hundreds of thousands of cells; far more code even when virtualised).
+  The view's SVG is not the export of "Punch a tape"; that slice has its own adapter in mm.
+
+### R10.10 Routes and navigation
+
+- **Decision**: `tapes` (Tape list, in the navbar), `tapes/new` (import form), `tapes/:id` (Tape
+  view). The Tape list shows name, Organ name (or that the Organ is not available, FR-023), length
+  in Columns and in mm (FR-017), an open action (disabled without a readable Organ), and remove
+  with confirmation (FR-019, shared `ConfirmDialogComponent`).
+- **Rationale**: same structure as `organs`, `organs/new`, `organs/:id`.
