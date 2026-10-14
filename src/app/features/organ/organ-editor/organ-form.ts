@@ -79,18 +79,55 @@ export function isShown(error: OrganFieldError, dirty: boolean): boolean {
   return dirty || !MISSING_VALUE_CODES.has(error.kind);
 }
 
-/** The errors of a field that the user should see now. */
-export function shownErrors(field: FieldTree<unknown>, organ: FieldTree<OrganDraft>): readonly OrganFieldError[] {
+/** The text of a number field could not be read as a number; the form keeps the previous value. */
+function isNotANumber(error: ValidationError): boolean {
+  return error.kind === 'parse';
+}
+
+const NOT_A_NUMBER: TranslatableText = {key: 'ORGAN.EDITOR.NOT_A_NUMBER', params: {}};
+
+function violationMessage(error: OrganFieldError): TranslatableText {
+  return {key: `ORGAN.VIOLATION.${error.kind.toUpperCase().replace(/-/g, '_')}`, params: error.violation.params ?? {}};
+}
+
+/** The messages of a field that the user should see now. */
+export function shownMessages(field: FieldTree<unknown>, organ: FieldTree<OrganDraft>): readonly TranslatableText[] {
   // "Add at least one Pipe" belongs to the whole Organ: show it once anything was edited.
   const dirty = field === organ.pipes ? organ().dirty() : field().dirty();
   return field()
     .errors()
-    .filter(isOrganFieldError)
-    .filter((error) => isShown(error, dirty));
+    .flatMap((error) => {
+      if (isNotANumber(error)) return [NOT_A_NUMBER];
+      return isOrganFieldError(error) && isShown(error, dirty) ? [violationMessage(error)] : [];
+    });
 }
 
-export function violationMessage(error: OrganFieldError): TranslatableText {
-  return {key: `ORGAN.VIOLATION.${error.kind.toUpperCase().replace(/-/g, '_')}`, params: error.violation.params ?? {}};
+/** A rule the Organ breaks, located by the path of the field it belongs to (as in `OrganViolation`). */
+export interface FieldProblem {
+  readonly path: string;
+  readonly message: TranslatableText;
+}
+
+/** Every problem of the form, shown or not: the broken rules and the number fields with unreadable text. */
+export function organProblems(organ: FieldTree<OrganDraft>): readonly FieldProblem[] {
+  return organ()
+    .errorSummary()
+    .flatMap((error): FieldProblem[] => {
+      if (isOrganFieldError(error)) return [{path: error.violation.path, message: violationMessage(error)}];
+      const path = isNotANumber(error) ? pathOf(organ, error.fieldTree) : undefined;
+      return path === undefined ? [] : [{path, message: NOT_A_NUMBER}];
+    });
+}
+
+/** The path of an input field of the Organ, as used by `OrganViolation`. */
+function pathOf(organ: ReadonlyFieldTree<OrganDraft>, field: ReadonlyFieldTree<unknown>): string | undefined {
+  const paths = [
+    'name',
+    ...TAPE_BED_FIELDS.map((tapeBedField) => `tapeBed.${tapeBedField}`),
+    'minimumGap',
+    ...Array.from({length: organ.pipes.length}, (_, row) => `pipes.${row}.note`),
+  ];
+  return paths.find((path) => fieldAt(organ, path) === field);
 }
 
 /** Puts a Material input in its error state exactly while the editor shows a message for its field. */
@@ -99,9 +136,6 @@ export class ShownViolationMatcher extends ErrorStateMatcher {
   override isSignalErrorState(field: Field<unknown> | null): boolean {
     if (!field) return false;
     const state = field();
-    return state
-      .errors()
-      .filter(isOrganFieldError)
-      .some((error) => isShown(error, state.dirty()));
+    return state.errors().some((error) => isNotANumber(error) || (isOrganFieldError(error) && isShown(error, state.dirty())));
   }
 }

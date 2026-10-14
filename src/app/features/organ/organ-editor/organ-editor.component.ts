@@ -24,14 +24,7 @@ import {
 import {ConfirmableAction, ConfirmDialogComponent} from '../../shared/components/confirm-dialog/confirm-dialog.component';
 import type {LeaveProblem, TranslatableText, UnsavedChanges, UnsavedChangesCheck} from '../leave-unsaved.guard';
 import {OrganLibrary} from '../organ-library.store';
-import {
-  isOrganFieldError,
-  type OrganFieldError,
-  organFormSchema,
-  shownErrors,
-  ShownViolationMatcher,
-  violationMessage,
-} from './organ-form';
+import {type FieldProblem, organFormSchema, organProblems, shownMessages, ShownViolationMatcher} from './organ-form';
 
 /** The label key of each field that has one fixed label; Pipe notes are labelled by their row. */
 const FIELD_LABEL_KEYS: Readonly<Record<string, string>> = {
@@ -102,7 +95,6 @@ export class OrganEditorComponent implements UnsavedChangesCheck {
   protected readonly canSave = computed(() => this.changed() && this.organ().valid() && !this.saving());
 
   protected readonly minimumHoleLength = computed(() => this.organ.tapeBed.holeDiameter().value() ?? '');
-  protected readonly violationMessage = violationMessage;
 
   constructor() {
     effect(() => {
@@ -116,7 +108,7 @@ export class OrganEditorComponent implements UnsavedChangesCheck {
   /** What leaving would lose (spec FR-012a), or `null` when there is no unsaved change. */
   unsavedChanges(): UnsavedChanges | null {
     if (this.deleted || !this.changed()) return null;
-    return {problems: this.organ().errorSummary().filter(isOrganFieldError).map(toProblem)};
+    return {problems: organProblems(this.organ).map(toProblem)};
   }
 
   /** Stores the valid, changed Organ (spec FR-012). */
@@ -134,9 +126,9 @@ export class OrganEditorComponent implements UnsavedChangesCheck {
     if (!this.id()) await this.router.navigate(['/organs', result.value.id], {replaceUrl: true});
   }
 
-  /** The rule violations to show at a field now. */
-  protected violationsAt(field: FieldTree<unknown>): readonly OrganFieldError[] {
-    return shownErrors(field, this.organ);
+  /** The messages to show at a field now. */
+  protected messagesAt(field: FieldTree<unknown>): readonly TranslatableText[] {
+    return shownMessages(field, this.organ);
   }
 
   /** The name of the note a Pipe plays, or nothing while its note is missing or out of range. */
@@ -178,11 +170,10 @@ export class OrganEditorComponent implements UnsavedChangesCheck {
   }
 }
 
-function toProblem(error: OrganFieldError): LeaveProblem {
-  const {path} = error.violation;
+function toProblem({path, message}: FieldProblem): LeaveProblem {
   const pipeRow = /^pipes\.(\d+)\./.exec(path);
   const field: TranslatableText = pipeRow
     ? {key: 'ORGAN.LEAVE.PIPE_FIELD', params: {row: Number(pipeRow[1]) + 1}}
     : {key: FIELD_LABEL_KEYS[path] ?? path, params: {}};
-  return {field, message: violationMessage(error)};
+  return {field, message};
 }

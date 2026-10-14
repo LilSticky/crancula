@@ -42,6 +42,7 @@
       "PIPES": "Pfeifen",
       "ROW": "Reihe {{row}}",
       "PIPE_NOTE": "MIDI-Note",
+      "NOT_A_NUMBER": "Gib eine Zahl ein.",
       "ADD_PIPE": "Pfeife hinzufügen",
       "MOVE_PIPE_UP": "Pfeife nach oben verschieben",
       "MOVE_PIPE_DOWN": "Pfeife nach unten verschieben",

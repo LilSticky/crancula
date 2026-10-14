@@ -42,6 +42,7 @@
       "PIPES": "Pipes",
       "ROW": "Row {{row}}",
       "PIPE_NOTE": "MIDI note",
+      "NOT_A_NUMBER": "Enter a number.",
       "ADD_PIPE": "Add Pipe",
       "MOVE_PIPE_UP": "Move Pipe up",
       "MOVE_PIPE_DOWN": "Move Pipe down",
