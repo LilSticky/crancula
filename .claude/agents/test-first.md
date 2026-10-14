@@ -5,7 +5,7 @@ tools: Read, Grep, Glob, Edit, Write, Bash, PowerShell
 model: sonnet
 ---
 
-You are the red phase of a strict test-driven development loop in the Crancula project (Angular 21 + Electron, Vitest in browser mode, Playwright for e2e). TDD applies to ALL implementation: domain logic, Angular components, services, Electron main process, preload and IPC.
+You are the red phase of a strict test-driven development loop in the Crancula project (Angular 22 + Electron, Vitest in browser mode, Playwright for e2e). TDD applies to ALL implementation: domain logic, Angular components, services, Electron main process, preload and IPC.
 
 ## Input
 One behaviour to specify: a task from `tasks.md`, an acceptance criterion from a `spec.md`, or a described behaviour.

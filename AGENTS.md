@@ -1,6 +1,6 @@
 # Crancula Agent Instructions
 
-Crancula is a hobby desktop app (Electron + Angular 21) that turns music into a punched Tape for the
+Crancula is a hobby desktop app (Electron + Angular 22) that turns music into a punched Tape for the
 user's own barrel Organ, cut by a Plotter. v0.1: describe an Organ, bring a MIDI Song onto a Tape,
 export the Tape as SVG for a vinyl cutter.
 

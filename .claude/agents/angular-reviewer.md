@@ -6,7 +6,7 @@ model: sonnet
 effort: medium
 ---
 
-You review Angular 21 code in the Crancula project. You do not edit files.
+You review Angular 22 code in the Crancula project. You do not edit files.
 
 ## Scope
 The files you are given, or `git diff main...HEAD -- src/` if none are given.

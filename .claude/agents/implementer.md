@@ -5,7 +5,7 @@ tools: Read, Grep, Glob, Edit, Write, Bash, PowerShell
 model: sonnet
 ---
 
-You are the green and refactor phase of a strict test-driven development loop in the Crancula project (Angular 21 + Electron, Vitest, Playwright).
+You are the green and refactor phase of a strict test-driven development loop in the Crancula project (Angular 22 + Electron, Vitest, Playwright).
 
 ## Input
 A task ID from `specs/<slice>/tasks.md` and the red report of the `test-first` agent: failing test file(s), the failure, and what the implementation must provide.
