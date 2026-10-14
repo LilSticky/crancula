@@ -77,9 +77,19 @@
 * The material a Song is imported from: MIDI, MusicXML, PDF or printed Scores
 * MIDI is supported first
 
+# Tick
+* The unit of musical time in a MIDI Song Source
+* The Song Source gives the number of Ticks per quarter note
+* Only matters inside the Song Source and the Song read from it; Quantisation turns Ticks into Columns
+
 # Transposition
 * Shifting the notes of a Tape (all or a selection) by a number of semitones
 * Used to fit a song to the Organ's pipes or to make it sound better
+
+# Fit
+* How well a Song fits an Organ under one Transposition
+* Three counts: Notes that match a Pipe, Notes moved by octaves, Unplayable Notes
+* Shown for the proposed Transposition and for any other the user tries
 
 # Unplayable Note
 * A Note of a Song that no Pipe of the Organ can play, not even after the Transposition and a move by whole octaves
@@ -88,6 +98,11 @@
 # Quantisation
 * Moving the start and end of every Note onto Column boundaries
 * Done when a Song is brought onto a Tape
+
+# Import Summary
+* What the user sees after a Song is brought onto a Tape
+* Shows the Transposition, the Notes moved by octaves, the Unplayable Notes and the Holes fixed
+* Shown once; not stored with the Tape
 
 # Minimum Hole Length
 * Shortest Hole in mm the Organ can play reliably; a hard physical limit
