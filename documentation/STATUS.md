@@ -48,7 +48,9 @@ now including e2e, is green (T042). After that:
 
 ## Known broken / WIP
 
-- No known broken items. #4–#8 are fixed on this branch and close with the merge.
+- No known broken items. Fixed on 2026-10-14: fonts no longer load from Google; Roboto and Material
+  Icons ship with the app from `src/fonts/`, licenses in `src/assets/fonts/`
+  ([#24](https://github.com/LilSticky/crancula/issues/24)).
 
 ## Open questions
 
