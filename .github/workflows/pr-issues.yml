@@ -1,0 +1,23 @@
+name: Pull request references
+
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize]
+
+permissions: {}
+
+jobs:
+  references:
+    name: References an issue (ADR 10)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check the body for Closes/Refs #N
+        env:
+          BODY: ${{ github.event.pull_request.body }}
+        run: |
+          if printf '%s' "$BODY" | grep -Eiq '\b(closes|fixes|resolves|refs)[[:space:]]+#[0-9]+'; then
+            echo "Issue reference found."
+          else
+            echo "::error::The pull request body must reference an issue with 'Closes #N' or 'Refs #N' (ADR 10)."
+            exit 1
+          fi
