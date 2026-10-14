@@ -121,6 +121,79 @@ describe('OrganEditorComponent', () => {
     });
   });
 
+  describe('hasInvalidDraft', () => {
+    it('is false for a pristine new draft', async () => {
+      const {open: openEditor} = render();
+      const {fixture} = await openEditor();
+
+      expect(fixture.componentInstance.hasInvalidDraft()).toBe(false);
+    });
+
+    it('is false after an edit that leaves the Organ valid', async () => {
+      const {open: openEditor} = render();
+      const {fixture, fillValidOrgan} = await openEditor();
+
+      await fillValidOrgan();
+
+      expect(fixture.componentInstance.hasInvalidDraft()).toBe(false);
+    });
+
+    it('is true after an edit that breaks a rule', async () => {
+      const {open: openEditor} = render();
+      const {fixture, field, type} = await openEditor();
+
+      await type(field('name'), 'Street organ');
+
+      expect(fixture.componentInstance.hasInvalidDraft()).toBe(true);
+    });
+
+    it('is false when a stored Organ is reopened without changes', async () => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 2);
+      await library.put(organ);
+      const {fixture} = await openEditor(organ.id);
+
+      expect(fixture.componentInstance.hasInvalidDraft()).toBe(false);
+    });
+  });
+
+  describe('hasInvalidDraft by real changes', () => {
+    it('is true after removing Pipes from a stored Organ until it breaks a rule', async () => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 2);
+      await library.put(organ);
+      const {fixture, click} = await openEditor(organ.id);
+
+      await click('remove-pipe');
+      await click('remove-pipe');
+
+      expect(fixture.componentInstance.hasInvalidDraft()).toBe(true);
+    });
+
+    it('is true after adding an empty Pipe row to a stored Organ', async () => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 2);
+      await library.put(organ);
+      const {fixture, click} = await openEditor(organ.id);
+
+      await click('add-pipe');
+
+      expect(fixture.componentInstance.hasInvalidDraft()).toBe(true);
+    });
+
+    it('is false after only focusing and blurring a field of a pristine new draft', async () => {
+      const {open: openEditor} = render();
+      const {fixture, field} = await openEditor();
+      const name = field('name');
+
+      name.dispatchEvent(new Event('focus'));
+      name.dispatchEvent(new Event('blur'));
+      await fixture.whenStable();
+
+      expect(fixture.componentInstance.hasInvalidDraft()).toBe(false);
+    });
+  });
+
   describe('an unknown id', () => {
     it('goes back to the Organ list', async () => {
       const {open: openEditor, navigate} = render();

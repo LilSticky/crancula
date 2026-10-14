@@ -337,7 +337,7 @@ restart and check; then delete with cancel and with confirm.
     the first row and move-down disabled on the last;
   - "remove" deletes a row and keeps the rest contiguous;
   - the result is stored.
-- [ ] T030 [P] [US4] Write the guard test `src/app/features/organ/leave-invalid.guard.spec.ts`:
+- [x] T030 [P] [US4] Write the guard test `src/app/features/organ/leave-invalid.guard.spec.ts`:
   - leaving with a valid or unchanged draft is allowed without a dialog;
   - leaving with an invalid draft opens the confirm dialog;
   - **cancel** stays on the page;
@@ -352,7 +352,7 @@ restart and check; then delete with cancel and with confirm.
 
 - [x] T033 [US4] Add reorder and remove controls to the editor: Material icon buttons plus
   `cdkDropList`, using `movePipe` and `removePipe` from `api/organ/organ-draft.ts`.
-- [ ] T034 [US4] Implement `src/app/features/organ/leave-invalid.guard.ts` (`CanDeactivateFn`),
+- [x] T034 [US4] Implement `src/app/features/organ/leave-invalid.guard.ts` (`CanDeactivateFn`),
   reusing `src/app/features/shared/components/confirm-dialog/`, and wire it into
   `src/app/features/organ/routes.ts`.
 - [ ] T035 [US4] Add delete with a confirm dialog to the Organ list and the editor, then navigate

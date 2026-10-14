@@ -22,6 +22,7 @@ import {
   validateOrgan,
 } from '@api/index';
 import {ErrorStateDirective} from '../../shared/directives/error-state.directive';
+import {type DraftLeaveCheck} from '../leave-invalid.guard';
 import {OrganLibrary} from '../organ-library.store';
 
 type TapeBedField = keyof OrganDraft['tapeBed'];
@@ -67,7 +68,7 @@ const MISSING_VALUE_CODES: ReadonlySet<OrganViolationCode> = new Set([
     }
   `,
 })
-export class OrganEditorComponent {
+export class OrganEditorComponent implements DraftLeaveCheck {
   /** Route parameter; absent for a new Organ. */
   readonly id = input<string>();
 
@@ -125,6 +126,11 @@ export class OrganEditorComponent {
       const result = validateOrgan(this.draft());
       if (result.ok) untracked(() => this.store(result.value));
     });
+  }
+
+  /** Whether the user changed the Organ into a state that is not stored; leaving would discard it. */
+  hasInvalidDraft(): boolean {
+    return JSON.stringify(this.draft()) !== JSON.stringify(this.opened()) && !validateOrgan(this.draft()).ok;
   }
 
   /** The rule messages to show at the field with this path. */
