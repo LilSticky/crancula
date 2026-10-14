@@ -34,3 +34,24 @@ export {
   type TicksPerQuarter,
 } from './song/song';
 export {MAXIMUM_MIDI_FILE_SIZE, readMidiSong, type SongRejection} from './song/midi/read-midi-song';
+export {
+  removeHolesOfPipes,
+  tapeId,
+  tapeLengthInMillimetres,
+  type Column,
+  type ColumnCount,
+  type Hole,
+  type Tape,
+  type TapeId,
+  type Transposition,
+} from './tape/tape';
+export {allowedTranspositions, proposeTransposition} from './tape/transposition';
+export {fitOf, type Fit} from './tape/fit';
+export {
+  createTape,
+  prefilledColumnLength,
+  type CreateTapeInput,
+  type TapeViolation,
+  type TapeViolationCode,
+} from './tape/create-tape';
+export type {HoleChange, ImportSummary} from './tape/import-summary';

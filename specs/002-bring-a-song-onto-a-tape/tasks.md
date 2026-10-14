@@ -198,7 +198,7 @@ the `tapes:*` IPC boundary and the `TapeLibrary` store. Every user story needs t
     `lostColumn`.
 - [x] T021 Implement `api/tape/hole-fixes.ts` (overlap merge, the FR-012 loop of R6) and the
   `HoleChange` union in `api/tape/import-summary.ts` until T020 is green. Depends on T011, T020.
-- [ ] T022 Write the failing test `api/tape/create-tape.spec.ts` for `createTape(input)` and
+- [x] T022 Write the failing test `api/tape/create-tape.spec.ts` for `createTape(input)` and
   `prefilledColumnLength(organ, tapes)` (contracts/domain-api.md, data-model.md):
   - Violations, all reported at once: `name-required` (FR-014), `column-length-must-be-positive`
     (FR-010), `no-part-selected` (FR-004), `transposition-out-of-range` (FR-007),
@@ -221,7 +221,7 @@ the `tapes:*` IPC boundary and the `TapeLibrary` store. Every user story needs t
     array order), else `minimumHoleLength` of the Organ (FR-010).
   - Performance (SC-006): `readMidiSong` plus `createTape` on a generated 5-minute Song with
     16 Parts finishes well under 5 s.
-- [ ] T023 Implement `api/tape/create-tape.ts` (the pipeline Quantisation → Transposition →
+- [x] T023 Implement `api/tape/create-tape.ts` (the pipeline Quantisation → Transposition →
   octave moves → overlap merge → FR-012 fixes → Tape length, `prefilledColumnLength`,
   `TapeViolation`) and complete `api/tape/import-summary.ts` until T022 is green. Re-export the
   Tape API listed in contracts/domain-api.md from `api/index.ts`. Depends on T009, T013, T019,
