@@ -10,7 +10,9 @@ const OFF_SCREEN = -32000;
  * never shown does not paint, and Playwright's clicks wait for it forever. So it asks for a position off screen,
  * zero opacity, no taskbar entry and no focus. These are best effort per platform: macOS or a window manager may
  * clamp the position back onto a display. On Linux the window stays opaque: there a transparent window renders
- * only about one frame per second, and Playwright waits for frames before every click.
+ * only about one frame per second, and Playwright waits for frames before every click. Background throttling is
+ * off on every platform, because a hidden or occluded window on macOS otherwise gets its animation frames
+ * throttled (observed as 1 frame per 500 ms in CI).
  */
 export function windowOptions(
   env: NodeJS.ProcessEnv,
@@ -31,6 +33,7 @@ export function windowOptions(
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true,
+      ...(headless ? {backgroundThrottling: false} : {}),
     },
   };
 }

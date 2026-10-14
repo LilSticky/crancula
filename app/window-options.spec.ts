@@ -47,11 +47,28 @@ describe('windowOptions', () => {
   });
 
   it.each([{}, {CRANCULA_HEADLESS: '1'}])('always isolates the renderer from Node (%j)', (env) => {
-    expect(windowOptions(env, workArea, preloadPath, 'win32').webPreferences).toEqual({
+    expect(windowOptions(env, workArea, preloadPath, 'win32').webPreferences).toMatchObject({
       preload: preloadPath,
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true,
     });
+  });
+
+  // An invisible window counts as hidden or occluded, and Chromium then throttles requestAnimationFrame
+  // (seen on macOS CI: 1 frame in 500 ms). Headless runs must render at full speed on every platform.
+  it.each<NodeJS.Platform>(['win32', 'linux', 'darwin'])(
+    'keeps the headless window from throttling in the background on %s',
+    (platform) => {
+      const options = windowOptions({CRANCULA_HEADLESS: '1'}, workArea, preloadPath, platform);
+
+      expect(options.webPreferences?.backgroundThrottling).toBe(false);
+    },
+  );
+
+  it('leaves background throttling at its default when CRANCULA_HEADLESS is not set', () => {
+    const options = windowOptions({}, workArea, preloadPath, 'darwin');
+
+    expect(options.webPreferences?.backgroundThrottling ?? true).toBe(true);
   });
 });
