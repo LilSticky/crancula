@@ -36,7 +36,12 @@ registerAppHandlers(ipcMain, applyMenu);
 function createWindow(): BrowserWindow {
   // E2E runs set CRANCULA_HEADLESS=1 to keep the window hidden (see windowOptions).
   win = new BrowserWindow(
-    windowOptions(process.env, screen.getPrimaryDisplay().workAreaSize, path.join(__dirname, 'preload.js')),
+    windowOptions(
+      process.env,
+      screen.getPrimaryDisplay().workAreaSize,
+      path.join(__dirname, 'preload.js'),
+      process.platform,
+    ),
   );
 
   if (serve) {
