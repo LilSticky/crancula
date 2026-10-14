@@ -24,9 +24,19 @@ lint, i18n, 130 node + 108 Angular tests and 16 e2e green.
 Other changes on 2026-10-14: README for organ owners and MIT license; punched-tape logo, favicon and
 app icon; splash for the portable Windows build; fonts ship with the app (#24).
 
-**Next concrete step:** revisit research R6: move the Organ editor to Angular 22 signal forms
-(`form()`, `[formField]`, one `validate`/`validateTree` rule fed by `validateOrgan`), on its own
-branch, refactoring under the existing editor specs and e2e. Then `/speckit-plan` for slice 002.
+**Next concrete step** (handover, session ended 2026-10-14 ~16:00): get PR #31 green on Linux.
+- Since Electron 44, the same 6 e2e tests time out on CI ubuntu-latest (xvfb, hidden window); Windows,
+  macOS and local runs are green. Tried and reverted: one worker, `--ozone-platform=x11`, no vsync.
+  Latest try `6fa0d40` "keep the hidden e2e window opaque on Linux" (CI run 38593732077, result open).
+  Check it with `gh pr checks 31`; earlier runs: `gh run view <id> --log-failed`, traces in the
+  `e2e-traces-ubuntu-latest` artifact.
+- Also open: `npx tsc -p e2e/tsconfig.e2e.json --noEmit` reports a type error in
+  `e2e/support/launch-app.ts` (env object vs. Playwright 1.64 types), and the IDE shows argument-count
+  errors in `app/window-options.spec.ts`; check both once #31 is green.
+- Then merge #31, rebase `refactor/organ-editor-signal-forms` (pushed, reviewed, all suites green
+  locally; R6 moves the Organ editor to signal forms) onto `main`, open its PR (`Refs #13`), merge.
+- Then rebase `002-bring-a-song-onto-a-tape` and run `/speckit-plan` for slice 002. Draft PR #26
+  (release workflow) waits for that.
 
 ## Known broken / WIP
 
