@@ -1,9 +1,9 @@
 import {readFileSync} from 'node:fs';
 import {join} from 'node:path';
 import type {MenuItemConstructorOptions} from 'electron';
-import {describe, expect, it} from 'vitest';
+import {describe, expect, it, vi} from 'vitest';
 import type {Language} from '../api/app/language';
-import {menuTemplate} from './application-menu';
+import {loadMenuLabels, menuTemplate} from './application-menu';
 
 interface Translations {
   readonly MENU: Record<string, string>;
@@ -75,5 +75,26 @@ describe('menuTemplate', () => {
     expect(mac[0]?.label).toBeTruthy();
     expect(roles(mac[0])).toContain('quit');
     expect(mac.slice(1).map((item) => item.label)).toEqual(windows.map((item) => item.label));
+  });
+});
+
+describe('loadMenuLabels', () => {
+  it('warns once and falls back to English when the translation file cannot be read', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+
+    const labels = loadMenuLabels('de', join(__dirname, 'no-such-folder'));
+
+    expect(labels.FILE).toBe('File');
+    expect(warn).toHaveBeenCalledTimes(1);
+    warn.mockRestore();
+  });
+
+  it('does not warn when the translation file is read', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+
+    loadMenuLabels('de', join(__dirname, '../src/assets/i18n'));
+
+    expect(warn).not.toHaveBeenCalled();
+    warn.mockRestore();
   });
 });

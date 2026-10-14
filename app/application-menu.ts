@@ -44,7 +44,8 @@ function readMenuSection(language: Language, i18nDirectory: string): Readonly<Re
   try {
     const parsed: unknown = JSON.parse(readFileSync(join(i18nDirectory, `${language}.json`), 'utf8'));
     return isRecord(parsed) && isRecord(parsed['MENU']) ? parsed['MENU'] : {};
-  } catch {
+  } catch (error) {
+    console.warn(`Crancula: cannot read the ${language} menu translations from ${i18nDirectory}; using English.`, error);
     return {};
   }
 }
