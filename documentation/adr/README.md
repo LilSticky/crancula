@@ -18,3 +18,4 @@ with a new one and update both statuses here.
 | 10 | [Merge through pull requests that reference issues](0010-merge-through-pull-requests.md) | Accepted |
 | 11 | [UI preferences in localStorage](0011-ui-preferences-in-local-storage.md) | Accepted |
 | 12 | [Bundle the Electron main process and preload](0012-bundle-electron-main-and-preload.md) | Accepted |
+| 13 | [End-to-end tests in CI replace the manual walkthrough](0013-e2e-in-ci-replaces-manual-walkthrough.md) | Accepted |
