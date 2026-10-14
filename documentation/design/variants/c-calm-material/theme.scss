@@ -1,0 +1,95 @@
+// Variant c-calm-material: stock Angular Material 3 + Roboto, one tonal palette, light and dark.
+// Replaces the mat.theme() block and .cranc-form-section in src/styles.scss.
+//
+// 1. Generate the palette once from the seed colour "organ blue" #405F90:
+//      ng generate @angular/material:theme-color --primary-color=#405F90 --directory=src/styles/
+//    It writes src/styles/_theme-colors.scss with $primary-palette (+ derived secondary,
+//    neutral, neutral-variant, error) and the high-contrast mixin.
+// 2. Use it below. No tertiary of our own: the generated one stays for rare accents only.
+@use '@angular/material' as mat;
+@use 'styles/fonts';
+@use 'styles/theme-colors' as crancula;
+
+html {
+  height: 100%;
+  color-scheme: light dark; // follows the OS; the rail toggle sets `light` or `dark` on <html>
+
+  @include mat.theme((
+    color: (
+      primary: crancula.$primary-palette,
+      theme-type: color-scheme, // emits light-dark() tokens: one theme, both schemes
+    ),
+    typography: Roboto,
+    density: 0,
+  ));
+
+  &.light { color-scheme: light; }
+  &.dark  { color-scheme: dark; }
+
+  @media (prefers-contrast: more) {
+    @include crancula.high-contrast-overrides(color-scheme);
+  }
+
+  // --- Crancula's own tokens (the only ones) --------------------------------
+  // The Tape is a physical object: paper and Holes keep their colour in both schemes.
+  --cranc-tape-paper: light-dark(#f2ead6, #ddd4bf);
+  --cranc-tape-edge: light-dark(#b9ab88, #8f8368);
+  --cranc-tape-guide: rgb(90 74 40 / 14%);   // row lines, beat lines
+  --cranc-tape-bar: rgb(90 74 40 / 38%);     // bar lines, border lines
+  --cranc-hole: #26292e;
+  --cranc-select: #2f5aa8;                   // selection ring on paper, 4.9:1 on paper
+  --cranc-ok: light-dark(#2e6b3a, #9ad49f);  // "fits" icons and chips; never the only signal
+  --cranc-ok-container: light-dark(#d5ecd6, #1f4a28);
+}
+
+body {
+  margin: 0;
+  height: 100%;
+  background: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface);
+  font: var(--mat-sys-body-medium);
+}
+
+// --- Density: compact only where lists are long --------------------------
+// Forms: density -4 (40 px fields). The Pipes table and the Parts table: -5 (36 px).
+.cranc-form { @include mat.theme((density: -4)); }
+.cranc-table-fields { @include mat.theme((density: -5)); }
+
+// --- Component overrides (tokens, not selectors) --------------------------
+html {
+  // Navigation rail: mat-nav-list inside a fixed 88 px column.
+  @include mat.list-overrides((
+    active-indicator-color: var(--mat-sys-secondary-container),
+    active-indicator-shape: 16px,
+  ));
+
+  // Outlined cards everywhere; the page is calm, structure comes from 1 px outlines.
+  @include mat.card-overrides((
+    outlined-container-color: var(--mat-sys-surface-container-lowest),
+    outlined-outline-color: var(--mat-sys-outline-variant),
+    outlined-container-shape: 12px,
+  ));
+
+  // Form fields: outlined appearance by default (set in provideAppConfig via
+  // MAT_FORM_FIELD_DEFAULT_OPTIONS { appearance: 'outline', subscriptSizing: 'dynamic' }).
+  @include mat.form-field-overrides((
+    outlined-outline-color: var(--mat-sys-outline),
+  ));
+
+  // Tables: quiet header, no zebra.
+  @include mat.table-overrides((
+    header-headline-color: var(--mat-sys-on-surface-variant),
+    header-headline-weight: 500,
+    header-headline-size: 12px,
+    row-item-outline-color: var(--mat-sys-outline-variant),
+  ));
+}
+
+// --- The few layout classes (shared, in src/app/features/shared) ----------
+.cranc-page-head { display: flex; align-items: center; gap: 8px; min-height: 72px; padding: 12px 24px 12px 32px; }
+.cranc-page-body { flex: 1; min-height: 0; padding: 0 32px 24px; overflow: auto; }
+.cranc-savebar   { display: flex; align-items: center; gap: 12px; padding: 12px 24px 12px 32px;
+                   border-top: 1px solid var(--mat-sys-outline-variant);
+                   background: var(--mat-sys-surface-container-low); }
+.cranc-two-pane  { display: grid; grid-template-columns: minmax(340px, 400px) minmax(0, 1fr); gap: 16px; }
+.cranc-grid-2    { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 16px; }
