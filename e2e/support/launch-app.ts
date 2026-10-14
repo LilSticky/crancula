@@ -11,12 +11,6 @@ export interface LaunchedApp {
 }
 
 /**
- * Under xvfb (Linux CI) with Electron 44 the hidden window renders only 1 to 2 frames per second, and every
- * click waits about 2 s for them. Frames that do not wait for the display's vsync avoid that.
- */
-const LINUX_DISPLAY_ARGS = process.platform === 'linux' ? ['--disable-gpu-vsync'] : [];
-
-/**
  * Starts the built Electron app with its own `userData` folder (`CRANCULA_USER_DATA`).
  * The window stays hidden (`CRANCULA_HEADLESS`) unless `HEADED=1` is set.
  */
@@ -29,7 +23,7 @@ export async function launchApp(userDataDir?: string): Promise<LaunchedApp> {
   env['CRANCULA_USER_DATA'] = dir;
   if (process.env['HEADED'] !== '1') env['CRANCULA_HEADLESS'] = '1';
   const app = await electron.launch({
-    args: [...LINUX_DISPLAY_ARGS, join(__dirname, '../../app/main.js')],
+    args: [join(__dirname, '../../app/main.js')],
     env,
   });
   const window = await app.firstWindow();
