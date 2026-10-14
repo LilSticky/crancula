@@ -53,3 +53,6 @@ testem.log
 Thumbs.db
 /api/**/*.js
 /app/**/*.js
+
+# Spec Kit extension catalog cache
+/.specify/extensions/.cache
