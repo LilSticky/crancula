@@ -267,15 +267,15 @@ the `tapes:*` IPC boundary and the `TapeLibrary` store. Every user story needs t
   original bytes (FR-023, SC-007), and never touches `organs.json`.
 - [x] T031 Implement `app/tape-library-file.ts` on top of `app/snapshot-file.ts` until T030 is
   green. Depends on T025, T029, T030.
-- [ ] T032 Write the failing test `app/tape-library-ipc.spec.ts` (fake `ipcMain`):
+- [x] T032 Write the failing test `app/tape-library-ipc.spec.ts` (fake `ipcMain`):
   `registerTapeLibraryHandlers(ipcMain, file)` handles exactly `tapes:load` and `tapes:save`
   (`TAPE_LIBRARY_CHANNELS = {load: 'tapes:load', save: 'tapes:save'} as const`), and `tapes:save`
   answers `rejected` for a payload that fails `parseTapeLibrarySnapshot`.
-- [ ] T033 Implement `app/tape-library-ipc.ts` until T032 is green. Depends on T031, T032.
-- [ ] T034 Extend the e2e test `e2e/boundary.spec.ts`: `window.crancula.tapes.load` and
+- [x] T033 Implement `app/tape-library-ipc.ts` until T032 is green. Depends on T031, T032.
+- [x] T034 Extend the e2e test `e2e/boundary.spec.ts`: `window.crancula.tapes.load` and
   `window.crancula.tapes.save` are functions; with a fresh `CRANCULA_USER_DATA`,
   `tapes.load()` returns `{status: 'empty'}`; `window.crancula` exposes no other new member.
-- [ ] T035 Wire the Tape library into `app/preload.ts` (`tapes.load`/`tapes.save` through
+- [x] T035 Wire the Tape library into `app/preload.ts` (`tapes.load`/`tapes.save` through
   `ipcRenderer.invoke`, type-only imports from `../api`) and `app/main.ts` (create the Tape file
   in `<userData>/snapshots`, register the handlers, and on `before-quit` flush the Organ file and
   the Tape file, then quit) until T034 is green. Depends on T033, T034.
