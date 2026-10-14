@@ -63,4 +63,10 @@ export {
   type TapeViolation,
   type TapeViolationCode,
 } from './tape/create-tape';
+export {
+  parseTapeLibrarySnapshot,
+  toTapeLibrarySnapshot,
+  type TapeLibrary,
+  type TapeLibrarySnapshot,
+} from './tape/tape-library-snapshot';
 export type {HoleChange, ImportSummary} from './tape/import-summary';

@@ -251,21 +251,21 @@ the `tapes:*` IPC boundary and the `TapeLibrary` store. Every user story needs t
 
 ### Electron main process and preload (`app/`, Node Vitest + e2e)
 
-- [ ] T028 Write the failing test `app/snapshot-file.spec.ts` for a generic
+- [x] T028 Write the failing test `app/snapshot-file.spec.ts` for a generic
   `createSnapshotFile<S>(dir, {fileName, parse, normalise}, options)` with a toy snapshot
   (research R10.4, ADR 8): no file → `empty`; valid → `loaded`; bad JSON, failed parse or unknown
   version → renamed to `<name>.unreadable-<ISO timestamp>.json` with unchanged bytes and
   `unreadable`; `save` rejects an invalid payload without writing; coalesced writes with ~250 ms
   trailing debounce, one at a time, latest wins; `<name>.json.tmp` then rename; an I/O error gives
   `failed` and leaves the old file; `flush` awaits pending writes.
-- [ ] T029 Extract `app/snapshot-file.ts` from `app/organ-library-file.ts` until T028 is green,
+- [x] T029 Extract `app/snapshot-file.ts` from `app/organ-library-file.ts` until T028 is green,
   and make `app/organ-library-file.ts` a thin configuration of it. `app/organ-library-file.spec.ts`
   stays green **unchanged** (refactor under green). Depends on T028.
-- [ ] T030 Write the failing test `app/tape-library-file.spec.ts` (temporary directories):
+- [x] T030 Write the failing test `app/tape-library-file.spec.ts` (temporary directories):
   `createTapeLibraryFile(dir, options)` uses `tapes.json`, validates with
   `parseTapeLibrarySnapshot`, quarantines to `tapes.unreadable-<ISO timestamp>.json` with the
   original bytes (FR-023, SC-007), and never touches `organs.json`.
-- [ ] T031 Implement `app/tape-library-file.ts` on top of `app/snapshot-file.ts` until T030 is
+- [x] T031 Implement `app/tape-library-file.ts` on top of `app/snapshot-file.ts` until T030 is
   green. Depends on T025, T029, T030.
 - [ ] T032 Write the failing test `app/tape-library-ipc.spec.ts` (fake `ipcMain`):
   `registerTapeLibraryHandlers(ipcMain, file)` handles exactly `tapes:load` and `tapes:save`
