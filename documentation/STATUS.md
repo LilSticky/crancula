@@ -9,9 +9,8 @@ Issues: [GitHub](https://github.com/LilSticky/crancula/issues)
 **Bring a song onto a tape** ([#2](https://github.com/LilSticky/crancula/issues/2)) on branch
 `002-bring-a-song-onto-a-tape`: spec clarified, research and data model written (docs only, no code yet).
 
-**Done:** [Describe my organ](../specs/001-describe-my-organ/spec.md) (PR #15, 2026-10-14). Changes from
-the plan: plain signals instead of signal forms in the editor (research R6), Angular specs in jsdom
-([ADR 9](adr/0009-angular-specs-in-jsdom.md)), a small `crancErrorState` directive for error states.
+**Done:** [Describe my organ](../specs/001-describe-my-organ/spec.md) (PR #15, 2026-10-14). Change from
+the plan: Angular specs in jsdom ([ADR 9](adr/0009-angular-specs-in-jsdom.md)).
 
 **Tech stack updated** (2026-10-14, [#13](https://github.com/LilSticky/crancula/issues/13),
 [ADR 14](adr/0014-current-major-versions-with-dependabot.md)): Angular 22, Material 22, NgRx Signals 22,
@@ -24,16 +23,13 @@ lint, i18n, 130 node + 108 Angular tests and 16 e2e green.
 Other changes on 2026-10-14: README for organ owners and MIT license; punched-tape logo, favicon and
 app icon; splash for the portable Windows build; fonts ship with the app (#24).
 
-- Linux e2e timeouts are fixed: the hidden window stays opaque on Linux (`273b4df`). An intermittent
-  macOS failure (hidden window rendered 1 frame in 500 ms) is fixed by turning off background
-  throttling in headless runs (`f66eb98`). The e2e tsc error in `e2e/support/launch-app.ts` and the
-  IDE argument-count errors in `app/window-options.spec.ts` no longer reproduce (tsc clean, all
-  calls pass 4 arguments).
+**Organ editor on signal forms** (2026-10-14, [#13](https://github.com/LilSticky/crancula/issues/13),
+research R6 revised): `form()` over `OrganDraft`, `[formField]` inputs, one `validateTree` rule fed by
+`validateOrgan`, a `ShownViolationMatcher` instead of the `crancErrorState` directive. Lint, i18n,
+116 Angular tests and 17 e2e green.
 
-**Next concrete step:** rebase `refactor/organ-editor-signal-forms` (R6, Organ editor on signal forms,
-pushed and reviewed) onto `main`, open its PR (`Refs #13`) and merge it. Then rebase
-`002-bring-a-song-onto-a-tape` and run `/speckit-plan` for slice 002. Draft PR #26 (release workflow)
-waits for that.
+**Next concrete step:** rebase `002-bring-a-song-onto-a-tape` onto `main` and run `/speckit-plan` for
+slice 002. Draft PR #26 (release workflow) waits for that.
 
 ## Known broken / WIP
 
