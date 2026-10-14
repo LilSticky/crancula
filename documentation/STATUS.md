@@ -49,8 +49,12 @@ after this pull request merges. Draft PR #26 (release workflow) waits for that.
   not finished; not in v0.1.
 - Release builds: CI (`.github/workflows/ci.yml`) runs lint, test and build on Linux, Windows
   and macOS and should go green with this branch. Packaging now starts locally on Windows (smoke
-  launch of the packaged app). CI packaging and GitHub Releases are not set up yet
-  ([#11](https://github.com/LilSticky/crancula/issues/11)).
+  launch of the packaged app).
+- Release workflow ([#11](https://github.com/LilSticky/crancula/issues/11)): `.github/workflows/release.yml`
+  is drafted. A pushed tag `v*` packages on Linux, Windows and macOS and creates a draft GitHub
+  Release; a manual run only builds artifacts. Builds are unsigned. Untested in CI until the first
+  tag; only the Windows portable `.exe` was packaged locally. The missing portable splash image was
+  removed from `electron-builder.json`, because it broke the Windows build.
 
 ## Process changes
 
