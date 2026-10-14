@@ -139,13 +139,35 @@ Each entry gives the decision, the reason for it, and the alternatives considere
 - **Alternatives**: built-in signal-form validators for each rule. They would duplicate the
   domain logic, and cross-field rules (fit, overlap) are awkward to express with them.
 
-- **Revised during implementation (2026-10-14)**: the editor uses plain signals with `(input)`
+- **Revised during implementation (2026-10-14; superseded below)**: the editor uses plain signals with `(input)`
   handlers instead of signal forms. In Angular 21, signal forms (experimental) can't bind a
   `number | null` model to number inputs, and array fields iterate as entries. Making the domain's
   `OrganDraft` fit that API would have bent the domain to a UI library. `validateOrgan` is still the
   single source of the rules. Inputs show a `displayed` copy of the draft, which follows it only on
   structural changes, so a number is never rewritten while it is being typed.
-  **To revisit** after updating the tech stack: the user wants signal forms used rather than avoided.
+
+- **Revised after the Angular 22 update (2026-10-14)**: the editor uses signal forms again
+  (`@angular/forms/signals`; stable since 22.0, only the WebMCP options are `@experimental`).
+  - **What changed**: Angular 22 binds `number | null` model fields to number inputs (an empty
+    input is `null`) and iterates arrays of objects as field trees whose identity follows the item.
+    The unchanged `OrganDraft` is the form model; nothing is translated at the form boundary.
+  - **One rule**: `organFormSchema` has a single `validateTree` that runs `validateOrgan` and
+    targets each `OrganViolation` at the field its path names (`organ-form.ts`). No built-in
+    validators duplicate the rules. Save and the leave guard read the form's validity and
+    `errorSummary()`.
+  - **Display**: Angular Material 22 asks the error state matcher about signal-form fields, so a
+    small `ShownViolationMatcher` replaces the `crancErrorState` directive. A message about a
+    missing value shows once its field is `dirty()` (the old "touched" path set), other
+    violations show right away; "add a Pipe" waits for any edit.
+  - **Pipes**: `@for (pipe of organ.pipes; track pipe)`; a Pipe's field state (dirty) moves with
+    its item on reorder and is dropped on removal, so the manual path remapping is gone, and so
+    is the `displayed` copy of the draft. The DOM is written only when the parsed number changes,
+    so typing `3.50` keeps the text (e2e guard).
+  - **Unreadable number text**: text a number input cannot parse (Chromium reports `badInput`, e.g.
+    "1e") is a `parse` error of the field: the model keeps its previous value and the form is
+    invalid. The editor shows "Enter a number." (`ORGAN.EDITOR.NOT_A_NUMBER`) next to the field right
+    away and lists it in the leave dialog with the field's label, so a disabled Save always has a
+    visible reason.
 
 ## R7 Note names
 
