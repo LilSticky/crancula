@@ -99,7 +99,7 @@ the `tapes:*` IPC boundary and the `TapeLibrary` store. Every user story needs t
 - [x] T005 Implement `api/song/song.ts` (types, `songId`, `defaultSelectedParts`, the internal
   brand helpers) until T004 is green. A valid `Song` can only be built by the MIDI reader or the
   snapshot parser (branded, non-exported constructor, like `Organ`). Depends on T004.
-- [ ] T006 Write the failing test `api/song/midi/read-midi-song.spec.ts`, part 1: the file level
+- [x] T006 Write the failing test `api/song/midi/read-midi-song.spec.ts`, part 1: the file level
   (research R1, data-model.md "Reading a Song"), with bytes from the SMF test helper (T003):
   - `SongRejection` `not-a-midi-file` "not a readable MIDI file: no `MThd`, truncated, malformed
     or too large": no `MThd`, a chunk length beyond the end of the file, a data byte ≥ `0x80`
@@ -112,7 +112,7 @@ the `tapes:*` IPC boundary and the `TapeLibrary` store. Every user story needs t
     End of Track at the end of the file is tolerated.
   - `readMidiSong` never throws: run it on every prefix of a valid file and on a few hundred
     seeded pseudo-random byte arrays; each call returns a `Result`.
-- [ ] T007 Implement `api/song/midi/read-midi-song.ts` (`readMidiSong(bytes, fileName)`,
+- [x] T007 Implement `api/song/midi/read-midi-song.ts` (`readMidiSong(bytes, fileName)`,
   `MAXIMUM_MIDI_FILE_SIZE`, the bounds-checked byte reader, header and chunk walking, the
   rejections) until T006 is green. Only `Uint8Array` reads and the `TextDecoder` global.
   Depends on T005, T006.
