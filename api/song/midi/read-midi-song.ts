@@ -85,13 +85,31 @@ function asTick(value: number): Tick {
   return tick(value) ?? malformed();
 }
 
-/** Reads the Notes of one track chunk, with the channel of each. Unreleased Notes end with the track. */
-function readTrack(chunk: Uint8Array): RawNote[] {
+interface RawTrack {
+  readonly name: string | undefined;
+  readonly notes: readonly RawNote[];
+}
+
+/** UTF-8 when valid, otherwise Latin-1; trimmed, and empty counts as absent. */
+function decodeName(bytes: Uint8Array): string | undefined {
+  let text: string;
+  try {
+    text = new TextDecoder('utf-8', {fatal: true}).decode(bytes);
+  } catch {
+    text = new TextDecoder('latin1').decode(bytes);
+  }
+  const trimmed = text.trim();
+  return trimmed === '' ? undefined : trimmed;
+}
+
+/** Reads the Notes and the first track name of one track chunk. Unreleased Notes end with the track. */
+function readTrack(chunk: Uint8Array): RawTrack {
   const reader = new ByteReader(chunk);
   const finished: RawNote[] = [];
   const sounding = new Map<number, Tick>();
   let time = 0;
   let runningStatus: number | undefined;
+  let name: string | undefined;
 
   const release = (channel: number, key: number, end: Tick): void => {
     const id = channel * 128 + key;
@@ -114,7 +132,8 @@ function readTrack(chunk: Uint8Array): RawNote[] {
 
     if (status === 0xff) {
       const type = reader.byte();
-      reader.skip(reader.variableLength());
+      const text = reader.slice(reader.variableLength());
+      if (type === 0x03 && name === undefined) name = decodeName(text);
       if (type === 0x2f) break;
     } else if (status === 0xf0 || status === 0xf7) {
       reader.skip(reader.variableLength());
@@ -132,7 +151,7 @@ function readTrack(chunk: Uint8Array): RawNote[] {
         if (kind === 0x9 && velocity > 0) {
           release(channel, key, now);
           sounding.set(channel * 128 + key, now);
-        } else if (kind === 0x8 || kind === 0x9) {
+        } else if ((kind === 0x8 || kind === 0x9) && sounding.get(channel * 128 + key) !== now) {
           release(channel, key, now);
         }
       }
@@ -141,18 +160,18 @@ function readTrack(chunk: Uint8Array): RawNote[] {
 
   const end = asTick(time);
   for (const id of [...sounding.keys()]) release(Math.floor(id / 128), id % 128, end);
-  return finished;
+  return {name, notes: finished};
 }
 
-/** One Part per channel that has Notes. */
-function partsOfTrack(rawNotes: readonly RawNote[]): Part[] {
+/** One Part per channel that has Notes, each named after the track. */
+function partsOfTrack({name, notes: rawNotes}: RawTrack): Part[] {
   const channels = [...new Set(rawNotes.map((raw) => raw.channel))].sort((a, b) => a - b);
   return channels.flatMap((channel) => {
     const notes = rawNotes
       .filter((raw) => raw.channel === channel)
       .map((raw) => note({noteNumber: raw.noteNumber, start: raw.start, duration: asTick(raw.end - raw.start)}) ?? malformed())
       .sort((a, b) => a.start - b.start || a.noteNumber - b.noteNumber);
-    const built = part({name: undefined, percussion: channel === PERCUSSION_CHANNEL, notes});
+    const built = part({name, percussion: channel === PERCUSSION_CHANNEL, notes});
     return built === undefined ? [] : [built];
   });
 }
@@ -177,13 +196,19 @@ function readSong(bytes: Uint8Array, fileName: string): Result<Song, SongRejecti
   if (resolution === undefined) return malformed();
 
   const parts: Part[] = [];
+  let songName: string | undefined;
+  let firstTrack = true;
   while (!reader.atEnd) {
     const type = reader.uint32();
     const chunk = reader.slice(reader.uint32());
-    if (type === 0x4d54726b) parts.push(...partsOfTrack(readTrack(chunk)));
+    if (type !== 0x4d54726b) continue;
+    const track = readTrack(chunk);
+    if (firstTrack) songName = track.name;
+    firstTrack = false;
+    parts.push(...partsOfTrack(track));
   }
 
-  const built = song({id: newSongId(), name: nameWithoutExtension(fileName), ticksPerQuarter: resolution, parts});
+  const built = song({id: newSongId(), name: songName ?? nameWithoutExtension(fileName), ticksPerQuarter: resolution, parts});
   return built === undefined ? err('no-notes') : ok(built);
 }
 

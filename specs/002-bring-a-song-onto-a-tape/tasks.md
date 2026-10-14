@@ -116,7 +116,7 @@ the `tapes:*` IPC boundary and the `TapeLibrary` store. Every user story needs t
   `MAXIMUM_MIDI_FILE_SIZE`, the bounds-checked byte reader, header and chunk walking, the
   rejections) until T006 is green. Only `Uint8Array` reads and the `TextDecoder` global.
   Depends on T005, T006.
-- [ ] T008 Extend `api/song/midi/read-midi-song.spec.ts`, part 2: Notes, Parts and names
+- [x] T008 Extend `api/song/midi/read-midi-song.spec.ts`, part 2: Notes, Parts and names
   (research R2, fixtures 1–6 and 8 of R8):
   - a Part is one (track, channel) pair with at least one Note, ordered by track, then channel;
     one track with two channels gives two Parts that share the track's name;
@@ -133,7 +133,7 @@ the `tapes:*` IPC boundary and the `TapeLibrary` store. Every user story needs t
   - tempo, time signature, program changes, controllers and velocity don't change the Song
     (FR-003); `ticksPerQuarter` comes from the header;
   - every Song gets a new `SongId`; Notes in each Part are sorted by start, then note number.
-- [ ] T009 Extend `api/song/midi/read-midi-song.ts` with the event loop, Note pairing, Parts and
+- [x] T009 Extend `api/song/midi/read-midi-song.ts` with the event loop, Note pairing, Parts and
   names until T008 is green. Re-export `readMidiSong`, `MAXIMUM_MIDI_FILE_SIZE`, `SongRejection`,
   the Song types, `songId` and `defaultSelectedParts` from `api/index.ts`
   (contracts/domain-api.md). Depends on T007, T008.

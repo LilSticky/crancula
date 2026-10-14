@@ -22,3 +22,15 @@ export {
 } from './organ/organ-library-snapshot';
 export type {CranculaApi, OrganLibraryLoadResult, OrganLibrarySaveResult, SetLanguageResult} from './app/crancula-api';
 export {isLanguage, type Language} from './app/language';
+export {
+  defaultSelectedParts,
+  songId,
+  type Note,
+  type Part,
+  type PartIndex,
+  type Song,
+  type SongId,
+  type Tick,
+  type TicksPerQuarter,
+} from './song/song';
+export {MAXIMUM_MIDI_FILE_SIZE, readMidiSong, type SongRejection} from './song/midi/read-midi-song';
