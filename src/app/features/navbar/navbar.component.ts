@@ -23,7 +23,11 @@ const LANGUAGE_KEY = 'crancula.language';
     RouterLinkActive
   ],
   template: `
-    <div class="flex-row">
+    <div class="flex-row" data-testid="navbar">
+      <a class="brand" data-testid="brand" routerLink="/home">
+        <img src="assets/icons/logo.svg" alt="" width="32" height="32">
+        <span>Crancula</span>
+      </a>
       @for (item of items; track $index) {
         <a matButton routerLinkActive="router-link-active"
            [routerLink]="item.path">{{ item.translate.title | translate }}</a>
@@ -42,6 +46,19 @@ const LANGUAGE_KEY = 'crancula.language';
       flex-direction: row;
       justify-content: space-around;
       align-items: center;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      color: inherit;
+      font-weight: 500;
+    }
+
+    .brand img {
+      height: 32px;
     }
 
     .router-link-active {
