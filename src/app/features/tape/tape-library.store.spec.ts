@@ -167,6 +167,27 @@ describe('TapeLibrary', () => {
       expect(store.songEntities()).toEqual(content.songs);
     });
 
+    it('stores two Tapes with the same name', async () => {
+      const {api, store} = setup();
+      const parsed = parseTapeLibrarySnapshot({
+        version: 1,
+        songs: [songSnapshot(songId(1))],
+        tapes: [
+          tapeSnapshot(tapeId(1), songId(1), ORGAN_A, 'Same name'),
+          tapeSnapshot(tapeId(2), songId(1), ORGAN_A, 'Same name'),
+        ],
+      });
+      if (!parsed.ok) throw new Error(`invalid test library: ${parsed.error}`);
+      const {tapes, songs} = parsed.value;
+
+      expect(await store.create(tapes[0], songs[0])).toBe(true);
+      expect(await store.create(tapes[1], songs[0])).toBe(true);
+
+      expect(store.tapeEntities().map((tape) => tape.name)).toEqual(['Same name', 'Same name']);
+      expect(store.tapeEntities().map((tape) => tape.id)).toEqual(tapes.map((tape) => tape.id));
+      expect((await storedTapes(api))?.tapes).toHaveLength(2);
+    });
+
     it('resolves false, reports the problem and keeps the Tape in memory when writing failed', async () => {
       const {store} = setup(apiSaving({status: 'failed', reason: 'disk full'}));
       const content = library({tape: 1, song: 1});

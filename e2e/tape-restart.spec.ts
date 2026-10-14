@@ -9,6 +9,12 @@ interface StoredTape {
   readonly name: string;
   readonly transposition: number;
   readonly holes: readonly unknown[];
+  readonly selectedParts: readonly number[];
+  readonly songId: string;
+}
+
+interface StoredSong {
+  readonly id: string;
 }
 
 async function readTapesFile(userDataDir: string): Promise<string> {
@@ -26,6 +32,10 @@ test.describe('My tapes are still there after a restart', () => {
     expect(tape?.name).toBe('Scale');
     expect(tape?.holes.length).toBeGreaterThan(0);
     expect(tape?.transposition).toBe(12);
+    expect(tape?.selectedParts).toEqual([0]);
+    const songs = (JSON.parse(stored) as {songs: readonly StoredSong[]}).songs;
+    expect(songs).toHaveLength(1);
+    expect(tape?.songId).toBe(songs[0]?.id);
 
     const second = await launchApp(first.userDataDir);
     await second.window.getByRole('link', {name: 'Tapes'}).click();

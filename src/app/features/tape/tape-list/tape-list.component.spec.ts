@@ -100,6 +100,18 @@ describe('TapeListComponent', () => {
     expect(element.textContent).not.toContain('No Tapes yet.');
   });
 
+  it('lists two Tapes with the same name separately', async () => {
+    const {add, element} = await render();
+    const organ = testOrgan('Street organ', 3);
+    const first = await add(organ, 'Melody');
+    const second = await add(organ, 'Melody');
+
+    const names = [...element.querySelectorAll('[data-testid="tape-name"]')].map((node) => node.textContent?.trim());
+    expect(names).toEqual(['Melody', 'Melody']);
+    const hrefs = [...element.querySelectorAll('[data-testid="open-tape"]')].map((node) => node.getAttribute('href'));
+    expect(hrefs).toEqual([`/tapes/${first.id}`, `/tapes/${second.id}`]);
+  });
+
   it('links the open action to the Tape', async () => {
     const {add, element} = await render();
     const tape = await add(testOrgan('Street organ', 3), 'Melody');

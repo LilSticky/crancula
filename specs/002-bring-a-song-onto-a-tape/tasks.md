@@ -547,9 +547,9 @@ English.
   Electron or Node module.
 - [x] T073 [P] Update `quickstart.md` and `data-model.md` where the implementation settled a detail
   (for example the remaining "decided in /speckit-plan after #13" notes, i18n key names).
-- [ ] T074 Run `npm run lint`, `npm run i18n:check`, `npm run test` and `npm run build`; all green.
-- [ ] T075 Run `npm run e2e`; the whole suite, including the 001 tests, is green.
-- [ ] T076 Run the `spec-auditor` agent on the slice against `spec.md` and this file; fix every
+- [x] T074 Run `npm run lint`, `npm run i18n:check`, `npm run test` and `npm run build`; all green.
+- [x] T075 Run `npm run e2e`; the whole suite, including the 001 tests, is green.
+- [x] T076 Run the `spec-auditor` agent on the slice against `spec.md` and this file; fix every
   gap through a new test+implementation task pair appended to this file.
 - [ ] T077 Through the `housekeeper` agent: update `documentation/STATUS.md` (slice done, next
   step "Punch a tape") and set "Bring a song onto a tape" to `done` in
