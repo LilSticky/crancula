@@ -1,11 +1,16 @@
 # Packages Crancula for Windows, macOS and Linux and publishes a draft GitHub Release (#11).
-# A pushed tag `v*` builds and publishes; a manual run only builds and keeps the artifacts.
+# A pushed tag `v*` builds and publishes. A manual run, or a pull request that changes the packaging
+# setup, only builds and keeps the artifacts.
 # The builds are not code-signed: Windows SmartScreen and macOS Gatekeeper will warn.
 name: Release
 
 on:
   push:
     tags: ['v*']
+  pull_request:
+    paths:
+      - .github/workflows/release.yml
+      - electron-builder.json
   workflow_dispatch:
 
 permissions:
@@ -16,8 +21,8 @@ jobs:
     name: Lint and test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version-file: .node-version
           cache: npm
@@ -38,8 +43,8 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version-file: .node-version
           cache: npm
@@ -50,7 +55,7 @@ jobs:
           # Unsigned builds: don't look for a signing identity on macOS.
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
       # Targets from electron-builder.json: portable .exe, .dmg, .AppImage.
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: crancula-${{ runner.os }}
           path: |
@@ -67,7 +72,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           path: artifacts
           merge-multiple: true
