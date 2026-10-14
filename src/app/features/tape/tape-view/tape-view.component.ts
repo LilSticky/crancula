@@ -6,10 +6,21 @@ import type {ImportSummary} from '@api/index';
 import {ImportSummaryComponent} from '../import-summary/import-summary.component';
 import {TapeLibrary} from '../tape-library.store';
 
+function isImportSummary(value: unknown): value is ImportSummary {
+  if (typeof value !== 'object' || value === null) return false;
+  const summary: Partial<Record<keyof ImportSummary, unknown>> = value;
+  return (
+    typeof summary.transposition === 'number' &&
+    typeof summary.notesOnTape === 'number' &&
+    Array.isArray(summary.movedByOctaves) &&
+    Array.isArray(summary.unplayableNotes) &&
+    Array.isArray(summary.holeChanges)
+  );
+}
+
 function importSummaryOf(state: unknown): ImportSummary | null {
-  return typeof state === 'object' && state !== null && 'importSummary' in state
-    ? (state.importSummary as ImportSummary)
-    : null;
+  if (typeof state !== 'object' || state === null || !('importSummary' in state)) return null;
+  return isImportSummary(state.importSummary) ? state.importSummary : null;
 }
 
 /** One Tape. Right after an import, the navigation state carries the Import Summary. */
@@ -34,7 +45,7 @@ export class TapeViewComponent {
 
   constructor() {
     effect(() => {
-      if (this.tape() === undefined) void this.router.navigateByUrl('/tapes');
+      if (this.library.loaded() && this.tape() === undefined) void this.router.navigateByUrl('/tapes');
     });
   }
 }

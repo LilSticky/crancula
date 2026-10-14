@@ -5,10 +5,10 @@ import {RouterTestingHarness} from '@angular/router/testing';
 import {
   createTape,
   defaultSelectedParts,
-  type ImportSummary,
   proposeTransposition,
   readMidiSong,
   type Tape,
+  toTapeLibrarySnapshot,
 } from '@api/index';
 import {encodeSmf} from '../../../../../api/song/midi/smf-test-helper';
 import {CRANCULA_API, createInMemoryCranculaApi} from '../../../core/crancula-api.token';
@@ -23,8 +23,23 @@ class TapeListStubComponent {}
 
 const TICKS_PER_QUARTER = 480;
 
-async function render() {
-  const api = createInMemoryCranculaApi();
+async function render(options: {deferLoad?: boolean} = {}) {
+  const inMemory = createInMemoryCranculaApi();
+  let finishLoad: () => void = () => undefined;
+  let deferredSnapshot: ReturnType<typeof toTapeLibrarySnapshot> | null = null;
+  const api = options.deferLoad
+    ? {
+        ...inMemory,
+        tapes: {
+          ...inMemory.tapes,
+          load: () =>
+            new Promise<Awaited<ReturnType<typeof inMemory.tapes.load>>>((resolve) => {
+              finishLoad = () =>
+                resolve(deferredSnapshot ? {status: 'loaded', snapshot: deferredSnapshot} : {status: 'empty'});
+            }),
+        },
+      }
+    : inMemory;
   TestBed.configureTestingModule({
     providers: [
       provideRouter([
@@ -64,17 +79,31 @@ async function render() {
   });
   if (!created.ok) throw new Error(`invalid test Tape: ${JSON.stringify(created.error)}`);
   const tape: Tape = created.value.tape;
-  await TestBed.inject(TapeLibrary).create(tape, song);
+  const library = TestBed.inject(TapeLibrary);
+  let loading: Promise<void> = Promise.resolve();
+  if (options.deferLoad) {
+    deferredSnapshot = toTapeLibrarySnapshot([tape], [song]);
+    loading = library.load();
+  } else {
+    await library.load();
+    await library.create(tape, song);
+  }
 
   const harness = await RouterTestingHarness.create();
   const router = TestBed.inject(Router);
-  const open = async (url: string, importSummary?: ImportSummary) => {
+  const open = async (url: string, importSummary?: unknown) => {
     await router.navigateByUrl(url, importSummary ? {state: {importSummary}} : {});
     harness.detectChanges();
     await harness.fixture.whenStable();
   };
   const summaryShown = () => harness.routeNativeElement?.querySelector('[data-testid="import-summary"]') ?? null;
-  return {tape, importSummary: created.value.importSummary, open, summaryShown, router};
+  const finish = async () => {
+    finishLoad();
+    await loading;
+    harness.detectChanges();
+    await harness.fixture.whenStable();
+  };
+  return {tape, importSummary: created.value.importSummary, open, summaryShown, router, finish};
 }
 
 describe('TapeViewComponent', () => {
@@ -100,5 +129,33 @@ describe('TapeViewComponent', () => {
     await open('/tapes/00000000-0000-0000-0000-000000000000');
 
     expect(router.url).toBe('/tapes');
+  });
+
+  it('does not redirect an existing Tape while the Tape library is still loading', async () => {
+    const {tape, open, router, finish} = await render({deferLoad: true});
+
+    await open(`/tapes/${tape.id}`);
+
+    expect(router.url).toBe(`/tapes/${tape.id}`);
+    await finish();
+    expect(router.url).toBe(`/tapes/${tape.id}`);
+  });
+
+  it('redirects an unknown id to the Tape list only after loading', async () => {
+    const {open, router, finish} = await render({deferLoad: true});
+
+    await open('/tapes/00000000-0000-0000-0000-000000000000');
+    expect(router.url).toBe('/tapes/00000000-0000-0000-0000-000000000000');
+
+    await finish();
+    expect(router.url).toBe('/tapes');
+  });
+
+  it('ignores an importSummary in the navigation state that has no Import Summary shape', async () => {
+    const {tape, open, summaryShown} = await render();
+
+    await open(`/tapes/${tape.id}`, {foo: 1});
+
+    expect(summaryShown()).toBeNull();
   });
 });

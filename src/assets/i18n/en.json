@@ -36,6 +36,7 @@
     },
     "IMPORT": {
       "TITLE": "Bring a Song onto a Tape",
+      "LOAD_PROBLEM": "Your Tapes couldn't be loaded, so no new Tape can be saved for now.",
       "NO_ORGAN": "You need an Organ first: the Tape is punched for its Pipes.",
       "NEW_ORGAN": "Describe an Organ",
       "ORGAN": "Organ",

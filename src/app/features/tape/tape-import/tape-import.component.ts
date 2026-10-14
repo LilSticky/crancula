@@ -7,7 +7,6 @@ import {MatIcon} from '@angular/material/icon';
 import {Router, RouterLink} from '@angular/router';
 import {TranslatePipe} from '@ngx-translate/core';
 import {
-  createTape,
   defaultSelectedParts,
   MAXIMUM_MIDI_FILE_SIZE,
   type Organ,
@@ -16,7 +15,6 @@ import {
   readMidiSong,
   type Song,
   type SongRejection,
-  transposition,
 } from '@api/index';
 import {OrganLibrary} from '../../organ/organ-library.store';
 import {TapeLibrary} from '../tape-library.store';
@@ -26,6 +24,7 @@ import {
   ShownViolationMatcher,
   type TapeImportContext,
   type TapeImportDraft,
+  createTapeFromDraft,
   tapeImportSchema,
 } from './tape-import-form';
 
@@ -52,7 +51,7 @@ const NO_SONG_DRAFT: TapeImportDraft = {name: '', columnLength: null, transposit
 })
 export class TapeImportComponent {
   private readonly organs = inject(OrganLibrary);
-  private readonly tapes = inject(TapeLibrary);
+  protected readonly tapes = inject(TapeLibrary);
   private readonly router = inject(Router);
   private readonly pendingTasks = inject(PendingTasks);
 
@@ -90,7 +89,9 @@ export class TapeImportComponent {
 
   protected readonly tape: FieldTree<TapeImportDraft> = form(this.draft, tapeImportSchema(this.context));
 
-  protected readonly canCreate = computed(() => this.context() !== null && this.tape().valid());
+  protected readonly canCreate = computed(
+    () => this.context() !== null && this.tape().valid() && this.tapes.loadProblem() === null,
+  );
 
   /** Reads the chosen file into the Song, or into the reason it was rejected. */
   protected chooseSong(input: HTMLInputElement): void {
@@ -126,19 +127,11 @@ export class TapeImportComponent {
   /** Creates the Tape, stores it with its Song and opens it with the Import Summary. */
   protected async create(): Promise<void> {
     const context = this.context();
-    const {name, columnLength, transposition: semitones} = this.draft();
-    const valid = transposition(semitones ?? Number.NaN);
-    if (context === null || valid === undefined || !this.canCreate()) return;
-    const result = createTape({
-      song: context.song,
-      organ: context.organ,
-      selectedParts: defaultSelectedParts(context.song),
-      transposition: valid,
-      name,
-      columnLength: columnLength ?? Number.NaN,
-    });
+    if (context === null || !this.canCreate()) return;
+    const result = createTapeFromDraft(context, this.draft());
     if (!result.ok) return;
-    await this.tapes.create(result.value.tape, context.song);
+    const saved = await this.tapes.create(result.value.tape, context.song);
+    if (!saved && this.tapes.loadProblem() !== null) return;
     await this.router.navigate(['/tapes', result.value.tape.id], {state: {importSummary: result.value.importSummary}});
   }
 }

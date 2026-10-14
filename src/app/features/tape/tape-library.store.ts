@@ -14,6 +14,8 @@ import {
 import {CRANCULA_API} from '../../core/crancula-api.token';
 
 interface TapeLibraryState {
+  /** Set once `load()` has finished, whatever it found. */
+  readonly loaded: boolean;
   /** Set when the stored Tapes couldn't be read on startup; the file was moved to `backupPath`. */
   readonly loadProblem: {readonly backupPath: string; readonly reason: string} | null;
   /** Set when the last write to disk failed; cleared by the next successful one. */
@@ -28,7 +30,7 @@ export const TapeLibrary = signalStore(
   {providedIn: 'root'},
   withEntities(tapeConfig),
   withEntities(songConfig),
-  withState<TapeLibraryState>({loadProblem: null, saveProblem: null}),
+  withState<TapeLibraryState>({loaded: false, loadProblem: null, saveProblem: null}),
   withMethods((store, api = inject(CRANCULA_API)) => {
     /** Writes all Tapes and their Songs to disk; resolves `true` when that worked. */
     async function save(): Promise<boolean> {
@@ -56,7 +58,7 @@ export const TapeLibrary = signalStore(
     }
 
     function empty(loadProblem: TapeLibraryState['loadProblem']): void {
-      patchState(store, setAllEntities([] as Tape[], tapeConfig), setAllEntities([] as Song[], songConfig), {loadProblem});
+      patchState(store, setAllEntities([] as Tape[], tapeConfig), setAllEntities([] as Song[], songConfig), {loadProblem, loaded: true});
     }
 
     return {
@@ -76,7 +78,7 @@ export const TapeLibrary = signalStore(
             store,
             setAllEntities(library.value.tapes, tapeConfig),
             setAllEntities(library.value.songs, songConfig),
-            {loadProblem: null},
+            {loadProblem: null, loaded: true},
           );
         } else {
           empty({backupPath: '', reason: library.error});

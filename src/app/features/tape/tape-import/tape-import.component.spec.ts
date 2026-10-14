@@ -50,14 +50,19 @@ function songOf(bytes: Uint8Array, name: string): Song {
   return result.value;
 }
 
-async function render(options: {organs?: readonly Organ[]; failToSave?: boolean} = {}) {
-  const api = createInMemoryCranculaApi(undefined, undefined, options.failToSave ? {tapes: {save: 'failed'}} : {});
+async function render(options: {organs?: readonly Organ[]; failToSave?: boolean; unreadableTapes?: boolean} = {}) {
+  const api = createInMemoryCranculaApi(
+    undefined,
+    undefined,
+    options.failToSave ? {tapes: {save: 'failed'}} : options.unreadableTapes ? {tapes: {load: 'unreadable'}} : {},
+  );
   TestBed.configureTestingModule({
     providers: [provideRouter([]), provideTestTranslations(), {provide: CRANCULA_API, useValue: api}],
   });
   const organs = TestBed.inject(OrganLibrary);
   for (const organ of options.organs ?? []) await organs.put(organ);
   const tapes = TestBed.inject(TapeLibrary);
+  if (options.unreadableTapes) await tapes.load();
   const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
 
   const fixture = TestBed.createComponent(TapeImportComponent);
@@ -250,6 +255,17 @@ describe('TapeImportComponent', () => {
 
       expect(tapes.saveProblem()).not.toBeNull();
       expect(navigate).toHaveBeenCalledWith(['/tapes', tape?.id], expect.anything());
+    });
+
+    it('does not navigate, shows the load problem and disables Create when the Tape library could not be read', async () => {
+      const page = await render({organs: [testOrgan('Street organ', 3)], unreadableTapes: true});
+      await page.choose(midiFile(melodyBytes()));
+
+      expect(page.query('tape-load-problem')).not.toBeNull();
+      expect(page.query('create-tape')?.hasAttribute('disabled')).toBe(true);
+      await page.create();
+      expect(page.navigate).not.toHaveBeenCalled();
+      expect(page.tapes.tapeEntities()).toEqual([]);
     });
 
     it('is disabled until a Song was chosen', async () => {

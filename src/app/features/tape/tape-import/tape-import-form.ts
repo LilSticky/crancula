@@ -8,7 +8,16 @@ import {
   type ValidationError,
 } from '@angular/forms/signals';
 import {ErrorStateMatcher} from '@angular/material/core';
-import {createTape, defaultSelectedParts, type Organ, type Song, transposition, type TapeViolationCode} from '@api/index';
+import {
+  type CreatedTape,
+  createTape,
+  defaultSelectedParts,
+  type Organ,
+  type Result,
+  type Song,
+  transposition,
+  type TapeViolationCode,
+} from '@api/index';
 import type {TranslatableText} from '../../organ/leave-unsaved.guard';
 
 /** What the user enters on the import page; the Parts are the Song's default Parts. */
@@ -34,6 +43,24 @@ function isTapeFieldError(error: ValidationError): error is TapeFieldError {
   return error.kind !== 'parse';
 }
 
+/** The Tape the draft makes, or the codes of the rules it breaks; the only call of `createTape` on this page. */
+export function createTapeFromDraft(
+  {song, organ}: TapeImportContext,
+  {name, columnLength, transposition: semitones}: TapeImportDraft,
+): Result<CreatedTape, readonly TapeViolationCode[]> {
+  const valid = transposition(semitones ?? Number.NaN);
+  if (valid === undefined) return {ok: false, error: ['transposition-out-of-range']};
+  const result = createTape({
+    song,
+    organ,
+    selectedParts: defaultSelectedParts(song),
+    transposition: valid,
+    name,
+    columnLength: columnLength ?? Number.NaN,
+  });
+  return result.ok ? result : {ok: false, error: result.error.map(({code}) => code)};
+}
+
 /**
  * The schema of the import form. Its one rule is `createTape`'s own validation, the only place where
  * the rules of a Tape live; each violation becomes an error at the field it belongs to.
@@ -43,18 +70,8 @@ export function tapeImportSchema(context: Signal<TapeImportContext | null>) {
     validateTree(draft, ({value, fieldTree}) => {
       const chosen = context();
       if (chosen === null) return undefined;
-      const {name, columnLength, transposition: semitones} = value();
-      const valid = transposition(semitones ?? Number.NaN);
-      if (valid === undefined) return [toFieldError('transposition-out-of-range', fieldTree)];
-      const result = createTape({
-        song: chosen.song,
-        organ: chosen.organ,
-        selectedParts: defaultSelectedParts(chosen.song),
-        transposition: valid,
-        name,
-        columnLength: columnLength ?? Number.NaN,
-      });
-      return result.ok ? undefined : result.error.map(({code}) => toFieldError(code, fieldTree));
+      const result = createTapeFromDraft(chosen, value());
+      return result.ok ? undefined : result.error.map((code) => toFieldError(code, fieldTree));
     });
   };
 }

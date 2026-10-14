@@ -60,6 +60,7 @@ export {fitOf, type Fit} from './tape/fit';
 export {
   createTape,
   prefilledColumnLength,
+  type CreatedTape,
   type CreateTapeInput,
   type TapeViolation,
   type TapeViolationCode,

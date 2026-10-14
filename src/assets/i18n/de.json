@@ -36,6 +36,7 @@
     },
     "IMPORT": {
       "TITLE": "Ein Lied auf ein Band bringen",
+      "LOAD_PROBLEM": "Deine Bänder konnten nicht geladen werden, darum kann vorerst kein neues Band gespeichert werden.",
       "NO_ORGAN": "Du brauchst zuerst eine Drehorgel: Das Band wird für ihre Pfeifen gestanzt.",
       "NEW_ORGAN": "Drehorgel beschreiben",
       "ORGAN": "Drehorgel",
