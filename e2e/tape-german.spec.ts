@@ -14,8 +14,8 @@ test.describe('I can bring a Song onto a Tape in German', () => {
       seen.push(await window.locator('body').innerText());
     };
 
-    await window.getByRole('link', {name: 'Bänder'}).click();
-    await window.getByRole('link', {name: 'Ein Lied auf ein Band bringen'}).click();
+    await window.getByRole('link', {name: 'Lochbänder'}).click();
+    await window.getByRole('link', {name: 'Ein Lied auf ein Lochband bringen'}).click();
     await expect(window.getByTestId('import-form')).toBeVisible();
     await collect();
 
@@ -41,7 +41,7 @@ test.describe('I can bring a Song onto a Tape in German', () => {
     await expect(window.getByTestId('import-summary')).toBeVisible();
     await collect();
 
-    await window.getByRole('link', {name: 'Bänder'}).click();
+    await window.getByRole('link', {name: 'Lochbänder'}).click();
     await expect(window.getByTestId('tape')).toHaveCount(1);
     await collect();
 
