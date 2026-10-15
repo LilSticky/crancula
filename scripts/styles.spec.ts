@@ -1,7 +1,8 @@
 import {existsSync, readFileSync} from 'node:fs';
 import {dirname, resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {describe, expect, it} from 'vitest';
+import {compile} from 'sass';
+import {beforeAll, describe, expect, it} from 'vitest';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const fontsScss = resolve(root, 'src/styles/_fonts.scss');
@@ -63,4 +64,50 @@ describe('bundled fonts (src/styles/_fonts.scss)', () => {
       expect(existsSync(resolve(licenceDir, file))).toBe(true);
     },
   );
+});
+
+describe('theme (src/styles.scss)', () => {
+  let css = '';
+  let htmlRules = '';
+
+  beforeAll(() => {
+    css = compile(resolve(root, 'src/styles.scss'), {
+      loadPaths: [resolve(root, 'node_modules'), resolve(root, 'src')],
+      quietDeps: true,
+      silenceDeprecations: ['import', 'global-builtin', 'mixed-decls'],
+      logger: {warn: () => undefined, debug: () => undefined},
+    }).css;
+    htmlRules = [...css.matchAll(/(?:^|\})\s*html\s*\{([^}]*)\}/g)].map(([, block = '']) => block).join('\n');
+  }, 60_000);
+
+  /** The value that wins in the cascade: the last declaration of the property on html. */
+  function htmlToken(name: string): string {
+    const values = [...htmlRules.matchAll(new RegExp(`${name}\\s*:\\s*([^;]+);`, 'g'))].map((match) => match[1] ?? '');
+    return values.at(-1)?.replace(/\s+/g, ' ').trim() ?? '';
+  }
+
+  it('follows the system colour scheme on html', () => {
+    expect(htmlToken('color-scheme')).toBe('light dark');
+  });
+
+  // Expected values: the theme-overrides block in documentation/design/theme.scss.
+  it('sets --mat-sys-surface to the bench colours', () => {
+    expect(htmlToken('--mat-sys-surface')).toBe('light-dark(#d6d0c4, #1c1916)');
+  });
+
+  it('sets --mat-sys-primary to the ink colours', () => {
+    expect(htmlToken('--mat-sys-primary')).toBe('light-dark(#1e1a16, #ede6d8)');
+  });
+
+  it('uses Noto Sans as the plain typeface', () => {
+    expect(htmlToken('--mat-sys-body-medium-font')).toContain('Noto Sans');
+  });
+
+  it('uses Libertinus Serif as the brand typeface', () => {
+    expect(htmlToken('--mat-sys-headline-small-font')).toContain('Libertinus Serif');
+  });
+
+  it('references no Roboto', () => {
+    expect(css).not.toMatch(/roboto/i);
+  });
 });
