@@ -33,10 +33,10 @@ mockup `variants/a-workshop/mockup.html` (rail, page head, action bar). Design c
 (not domain): the scheme toggle has three states, System, Light and Dark, and is remembered in
 `localStorage` (`crancula.scheme`) like the language (`crancula.language`).
 
-- [ ] **S1** Organs is the start page; the Overview page goes. Unit: `''` redirects to `organs`;
+- [x] **S1** Organs is the start page; the Overview page goes. Unit: `''` redirects to `organs`;
   no `home` route; the brand links to `/organs`. Remove `HomePage`, `PAGES.HOME.*` keys (en + de),
   and the e2e "shows the home page title" (replace it with "opens on the Organ list").
-- [ ] **S2** Scheme. A `SchemePreference` (`'system' | 'light' | 'dark'`) service in
+- [x] **S2** Scheme. A `SchemePreference` (`'system' | 'light' | 'dark'`) service in
   `src/app/features/shared/`: reads and writes `crancula.scheme`, sets class `cr-light` or `cr-dark`
   on `<html>` (none for System). Unit spec with jsdom.
 - [ ] **S3** Rail component `cranc-rail` replaces `cranc-navbar`: brand, `mat-nav-list` with Organs
