@@ -24,4 +24,4 @@ level first (`tdd` skill, test pyramid). Tick a task once its tests are green.
   scheme follows the system until then.
 - [x] **D3** e2e: update `e2e/fonts.spec.ts` to expect Noto Sans, Libertinus Serif and Material
   Icons loaded from the app (no Roboto). Run it once, then the full `npm run e2e` before the PR.
-- [ ] **D4** `npm run ux:screens`, `ux-review` of the result; record the score in STATUS.
+- [x] **D4** `npm run ux:screens`, `ux-review` of the result; record the score in STATUS.

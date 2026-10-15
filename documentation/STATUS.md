@@ -39,21 +39,17 @@ variants 40–42 (self-reviews). New tooling: `ux-review` skill, `ux-designer` a
 The Tape is drawn horizontally, row 1 on top (user decision). German for Tape is now Lochband
 (dictionary, UI texts). Applying the guide to the app: [#59](https://github.com/LilSticky/crancula/issues/59).
 
-**In progress (paused 2026-10-15, night):** [#62](https://github.com/LilSticky/crancula/issues/62) theme and
-fonts on branch `062-design-theme-and-fonts` (pushed, no pull request yet). D1–D3 of
-[design/tasks.md](design/tasks.md) done and committed (fonts bundled, workshop theme, `scripts/styles.spec.ts`
-14 tests green, fonts e2e green). To resume, in this order:
-1. Done: PR #68 merged after a re-run; this branch is rebased on `main`.
-2. Reviewer's should-fixes on `scripts/styles.spec.ts`: drop the blanket `silenceDeprecations` (or name the
-   warning that needs it); test `html.cr-dark { color-scheme: dark }` and the high-contrast media rule; note
-   that the `[^}]*` rule regex can't see nested rules. Comment nits: Libertinus ships only weight 600
-   (`_fonts.scss`), the reduced-motion reset is intentional, check whether the `h1–h3` rule is needed.
-3. D4: `npm run ux:screens`, `ux-review`, score into STATUS; full `npm run e2e`; pull request `Closes #62`.
+**Done (pull request pending):** [#62](https://github.com/LilSticky/crancula/issues/62) theme and fonts
+(2026-10-15, branch `062-design-theme-and-fonts`). Noto Sans and Libertinus Serif bundled, Roboto removed.
+Workshop theme with light-dark tokens; the scheme follows the system until #63. `provideFormFieldDefaults()`
+makes fields outlined app-wide, because the theme's density -2 hides fill-field labels (found by the
+ux-review). The Libertinus licence now carries the upstream notice. `ux:screens` waits for dialogs and
+animations. ux-review 30/50 (was 29/50), see [design/screens/current/ux-review.md](design/screens/current/ux-review.md).
+Gate: lint, 253 Angular tests and node tests, 31 e2e green locally.
 
-**Next concrete step:** apply the design guide before the app grows (user decision, 2026-10-15):
-[#62](https://github.com/LilSticky/crancula/issues/62) theme and fonts, then #63 shell, #64 Organ
-editor, #65 Tape view, #66 lists (all sub-issues of [#59](https://github.com/LilSticky/crancula/issues/59)).
-After that: `/speckit-specify` for "Punch a tape" ([#3](https://github.com/LilSticky/crancula/issues/3)).
+**Next concrete step:** #63 shell, then #64 Organ editor, #65 Tape view, #66 lists and #69 Tape import
+screen (all sub-issues of [#59](https://github.com/LilSticky/crancula/issues/59)). Then
+`/speckit-specify` for "Punch a tape" ([#3](https://github.com/LilSticky/crancula/issues/3)).
 Open issues carry `priority:` and `size:` labels; triage sets them.
 
 ## Known broken / WIP
@@ -76,6 +72,8 @@ Open issues carry `priority:` and `size:` labels; triage sets them.
 
 ## Process changes
 
+- 2026-10-15: a machine that last pulled before the 2026-10-14 rewrite has a local `main` with no merge
+  base; reset it to `origin/main` after checking that every local commit subject exists there.
 - 2026-10-15: after every merge the `housekeeper` cleans up the local Git state (pruned remote
   branches, merged local branches and worktrees, stale build output); part of the workflow in AGENTS.md.
 - 2026-10-14: commits are authored as LilSticky with the GitHub noreply address, set per repository.

@@ -27,7 +27,7 @@ Release v0.1 as cross-platform GitHub Releases built in CI, once all of the abov
   platforms on a `v*` tag and creates a draft GitHub Release; publishing is untested until the first tag
   ([#11](https://github.com/LilSticky/crancula/issues/11)).
 - **Design guide**: done 2026-10-15 ([DESIGN-GUIDE.md](DESIGN-GUIDE.md), #12); applying it to the
-  app ([#59](https://github.com/LilSticky/crancula/issues/59), sub-issues #62–#66) comes before "Punch a tape".
+  app ([#59](https://github.com/LilSticky/crancula/issues/59), sub-issues #62–#66 and #69) comes before "Punch a tape".
 
 ## Later (unordered)
 
