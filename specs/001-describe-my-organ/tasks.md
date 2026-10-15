@@ -507,7 +507,7 @@ diameter. A Border of 0 is valid, a negative one is not ("rows don't fit"). The 
 derived Border read-only. Dictionary: Tape Bed, Border, Row Span. Every Organ valid before stays
 valid (old rule 2·border + span ≤ width implies span ≤ width).
 
-- [ ] **A1** ADR 20 "Snapshots are migrated on read and written in the newest version" (`adr` skill):
+- [x] **A1** ADR 20 "Snapshots are migrated on read and written in the newest version" (`adr` skill):
   which old versions are read, the newest is written on the next save, a downgrade moves the file
   aside (ADR 8). Applies to Organ and Tape snapshots.
 - [ ] **A2** Domain (`api/organ/organ.ts`): unit tests first. `rowSpan(tapeBed, pipeCount)`;
