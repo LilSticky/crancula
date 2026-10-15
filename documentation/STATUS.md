@@ -39,8 +39,8 @@ variants 40–42 (self-reviews). New tooling: `ux-review` skill, `ux-designer` a
 The Tape is drawn horizontally, row 1 on top (user decision). German for Tape is now Lochband
 (dictionary, UI texts). Applying the guide to the app: [#59](https://github.com/LilSticky/crancula/issues/59).
 
-**Done (pull request pending):** [#62](https://github.com/LilSticky/crancula/issues/62) theme and fonts
-(2026-10-15, branch `062-design-theme-and-fonts`). Noto Sans and Libertinus Serif bundled, Roboto removed.
+**Done:** [#62](https://github.com/LilSticky/crancula/issues/62) theme and fonts
+(2026-10-15, PR #70). Noto Sans and Libertinus Serif bundled, Roboto removed.
 Workshop theme with light-dark tokens; the scheme follows the system until #63. `provideFormFieldDefaults()`
 makes fields outlined app-wide, because the theme's density -2 hides fill-field labels (found by the
 ux-review). The Libertinus licence now carries the upstream notice. `ux:screens` waits for dialogs and
