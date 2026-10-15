@@ -1,9 +1,4 @@
 {
-  "PAGES": {
-    "HOME": {
-      "TITLE": "Overview"
-    }
-  },
   "CONFIRMATION_DIALOG": {
     "TITLE": "Confirm Action",
     "CANCEL": "Cancel",

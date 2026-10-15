@@ -43,11 +43,11 @@ describe('NavbarComponent brand', () => {
   beforeEach(stubLocalStorage);
   afterEach(() => vi.unstubAllGlobals());
 
-  it('links the logo and the app name to the home route as one brand', async () => {
+  it('links the logo and the app name to the Organ list as one brand', async () => {
     const {element} = await startApp();
 
     const brand = element.querySelector<HTMLAnchorElement>('a[data-testid="brand"]');
-    expect(brand?.getAttribute('href')).toBe('/home');
+    expect(brand?.getAttribute('href')).toBe('/organs');
     expect(brand?.querySelector('img')?.getAttribute('src')).toBe('assets/icons/logo.svg');
     expect(brand?.textContent?.trim()).toBe('Crancula');
   });

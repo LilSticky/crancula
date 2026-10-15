@@ -34,9 +34,6 @@ test.describe('UX screens', () => {
   test('captures every screen', async () => {
     const {window} = launched;
 
-    await capture(window, '01-home');
-
-    await window.getByRole('link', {name: 'Organs'}).click();
     await capture(window, '02-organ-list-empty');
 
     await window.getByTestId('new-organ').click();

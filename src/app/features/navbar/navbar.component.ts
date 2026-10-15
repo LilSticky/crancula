@@ -24,7 +24,7 @@ const LANGUAGE_KEY = 'crancula.language';
   ],
   template: `
     <div class="flex-row" data-testid="navbar">
-      <a class="brand" data-testid="brand" routerLink="/home">
+      <a class="brand" data-testid="brand" routerLink="/organs">
         <img src="assets/icons/logo.svg" alt="" width="32" height="32">
         <span>Crancula</span>
       </a>
