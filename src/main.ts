@@ -12,6 +12,7 @@ import {provideTranslateHttpLoader} from '@ngx-translate/http-loader';
 import {routes} from "./app.routes";
 import {provideOrganLibrary} from "./app/features/organ/organ-library.store";
 import {provideTapeLibrary} from "./app/features/tape/tape-library.store";
+import {provideFormFieldDefaults} from "./app/features/shared/form-field-defaults";
 
 if (APP_CONFIG.production) {
   enableProdMode();
@@ -32,6 +33,7 @@ bootstrapApplication(AppComponent, {
     provideRouter(routes, withComponentInputBinding()),
     provideOrganLibrary(),
     provideTapeLibrary(),
+    provideFormFieldDefaults(),
     importProvidersFrom(
       CoreModule,
       SharedModule

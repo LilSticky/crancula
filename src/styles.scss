@@ -91,8 +91,8 @@ html {
     selected-state-text-color: var(--mat-sys-on-primary),
   ));
 
-  // Outlined fields app-wide (MAT_FORM_FIELD_DEFAULT_OPTIONS
-  // { appearance: 'outline', subscriptSizing: 'dynamic' }).
+  // Outlined fields app-wide (set by provideFormFieldDefaults() in
+  // src/app/features/shared/form-field-defaults.ts).
   @include mat.form-field-overrides((
     outlined-container-shape: 4px,
     outlined-focus-outline-color: var(--mat-sys-primary),
