@@ -1,4 +1,4 @@
-import {ChangeDetectionStrategy, Component, computed, effect, inject, input, linkedSignal, signal, untracked} from '@angular/core';
+import {afterNextRender, ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, Injector, input, linkedSignal, signal, untracked, viewChildren} from '@angular/core';
 import {CdkDrag, CdkDragDrop, CdkDragHandle, CdkDropList, CdkDropListGroup} from '@angular/cdk/drag-drop';
 import {type FieldTree, form, FormField} from '@angular/forms/signals';
 import {ErrorStateMatcher} from '@angular/material/core';
@@ -7,6 +7,8 @@ import {MatError, MatFormField, MatHint, MatInput, MatLabel, MatSuffix} from '@a
 import {MatCard} from '@angular/material/card';
 import {MatDialog} from '@angular/material/dialog';
 import {MatIcon} from '@angular/material/icon';
+import {MatMenu, MatMenuItem, MatMenuTrigger} from '@angular/material/menu';
+import {MatTooltip} from '@angular/material/tooltip';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {Router} from '@angular/router';
 import {TranslatePipe, TranslateService} from '@ngx-translate/core';
@@ -50,7 +52,7 @@ const FIELD_LABEL_KEYS: Readonly<Record<string, string>> = {
 @Component({
   selector: 'cranc-organ-editor',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslatePipe, MatFormField, MatLabel, MatInput, MatHint, MatError, MatSuffix, MatButton, MatIconButton, MatIcon, MatCard, FormField, DecimalInputDirective, CdkDropList, CdkDropListGroup, CdkDrag, CdkDragHandle, PageHeadComponent],
+  imports: [TranslatePipe, MatFormField, MatLabel, MatInput, MatHint, MatError, MatSuffix, MatButton, MatIconButton, MatIcon, MatMenu, MatMenuItem, MatMenuTrigger, MatTooltip, MatCard, FormField, DecimalInputDirective, CdkDropList, CdkDropListGroup, CdkDrag, CdkDragHandle, PageHeadComponent],
   templateUrl: './organ-editor.component.html',
   providers: [{provide: ErrorStateMatcher, useClass: ShownViolationMatcher}],
   styles: `
@@ -351,8 +353,20 @@ export class OrganEditorComponent implements UnsavedChangesCheck {
     this.draft.update(addPipe);
   }
 
+  private readonly injector = inject(Injector);
+  private readonly noteInputs = viewChildren<ElementRef<HTMLInputElement>>('noteInput');
+
   protected movePipe(fromRow: number, toRow: number): void {
     this.draft.update((draft) => movePipe(draft, fromRow, toRow));
+  }
+
+  /** Alt+ArrowUp/Down: moves the Pipe one row and keeps the focus on its note input. */
+  protected moveByKeyboard(event: Event, row: number, step: -1 | 1): void {
+    event.preventDefault();
+    const target = row + step;
+    if (target < 0 || target >= this.draft().pipes.length) return;
+    this.movePipe(row, target);
+    afterNextRender(() => this.noteInputs()[target]?.nativeElement.focus(), {injector: this.injector});
   }
 
   protected removePipe(row: number): void {

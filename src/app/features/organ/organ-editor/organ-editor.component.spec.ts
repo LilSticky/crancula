@@ -2,7 +2,10 @@ import type {CdkDragDrop} from '@angular/cdk/drag-drop';
 import {CdkDropList} from '@angular/cdk/drag-drop';
 import {type ComponentFixture, TestBed} from '@angular/core/testing';
 import {By} from '@angular/platform-browser';
+import {TestbedHarnessEnvironment} from '@angular/cdk/testing/testbed';
 import {MatDialog} from '@angular/material/dialog';
+import {MatMenuHarness} from '@angular/material/menu/testing';
+import {MatTooltipHarness} from '@angular/material/tooltip/testing';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {provideRouter, Router} from '@angular/router';
 import {type Observable, of} from 'rxjs';
@@ -102,6 +105,27 @@ async function open(id?: string) {
     await fixture.whenStable();
   };
   const pipeRows = () => [...element.querySelectorAll<HTMLElement>('[data-testid="pipe"]')];
+  const loader = TestbedHarnessEnvironment.loader(fixture);
+  /** The menu button of the Pipe in the 0-based `row`. */
+  const pipeMenu = async (row: number) => {
+    const menus = await loader.getAllHarnesses(MatMenuHarness.with({selector: '[data-testid="pipe-menu"]'}));
+    const menu = menus[row];
+    if (!menu) throw new Error(`no Pipe menu in row ${row}`);
+    return menu;
+  };
+  /** The item of the Pipe menu in the 0-based `row`: opens the menu, which stays open. */
+  const pipeMenuItem = async (row: number, testId: string) => {
+    const menu = await pipeMenu(row);
+    if (!(await menu.isOpen())) await menu.open();
+    const [item] = await menu.getItems({selector: `[data-testid="${testId}"]`});
+    if (!item) throw new Error(`no ${testId} in the menu of row ${row}`);
+    return item;
+  };
+  /** Chooses an item of the Pipe menu in the 0-based `row`. */
+  const choose = async (row: number, testId: string) => {
+    await (await pipeMenuItem(row, testId)).click();
+    await fixture.whenStable();
+  };
 
   async function fillValidOrgan() {
     await type(field('name'), 'Street organ');
@@ -117,7 +141,22 @@ async function open(id?: string) {
   const violationAt = (path: string) =>
     [...element.querySelectorAll(`[data-testid="violation"][data-path="${path}"]`)].map((error) => error.textContent?.trim());
 
-  return {fixture, element, field, type, typeUnreadableNumber, click, save, saveButton, pipeRows, fillValidOrgan, violationAt};
+  return {
+    fixture,
+    element,
+    field,
+    type,
+    typeUnreadableNumber,
+    click,
+    save,
+    saveButton,
+    pipeRows,
+    pipeMenu,
+    pipeMenuItem,
+    choose,
+    fillValidOrgan,
+    violationAt,
+  };
 }
 
 describe('OrganEditorComponent', () => {
@@ -240,9 +279,9 @@ describe('OrganEditorComponent', () => {
       const {open: openEditor, library} = render();
       const organ = testOrgan('Street organ', 31);
       await library.put(organ);
-      const {element, click} = await openEditor(organ.id);
+      const {element, choose} = await openEditor(organ.id);
 
-      await click('remove-pipe');
+      await choose(0, 'remove-pipe');
 
       expect(borderOf(element)).toBe('8');
     });
@@ -663,9 +702,9 @@ describe('OrganEditorComponent', () => {
       const {open: openEditor, library} = render();
       const organ = testOrgan('Street organ', 1);
       await library.put(organ);
-      const {fixture, click} = await openEditor(organ.id);
+      const {fixture, choose} = await openEditor(organ.id);
 
-      await click('remove-pipe');
+      await choose(0, 'remove-pipe');
 
       expect(fixture.componentInstance.unsavedChanges()?.problems).toEqual([
         {
@@ -800,12 +839,7 @@ describe('OrganEditorComponent', () => {
         await editor.save();
         return storedNotes();
       };
-      const press = async (row: number, testId: string) => {
-        const button = editor.pipeRows()[row]?.querySelector<HTMLButtonElement>(`[data-testid="${testId}"]`);
-        if (!button) throw new Error(`no ${testId} in row ${row}`);
-        button.click();
-        await editor.fixture.whenStable();
-      };
+      const press = editor.choose;
       const drop = async (previousIndex: number, currentIndex: number) => {
         const list = editor.fixture.debugElement.query(By.directive(CdkDropList));
         const dropList: CdkDropList = list.injector.get(CdkDropList);
@@ -815,7 +849,7 @@ describe('OrganEditorComponent', () => {
       return {...editor, notesInRows, storedNotes, saved, press, drop, original: organ.pipes.map((pipe) => pipe.note)};
     }
 
-    it('moves a Pipe up one row with its move-up button and saves the order', async () => {
+    it('moves a Pipe up one row with Move up in its menu and saves the order', async () => {
       const {press, notesInRows, storedNotes, saved, original} = await openWithPipes();
 
       await press(2, 'move-up');
@@ -826,7 +860,7 @@ describe('OrganEditorComponent', () => {
       expect(await saved()).toEqual(expected);
     });
 
-    it('moves a Pipe down one row with its move-down button and saves the order', async () => {
+    it('moves a Pipe down one row with Move down in its menu and saves the order', async () => {
       const {press, notesInRows, saved, original} = await openWithPipes();
 
       await press(0, 'move-down');
@@ -836,18 +870,152 @@ describe('OrganEditorComponent', () => {
       expect(await saved()).toEqual(expected);
     });
 
-    it('disables move-up on the first row and move-down on the last row', async () => {
-      const {pipeRows} = await openWithPipes();
-      const rows = pipeRows();
-      const button = (row: number, testId: string) =>
-        rows[row]?.querySelector<HTMLButtonElement>(`[data-testid="${testId}"]`);
+    it('disables Move up on the first row and Move down on the last row of the menu', async () => {
+      const {pipeMenu, pipeMenuItem} = await openWithPipes();
+      const disabled = async (row: number, testId: string) => (await pipeMenuItem(row, testId)).isDisabled();
 
-      expect(button(0, 'move-up')?.disabled).toBe(true);
-      expect(button(0, 'move-down')?.disabled).toBe(false);
-      expect(button(1, 'move-up')?.disabled).toBe(false);
-      expect(button(1, 'move-down')?.disabled).toBe(false);
-      expect(button(2, 'move-up')?.disabled).toBe(false);
-      expect(button(2, 'move-down')?.disabled).toBe(true);
+      expect(await disabled(0, 'move-up')).toBe(true);
+      expect(await disabled(0, 'move-down')).toBe(false);
+      await (await pipeMenu(0)).close();
+      expect(await disabled(1, 'move-up')).toBe(false);
+      expect(await disabled(1, 'move-down')).toBe(false);
+      await (await pipeMenu(1)).close();
+      expect(await disabled(2, 'move-up')).toBe(false);
+      expect(await disabled(2, 'move-down')).toBe(true);
+    });
+
+    it('offers Move up, Move down and Remove Pipe in the menu', async () => {
+      const {pipeMenu} = await openWithPipes();
+      const menu = await pipeMenu(1);
+
+      await menu.open();
+
+      const items = await menu.getItems();
+      expect(await Promise.all(items.map((item) => item.getText()))).toEqual(
+        expect.arrayContaining([expect.stringContaining('Move up'), expect.stringContaining('Move down'), expect.stringContaining('Remove Pipe')]),
+      );
+      expect(items).toHaveLength(3);
+    });
+
+    it('names the menu button "Move or remove the Pipe in row 2" for its label and its tooltip', async () => {
+      const {pipeRows, fixture} = await openWithPipes();
+      const button = pipeRows()[1]?.querySelector<HTMLButtonElement>('[data-testid="pipe-menu"]');
+
+      expect(button?.getAttribute('aria-label')).toBe('Move or remove the Pipe in row 2');
+      const tooltips = await TestbedHarnessEnvironment.loader(fixture).getAllHarnesses(
+        MatTooltipHarness.with({selector: '[data-testid="pipe-menu"]'}),
+      );
+      await tooltips[1]?.show();
+      expect(await tooltips[1]?.getTooltipText()).toBe('Move or remove the Pipe in row 2');
+    });
+
+    it('no longer has move-up, move-down and remove-pipe icon buttons in the rows', async () => {
+      const {pipeRows} = await openWithPipes();
+
+      for (const row of pipeRows()) {
+        for (const testId of ['move-up', 'move-down', 'remove-pipe']) {
+          expect(row.querySelector(`button[data-testid="${testId}"]`)).toBeNull();
+        }
+      }
+    });
+
+    describe('with the keyboard', () => {
+      const keydown = async (editor: Awaited<ReturnType<typeof openWithPipes>>, row: number, key: string, altKey = true) => {
+        const input = editor.pipeRows()[row]?.querySelector<HTMLInputElement>('[data-testid="pipe-note"]');
+        if (!input) throw new Error(`no note field in row ${row}`);
+        input.focus();
+        input.dispatchEvent(new KeyboardEvent('keydown', {key, altKey, bubbles: true, cancelable: true}));
+        await editor.fixture.whenStable();
+      };
+      const focusedRow = (editor: Awaited<ReturnType<typeof openWithPipes>>) =>
+        editor.pipeRows().findIndex((row) => row.contains(document.activeElement));
+      const focusedNote = () => (document.activeElement instanceof HTMLInputElement ? document.activeElement.value : null);
+
+      it('moves a Pipe up one row with Alt+ArrowUp and keeps the focus on its note input', async () => {
+        const editor = await openWithPipes();
+
+        await keydown(editor, 2, 'ArrowUp');
+
+        expect(editor.notesInRows()).toEqual([editor.original[0], editor.original[2], editor.original[1]]);
+        expect(focusedRow(editor)).toBe(1);
+        expect(focusedNote()).toBe(String(editor.original[2]));
+      });
+
+      it('moves a Pipe down one row with Alt+ArrowDown and keeps the focus on its note input', async () => {
+        const editor = await openWithPipes();
+
+        await keydown(editor, 0, 'ArrowDown');
+
+        expect(editor.notesInRows()).toEqual([editor.original[1], editor.original[0], editor.original[2]]);
+        expect(focusedRow(editor)).toBe(1);
+        expect(focusedNote()).toBe(String(editor.original[0]));
+      });
+
+      it('does nothing with Alt+ArrowUp on the first row', async () => {
+        const editor = await openWithPipes();
+
+        await keydown(editor, 0, 'ArrowUp');
+
+        expect(editor.notesInRows()).toEqual(editor.original);
+        expect(focusedRow(editor)).toBe(0);
+      });
+
+      it('does nothing with Alt+ArrowDown on the last row', async () => {
+        const editor = await openWithPipes();
+
+        await keydown(editor, 2, 'ArrowDown');
+
+        expect(editor.notesInRows()).toEqual(editor.original);
+        expect(focusedRow(editor)).toBe(2);
+      });
+
+      it('does nothing with ArrowUp alone', async () => {
+        const editor = await openWithPipes();
+
+        await keydown(editor, 2, 'ArrowUp', false);
+
+        expect(editor.notesInRows()).toEqual(editor.original);
+      });
+    });
+
+    describe('dragging between rack columns', () => {
+      async function openWithColumns() {
+        const {open: openEditor, library} = render();
+        const organ = testOrgan('Street organ', 31);
+        await library.put(organ);
+        const editor = await openEditor(organ.id);
+        const notes = () =>
+          editor.pipeRows().map((row) => Number(row.querySelector<HTMLInputElement>('[data-testid="pipe-note"]')?.value));
+        const dropBetween = async (from: number, to: number, previousIndex: number, currentIndex: number) => {
+          const lists = editor.fixture.debugElement.queryAll(By.directive(CdkDropList)).map((list) => list.injector.get(CdkDropList));
+          const previousContainer = lists[from];
+          const container = lists[to];
+          if (!previousContainer || !container) throw new Error('no such rack column');
+          container.dropped.emit({previousIndex, currentIndex, previousContainer, container} as CdkDragDrop<number>);
+          await editor.fixture.whenStable();
+        };
+        return {notes, dropBetween, original: organ.pipes.map((pipe) => pipe.note)};
+      }
+
+      it('moves a Pipe from column 1 into column 2 at the dropped place', async () => {
+        const {notes, dropBetween, original} = await openWithColumns();
+
+        await dropBetween(0, 1, 2, 1);
+
+        const expected = original.filter((_, row) => row !== 2);
+        expected.splice(11, 0, original[2] ?? 0);
+        expect(notes()).toEqual(expected);
+      });
+
+      it('moves a Pipe from column 2 back into column 1 at the dropped place', async () => {
+        const {notes, dropBetween, original} = await openWithColumns();
+
+        await dropBetween(1, 0, 1, 0);
+
+        const expected = original.filter((_, row) => row !== 12);
+        expected.splice(0, 0, original[12] ?? 0);
+        expect(notes()).toEqual(expected);
+      });
     });
 
     it('moves a Pipe to the dropped row when dragged and saves the order', async () => {
@@ -1084,7 +1252,7 @@ describe('OrganEditorComponent', () => {
       const snackBarOpen = vi.spyOn(TestBed.inject(MatSnackBar), 'open');
       const editor = await open(organ.id);
       const removeRows = async (count: number) => {
-        for (let removed = 0; removed < count; removed++) await editor.click('remove-pipe');
+        for (let removed = 0; removed < count; removed++) await editor.choose(0, 'remove-pipe');
       };
       const storedNotes = () => library.entities()[0]?.pipes.map((pipe) => pipe.note);
       const holeCount = () => tapes.tapeEntities().reduce((sum, tape) => sum + tape.holes.length, 0);
@@ -1137,12 +1305,9 @@ describe('OrganEditorComponent', () => {
     });
 
     it('asks nothing when removed Pipes have no Holes', async () => {
-      const {pipeRows, fixture, save, dialog, storedNotes} = await openWithTapes();
+      const {choose, save, dialog, storedNotes} = await openWithTapes();
       // The last row (note 66) is a Pipe without Holes.
-      const last = pipeRows()[3]?.querySelector<HTMLButtonElement>('[data-testid="remove-pipe"]');
-      if (!last) throw new Error('no remove-pipe in the last row');
-      last.click();
-      await fixture.whenStable();
+      await choose(3, 'remove-pipe');
 
       await save();
 
@@ -1151,8 +1316,8 @@ describe('OrganEditorComponent', () => {
     });
 
     it('asks nothing when Pipes are only reordered or added', async () => {
-      const {press, click, element, type, save, dialog, storedNotes} = await openWithTapesForArranging();
-      await press(0, 'move-down');
+      const {choose, click, element, type, save, dialog, storedNotes} = await openWithTapes();
+      await choose(0, 'move-down');
       await click('add-pipe');
       const notes = element.querySelectorAll<HTMLInputElement>('[data-testid="pipe-note"]');
       const added = notes[notes.length - 1];
@@ -1184,17 +1349,6 @@ describe('OrganEditorComponent', () => {
 
       expect(library.entities()[0]?.name).toBe('Renamed');
     });
-
-    async function openWithTapesForArranging() {
-      const editor = await openWithTapes();
-      const press = async (row: number, testId: string) => {
-        const button = editor.pipeRows()[row]?.querySelector<HTMLButtonElement>(`[data-testid="${testId}"]`);
-        if (!button) throw new Error(`no ${testId} in row ${row}`);
-        button.click();
-        await editor.fixture.whenStable();
-      };
-      return {...editor, press};
-    }
   });
 
   describe('a number field with text that is not a number', () => {

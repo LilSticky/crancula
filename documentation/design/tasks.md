@@ -146,11 +146,11 @@ Every task that adds or changes UI text adds the keys to `en.json` and `de.json`
   Done differently: one `cdkDropList` per `rack-column` inside a `cdkDropListGroup` (data = the column's first row,
   `dropPipe` maps to global rows), because the specs need each row inside its column element and `mixed` over one
   grid would not.
-- [ ] **E9** Pipe row menu, component. Spec: the menu button has the aria-label and `matTooltip`
+- [x] **E9** Pipe row menu, component. Spec: the menu button has the aria-label and `matTooltip`
   "Move or remove the Pipe in row N"; the menu holds Move up (disabled on row 1), Move down
   (disabled on the last row) and Remove Pipe, each doing what today's icon buttons do (rewrite
   those specs to go through the menu). Then replace the three icon buttons.
-- [ ] **E10** Moving Pipes by keyboard, component. Spec: Alt+↑ / Alt+↓ in a note input moves its
+- [x] **E10** Moving Pipes by keyboard, component. Spec: Alt+↑ / Alt+↓ in a note input moves its
   Pipe one row and keeps the focus on that Pipe's input in its new row; nothing happens on the
   first / last row. Then the key handler.
 - [ ] **E11** Compact rack below 1180 px, component. Spec with a faked `BreakpointObserver` (as the

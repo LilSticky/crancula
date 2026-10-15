@@ -119,7 +119,8 @@
                   <span class="row-cell" data-testid="pipe-row-number">{{ row + 1 }}</span>
                   <mat-form-field subscriptSizing="dynamic">
                     <mat-label>{{ 'ORGAN.EDITOR.PIPE_NOTE' | translate }}</mat-label>
-                    <input matInput type="number" data-testid="pipe-note" [formField]="pipe.note"/>
+                    <input matInput type="number" data-testid="pipe-note" [formField]="pipe.note" #noteInput
+                           (keydown.alt.arrowup)="moveByKeyboard($event, row, -1)" (keydown.alt.arrowdown)="moveByKeyboard($event, row, 1)"/>
                     <ng-container ngProjectAs="mat-error">
                       @for (message of messagesAt(pipe.note); track message.key) {
                         <mat-error data-testid="violation" [attr.data-path]="'pipes.' + row + '.note'">{{ message.key | translate: message.params }}</mat-error>
@@ -127,22 +128,25 @@
                     </ng-container>
                   </mat-form-field>
                   <span class="note-name" data-testid="pipe-note-name" [class.sharp]="isSharp(pipe.note().value())">{{ noteNameOf(pipe.note().value()) }}</span>
-                  <button matIconButton type="button" data-testid="move-up" [disabled]="row === 0"
-                          [attr.aria-label]="'ORGAN.EDITOR.MOVE_PIPE_UP' | translate" (click)="movePipe(row, row - 1)">
-                    <mat-icon>arrow_upward</mat-icon>
-                  </button>
-                  <button matIconButton type="button" data-testid="move-down" [disabled]="row === organ.pipes.length - 1"
-                          [attr.aria-label]="'ORGAN.EDITOR.MOVE_PIPE_DOWN' | translate" (click)="movePipe(row, row + 1)">
-                    <mat-icon>arrow_downward</mat-icon>
-                  </button>
-                  <button matIconButton type="button" data-testid="remove-pipe"
-                          [attr.aria-label]="'ORGAN.EDITOR.REMOVE_PIPE' | translate" (click)="removePipe(row)">
-                    <mat-icon>delete</mat-icon>
-                  </button>
-                  <button matIconButton type="button" data-testid="pipe-menu"
-                          [attr.aria-label]="'ORGAN.EDITOR.PIPE_MENU' | translate: {row: row + 1}">
+                  <button matIconButton type="button" data-testid="pipe-menu" [matMenuTriggerFor]="pipeMenu"
+                          [attr.aria-label]="'ORGAN.EDITOR.PIPE_MENU' | translate: {row: row + 1}"
+                          [matTooltip]="'ORGAN.EDITOR.PIPE_MENU' | translate: {row: row + 1}">
                     <mat-icon>more_vert</mat-icon>
                   </button>
+                  <mat-menu #pipeMenu="matMenu">
+                    <button mat-menu-item type="button" data-testid="move-up" [disabled]="row === 0" (click)="movePipe(row, row - 1)">
+                      <mat-icon>arrow_upward</mat-icon>
+                      <span>{{ 'ORGAN.EDITOR.MOVE_UP' | translate }}</span>
+                    </button>
+                    <button mat-menu-item type="button" data-testid="move-down" [disabled]="row === organ.pipes.length - 1" (click)="movePipe(row, row + 1)">
+                      <mat-icon>arrow_downward</mat-icon>
+                      <span>{{ 'ORGAN.EDITOR.MOVE_DOWN' | translate }}</span>
+                    </button>
+                    <button mat-menu-item type="button" data-testid="remove-pipe" (click)="removePipe(row)">
+                      <mat-icon>delete</mat-icon>
+                      <span>{{ 'ORGAN.EDITOR.REMOVE_PIPE' | translate }}</span>
+                    </button>
+                  </mat-menu>
                 </div>
               }
             </div>
