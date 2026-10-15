@@ -16,7 +16,7 @@ interface FontFace {
 }
 
 function declaration(block: string, property: string): string {
-  return new RegExp(`${property}\s*:\s*([^;]+);`).exec(block)?.[1]?.trim() ?? '';
+  return new RegExp(`${property}\\s*:\\s*([^;]+);`).exec(block)?.[1]?.trim() ?? '';
 }
 
 function fontFaces(): readonly FontFace[] {
@@ -74,11 +74,19 @@ describe('theme (src/styles.scss)', () => {
     css = compile(resolve(root, 'src/styles.scss'), {
       loadPaths: [resolve(root, 'node_modules'), resolve(root, 'src')],
       quietDeps: true,
-      silenceDeprecations: ['import', 'global-builtin', 'mixed-decls'],
-      logger: {warn: () => undefined, debug: () => undefined},
     }).css;
+    // [^}]* cannot see nested rules, so only flat compiled `html { ... }` blocks match; html.cr-dark etc.
+    // and rules inside @media are compiled to their own blocks and are read separately.
     htmlRules = [...css.matchAll(/(?:^|\})\s*html\s*\{([^}]*)\}/g)].map(([, block = '']) => block).join('\n');
   }, 60_000);
+
+  /** The declarations of the flat compiled block(s) with exactly this selector (same [^}]* limit as above). */
+  function block(selector: string): string {
+    const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return [...css.matchAll(new RegExp(`(?:^|\\})\\s*${escaped}\\s*\\{([^}]*)\\}`, 'g'))]
+      .map(([, body = '']) => body)
+      .join('\n');
+  }
 
   /** The value that wins in the cascade: the last declaration of the property on html. */
   function htmlToken(name: string): string {
@@ -88,6 +96,18 @@ describe('theme (src/styles.scss)', () => {
 
   it('follows the system colour scheme on html', () => {
     expect(htmlToken('color-scheme')).toBe('light dark');
+  });
+
+  it.each([
+    ['html.cr-light', 'light'],
+    ['html.cr-dark', 'dark'],
+  ])('%s forces color-scheme %s', (selector, scheme) => {
+    expect(declaration(block(selector), 'color-scheme')).toBe(scheme);
+  });
+
+  it('overrides a --mat-sys token on html under prefers-contrast: more', () => {
+    const media = /@media\s*\(prefers-contrast:\s*more\)\s*\{\s*html\s*\{([^}]*)\}/.exec(css)?.[1] ?? '';
+    expect(media).toMatch(/--mat-sys-[\w-]+\s*:/);
   });
 
   // Expected values: the theme-overrides block in documentation/design/theme.scss.
