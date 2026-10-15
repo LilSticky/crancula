@@ -8,7 +8,7 @@ export const organRoutes: CranculaRoutes = [
     path: 'organs',
     component: OrganListComponent,
     title: 'Organs',
-    data: {path: '/organs', showIn: {navbar: true}, translate: {title: 'ORGAN.NAV'}},
+    data: {path: '/organs', showIn: {rail: true, icon: 'piano'}, translate: {title: 'ORGAN.NAV'}},
   },
   {path: 'organs/new', component: OrganEditorComponent, canDeactivate: [leaveUnsavedGuard]},
   {path: 'organs/:id', component: OrganEditorComponent, canDeactivate: [leaveUnsavedGuard]},

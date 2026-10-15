@@ -8,13 +8,13 @@ export const tapeRoutes: CranculaRoutes = [
     path: 'tapes',
     component: TapeListComponent,
     title: 'Tapes',
-    data: {path: '/tapes', showIn: {navbar: true}, translate: {title: 'TAPE.NAV'}},
+    data: {path: '/tapes', showIn: {rail: true, icon: 'receipt_long'}, translate: {title: 'TAPE.NAV'}},
   },
   {
     path: 'tapes/new',
     component: TapeImportComponent,
     title: 'New Tape',
-    data: {path: '/tapes/new', showIn: {navbar: false}, translate: {title: 'TAPE.IMPORT.TITLE'}},
+    data: {path: '/tapes/new', showIn: {rail: false}, translate: {title: 'TAPE.IMPORT.TITLE'}},
   },
   {path: 'tapes/:id', component: TapeViewComponent},
 ];

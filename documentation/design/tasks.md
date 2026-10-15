@@ -39,13 +39,13 @@ mockup `variants/a-workshop/mockup.html` (rail, page head, action bar). Design c
 - [x] **S2** Scheme. A `SchemePreference` (`'system' | 'light' | 'dark'`) service in
   `src/app/features/shared/`: reads and writes `crancula.scheme`, sets class `cr-light` or `cr-dark`
   on `<html>` (none for System). Unit spec with jsdom.
-- [ ] **S3** Rail component `cranc-rail` replaces `cranc-navbar`: brand, `mat-nav-list` with Organs
+- [x] **S3** Rail component `cranc-rail` replaces `cranc-navbar`: brand, `mat-nav-list` with Organs
   (icon `piano`) and Tapes (icon `receipt_long`), active item with `aria-current="page"`; at the
   bottom the language toggle (keeps `data-testid="language-switch"`, `data-language`, the existing
   persistence and `api.app.setLanguage`), the scheme toggle (`data-testid="scheme-switch"`, three
   icon toggles with labels), and "Saved on this computer". Class `cr-rail` (walnut tokens in
   `styles.scss`). Component spec.
-- [ ] **S4** `AppComponent` shell: `mat-sidenav-container`, `mat-sidenav` mode `side`, always open,
+- [x] **S4** `AppComponent` shell: `mat-sidenav-container`, `mat-sidenav` mode `side`, always open,
   196 px; below 1180 px an 84 px icon rail with tooltips (`BreakpointObserver`), labels hidden.
   Content area padding 32 px (24 px below 1180 px). Component spec for both widths.
 - [ ] **S5** Shared `cranc-page-head` (serif `h1` title, optional one-sentence subtitle, projected

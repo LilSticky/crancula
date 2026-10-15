@@ -1,34 +1,49 @@
+import {BreakpointObserver} from '@angular/cdk/layout';
 import {Component, effect, inject, untracked} from '@angular/core';
+import {toSignal} from '@angular/core/rxjs-interop';
+import {MatSidenav, MatSidenavContainer, MatSidenavContent} from '@angular/material/sidenav';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {RouterOutlet} from '@angular/router';
 import {TranslateService} from '@ngx-translate/core';
-import {firstValueFrom} from 'rxjs';
+import {firstValueFrom, map} from 'rxjs';
 import {OrganLibrary} from './features/organ/organ-library.store';
 import {TapeLibrary} from './features/tape/tape-library.store';
-import {NavbarComponent} from './features/navbar/navbar.component';
+import {RailComponent} from './features/rail/rail.component';
+
+/** Below this width the rail shrinks to icons (DESIGN-GUIDE: Layout and navigation). */
+const COMPACT_QUERY = '(max-width: 1179.98px)';
 
 @Component({
   // eslint-disable-next-line @angular-eslint/component-selector
   selector: 'app-root',
   template: `
-    <cranc-navbar/>
-    <div class="page-container">
-      <router-outlet/>
-    </div>
+    <mat-sidenav-container>
+      <mat-sidenav mode="side" opened disableClose [class.cr-compact]="compact()">
+        <cranc-rail [compact]="compact()"/>
+      </mat-sidenav>
+      <mat-sidenav-content class="page" [class.cr-compact]="compact()">
+        <router-outlet/>
+      </mat-sidenav-content>
+    </mat-sidenav-container>
   `,
   styles: `
-    .page-container {
-      width: 80%;
-      margin: auto;
-    }
+    :host { position: fixed; inset: 0; }
+    mat-sidenav-container { height: 100%; }
+    .page { box-sizing: border-box; padding: 32px; }
+    .page.cr-compact { padding: 24px; }
   `,
-  imports: [RouterOutlet, NavbarComponent],
+  imports: [RouterOutlet, RailComponent, MatSidenav, MatSidenavContainer, MatSidenavContent],
 })
 export class AppComponent {
   private readonly library = inject(OrganLibrary);
   private readonly tapes = inject(TapeLibrary);
   private readonly snackBar = inject(MatSnackBar);
   private readonly translate = inject(TranslateService);
+  private readonly breakpoints = inject(BreakpointObserver);
+
+  protected readonly compact = toSignal(this.breakpoints.observe(COMPACT_QUERY).pipe(map((state) => state.matches)), {
+    initialValue: this.breakpoints.isMatched(COMPACT_QUERY),
+  });
 
   constructor() {
     // Storage problems are reported to the user (spec FR-014, FR-015). Notifying is untracked: translating
