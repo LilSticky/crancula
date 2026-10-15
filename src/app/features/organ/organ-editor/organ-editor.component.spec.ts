@@ -122,6 +122,13 @@ async function open(id?: string) {
 }
 
 describe('OrganEditorComponent', () => {
+  it('titles the page in a page head', async () => {
+    const {open: openEditor} = render();
+    const {element} = await openEditor();
+
+    expect(element.querySelector('cranc-page-head h1')?.textContent?.trim()).toBe('New Organ');
+  });
+
   describe('a new Organ', () => {
     it('has empty fields for name, Tape Bed and Minimum Gap', async () => {
       const {open: openEditor} = render();

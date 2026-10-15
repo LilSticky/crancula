@@ -48,7 +48,7 @@ mockup `variants/a-workshop/mockup.html` (rail, page head, action bar). Design c
 - [x] **S4** `AppComponent` shell: `mat-sidenav-container`, `mat-sidenav` mode `side`, always open,
   196 px; below 1180 px an 84 px icon rail with tooltips (`BreakpointObserver`), labels hidden.
   Content area padding 32 px (24 px below 1180 px). Component spec for both widths.
-- [ ] **S5** Shared `cranc-page-head` (serif `h1` title, optional one-sentence subtitle, projected
+- [x] **S5** Shared `cranc-page-head` (serif `h1` title, optional one-sentence subtitle, projected
   actions on the right) and `cranc-action-bar` (sticky bottom; projected state left, actions right).
   Component specs. Use the page head on every page now (Organ list, Organ editor, Tape list, Bring
   a Song onto a Tape, Tape view, not found); the action bar is adopted in #64.

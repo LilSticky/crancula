@@ -1,5 +1,5 @@
 @if (drawing(); as drawing) {
-  <h2 data-testid="tape-name">{{ drawing.tape.name }}</h2>
+  <cranc-page-head data-testid="tape-name" [title]="drawing.tape.name"/>
   @if (importSummary; as summary) {
     <cranc-import-summary data-testid="import-summary" [importSummary]="summary" />
   }

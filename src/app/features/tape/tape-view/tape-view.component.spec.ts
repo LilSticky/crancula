@@ -126,6 +126,14 @@ async function render(options: RenderOptions = {}) {
 }
 
 describe('TapeViewComponent', () => {
+  it('titles the page with the Tape name in a page head', async () => {
+    const {tape, open, view} = await render();
+
+    await open(`/tapes/${tape.id}`);
+
+    expect(view()?.querySelector('cranc-page-head h1')?.textContent?.trim()).toBe(tape.name);
+  });
+
   it('shows the Import Summary given as navigation state', async () => {
     const {tape, importSummary, open, summaryShown} = await render();
 

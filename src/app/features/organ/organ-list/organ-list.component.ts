@@ -5,19 +5,21 @@ import {MatListItem, MatListItemLine, MatListItemTitle, MatNavList} from '@angul
 import {RouterLink} from '@angular/router';
 import {TranslatePipe} from '@ngx-translate/core';
 import type {Organ} from '@api/index';
+import {PageHeadComponent} from '../../shared/components/page-head/page-head.component';
 import {OrganDeletion} from '../organ-deletion';
 import {OrganLibrary} from '../organ-library.store';
 
 @Component({
   selector: 'cranc-organ-list',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslatePipe, RouterLink, MatButton, MatIconButton, MatIcon, MatNavList, MatListItem, MatListItemTitle, MatListItemLine],
+  imports: [TranslatePipe, RouterLink, MatButton, MatIconButton, MatIcon, MatNavList, MatListItem, MatListItemTitle, MatListItemLine, PageHeadComponent],
   template: `
-    <h2>{{ 'ORGAN.LIST.TITLE' | translate }}</h2>
-    <a matButton="filled" routerLink="/organs/new" data-testid="new-organ">
-      <mat-icon>add</mat-icon>
-      {{ 'ORGAN.LIST.NEW' | translate }}
-    </a>
+    <cranc-page-head [title]="'ORGAN.LIST.TITLE' | translate">
+      <a pageHeadActions matButton="filled" routerLink="/organs/new" data-testid="new-organ">
+        <mat-icon>add</mat-icon>
+        {{ 'ORGAN.LIST.NEW' | translate }}
+      </a>
+    </cranc-page-head>
     @if (library.entities().length === 0) {
       <p>{{ 'ORGAN.LIST.EMPTY' | translate }}</p>
     } @else {

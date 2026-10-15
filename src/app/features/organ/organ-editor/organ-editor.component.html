@@ -1,5 +1,5 @@
 <div class="organ-editor">
-  <h2>{{ (id() ? 'ORGAN.EDITOR.TITLE' : 'ORGAN.EDITOR.TITLE_NEW') | translate }}</h2>
+  <cranc-page-head [title]="(id() ? 'ORGAN.EDITOR.TITLE' : 'ORGAN.EDITOR.TITLE_NEW') | translate"/>
 
   <mat-form-field>
     <mat-label>{{ 'ORGAN.EDITOR.NAME' | translate }}</mat-label>
