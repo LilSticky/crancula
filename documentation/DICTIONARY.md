@@ -24,6 +24,7 @@
 * Defines the physical length of one Column in mm
 * Always editable in Crancula; the tool does not track whether it has been punched
 * Holds no tempo: playing speed is set by the Crank
+* German: Lochband (plural Lochbänder); compounds keep "Band": Bandbett, Bandbreite
 * Effectively a table
   * each row represents one pipe
     * extending a hole further along the row extends the duration the pipe is played
