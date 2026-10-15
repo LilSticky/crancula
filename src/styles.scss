@@ -1,41 +1,158 @@
-// Include theming for Angular Material with `mat.theme()`.
-// This Sass mixin will define CSS variables that are used for styling Angular Material
-// components according to the Material 3 design spec.
-// Learn more about theming and how to use it for your application's
-// custom components at https://material.angular.dev/guide/theming
+// Crancula theme: "the organ builder's workshop". Binding guide: documentation/DESIGN-GUIDE.md.
+// Palettes (src/styles/_theme-colors.scss) were generated once and are committed:
+//   ng generate @angular/material:theme-color --primary-color=#3a2f28 --tertiary-color=#8c6a23
+//     --neutral-color=#6e675c --error-color=#7a2a24 --include-high-contrast --directory=src/styles/
+// Fonts (OFL 1.1) live in src/fonts/, declared in src/styles/_fonts.scss:
+//   libertinus-serif-latin-600.woff2, libertinus-serif-latin-ext-600.woff2   headings and names
+//   noto-sans-latin.woff2, noto-sans-latin-ext.woff2                         body, labels, numbers
+// Scheme: follows the system (prefers-color-scheme); the Settings toggle sets class cr-light or
+// cr-dark on <html>.
 @use '@angular/material' as mat;
 @use 'styles/fonts';
+@use 'styles/theme-colors' as workshop;
 
 html {
   height: 100%;
+  color-scheme: light dark;
+
+  &.cr-light { color-scheme: light; }
+  &.cr-dark  { color-scheme: dark; }
+
   @include mat.theme((
     color: (
-      primary: mat.$cyan-palette,
-      tertiary: mat.$orange-palette,
+      primary: workshop.$primary-palette,
+      tertiary: workshop.$tertiary-palette,
+      theme-type: color-scheme, // light-dark() tokens: one theme, both schemes
     ),
-    typography: Roboto,
-    density: 0,
+    typography: (
+      plain-family: 'Noto Sans',
+      brand-family: 'Libertinus Serif',
+      bold-weight: 600,
+      medium-weight: 500,
+      regular-weight: 400,
+    ),
+    density: -2,
+  ));
+
+  // Pin the roles the generated palette only approximates. light-dark(light, dark).
+  @include mat.theme-overrides((
+    primary: light-dark(#1e1a16, #ede6d8),           // ink: the one filled button, checkboxes
+    on-primary: light-dark(#fbf9f4, #1e1a16),
+    error: light-dark(#7a2a24, #e3a49b),             // oxblood: errors, unsaved, Delete
+    on-error: light-dark(#ffffff, #3b0f0b),
+    surface: light-dark(#d6d0c4, #1c1916),           // the bench (page background)
+    on-surface: light-dark(#1e1a16, #ede6d8),
+    on-surface-variant: light-dark(#4a433b, #c2b8a8),
+    outline: light-dark(#8f8576, #8a8072),           // field outlines, >= 3:1 on paper
+    outline-variant: light-dark(#d4ccbc, #4a423a),
+    corner-small: 3px,
+    corner-medium: 6px,
+  ));
+
+  @media (prefers-contrast: more) {
+    @include workshop.high-contrast-overrides(color-scheme);
+  }
+
+  // Custom tokens: no Material role exists for these.
+  --cr-paper: light-dark(#fbf9f4, #2b2622);          // sheets (mat-card outlined)
+  --cr-paper-edge: light-dark(#d4ccbc, #4a423a);
+  --cr-tape: light-dark(#e8d6a4, #d8c593);           // manila, the Tape only; stays light in dark
+  --cr-tape-edge: light-dark(#c4ad74, #a8925c);
+  --cr-tape-guide: rgb(90 70 30 / 16%);              // row guides, Column lines (on the Tape)
+  --cr-tape-guide-strong: rgb(90 70 30 / 40%);       // natural rows, every 24th Column, borders
+  --cr-hole: #1e1a16;                                // ink-black Holes, both schemes
+  --cr-select: #1d4f91;                              // selected Hole ring on manila, 5.6:1
+  --cr-brass: light-dark(#8c6a23, #c9a45a);          // rulers, dimensions, focus ring
+  --cr-brass-on-walnut: #c9a45a;                     // focus ring inside the rail (6:1)
+  --cr-walnut: light-dark(#2e2722, #14110f);         // navigation rail
+  --cr-walnut-raised: light-dark(#463c35, #2e2722);  // active rail item
+  --cr-walnut-text: #ede6d8;
+  --cr-mm: 3.78px;                                   // 1 mm at 96 dpi, the 1:1 Tape zoom
+
+  // --- Component overrides (tokens, not selectors) ---------------------------
+  // Paper sheets: the only container. mat-card appearance="outlined".
+  @include mat.card-overrides((
+    outlined-container-color: var(--cr-paper),
+    outlined-outline-color: var(--cr-paper-edge),
+    outlined-container-shape: 3px,
+  ));
+
+  // Tool-like 6 px corners instead of pills.
+  @include mat.button-overrides((
+    filled-container-shape: 6px,
+    outlined-container-shape: 6px,
+    text-container-shape: 6px,
+    tonal-container-shape: 6px,
+    protected-container-shape: 6px,
+  ));
+  @include mat.button-toggle-overrides((
+    shape: 6px,
+    selected-state-background-color: var(--mat-sys-primary),
+    selected-state-text-color: var(--mat-sys-on-primary),
+  ));
+
+  // Outlined fields app-wide (set by provideFormFieldDefaults() in
+  // src/app/features/shared/form-field-defaults.ts).
+  @include mat.form-field-overrides((
+    outlined-container-shape: 4px,
+    outlined-focus-outline-color: var(--mat-sys-primary),
+  ));
+
+  // Ledgers (Organ list, Tape list, Parts): quiet ruled tables.
+  @include mat.table-overrides((
+    background-color: var(--cr-paper),
+    header-headline-color: var(--mat-sys-on-surface-variant),
+    row-item-outline-color: var(--cr-paper-edge),
+  ));
+
+  // Navigation rail on walnut: mat-sidenav (mode side) + mat-nav-list.
+  @include mat.sidenav-overrides((
+    container-background-color: var(--cr-walnut),
+    container-text-color: var(--cr-walnut-text),
+    container-shape: 0,
+    container-width: 196px,
   ));
 }
 
-body {
-  // Default the application to a light color theme. This can be changed to
-  // `dark` to enable the dark color theme, or to `light dark` to defer to the
-  // user's system settings.
-  color-scheme: light;
+// The rail's list is light-on-walnut; every other mat-list keeps the defaults.
+.cr-rail {
+  @include mat.list-overrides((
+    active-indicator-color: var(--cr-walnut-raised),
+    active-indicator-shape: 6px,
+    list-item-label-text-color: var(--cr-walnut-text),
+    list-item-leading-icon-color: var(--cr-walnut-text),
+    list-item-hover-label-text-color: var(--cr-walnut-text),
+    list-item-hover-leading-icon-color: var(--cr-walnut-text),
+    list-item-focus-label-text-color: var(--cr-walnut-text),
+  ));
 
-  // Set a default background, font and text colors for the application using
-  // Angular Material's system-level CSS variables. Learn more about these
-  // variables at https://material.angular.dev/guide/system-variables
-  background-color: var(--mat-sys-surface);
-  color: var(--mat-sys-on-surface);
-  font: var(--mat-sys-body-medium);
-
-  // Reset the user agent margin.
-  margin: 0;
-  height: 100%;
+  :focus-visible { outline-color: var(--cr-brass-on-walnut); }
 }
 
+body {
+  margin: 0;
+  height: 100%;
+  background: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface);
+  font: var(--mat-sys-body-medium);
+  font-variant-numeric: tabular-nums; // millimetres and MIDI notes line up in columns
+}
+
+// Bare h1-h3 get no Material typography (nothing carries mat-typography), so set the brand face here.
+h1, h2, h3 { font-family: var(--mat-sys-headline-small-font); font-weight: 600; }
+
+// One focus ring everywhere: brass, 2 px, offset.
+:focus-visible { outline: 2px solid var(--cr-brass); outline-offset: 2px; }
+
+// Reorder handle in the Pipe rack (cdkDrag).
+.cr-drag-handle { color: var(--mat-sys-on-surface-variant); cursor: grab; }
+
+// Intentional blanket reset: users who ask for reduced motion get none, including Material's.
+@media (prefers-reduced-motion: reduce) {
+  * { transition-duration: 0s !important; animation-duration: 0s !important; }
+}
+
+// Remove with the form restyle (#64).
 .cranc-form-section {
   border: 1px solid #ccc;
   padding: 1rem;

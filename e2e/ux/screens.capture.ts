@@ -10,6 +10,12 @@ const SCREENS = process.env['UX_SCREENS_DIR'] ?? join(__dirname, '../../document
 
 async function capture(window: Page, name: string): Promise<void> {
   await window.waitForLoadState('networkidle');
+  // CSS transitions, CSS animations and Web Animations all show up in getAnimations(); loop in case one starts another.
+  await window.evaluate(async () => {
+    while (document.getAnimations().length > 0) {
+      await Promise.allSettled(document.getAnimations().map((animation) => animation.finished));
+    }
+  });
   await window.screenshot({path: join(SCREENS, `${name}.png`), fullPage: true});
 }
 
@@ -41,6 +47,8 @@ test.describe('UX screens', () => {
     await capture(window, '03-organ-editor-invalid');
 
     await window.getByRole('link', {name: 'Organs'}).click();
+    await expect(window.getByRole('dialog')).toBeVisible();
+    await expect(window.getByRole('button', {name: 'Discard changes'})).toBeVisible();
     await capture(window, '03b-leave-unsaved-dialog');
     await window.getByRole('button', {name: 'Discard changes'}).click();
     await defineStreetOrgan(window);

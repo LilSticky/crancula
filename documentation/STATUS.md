@@ -39,10 +39,17 @@ variants 40–42 (self-reviews). New tooling: `ux-review` skill, `ux-designer` a
 The Tape is drawn horizontally, row 1 on top (user decision). German for Tape is now Lochband
 (dictionary, UI texts). Applying the guide to the app: [#59](https://github.com/LilSticky/crancula/issues/59).
 
-**Next concrete step:** apply the design guide before the app grows (user decision, 2026-10-15):
-[#62](https://github.com/LilSticky/crancula/issues/62) theme and fonts, then #63 shell, #64 Organ
-editor, #65 Tape view, #66 lists (all sub-issues of [#59](https://github.com/LilSticky/crancula/issues/59)).
-After that: `/speckit-specify` for "Punch a tape" ([#3](https://github.com/LilSticky/crancula/issues/3)).
+**Done (pull request pending):** [#62](https://github.com/LilSticky/crancula/issues/62) theme and fonts
+(2026-10-15, branch `062-design-theme-and-fonts`). Noto Sans and Libertinus Serif bundled, Roboto removed.
+Workshop theme with light-dark tokens; the scheme follows the system until #63. `provideFormFieldDefaults()`
+makes fields outlined app-wide, because the theme's density -2 hides fill-field labels (found by the
+ux-review). The Libertinus licence now carries the upstream notice. `ux:screens` waits for dialogs and
+animations. ux-review 30/50 (was 29/50), see [design/screens/current/ux-review.md](design/screens/current/ux-review.md).
+Gate: lint, 253 Angular tests and node tests, 31 e2e green locally.
+
+**Next concrete step:** #63 shell, then #64 Organ editor, #65 Tape view, #66 lists and #69 Tape import
+screen (all sub-issues of [#59](https://github.com/LilSticky/crancula/issues/59)). Then
+`/speckit-specify` for "Punch a tape" ([#3](https://github.com/LilSticky/crancula/issues/3)).
 Open issues carry `priority:` and `size:` labels; triage sets them.
 
 ## Known broken / WIP
@@ -65,6 +72,8 @@ Open issues carry `priority:` and `size:` labels; triage sets them.
 
 ## Process changes
 
+- 2026-10-15: a machine that last pulled before the 2026-10-14 rewrite has a local `main` with no merge
+  base; reset it to `origin/main` after checking that every local commit subject exists there.
 - 2026-10-15: after every merge the `housekeeper` cleans up the local Git state (pruned remote
   branches, merged local branches and worktrees, stale build output); part of the workflow in AGENTS.md.
 - 2026-10-14: commits are authored as LilSticky with the GitHub noreply address, set per repository.

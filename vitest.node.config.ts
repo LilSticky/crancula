@@ -9,7 +9,7 @@ export default defineConfig({
   resolve: {extensions: ['.ts', '.mts', '.mjs', '.js', '.json']},
   test: {
     environment: 'node',
-    include: ['api/**/*.spec.ts', 'app/**/*.spec.ts', 'e2e/support/**/*.spec.ts'],
+    include: ['api/**/*.spec.ts', 'app/**/*.spec.ts', 'e2e/support/**/*.spec.ts', 'scripts/**/*.spec.ts'],
     passWithNoTests: true,
   },
 });
