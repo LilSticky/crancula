@@ -16,7 +16,7 @@ interface FontFace {
 }
 
 function declaration(block: string, property: string): string {
-  return new RegExp(`${property}\s*:\s*([^;]+);`).exec(block)?.[1]?.trim() ?? '';
+  return new RegExp(`${property}\\s*:\\s*([^;]+);`).exec(block)?.[1]?.trim() ?? '';
 }
 
 function fontFaces(): readonly FontFace[] {
@@ -74,9 +74,8 @@ describe('theme (src/styles.scss)', () => {
     css = compile(resolve(root, 'src/styles.scss'), {
       loadPaths: [resolve(root, 'node_modules'), resolve(root, 'src')],
       quietDeps: true,
-      silenceDeprecations: ['import', 'global-builtin', 'mixed-decls'],
-      logger: {warn: () => undefined, debug: () => undefined},
     }).css;
+    // `[^}]*` only sees flat rules: compiled CSS is flat apart from @media, whose nested html rules are not matched.
     htmlRules = [...css.matchAll(/(?:^|\})\s*html\s*\{([^}]*)\}/g)].map(([, block = '']) => block).join('\n');
   }, 60_000);
 
@@ -97,6 +96,15 @@ describe('theme (src/styles.scss)', () => {
 
   it('sets --mat-sys-primary to the ink colours', () => {
     expect(htmlToken('--mat-sys-primary')).toBe('light-dark(#1e1a16, #ede6d8)');
+  });
+
+  it('forces the light scheme on html.cr-light and the dark scheme on html.cr-dark', () => {
+    expect(css).toMatch(/html\.cr-light\s*\{[^}]*color-scheme:\s*light\s*;/);
+    expect(css).toMatch(/html\.cr-dark\s*\{[^}]*color-scheme:\s*dark\s*;/);
+  });
+
+  it('sets Material tokens on html for prefers-contrast: more', () => {
+    expect(css).toMatch(/@media\s*\(prefers-contrast:\s*more\)\s*\{\s*html\s*\{[^}]*--mat-sys-/);
   });
 
   it('uses Noto Sans as the plain typeface', () => {
