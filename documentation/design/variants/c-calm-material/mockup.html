@@ -1,0 +1,738 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Crancula, variant c-calm-material</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+/* Fonts ship with the app (#24). Roboto variable 300-500, Material Icons. */
+@font-face { font-family: 'Roboto'; font-weight: 300 500; src: url('../../../../src/fonts/roboto-latin.woff2') format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: 'Roboto'; font-weight: 300 500; src: url('../../../../src/fonts/roboto-latin-ext.woff2') format('woff2'); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1E00-1E9F, U+2113; }
+@font-face { font-family: 'Material Icons'; font-weight: 400; font-display: block; src: url('../../../../src/fonts/material-icons.woff2') format('woff2'); }
+
+/* ---- M3 system tokens, as mat.theme() emits them (seed #405F90 "organ blue") ---- */
+:root {
+  --mat-sys-primary: #405f90;
+  --mat-sys-on-primary: #ffffff;
+  --mat-sys-primary-container: #d6e3ff;
+  --mat-sys-on-primary-container: #264777;
+  --mat-sys-secondary: #565f71;
+  --mat-sys-secondary-container: #dae2f9;
+  --mat-sys-on-secondary-container: #3e4759;
+  --mat-sys-error: #ba1a1a;
+  --mat-sys-error-container: #ffdad6;
+  --mat-sys-on-error-container: #93000a;
+  --mat-sys-surface: #f9f9ff;
+  --mat-sys-surface-container-lowest: #ffffff;
+  --mat-sys-surface-container-low: #f3f3fa;
+  --mat-sys-surface-container: #ededf4;
+  --mat-sys-surface-container-high: #e7e8ee;
+  --mat-sys-surface-container-highest: #e2e2e9;
+  --mat-sys-on-surface: #191c20;
+  --mat-sys-on-surface-variant: #44474e;
+  --mat-sys-outline: #74777f;
+  --mat-sys-outline-variant: #c4c6d0;
+  --mat-sys-scrim: rgba(0,0,0,.32);
+  /* Crancula's own tokens: the Tape is physical, so it keeps its paper colour in both schemes. */
+  --cranc-tape-paper: #f2ead6;
+  --cranc-tape-edge: #b9ab88;
+  --cranc-tape-guide: rgba(90, 74, 40, .14);
+  --cranc-tape-bar: rgba(90, 74, 40, .38);
+  --cranc-hole: #26292e;
+  --cranc-select: #2f5aa8;
+  --cranc-ok: #2e6b3a;
+  --cranc-ok-container: #d5ecd6;
+}
+html.dark {
+  --mat-sys-primary: #a9c7ff;
+  --mat-sys-on-primary: #0a305f;
+  --mat-sys-primary-container: #264777;
+  --mat-sys-on-primary-container: #d6e3ff;
+  --mat-sys-secondary: #bec6dc;
+  --mat-sys-secondary-container: #3e4759;
+  --mat-sys-on-secondary-container: #dae2f9;
+  --mat-sys-error: #ffb4ab;
+  --mat-sys-error-container: #93000a;
+  --mat-sys-on-error-container: #ffdad6;
+  --mat-sys-surface: #111318;
+  --mat-sys-surface-container-lowest: #0c0e13;
+  --mat-sys-surface-container-low: #191c20;
+  --mat-sys-surface-container: #1d2024;
+  --mat-sys-surface-container-high: #282a2f;
+  --mat-sys-surface-container-highest: #33353a;
+  --mat-sys-on-surface: #e2e2e9;
+  --mat-sys-on-surface-variant: #c4c6d0;
+  --mat-sys-outline: #8e9099;
+  --mat-sys-outline-variant: #44474e;
+  --cranc-tape-paper: #ddd4bf;
+  --cranc-tape-edge: #8f8368;
+  --cranc-ok: #9ad49f;
+  --cranc-ok-container: #1f4a28;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body {
+  font: 400 14px/20px Roboto, system-ui, sans-serif; letter-spacing: .25px;
+  background: var(--mat-sys-surface); color: var(--mat-sys-on-surface);
+}
+.mi { font-family: 'Material Icons'; font-weight: normal; font-style: normal; font-size: 24px; line-height: 1;
+  display: inline-block; white-space: nowrap; direction: ltr; font-feature-settings: 'liga'; -webkit-font-smoothing: antialiased; }
+.mi.sm { font-size: 20px; } .mi.xs { font-size: 18px; }
+
+/* ---- Screen switching (mockup only) ---- */
+.screen { display: none; height: 100vh; min-height: 640px; }
+.screen.active { display: grid; grid-template-columns: 88px 1fr; }
+
+/* ---- Navigation rail (mat-nav-list styled as an M3 rail) ---- */
+.rail { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 16px 0 16px;
+  background: var(--mat-sys-surface-container-low); border-right: 1px solid var(--mat-sys-outline-variant); }
+.rail .logo { width: 40px; height: 40px; margin-bottom: 20px; }
+.rail a { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 80px; padding: 4px 0 8px;
+  text-decoration: none; color: var(--mat-sys-on-surface-variant); font-size: 12px; font-weight: 500; line-height: 16px; letter-spacing: .5px; }
+.rail a .pill { width: 56px; height: 32px; border-radius: 16px; display: grid; place-items: center; }
+.rail a.on { color: var(--mat-sys-on-surface); }
+.rail a.on .pill { background: var(--mat-sys-secondary-container); color: var(--mat-sys-on-secondary-container); }
+.rail a:focus-visible .pill { outline: 2px solid var(--mat-sys-primary); outline-offset: 2px; }
+.rail .spacer { flex: 1; }
+.lang { display: flex; flex-direction: column; border: 1px solid var(--mat-sys-outline); border-radius: 16px; overflow: hidden; }
+.lang span { width: 48px; height: 32px; display: grid; place-items: center; font-size: 12px; font-weight: 500; color: var(--mat-sys-on-surface-variant); }
+.lang span.on { background: var(--mat-sys-secondary-container); color: var(--mat-sys-on-secondary-container); }
+.lang span + span { border-top: 1px solid var(--mat-sys-outline); }
+.icon-btn { width: 40px; height: 40px; border-radius: 20px; display: inline-grid; place-items: center; border: 0; background: none;
+  color: var(--mat-sys-on-surface-variant); cursor: pointer; }
+.icon-btn.sm { width: 32px; height: 32px; }
+a.icon-btn { text-decoration: none; }
+.icon-btn:hover { background: color-mix(in srgb, var(--mat-sys-on-surface) 8%, transparent); }
+
+/* ---- Main area ---- */
+.main { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+.page-head { display: flex; align-items: center; gap: 8px; min-height: 72px; padding: 12px 24px 12px 32px; }
+.page-head.has-back { padding-left: 16px; }
+.page-head .titles { flex: 1; min-width: 0; }
+.page-head h1 { margin: 0; font-size: 24px; line-height: 32px; font-weight: 400; letter-spacing: 0; }
+.page-head p { margin: 0; color: var(--mat-sys-on-surface-variant); }
+.content { flex: 1; min-height: 0; padding: 0 32px 24px; overflow: auto; }
+
+/* ---- Buttons (mat-button variants) ---- */
+.btn { display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 24px; border-radius: 20px; border: 0;
+  font: 500 14px/20px Roboto, sans-serif; letter-spacing: .1px; cursor: pointer; white-space: nowrap; text-decoration: none; }
+.btn .mi { font-size: 18px; margin-left: -8px; }
+.btn.filled { background: var(--mat-sys-primary); color: var(--mat-sys-on-primary); }
+.btn.tonal { background: var(--mat-sys-secondary-container); color: var(--mat-sys-on-secondary-container); }
+.btn.outlined { background: none; border: 1px solid var(--mat-sys-outline); color: var(--mat-sys-primary); }
+.btn.text { background: none; color: var(--mat-sys-primary); padding: 0 12px; }
+.btn.text.danger { color: var(--mat-sys-error); }
+.btn.sm { height: 32px; padding: 0 16px; }
+.btn:focus-visible { outline: 2px solid var(--mat-sys-primary); outline-offset: 2px; }
+.btn.focus { outline: 2px solid var(--mat-sys-primary); outline-offset: 2px; }
+
+/* ---- Cards (mat-card appearance="outlined") ---- */
+.card { background: var(--mat-sys-surface-container-lowest); border: 1px solid var(--mat-sys-outline-variant); border-radius: 12px; }
+html.dark .card { background: var(--mat-sys-surface-container-low); }
+.card-head { display: flex; align-items: center; gap: 12px; padding: 16px 16px 8px 20px; }
+.card-head h2 { margin: 0; font-size: 16px; line-height: 24px; font-weight: 500; letter-spacing: .15px; flex: 1; }
+.card-head .sub { color: var(--mat-sys-on-surface-variant); font-weight: 400; font-size: 14px; }
+.card-body { padding: 8px 20px 20px; }
+h3.group { margin: 16px 0 12px; font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: .1px; color: var(--mat-sys-on-surface-variant); }
+
+/* ---- Outlined form field, density -4 (40 px) ---- */
+.field { position: relative; display: flex; flex-direction: column; min-width: 0; }
+.field .box { position: relative; display: flex; align-items: center; height: 40px; border: 1px solid var(--mat-sys-outline); border-radius: 4px; padding: 0 12px; background: transparent; }
+.field label { position: absolute; z-index: 1; top: -9px; left: 8px; padding: 0 4px; font-size: 12px; line-height: 16px; color: var(--mat-sys-on-surface-variant);
+  background: var(--mat-sys-surface-container-lowest); white-space: nowrap; max-width: calc(100% - 16px); overflow: hidden; text-overflow: ellipsis; }
+html.dark .field label { background: var(--mat-sys-surface-container-low); }
+.field input { flex: 1; min-width: 0; width: 100%; border: 0; background: none; outline: 0; font: 400 16px/24px Roboto, sans-serif; color: var(--mat-sys-on-surface); padding: 0; letter-spacing: .5px; }
+.field input.num { text-align: right; font-variant-numeric: tabular-nums; }
+.field .suffix { margin-left: 8px; color: var(--mat-sys-on-surface-variant); font-size: 14px; }
+.field .hint { font-size: 12px; line-height: 16px; color: var(--mat-sys-on-surface-variant); padding: 4px 12px 0; min-height: 20px; }
+.field.focus .box { border: 2px solid var(--mat-sys-primary); padding: 0 11px; }
+.field.focus label { color: var(--mat-sys-primary); }
+.field.err .box { border: 2px solid var(--mat-sys-error); padding: 0 11px; }
+.field.err label, .field.err .hint { color: var(--mat-sys-error); }
+.field.ro .box { border-style: dashed; border-color: var(--mat-sys-outline-variant); }
+.field.ro input { color: var(--mat-sys-on-surface-variant); }
+.field.select .box::after { content: 'arrow_drop_down'; font-family: 'Material Icons'; font-size: 24px; color: var(--mat-sys-on-surface-variant); margin-right: -6px; }
+.grid2 { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 12px 16px; }
+
+/* ---- Chips, banners ---- */
+.chip { white-space: nowrap; flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--mat-sys-outline-variant);
+  font-size: 14px; font-weight: 500; color: var(--mat-sys-on-surface-variant); background: none; }
+.chip.sm { height: 24px; padding: 0 8px; font-size: 12px; border-radius: 6px; }
+.chip.ok { background: var(--cranc-ok-container); color: var(--cranc-ok); border-color: transparent; }
+html.dark .chip.ok { color: #c6f0c9; }
+.chip.info { background: var(--mat-sys-primary-container); color: var(--mat-sys-on-primary-container); border-color: transparent; }
+.banner { display: flex; gap: 12px; align-items: flex-start; padding: 12px 16px; border-radius: 12px; margin-bottom: 16px; }
+.banner.error { background: var(--mat-sys-error-container); color: var(--mat-sys-on-error-container); }
+.banner b { font-weight: 500; }
+.banner a { color: inherit; font-weight: 500; }
+.banner ul { margin: 4px 0 0; padding-left: 18px; }
+
+/* ---- Organ list ---- */
+.organ-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; align-items: start; }
+.organ-card .card-head h2 { font-size: 22px; line-height: 28px; font-weight: 400; letter-spacing: 0; }
+.facts { display: grid; grid-template-columns: auto 1fr; gap: 6px 16px; margin: 0; }
+.facts dt { color: var(--mat-sys-on-surface-variant); }
+.facts dd { margin: 0; font-variant-numeric: tabular-nums; }
+.card-actions { display: flex; gap: 8px; align-items: center; padding: 8px 12px 12px 20px; border-top: 1px solid var(--mat-sys-outline-variant); }
+.card-actions .grow { flex: 1; }
+.bed-glyph { display: block; margin: 4px 0 16px; }
+.next-hint { margin-top: 24px; display: flex; gap: 12px; align-items: center; color: var(--mat-sys-on-surface-variant); }
+
+/* ---- Organ editor ---- */
+.editor { display: grid; grid-template-columns: minmax(340px, 400px) minmax(0, 1fr); gap: 16px; height: 100%; min-height: 0; }
+.editor > .card { display: flex; flex-direction: column; min-height: 0; }
+.editor .scroll { overflow: auto; min-height: 0; flex: 1; }
+.bedcheck { margin-top: 4px; padding: 12px; border-radius: 8px; background: var(--mat-sys-surface-container); font-size: 13px; line-height: 18px; color: var(--mat-sys-on-surface-variant); }
+.bedcheck .row { display: flex; align-items: center; gap: 8px; color: var(--mat-sys-on-surface); font-weight: 500; margin-bottom: 4px; }
+.bedcheck svg { display: block; margin-top: 8px; }
+.range { display: grid; grid-template-columns: repeat(31, 1fr); gap: 2px; padding: 0 20px 12px; }
+.range span { height: 20px; border-radius: 3px; background: var(--mat-sys-primary-container); }
+.range span.sharp { background: color-mix(in srgb, var(--mat-sys-primary) 55%, var(--mat-sys-primary-container)); }
+.range span.sel { outline: 2px solid var(--mat-sys-primary); outline-offset: 1px; }
+.range-labels { display: flex; justify-content: space-between; padding: 0 20px 8px; font-size: 12px; color: var(--mat-sys-on-surface-variant); }
+table.pipes { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+table.pipes th { position: sticky; top: 0; z-index: 1; background: var(--mat-sys-surface-container-lowest); text-align: left; font-size: 12px; font-weight: 500; letter-spacing: .5px;
+  color: var(--mat-sys-on-surface-variant); padding: 8px 8px; border-bottom: 1px solid var(--mat-sys-outline-variant); }
+html.dark table.pipes th { background: var(--mat-sys-surface-container-low); }
+table.pipes td { padding: 4px 8px; border-bottom: 1px solid color-mix(in srgb, var(--mat-sys-outline-variant) 60%, transparent); height: 44px; }
+table.pipes tr.sel td { background: color-mix(in srgb, var(--mat-sys-primary) 8%, transparent); }
+table.pipes td.handle { width: 32px; color: var(--mat-sys-on-surface-variant); cursor: grab; padding-left: 12px; }
+table.pipes td.rownum { width: 56px; color: var(--mat-sys-on-surface-variant); }
+table.pipes td.note { width: 72px; font-weight: 500; }
+table.pipes td.msg { width: 100%; }
+table.pipes td.act { width: 48px; text-align: right; }
+table.pipes .field .box { height: 36px; width: 96px; }
+table.pipes .field.err .box { width: 96px; }
+table.pipes .rowerr { color: var(--mat-sys-error); font-size: 12px; line-height: 16px; }
+.savebar { display: flex; align-items: center; gap: 12px; padding: 12px 24px 12px 32px; border-top: 1px solid var(--mat-sys-outline-variant); background: var(--mat-sys-surface-container-low); }
+.savebar .state { flex: 1; display: flex; align-items: center; gap: 8px; color: var(--mat-sys-on-surface-variant); }
+.dot { width: 8px; height: 8px; border-radius: 4px; background: var(--mat-sys-primary); }
+
+/* ---- Tape import ---- */
+.import { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 16px; align-items: start; }
+.step { display: grid; grid-template-columns: 28px 1fr; gap: 0 12px; padding: 4px 0 20px; }
+.step + .step { border-top: 1px solid var(--mat-sys-outline-variant); padding-top: 16px; }
+.step .n { width: 24px; height: 24px; border-radius: 12px; background: var(--mat-sys-primary); color: var(--mat-sys-on-primary); font-size: 12px; font-weight: 500; display: grid; place-items: center; margin-top: 2px; }
+.step h3 { margin: 0 0 12px; font-size: 16px; line-height: 28px; font-weight: 500; letter-spacing: .15px; }
+.filechip { display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 8px 0 12px; border-radius: 8px; background: var(--mat-sys-surface-container); }
+.filechip .meta { color: var(--mat-sys-on-surface-variant); font-size: 12px; }
+table.parts { width: 100%; border-collapse: collapse; margin-top: 12px; font-variant-numeric: tabular-nums; }
+table.parts th { text-align: left; font-size: 12px; font-weight: 500; color: var(--mat-sys-on-surface-variant); padding: 6px 8px; border-bottom: 1px solid var(--mat-sys-outline-variant); }
+table.parts td { padding: 6px 8px; border-bottom: 1px solid color-mix(in srgb, var(--mat-sys-outline-variant) 60%, transparent); height: 44px; }
+table.parts tr.off td { color: var(--mat-sys-on-surface-variant); }
+.cb { width: 18px; height: 18px; border-radius: 2px; border: 2px solid var(--mat-sys-on-surface-variant); display: inline-grid; place-items: center; vertical-align: middle; }
+.cb.on { background: var(--mat-sys-primary); border-color: var(--mat-sys-primary); }
+.cb.on::after { content: 'check'; font-family: 'Material Icons'; font-size: 16px; color: var(--mat-sys-on-primary); }
+.stepper { display: flex; align-items: center; gap: 8px; }
+.stepper .field .box { width: 140px; }
+.fit-row { display: grid; grid-template-columns: 28px 1fr auto; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid color-mix(in srgb, var(--mat-sys-outline-variant) 60%, transparent); }
+.fit-row .v { font-size: 22px; line-height: 28px; font-variant-numeric: tabular-nums; }
+.fit-row .mi { color: var(--mat-sys-on-surface-variant); }
+.fit-row.good .mi { color: var(--cranc-ok); }
+.ranges { margin: 16px 0 4px; font-size: 12px; color: var(--mat-sys-on-surface-variant); }
+.ranges .bar { position: relative; height: 14px; margin: 4px 0 10px; background: var(--mat-sys-surface-container); border-radius: 7px; }
+.ranges .bar i { position: absolute; top: 0; bottom: 0; border-radius: 7px; }
+
+/* ---- Tape view ---- */
+.tapeview { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 16px; height: 100%; min-height: 0; }
+.tapecard { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+.tapecard .toolbar { display: flex; align-items: center; gap: 12px; padding: 8px 12px 8px 16px; border-bottom: 1px solid var(--mat-sys-outline-variant); }
+.tapecard .toolbar .grow { flex: 1; }
+.seg { display: inline-flex; border: 1px solid var(--mat-sys-outline); border-radius: 16px; overflow: hidden; }
+.seg span { white-space: nowrap; height: 32px; padding: 0 14px; display: inline-flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 500; color: var(--mat-sys-on-surface); }
+.seg span + span { border-left: 1px solid var(--mat-sys-outline); }
+.seg span.on { background: var(--mat-sys-secondary-container); color: var(--mat-sys-on-secondary-container); }
+.tapestage { flex: 1; min-height: 0; display: grid; grid-template-columns: 64px minmax(0, 1fr); overflow: auto; background: var(--mat-sys-surface-container); }
+.rowlabels { position: sticky; left: 0; z-index: 2; background: var(--mat-sys-surface-container); }
+.tapescroll { overflow-x: auto; overflow-y: hidden; }
+.statusline { display: flex; gap: 16px; white-space: nowrap; overflow: hidden; align-items: center; padding: 8px 16px; border-top: 1px solid var(--mat-sys-outline-variant); font-size: 13px; color: var(--mat-sys-on-surface-variant); font-variant-numeric: tabular-nums; }
+.statusline b { color: var(--mat-sys-on-surface); font-weight: 500; }
+.overview { padding: 8px 16px 12px; border-top: 1px solid var(--mat-sys-outline-variant); }
+.side { display: flex; flex-direction: column; gap: 16px; min-height: 0; overflow: auto; }
+.summary .facts { gap: 8px 12px; }
+.muted { color: var(--mat-sys-on-surface-variant); }
+.small { font-size: 12px; line-height: 16px; }
+
+/* ---- Dialog ---- */
+.scrim { position: fixed; inset: 0; background: var(--mat-sys-scrim); display: none; place-items: center; z-index: 10; }
+.scrim.show { display: grid; }
+.dialog { width: 400px; background: var(--mat-sys-surface-container-high); border-radius: 28px; padding: 24px; }
+.dialog h2 { margin: 0 0 16px; font-size: 24px; line-height: 32px; font-weight: 400; }
+.dialog p { margin: 0 0 24px; color: var(--mat-sys-on-surface-variant); }
+.dialog .acts { display: flex; justify-content: flex-end; gap: 8px; }
+
+@media (max-width: 1150px) {
+  .tapeview { grid-template-columns: minmax(0, 1fr) 248px; }
+  .tapecard .toolbar .hint { display: none; }
+  .statusline .total { display: none; }
+  .import { grid-template-columns: minmax(0, 1fr) 320px; }
+  .side .facts { grid-template-columns: 1fr; gap: 0; }
+  .side .facts dd { margin-bottom: 8px; }
+  .grid2.org-tr { grid-template-columns: 1fr !important; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+
+<!-- Shared rail template is cloned into each screen by the script below. -->
+<template id="rail-tpl">
+  <nav class="rail" aria-label="Main">
+    <svg class="logo" viewBox="0 0 40 40" aria-label="Crancula" role="img">
+      <rect x="2" y="6" width="36" height="28" rx="6" fill="var(--cranc-tape-paper)" stroke="var(--cranc-tape-edge)"/>
+      <rect x="8" y="12" width="10" height="3" rx="1.5" fill="var(--cranc-hole)"/>
+      <rect x="20" y="18.5" width="6" height="3" rx="1.5" fill="var(--cranc-hole)"/>
+      <rect x="12" y="25" width="16" height="3" rx="1.5" fill="var(--cranc-hole)"/>
+    </svg>
+    <a href="#organ-list" data-nav="organs"><span class="pill"><span class="mi">piano</span></span><span data-i18n="organs">Organs</span></a>
+    <a href="#tape-list" data-nav="tapes"><span class="pill"><span class="mi">queue_music</span></span><span data-i18n="tapes">Tapes</span></a>
+    <div class="spacer"></div>
+    <button class="icon-btn" aria-label="Switch to dark scheme" title="Light / dark"><span class="mi sm">dark_mode</span></button>
+    <div class="lang" role="group" aria-label="Language"><span data-lang="en">EN</span><span data-lang="de">DE</span></div>
+  </nav>
+</template>
+
+<!-- ================= Organ list ================= -->
+<section class="screen" id="organ-list" data-nav="organs">
+  <main class="main">
+    <header class="page-head">
+      <div class="titles"><h1>Organs</h1><p>Describe each Organ once; every Tape is made for one of them.</p></div>
+      <a class="btn filled" href="#organ-editor"><span class="mi">add</span>New Organ</a>
+    </header>
+    <div class="content">
+      <div class="organ-grid">
+        <article class="card organ-card">
+          <div class="card-head"><h2>Street organ</h2><span class="chip sm">2 Tapes</span></div>
+          <div class="card-body">
+            <svg class="bed-glyph" width="100%" height="28" viewBox="0 0 300 28" preserveAspectRatio="none" aria-hidden="true" id="glyph-street"></svg>
+            <dl class="facts">
+              <dt>Tape width</dt><dd>120 mm</dd>
+              <dt>Pipes</dt><dd>31, from F3 to B5</dd>
+              <dt>Hole diameter</dt><dd>2,5 mm</dd>
+              <dt>Spacing between rows</dt><dd>3,5 mm</dd>
+            </dl>
+          </div>
+          <div class="card-actions">
+            <a class="btn text" href="#organ-editor"><span class="mi">edit</span>Edit</a>
+            <a class="btn text" href="#tape-import"><span class="mi">queue_music</span>Bring a Song onto a Tape</a>
+            <span class="grow"></span>
+            <button class="icon-btn" aria-label="More actions for Street organ" title="More (Delete Organ)"><span class="mi">more_vert</span></button>
+          </div>
+        </article>
+        <article class="card organ-card">
+          <div class="card-head"><h2>Hand organ, 20 notes</h2><span class="chip sm">No Tapes yet</span></div>
+          <div class="card-body">
+            <svg class="bed-glyph" width="100%" height="28" viewBox="0 0 300 28" preserveAspectRatio="none" aria-hidden="true" id="glyph-hand"></svg>
+            <dl class="facts">
+              <dt>Tape width</dt><dd>70 mm</dd>
+              <dt>Pipes</dt><dd>20, from C4 to A5</dd>
+              <dt>Hole diameter</dt><dd>2 mm</dd>
+              <dt>Spacing between rows</dt><dd>3 mm</dd>
+            </dl>
+          </div>
+          <div class="card-actions">
+            <a class="btn text" href="#organ-editor"><span class="mi">edit</span>Edit</a>
+            <a class="btn text" href="#tape-import"><span class="mi">queue_music</span>Bring a Song onto a Tape</a>
+            <span class="grow"></span>
+            <button class="icon-btn" aria-label="More actions for Hand organ" title="More (Delete Organ)"><span class="mi">more_vert</span></button>
+          </div>
+        </article>
+      </div>
+      <p class="next-hint"><span class="mi sm">info</span>Open an Organ to change its Tape Bed or Pipes. Tapes already made keep their Holes on the same Pipes.</p>
+    </div>
+  </main>
+</section>
+
+<!-- ================= Organ editor ================= -->
+<section class="screen" id="organ-editor" data-nav="organs">
+  <main class="main">
+    <header class="page-head has-back">
+      <a class="icon-btn" href="#organ-list" aria-label="Back to Organs" title="Back to Organs"><span class="mi">arrow_back</span></a>
+      <div class="titles"><h1>Street organ</h1><p>Organ, used by 2 Tapes</p></div>
+      <button class="icon-btn" aria-label="More actions" title="More (Duplicate, Delete Organ)"><span class="mi">more_vert</span></button>
+    </header>
+    <div class="content">
+      <div class="editor">
+        <section class="card" aria-labelledby="h-bed">
+          <div class="scroll">
+            <div class="card-body" style="padding-top:20px">
+              <div class="field focus"><label>Name</label><div class="box"><input value="Street organ"></div><div class="hint"></div></div>
+              <h3 class="group" id="h-bed">Tape Bed</h3>
+              <div class="grid2">
+                <div class="field"><label>Tape width</label><div class="box"><input class="num" value="120"><span class="suffix">mm</span></div><div class="hint"></div></div>
+                <div class="field"><label>Border</label><div class="box"><input class="num" value="5"><span class="suffix">mm</span></div><div class="hint"></div></div>
+                <div class="field"><label>Hole diameter</label><div class="box"><input class="num" value="2,5"><span class="suffix">mm</span></div><div class="hint"></div></div>
+                <div class="field"><label>Spacing between rows</label><div class="box"><input class="num" value="3,5"><span class="suffix">mm</span></div><div class="hint"></div></div>
+                <div class="field"><label>Minimum Gap</label><div class="box"><input class="num" value="1,5"><span class="suffix">mm</span></div><div class="hint"></div></div>
+                <div class="field ro"><label>Minimum Hole Length</label><div class="box"><input class="num" value="2,5" readonly><span class="suffix">mm</span></div><div class="hint">Equals the hole diameter</div></div>
+              </div>
+              <div class="bedcheck">
+                <div class="row"><span class="mi xs" style="color:var(--cranc-ok)">check_circle</span>31 rows fit on the Tape</div>
+                30 × 3,5 mm between rows + 2,5 mm hole + 2 × 5 mm border = 117,5 mm of 120 mm.
+                <svg id="bed-section" width="100%" height="34" viewBox="0 0 340 34" aria-hidden="true"></svg>
+              </div>
+            </div>
+          </div>
+        </section>
+        <section class="card" aria-labelledby="h-pipes">
+          <div class="card-head">
+            <h2 id="h-pipes">Pipes <span class="sub">31, from F3 to B5, in row order</span></h2>
+            <button class="btn tonal sm"><span class="mi">add</span>Add Pipe</button>
+          </div>
+          <div class="range" id="range-street" aria-hidden="true"></div>
+          <div class="range-labels"><span>Row 1, F3</span><span>Row 31, B5</span></div>
+          <div class="scroll">
+            <table class="pipes" id="pipes-street">
+              <thead><tr><th></th><th>Row</th><th>MIDI note</th><th>Note</th><th></th><th></th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </div>
+    <footer class="savebar">
+      <span class="state"><span class="dot"></span>Unsaved changes: Name</span>
+      <button class="btn text">Discard changes</button>
+      <button class="btn filled"><span class="mi">save</span>Save</button>
+    </footer>
+  </main>
+</section>
+
+<!-- ================= Organ editor, errors (German) ================= -->
+<section class="screen" id="organ-editor-error" data-nav="organs" data-lang="de">
+  <main class="main">
+    <header class="page-head has-back">
+      <a class="icon-btn" href="#organ-list" aria-label="Zurück zu den Drehorgeln" title="Zurück zu den Drehorgeln"><span class="mi">arrow_back</span></a>
+      <div class="titles"><h1>Neue Drehorgel</h1><p>Noch nicht gespeichert</p></div>
+    </header>
+    <div class="content">
+      <div class="editor">
+        <section class="card">
+          <div class="scroll">
+            <div class="card-body" style="padding-top:20px">
+              <div class="banner error" role="alert">
+                <span class="mi sm">error</span>
+                <div><b>3 Angaben verhindern das Speichern.</b>
+                  <ul><li><a href="#e1">Rand</a> fehlt</li><li><a href="#e2">Lochdurchmesser</a> ist 0</li><li><a href="#e3">Reihe 2</a> doppelt</li></ul></div>
+              </div>
+              <div class="field"><label>Name</label><div class="box"><input value="Straßenorgel"></div><div class="hint"></div></div>
+              <h3 class="group">Bandbett</h3>
+              <div class="grid2">
+                <div class="field"><label>Bandbreite</label><div class="box"><input class="num" value="120"><span class="suffix">mm</span></div><div class="hint"></div></div>
+                <div class="field err focus" id="e1"><label>Rand</label><div class="box"><input class="num" value=""><span class="suffix">mm</span></div><div class="hint">Bitte einen Wert eingeben</div></div>
+                <div class="field err" id="e2"><label>Lochdurchmesser</label><div class="box"><input class="num" value="0"><span class="suffix">mm</span></div><div class="hint">Muss größer als 0 sein</div></div>
+                <div class="field"><label>Reihenabstand</label><div class="box"><input class="num" value="3,5"><span class="suffix">mm</span></div><div class="hint"></div></div>
+                <div class="field"><label>Mindestabstand</label><div class="box"><input class="num" value="1,5"><span class="suffix">mm</span></div><div class="hint"></div></div>
+                <div class="field ro"><label>Mindestlochlänge</label><div class="box"><input class="num" value="" placeholder="–" readonly><span class="suffix">mm</span></div><div class="hint">Gleich dem Lochdurchmesser</div></div>
+              </div>
+            </div>
+          </div>
+        </section>
+        <section class="card">
+          <div class="card-head">
+            <h2>Pfeifen <span class="sub">3, in Reihenfolge der Reihen</span></h2>
+            <button class="btn tonal sm"><span class="mi">add</span>Pfeife hinzufügen</button>
+          </div>
+          <div class="scroll">
+            <table class="pipes">
+              <thead><tr><th></th><th>Reihe</th><th>MIDI-Note</th><th>Note</th><th></th><th></th></tr></thead>
+              <tbody>
+                <tr><td class="handle"><span class="mi sm">drag_indicator</span></td><td class="rownum">1</td><td><div class="field"><div class="box"><input class="num" value="53"></div></div></td><td class="note">F3</td><td class="msg"></td><td class="act"><button class="icon-btn sm" aria-label="Aktionen für Reihe 1"><span class="mi sm">more_vert</span></button></td></tr>
+                <tr id="e3"><td class="handle"><span class="mi sm">drag_indicator</span></td><td class="rownum">2</td><td><div class="field err"><div class="box"><input class="num" value="53"></div></div></td><td class="note">F3</td><td class="msg rowerr">Diese MIDI-Note spielt schon Reihe 1</td><td class="act"><button class="icon-btn sm" aria-label="Aktionen für Reihe 2"><span class="mi sm">more_vert</span></button></td></tr>
+                <tr><td class="handle"><span class="mi sm">drag_indicator</span></td><td class="rownum">3</td><td><div class="field"><div class="box"><input class="num" value="55"></div></div></td><td class="note">G3</td><td class="msg"></td><td class="act"><button class="icon-btn sm" aria-label="Aktionen für Reihe 3"><span class="mi sm">more_vert</span></button></td></tr>
+              </tbody>
+            </table>
+            <p class="muted small" style="padding:12px 20px">Pfeifen per Ziehen oder über das Menü ⋮ umsortieren. Eine Drehorgel hat meist 20 bis 80 Pfeifen.</p>
+          </div>
+        </section>
+      </div>
+    </div>
+    <footer class="savebar">
+      <span class="state"><span class="dot"></span>Ungespeicherte Änderungen</span>
+      <button class="btn text">Verwerfen</button>
+      <button class="btn filled"><span class="mi">save</span>Speichern</button>
+    </footer>
+  </main>
+</section>
+
+<!-- ================= Tape import ================= -->
+<section class="screen" id="tape-import" data-nav="tapes">
+  <main class="main">
+    <header class="page-head has-back">
+      <a class="icon-btn" href="#tape-list" aria-label="Back to Tapes" title="Back to Tapes"><span class="mi">arrow_back</span></a>
+      <div class="titles"><h1>Bring a Song onto a Tape</h1><p>Choose the MIDI file and the Parts, then check how well they fit the Organ.</p></div>
+    </header>
+    <div class="content">
+      <div class="import">
+        <section class="card"><div class="card-body" style="padding-top:20px">
+          <div class="step"><span class="n">1</span><div>
+            <h3>Song</h3>
+            <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap">
+              <span class="filechip"><span class="mi sm muted">audio_file</span>three-parts.mid <span class="meta">3 Parts, 3 bars</span>
+                <button class="icon-btn sm" aria-label="Remove MIDI file"><span class="mi xs">close</span></button></span>
+              <button class="btn text">Choose another MIDI file</button>
+            </div>
+            <table class="parts">
+              <thead><tr><th style="width:40px"></th><th>Part</th><th>Notes</th><th>Range</th><th></th></tr></thead>
+              <tbody>
+                <tr><td><span class="cb on" role="checkbox" aria-checked="true" aria-label="Lead"></span></td><td>Lead</td><td>25</td><td>C4 to E5</td><td></td></tr>
+                <tr><td><span class="cb on" role="checkbox" aria-checked="true" aria-label="Bass"></span></td><td>Bass</td><td>11</td><td>C3 to A3</td><td></td></tr>
+                <tr class="off"><td><span class="cb" role="checkbox" aria-checked="false" aria-label="Drums"></span></td><td>Drums</td><td>40</td><td>no pitch</td><td><span class="chip sm">Percussion, not on the Tape</span></td></tr>
+              </tbody>
+            </table>
+          </div></div>
+          <div class="step"><span class="n">2</span><div>
+            <h3>Organ and Transposition</h3>
+            <div class="grid2 org-tr" style="grid-template-columns: 1fr auto; align-items:start">
+              <div class="field select"><label>Organ</label><div class="box"><input value="Street organ, 31 Pipes F3 to B5" readonly></div><div class="hint"></div></div>
+              <div class="stepper">
+                <button class="icon-btn" aria-label="One semitone down"><span class="mi">remove</span></button>
+                <div class="field"><label>Transposition</label><div class="box"><input class="num" value="+5"><span class="suffix">semitones</span></div><div class="hint"></div></div>
+                <button class="icon-btn" aria-label="One semitone up"><span class="mi">add</span></button>
+              </div>
+            </div>
+            <div style="display:flex; gap:8px; align-items:center; margin-top:4px">
+              <span class="chip info"><span class="mi xs">auto_awesome</span>+5 is the proposal</span>
+              <span class="muted">It puts the most Notes onto a Pipe without moving octaves.</span>
+            </div>
+          </div></div>
+        </div></section>
+
+        <aside class="card" aria-labelledby="h-fit">
+          <div class="card-head"><h2 id="h-fit">Fit on the Street organ</h2><span class="chip sm ok"><span class="mi xs">check</span>All Notes play</span></div>
+          <div class="card-body">
+            <div class="fit-row good"><span class="mi">check_circle</span><span>Notes matching a Pipe</span><span class="v">30</span></div>
+            <div class="fit-row"><span class="mi">swap_vert</span><span>Notes moved by octaves</span><span class="v">6</span></div>
+            <div class="fit-row good"><span class="mi">block</span><span>Unplayable Notes</span><span class="v">0</span></div>
+            <div class="ranges">
+              Pipes of the Organ, F3 to B5
+              <div class="bar"><i style="left:13.9%; right:2.8%; background:var(--mat-sys-primary-container); border:1px solid var(--mat-sys-primary)"></i></div>
+              Selected Parts as written, C3 to E5
+              <div class="bar"><i style="left:0; right:22.2%; background:var(--mat-sys-outline)"></i></div>
+              Selected Parts after +5, F3 to A5
+              <div class="bar"><i style="left:13.9%; right:8.3%; background:var(--mat-sys-primary)"></i></div>
+            </div>
+            <h3 class="group" style="margin-top:20px">Tape</h3>
+            <div class="field"><label>Name of the Tape</label><div class="box"><input value="Three parts"></div><div class="hint"></div></div>
+            <div class="field"><label>Column length</label><div class="box"><input class="num" value="2,5"><span class="suffix">mm</span></div><div class="hint">One Column is a 1/32 note</div></div>
+            <button class="btn filled" style="width:100%; justify-content:center; margin-top:4px"><span class="mi">add</span>Create Tape</button>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </main>
+</section>
+
+<!-- ================= Tape view ================= -->
+<section class="screen" id="tape-view" data-nav="tapes">
+  <main class="main">
+    <header class="page-head has-back">
+      <a class="icon-btn" href="#tape-list" aria-label="Back to Tapes" title="Back to Tapes"><span class="mi">arrow_back</span></a>
+      <div class="titles"><h1>Three parts</h1><p>Tape for the Street organ, 96 Columns, 240 mm long</p></div>
+      <span class="muted small">Export comes in the next release</span>
+      <button class="btn outlined" disabled style="opacity:.6; cursor:default" title="Export as SVG for the Plotter (coming in the next release)"><span class="mi">content_cut</span>Export for the Plotter</button>
+      <button class="icon-btn" aria-label="More actions" title="More (Rename, Delete Tape)"><span class="mi">more_vert</span></button>
+    </header>
+    <div class="content">
+      <div class="tapeview">
+        <section class="card tapecard" aria-label="Tape">
+          <div class="toolbar">
+            <span class="seg" role="group" aria-label="Zoom"><span>Fit to window</span><span class="on"><span class="mi xs">check</span>True size</span><span>200 %</span></span>
+            <span class="grow"></span>
+            <span class="muted small hint">Row 1 at the top. The Tape runs right to left through the Organ.</span>
+          </div>
+          <div class="tapestage" id="tapestage">
+            <svg class="rowlabels" id="rowlabels" width="64"></svg>
+            <div class="tapescroll"><svg id="tape" role="img" aria-label="Tape with 31 rows and 96 Columns"></svg></div>
+          </div>
+          <div class="statusline" id="status"></div>
+          <div class="overview"><svg id="overview" width="100%" height="28" preserveAspectRatio="none" aria-label="Whole Tape, visible part highlighted" role="img"></svg></div>
+        </section>
+        <aside class="side">
+          <section class="card summary">
+            <div class="card-head"><h2>What changed on import</h2><button class="icon-btn sm" aria-label="Hide Import Summary" title="Hide; shown only once"><span class="mi xs">close</span></button></div>
+            <div class="card-body">
+              <dl class="facts">
+                <dt>Transposition</dt><dd>+5 semitones</dd>
+                <dt>Parts on the Tape</dt><dd>Lead, Bass</dd>
+                <dt>Left out</dt><dd>Drums (percussion)</dd>
+                <dt>Moved by octaves</dt><dd>6 Notes</dd>
+                <dt>Unplayable Notes</dt><dd>0</dd>
+                <dt>Holes fixed</dt><dd>3, lengthened to 2,5 mm</dd>
+              </dl>
+              <p class="muted small" style="margin:12px 0 0">Shown once after the import; not stored with the Tape.</p>
+            </div>
+          </section>
+          <section class="card">
+            <div class="card-head"><h2>Tape</h2></div>
+            <div class="card-body">
+              <dl class="facts">
+                <dt>Organ</dt><dd><a href="#organ-editor" style="color:var(--mat-sys-primary)">Street organ</a></dd>
+                <dt>Tape width</dt><dd>120 mm</dd>
+                <dt>Column length</dt><dd>2,5 mm</dd>
+                <dt>Length</dt><dd>240 mm, 3 bars</dd>
+                <dt>Holes</dt><dd>36</dd>
+              </dl>
+            </div>
+          </section>
+        </aside>
+      </div>
+    </div>
+  </main>
+</section>
+
+<!-- ================= Tape list (for nav completeness) ================= -->
+<section class="screen" id="tape-list" data-nav="tapes">
+  <main class="main">
+    <header class="page-head">
+      <div class="titles"><h1>Tapes</h1><p>Each Tape belongs to one Organ.</p></div>
+      <a class="btn filled" href="#tape-import"><span class="mi">add</span>Bring a Song onto a Tape</a>
+    </header>
+    <div class="content">
+      <section class="card">
+        <table class="parts" style="margin:0">
+          <thead><tr><th style="padding-left:20px">Name</th><th>Organ</th><th>Columns</th><th>Length</th><th></th></tr></thead>
+          <tbody>
+            <tr><td style="padding-left:20px"><a href="#tape-view" style="color:var(--mat-sys-on-surface); font-weight:500">Three parts</a></td><td>Street organ</td><td>96</td><td>240 mm</td><td style="text-align:right"><a class="btn text sm" href="#tape-view">Open</a><button class="icon-btn sm" aria-label="More actions for Three parts"><span class="mi xs">more_vert</span></button></td></tr>
+            <tr><td style="padding-left:20px"><a href="#tape-view" style="color:var(--mat-sys-on-surface); font-weight:500">Kirmeswalzer</a></td><td>Street organ</td><td>512</td><td>1280 mm</td><td style="text-align:right"><a class="btn text sm" href="#tape-view">Open</a><button class="icon-btn sm" aria-label="More actions for Kirmeswalzer"><span class="mi xs">more_vert</span></button></td></tr>
+          </tbody>
+        </table>
+      </section>
+    </div>
+  </main>
+</section>
+
+<!-- Leave-with-unsaved-changes dialog (#organ-editor-leave) -->
+<div class="scrim" id="leave-dialog" role="dialog" aria-modal="true" aria-labelledby="leave-h">
+  <div class="dialog">
+    <h2 id="leave-h">Leave without saving?</h2>
+    <p>Your changes to the Street organ are not saved yet. If you leave, they are lost.</p>
+    <div class="acts"><button class="btn text danger">Discard changes</button><button class="btn filled focus">Keep editing</button></div>
+  </div>
+</div>
+
+<script>
+const NAMES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+const noteName = m => NAMES[m % 12] + (Math.floor(m / 12) - 1);
+const isSharp = m => NAMES[m % 12].includes('#');
+const SVGNS = 'http://www.w3.org/2000/svg';
+const el = (tag, attrs, parent) => { const e = document.createElementNS(SVGNS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; };
+const PIPES = Array.from({ length: 31 }, (_, i) => 53 + i); // F3..B5
+
+// Rail into every screen
+document.querySelectorAll('.screen').forEach(s => {
+  const rail = document.getElementById('rail-tpl').content.firstElementChild.cloneNode(true);
+  const de = s.dataset.lang === 'de';
+  rail.querySelector(`[data-nav="${s.dataset.nav}"]`).classList.add('on');
+  rail.querySelector(`[data-lang="${de ? 'de' : 'en'}"]`).classList.add('on');
+  if (de) { rail.querySelector('[data-i18n="organs"]').textContent = 'Drehorgeln'; rail.querySelector('[data-i18n="tapes"]').textContent = 'Bänder'; }
+  s.prepend(rail);
+});
+
+// Organ card glyphs: one tick per Pipe across the Tape width
+function glyph(id, n, widthFrac) {
+  const g = document.getElementById(id); const w = 300 * widthFrac;
+  el('rect', { x: 0, y: 2, width: w, height: 24, rx: 3, fill: 'var(--cranc-tape-paper)', stroke: 'var(--cranc-tape-edge)' }, g);
+  for (let i = 0; i < n; i++) el('rect', { x: 10 + i * (w - 20) / (n - 1) - 1.5, y: 8, width: 3, height: 12, rx: 1.5, fill: 'var(--cranc-hole)' }, g);
+}
+glyph('glyph-street', 31, 1); glyph('glyph-hand', 20, 70 / 120);
+
+// Tape Bed cross-section
+(() => {
+  const g = document.getElementById('bed-section'); const s = 340 / 120;
+  el('rect', { x: 0, y: 6, width: 340, height: 20, rx: 2, fill: 'var(--cranc-tape-paper)', stroke: 'var(--cranc-tape-edge)' }, g);
+  el('rect', { x: 0, y: 6, width: 5 * s, height: 20, fill: 'var(--cranc-tape-guide)' }, g);
+  el('rect', { x: 340 - 5 * s, y: 6, width: 5 * s, height: 20, fill: 'var(--cranc-tape-guide)' }, g);
+  const start = (120 - 105) / 2;
+  for (let i = 0; i < 31; i++) el('circle', { cx: (start + i * 3.5) * s, cy: 16, r: 1.25 * s, fill: 'var(--cranc-hole)' }, g);
+})();
+
+// Pipe table + range strip
+(() => {
+  const tb = document.querySelector('#pipes-street tbody'); const strip = document.getElementById('range-street');
+  PIPES.forEach((m, i) => {
+    const sel = i === 12;
+    const sp = document.createElement('span'); if (isSharp(m)) sp.className = 'sharp'; if (sel) sp.classList.add('sel'); sp.title = `Row ${i + 1}, ${noteName(m)}`; strip.appendChild(sp);
+    const tr = document.createElement('tr'); if (sel) tr.className = 'sel';
+    tr.innerHTML = `<td class="handle"><span class="mi sm" aria-hidden="true">drag_indicator</span></td><td class="rownum">${i + 1}</td>
+      <td><div class="field${sel ? ' focus' : ''}"><div class="box"><input class="num" value="${m}" aria-label="MIDI note of row ${i + 1}"></div></div></td>
+      <td class="note">${noteName(m)}</td><td class="msg"></td>
+      <td class="act"><button class="icon-btn sm" aria-label="Actions for row ${i + 1}" title="Move up, Move down, Delete Pipe"><span class="mi sm">more_vert</span></button></td>`;
+    tb.appendChild(tr);
+  });
+  // start scrolled so the focused row is visible
+  requestAnimationFrame(() => { const sc = tb.closest('.scroll'); sc.scrollTop = 44 * 8; });
+})();
+
+// Tape: true size, 4 px per mm (approx. 1:1 at 96 dpi)
+(() => {
+  const PX = 4, W = 120, BORDER = 5, ROW = 3.5, HOLE = 2.5, COL = 2.5, COLS = 96, RULER = 28;
+  const rowY = r => ((W - 30 * ROW) / 2 + r * ROW) * PX; // centre of row r (0-based), from the Tape edge
+  const tapeH = W * PX, tapeW = COLS * COL * PX + 24;
+  const svg = document.getElementById('tape'); svg.setAttribute('width', tapeW); svg.setAttribute('height', tapeH + RULER + 16);
+  const labels = document.getElementById('rowlabels'); labels.setAttribute('height', tapeH + RULER + 16);
+  const top = RULER + 8, left = 8;
+  // ruler: bars (32 Columns), beats (8 Columns), mm every 10
+  for (let c = 0; c <= COLS; c += 8) {
+    const x = left + c * COL * PX; const bar = c % 32 === 0;
+    el('line', { x1: x, x2: x, y1: bar ? 6 : 16, y2: RULER, stroke: 'var(--mat-sys-on-surface-variant)', 'stroke-width': bar ? 1.2 : .8 }, svg);
+    if (bar && c < COLS) { const t = el('text', { x: x + 4, y: 16, 'font-size': 12, fill: 'var(--mat-sys-on-surface)', 'font-weight': 500 }, svg); t.textContent = `Bar ${c / 32 + 1}`; }
+    else if (!bar) { const t = el('text', { x: x + 3, y: 24, 'font-size': 12, fill: 'var(--mat-sys-on-surface-variant)' }, svg); t.textContent = c; }
+  }
+  // paper
+  el('rect', { x: left, y: top, width: COLS * COL * PX, height: tapeH, fill: 'var(--cranc-tape-paper)', stroke: 'var(--cranc-tape-edge)' }, svg);
+  el('line', { x1: left, x2: left + COLS * COL * PX, y1: top + BORDER * PX, y2: top + BORDER * PX, stroke: 'var(--cranc-tape-bar)', 'stroke-dasharray': '4 4' }, svg);
+  el('line', { x1: left, x2: left + COLS * COL * PX, y1: top + (W - BORDER) * PX, y2: top + (W - BORDER) * PX, stroke: 'var(--cranc-tape-bar)', 'stroke-dasharray': '4 4' }, svg);
+  for (let r = 0; r < 31; r++) {
+    const y = top + rowY(r);
+    el('line', { x1: left, x2: left + COLS * COL * PX, y1: y, y2: y, stroke: r % 12 === 0 ? 'var(--cranc-tape-bar)' : 'var(--cranc-tape-guide)' }, svg);
+    const m = PIPES[r];
+    const t = el('text', { x: 40, y: y + 4, 'font-size': 12, 'text-anchor': 'end', fill: isSharp(m) ? 'var(--mat-sys-on-surface-variant)' : 'var(--mat-sys-on-surface)', 'font-weight': isSharp(m) ? 400 : 500 }, labels);
+    t.textContent = noteName(m);
+    const n = el('text', { x: 60, y: y + 4, 'font-size': 12, 'text-anchor': 'end', fill: 'var(--mat-sys-on-surface-variant)' }, labels);
+    if (r % 2 === 0) n.textContent = r + 1;
+  }
+  for (let c = 0; c <= COLS; c += 8) {
+    const x = left + c * COL * PX;
+    el('line', { x1: x, x2: x, y1: top, y2: top + tapeH, stroke: c % 32 === 0 ? 'var(--cranc-tape-bar)' : 'var(--cranc-tape-guide)', 'stroke-width': c % 32 === 0 ? 1.2 : 1 }, svg);
+  }
+  // Holes: Lead (melody) and Bass, already transposed +5 onto F3..B5
+  const lead = [[72,0,4],[74,4,4],[76,8,4],[77,12,4],[79,16,8],[77,24,4],[76,28,4],
+                [74,32,4],[76,36,4],[77,40,8],[81,48,4],[79,52,4],[77,56,8],
+                [76,64,4],[74,68,4],[72,72,4],[74,76,4],[76,80,8],[72,88,8]];
+  const bass = [[53,0,8],[60,8,8],[57,16,8],[60,24,8],[55,32,8],[62,40,8],[58,48,8],[62,56,8],[53,64,8],[60,72,8],[53,80,16]];
+  const harm = [[65,0,6],[69,16,6],[67,32,6],[70,48,6],[65,64,6],[69,80,6]];
+  const all = [...lead, ...bass, ...harm];
+  const selected = lead[4];
+  all.forEach(h => {
+    const [m, c, len] = h; const r = PIPES.indexOf(m); if (r < 0) return;
+    const x = left + c * COL * PX + 2, w = len * COL * PX - 4 - 2; // keep the Minimum Gap
+    const y = top + rowY(r) - HOLE * PX / 2;
+    el('rect', { x, y, width: w, height: HOLE * PX, rx: HOLE * PX / 2, fill: 'var(--cranc-hole)' }, svg);
+    if (h === selected) el('rect', { x: x - 3, y: y - 3, width: w + 6, height: HOLE * PX + 6, rx: HOLE * PX / 2 + 3, fill: 'none', stroke: 'var(--cranc-select)', 'stroke-width': 2.5 }, svg);
+  });
+  document.getElementById('status').innerHTML =
+    `<span>Selected Hole: <b>Row ${PIPES.indexOf(selected[0]) + 1}, ${noteName(selected[0])}</b></span><span>Columns <b>17 to 24</b></span><span>Length <b>20 mm</b>, a 1/4 note</span><span class="total" style="margin-left:auto">${all.length} Holes, no conflicts</span>`;
+  // overview
+  const ov = document.getElementById('overview'); ov.setAttribute('viewBox', `0 0 ${COLS} 28`);
+  el('rect', { x: 0, y: 2, width: COLS, height: 24, fill: 'var(--cranc-tape-paper)', stroke: 'var(--cranc-tape-edge)', 'stroke-width': .2 }, ov);
+  all.forEach(([m, c, len]) => { const r = PIPES.indexOf(m); el('rect', { x: c + .2, y: 3 + r * 0.72, width: len - .4, height: .6, fill: 'var(--cranc-hole)' }, ov); });
+  el('rect', { x: .2, y: 1, width: 76, height: 26, fill: 'none', stroke: 'var(--cranc-select)', 'stroke-width': .6, rx: .8 }, ov);
+})();
+
+// Mockup routing: #<screen>, #<screen>-dark, #organ-editor-leave
+function route() {
+  let id = location.hash.slice(1) || 'organ-list';
+  document.documentElement.classList.toggle('dark', id.endsWith('-dark'));
+  id = id.replace(/-dark$/, '');
+  const leave = id === 'organ-editor-leave'; if (leave) id = 'organ-editor';
+  document.querySelectorAll('.screen').forEach(s => s.classList.toggle('active', s.id === id));
+  document.getElementById('leave-dialog').classList.toggle('show', leave);
+  document.documentElement.lang = id === 'organ-editor-error' ? 'de' : 'en';
+}
+addEventListener('hashchange', route); route();
+</script>
+</body>
+</html>

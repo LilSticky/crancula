@@ -1,0 +1,638 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Crancula, variant a-workshop</title>
+<style>
+/* Fonts: installed system fonts for the mockup. To bundle in src/fonts: Libertinus Serif (OFL 1.1,
+   maintained fork of Linux Libertine) and Noto Sans (OFL 1.1). Material Icons is already bundled. */
+@font-face { font-family: "Bench Serif"; font-weight: 400; src: local("Linux Libertine G"), local("Linux Libertine O"), local("Libertinus Serif"), local("Georgia"); }
+@font-face { font-family: "Bench Serif"; font-weight: 700; src: local("Linux Libertine G Semibold"), local("Linux Libertine G Bold"), local("Linux Libertine O Semibold"), local("Libertinus Serif Semibold"), local("Georgia Bold"); }
+@font-face { font-family: "Material Icons"; font-style: normal; font-weight: 400; src: url("../../../../src/fonts/material-icons.woff2") format("woff2"); }
+
+:root {
+  --bench: #d6d0c4;        /* page: grey millboard of the bench */
+  --bench-line: #bdb5a6;
+  --paper: #fbf9f4;        /* sheets you write on */
+  --paper-edge: #d4ccbc;
+  --manila: #e8d6a4;       /* the Tape */
+  --manila-edge: #c4ad74;
+  --manila-line: rgba(122, 96, 40, .16);
+  --ink: #1e1a16;          /* Holes, primary actions, text */
+  --ink-2: #4a433b;        /* secondary text */
+  --ink-3: #6b6257;        /* hints, disabled labels (on paper 5.6:1) */
+  --walnut: #2e2722;       /* navigation rail */
+  --walnut-2: #463c35;
+  --rail-text: #ede6d8;
+  --brass: #8c6a23;        /* measurement: rulers, dimension lines, focus */
+  --brass-light: #d2ab55;  /* brass on walnut */
+  --oxblood: #7a2a24;      /* attention: errors, unsaved, destructive */
+  --oxblood-tint: #f3e3df;
+  --serif: "Bench Serif", Georgia, serif;
+  --sans: "Noto Sans", "Segoe UI", system-ui, sans-serif;
+  --mm: 3.78px;            /* 1:1 on a 96 dpi screen */
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { font: 14px/1.45 var(--sans); color: var(--ink); background: var(--bench); font-variant-numeric: tabular-nums; }
+.icon { font-family: "Material Icons"; font-size: 20px; line-height: 1; font-weight: normal; font-style: normal; letter-spacing: normal; text-transform: none; white-space: nowrap; direction: ltr; -webkit-font-feature-settings: "liga"; font-feature-settings: "liga"; display: inline-block; vertical-align: middle; }
+
+/* ---------- screens ---------- */
+.screen { display: none; height: 100vh; grid-template-columns: 196px 1fr; }
+.screen:target, body:not(:has(.screen:target)) #organ-list { display: grid; }
+
+/* ---------- navigation rail ---------- */
+.rail { background: var(--walnut); color: var(--rail-text); display: flex; flex-direction: column; padding: 18px 12px; gap: 4px; position: sticky; top: 0; height: 100vh; }
+.brand { display: flex; align-items: center; gap: 10px; padding: 4px 8px 22px; font: 700 22px/1 var(--serif); letter-spacing: .01em; }
+.brand svg { flex: none; }
+.rail a { display: flex; align-items: center; gap: 12px; padding: 0 12px; height: 44px; border-radius: 6px; color: var(--rail-text); text-decoration: none; font-weight: 500; position: relative; }
+.rail a:hover { background: var(--walnut-2); }
+.rail a[aria-current="page"] { background: var(--walnut-2); }
+.rail a[aria-current="page"]::before { content: ""; position: absolute; left: -12px; top: 8px; bottom: 8px; width: 4px; border-radius: 0 3px 3px 0; background: var(--manila); }
+.rail .spacer { flex: 1; }
+.lang { display: flex; border: 1px solid #6d6158; border-radius: 6px; overflow: hidden; margin: 0 8px; }
+.lang span { flex: 1; text-align: center; padding: 6px 0; font-size: 13px; font-weight: 600; color: var(--rail-text); }
+.lang span[aria-pressed="true"] { background: var(--rail-text); color: var(--walnut); }
+.rail-foot { font-size: 12px; color: #b8ad9f; padding: 10px 8px 0; }
+
+/* ---------- page ---------- */
+main { min-width: 0; display: flex; flex-direction: column; height: 100vh; overflow: auto; }
+.page-head { display: flex; align-items: flex-end; gap: 16px; padding: 26px 32px 18px; }
+.page-head h1 { font: 700 30px/1.1 var(--serif); margin: 0; letter-spacing: -.005em; }
+.page-head .sub { color: var(--ink-2); margin: 6px 0 0; }
+.page-head .actions { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+.body { padding: 0 32px 24px; flex: 1 0 auto; }
+
+.sheet { background: var(--paper); border: 1px solid var(--paper-edge); border-radius: 3px; box-shadow: 0 1px 0 rgba(60, 45, 30, .08), 0 6px 14px -10px rgba(60, 45, 30, .35); }
+.sheet > h2, .sheet-head h2 { font: 700 19px/1.2 var(--serif); margin: 0; }
+.sheet-head { display: flex; align-items: baseline; gap: 10px; padding: 16px 20px 10px; }
+.sheet-head .count { color: var(--ink-3); }
+.sheet-head .grow { flex: 1; }
+
+/* ---------- buttons (Material buttons with a 6px shape) ---------- */
+.btn { font: 600 14px/1 var(--sans); height: 40px; padding: 0 18px; border-radius: 6px; border: 1px solid transparent; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; background: none; color: var(--ink); white-space: nowrap; text-decoration: none; }
+.btn .icon { font-size: 18px; }
+.btn.filled { background: var(--ink); color: var(--paper); }
+.btn.outlined { border-color: #8f8576; background: transparent; }
+.btn.text { padding: 0 12px; }
+.btn.danger { color: var(--oxblood); }
+.btn[disabled] { opacity: .5; cursor: default; }
+.btn:focus-visible, .iconbtn:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+.iconbtn { width: 32px; height: 32px; border-radius: 50%; border: 0; background: none; color: var(--ink-2); display: inline-grid; place-items: center; cursor: pointer; }
+.iconbtn:hover { background: rgba(30, 26, 22, .07); }
+.btn.focus { outline: 2px solid var(--brass); outline-offset: 2px; }
+
+/* ---------- outlined form field, density -2 ---------- */
+.field { position: relative; display: block; }
+.field input, .field .select { width: 100%; height: 44px; border: 1px solid #8f8576; border-radius: 4px; background: var(--paper); font: 15px var(--sans); color: var(--ink); padding: 0 12px; font-variant-numeric: tabular-nums; display: flex; align-items: center; }
+.field .label { position: absolute; left: 9px; top: -8px; padding: 0 4px; background: var(--paper); font-size: 12px; color: var(--ink-2); line-height: 16px; white-space: nowrap; }
+.field .suffix { position: absolute; right: 12px; top: 0; height: 44px; display: flex; align-items: center; color: var(--ink-3); font-size: 13px; }
+.field .hint { font-size: 12px; color: var(--ink-3); padding: 3px 12px 0; display: block; }
+.field.focused input { border: 2px solid var(--ink); padding-left: 11px; }
+.field.focused .label { color: var(--ink); }
+.field.error input { border: 2px solid var(--oxblood); padding-left: 11px; }
+.field.error .label { color: var(--oxblood); }
+.field .err { font-size: 12px; color: var(--oxblood); padding: 3px 4px 0 8px; display: flex; gap: 4px; align-items: flex-start; line-height: 1.3; }
+.field .err .icon { font-size: 15px; }
+.field.readonly input { background: transparent; border-style: dashed; color: var(--ink-2); }
+.select::after { content: "arrow_drop_down"; font-family: "Material Icons"; font-size: 24px; position: absolute; right: 8px; color: var(--ink-2); }
+
+/* ---------- action bar (sticky bottom of a form) ---------- */
+.actionbar { position: sticky; bottom: 0; display: flex; align-items: center; gap: 12px; padding: 12px 32px; background: var(--paper); border-top: 1px solid var(--paper-edge); box-shadow: 0 -6px 14px -12px rgba(60,45,30,.5); }
+.actionbar .state { display: flex; align-items: center; gap: 8px; color: var(--ink-2); }
+.dot { width: 9px; height: 9px; border-radius: 50%; background: var(--oxblood); display: inline-block; }
+.actionbar .grow { flex: 1; }
+.err-summary { display: flex; align-items: center; gap: 8px; color: var(--oxblood); font-weight: 500; }
+.err-summary a { color: var(--oxblood); }
+
+/* ---------- Organ list (ledger) ---------- */
+.ledger { list-style: none; margin: 0; padding: 0; }
+.ledger li { display: grid; grid-template-columns: 132px 1fr auto auto; gap: 24px; align-items: center; padding: 18px 20px; border-top: 1px solid #e6dfd1; }
+.ledger li:first-child { border-top: 0; }
+.ledger li:hover { background: #f5f1e8; }
+.ledger h3 { font: 700 21px/1.2 var(--serif); margin: 0 0 4px; }
+.ledger h3 a { color: inherit; text-decoration: none; }
+.ledger .facts { color: var(--ink-2); margin: 0; }
+.ledger .tapes { color: var(--ink-2); text-align: right; font-size: 13px; }
+.next-step { display: flex; align-items: center; gap: 16px; margin-top: 18px; padding: 14px 20px; border: 1px dashed var(--bench-line); border-radius: 3px; color: var(--ink-2); }
+.next-step .grow { flex: 1; }
+
+/* ---------- Organ editor ---------- */
+.editor { display: grid; grid-template-columns: 392px 1fr; gap: 20px; align-items: start; }
+.bed { padding-bottom: 18px; }
+.bed .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px 14px; padding: 8px 20px 0; }
+.bed .grid .wide { grid-column: 1 / -1; }
+.bed h3 { font: 700 16px/1.2 var(--serif); margin: 22px 20px 0; }
+.diagram { margin: 16px 20px 0; border-top: 1px solid #e6dfd1; padding-top: 12px; }
+.diagram figcaption { font-size: 12px; color: var(--ink-3); margin-top: 4px; }
+.rack { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0 18px; padding: 0 16px 16px; }
+.rack ol { list-style: none; margin: 0; padding: 0; }
+.pipe { display: grid; grid-template-columns: 18px 26px 64px 1fr 28px; align-items: center; gap: 4px; height: 34px; border-bottom: 1px solid #ece6da; }
+.pipe .drag { color: #9a9083; font-size: 18px; cursor: grab; }
+.pipe .row { color: var(--ink-3); font-size: 12px; text-align: right; padding-right: 4px; }
+.pipe input { width: 60px; height: 28px; border: 1px solid #a99f90; border-radius: 3px; background: var(--paper); font: 14px var(--sans); text-align: right; padding: 0 8px; font-variant-numeric: tabular-nums; color: var(--ink); }
+.pipe .note { font-weight: 600; padding-left: 4px; }
+.pipe .note.sharp { color: var(--ink-2); font-weight: 500; }
+.pipe .iconbtn { width: 28px; height: 28px; }
+.pipe .iconbtn .icon { font-size: 18px; }
+.pipe.err input { border: 2px solid var(--oxblood); }
+.pipe-err { grid-column: 1 / -1; font-size: 12px; color: var(--oxblood); padding: 0 0 6px 48px; display: flex; gap: 4px; align-items: center; border-bottom: 1px solid #ece6da; }
+.pipe-err .icon { font-size: 15px; }
+.rack-head { display: grid; grid-template-columns: 18px 26px 64px 1fr 28px; gap: 4px; font-size: 12px; color: var(--ink-3); padding-bottom: 4px; border-bottom: 1px solid var(--paper-edge); }
+.rack-head span:nth-child(2) { text-align: right; padding-right: 4px; }
+.rack-head span:nth-child(3) { grid-column: span 2; padding-left: 8px; white-space: nowrap; }
+
+/* ---------- Tape stage ---------- */
+.tape-layout > div { min-width: 0; }
+.tape-layout { display: grid; grid-template-columns: minmax(0, 1fr) 292px; gap: 20px; align-items: start; }
+.stage { position: relative; padding: 14px 0 10px; overflow: hidden; }
+.stage-scroll { overflow-x: auto; overflow-y: hidden; margin-left: 54px; padding-bottom: 8px; }
+.gutter { position: absolute; left: 0; width: 54px; }
+.gutter div { position: absolute; right: 8px; font-size: 12px; line-height: 12px; color: var(--ink); font-weight: 600; transform: translateY(-50%); }
+.gutter div.sharp { color: var(--ink-2); font-weight: 400; }
+.tape-svg { display: block; }
+.overview { display: block; margin: 12px 0 0 54px; width: calc(100% - 54px); }
+.zoom { display: inline-flex; border: 1px solid #8f8576; border-radius: 6px; overflow: hidden; }
+.zoom span { padding: 0 14px; height: 38px; display: grid; place-items: center; font-weight: 600; font-size: 13px; border-left: 1px solid #8f8576; }
+.zoom span:first-child { border-left: 0; }
+.zoom span[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.summary { padding: 0 0 8px; }
+.summary dl { margin: 0; padding: 0 20px; }
+.summary .item { padding: 12px 0; border-top: 1px solid #e6dfd1; }
+.summary dt { font-size: 12.5px; color: var(--ink-2); }
+.summary dd { margin: 2px 0 0; font-weight: 600; }
+.summary dd ul { margin: 4px 0 0; padding-left: 18px; font-weight: 400; font-size: 13px; color: var(--ink-2); }
+.summary .muted { font-weight: 400; color: var(--ink-2); }
+.legend > span:not(:last-child) { white-space: nowrap; }
+.legend { display: flex; gap: 18px; align-items: center; color: var(--ink-2); font-size: 12.5px; margin: 6px 0 0 54px; }
+.legend i { display: inline-block; vertical-align: middle; margin-right: 6px; }
+
+/* ---------- Tape import ---------- */
+.import { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+.form { padding: 4px 20px 20px; }
+.form h3 { font: 700 16px/1.2 var(--serif); margin: 20px 0 10px; }
+.file { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border: 1px solid var(--paper-edge); border-radius: 4px; background: #f5f1e8; }
+.file .name { font-weight: 600; }
+.file .meta { color: var(--ink-2); font-size: 13px; }
+.file .grow { flex: 1; }
+.parts { list-style: none; margin: 0; padding: 0; }
+.parts li { display: grid; grid-template-columns: 28px 1fr auto; align-items: center; gap: 8px; min-height: 40px; border-bottom: 1px solid #ece6da; }
+.check { width: 18px; height: 18px; border: 2px solid var(--ink-2); border-radius: 3px; display: grid; place-items: center; }
+.check.on { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+.check .icon { font-size: 16px; }
+.parts .why { display: block; font-size: 12px; color: var(--ink-3); }
+.parts .n { color: var(--ink-2); font-size: 13px; }
+.stepper { display: flex; align-items: center; gap: 0; border: 1px solid #8f8576; border-radius: 4px; width: max-content; height: 44px; }
+.stepper button { width: 40px; height: 42px; border: 0; background: none; color: var(--ink); cursor: pointer; }
+.stepper output { min-width: 56px; text-align: center; font-weight: 600; font-size: 16px; border-left: 1px solid #d4ccbc; border-right: 1px solid #d4ccbc; line-height: 42px; }
+.trans { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.trans .proposal { color: var(--ink-2); font-size: 13px; }
+.row2 { display: grid; grid-template-columns: 1fr 150px; gap: 14px; margin-top: 22px; }
+.fit { list-style: none; margin: 0; padding: 0 20px; }
+.fit li { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-top: 1px solid #e6dfd1; }
+.fit li .grow { flex: 1; }
+.fit li b { font-size: 16px; min-width: 2.5ch; text-align: right; }
+.fit .icon { font-size: 19px; color: var(--ink-2); }
+.preview { padding: 12px 20px 16px; }
+.preview p { margin: 8px 0 0; font-size: 12.5px; color: var(--ink-2); }
+
+/* ---------- small windows ---------- */
+@media (max-width: 1180px) {
+  .screen { grid-template-columns: 84px 1fr; }
+  .rail { padding: 18px 8px; }
+  .rail .brand span, .rail-foot { display: none; }
+  .brand { justify-content: center; padding: 4px 0 18px; }
+  .rail a { flex-direction: column; justify-content: center; gap: 2px; height: 58px; padding: 0; font-size: 12px; }
+  .rail a[aria-current="page"]::before { left: -8px; }
+  .lang { margin: 0; flex-direction: column; }
+  .editor { grid-template-columns: 340px 1fr; }
+  .rack { grid-template-columns: repeat(2, 1fr); }
+  .tape-layout { grid-template-columns: minmax(0, 1fr) 248px; }
+  .page-head, .body { padding-left: 24px; padding-right: 24px; }
+  .actionbar { padding-left: 24px; padding-right: 24px; }
+  .bed .grid { grid-template-columns: 1fr; }
+  .diagram { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+
+<!-- ================= Organ list ================= -->
+<section class="screen" id="organ-list" data-nav="organs">
+  <nav class="rail" aria-label="Main"></nav>
+  <main>
+    <header class="page-head">
+      <div>
+        <h1>Organs</h1>
+        <p class="sub">Each Organ knows its Tape Bed and its Pipes. Tapes are cut for one Organ.</p>
+      </div>
+      <div class="actions"><button class="btn filled"><span class="icon">add</span>New Organ</button></div>
+    </header>
+    <div class="body">
+      <div class="sheet">
+        <ul class="ledger">
+          <li>
+            <svg class="mini" data-width="120" data-pipes="31" width="132" height="60"></svg>
+            <div>
+              <h3><a href="#organ-editor">Street organ</a></h3>
+              <p class="facts">31 Pipes, F3 to B5. 120 mm Tape, hole diameter 2.5 mm.</p>
+            </div>
+            <div class="tapes">3 Tapes</div>
+            <button class="iconbtn" aria-label="More actions for Street organ"><span class="icon">more_vert</span></button>
+          </li>
+          <li>
+            <svg class="mini" data-width="70" data-pipes="20" width="132" height="60"></svg>
+            <div>
+              <h3><a href="#organ-editor">Hand organ 20</a></h3>
+              <p class="facts">20 Pipes, C4 to C6 (gapped). 70 mm Tape, hole diameter 2.0 mm.</p>
+            </div>
+            <div class="tapes">1 Tape</div>
+            <button class="iconbtn" aria-label="More actions for Hand organ 20"><span class="icon">more_vert</span></button>
+          </li>
+        </ul>
+      </div>
+      <div class="next-step">
+        <span class="icon">music_note</span>
+        <span class="grow">Your Organs are ready. Bring a MIDI Song onto a Tape for one of them.</span>
+        <a class="btn outlined" href="#tape-import">Bring a Song onto a Tape</a>
+      </div>
+    </div>
+  </main>
+</section>
+
+<!-- ================= Organ editor (unsaved changes) ================= -->
+<section class="screen" id="organ-editor" data-nav="organs">
+  <nav class="rail" aria-label="Main"></nav>
+  <main>
+    <header class="page-head">
+      <div>
+        <h1>Street organ</h1>
+        <p class="sub">31 Pipes, row 1 is nearest the Tape's left edge.</p>
+      </div>
+      <div class="actions">
+        <button class="btn text danger"><span class="icon">delete</span>Delete Organ</button>
+      </div>
+    </header>
+    <div class="body">
+      <div class="editor">
+        <div class="sheet bed">
+          <div class="sheet-head"><h2>Tape Bed</h2></div>
+          <div class="grid">
+            <label class="field wide"><span class="label">Name</span><input value="Street organ"></label>
+            <label class="field"><span class="label">Tape width</span><input value="120"><span class="suffix">mm</span></label>
+            <label class="field focused"><span class="label">Border</span><input value="5"><span class="suffix">mm</span></label>
+            <label class="field"><span class="label">Hole diameter</span><input value="2.5"><span class="suffix">mm</span></label>
+            <label class="field"><span class="label">Spacing between rows</span><input value="3.5"><span class="suffix">mm</span></label>
+            <label class="field"><span class="label">Minimum Gap</span><input value="1.5"><span class="suffix">mm</span></label>
+            <label class="field readonly"><span class="label">Minimum Hole Length</span><input value="2.5" readonly><span class="suffix">mm</span><span class="hint">Equals the hole diameter</span></label>
+          </div>
+          <figure class="diagram" style="margin-left:20px;margin-right:20px">
+            <svg class="bed-diagram" data-width="120" data-border="5" data-dia="2.5" data-spacing="3.5" data-pipes="31" width="350" height="148"></svg>
+            <figcaption>Tape Bed drawn from your values. Left: the whole Tape to scale. Right: the first rows enlarged.</figcaption>
+          </figure>
+        </div>
+        <div class="sheet">
+          <div class="sheet-head"><h2>Pipes</h2><span class="count">31</span><span class="grow"></span>
+            <button class="btn text"><span class="icon">add</span>Add Pipe</button></div>
+          <div class="rack" data-first="53" data-count="31"></div>
+        </div>
+      </div>
+    </div>
+    <div class="actionbar">
+      <span class="state"><span class="dot" aria-hidden="true"></span>Unsaved changes: Border</span>
+      <span class="grow"></span>
+      <button class="btn text">Discard changes</button>
+      <button class="btn filled"><span class="icon">check</span>Save</button>
+    </div>
+  </main>
+</section>
+
+<!-- ================= Organ editor, errors, German ================= -->
+<section class="screen" id="organ-editor-error" data-nav="organs" data-lang="de" lang="de">
+  <nav class="rail" aria-label="Hauptnavigation"></nav>
+  <main>
+    <header class="page-head">
+      <div>
+        <h1>Neue Drehorgel</h1>
+        <p class="sub">Beschreibe das Bandbett und die Pfeifen in der Reihenfolge der Reihen.</p>
+      </div>
+    </header>
+    <div class="body">
+      <div class="editor">
+        <div class="sheet bed">
+          <div class="sheet-head"><h2>Bandbett</h2></div>
+          <div class="grid">
+            <label class="field wide"><span class="label">Name</span><input value="Kleine Drehorgel im Keller"></label>
+            <label class="field"><span class="label">Bandbreite</span><input value="70"><span class="suffix">mm</span></label>
+            <label class="field error" id="de-border"><span class="label">Rand</span><input value=""><span class="suffix">mm</span><span class="err"><span class="icon">error</span>Bitte gib einen Wert ein.</span></label>
+            <label class="field error"><span class="label">Lochdurchmesser</span><input value="0"><span class="suffix">mm</span><span class="err"><span class="icon">error</span>Muss größer als 0 sein.</span></label>
+            <label class="field"><span class="label">Reihenabstand</span><input value="3,0"><span class="suffix">mm</span></label>
+            <label class="field"><span class="label">Mindestabstand</span><input value="1,5"><span class="suffix">mm</span></label>
+            <label class="field readonly"><span class="label">Mindestlochlänge</span><input value="" readonly><span class="suffix">mm</span><span class="hint">Entspricht dem Lochdurchmesser</span></label>
+          </div>
+        </div>
+        <div class="sheet">
+          <div class="sheet-head"><h2>Pfeifen</h2><span class="count">4</span><span class="grow"></span>
+            <button class="btn text"><span class="icon">add</span>Pfeife hinzufügen</button></div>
+          <div class="rack">
+            <div>
+              <div class="rack-head"><span></span><span>Reihe</span><span>MIDI-Note</span><span></span></div>
+              <ol>
+                <li class="pipe"><span class="icon drag">drag_indicator</span><span class="row">1</span><input value="60"><span class="note">C4</span><button class="iconbtn" aria-label="Weitere Aktionen für Reihe 1"><span class="icon">more_vert</span></button></li>
+                <li class="pipe"><span class="icon drag">drag_indicator</span><span class="row">2</span><input value="62"><span class="note">D4</span><button class="iconbtn" aria-label="Weitere Aktionen für Reihe 2"><span class="icon">more_vert</span></button></li>
+                <li class="pipe err"><span class="icon drag">drag_indicator</span><span class="row">3</span><input value="62"><span class="note">D4</span><button class="iconbtn" aria-label="Weitere Aktionen für Reihe 3"><span class="icon">more_vert</span></button></li>
+                <li class="pipe-err"><span class="icon">error</span>Eine andere Pfeife spielt bereits D4.</li>
+                <li class="pipe"><span class="icon drag">drag_indicator</span><span class="row">4</span><input value="64"><span class="note">E4</span><button class="iconbtn" aria-label="Weitere Aktionen für Reihe 4"><span class="icon">more_vert</span></button></li>
+              </ol>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="actionbar">
+      <span class="err-summary"><span class="icon">error</span><span>Drei Angaben verhindern das Speichern: <a href="#de-border">Rand</a>, <a href="#de-border">Lochdurchmesser</a>, <a href="#de-border">Reihe 3</a></span></span>
+      <span class="grow"></span>
+      <button class="btn text">Änderungen verwerfen</button>
+      <button class="btn filled"><span class="icon">check</span>Speichern</button>
+    </div>
+  </main>
+</section>
+
+<!-- ================= Tape import ================= -->
+<section class="screen" id="tape-import" data-nav="tapes">
+  <nav class="rail" aria-label="Main"></nav>
+  <main>
+    <header class="page-head">
+      <div>
+        <h1>Bring a Song onto a Tape</h1>
+        <p class="sub">Choose the Parts and the Transposition. The preview shows the Tape before it is created.</p>
+      </div>
+    </header>
+    <div class="body">
+      <div class="import">
+        <div class="sheet form">
+          <h3>Song</h3>
+          <div class="file">
+            <span class="icon">music_note</span>
+            <div class="grow"><div class="name">kirmes-walzer.mid</div><div class="meta">3 Parts, 116 Notes</div></div>
+            <button class="btn text">Choose another file</button>
+          </div>
+          <h3>Organ</h3>
+          <label class="field"><span class="label">Organ</span><span class="select">Street organ, 31 Pipes F3 to B5</span></label>
+          <h3>Parts</h3>
+          <ul class="parts">
+            <li><span class="check on"><span class="icon">check</span></span><span>Lead</span><span class="n">24 Notes</span></li>
+            <li><span class="check on"><span class="icon">check</span></span><span>Bass</span><span class="n">40 Notes</span></li>
+            <li><span class="check"></span><span>Drums<span class="why">Percussion: no Pipe plays it</span></span><span class="n">52 Notes</span></li>
+          </ul>
+          <h3>Transposition</h3>
+          <div class="trans">
+            <div class="stepper" role="group" aria-label="Transposition in semitones">
+              <button aria-label="One semitone down"><span class="icon">remove</span></button>
+              <output>+5</output>
+              <button aria-label="One semitone up"><span class="icon">add</span></button>
+            </div>
+            <span class="proposal">semitones. This is the proposal, it fits best.</span>
+          </div>
+          <div class="row2">
+            <label class="field"><span class="label">Name of the Tape</span><input value="Kirmes-Walzer"></label>
+            <label class="field"><span class="label">Column length</span><input value="2.5"><span class="suffix">mm</span></label>
+          </div>
+        </div>
+        <div class="sheet">
+          <div class="sheet-head"><h2>Fit of the selected Parts</h2></div>
+          <ul class="fit">
+            <li><span class="icon">check_circle</span><span class="grow">Notes matching a Pipe</span><b>62</b></li>
+            <li><span class="icon">swap_vert</span><span class="grow">Notes moved by octaves</span><b>2</b></li>
+            <li><span class="icon">block</span><span class="grow">Unplayable Notes</span><b>0</b></li>
+          </ul>
+          <div class="preview">
+            <svg class="tape-svg" data-tape="preview" data-scale="1.9" data-cols="72"></svg>
+            <p>First 72 Columns, Lead and Bass, transposed by +5.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="actionbar">
+      <span class="state">64 Holes on 31 rows, 480 mm of Tape</span>
+      <span class="grow"></span>
+      <a class="btn text" href="#organ-list">Cancel</a>
+      <a class="btn filled" href="#tape-view"><span class="icon">add</span>Create Tape</a>
+    </div>
+  </main>
+</section>
+
+<!-- ================= Tape view ================= -->
+<section class="screen" id="tape-view" data-nav="tapes">
+  <nav class="rail" aria-label="Main"></nav>
+  <main>
+    <header class="page-head">
+      <div>
+        <h1>Kirmes-Walzer</h1>
+        <p class="sub">For the Street organ. 192 Columns of 2.5 mm, 480 mm of Tape.</p>
+      </div>
+      <div class="actions">
+        <div class="zoom" role="group" aria-label="Zoom"><span>Whole Tape</span><span aria-pressed="true">1:1</span><span>2:1</span></div>
+        <button class="btn filled"><span class="icon">content_cut</span>Export for the Plotter</button>
+      </div>
+    </header>
+    <div class="body">
+      <div class="tape-layout">
+        <div>
+          <div class="stage" id="main-stage">
+            <div class="gutter"></div>
+            <div class="stage-scroll"><svg class="tape-svg" data-tape="main" data-scale="3.78" data-cols="192"></svg></div>
+          </div>
+          <div class="legend">
+            <span><i style="width:20px;height:9px;background:var(--ink);border-radius:5px"></i>Hole</span>
+            <span><i style="width:20px;height:2px;background:var(--brass)"></i>Ruler in mm</span>
+            <span>Numbers under the Tape count Columns. Bold notes are natural, light notes are sharps.</span>
+          </div>
+          <svg class="overview" data-tape="overview"></svg>
+        </div>
+        <aside class="sheet summary">
+          <div class="sheet-head"><h2>What changed on import</h2><span class="grow"></span><button class="iconbtn" aria-label="Dismiss"><span class="icon">close</span></button></div>
+          <dl>
+            <div class="item"><dt>Transposition</dt><dd>+5 semitones</dd></div>
+            <div class="item"><dt>Parts on the Tape</dt><dd>Lead, Bass <span class="muted">(Drums left out)</span></dd></div>
+            <div class="item"><dt>Notes on the Tape</dt><dd data-count-holes>64</dd></div>
+            <div class="item"><dt>Notes moved by octaves</dt><dd>2
+              <ul><li>D6 down 1 octave onto Pipe D5 (Lead, Column 61)</li><li>E6 down 1 octave onto Pipe E5 (Lead, Column 133)</li></ul></dd></div>
+            <div class="item"><dt>Unplayable Notes</dt><dd class="muted">None</dd></div>
+            <div class="item"><dt>Holes changed</dt><dd>1
+              <ul><li>Repeated Holes on Pipe C5 merged at Column 25</li></ul></dd></div>
+          </dl>
+        </aside>
+      </div>
+    </div>
+  </main>
+</section>
+
+<script>
+const NAMES = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
+const noteName = m => NAMES[m % 12] + (Math.floor(m / 12) - 1);
+const isSharp = m => NAMES[m % 12].includes("#");
+const NS = "http://www.w3.org/2000/svg";
+const el = (tag, attrs, parent, text) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (text != null) e.textContent = text; parent && parent.appendChild(e); return e; };
+
+/* ---- navigation rail ---- */
+const RAIL = {
+  en: { organs: "Organs", tapes: "Tapes", foot: "v0.1, saved on this computer" },
+  de: { organs: "Drehorgeln", tapes: "Bänder", foot: "v0.1, auf diesem Computer gespeichert" }
+};
+const LOGO = '<svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><rect x="3" y="4" width="24" height="22" rx="2" fill="#e8d6a4"/><rect x="7" y="8" width="9" height="3" rx="1.5" fill="#1e1a16"/><rect x="12" y="13.5" width="11" height="3" rx="1.5" fill="#1e1a16"/><rect x="7" y="19" width="6" height="3" rx="1.5" fill="#1e1a16"/></svg>';
+document.querySelectorAll(".screen").forEach(s => {
+  const t = RAIL[s.dataset.lang || "en"], nav = s.dataset.nav, de = s.dataset.lang === "de";
+  s.querySelector(".rail").innerHTML =
+    `<div class="brand">${LOGO}<span>Crancula</span></div>
+     <a href="#organ-list" ${nav === "organs" ? 'aria-current="page"' : ""}><span class="icon">piano</span>${t.organs}</a>
+     <a href="#tape-view" ${nav === "tapes" ? 'aria-current="page"' : ""}><span class="icon">receipt_long</span>${t.tapes}</a>
+     <div class="spacer"></div>
+     <div class="lang" role="group" aria-label="${de ? "Sprache" : "Language"}"><span aria-pressed="${!de}">EN</span><span aria-pressed="${de}">DE</span></div>
+     <div class="rail-foot">${t.foot}</div>`;
+});
+
+/* ---- Pipe rack ---- */
+document.querySelectorAll(".rack[data-first]").forEach(r => {
+  const first = +r.dataset.first, count = +r.dataset.count, per = Math.ceil(count / 3);
+  const cols = window.innerWidth <= 1180 ? 2 : 3, perCol = Math.ceil(count / cols);
+  for (let c = 0; c < cols; c++) {
+    const wrap = document.createElement("div");
+    wrap.innerHTML = '<div class="rack-head"><span></span><span>Row</span><span>MIDI note</span><span></span></div>';
+    const ol = document.createElement("ol"); ol.start = c * perCol + 1;
+    for (let i = c * perCol; i < Math.min(count, (c + 1) * perCol); i++) {
+      const m = first + i;
+      ol.insertAdjacentHTML("beforeend", `<li class="pipe"><span class="icon drag" title="Drag the Pipe to another row">drag_indicator</span><span class="row">${i + 1}</span><input value="${m}" aria-label="Row ${i + 1}, MIDI note"><span class="note ${isSharp(m) ? "sharp" : ""}">${noteName(m)}</span><button class="iconbtn" aria-label="Move or remove the Pipe in row ${i + 1}"><span class="icon">more_vert</span></button></li>`);
+    }
+    wrap.appendChild(ol); r.appendChild(wrap);
+  }
+});
+
+/* ---- Organ list miniatures: Tape cross-sections to a common scale ---- */
+document.querySelectorAll("svg.mini").forEach(svg => {
+  const w = +svg.dataset.width, pipes = +svg.dataset.pipes, s = 0.46, h = w * s, y0 = (60 - h) / 2;
+  el("rect", { x: 2, y: y0, width: 128, height: h, fill: "#e8d6a4", stroke: "#c4ad74" }, svg);
+  const pitch = (h - 8) / (pipes - 1);
+  const pattern = [0, 10, 22, 4, 30, 14, 40, 8, 50, 26];
+  for (let i = 0; i < pipes; i++) {
+    const y = y0 + 4 + i * pitch, x = 8 + ((i * 37) % 90);
+    el("rect", { x, y: y - 1, width: 10 + (i % 4) * 6, height: 2, rx: 1, fill: "#1e1a16" }, svg);
+  }
+});
+
+/* ---- Tape Bed diagram ---- */
+document.querySelectorAll("svg.bed-diagram").forEach(svg => {
+  const W = +svg.dataset.width, B = +svg.dataset.border, D = +svg.dataset.dia, S = +svg.dataset.spacing, N = +svg.dataset.pipes;
+  const brass = "#8c6a23", ink = "#1e1a16";
+  // whole tape to scale, vertical
+  const s = 130 / W, x0 = 26, y0 = 8;
+  el("rect", { x: x0, y: y0, width: 46, height: W * s, fill: "#e8d6a4", stroke: "#c4ad74" }, svg);
+  el("rect", { x: x0 - 2, y: y0 - 1, width: 50, height: 16 * s + 2, fill: "none", stroke: brass, rx: 1 }, svg);
+  const first = (W - (N - 1) * S) / 2;
+  for (let i = 0; i < N; i++) el("circle", { cx: x0 + 23, cy: y0 + (first + i * S) * s, r: D * s / 2 + .3, fill: ink }, svg);
+  el("line", { x1: 14, y1: y0, x2: 14, y2: y0 + W * s, stroke: brass }, svg);
+  [y0, y0 + W * s].forEach(y => el("line", { x1: 10, y1: y, x2: 18, y2: y, stroke: brass }, svg));
+  const t = el("text", { x: 10, y: y0 + W * s / 2, fill: brass, "font-size": 12, "text-anchor": "middle", transform: `rotate(-90 10 ${y0 + W * s / 2})`, "font-family": "Noto Sans" }, svg, W + " mm");
+  // enlarged corner, 9 px per mm
+  const z = 8, ex = 118, ey = 10;
+  el("path", { d: `M${x0 + 46} ${y0} L${ex} ${ey} M${x0 + 46} ${y0 + 16 * s} L${ex} ${ey + 128}`, stroke: "#bdb5a6", "stroke-dasharray": "3 3", fill: "none" }, svg);
+  el("rect", { x: ex, y: ey, width: 120, height: 128, fill: "#e8d6a4", stroke: "#c4ad74" }, svg);
+  el("line", { x1: ex, y1: ey + B * z, x2: ex + 120, y2: ey + B * z, stroke: "#c4ad74", "stroke-dasharray": "4 3" }, svg);
+  const rows = [0, 1, 2].map(i => ey + (first + i * S) * z);
+  rows.forEach((cy, i) => el("rect", { x: ex + 20 + i * 18, y: cy - D * z / 2, width: 40 + i * 10, height: D * z, rx: D * z / 2, fill: ink }, svg));
+  const dim = (x, y1, y2, label) => {
+    el("line", { x1: x, y1, x2: x, y2, stroke: brass }, svg);
+    [y1, y2].forEach(y => el("line", { x1: x - 4, y1: y, x2: x + 4, y2: y, stroke: brass }, svg));
+    el("text", { x: x + 8, y: (y1 + y2) / 2 + 4, fill: brass, "font-size": 12, "font-family": "Noto Sans" }, svg, label);
+  };
+  dim(ex + 132, ey, ey + B * z, "Border " + B);
+  dim(ex + 132, rows[0] - D * z / 2, rows[0] + D * z / 2, "Hole Ø " + D);
+  dim(ex + 132, rows[1], rows[2], "Spacing " + S);
+  el("line", { x1: ex + 132, y1: rows[1], x2: ex + 124, y2: rows[1], stroke: "#bdb5a6", "stroke-dasharray": "2 2" }, svg);
+});
+
+/* ---- The Tape ---- */
+// Waltz, 3/4: one bar = 24 Columns (1/32 note each). Notes are already transposed by +5 (F major).
+const lead = [];
+const L = (bar, beat8, m, len) => lead.push([m, bar * 24 + beat8, len]);
+[[0,0,72,8],[0,8,69,8],[0,16,72,8],[1,0,77,16],[1,16,76,8],[2,0,74,8],[2,8,72,8],[2,16,70,8],[3,0,67,24],
+ [4,0,70,8],[4,8,67,8],[4,16,70,8],[5,0,76,16],[5,16,74,8],[6,0,72,8],[6,8,69,4],[6,12,72,4],[6,16,77,8],[7,0,81,8],[7,8,79,4],[7,12,77,4],[7,16,72,8]].forEach(a => L(...a));
+const bass = [];
+const chords = { F: [53, [57, 60]], C: [55, [58, 64]] };
+["F","F","C","C","C","C","F","F"].forEach((c, bar) => {
+  const [root, upper] = chords[c];
+  bass.push([bar % 2 ? root + 7 : root, bar * 24, 8]);
+  upper.forEach(u => { bass.push([u, bar * 24 + 8, 8]); bass.push([u, bar * 24 + 16, 8]); });
+});
+const allNotes = lead.concat(bass);
+
+const GEO = { width: 120, border: 5, spacing: 3.5, dia: 2.5, col: 2.5, first: 53, pipes: 31 };
+const rowY = r => (GEO.width - (GEO.pipes - 1) * GEO.spacing) / 2 + r * GEO.spacing; // mm from top edge
+
+function drawTape(svg, scale, cols, opts = {}) {
+  const ruler = opts.ruler ? 22 : 0, foot = opts.numbers ? 20 : 0;
+  const lenMm = cols * GEO.col, W = lenMm * scale + 30, H = ruler + GEO.width * scale + foot;
+  svg.setAttribute("width", W); svg.setAttribute("height", H);
+  svg.setAttribute("role", "img");
+  svg.setAttribute("aria-label", `Tape with ${allNotes.length} Holes on ${GEO.pipes} rows`);
+  const y0 = ruler, tx = 0;
+  // tape body with an angled lead-in at the start
+  const th = GEO.width * scale, tw = lenMm * scale + 30;
+  el("path", { d: `M${tx + 14} ${y0} H${tx + tw} V${y0 + th} H${tx} V${y0 + 14} Z`, fill: "#e8d6a4", stroke: "#c4ad74" }, svg);
+  // Column lines: beat every 8, bar every 24
+  for (let c = 0; c <= cols; c += 8) {
+    const x = tx + 14 + c * GEO.col * scale;
+    el("line", { x1: x, y1: y0 + 1, x2: x, y2: y0 + th - 1, stroke: c % 24 ? "rgba(122,96,40,.14)" : "rgba(122,96,40,.38)" }, svg);
+  }
+  // faint row guides
+  if (opts.guides) for (let r = 0; r < GEO.pipes; r++) {
+    const y = y0 + rowY(r) * scale;
+    el("line", { x1: tx + 14, y1: y, x2: tx + tw, y2: y, stroke: isSharp(GEO.first + r) ? "rgba(122,96,40,.08)" : "rgba(122,96,40,.17)" }, svg);
+  }
+  // Holes: length = note length minus one Column (keeps the Minimum Gap)
+  allNotes.filter(n => n[1] < cols).forEach(([m, start, len]) => {
+    const r = m - GEO.first, h = GEO.dia * scale, x = tx + 14 + start * GEO.col * scale;
+    const w = Math.max(GEO.dia, (len - 1) * GEO.col) * scale;
+    el("rect", { x, y: y0 + rowY(r) * scale - h / 2, width: Math.min(w, tx + tw - x), height: h, rx: h / 2, fill: "#1e1a16" }, svg);
+  });
+  if (opts.ruler) {
+    el("line", { x1: tx + 14, y1: ruler - 1, x2: tx + tw, y2: ruler - 1, stroke: "#8c6a23" }, svg);
+    for (let mm = 0; mm <= lenMm; mm++) {
+      const x = tx + 14 + mm * scale, long = mm % 10 === 0, mid = mm % 5 === 0;
+      el("line", { x1: x, y1: ruler - 1, x2: x, y2: ruler - (long ? 10 : mid ? 7 : 4), stroke: "#8c6a23" }, svg);
+      if (long && mm > 0) el("text", { x: x + 2, y: 10, "font-size": 11, fill: "#7a5c1c", "font-family": "Noto Sans" }, svg, mm);
+    }
+    el("text", { x: tx + 16, y: 10, "font-size": 11, fill: "#7a5c1c", "font-family": "Noto Sans" }, svg, "mm");
+  }
+  if (opts.numbers) for (let c = 0; c < cols; c += 24) {
+    const x = tx + 14 + c * GEO.col * scale;
+    el("text", { x: x + 3, y: y0 + th + 15, "font-size": 12, fill: "#4a433b", "font-family": "Noto Sans" }, svg, c + 1);
+  }
+  return { y0, th };
+}
+
+const main = document.querySelector('[data-tape="main"]');
+const { y0 } = drawTape(main, 3.78, 192, { ruler: true, numbers: true, guides: true });
+const gutter = document.querySelector("#main-stage .gutter");
+gutter.style.top = "14px";
+for (let r = 0; r < GEO.pipes; r++) {
+  const m = GEO.first + r, d = document.createElement("div");
+  d.textContent = noteName(m); if (isSharp(m)) d.className = "sharp";
+  d.style.top = (y0 + rowY(r) * 3.78) + "px"; gutter.appendChild(d);
+}
+drawTape(document.querySelector('[data-tape="preview"]'), 1.9, 72, { guides: true, numbers: true });
+// overview of the whole Tape, squeezed to the stage width; the visible window framed in brass
+const ov = document.querySelector('[data-tape="overview"]');
+drawTape(ov, 1, 192, {});
+const ovW = +ov.getAttribute("width"), ovH = +ov.getAttribute("height");
+ov.setAttribute("viewBox", `0 0 ${ovW} ${ovH}`); ov.setAttribute("preserveAspectRatio", "none");
+ov.setAttribute("width", "100%"); ov.setAttribute("height", "44"); ov.setAttribute("aria-label", "Whole Tape, the framed part is shown above");
+window.addEventListener("load", () => {
+  const vis = document.querySelector("#main-stage .stage-scroll");
+  const frac = Math.min(1, vis.clientWidth / +main.getAttribute("width"));
+  el("rect", { x: 1, y: 1, width: (ovW - 2) * frac, height: ovH - 2, fill: "rgba(140,106,35,.12)", stroke: "#8c6a23", "stroke-width": 3, "vector-effect": "non-scaling-stroke" }, ov);
+});
+</script>
+</body>
+</html>

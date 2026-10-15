@@ -85,6 +85,7 @@ and commits. It does not write code itself, which keeps its context small across
 | Review `src/` changes | `angular-reviewer` | sonnet |
 | Review `app/` and IPC changes | `electron-reviewer` | sonnet |
 | Slice vs. `spec.md` before merging | `spec-auditor` | sonnet |
+| Design variant: guide, theme, mockup, `ux-review` (run several in parallel) | `ux-designer` | opus |
 | STATUS/ROADMAP, GitHub Issues and board, i18n parity | `housekeeper` | haiku |
 | Broad read-only code search | `Explore` | haiku |
 
@@ -138,5 +139,6 @@ and commits. It does not write code itself, which keeps its context small across
 - `npm run e2e`: Playwright end-to-end tests (production build first); the window is hidden. To watch a run, slowed down and traced: `$env:HEADED='1'; npm run e2e`
 - `npm run lint`: ESLint
 - `npm run i18n:check`: en/de translation key parity (`i18n-parity` skill)
+- `npm run ux:screens`: screenshots of every screen for the `ux-review` skill (`documentation/design/screens/current/`)
 
 Development happens on Windows. The Bash tool is Git Bash and the primary shell is PowerShell.

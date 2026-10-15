@@ -1,0 +1,654 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Crancula, variant b: the precision drafting table</title>
+<style>
+/* Fonts: shipped Roboto and Material Icons from src/fonts. Barlow and JetBrains Mono (both OFL) are
+   "to bundle"; until then the mockup falls back to locally installed Bahnschrift / Consolas. */
+@font-face { font-family: 'Roboto'; font-weight: 300 500; src: url('../../../../src/fonts/roboto-latin.woff2') format('woff2'); }
+@font-face { font-family: 'Material Icons'; font-display: block; src: url('../../../../src/fonts/material-icons.woff2') format('woff2'); }
+
+:root {
+  --sheet: #E6EAED;       /* the drafting table under everything */
+  --sheet-line: #DCE1E5;  /* 8 px table grid */
+  --panel: #FFFFFF;
+  --panel-2: #F4F6F7;
+  --rule: #D5DBE0;
+  --rule-strong: #A9B3BC;
+  --ink: #1A2127;
+  --ink-2: #525E69;
+  --ink-3: #66727D;
+  --signal: #1450C8;      /* the one signal colour: cobalt, plotter pen */
+  --signal-weak: #E7EEFC;
+  --error: #B3261E;
+  --error-weak: #FCEEEC;
+  --ok: #2F6B3A;
+  --paper: #FBFBF8;
+  --paper-edge: #8F9AA4;
+  --sharp-row: #EEF1F3;
+  --grid: #E1E5E9;
+  --grid-major: #C3CBD2;
+  --hole: #1A2127;
+  --sans: 'Barlow', 'Bahnschrift', 'Roboto', system-ui, sans-serif;
+  --mono: 'JetBrains Mono', 'Consolas', 'Roboto Mono', monospace;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body { font: 400 13px/1.4 var(--sans); color: var(--ink); background: var(--sheet); font-variant-numeric: tabular-nums; }
+.num { font-family: var(--mono); font-size: 12.5px; letter-spacing: -0.01em; }
+.mi { font-family: 'Material Icons'; font-weight: normal; font-style: normal; font-size: 18px; line-height: 1; display: inline-block; white-space: nowrap; direction: ltr; -webkit-font-feature-settings: 'liga'; font-feature-settings: 'liga'; vertical-align: middle; }
+a { color: var(--signal); }
+:focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
+
+/* ---------- screens ---------- */
+.screen { display: none; flex-direction: column; width: 100vw; height: 100vh; min-width: 1024px; min-height: 640px; overflow: hidden; }
+.screen:target { display: flex; }
+
+/* ---------- shell ---------- */
+.topbar { height: 44px; flex: none; display: flex; align-items: stretch; background: var(--panel); border-bottom: 1px solid var(--rule); padding: 0 12px 0 14px; }
+.brand { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 15px; padding-right: 24px; border-right: 1px solid var(--rule); margin-right: 8px; }
+.tabs { display: flex; }
+.tabs a { display: flex; align-items: center; gap: 6px; padding: 0 16px; color: var(--ink-2); text-decoration: none; font-weight: 500; font-size: 14px; border-bottom: 3px solid transparent; border-top: 3px solid transparent; }
+.tabs a.active { color: var(--ink); border-bottom-color: var(--signal); }
+.tabs a .count { font-family: var(--mono); font-size: 11.5px; color: var(--ink-3); }
+.spacer { flex: 1; }
+.seg { display: inline-flex; align-self: center; border: 1px solid var(--rule-strong); border-radius: 4px; overflow: hidden; height: 28px; }
+.seg button { font: 500 12.5px var(--sans); border: 0; background: var(--panel); color: var(--ink-2); padding: 0 10px; min-width: 36px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
+.seg button + button { border-left: 1px solid var(--rule-strong); }
+.seg button.on { background: var(--signal-weak); color: var(--signal); }
+.seg .mi { font-size: 15px; }
+
+.main { flex: 1; min-height: 0; display: flex;
+  background-color: var(--sheet);
+  background-image: linear-gradient(var(--sheet-line) 1px, transparent 1px), linear-gradient(90deg, var(--sheet-line) 1px, transparent 1px);
+  background-size: 16px 16px; }
+
+.statusbar { height: 26px; flex: none; display: flex; align-items: stretch; background: var(--panel-2); border-top: 1px solid var(--rule); font-size: 12px; color: var(--ink-2); }
+.statusbar > span { display: flex; align-items: center; gap: 5px; padding: 0 12px; border-right: 1px solid var(--rule); }
+.statusbar > span.right { margin-left: auto; border-left: 1px solid var(--rule); }
+.statusbar .mi { font-size: 14px; }
+.statusbar .warn { color: var(--signal); font-weight: 600; }
+.statusbar .bad { color: var(--error); font-weight: 600; }
+
+/* ---------- panes ---------- */
+.pane { background: var(--panel); display: flex; flex-direction: column; min-height: 0; }
+.pane-list { width: 296px; flex: none; border-right: 1px solid var(--rule); }
+.pane-head { height: 44px; flex: none; display: flex; align-items: center; gap: 8px; padding: 0 12px 0 16px; border-bottom: 1px solid var(--rule); }
+.pane-head h2 { font-size: 14px; font-weight: 600; margin: 0; }
+.pane-head .sub { color: var(--ink-3); font-size: 12px; }
+.pane-body { flex: 1; overflow: auto; min-height: 0; }
+.workspace { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.pagebar { height: 56px; flex: none; display: flex; align-items: center; gap: 10px; padding: 0 16px 0 20px; background: var(--panel); border-bottom: 1px solid var(--rule); }
+.pagebar .crumb { font-size: 12px; color: var(--ink-3); }
+.pagebar .crumb a { color: var(--ink-2); text-decoration: none; }
+.pagebar h1 { font-size: 19px; font-weight: 600; margin: 0; line-height: 1.15; }
+.chip { display: inline-flex; align-items: center; gap: 5px; height: 24px; padding: 0 9px; border-radius: 12px; font-size: 12px; font-weight: 500; border: 1px solid var(--rule-strong); color: var(--ink-2); background: var(--panel); }
+.chip.unsaved { border-color: var(--signal); color: var(--signal); background: var(--signal-weak); }
+.chip.unsaved::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--signal); }
+.chip.errors { border-color: var(--error); color: var(--error); background: var(--error-weak); }
+
+/* buttons (mat-flat-button / mat-stroked-button / mat-button / mat-icon-button) */
+.btn { font: 500 13px var(--sans); height: 32px; padding: 0 14px; border-radius: 4px; border: 1px solid transparent; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; white-space: nowrap; background: none; color: var(--ink); }
+.btn .mi { font-size: 17px; margin-left: -3px; }
+.btn.filled { background: var(--signal); color: #fff; }
+.btn.stroked { border-color: var(--rule-strong); background: var(--panel); }
+.btn.text { color: var(--signal); padding: 0 10px; }
+.btn.danger { color: var(--error); }
+.btn[disabled] { opacity: .45; cursor: default; }
+.ibtn { width: 32px; height: 32px; border-radius: 4px; border: 0; background: none; color: var(--ink-2); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+.ibtn:hover { background: var(--panel-2); }
+.ibtn[disabled] { color: var(--rule-strong); }
+
+/* list (mat-selection-list, single) */
+.item { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; padding: 10px 14px 10px 16px; border-bottom: 1px solid var(--rule); cursor: pointer; }
+.item .name { font-weight: 600; font-size: 14px; }
+.item .meta { grid-column: 1; color: var(--ink-2); font-size: 12px; display: flex; gap: 10px; }
+.item .meta .num { font-size: 12px; }
+.item .side { grid-row: 1 / span 2; grid-column: 2; align-self: center; color: var(--ink-3); }
+.item.selected { background: var(--signal-weak); box-shadow: inset 3px 0 0 var(--signal); }
+
+/* panels inside a workspace */
+.desk { flex: 1; min-height: 0; overflow: auto; padding: 16px; display: flex; gap: 16px; align-items: flex-start; }
+.sheet { background: var(--panel); border: 1px solid var(--rule); border-radius: 2px; }
+.sheet-head { display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 12px 0 14px; border-bottom: 1px solid var(--rule); }
+.sheet-head h3 { margin: 0; font-size: 14px; font-weight: 600; }
+.sheet-head .sub { color: var(--ink-3); font-size: 12px; }
+.sheet-body { padding: 14px; }
+
+/* fields: mat-form-field appearance="outline", floatLabel="always", density -4, matTextSuffix */
+.field { position: relative; display: flex; flex-direction: column; }
+.field .box { height: 34px; border: 1px solid var(--rule-strong); border-radius: 3px; display: flex; align-items: center; padding: 0 9px; background: var(--panel); }
+.field label { position: absolute; top: -7px; left: 7px; padding: 0 4px; background: var(--panel); font-size: 11.5px; color: var(--ink-2); line-height: 14px; white-space: nowrap; }
+.field .val { font-family: var(--mono); font-size: 13px; }
+.field .val.text { font-family: var(--sans); font-size: 14px; }
+.field .unit { margin-left: auto; color: var(--ink-3); font-size: 12px; padding-left: 6px; }
+.field .hint { font-size: 11.5px; color: var(--ink-3); padding: 3px 0 0 10px; }
+.field.focus .box { border: 2px solid var(--signal); padding: 0 8px; }
+.field.focus label { color: var(--signal); }
+.field.readonly .box { background: var(--panel-2); border-style: dashed; }
+.field.invalid .box { border: 2px solid var(--error); padding: 0 8px; }
+.field.invalid label { color: var(--error); }
+.field .err { font-size: 11.5px; color: var(--error); padding: 3px 0 0 10px; display: flex; gap: 4px; align-items: flex-start; }
+.field .err .mi { font-size: 14px; }
+.field .placeholder { color: var(--ink-3); font-family: var(--sans); font-size: 13px; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 12px; }
+
+/* pipes table: mat-table, row height 26 */
+.pipes-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 0 18px; }
+table.pipes { border-collapse: collapse; width: 100%; }
+table.pipes th { font-size: 11.5px; font-weight: 500; color: var(--ink-3); text-align: left; height: 24px; border-bottom: 1px solid var(--rule-strong); padding: 0 6px; }
+table.pipes td { height: 26px; border-bottom: 1px solid var(--grid); padding: 0 6px; }
+table.pipes td.h { width: 18px; padding: 0; color: var(--rule-strong); }
+table.pipes td.h .mi { font-size: 16px; }
+table.pipes td.r { width: 34px; color: var(--ink-3); text-align: right; }
+table.pipes td.m { width: 72px; }
+table.pipes .cell-in { height: 21px; width: 56px; border: 1px solid var(--rule); border-radius: 2px; display: flex; align-items: center; padding: 0 6px; background: var(--panel); }
+table.pipes td.n { width: 40px; font-weight: 600; }
+table.pipes td.p { padding-right: 2px; }
+table.pipes .bar { height: 5px; background: var(--rule-strong); border-radius: 1px; }
+table.pipes tr.sel td { background: var(--signal-weak); }
+table.pipes tr.sel td.h { color: var(--signal); box-shadow: inset 3px 0 0 var(--signal); }
+table.pipes tr.sel .cell-in { border: 2px solid var(--signal); padding: 0 5px; }
+table.pipes tr.sel .bar { background: var(--signal); }
+table.pipes tr.bad .cell-in { border: 2px solid var(--error); padding: 0 5px; }
+.toolbar { display: flex; align-items: center; gap: 4px; height: 44px; padding: 0 10px 0 12px; border-bottom: 1px solid var(--rule); background: var(--panel-2); }
+.toolbar .sep { width: 1px; height: 20px; background: var(--rule-strong); margin: 0 8px; }
+.toolbar .label { font-size: 12.5px; color: var(--ink-2); padding-right: 4px; }
+.kbd { font-family: var(--mono); font-size: 11px; border: 1px solid var(--rule-strong); border-bottom-width: 2px; border-radius: 3px; padding: 0 4px; color: var(--ink-2); background: var(--panel); }
+
+/* spec tables (read-only) */
+table.spec { border-collapse: collapse; width: 100%; }
+table.spec td { height: 28px; border-bottom: 1px solid var(--grid); padding: 0 4px; }
+table.spec td:first-child { color: var(--ink-2); }
+table.spec td.v { text-align: right; font-family: var(--mono); font-size: 12.5px; white-space: nowrap; }
+table.spec td.v small { font-family: var(--sans); color: var(--ink-3); font-size: 12px; margin-left: 3px; }
+table.spec tr.head td { color: var(--ink-3); font-size: 11.5px; height: 24px; border-bottom: 1px solid var(--rule-strong); }
+
+.check { display: flex; gap: 6px; align-items: flex-start; font-size: 12.5px; padding: 8px 10px; border-radius: 3px; background: var(--panel-2); border: 1px solid var(--rule); }
+.check .mi { font-size: 16px; color: var(--ok); }
+.check.bad { background: var(--error-weak); border-color: #EBB8B3; }
+.check.bad .mi { color: var(--error); }
+
+.banner { display: flex; gap: 10px; align-items: flex-start; padding: 10px 14px; background: var(--error-weak); border-bottom: 1px solid #EBB8B3; color: var(--ink); font-size: 13px; }
+.banner .mi { color: var(--error); font-size: 20px; }
+.banner ul { margin: 2px 0 0; padding-left: 18px; }
+.banner a { color: var(--error); }
+
+/* step markers in the import (a real sequence) */
+.step { display: grid; grid-template-columns: 26px 1fr; gap: 0 10px; padding: 11px 16px; border-bottom: 1px solid var(--rule); }
+.step .no { width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--ink-2); display: flex; align-items: center; justify-content: center; font: 600 12px var(--mono); color: var(--ink-2); }
+.step.done .no { background: var(--ink); border-color: var(--ink); color: #fff; }
+.step h3 { margin: 1px 0 8px; font-size: 14px; font-weight: 600; }
+.file { display: flex; align-items: center; gap: 8px; border: 1px solid var(--rule); background: var(--panel-2); border-radius: 3px; padding: 6px 6px 6px 10px; }
+.file .mi { color: var(--ink-2); }
+.file .fname { font-family: var(--mono); font-size: 12.5px; }
+.file .fmeta { color: var(--ink-3); font-size: 12px; }
+table.parts, table.fit { border-collapse: collapse; width: 100%; }
+table.parts td, table.fit td, table.fit th { height: 26px; border-bottom: 1px solid var(--grid); padding: 0 6px; }
+table.fit th { font-size: 11.5px; font-weight: 500; color: var(--ink-3); text-align: right; border-bottom: 1px solid var(--rule-strong); height: 24px; }
+table.fit th:first-child, table.fit td:first-child { text-align: left; }
+table.fit td { text-align: right; font-family: var(--mono); font-size: 12.5px; }
+table.fit tr.sel td { background: var(--signal-weak); }
+table.fit tr.sel td:first-child { box-shadow: inset 3px 0 0 var(--signal); }
+table.fit .tag { font-family: var(--sans); font-size: 11.5px; color: var(--signal); font-weight: 600; margin-left: 6px; }
+table.fit td.bad { color: var(--error); font-weight: 600; }
+.cb { width: 16px; height: 16px; border: 2px solid var(--ink-2); border-radius: 2px; display: inline-flex; align-items: center; justify-content: center; vertical-align: middle; }
+.cb.on { background: var(--signal); border-color: var(--signal); color: #fff; }
+.cb.on::after { content: 'check'; font-family: 'Material Icons'; font-size: 14px; }
+table.parts td.c { width: 28px; }
+table.parts td.cnt { text-align: right; font-family: var(--mono); font-size: 12.5px; }
+table.parts tr.off td { color: var(--ink-3); }
+.stepper { display: inline-flex; align-items: center; border: 1px solid var(--rule-strong); border-radius: 3px; height: 32px; }
+.stepper button { border: 0; background: none; width: 30px; height: 30px; color: var(--ink-2); cursor: pointer; }
+.stepper .v { font: 600 15px var(--mono); min-width: 44px; text-align: center; border-left: 1px solid var(--rule); border-right: 1px solid var(--rule); line-height: 30px; }
+
+/* tape canvas */
+.canvas { flex: 1; min-height: 0; overflow: auto; position: relative; }
+.canvas svg { display: block; }
+.minimap { flex: none; height: 46px; border-top: 1px solid var(--rule); background: var(--panel); padding: 6px 14px 6px 86px; display: flex; align-items: center; gap: 10px; }
+.minimap .lbl { font-size: 11.5px; color: var(--ink-3); position: absolute; left: 14px; }
+.pane-insp { width: 300px; flex: none; border-left: 1px solid var(--rule); }
+.insp-sec { padding: 12px 16px; border-bottom: 1px solid var(--rule); }
+.insp-sec h3 { margin: 0 0 6px; font-size: 13.5px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+.insp-sec h3 .sub { font-weight: 400; color: var(--ink-3); font-size: 12px; margin-left: auto; }
+.insp-sec p { margin: 4px 0; font-size: 12.5px; color: var(--ink-2); }
+.dropped { text-decoration: line-through; color: var(--ink-3); }
+
+.empty-draw { border: 1px dashed var(--rule-strong); border-radius: 3px; padding: 18px; color: var(--ink-2); font-size: 12.5px; text-align: center; background: var(--panel-2); }
+.pipestrip { display: grid; grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); gap: 0; border-top: 1px solid var(--rule); border-left: 1px solid var(--rule); }
+.pipestrip div { border-right: 1px solid var(--rule); border-bottom: 1px solid var(--rule); padding: 3px 6px; display: flex; justify-content: space-between; font-size: 12px; }
+.pipestrip div b { font-weight: 600; }
+.pipestrip div span { color: var(--ink-3); font-family: var(--mono); font-size: 11.5px; }
+.pipestrip div.sharp { background: var(--sharp-row); }
+</style>
+</head>
+<body>
+
+<!-- ============================================================ ORGAN LIST -->
+<section class="screen" id="organ-list">
+  <header class="topbar">
+    <div class="brand"><svg class="logo" width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><rect x="1" y="4" width="20" height="14" rx="1" fill="#FBFBF8" stroke="#1A2127" stroke-width="1.4"/><rect x="4" y="7" width="7" height="2" rx="1" fill="#1A2127"/><rect x="9" y="10.5" width="9" height="2" rx="1" fill="#1450C8"/><rect x="5" y="14" width="4" height="2" rx="1" fill="#1A2127"/></svg>Crancula</div>
+    <nav class="tabs"><a class="active" href="#organ-list">Organs <span class="count">3</span></a><a href="#tape-view">Tapes <span class="count">4</span></a></nav>
+    <span class="spacer"></span>
+    <div class="seg" role="group" aria-label="Language"><button class="on"><span class="mi">check</span>EN</button><button>DE</button></div>
+  </header>
+  <div class="main">
+    <aside class="pane pane-list">
+      <div class="pane-head"><h2>Organs</h2><span class="spacer"></span><button class="btn filled"><span class="mi">add</span>New Organ</button></div>
+      <div class="pane-body">
+        <div class="item selected"><span class="name">Street organ</span><span class="mi side">chevron_right</span><span class="meta"><span class="num">120 mm</span><span>31 Pipes</span><span class="num">F3–B5</span></span></div>
+        <div class="item"><span class="name">Monkey organ</span><span class="mi side">chevron_right</span><span class="meta"><span class="num">70 mm</span><span>20 Pipes</span><span class="num">C4–A5</span></span></div>
+        <div class="item"><span class="name">Fair organ, workshop copy</span><span class="mi side">chevron_right</span><span class="meta"><span class="num">160 mm</span><span>45 Pipes</span><span class="num">C3–G#6</span></span></div>
+      </div>
+    </aside>
+    <section class="workspace">
+      <div class="pagebar">
+        <div><div class="crumb">Organ</div><h1>Street organ</h1></div>
+        <span class="spacer"></span>
+        <button class="btn stroked"><span class="mi">queue_music</span>Bring a Song onto a Tape</button>
+        <button class="btn filled"><span class="mi">edit</span>Edit Organ</button>
+        <button class="ibtn" aria-label="More actions" title="More actions: Delete Organ"><span class="mi">more_vert</span></button>
+      </div>
+      <div class="desk" style="flex-wrap: wrap;">
+        <div class="sheet" style="flex: 1 1 520px; max-width: 560px;">
+          <div class="sheet-head"><h3>Tape Bed</h3><span class="sub">drawn to scale, 4 px per mm</span></div>
+          <div class="sheet-body">
+            <div id="bed-list"></div>
+            <table class="spec" style="margin-top: 10px;">
+              <tr><td>Tape width</td><td class="v">120.0<small>mm</small></td><td style="width:24px"></td><td>Spacing between rows</td><td class="v">3.5<small>mm</small></td></tr>
+              <tr><td>Border</td><td class="v">5.0<small>mm</small></td><td></td><td>Minimum Gap</td><td class="v">1.5<small>mm</small></td></tr>
+              <tr><td>Hole diameter</td><td class="v">2.5<small>mm</small></td><td></td><td>Minimum Hole Length</td><td class="v">2.5<small>mm</small></td></tr>
+            </table>
+          </div>
+        </div>
+        <div style="flex: 1 1 300px; display: flex; flex-direction: column; gap: 16px; min-width: 0;">
+          <div class="sheet">
+            <div class="sheet-head"><h3>Pipes</h3><span class="sub">31 in row order, F3–B5 chromatic</span></div>
+            <div class="sheet-body" style="padding: 10px;"><div class="pipestrip" id="strip"></div></div>
+          </div>
+          <div class="sheet">
+            <div class="sheet-head"><h3>Tapes for this Organ</h3><span class="sub">2</span></div>
+            <table class="spec" style="margin: 2px 0 6px;">
+              <tr><td style="padding-left:14px"><a href="#tape-view">Three parts</a></td><td class="v">192 Columns</td><td class="v" style="padding-right:14px">480.0<small>mm</small></td></tr>
+              <tr><td style="padding-left:14px"><a href="#tape-view">Westminster chimes</a></td><td class="v">64 Columns</td><td class="v" style="padding-right:14px">160.0<small>mm</small></td></tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+  <footer class="statusbar"><span><span class="mi">check_circle</span>All changes saved</span><span>3 Organs</span><span class="right">Units: mm</span></footer>
+</section>
+
+<!-- ============================================================ ORGAN EDITOR -->
+<section class="screen" id="organ-editor">
+  <header class="topbar">
+    <div class="brand"><svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><rect x="1" y="4" width="20" height="14" rx="1" fill="#FBFBF8" stroke="#1A2127" stroke-width="1.4"/><rect x="4" y="7" width="7" height="2" rx="1" fill="#1A2127"/><rect x="9" y="10.5" width="9" height="2" rx="1" fill="#1450C8"/><rect x="5" y="14" width="4" height="2" rx="1" fill="#1A2127"/></svg>Crancula</div>
+    <nav class="tabs"><a class="active" href="#organ-list">Organs <span class="count">3</span></a><a href="#tape-view">Tapes <span class="count">4</span></a></nav>
+    <span class="spacer"></span>
+    <div class="seg" role="group" aria-label="Language"><button class="on"><span class="mi">check</span>EN</button><button>DE</button></div>
+  </header>
+  <div class="main">
+    <section class="workspace">
+      <div class="pagebar">
+        <div><div class="crumb"><a href="#organ-list">Organs</a> / Edit</div><h1>Street organ</h1></div>
+        <span class="chip unsaved">Unsaved changes</span>
+        <span class="spacer"></span>
+        <button class="btn text">Discard changes</button>
+        <button class="btn filled"><span class="mi">save</span>Save</button>
+        <button class="ibtn" aria-label="More actions" title="More actions: Delete Organ"><span class="mi">more_vert</span></button>
+      </div>
+      <div class="desk">
+        <div class="sheet" style="width: 356px; flex: none;">
+          <div class="sheet-head"><h3>Organ and Tape Bed</h3><span class="sub">values in mm</span></div>
+          <div class="sheet-body" style="padding-top: 18px;">
+            <div class="field" style="margin-bottom: 20px;"><label>Name</label><div class="box"><span class="val text">Street organ</span></div></div>
+            <div class="grid2">
+              <div class="field"><label>Tape width</label><div class="box"><span class="val">120</span><span class="unit">mm</span></div></div>
+              <div class="field"><label>Border</label><div class="box"><span class="val">5</span><span class="unit">mm</span></div></div>
+              <div class="field focus"><label>Hole diameter</label><div class="box"><span class="val">2.5</span><span class="unit">mm</span></div></div>
+              <div class="field"><label>Spacing between rows</label><div class="box"><span class="val">3.5</span><span class="unit">mm</span></div></div>
+              <div class="field"><label>Minimum Gap</label><div class="box"><span class="val">1.5</span><span class="unit">mm</span></div></div>
+              <div class="field readonly"><label>Minimum Hole Length</label><div class="box"><span class="val">2.5</span><span class="unit">mm</span></div><div class="hint">Equals the hole diameter</div></div>
+            </div>
+            <div style="margin: 14px 0 6px; font-size: 12px; color: var(--ink-3);">Cross-section of the Tape, 2.6 px per mm</div>
+            <div id="bed-edit"></div>
+            <div class="check" style="margin-top: 8px;"><span class="mi">check_circle</span><span>31 Pipes need <b class="num">107.5 mm</b> of the <b class="num">110.0 mm</b> between the borders.</span></div>
+          </div>
+        </div>
+        <div class="sheet" style="flex: 1; min-width: 0;">
+          <div class="sheet-head"><h3>Pipes</h3><span class="sub">31, top row of the Tape first</span><span class="spacer"></span><span class="sub num">F3–B5</span></div>
+          <div class="toolbar">
+            <button class="btn stroked"><span class="mi">add</span>Add Pipe</button>
+            <span class="sep"></span>
+            <span class="label">Row 17 (A4)</span>
+            <button class="ibtn" aria-label="Move Pipe up" title="Move Pipe up"><span class="mi">arrow_upward</span></button>
+            <button class="ibtn" aria-label="Move Pipe down" title="Move Pipe down"><span class="mi">arrow_downward</span></button>
+            <button class="ibtn" aria-label="Remove Pipe" title="Remove Pipe"><span class="mi">delete_outline</span></button>
+            <span class="spacer"></span>
+            <span class="label"><span class="kbd">Alt</span> + <span class="kbd">↑</span> <span class="kbd">↓</span> moves a row</span>
+          </div>
+          <div class="pipes-wrap" style="padding: 4px 12px 10px;" id="pipes-edit"></div>
+        </div>
+      </div>
+    </section>
+  </div>
+  <footer class="statusbar"><span class="warn"><span class="mi">edit</span>Unsaved changes</span><span>31 Pipes</span><span>Tape width <span class="num">120 mm</span></span><span class="right">Units: mm</span></footer>
+</section>
+
+<!-- ============================================================ ORGAN EDITOR ERROR (German) -->
+<section class="screen" id="organ-editor-error">
+  <header class="topbar">
+    <div class="brand"><svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><rect x="1" y="4" width="20" height="14" rx="1" fill="#FBFBF8" stroke="#1A2127" stroke-width="1.4"/><rect x="4" y="7" width="7" height="2" rx="1" fill="#1A2127"/><rect x="9" y="10.5" width="9" height="2" rx="1" fill="#1450C8"/><rect x="5" y="14" width="4" height="2" rx="1" fill="#1A2127"/></svg>Crancula</div>
+    <nav class="tabs"><a class="active" href="#organ-list">Drehorgeln <span class="count">3</span></a><a href="#tape-view">Bänder <span class="count">4</span></a></nav>
+    <span class="spacer"></span>
+    <div class="seg" role="group" aria-label="Sprache"><button>EN</button><button class="on"><span class="mi">check</span>DE</button></div>
+  </header>
+  <div class="main">
+    <section class="workspace">
+      <div class="pagebar">
+        <div><div class="crumb"><a href="#organ-list">Drehorgeln</a> / Neu</div><h1>Neue Drehorgel</h1></div>
+        <span class="chip errors"><span class="mi" style="font-size:15px">error_outline</span>4 Probleme</span>
+        <span class="spacer"></span>
+        <button class="btn text">Änderungen verwerfen</button>
+        <button class="btn filled"><span class="mi">save</span>Speichern</button>
+      </div>
+      <div class="banner"><span class="mi">error_outline</span><div><b>Die Drehorgel kann noch nicht gespeichert werden.</b> Behebe diese Probleme:
+        <ul><li><a href="#">Rand</a>: Bitte gib einen Wert ein.</li><li><a href="#">Lochdurchmesser</a>: Bitte gib einen Wert ein.</li><li><a href="#">Reihenabstand</a>: Bitte gib einen Wert ein.</li><li><a href="#">Reihe 1, MIDI-Note</a>: Gib die MIDI-Note dieser Pfeife ein.</li></ul></div></div>
+      <div class="desk">
+        <div class="sheet" style="width: 356px; flex: none;">
+          <div class="sheet-head"><h3>Drehorgel und Bandbett</h3><span class="sub">Werte in mm</span></div>
+          <div class="sheet-body" style="padding-top: 18px;">
+            <div class="field" style="margin-bottom: 20px;"><label>Name</label><div class="box"><span class="val text">Jahrmarktorgel</span></div></div>
+            <div class="grid2">
+              <div class="field"><label>Bandbreite</label><div class="box"><span class="val">20</span><span class="unit">mm</span></div></div>
+              <div class="field invalid focus"><label>Rand</label><div class="box"><span class="placeholder"></span><span class="unit">mm</span></div><div class="err"><span class="mi">error</span>Bitte gib einen Wert ein.</div></div>
+              <div class="field invalid"><label>Lochdurchmesser</label><div class="box"><span class="unit">mm</span></div><div class="err"><span class="mi">error</span>Bitte gib einen Wert ein.</div></div>
+              <div class="field invalid"><label>Reihenabstand</label><div class="box"><span class="unit">mm</span></div><div class="err"><span class="mi">error</span>Bitte gib einen Wert ein.</div></div>
+              <div class="field"><label>Mindestabstand</label><div class="box"><span class="val">1,5</span><span class="unit">mm</span></div></div>
+              <div class="field readonly"><label>Mindestlochlänge</label><div class="box"><span class="placeholder">–</span><span class="unit">mm</span></div><div class="hint">Entspricht dem Lochdurchmesser</div></div>
+            </div>
+            <div style="margin: 14px 0 6px; font-size: 12px; color: var(--ink-3);">Querschnitt des Bandes</div>
+            <div class="empty-draw"><span class="mi" style="color: var(--ink-3)">straighten</span><br>Die Zeichnung erscheint, sobald Rand, Lochdurchmesser und Reihenabstand eingetragen sind.</div>
+          </div>
+        </div>
+        <div class="sheet" style="flex: 1; min-width: 0;">
+          <div class="sheet-head"><h3>Pfeifen</h3><span class="sub">1, oberste Reihe des Bandes zuerst</span></div>
+          <div class="toolbar">
+            <button class="btn stroked"><span class="mi">add</span>Pfeife hinzufügen</button>
+            <span class="sep"></span>
+            <span class="label">Reihe 1</span>
+            <button class="ibtn" disabled aria-label="Pfeife nach oben verschieben"><span class="mi">arrow_upward</span></button>
+            <button class="ibtn" disabled aria-label="Pfeife nach unten verschieben"><span class="mi">arrow_downward</span></button>
+            <button class="ibtn" aria-label="Pfeife entfernen" title="Pfeife entfernen"><span class="mi">delete_outline</span></button>
+          </div>
+          <div style="padding: 4px 12px 10px; max-width: 420px;">
+            <table class="pipes">
+              <tr><th></th><th style="text-align:right">Reihe</th><th>MIDI-Note</th><th>Note</th><th>Tonhöhe</th></tr>
+              <tr class="bad sel"><td class="h"><span class="mi">drag_indicator</span></td><td class="r num">1</td><td class="m"><div class="cell-in num"></div></td><td class="n" style="color:var(--ink-3)">–</td><td class="p"></td></tr>
+            </table>
+            <div class="field" style="margin-top: 2px;"><div class="err"><span class="mi">error</span>Reihe 1: Gib die MIDI-Note dieser Pfeife ein.</div></div>
+            <p style="font-size: 12.5px; color: var(--ink-2); margin: 16px 0 0;">Füge die Pfeifen in der Reihenfolge der Reihen auf dem Band hinzu. Mit <span class="kbd">Enter</span> in der letzten Reihe kommt die nächste Pfeife dazu.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+  <footer class="statusbar"><span class="bad"><span class="mi">error_outline</span>4 Probleme verhindern das Speichern</span><span>1 Pfeife</span><span class="right">Einheit: mm</span></footer>
+</section>
+
+<!-- ============================================================ TAPE IMPORT -->
+<section class="screen" id="tape-import">
+  <header class="topbar">
+    <div class="brand"><svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><rect x="1" y="4" width="20" height="14" rx="1" fill="#FBFBF8" stroke="#1A2127" stroke-width="1.4"/><rect x="4" y="7" width="7" height="2" rx="1" fill="#1A2127"/><rect x="9" y="10.5" width="9" height="2" rx="1" fill="#1450C8"/><rect x="5" y="14" width="4" height="2" rx="1" fill="#1A2127"/></svg>Crancula</div>
+    <nav class="tabs"><a href="#organ-list">Organs <span class="count">3</span></a><a class="active" href="#tape-view">Tapes <span class="count">4</span></a></nav>
+    <span class="spacer"></span>
+    <div class="seg" role="group" aria-label="Language"><button class="on"><span class="mi">check</span>EN</button><button>DE</button></div>
+  </header>
+  <div class="main">
+    <aside class="pane" style="width: 452px; flex: none; border-right: 1px solid var(--rule);">
+      <div class="pane-head" style="height: 56px;"><div><div style="font-size:12px;color:var(--ink-3)"><a href="#tape-view" style="color:var(--ink-2);text-decoration:none">Tapes</a> / New</div><h2 style="font-size:17px">Bring a Song onto a Tape</h2></div></div>
+      <div class="pane-body">
+        <div class="step done"><span class="no">1</span><div><h3>Song and Organ</h3>
+          <div class="file" style="margin-bottom:10px"><span class="mi">audio_file</span><div style="flex:1;min-width:0"><div class="fname">three-parts.mid</div><div class="fmeta">3 Parts, 252 Notes</div></div><button class="btn text">Choose another</button></div>
+          <div class="field"><label>Organ</label><div class="box"><span class="val text">Street organ</span><span class="unit num">120 mm, F3–B5</span><span class="mi" style="margin-left:8px;color:var(--ink-2)">arrow_drop_down</span></div></div></div></div>
+        <div class="step done"><span class="no">2</span><div><h3>Parts</h3>
+          <table class="parts">
+            <tr><td class="c"><span class="cb on"></span></td><td>Lead</td><td class="cnt">44 Notes</td></tr>
+            <tr><td class="c"><span class="cb on"></span></td><td>Bass</td><td class="cnt">24 Notes</td></tr>
+            <tr class="off"><td class="c"><span class="cb"></span></td><td>Drums <span style="font-size:12px">(percussion, not on the Tape)</span></td><td class="cnt">184 Notes</td></tr>
+          </table></div></div>
+        <div class="step"><span class="no">3</span><div><h3>Transposition and Fit</h3>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+            <div class="stepper"><button aria-label="One semitone down"><span class="mi">remove</span></button><span class="v">+5</span><button aria-label="One semitone up"><span class="mi">add</span></button></div>
+            <span style="color:var(--ink-2);font-size:12.5px">semitones; proposed: <b class="num">+5</b>, the most Notes on a Pipe</span>
+          </div>
+          <table class="fit">
+            <tr><th>Transposition</th><th>On a Pipe</th><th>Moved by octaves</th><th>Unplayable</th></tr>
+            <tr><td class="num">+3</td><td>61</td><td>5</td><td class="bad">2</td></tr>
+            <tr><td class="num">+4</td><td>63</td><td>5</td><td>0</td></tr>
+            <tr class="sel"><td class="num">+5 <span class="tag">proposal</span></td><td>66</td><td>2</td><td>0</td></tr>
+            <tr><td class="num">+6</td><td>64</td><td>4</td><td>0</td></tr>
+            <tr><td class="num">+7</td><td>60</td><td>4</td><td class="bad">4</td></tr>
+          </table></div></div>
+        <div class="step"><span class="no">4</span><div><h3>Tape</h3>
+          <div class="grid2" style="grid-template-columns: 1fr 120px; margin-top: 10px;">
+            <div class="field"><label>Name of the Tape</label><div class="box"><span class="val text">Three parts</span></div></div>
+            <div class="field"><label>Column length</label><div class="box"><span class="val">2.5</span><span class="unit">mm</span></div></div>
+          </div></div></div>
+      </div>
+      <div style="flex:none;display:flex;align-items:center;gap:8px;padding:10px 16px;border-top:1px solid var(--rule);background:var(--panel-2)">
+        <span style="font-size:12.5px;color:var(--ink-2)"><b class="num">68</b> Notes become Holes, <b class="num">192</b> Columns, <b class="num">480 mm</b></span>
+        <span class="spacer"></span><button class="btn filled"><span class="mi">add</span>Create Tape</button>
+      </div>
+    </aside>
+    <section class="workspace">
+      <div class="pagebar" style="height:44px"><h3 style="margin:0;font-size:14px;font-weight:600">Preview</h3><span style="color:var(--ink-3);font-size:12px">first 88 Columns at 3.4 px per mm, Transposition +5</span></div>
+      <div class="canvas" id="tape-preview"></div>
+    </section>
+  </div>
+  <footer class="statusbar"><span>Song three-parts.mid</span><span>Organ Street organ</span><span class="right">Units: mm</span></footer>
+</section>
+
+<!-- ============================================================ TAPE VIEW -->
+<section class="screen" id="tape-view">
+  <header class="topbar">
+    <div class="brand"><svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><rect x="1" y="4" width="20" height="14" rx="1" fill="#FBFBF8" stroke="#1A2127" stroke-width="1.4"/><rect x="4" y="7" width="7" height="2" rx="1" fill="#1A2127"/><rect x="9" y="10.5" width="9" height="2" rx="1" fill="#1450C8"/><rect x="5" y="14" width="4" height="2" rx="1" fill="#1A2127"/></svg>Crancula</div>
+    <nav class="tabs"><a href="#organ-list">Organs <span class="count">3</span></a><a class="active" href="#tape-view">Tapes <span class="count">4</span></a></nav>
+    <span class="spacer"></span>
+    <div class="seg" role="group" aria-label="Language"><button class="on"><span class="mi">check</span>EN</button><button>DE</button></div>
+  </header>
+  <div class="main">
+    <section class="workspace">
+      <div class="pagebar">
+        <div><div class="crumb"><a href="#tape-view">Tapes</a> / <a href="#organ-list">Street organ</a></div><h1>Three parts</h1></div>
+        <span class="spacer"></span>
+        <div class="seg" role="group" aria-label="Zoom"><button>Fit</button><button class="on"><span class="mi">check</span>4 px/mm</button><button>8 px/mm</button></div>
+        <button class="btn filled" style="margin-left:8px"><span class="mi">content_cut</span>Export SVG</button>
+        <button class="ibtn" aria-label="More actions" title="More actions: Remove Tape"><span class="mi">more_vert</span></button>
+      </div>
+      <div class="canvas" id="tape-main"></div>
+      <div class="minimap" style="position:relative"><span class="lbl">Whole Tape</span><div id="tape-mini" style="flex:1"></div></div>
+    </section>
+    <aside class="pane pane-insp">
+      <div class="pane-body">
+        <div class="insp-sec" style="background: var(--signal-weak); box-shadow: inset 3px 0 0 var(--signal);">
+          <h3><span class="mi" style="font-size:16px;color:var(--signal)">radio_button_checked</span>Selected Hole</h3>
+          <table class="spec">
+            <tr><td>Pipe</td><td class="v">F5 <small>row 25</small></td></tr>
+            <tr><td>Columns</td><td class="v">65–79</td></tr>
+            <tr><td>Length</td><td class="v">15 Columns, 37.5<small>mm</small></td></tr>
+            <tr><td>Gap to next Hole</td><td class="v">2.5<small>mm</small></td></tr>
+          </table>
+        </div>
+        <div class="insp-sec">
+          <h3>Tape</h3>
+          <table class="spec">
+            <tr><td>Organ</td><td class="v" style="font-family:var(--sans)"><a href="#organ-list">Street organ</a></td></tr>
+            <tr><td>Column length</td><td class="v">2.5<small>mm</small></td></tr>
+            <tr><td>Columns</td><td class="v">192</td></tr>
+            <tr><td>Length</td><td class="v">480.0<small>mm</small></td></tr>
+            <tr><td>Holes</td><td class="v">68</td></tr>
+          </table>
+        </div>
+        <div class="insp-sec">
+          <h3>What changed on import <span class="sub">shown once</span></h3>
+          <table class="spec">
+            <tr><td>Transposition</td><td class="v">+5 <small>semitones</small></td></tr>
+            <tr><td>Parts</td><td class="v" style="font-family:var(--sans)">Lead, Bass, <span class="dropped">Drums</span></td></tr>
+            <tr><td>Notes moved by octaves</td><td class="v">2</td></tr>
+            <tr><td>Unplayable Notes</td><td class="v">0</td></tr>
+            <tr><td>Holes changed</td><td class="v">1</td></tr>
+          </table>
+          <p style="margin-top:8px">C6 moved 1 octave down to Pipe C5 (Part Lead, Column 121). <a href="#">Show all 3 changes</a></p>
+        </div>
+      </div>
+    </aside>
+  </div>
+  <footer class="statusbar"><span><span class="mi">my_location</span>Column <span class="num">72</span> at <span class="num">177.5 mm</span></span><span>Row 25, F5</span><span>Scale <span class="num">4 px/mm</span></span><span class="right"><span class="mi">check_circle</span>Saved</span></footer>
+</section>
+
+<script>
+const NAMES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+const noteName = m => NAMES[m % 12] + (Math.floor(m / 12) - 1);
+const PIPES = Array.from({ length: 31 }, (_, i) => 53 + i);
+const SVGNS = 'http://www.w3.org/2000/svg';
+const C = { ink: '#1A2127', ink2: '#525E69', ink3: '#66727D', signal: '#1450C8', paper: '#FBFBF8', edge: '#8F9AA4', grid: '#E1E5E9', gridMajor: '#C3CBD2', sharp: '#EEF1F3', rule: '#D5DBE0' };
+const fmt = (n, d = 1) => n.toFixed(d);
+
+function svg(w, h, body) { return `<svg xmlns="${SVGNS}" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" font-family="Consolas, 'JetBrains Mono', monospace">${body}</svg>`; }
+
+/* ---- Tape Bed cross-section with dimension lines ---- */
+function bed({ s, width = 120, border = 5, d = 2.5, spacing = 3.5, pipes = PIPES }) {
+  const pad = 20, W = width * s, x0 = pad, h = 128;
+  const n = pipes.length, usable = width - 2 * border, span = (n - 1) * spacing + d;
+  const off = border + (usable - span) / 2;
+  const cx = i => x0 + (off + d / 2 + i * spacing) * s;
+  const ty = 44, th = 34, cy = ty + th / 2;
+  let b = `<defs><pattern id="hatch${s}" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="5" stroke="${C.gridMajor}" stroke-width="1.2"/></pattern>
+  <marker id="ar${s}" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L7,4 L0,7" fill="none" stroke="${C.signal}" stroke-width="1.2"/></marker></defs>`;
+  // overall width dimension
+  b += `<line x1="${x0}" y1="10" x2="${x0}" y2="${ty - 2}" stroke="${C.signal}" stroke-width=".8"/><line x1="${x0 + W}" y1="10" x2="${x0 + W}" y2="${ty - 2}" stroke="${C.signal}" stroke-width=".8"/>`;
+  b += `<line x1="${x0 + 1}" y1="18" x2="${x0 + W - 1}" y2="18" stroke="${C.signal}" stroke-width="1" marker-start="url(#ar${s})" marker-end="url(#ar${s})"/>`;
+  b += `<rect x="${x0 + W / 2 - 34}" y="11" width="68" height="14" fill="#fff"/><text x="${x0 + W / 2}" y="22" text-anchor="middle" font-size="12" fill="${C.signal}">${fmt(width)} mm</text>`;
+  // tape strip
+  b += `<rect x="${x0}" y="${ty}" width="${W}" height="${th}" fill="${C.paper}" stroke="${C.edge}"/>`;
+  b += `<rect x="${x0}" y="${ty}" width="${border * s}" height="${th}" fill="url(#hatch${s})"/><rect x="${x0 + W - border * s}" y="${ty}" width="${border * s}" height="${th}" fill="url(#hatch${s})"/>`;
+  pipes.forEach((m, i) => {
+    const sharp = NAMES[m % 12].includes('#');
+    b += `<line x1="${cx(i)}" y1="${ty}" x2="${cx(i)}" y2="${ty + th}" stroke="${sharp ? C.gridMajor : C.grid}" stroke-width=".8"/>`;
+    b += `<circle cx="${cx(i)}" cy="${cy}" r="${d / 2 * s}" fill="${C.ink}"/>`;
+  });
+  // border dimension (left), spacing callout, diameter leader, first/last labels
+  const by = ty + th + 16;
+  b += `<line x1="${x0 + border * s}" y1="${ty + th}" x2="${x0 + border * s}" y2="${by + 4}" stroke="${C.signal}" stroke-width=".8"/><line x1="${x0}" y1="${ty + th}" x2="${x0}" y2="${by + 4}" stroke="${C.signal}" stroke-width=".8"/>`;
+  b += `<text x="${x0 + border * s / 2}" y="${by + 16}" text-anchor="middle" font-size="12" fill="${C.signal}">${fmt(border)}</text>`;
+  b += `<line x1="${cx(0)}" y1="${cy}" x2="${cx(0)}" y2="${by + 4}" stroke="${C.ink3}" stroke-width=".6" stroke-dasharray="2 2"/><line x1="${cx(1)}" y1="${cy}" x2="${cx(1)}" y2="${by + 4}" stroke="${C.ink3}" stroke-width=".6" stroke-dasharray="2 2"/>`;
+  b += `<path d="M${cx(1)},${by} L${cx(1) + 14},${by + 12}" stroke="${C.signal}" stroke-width=".8" fill="none"/><text x="${cx(1) + 16}" y="${by + 16}" font-size="12" fill="${C.signal}">${fmt(spacing)} row spacing</text>`;
+  const li = n - 1;
+  b += `<path d="M${cx(li) - d / 2 * s * .7},${cy + d / 2 * s * .7} L${cx(li) - 22},${by + 10} L${cx(li) - 64},${by + 10}" stroke="${C.signal}" stroke-width=".8" fill="none"/><text x="${cx(li) - 64}" y="${by + 6}" font-size="12" fill="${C.signal}">Ø ${fmt(d)}</text>`;
+  b += `<text x="${cx(0)}" y="${ty - 5}" text-anchor="middle" font-size="12" fill="${C.ink}" font-family="Bahnschrift, Barlow, sans-serif" font-weight="600">${noteName(pipes[0])}</text>`;
+  b += `<text x="${cx(li)}" y="${ty - 5}" text-anchor="middle" font-size="12" fill="${C.ink}" font-family="Bahnschrift, Barlow, sans-serif" font-weight="600">${noteName(pipes[li])}</text>`;
+  return svg(W + pad * 2, h, b);
+}
+document.getElementById('bed-list').innerHTML = bed({ s: 4 });
+document.getElementById('bed-edit').innerHTML = bed({ s: 2.6 });
+
+/* ---- pipe strip and pipe table ---- */
+document.getElementById('strip').innerHTML = PIPES.map((m, i) => `<div class="${NAMES[m % 12].includes('#') ? 'sharp' : ''}"><b>${noteName(m)}</b><span>${i + 1}</span></div>`).join('');
+function pipeTable(from, to, sel) {
+  let r = `<table class="pipes"><tr><th></th><th style="text-align:right">Row</th><th>MIDI note</th><th>Note</th><th>Pitch</th></tr>`;
+  for (let i = from; i < to; i++) {
+    const m = PIPES[i];
+    r += `<tr class="${i === sel ? 'sel' : ''}"><td class="h"><span class="mi">drag_indicator</span></td><td class="r num">${i + 1}</td><td class="m"><div class="cell-in num">${m}</div></td><td class="n">${noteName(m)}</td><td class="p"><div class="bar" style="width:${8 + (m - 53) * 2.6}px"></div></td></tr>`;
+  }
+  return r + '</table>';
+}
+document.getElementById('pipes-edit').innerHTML = pipeTable(0, 16, 16) + pipeTable(16, 31, 16);
+
+/* ---- the Song on the Tape ---- */
+const MELODY = [[72,4],[74,4],[76,8],[77,4],[76,4],[74,8],[72,8],[69,8],[72,4],[74,4],[76,4],[79,4],[77,16],[76,8],[74,8]];
+const BASS = [53, 60, 58, 60];
+function holes() {
+  const h = []; let c = 0;
+  for (let rep = 0; rep < 2; rep++) for (const [m, len] of MELODY) {
+    h.push({ m, c, len: len - 1 });
+    if (len >= 8) h.push({ m: m - 4 < 53 ? m - 4 + 12 : m - 4, c, len: len - 1 });
+    c += len;
+  }
+  for (let col = 0; col < 192; col += 8) h.push({ m: BASS[(col / 8) % 4], c: col, len: 6 });
+  return h;
+}
+const HOLES = holes();
+
+function tape({ s, cols, colMm = 2.5, labels = true, select = null, view = null, mini = false }) {
+  const W = 120, rowSp = 3.5, d = 2.5, top0 = (W - 31 * rowSp) / 2;
+  const L = mini ? 0 : 74, T = mini ? 0 : 38, len = cols * colMm;
+  const X = mm => L + mm * s, Y = mm => T + mm * s;
+  const rowY = r => top0 + rowSp * (r + .5);
+  const w = L + len * s + (mini ? 0 : 24), h = T + W * s + (mini ? 0 : 20);
+  let b = '';
+  if (!mini) {
+    // ruler backgrounds
+    b += `<rect x="0" y="0" width="${w}" height="${T - 4}" fill="#fff"/><rect x="0" y="0" width="${L - 4}" height="${h}" fill="#fff"/>`;
+    b += `<line x1="0" y1="${T - 4}" x2="${w}" y2="${T - 4}" stroke="${C.rule}"/><line x1="${L - 4}" y1="0" x2="${L - 4}" y2="${h}" stroke="${C.rule}"/>`;
+  }
+  // paper
+  b += `<rect x="${X(0)}" y="${Y(0)}" width="${len * s}" height="${W * s}" fill="${C.paper}" stroke="${mini ? 'none' : C.edge}"/>`;
+  PIPES.forEach((m, r) => { if (NAMES[m % 12].includes('#')) b += `<rect x="${X(0)}" y="${Y(rowY(r) - rowSp / 2)}" width="${len * s}" height="${rowSp * s}" fill="${C.sharp}"/>`; });
+  if (!mini) {
+    for (let c = 0; c <= cols; c += 8) b += `<line x1="${X(c * colMm)}" y1="${Y(0)}" x2="${X(c * colMm)}" y2="${Y(W)}" stroke="${c % 32 === 0 ? C.gridMajor : C.grid}" stroke-width="${c % 32 === 0 ? 1 : .8}"/>`;
+    b += `<line x1="${X(0)}" y1="${Y(5)}" x2="${X(len)}" y2="${Y(5)}" stroke="${C.edge}" stroke-dasharray="4 3" stroke-width=".8"/><line x1="${X(0)}" y1="${Y(115)}" x2="${X(len)}" y2="${Y(115)}" stroke="${C.edge}" stroke-dasharray="4 3" stroke-width=".8"/>`;
+  }
+  for (const o of HOLES) {
+    if (o.c >= cols) continue;
+    const r = o.m - 53, l = Math.min(o.len, cols - o.c);
+    const sel = select && o.m === select.m && o.c === select.c;
+    b += `<rect x="${X(o.c * colMm)}" y="${Y(rowY(r) - d / 2)}" width="${l * colMm * s}" height="${d * s}" rx="${mini ? 0 : d / 2 * s}" fill="${mini ? C.ink2 : C.ink}"/>`;
+    if (sel) {
+      const x1 = X(o.c * colMm), x2 = X((o.c + l) * colMm), yy = Y(rowY(r) - d / 2);
+      b += `<rect x="${x1 - 3}" y="${yy - 3}" width="${x2 - x1 + 6}" height="${d * s + 6}" rx="${d / 2 * s + 3}" fill="none" stroke="${C.signal}" stroke-width="2"/>`;
+      b += `<line x1="${x1}" y1="${yy - 4}" x2="${x1}" y2="${yy - 18}" stroke="${C.signal}" stroke-width=".8"/><line x1="${x2}" y1="${yy - 4}" x2="${x2}" y2="${yy - 18}" stroke="${C.signal}" stroke-width=".8"/>`;
+      b += `<line x1="${x1 + 1}" y1="${yy - 13}" x2="${x2 - 1}" y2="${yy - 13}" stroke="${C.signal}" marker-start="url(#tar)" marker-end="url(#tar)"/>`;
+      b += `<rect x="${(x1 + x2) / 2 - 30}" y="${yy - 26}" width="60" height="15" fill="#fff" stroke="${C.signal}" stroke-width=".8" rx="2"/><text x="${(x1 + x2) / 2}" y="${yy - 15}" text-anchor="middle" font-size="11.5" fill="${C.signal}">${fmt(l * colMm)} mm</text>`;
+    }
+  }
+  if (view) b += `<rect x="${X(view[0])}" y="0.5" width="${(view[1] - view[0]) * s}" height="${W * s - 1}" fill="rgba(20,80,200,.08)" stroke="${C.signal}" stroke-width="1.5"/>`;
+  if (!mini) {
+    // top ruler: Columns and mm
+    for (let mm = 0; mm <= len; mm += (s >= 4 ? 1 : 2)) {
+      const big = mm % 10 === 0, mid = mm % 5 === 0;
+      b += `<line x1="${X(mm)}" y1="${T - 4}" x2="${X(mm)}" y2="${T - 4 - (big ? 9 : mid ? 6 : 3)}" stroke="${C.ink3}" stroke-width=".8"/>`;
+      if (big && (s >= 4 || mm % 20 === 0)) b += `<text x="${X(mm) + 2}" y="${T - 10}" font-size="11" fill="${C.ink2}">${mm}</text>`;
+    }
+    for (let c = 0; c < cols; c += 16) b += `<text x="${X(c * colMm) + 2}" y="12" font-size="11" fill="${C.ink}">${c + 1}</text><line x1="${X(c * colMm)}" y1="2" x2="${X(c * colMm)}" y2="14" stroke="${C.ink}" stroke-width=".8"/>`;
+    b += `<rect x="0" y="0" width="${L - 4}" height="${T - 4}" fill="#fff"/><text x="${L - 10}" y="12" text-anchor="end" font-size="11" fill="${C.ink3}" font-family="Bahnschrift, Barlow, sans-serif">Column</text><text x="${L - 10}" y="${T - 10}" text-anchor="end" font-size="11" fill="${C.ink3}" font-family="Bahnschrift, Barlow, sans-serif">mm</text>`;
+    // left: mm ruler and note labels
+    for (let mm = 0; mm <= W; mm += 5) {
+      const big = mm % 10 === 0;
+      b += `<line x1="${L - 4}" y1="${Y(mm)}" x2="${L - 4 - (big ? 7 : 4)}" y2="${Y(mm)}" stroke="${C.ink3}" stroke-width=".8"/>`;
+      if (big && (s >= 4 || mm % 20 === 0)) b += `<text x="2" y="${Y(mm) + 4}" font-size="10.5" fill="${C.ink3}">${mm}</text>`;
+    }
+    if (labels) PIPES.forEach((m, r) => {
+      const isSel = select && m === select.m;
+      b += `<text x="${L - 14}" y="${Y(rowY(r)) + 4}" text-anchor="end" font-size="${s >= 4 ? 12 : 10.5}" font-family="Bahnschrift, Barlow, sans-serif" font-weight="${isSel ? 700 : 500}" fill="${isSel ? C.signal : C.ink}">${noteName(m)}</text>`;
+    });
+  }
+  const defs = `<defs><marker id="tar" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,1 L7,4 L0,7" fill="none" stroke="${C.signal}" stroke-width="1.3"/></marker></defs>`;
+  return svg(w, h, defs + b);
+}
+document.getElementById('tape-main').innerHTML = tape({ s: 4, cols: 192, select: { m: 77, c: 64 } });
+document.getElementById('tape-preview').innerHTML = tape({ s: 3.4, cols: 88 });
+(function () {
+  const el = document.getElementById('tape-mini');
+  const w = el.clientWidth || 800;
+  el.innerHTML = tape({ s: w / 480, cols: 192, mini: true, view: [0, 220] }).replace(/height="[\d.]+"/, 'height="32" preserveAspectRatio="none"');
+})();
+document.querySelector('#tape-main').scrollLeft = 0;
+
+if (!location.hash) location.hash = '#organ-list';
+window.addEventListener('hashchange', () => { const el = document.getElementById('tape-mini'); if (location.hash === '#tape-view') { const w = el.clientWidth || 800; el.innerHTML = tape({ s: w / 480, cols: 192, mini: true, view: [0, 220] }).replace(/height="[\d.]+"/, 'height="32" preserveAspectRatio="none"'); } });
+</script>
+</body>
+</html>

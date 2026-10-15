@@ -1,0 +1,577 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Crancula, variant d-fairground</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+/* ---------- Fonts: offline only ----------
+   Display: Abril Fatface (OFL, to bundle). Stand-in here: Bodoni MT Black, then Georgia.
+   UI: Rubik (OFL, to bundle; installed on this machine).
+   Icons: Material Icons, already shipped in src/fonts. */
+@font-face { font-family: 'Fair Display'; src: local('Abril Fatface'), local('AbrilFatface-Regular'), local('Bodoni MT Black'), local('Georgia Bold'); font-weight: 400; }
+@font-face { font-family: 'Fair UI'; src: local('Rubik'), local('Rubik-Regular'); font-weight: 400; }
+@font-face { font-family: 'Fair UI'; src: local('Rubik Medium'), local('Rubik-Medium'), local('Rubik Bold'), local('Rubik-Bold'); font-weight: 500 700; }
+@font-face { font-family: 'Material Icons'; src: url('../../../../src/fonts/material-icons.woff2') format('woff2'); font-display: block; }
+
+:root {
+  /* colour roles (dark scheme is the default) */
+  --night: #151A2E;          /* surface: organ-case navy */
+  --night-deep: #0F1324;     /* top bar */
+  --case: #1D2440;           /* surface-container */
+  --case-high: #273052;      /* surface-container-high */
+  --line: #48527A;           /* outline-variant */
+  --outline: #8790B4;        /* outline: field borders, 3:1 on --case */
+  --ivory: #F4EBD6;          /* on-surface */
+  --muted: #BDB6A6;          /* on-surface-variant */
+  --red: #B3203A;            /* primary container: carousel red */
+  --red-hover: #C42A45;
+  --on-red: #FFF6E6;
+  --gold: #E2B651;           /* tertiary: gilt; focus, active, ornament */
+  --gold-dim: #9C7C34;
+  --green: #8FD6AE;          /* success text on dark */
+  --error: #FFB4AB;          /* error text on dark */
+  --error-line: #FF8A7E;
+  --manila: #EBDCB5;         /* the Tape */
+  --manila-band: #E0CEA0;
+  --manila-ink: #7A6538;
+  --hole: #151A2E;           /* a Hole shows the night through the Tape */
+  --r-panel: 14px; --r-field: 6px;
+  --display: 'Fair Display', Georgia, serif;
+  --ui: 'Fair UI', 'Segoe UI', sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--night); color: var(--ivory); font: 400 14px/1.45 var(--ui); }
+.material-icons { font-family: 'Material Icons'; font-weight: normal; font-style: normal; font-size: 20px; line-height: 1; display: inline-block; white-space: nowrap; font-feature-settings: 'liga'; -webkit-font-smoothing: antialiased; vertical-align: middle; }
+button, input, select { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.num { font-variant-numeric: tabular-nums; }
+
+/* ---------- screens: one visible at a time ---------- */
+section.screen { display: none; min-height: 800px; flex-direction: column; }
+section.screen:target { display: flex; }
+body:not(:has(section.screen:target)) #organ-list { display: flex; }
+
+/* ---------- shell ---------- */
+.topbar { height: 56px; background: var(--night-deep); display: flex; align-items: center; padding: 0 24px; gap: 28px; }
+.brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--gold); }
+.brand svg { width: 34px; height: 34px; }
+.brand span { font: 400 25px/1 var(--display); letter-spacing: .01em; }
+.nav { display: flex; gap: 6px; margin-left: 12px; }
+.nav a { color: var(--ivory); text-decoration: none; font-weight: 500; font-size: 15px; padding: 16px 14px 14px; border-bottom: 3px solid transparent; }
+.nav a[aria-current="page"] { color: var(--gold); border-bottom-color: var(--gold); }
+.lang { margin-left: auto; display: flex; border: 1px solid var(--gold-dim); border-radius: 999px; overflow: hidden; }
+.lang button { background: none; border: 0; padding: 5px 14px; font-weight: 500; font-size: 13px; color: var(--muted); cursor: pointer; min-height: 30px; }
+.lang button[aria-pressed="true"] { background: var(--gold); color: var(--night-deep); }
+/* the one ornament of the shell: facade trim, red band between gilt hairlines */
+.trim { height: 7px; background: linear-gradient(var(--gold) 0 1px, var(--night-deep) 1px 2px, var(--red) 2px 5px, var(--night-deep) 5px 6px, var(--gold) 6px 7px); }
+
+main { flex: 1; padding: 22px 24px 0; display: flex; flex-direction: column; }
+.page-head { display: flex; align-items: flex-end; gap: 16px; margin-bottom: 18px; }
+.page-head h1 { font: 400 36px/1.05 var(--display); margin: 0; color: var(--ivory); }
+.page-head .sub { color: var(--muted); margin: 6px 0 0; font-size: 14px; }
+.page-head .actions { margin-left: auto; display: flex; gap: 10px; align-items: center; }
+.back { display: inline-flex; align-items: center; gap: 4px; color: var(--muted); text-decoration: none; font-size: 13px; margin-bottom: 6px; }
+
+/* ---------- buttons (Material: filled, tonal, outlined, text, icon) ---------- */
+.btn { word-spacing: .12em; display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 20px; border-radius: 999px; border: 0; font-weight: 500; font-size: 14px; cursor: pointer; text-decoration: none; white-space: nowrap; }
+.btn .material-icons { font-size: 18px; }
+.btn-filled { background: var(--red); color: var(--on-red); box-shadow: inset 0 -2px 0 rgba(0,0,0,.25); }
+.btn-filled:hover { background: var(--red-hover); }
+.btn-tonal { background: var(--case-high); color: var(--gold); }
+.btn-outlined { background: none; border: 1px solid var(--outline); color: var(--ivory); }
+.btn-text { background: none; color: var(--gold); padding: 0 12px; }
+.btn-danger { background: none; border: 1px solid var(--error-line); color: var(--error); }
+.icon-btn { width: 32px; height: 32px; border-radius: 50%; border: 0; background: none; color: var(--muted); display: inline-grid; place-items: center; cursor: pointer; }
+.icon-btn:hover { background: var(--case-high); color: var(--ivory); }
+
+/* ---------- panels ---------- */
+.panel { background: var(--case); border-radius: var(--r-panel); padding: 18px 20px; }
+.panel h2 { font: 500 17px/1.2 var(--ui); margin: 0 0 14px; display: flex; align-items: baseline; gap: 10px; }
+.panel h2 .meta { color: var(--muted); font-weight: 400; font-size: 13px; }
+
+/* ---------- outlined form field (mat-form-field appearance="outline", density -2) ---------- */
+.field { position: relative; display: flex; align-items: center; height: 44px; border: 1px solid var(--outline); border-radius: var(--r-field); padding: 0 12px; background: transparent; }
+.field .lbl { position: absolute; top: -8px; left: 9px; padding: 0 4px; background: var(--case); font-size: 12px; color: var(--muted); line-height: 14px; white-space: nowrap; }
+.field input, .field select { flex: 1; min-width: 0; width: 100%; appearance: none; border: 0; background: none; outline: none; font-size: 15px; padding: 0; height: 100%; }
+.field .sfx { color: var(--muted); font-size: 13px; margin-left: 6px; }
+.field.focus { border: 2px solid var(--gold); padding: 0 11px; }
+.field.focus .lbl { color: var(--gold); }
+.field.invalid { border: 2px solid var(--error-line); padding: 0 11px; }
+.field.invalid .lbl { color: var(--error); }
+.hint { font-size: 12px; color: var(--muted); margin: 4px 0 0 13px; }
+.err { font-size: 12px; color: var(--error); margin: 4px 0 0 13px; display: flex; gap: 4px; align-items: flex-start; }
+.err .material-icons { font-size: 15px; }
+
+/* ---------- Organ list ---------- */
+.organ-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.organ-card { background: var(--case); border-radius: var(--r-panel); padding: 20px 22px 16px; display: grid; grid-template-columns: 1fr auto; gap: 4px 16px; position: relative; }
+.organ-card h2 { font: 400 28px/1.1 var(--display); margin: 0; }
+.organ-card .facts { color: var(--muted); margin: 2px 0 14px; }
+.organ-card .bed { grid-column: 1 / -1; }
+.organ-card .card-actions { grid-column: 1 / -1; display: flex; gap: 8px; align-items: center; margin-top: 12px; border-top: 1px solid var(--line); padding-top: 12px; }
+.organ-card .card-actions .icon-btn { margin-left: auto; }
+.organ-card .tapes { grid-column: 1 / -1; color: var(--muted); font-size: 13px; margin-top: 10px; }
+.organ-card .tapes b { color: var(--ivory); font-weight: 500; }
+.new-card { border: 2px dashed var(--line); border-radius: var(--r-panel); display: grid; place-items: center; text-align: center; color: var(--muted); padding: 24px; }
+.next-step { margin-top: 20px; display: flex; align-items: center; gap: 14px; padding: 14px 20px; border-radius: var(--r-panel); border: 1px solid var(--gold-dim); }
+.next-step .material-icons { color: var(--gold); font-size: 26px; }
+.next-step p { margin: 0; }
+.next-step .btn { margin-left: auto; }
+
+/* ---------- Organ editor ---------- */
+.editor { display: grid; grid-template-columns: 404px minmax(0,1fr); gap: 20px; align-items: start; }
+.bed-grid { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 18px 14px; }
+.bed-grid > div { min-width: 0; }
+.bed-check { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line); }
+.bed-check p { margin: 8px 0 0; font-size: 13px; color: var(--muted); display: flex; gap: 6px; align-items: center; }
+.bed-check p .material-icons { font-size: 16px; color: var(--green); }
+.pipes-head { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+.pipes-head h2 { margin: 0; }
+.pipes-head .btn { margin-left: auto; height: 34px; }
+.pipe-cols { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: auto repeat(11, auto); grid-auto-flow: column; column-gap: 18px; }
+.pipe-colhead { display: grid; grid-template-columns: 24px 28px 70px 1fr 32px; gap: 6px; font-size: 12px; color: var(--muted); padding: 0 0 4px; border-bottom: 1px solid var(--line); }
+.pipe { display: grid; grid-template-columns: 24px 28px 70px 1fr 32px; gap: 6px; align-items: center; min-height: 36px; border-bottom: 1px solid rgba(72,82,122,.45); }
+.pipe .drag { color: var(--line); font-size: 18px; cursor: grab; width: 24px; height: 24px; display: grid; place-items: center; }
+.pipe .row-no { text-align: right; color: var(--muted); font-size: 13px; }
+.pipe input { width: 70px; height: 28px; border: 1px solid var(--outline); border-radius: 5px; background: var(--night); padding: 0 8px; font-size: 14px; text-align: right; font-variant-numeric: tabular-nums; }
+.pipe .note { font-weight: 500; color: var(--gold); font-size: 14px; }
+.pipe .note.sharp { color: var(--muted); }
+.pipe .icon-btn { width: 30px; height: 30px; }
+.pipe.invalid input { border: 2px solid var(--error-line); }
+.pipe.invalid .pipe-err { grid-column: 2 / -1; font-size: 12px; color: var(--error); padding: 0 0 6px; display: flex; gap: 4px; }
+.pipe.invalid .pipe-err .material-icons { font-size: 15px; }
+.pipe.focus input { border: 2px solid var(--gold); }
+
+.actionbar { position: sticky; bottom: 0; margin: 18px -24px 0; padding: 12px 24px; background: var(--night-deep); border-top: 1px solid var(--gold-dim); display: flex; align-items: center; gap: 12px; }
+.actionbar .state { display: flex; align-items: center; gap: 8px; color: var(--ivory); }
+.actionbar .state .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--gold); }
+.actionbar .state.bad { color: var(--error); }
+.actionbar .state a { color: var(--error); }
+.actionbar .spacer { flex: 1; }
+
+/* ---------- Tape import ---------- */
+.import { display: grid; grid-template-columns: 1fr 400px; gap: 20px; align-items: start; }
+.step { display: grid; grid-template-columns: 34px 1fr; gap: 0 14px; padding: 16px 0; border-bottom: 1px solid var(--line); }
+.step:first-child { padding-top: 2px; }
+.step:last-child { border-bottom: 0; padding-bottom: 0; }
+.step .n { width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--gold); color: var(--gold); font: 400 17px/26px var(--display); text-align: center; }
+.step h3 { margin: 3px 0 10px; font-size: 16px; font-weight: 500; }
+.file-chip { display: inline-flex; align-items: center; gap: 8px; background: var(--case-high); border-radius: 8px; padding: 6px 8px 6px 12px; }
+.file-chip .material-icons { color: var(--gold); }
+.file-chip small { color: var(--muted); }
+.row { display: flex; gap: 14px; align-items: flex-start; flex-wrap: wrap; }
+.parts { display: flex; gap: 10px; margin-top: 14px; }
+.part { flex: 1; display: flex; align-items: center; gap: 10px; border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; }
+.part.on { border-color: var(--gold-dim); background: rgba(226,182,81,.07); }
+.cb { width: 20px; height: 20px; border-radius: 4px; border: 2px solid var(--outline); display: grid; place-items: center; flex: none; }
+.part.on .cb { background: var(--gold); border-color: var(--gold); color: var(--night-deep); }
+.cb .material-icons { font-size: 16px; font-weight: 700; }
+.part div b { display: block; font-weight: 500; }
+.part div small { color: var(--muted); font-size: 12px; }
+.proposal { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); margin-top: 6px; }
+.proposal .material-icons { color: var(--green); font-size: 16px; }
+.fit-list { list-style: none; padding: 0; margin: 0 0 14px; }
+.fit-list li { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.fit-list li b { font-weight: 500; font-variant-numeric: tabular-nums; }
+.fit-ok { display: flex; gap: 8px; align-items: center; color: var(--green); margin: 0 0 14px; }
+.preview-wrap { background: var(--night); border-radius: 10px; padding: 10px; margin-bottom: 16px; }
+.preview-wrap small { color: var(--muted); display: block; margin-top: 6px; font-size: 12px; }
+
+/* ---------- Tape view ---------- */
+.tape-stage { position: relative; padding: 16px 18px 14px 6px; border-radius: var(--r-panel); background: var(--case); }
+.tape-stage .corner { position: absolute; width: 22px; height: 22px; border: 2px solid var(--gold); }
+.tape-stage .c-tl { top: 6px; left: 6px; border-right: 0; border-bottom: 0; border-top-left-radius: 8px; }
+.tape-stage .c-tr { top: 6px; right: 6px; border-left: 0; border-bottom: 0; border-top-right-radius: 8px; }
+.tape-stage .c-bl { bottom: 6px; left: 6px; border-right: 0; border-top: 0; border-bottom-left-radius: 8px; }
+.tape-stage .c-br { bottom: 6px; right: 6px; border-left: 0; border-top: 0; border-bottom-right-radius: 8px; }
+.tape-scroll { overflow-x: auto; }
+.tape-layout { display: grid; grid-template-columns: minmax(0,1fr) 248px; gap: 16px; align-items: stretch; }
+.summary { background: var(--case); border-radius: var(--r-panel); padding: 16px 18px; display: flex; flex-direction: column; gap: 14px; }
+.summary h2 { font: 500 16px/1.2 var(--ui); margin: 0; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
+.summary h3 { margin: 0 0 4px; font-size: 12px; color: var(--muted); font-weight: 400; }
+.summary .big { font: 400 28px/1.1 var(--display); }
+.summary .big small { font: 400 13px var(--ui); color: var(--muted); }
+.summary .ok { display: flex; gap: 6px; font-size: 13px; color: var(--green); margin: 6px 0 0; }
+.summary .ok .material-icons { font-size: 16px; }
+.part-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+.tag { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px 3px 6px; border-radius: 999px; background: var(--case-high); font-size: 13px; }
+.tag .material-icons { font-size: 16px; color: var(--green); }
+.tag.off { background: none; border: 1px dashed var(--line); color: var(--muted); text-decoration: line-through; }
+.tag.off .material-icons { color: var(--muted); }
+.zoom { display: flex; border: 1px solid var(--outline); border-radius: 999px; overflow: hidden; }
+.zoom button { background: none; border: 0; padding: 0 14px; height: 38px; color: var(--ivory); cursor: pointer; font-size: 13px; }
+.zoom button[aria-pressed="true"] { background: var(--case-high); color: var(--gold); }
+@media (max-width: 1180px) {
+  .editor { grid-template-columns: 316px minmax(0,1fr); gap: 14px; }
+  .pipe, .pipe-colhead { grid-template-columns: 18px 22px 58px 1fr 28px; gap: 4px; }
+  .pipe input { width: 58px; }
+  .pipe-cols { column-gap: 12px; }
+  .panel { padding: 16px; }
+  .tape-layout { grid-template-columns: 1fr; }
+  .summary { flex-direction: row; flex-wrap: wrap; align-items: flex-start; gap: 24px; }
+  .summary h2 { width: 100%; }
+  .import { grid-template-columns: 1fr 360px; }
+  .parts { flex-wrap: wrap; }
+}
+.hole-tip { position: absolute; background: var(--night-deep); border: 1px solid var(--gold); color: var(--ivory); padding: 6px 10px; border-radius: 8px; font-size: 13px; white-space: nowrap; pointer-events: none; }
+.hole-tip b { color: var(--gold); font-weight: 500; }
+</style>
+</head>
+<body>
+
+<!-- Logo: the Crancula C of punched holes, set in a gilt medallion -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="logo" viewBox="0 0 64 64">
+    <circle cx="32" cy="32" r="30" fill="#B3203A" stroke="#E2B651" stroke-width="3"/>
+    <circle cx="32" cy="32" r="24.5" fill="#EBDCB5" stroke="#E2B651" stroke-width="1"/>
+    <g fill="#151A2E">
+      <rect x="25" y="16" width="20" height="5" rx="2.5"/>
+      <rect x="18" y="24" width="6" height="5" rx="2.5"/>
+      <rect x="18" y="32" width="6" height="5" rx="2.5"/>
+      <rect x="18" y="40" width="6" height="5" rx="2.5"/>
+      <rect x="25" y="48" width="20" height="5" rx="2.5"/>
+    </g>
+    <rect x="36" y="32" width="11" height="5" rx="2.5" fill="#B3203A"/>
+  </symbol>
+</svg>
+
+<!-- ======================= ORGAN LIST ======================= -->
+<section class="screen" id="organ-list">
+  <header class="topbar">
+    <a class="brand" href="#organ-list"><svg><use href="#logo"/></svg><span>Crancula</span></a>
+    <nav class="nav"><a href="#organ-list" aria-current="page">Organs</a><a href="#tape-view">Tapes</a></nav>
+    <div class="lang" role="group" aria-label="Language"><button aria-pressed="true">EN</button><button aria-pressed="false">DE</button></div>
+  </header>
+  <div class="trim"></div>
+  <main>
+    <div class="page-head">
+      <div><h1>Organs</h1><p class="sub">Each Organ you describe here gets its own Tapes, punched for its Pipes.</p></div>
+      <div class="actions"><a class="btn btn-filled" href="#organ-editor"><span class="material-icons">add</span>New Organ</a></div>
+    </div>
+    <div class="organ-grid">
+      <article class="organ-card">
+        <div><h2>Street organ</h2><p class="facts num">120 mm Tape, 31 Pipes from F3 to B5</p></div>
+        <div class="bed"><svg class="bed-svg" data-pipes="31" data-width="120" viewBox="0 0 562 52" width="100%" height="64" role="img" aria-label="Tape Bed: 120 mm wide, 31 rows"></svg></div>
+        <p class="tapes">Tapes: <b>Three parts</b>, <b>Sur le pont d'Avignon</b></p>
+        <div class="card-actions">
+          <a class="btn btn-tonal" href="#organ-editor"><span class="material-icons">edit</span>Edit Organ</a>
+          <a class="btn btn-text" href="#tape-import"><span class="material-icons">library_music</span>Bring a Song onto a Tape</a>
+          <button class="icon-btn" aria-label="Delete Organ Street organ" title="Delete Organ Street organ"><span class="material-icons">delete_outline</span></button>
+        </div>
+      </article>
+      <article class="organ-card">
+        <div><h2>Parlour organ</h2><p class="facts num">80 mm Tape, 20 Pipes from G3 to D5</p></div>
+        <div class="bed"><svg class="bed-svg" data-pipes="20" data-width="80" viewBox="0 0 562 52" width="100%" height="52" role="img" aria-label="Tape Bed: 80 mm wide, 20 rows"></svg></div>
+        <p class="tapes">No Tapes yet.</p>
+        <div class="card-actions">
+          <a class="btn btn-tonal" href="#organ-editor"><span class="material-icons">edit</span>Edit Organ</a>
+          <a class="btn btn-text" href="#tape-import"><span class="material-icons">library_music</span>Bring a Song onto a Tape</a>
+          <button class="icon-btn" aria-label="Delete Organ Parlour organ" title="Delete Organ Parlour organ"><span class="material-icons">delete_outline</span></button>
+        </div>
+      </article>
+    </div>
+    <div class="next-step">
+      <span class="material-icons">queue_music</span>
+      <p><b>Next:</b> bring a MIDI Song onto a Tape for one of your Organs.</p>
+      <a class="btn btn-outlined" href="#tape-import">Bring a Song onto a Tape</a>
+    </div>
+  </main>
+</section>
+
+<!-- ======================= ORGAN EDITOR ======================= -->
+<section class="screen" id="organ-editor">
+  <header class="topbar">
+    <a class="brand" href="#organ-list"><svg><use href="#logo"/></svg><span>Crancula</span></a>
+    <nav class="nav"><a href="#organ-list" aria-current="page">Organs</a><a href="#tape-view">Tapes</a></nav>
+    <div class="lang" role="group" aria-label="Language"><button aria-pressed="true">EN</button><button aria-pressed="false">DE</button></div>
+  </header>
+  <div class="trim"></div>
+  <main>
+    <div class="page-head">
+      <div><a class="back" href="#organ-list"><span class="material-icons" style="font-size:16px">arrow_back</span>Organs</a><h1>Street organ</h1></div>
+      <div class="actions"><button class="btn btn-danger"><span class="material-icons">delete_outline</span>Delete Organ</button></div>
+    </div>
+    <div class="editor">
+      <div class="panel">
+        <label class="field" style="margin:6px 0 22px"><span class="lbl">Name</span><input value="Street organ"></label>
+        <h2>Tape Bed</h2>
+        <div class="bed-grid">
+          <div><label class="field"><span class="lbl">Tape width</span><input class="num" value="120"><span class="sfx">mm</span></label></div>
+          <div><label class="field"><span class="lbl">Border</span><input class="num" value="5"><span class="sfx">mm</span></label></div>
+          <div><label class="field"><span class="lbl">Hole diameter</span><input class="num" value="2,5"><span class="sfx">mm</span></label></div>
+          <div><label class="field focus"><span class="lbl">Spacing between rows</span><input class="num" value="3,5"><span class="sfx">mm</span></label></div>
+          <div><label class="field"><span class="lbl">Minimum Gap</span><input class="num" value="1,5"><span class="sfx">mm</span></label></div>
+          <div><label class="field"><span class="lbl">Minimum Hole Length</span><input class="num" value="2,5"><span class="sfx">mm</span></label><p class="hint">Equals the hole diameter</p></div>
+        </div>
+        <div class="bed-check">
+          <svg class="bed-svg" data-pipes="31" data-width="120" data-labels="1" viewBox="0 0 364 64" width="100%" height="64" role="img" aria-label="Cross-section of the Tape Bed"></svg>
+          <p class="num"><span class="material-icons">check_circle</span>31 rows take 108,5 mm of the 110 mm between the borders.</p>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="pipes-head"><h2>Pipes <span class="meta num">31 Pipes, F3 to B5, row 1 at the tape edge</span></h2><button class="btn btn-tonal"><span class="material-icons">add</span>Add Pipe</button></div>
+        <div class="pipe-cols" data-pipes="en"></div>
+      </div>
+    </div>
+    <div class="actionbar">
+      <span class="state"><span class="dot"></span>Unsaved changes</span>
+      <span class="spacer"></span>
+      <button class="btn btn-text">Discard changes</button>
+      <button class="btn btn-filled"><span class="material-icons">save</span>Save</button>
+    </div>
+  </main>
+</section>
+
+<!-- ======================= ORGAN EDITOR, ERRORS (German) ======================= -->
+<section class="screen" id="organ-editor-error" lang="de">
+  <header class="topbar">
+    <a class="brand" href="#organ-list"><svg><use href="#logo"/></svg><span>Crancula</span></a>
+    <nav class="nav"><a href="#organ-list" aria-current="page">Drehorgeln</a><a href="#tape-view">Bänder</a></nav>
+    <div class="lang" role="group" aria-label="Sprache"><button aria-pressed="false">EN</button><button aria-pressed="true">DE</button></div>
+  </header>
+  <div class="trim"></div>
+  <main>
+    <div class="page-head">
+      <div><a class="back" href="#organ-list"><span class="material-icons" style="font-size:16px">arrow_back</span>Drehorgeln</a><h1>Neue Drehorgel</h1></div>
+    </div>
+    <div class="editor">
+      <div class="panel">
+        <label class="field" style="margin:6px 0 22px"><span class="lbl">Name</span><input value="Straßenorgel"></label>
+        <h2>Bandbett</h2>
+        <div class="bed-grid">
+          <div><label class="field invalid"><span class="lbl">Bandbreite</span><input class="num" value="" aria-invalid="true"><span class="sfx">mm</span></label><p class="err"><span class="material-icons">error</span>Bitte gib einen Wert ein.</p></div>
+          <div><label class="field"><span class="lbl">Rand</span><input class="num" value="5"><span class="sfx">mm</span></label></div>
+          <div><label class="field"><span class="lbl">Lochdurchmesser</span><input class="num" value="2,5"><span class="sfx">mm</span></label></div>
+          <div><label class="field"><span class="lbl">Reihenabstand</span><input class="num" value="3,5"><span class="sfx">mm</span></label></div>
+          <div><label class="field"><span class="lbl">Mindestabstand</span><input class="num" value="1,5"><span class="sfx">mm</span></label></div>
+          <div><label class="field"><span class="lbl">Mindestlochlänge</span><input class="num" value="2,5"><span class="sfx">mm</span></label><p class="hint">Entspricht dem Lochdurchmesser</p></div>
+        </div>
+        <div class="bed-check">
+          <p><span class="material-icons" style="color:var(--muted)">info</span>Der Querschnitt erscheint, sobald die Bandbreite eingetragen ist.</p>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="pipes-head"><h2>Pfeifen <span class="meta num">31 Pfeifen, F3 bis B5, Reihe 1 am Bandrand</span></h2><button class="btn btn-tonal"><span class="material-icons">add</span>Pfeife hinzufügen</button></div>
+        <div class="pipe-cols" data-pipes="de"></div>
+        <p class="err" style="margin:10px 0 0"><span class="material-icons">error</span><span><b>Reihe 14:</b> Eine andere Pfeife spielt bereits F4 (Reihe 13). Ändere eine der beiden MIDI-Noten.</span></p>
+      </div>
+    </div>
+    <div class="actionbar">
+      <span class="state bad"><span class="material-icons">error</span>Noch nicht speicherbar, 2 Probleme: <a href="#">Bandbreite</a> und <a href="#">Reihe 14</a></span>
+      <span class="spacer"></span>
+      <button class="btn btn-text">Änderungen verwerfen</button>
+      <button class="btn btn-filled"><span class="material-icons">save</span>Speichern</button>
+    </div>
+  </main>
+</section>
+
+<!-- ======================= TAPE IMPORT ======================= -->
+<section class="screen" id="tape-import">
+  <header class="topbar">
+    <a class="brand" href="#organ-list"><svg><use href="#logo"/></svg><span>Crancula</span></a>
+    <nav class="nav"><a href="#organ-list">Organs</a><a href="#tape-view" aria-current="page">Tapes</a></nav>
+    <div class="lang" role="group" aria-label="Language"><button aria-pressed="true">EN</button><button aria-pressed="false">DE</button></div>
+  </header>
+  <div class="trim"></div>
+  <main>
+    <div class="page-head">
+      <div><a class="back" href="#tape-view"><span class="material-icons" style="font-size:16px">arrow_back</span>Tapes</a><h1>Bring a Song onto a Tape</h1></div>
+    </div>
+    <div class="import">
+      <div class="panel">
+        <div class="step">
+          <span class="n">1</span>
+          <div>
+            <h3>Song</h3>
+            <div class="row" style="align-items:center">
+              <span class="file-chip"><span class="material-icons">audio_file</span>three-parts.mid <small>3 Parts</small><button class="icon-btn" aria-label="Remove file" title="Remove file"><span class="material-icons" style="font-size:18px">close</span></button></span>
+              <button class="btn btn-text"><span class="material-icons">folder_open</span>Choose another MIDI file</button>
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <span class="n">2</span>
+          <div>
+            <h3>Organ and Parts</h3>
+            <label class="field" style="max-width:340px"><span class="lbl">Organ</span><select><option>Street organ (31 Pipes, F3 to B5)</option></select><span class="material-icons" style="color:var(--muted)">arrow_drop_down</span></label>
+            <div class="parts">
+              <div class="part on"><span class="cb"><span class="material-icons">check</span></span><div><b>Lead</b><small class="num">22 Notes</small></div></div>
+              <div class="part on"><span class="cb"><span class="material-icons">check</span></span><div><b>Bass</b><small class="num">11 Notes</small></div></div>
+              <div class="part"><span class="cb"></span><div><b>Drums</b><small class="num">40 Notes, percussion, stays off the Tape</small></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <span class="n">3</span>
+          <div>
+            <h3>Tape</h3>
+            <div class="row">
+              <label class="field" style="width:240px"><span class="lbl">Name of the Tape</span><input value="Three parts"></label>
+              <label class="field" style="width:130px"><span class="lbl">Column length</span><input class="num" value="2,5"><span class="sfx">mm</span></label>
+              <div>
+                <label class="field" style="width:170px"><span class="lbl">Transposition</span><input class="num" value="+5"><span class="sfx">semitones</span></label>
+              </div>
+            </div>
+            <p class="proposal"><span class="material-icons">check_circle</span>+5 is the proposal: it puts the most Notes on a Pipe.</p>
+          </div>
+        </div>
+      </div>
+      <aside class="panel">
+        <h2>Fit of the selected Parts</h2>
+        <div class="preview-wrap"><svg id="preview-tape" role="img" aria-label="Preview of the Tape"></svg><small>Preview of the first 96 Columns, true to scale.</small></div>
+        <ul class="fit-list">
+          <li><span>Notes matching a Pipe</span><b>33</b></li>
+          <li><span>Notes moved by octaves</span><b>0</b></li>
+          <li><span>Unplayable Notes</span><b>0</b></li>
+        </ul>
+        <p class="fit-ok"><span class="material-icons">check_circle</span>Every Note has a Pipe.</p>
+        <button class="btn btn-filled" style="width:100%;justify-content:center"><span class="material-icons">add</span>Create Tape</button>
+      </aside>
+    </div>
+  </main>
+</section>
+
+<!-- ======================= TAPE VIEW ======================= -->
+<section class="screen" id="tape-view">
+  <header class="topbar">
+    <a class="brand" href="#organ-list"><svg><use href="#logo"/></svg><span>Crancula</span></a>
+    <nav class="nav"><a href="#organ-list">Organs</a><a href="#tape-view" aria-current="page">Tapes</a></nav>
+    <div class="lang" role="group" aria-label="Language"><button aria-pressed="true">EN</button><button aria-pressed="false">DE</button></div>
+  </header>
+  <div class="trim"></div>
+  <main>
+    <div class="page-head" style="margin-bottom:12px">
+      <div><a class="back" href="#tape-import"><span class="material-icons" style="font-size:16px">arrow_back</span>Tapes</a><h1>Three parts</h1><p class="sub num">For the Street organ: 96 Columns, 240 mm long, 120 mm wide.</p></div>
+      <div class="actions">
+        <div class="zoom" role="group" aria-label="Zoom"><button aria-pressed="true">Fit</button><button aria-pressed="false">1:1</button></div>
+        <button class="btn btn-filled"><span class="material-icons">content_cut</span>Export SVG for the Plotter</button>
+      </div>
+    </div>
+    <div class="tape-layout">
+      <div class="tape-stage">
+        <span class="corner c-tl"></span><span class="corner c-tr"></span><span class="corner c-bl"></span><span class="corner c-br"></span>
+        <div class="tape-scroll"><svg id="main-tape" role="img" aria-label="Holes of the Tape Three parts"></svg></div>
+        <div class="hole-tip" id="tip"><b>G5</b>, Columns 17 to 22, Hole 13,5 mm long</div>
+      </div>
+      <aside class="summary">
+        <h2>What changed on import</h2>
+        <div class="sum-item"><h3>Transposition</h3><div class="big num">+5 <small>semitones</small></div></div>
+        <div class="sum-item"><h3>Parts on the Tape</h3><div class="part-tags"><span class="tag"><span class="material-icons">check</span>Lead, 22 Notes</span><span class="tag"><span class="material-icons">check</span>Bass, 11 Notes</span><span class="tag off"><span class="material-icons">block</span>Drums, dropped</span></div></div>
+        <div class="sum-item"><h3>Notes on the Tape</h3><div class="big num">33</div><p class="ok num"><span class="material-icons">check_circle</span>None moved by octaves, none unplayable.</p></div>
+        <a class="btn btn-outlined" href="#tape-import" style="align-self:flex-start"><span class="material-icons">tune</span>Change import</a>
+      </aside>
+    </div>
+  </main>
+</section>
+
+<script>
+// ---------- domain data (Street organ, Song "Three parts", Transposition +5 already applied) ----------
+const NAMES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+const noteName = m => NAMES[m % 12] + (Math.floor(m / 12) - 1);
+const PIPES = Array.from({ length: 31 }, (_, i) => 53 + i); // F3..B5, row 1 = F3
+const BED = { width: 120, border: 5, hole: 2.5, rowSpacing: 3.5, gap: 1.5, column: 2.5 };
+const lead = [[72,4],[74,4],[76,4],[77,4],[79,6],[77,2],[76,4],[74,4],[72,2],[74,2],[76,2],[77,2],[79,4],[81,4],[79,8],[76,8],[77,4],[76,4],[74,4],[72,2],[71,2],[72,12],[0,4]];
+const bass = [[53,8],[60,8],[58,8],[60,8],[53,8],[57,8],[60,8],[55,8],[58,8],[55,8],[53,12],[0,4]];
+function toHoles(seq) { const out = []; let c = 0; for (const [m, d] of seq) { if (m) out.push({ midi: m, col: c, len: d }); c += d; } return out; }
+const HOLES = [...toHoles(lead), ...toHoles(bass)];
+
+// ---------- Tape drawing: true to millimetres ----------
+const NS = 'http://www.w3.org/2000/svg';
+function el(name, attrs, parent) { const e = document.createElementNS(NS, name); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; }
+function rowY(i) { const used = PIPES.length * BED.rowSpacing; return (BED.width - used) / 2 + (i + 0.5) * BED.rowSpacing; }
+
+function drawTape(svg, { scale, columns, gutter, ruler, selected }) {
+  const tapeW = columns * BED.column * scale, tapeH = BED.width * scale;
+  const top = ruler ? 26 : 0, left = gutter ? 58 : 0, bottom = ruler ? 20 : 0;
+  svg.setAttribute('width', left + tapeW + (ruler ? 16 : 2)); svg.setAttribute('height', top + tapeH + bottom);
+  const g = el('g', { transform: `translate(${left},${top})` }, svg);
+  el('rect', { x: 0, y: 0, width: tapeW, height: tapeH, rx: 2, fill: 'var(--manila)' }, g);
+  // rows of sharps get a faint band, like the black keys
+  PIPES.forEach((m, i) => { if (NAMES[m % 12].includes('#')) el('rect', { x: 0, y: (rowY(i) - BED.rowSpacing / 2) * scale, width: tapeW, height: BED.rowSpacing * scale, fill: 'var(--manila-band)' }, g); });
+  // borders
+  for (const y of [BED.border, BED.width - BED.border]) el('line', { x1: 0, x2: tapeW, y1: y * scale, y2: y * scale, stroke: 'var(--manila-ink)', 'stroke-width': 1, 'stroke-dasharray': '4 4', opacity: .6 }, g);
+  if (ruler) {
+    // bar lines every 16 Columns
+    for (let c = 16; c < columns; c += 16) el('line', { x1: c * BED.column * scale, x2: c * BED.column * scale, y1: 0, y2: tapeH, stroke: 'var(--manila-ink)', 'stroke-width': 1, opacity: .35 }, g);
+    // millimetre ruler on top, Column numbers below
+    for (let mm = 0; mm <= columns * BED.column; mm += 5) {
+      const x = left + mm * scale, major = mm % 20 === 0;
+      el('line', { x1: x, x2: x, y1: major ? 12 : 18, y2: 24, stroke: 'var(--gold)', 'stroke-width': 1 }, svg);
+      if (major) { const last = mm + 20 > columns * BED.column; const t = el('text', { x: last ? x - 3 : x + 3, y: 11, fill: 'var(--gold)', 'font-size': 12, 'font-family': 'Fair UI, sans-serif', 'text-anchor': last ? 'end' : 'start' }, svg); t.textContent = mm === 0 ? '0 mm' : mm; }
+    }
+    for (let c = 1; c <= columns; c += (c === 1 ? 7 : 8)) {
+      const t = el('text', { x: left + (c - 0.5) * BED.column * scale, y: top + tapeH + 15, fill: 'var(--muted)', 'font-size': 12, 'text-anchor': 'middle', 'font-family': 'Fair UI, sans-serif' }, svg); t.textContent = c;
+    }
+    const t = el('text', { x: left - 8, y: top + tapeH + 15, fill: 'var(--muted)', 'font-size': 12, 'text-anchor': 'end', 'font-family': 'Fair UI, sans-serif' }, svg); t.textContent = 'Column';
+  }
+  if (gutter) PIPES.forEach((m, i) => {
+    const sharp = NAMES[m % 12].includes('#');
+    const t = el('text', { x: left - 8, y: top + rowY(i) * scale + 4, fill: sharp ? 'var(--muted)' : 'var(--ivory)', 'font-size': 12, 'text-anchor': 'end', 'font-family': 'Fair UI, sans-serif', 'font-weight': sharp ? 400 : 500 }, svg);
+    t.textContent = noteName(m);
+  });
+  // Holes: cut-outs, the night shows through
+  for (const h of HOLES) {
+    const i = PIPES.indexOf(h.midi); if (i < 0 || h.col >= columns) continue;
+    const lenMm = Math.max(BED.hole, h.len * BED.column - BED.gap);
+    const isSel = selected && h.midi === selected.midi && h.col === selected.col;
+    el('rect', { x: h.col * BED.column * scale, y: (rowY(i) - BED.hole / 2) * scale, width: lenMm * scale, height: BED.hole * scale, rx: BED.hole / 2 * scale, fill: 'var(--hole)', stroke: isSel ? 'var(--red)' : 'none', 'stroke-width': isSel ? 3 : 0 }, g);
+    if (isSel) svg.dataset.selX = left + h.col * BED.column * scale + lenMm * scale, svg.dataset.selY = top + (rowY(i) - BED.hole / 2) * scale;
+  }
+  return { left, top };
+}
+
+// Tape Bed cross-section (Organ list card and editor)
+document.querySelectorAll('.bed-svg').forEach(svg => {
+  const pipes = +svg.dataset.pipes, width = +svg.dataset.width, labels = svg.dataset.labels;
+  const vbW = svg.viewBox.baseVal.width, s = (vbW - (labels ? 4 : 64)) / 120, x0 = 2, y0 = 4, h = 30, w = width * s;
+  el('rect', { x: x0, y: y0, width: w, height: h, rx: 3, fill: 'var(--manila)' }, svg);
+  el('rect', { x: x0, y: y0, width: BED.border * s, height: h, fill: 'var(--manila-band)' }, svg);
+  el('rect', { x: x0 + w - BED.border * s, y: y0, width: BED.border * s, height: h, fill: 'var(--manila-band)' }, svg);
+  const used = pipes * BED.rowSpacing, off = (width - used) / 2;
+  for (let i = 0; i < pipes; i++) el('rect', { x: x0 + (off + i * BED.rowSpacing + (BED.rowSpacing - BED.hole) / 2) * s, y: y0 + 8, width: BED.hole * s, height: h - 16, rx: BED.hole * s / 2, fill: 'var(--hole)' }, svg);
+  if (labels) {
+    const t1 = el('text', { x: x0, y: y0 + h + 18, fill: 'var(--muted)', 'font-size': 12, 'font-family': 'Fair UI, sans-serif' }, svg); t1.textContent = 'Row 1, F3';
+    const t2 = el('text', { x: x0 + w, y: y0 + h + 18, fill: 'var(--muted)', 'font-size': 12, 'text-anchor': 'end', 'font-family': 'Fair UI, sans-serif' }, svg); t2.textContent = 'Row 31, B5';
+    const t3 = el('text', { x: x0 + w / 2, y: y0 + h + 18, fill: 'var(--gold)', 'font-size': 12, 'text-anchor': 'middle', 'font-family': 'Fair UI, sans-serif' }, svg); t3.textContent = '120 mm';
+  } else {
+    const t = el('text', { x: x0 + w + 8, y: y0 + h / 2 + 4, fill: 'var(--muted)', 'font-size': 12, 'font-family': 'Fair UI, sans-serif' }, svg); t.textContent = width + ' mm';
+  }
+});
+
+// Pipe lists, three columns of 11 rows
+document.querySelectorAll('.pipe-cols').forEach(box => {
+  const de = box.dataset.pipes === 'de';
+  const head = de ? ['Reihe', 'MIDI-Note', 'Ton'] : ['Row', 'MIDI note', 'Note'];
+  for (let c = 0; c < 3; c++) {
+    const h = document.createElement('div'); h.className = 'pipe-colhead';
+    h.innerHTML = `<span></span><span style="text-align:right">${head[0]}</span><span style="text-align:right">${head[1]}</span><span>${head[2]}</span><span></span>`;
+    box.appendChild(h);
+    for (let r = 0; r < 11; r++) {
+      const i = c * 11 + r; if (i >= 31) { box.appendChild(document.createElement('div')); continue; }
+      let m = PIPES[i]; const bad = de && i === 13; if (bad) m = 65;
+      const sharp = NAMES[m % 12].includes('#');
+      const row = document.createElement('div'); row.className = 'pipe' + (bad ? ' invalid' : '');
+      const label = de ? `Reihe ${i + 1}` : `Row ${i + 1}`;
+      row.innerHTML = `<span class="drag material-icons" title="${de ? 'Pfeife in eine andere Reihe ziehen' : 'Drag Pipe to another row'}">drag_indicator</span>`
+        + `<span class="row-no num">${i + 1}</span>`
+        + `<input aria-label="${label}, MIDI note" value="${m}"${bad ? ' aria-invalid="true"' : ''}>`
+        + (bad ? `<span class="note" style="color:var(--error)"><span class="material-icons" style="font-size:16px" aria-label="Fehler">error</span> ${noteName(m)}</span>` : `<span class="note${sharp ? ' sharp' : ''}">${noteName(m)}</span>`)
+        + `<button class="icon-btn" aria-label="${de ? 'Aktionen für ' : 'Actions for '}${label}" title="${de ? 'Verschieben oder entfernen' : 'Move or remove'}"><span class="material-icons">more_vert</span></button>`
+        ;
+      box.appendChild(row);
+    }
+  }
+});
+
+// Main Tape: 3,6 px per mm (Fit); 1:1 would be 3,78 px per mm at 96 dpi
+const main = document.getElementById('main-tape');
+drawTape(main, { scale: 3.6, columns: 96, gutter: true, ruler: true, selected: { midi: 79, col: 16 } });
+const tip = document.getElementById('tip');
+tip.style.left = (+main.dataset.selX + 10) + 'px'; tip.style.top = (+main.dataset.selY + 2) + 'px';
+// Preview: same Tape, small
+drawTape(document.getElementById('preview-tape'), { scale: 1.45, columns: 96, gutter: false, ruler: false });
+{ const pv = document.getElementById('preview-tape'); pv.setAttribute('viewBox', `0 0 ${pv.getAttribute('width')} ${pv.getAttribute('height')}`); pv.setAttribute('width', '100%'); pv.removeAttribute('height'); pv.style.display = 'block'; }
+</script>
+</body>
+</html>

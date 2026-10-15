@@ -1,0 +1,115 @@
+// Variant b, "the precision drafting table": theme sketch for Angular Material 22.
+// Replaces the mat.theme block and .cranc-form-section in src/styles.scss.
+// Fonts to bundle in src/fonts/ (both SIL OFL): Barlow 400/500/600, JetBrains Mono 400/600.
+@use '@angular/material' as mat;
+@use 'styles/fonts';
+
+html {
+  height: 100%;
+  color-scheme: light;
+
+  @include mat.theme((
+    color: (
+      primary: mat.$blue-palette,      // cobalt: the one signal colour
+      tertiary: mat.$blue-palette,     // no second accent on purpose
+      theme-type: light,
+    ),
+    typography: (
+      plain-family: ('Barlow', 'Roboto', sans-serif),
+      brand-family: ('Barlow', 'Roboto', sans-serif),
+      bold-weight: 600,
+      medium-weight: 500,
+      regular-weight: 400,
+    ),
+    density: -3,                       // desktop tool, mouse and keyboard
+  ));
+
+  // Cool neutrals instead of the tinted M3 surfaces, small radii, exact signal hex.
+  @include mat.theme-overrides((
+    primary: #1450c8,
+    on-primary: #ffffff,
+    primary-container: #e7eefc,
+    on-primary-container: #0c3a94,
+    surface: #ffffff,
+    surface-container-lowest: #ffffff,
+    surface-container-low: #f4f6f7,
+    surface-container: #eef1f3,
+    surface-container-high: #e6eaed,
+    on-surface: #1a2127,
+    on-surface-variant: #525e69,
+    outline: #a9b3bc,
+    outline-variant: #d5dbe0,
+    error: #b3261e,
+    error-container: #fceeec,
+    corner-extra-small: 2px,
+    corner-small: 3px,
+    corner-medium: 4px,
+    corner-large: 4px,
+    corner-full: 4px,                  // buttons are rectangles with 4 px corners, not pills
+  ));
+
+  // Crancula tokens that Material does not have.
+  --cr-sheet: #e6eaed;                 // the drafting table behind the panes
+  --cr-sheet-line: #dce1e5;            // its 16 px grid
+  --cr-paper: #fbfbf8;                 // Tape paper
+  --cr-paper-edge: #8f9aa4;
+  --cr-sharp-row: #eef1f3;             // rows of sharp notes on the Tape
+  --cr-grid: #e1e5e9;                  // every 8 Columns
+  --cr-grid-major: #c3cbd2;            // every 32 Columns
+  --cr-hole: #1a2127;
+  --cr-ok: #2f6b3a;
+  --cr-mono: 'JetBrains Mono', 'Consolas', monospace;
+}
+
+body {
+  margin: 0;
+  height: 100%;
+  background: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface);
+  font: var(--mat-sys-body-medium);
+  font-variant-numeric: tabular-nums;
+}
+
+// Numbers in fields, tables and rulers.
+.cr-num,
+input[type='number'],
+.mat-mdc-input-element.cr-num {
+  font-family: var(--cr-mono);
+}
+
+// Outlined fields with the label always in the notch; form fields go one step denser.
+@include mat.form-field-overrides((
+  outlined-outline-color: var(--mat-sys-outline),
+  outlined-focus-outline-width: 2px,
+  container-text-size: 13px,
+  outlined-label-text-size: 12px,
+));
+.mat-mdc-form-field { @include mat.form-field-density(-4); }
+
+// Top navigation: mat-tab-nav-bar with a 3 px signal underline.
+@include mat.tabs-overrides((
+  active-indicator-height: 3px,
+  active-indicator-shape: 0,
+  divider-height: 0,
+));
+
+// Pipe table and spec tables: 26 px rows.
+@include mat.table-overrides((
+  row-item-container-height: 26px,
+  header-container-height: 24px,
+  row-item-outline-color: var(--cr-grid),
+));
+
+// Panes on the drafting table: list | workspace | inspector.
+.cr-desk {
+  background-color: var(--cr-sheet);
+  background-image:
+    linear-gradient(var(--cr-sheet-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--cr-sheet-line) 1px, transparent 1px);
+  background-size: 16px 16px;
+}
+.cr-sheet {
+  background: var(--mat-sys-surface);
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 2px;
+}
