@@ -12,7 +12,6 @@ export interface OrganDraft {
   readonly name: string;
   readonly tapeBed: {
     readonly tapeWidth: number | null;
-    readonly border: number | null;
     readonly holeDiameter: number | null;
     readonly rowSpacing: number | null;
   };
@@ -23,7 +22,7 @@ export interface OrganDraft {
 export function emptyOrganDraft(): OrganDraft {
   return {
     name: '',
-    tapeBed: {tapeWidth: null, border: null, holeDiameter: null, rowSpacing: null},
+    tapeBed: {tapeWidth: null, holeDiameter: null, rowSpacing: null},
     minimumGap: null,
     pipes: [],
   };

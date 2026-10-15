@@ -13,7 +13,7 @@ describe('emptyOrganDraft', () => {
   it('has no id, no name, no measurements and no Pipes', () => {
     expect(emptyOrganDraft()).toEqual({
       name: '',
-      tapeBed: {tapeWidth: null, border: null, holeDiameter: null, rowSpacing: null},
+      tapeBed: {tapeWidth: null, holeDiameter: null, rowSpacing: null},
       minimumGap: null,
       pipes: [],
     });
@@ -27,7 +27,7 @@ describe('toDraft', () => {
     const organ = asValidOrgan({
       id,
       name: 'Street organ',
-      tapeBed: {tapeWidth: mm(120), border: mm(5), holeDiameter: mm(2.5), rowSpacing: mm(3.5)},
+      tapeBed: {tapeWidth: mm(120), holeDiameter: mm(2.5), rowSpacing: mm(3.5)},
       minimumGap: mm(1.5),
       pipes: [{note: midiNoteNumber(60) as MidiNoteNumber}],
     });
@@ -35,7 +35,7 @@ describe('toDraft', () => {
     expect(toDraft(organ)).toEqual({
       id,
       name: 'Street organ',
-      tapeBed: {tapeWidth: 120, border: 5, holeDiameter: 2.5, rowSpacing: 3.5},
+      tapeBed: {tapeWidth: 120, holeDiameter: 2.5, rowSpacing: 3.5},
       minimumGap: 1.5,
       pipes: [{note: 60}],
     });

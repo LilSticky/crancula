@@ -10,7 +10,7 @@ function organSnapshot(id: string, name = 'Street organ') {
   return {
     id,
     name,
-    tapeBed: {tapeWidth: 120, border: 5, holeDiameter: 2.5, rowSpacing: 3.5},
+    tapeBed: {tapeWidth: 120, holeDiameter: 2.5, rowSpacing: 3.5},
     minimumGap: 1.5,
     pipes: [{note: 64}, {note: 60}, {note: 62}],
   };
@@ -65,7 +65,7 @@ describe('toSnapshot', () => {
   it('writes Organs created by validateOrgan', () => {
     const result = validateOrgan({
       name: 'New',
-      tapeBed: {tapeWidth: 50, border: 0, holeDiameter: 2, rowSpacing: 3},
+      tapeBed: {tapeWidth: 50, holeDiameter: 2, rowSpacing: 3},
       minimumGap: 1,
       pipes: [{note: 60}],
     });
@@ -74,7 +74,7 @@ describe('toSnapshot', () => {
     expect(toSnapshot([result.value]).organs[0]).toEqual({
       id: result.value.id,
       name: 'New',
-      tapeBed: {tapeWidth: 50, border: 0, holeDiameter: 2, rowSpacing: 3},
+      tapeBed: {tapeWidth: 50, holeDiameter: 2, rowSpacing: 3},
       minimumGap: 1,
       pipes: [{note: 60}],
     });

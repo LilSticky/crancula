@@ -1,6 +1,6 @@
 import {err, ok, type Result} from '../result';
 import {midiNoteNumber, type MidiNoteNumber, noteName} from './midi-note-number';
-import {asValidOrgan, type Millimetres, millimetres, newOrganId, type Organ, requiredTapeWidth, type TapeBed} from './organ';
+import {asValidOrgan, type Millimetres, millimetres, newOrganId, type Organ, rowSpan, type TapeBed} from './organ';
 import type {OrganDraft} from './organ-draft';
 
 export type OrganViolationCode =
@@ -11,7 +11,6 @@ export type OrganViolationCode =
   | 'duplicate-pipe'
   | 'value-required'
   | 'must-be-positive'
-  | 'must-not-be-negative'
   | 'row-spacing-below-hole-diameter'
   | 'pipes-exceed-tape-width';
 
@@ -41,10 +40,10 @@ export function validateOrgan(draft: OrganDraft): Result<Organ, OrganViolation[]
 
   const notes = validateNotes(draft, add);
   const tapeBed = validateTapeBed(draft, add);
-  const minimumGap = measurement(draft.minimumGap, 'minimumGap', 'positive', add);
+  const minimumGap = measurement(draft.minimumGap, 'minimumGap', add);
 
   if (tapeBed && draft.pipes.length > 0) {
-    const required = requiredTapeWidth(tapeBed, draft.pipes.length);
+    const required = rowSpan(tapeBed, draft.pipes.length);
     if (required > tapeBed.tapeWidth + EPSILON_MM) {
       add({
         code: 'pipes-exceed-tape-width',
@@ -98,37 +97,31 @@ function validateNotes(draft: OrganDraft, add: AddViolation): MidiNoteNumber[] |
 
 function validateTapeBed(draft: OrganDraft, add: AddViolation): TapeBed | undefined {
   const {tapeBed} = draft;
-  const tapeWidth = measurement(tapeBed.tapeWidth, 'tapeBed.tapeWidth', 'positive', add);
-  const border = measurement(tapeBed.border, 'tapeBed.border', 'non-negative', add);
-  const holeDiameter = measurement(tapeBed.holeDiameter, 'tapeBed.holeDiameter', 'positive', add);
-  const rowSpacing = measurement(tapeBed.rowSpacing, 'tapeBed.rowSpacing', 'positive', add);
+  const tapeWidth = measurement(tapeBed.tapeWidth, 'tapeBed.tapeWidth', add);
+  const holeDiameter = measurement(tapeBed.holeDiameter, 'tapeBed.holeDiameter', add);
+  const rowSpacing = measurement(tapeBed.rowSpacing, 'tapeBed.rowSpacing', add);
 
   if (holeDiameter !== undefined && rowSpacing !== undefined && rowSpacing < holeDiameter) {
     add({code: 'row-spacing-below-hole-diameter', path: 'tapeBed.rowSpacing', params: {holeDiameter}});
     return undefined;
   }
-  if (tapeWidth === undefined || border === undefined || holeDiameter === undefined || rowSpacing === undefined) {
+  if (tapeWidth === undefined || holeDiameter === undefined || rowSpacing === undefined) {
     return undefined;
   }
-  return {tapeWidth, border, holeDiameter, rowSpacing};
+  return {tapeWidth, holeDiameter, rowSpacing};
 }
 
 function measurement(
   value: number | null,
   path: string,
-  bound: 'positive' | 'non-negative',
   add: AddViolation,
 ): Millimetres | undefined {
   if (value === null || !Number.isFinite(value)) {
     add({code: 'value-required', path});
     return undefined;
   }
-  if (bound === 'positive' && value <= 0) {
+  if (value <= 0) {
     add({code: 'must-be-positive', path});
-    return undefined;
-  }
-  if (bound === 'non-negative' && value < 0) {
-    add({code: 'must-not-be-negative', path});
     return undefined;
   }
   return millimetres(value);

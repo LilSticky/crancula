@@ -1,15 +1,18 @@
 export type {Result} from './result';
 export {midiNoteNumber, noteName, type MidiNoteNumber} from './organ/midi-note-number';
 export {
+  border,
   millimetres,
   minimumHoleLength,
   newOrganId,
   organId,
-  requiredTapeWidth,
+  rowSpan,
+  tapeBedFit,
   type Millimetres,
   type Organ,
   type OrganId,
   type Pipe,
+  type TapeBedFit,
   type TapeBed,
 } from './organ/organ';
 export {addPipe, emptyOrganDraft, movePipe, removePipe, toDraft, type OrganDraft, type PipeDraft} from './organ/organ-draft';

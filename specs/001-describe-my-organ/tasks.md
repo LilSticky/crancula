@@ -510,19 +510,19 @@ valid (old rule 2·border + span ≤ width implies span ≤ width).
 - [x] **A1** ADR 20 "Snapshots are migrated on read and written in the newest version" (`adr` skill):
   which old versions are read, the newest is written on the next save, a downgrade moves the file
   aside (ADR 8). Applies to Organ and Tape snapshots.
-- [ ] **A2** Domain (`api/organ/organ.ts`): unit tests first. `rowSpan(tapeBed, pipeCount)`;
+- [x] **A2** Domain (`api/organ/organ.ts`): unit tests first. `rowSpan(tapeBed, pipeCount)`;
   `border(organ)` (6.25 mm for the street organ 120 / 2.5 / 3.5, 31 Pipes; 0 when the rows fill the
   width); `TapeBed` without `border`; `requiredTapeWidth` goes. Export via `api/index.ts`.
-- [ ] **A3** Draft and validation (`organ-draft.ts`, `validate-organ.ts`): tests first. No `border`
+- [x] **A3** Draft and validation (`organ-draft.ts`, `validate-organ.ts`): tests first. No `border`
   in the draft; "pipes exceed tape width" compares the Row Span with the tape width (boundary
   107.5 mm for the street organ, equal is valid); the non-negative bound and
   `ORGAN.VIOLATION.MUST_NOT_BE_NEGATIVE` (en + de) go if unused.
-- [ ] **A4** A domain value the editor can show for a draft (may be negative), e.g.
+- [x] **A4** A domain value the editor can show for a draft (may be negative), e.g.
   `tapeBedFit(tapeBed, pipeCount) → {rowSpan, border}`; unit tests.
 - [ ] **A5** Organ snapshot version 2 (`organ-library-snapshot.ts`): tests first. Version 1 with a
   `border` (also one that no longer matches) reads, the border is ignored; version 2 has no
   `border`; `toSnapshot` writes version 2; other versions are rejected as before.
-- [ ] **A6** Fix the remaining fixtures that set `border` (`api/tape/*.spec.ts`,
+- [x] **A6** Fix the remaining fixtures that set `border` (`api/tape/*.spec.ts`,
   `app/organ-library-file.spec.ts`, `src/testing/organs.ts` and Angular specs). Tests stay green.
 - [ ] **A7** Organ editor: component tests first. No Border input; the derived Border shown
   read-only ("6,25 mm" in German, "6.25 mm" in English), absent while a value is missing; labels

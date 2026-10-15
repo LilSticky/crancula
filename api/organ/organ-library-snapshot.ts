@@ -8,7 +8,6 @@ export interface OrganSnapshot {
   readonly name: string;
   readonly tapeBed: {
     readonly tapeWidth: number;
-    readonly border: number;
     readonly holeDiameter: number;
     readonly rowSpacing: number;
   };
@@ -61,8 +60,8 @@ function parseOrgan(input: unknown): Result<Organ, string> {
   if (typeof id !== 'string' || organId(id) === undefined) return err('id is not a UUID');
   if (typeof name !== 'string') return err('name is not a string');
   if (!isRecord(tapeBed)) return err('tapeBed is not an object');
-  const {tapeWidth, border, holeDiameter, rowSpacing} = tapeBed;
-  if (!isNumber(tapeWidth) || !isNumber(border) || !isNumber(holeDiameter) || !isNumber(rowSpacing) || !isNumber(minimumGap)) {
+  const {tapeWidth, holeDiameter, rowSpacing} = tapeBed;
+  if (!isNumber(tapeWidth) || !isNumber(holeDiameter) || !isNumber(rowSpacing) || !isNumber(minimumGap)) {
     return err('a measurement is not a number');
   }
   if (!Array.isArray(pipes)) return err('pipes is not a list');
@@ -75,7 +74,7 @@ function parseOrgan(input: unknown): Result<Organ, string> {
   const result = validateOrgan({
     id: organId(id),
     name,
-    tapeBed: {tapeWidth, border, holeDiameter, rowSpacing},
+    tapeBed: {tapeWidth, holeDiameter, rowSpacing},
     minimumGap,
     pipes: notes.map((note) => ({note})),
   });
