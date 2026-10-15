@@ -1,5 +1,6 @@
 // Fonts ship with the app, so Crancula works offline (issue #24).
 // Libertinus Serif 600 (headings) and Noto Sans, variable wght (body), both SIL OFL, from Fontsource.
+// Libertinus Serif ships only weight 600; any other weight is synthesised by the browser or falls back.
 @font-face {
   font-family: 'Libertinus Serif';
   font-style: normal;

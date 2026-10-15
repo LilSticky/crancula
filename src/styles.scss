@@ -138,7 +138,8 @@ body {
   font-variant-numeric: tabular-nums; // millimetres and MIDI notes line up in columns
 }
 
-// Headings and names in the brand face (Material's headline/title roles use it already).
+// Headings and names in the brand face. Needed because Material's typography tokens only style
+// mat-* components (there is no mat-typography class on body), so plain h1-h3 would stay in Noto Sans.
 h1, h2, h3 { font-family: var(--mat-sys-headline-small-font); font-weight: 600; }
 
 // One focus ring everywhere: brass, 2 px, offset.
@@ -147,6 +148,7 @@ h1, h2, h3 { font-family: var(--mat-sys-headline-small-font); font-weight: 600; 
 // Reorder handle in the Pipe rack (cdkDrag).
 .cr-drag-handle { color: var(--mat-sys-on-surface-variant); cursor: grab; }
 
+// The blanket !important reset is intentional: it must beat every component's own durations.
 @media (prefers-reduced-motion: reduce) {
   * { transition-duration: 0s !important; animation-duration: 0s !important; }
 }
