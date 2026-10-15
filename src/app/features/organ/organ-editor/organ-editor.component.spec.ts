@@ -26,6 +26,7 @@ import {ConfirmableAction, ConfirmDialogComponent} from '../../shared/components
 import {provideTestTranslations} from '../../../../testing/test-translations';
 import {testOrgan} from '../../../../testing/organs';
 import {TapeLibrary} from '../../tape/tape-library.store';
+import {LanguagePreference} from '../../shared/language-preference';
 import {OrganLibrary} from '../organ-library.store';
 import {OrganEditorComponent} from './organ-editor.component';
 
@@ -2210,6 +2211,121 @@ describe('OrganEditorComponent', () => {
       expect(subtitleOf(element)).toBeDefined();
       expect(subtitleOf(element)).not.toBe('Not saved yet');
       expect(subtitleOf(element)).toContain('C4');
+    });
+  });
+
+  describe('switching the language', () => {
+    afterEach(() => localStorage.removeItem('crancula.language'));
+
+    it('shows the page head subtitle and the unsaved changes text in the new language', async () => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 31, {pipes: Array.from({length: 31}, (_, row) => ({note: 83 - row}))});
+      await library.put(organ);
+      const {element, fixture, field, type} = await openEditor(organ.id);
+      await type(field('hole-diameter'), '2.7');
+
+      TestBed.inject(LanguagePreference).choose('de');
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      expect(element.querySelector('cranc-page-head p')?.textContent?.trim()).toBe('31 Pfeifen, F3–B5');
+      const state = element.querySelector('cranc-action-bar [data-testid="action-bar-state"]')?.textContent?.replace(/\s+/g, ' ').trim();
+      expect(state).toBe('Nicht gespeicherte Änderungen: Lochdurchmesser');
+    });
+  });
+
+  describe('the focus', () => {
+    it('returns to the error summary when Save is pressed a second time on an invalid Organ', async () => {
+      const {open: openEditor} = render();
+      const {element, field, save} = await openEditor();
+      await save();
+      field('name').focus();
+      expect(document.activeElement).toBe(field('name'));
+
+      await save();
+
+      expect(document.activeElement).toBe(element.querySelector('[data-testid="error-summary"]'));
+    });
+
+    describe('after removing a Pipe through its menu', () => {
+      const noteInputs = (element: HTMLElement) => [...element.querySelectorAll<HTMLInputElement>('[data-testid="pipe-note"]')];
+
+      it('moves to the note input of the row now at that position', async () => {
+        const {open: openEditor, library} = render();
+        const organ = testOrgan('Street organ', 3);
+        await library.put(organ);
+        const {element, choose, fixture} = await openEditor(organ.id);
+
+        await choose(1, 'remove-pipe');
+        await fixture.whenStable();
+
+        expect(document.activeElement).toBe(noteInputs(element)[1]);
+      });
+
+      it('moves to the note input of the last row when the last Pipe was removed', async () => {
+        const {open: openEditor, library} = render();
+        const organ = testOrgan('Street organ', 3);
+        await library.put(organ);
+        const {element, choose, fixture} = await openEditor(organ.id);
+
+        await choose(2, 'remove-pipe');
+        await fixture.whenStable();
+
+        expect(noteInputs(element)).toHaveLength(2);
+        expect(document.activeElement).toBe(noteInputs(element)[1]);
+      });
+
+      it('moves to Add Pipe when the only Pipe was removed', async () => {
+        const {open: openEditor, library} = render();
+        const organ = testOrgan('Street organ', 1);
+        await library.put(organ);
+        const {element, choose, fixture} = await openEditor(organ.id);
+
+        await choose(0, 'remove-pipe');
+        await fixture.whenStable();
+
+        expect(document.activeElement).toBe(element.querySelector('[data-testid="add-pipe"]'));
+      });
+
+      it('still returns the focus to the menu button when a later move uses the same row menu', async () => {
+        const {open: openEditor, library} = render();
+        const organ = testOrgan('Street organ', 4);
+        await library.put(organ);
+        const {element, choose, pipeMenuItem, fixture} = await openEditor(organ.id);
+
+        await choose(1, 'remove-pipe');
+        await fixture.whenStable();
+        const moveUp = await pipeMenuItem(1, 'move-up');
+        element.querySelector<HTMLElement>('[data-testid="name"]')?.focus(); // Focus is elsewhere when the item is chosen.
+        await moveUp.click();
+        await fixture.whenStable();
+
+        expect(document.activeElement).toBe(element.querySelectorAll('[data-testid="pipe-menu"]')[1]);
+      });
+    });
+  });
+
+  describe('the Pipe note inputs', () => {
+    it('ask for a numeric keyboard', async () => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 3);
+      await library.put(organ);
+      const {element} = await openEditor(organ.id);
+
+      const inputs = [...element.querySelectorAll('[data-testid="pipe-note"]')];
+      expect(inputs).toHaveLength(3);
+      expect(inputs.map((input) => input.getAttribute('inputmode'))).toEqual(['numeric', 'numeric', 'numeric']);
+    });
+  });
+
+  describe('the fit-check line', () => {
+    it('is a polite live region', async () => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 31);
+      await library.put(organ);
+      const {element} = await openEditor(organ.id);
+
+      expect(element.querySelector('[data-testid="fit-check"]')?.getAttribute('aria-live')).toBe('polite');
     });
   });
 

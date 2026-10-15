@@ -285,6 +285,8 @@ export class OrganEditorComponent implements UnsavedChangesCheck {
   private readonly deletion = inject(OrganDeletion);
   private readonly snackBar = inject(MatSnackBar);
   private readonly translate = inject(TranslateService);
+  private readonly injector = inject(Injector);
+  private readonly noteInputs = viewChildren<ElementRef<HTMLInputElement>>('noteInput');
   private deleted = false;
 
   /** The Organ as it was when opened: the stored one, or a new one with its id already assigned. */
@@ -312,6 +314,7 @@ export class OrganEditorComponent implements UnsavedChangesCheck {
 
   /** "Not saved yet" for a new Organ, else the number of Pipes and the lowest and highest note of the saved Organ. */
   protected readonly subtitle = computed(() => {
+    this.language(); // Re-read the texts when the language changes.
     const id = this.draft().id;
     const stored = id ? this.library.entityMap()[id] : undefined;
     if (!stored) return String(this.translate.instant('ORGAN.EDITOR.NOT_SAVED_YET'));
@@ -326,6 +329,7 @@ export class OrganEditorComponent implements UnsavedChangesCheck {
   /** Save is only unavailable for a stored Organ without changes, or while a save is running. */
   protected readonly saveDisabled = computed(() => this.saving() || (this.isStored() && !this.changed()));
   protected readonly changedLabels = computed(() => {
+    this.language(); // Re-read the labels when the language changes.
     const names = changedFields(this.saved(), this.draft()).map((field): string => String(this.translate.instant(FIELD_LABEL_KEYS[field] ?? field)));
     return names.join(', ');
   });
@@ -413,7 +417,9 @@ export class OrganEditorComponent implements UnsavedChangesCheck {
     const result = validateOrgan(this.draft());
     if (!result.ok) {
       this.saveAttempt.set(true);
-      afterNextRender(() => this.summary()?.nativeElement.focus(), {injector: this.injector});
+      const summary = this.summary();
+      if (summary) summary.nativeElement.focus();
+      else afterNextRender(() => this.summary()?.nativeElement.focus(), {injector: this.injector});
       return;
     }
     if (!this.changed() || this.saving()) return;
@@ -507,9 +513,6 @@ export class OrganEditorComponent implements UnsavedChangesCheck {
     this.draft.update(addPipe);
   }
 
-  private readonly injector = inject(Injector);
-  private readonly noteInputs = viewChildren<ElementRef<HTMLInputElement>>('noteInput');
-
   protected movePipe(fromRow: number, toRow: number): void {
     this.draft.update((draft) => movePipe(draft, fromRow, toRow));
   }
@@ -523,8 +526,16 @@ export class OrganEditorComponent implements UnsavedChangesCheck {
     afterNextRender(() => this.noteInputs()[target]?.nativeElement.focus(), {injector: this.injector});
   }
 
-  protected removePipe(row: number): void {
+  /** Removes a Pipe; the focus moves to the note input now at its row (the last row if it was last), else to Add Pipe. */
+  protected removePipe(row: number, menu: MatMenuTrigger): void {
+    menu.restoreFocus = false; // The menu's trigger is gone or not wanted: the focus goes to the row now at this position.
     this.draft.update((draft) => removePipe(draft, row));
+    const remaining = this.draft().pipes.length;
+    const focus = () => {
+      if (remaining === 0) this.host.nativeElement.querySelector<HTMLElement>('[data-testid="add-pipe"]')?.focus();
+      else this.noteInputs()[Math.min(row, remaining - 1)]?.nativeElement.focus();
+    };
+    afterNextRender(focus, {injector: this.injector});
   }
 
   /** A drop in the column starting at `columnStart`; the indices are within the column, and a drop from another column shifts the rows after the removed Pipe. */

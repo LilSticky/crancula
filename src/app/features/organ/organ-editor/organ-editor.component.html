@@ -94,7 +94,7 @@
         </mat-form-field>
       </div>
       @if (fit(); as fit) {
-        <p class="fit-check" data-testid="fit-check" [class.error]="fit.tooWide">
+        <p class="fit-check" data-testid="fit-check" aria-live="polite" [class.error]="fit.tooWide">
           @if (fit.tooWide) {
             <mat-icon>error</mat-icon>
             <span>{{ fit.fitKey | translate: fit }}</span>
@@ -141,10 +141,10 @@
               @for (pipe of column.pipes; track $index; let index = $index) {
                 @let row = column.start + index;
                 <div class="pipe" data-testid="pipe" cdkDrag>
-                  <mat-icon cdkDragHandle class="drag-handle" [attr.aria-label]="'ORGAN.EDITOR.DRAG_PIPE' | translate">drag_indicator</mat-icon>
+                  <mat-icon cdkDragHandle class="drag-handle" role="img" [attr.aria-label]="'ORGAN.EDITOR.DRAG_PIPE' | translate">drag_indicator</mat-icon>
                   <span class="row-cell" data-testid="pipe-row-number">{{ row + 1 }}</span>
                   <mat-form-field class="note-field" subscriptSizing="dynamic">
-                    <input matInput type="number" data-testid="pipe-note" [formField]="pipe.note" #noteInput
+                    <input matInput type="number" inputmode="numeric" data-testid="pipe-note" [formField]="pipe.note" #noteInput
                            [attr.aria-label]="'ORGAN.EDITOR.PIPE_NOTE_IN_ROW' | translate: {row: row + 1}"
                            (keydown.alt.arrowup)="moveByKeyboard($event, row, -1)" (keydown.alt.arrowdown)="moveByKeyboard($event, row, 1)"/>
                     <ng-container ngProjectAs="mat-error">
@@ -154,7 +154,7 @@
                     </ng-container>
                   </mat-form-field>
                   <span class="note-name" data-testid="pipe-note-name" [class.sharp]="isSharp(pipe.note().value())">{{ noteNameOf(pipe.note().value()) }}</span>
-                  <button matIconButton type="button" data-testid="pipe-menu" [matMenuTriggerFor]="pipeMenu"
+                  <button matIconButton type="button" data-testid="pipe-menu" [matMenuTriggerFor]="pipeMenu" #menuTrigger="matMenuTrigger" (menuOpened)="menuTrigger.restoreFocus = true"
                           [attr.aria-label]="'ORGAN.EDITOR.PIPE_MENU' | translate: {row: row + 1}"
                           [matTooltip]="'ORGAN.EDITOR.PIPE_MENU' | translate: {row: row + 1}">
                     <mat-icon>more_vert</mat-icon>
@@ -168,7 +168,7 @@
                       <mat-icon>arrow_downward</mat-icon>
                       <span>{{ 'ORGAN.EDITOR.MOVE_DOWN' | translate }}</span>
                     </button>
-                    <button mat-menu-item type="button" data-testid="remove-pipe" (click)="removePipe(row)">
+                    <button mat-menu-item type="button" data-testid="remove-pipe" (click)="removePipe(row, menuTrigger)">
                       <mat-icon>delete</mat-icon>
                       <span>{{ 'ORGAN.EDITOR.REMOVE_PIPE' | translate }}</span>
                     </button>
