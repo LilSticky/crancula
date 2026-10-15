@@ -1,6 +1,6 @@
 import {expect, test, type Page} from '@playwright/test';
 import {launchApp} from './support/launch-app';
-import {defineStreetOrgan, saveOrgan, STREET_ORGAN} from './support/organ-editor';
+import {defineStreetOrgan, pickPipeMenuItem, saveOrgan, STREET_ORGAN} from './support/organ-editor';
 
 const pipeNotes = (window: Page) =>
   window.getByTestId('pipe-note').evaluateAll((inputs) => inputs.map((input) => (input as HTMLInputElement).value));
@@ -10,8 +10,8 @@ test.describe('I can rearrange and delete my organs', () => {
     const first = await launchApp();
     await defineStreetOrgan(first.window);
     const last = STREET_ORGAN.notes.length - 1;
-    await first.window.getByTestId('pipe').nth(last).getByTestId('move-up').click();
-    await first.window.getByTestId('pipe').nth(0).getByTestId('remove-pipe').click();
+    await pickPipeMenuItem(first.window, last, 'move-up');
+    await pickPipeMenuItem(first.window, 0, 'remove-pipe');
     const expected = await pipeNotes(first.window);
     expect(expected).toHaveLength(STREET_ORGAN.notes.length - 1);
     expect(expected.slice(-2)).toEqual([STREET_ORGAN.notes[last], STREET_ORGAN.notes[last - 1]]);

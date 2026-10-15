@@ -2,6 +2,7 @@ import {readFile} from 'node:fs/promises';
 import {join} from 'node:path';
 import {expect, test} from '@playwright/test';
 import {launchApp} from './support/launch-app';
+import {pickPipeMenuItem} from './support/organ-editor';
 import {createTapeFromSong, defineOctaveOrgan, songRepeatingC4} from './support/tape-creation';
 
 interface StoredTape {
@@ -50,7 +51,7 @@ test.describe('Changing an Organ carries over to its Tapes', () => {
     await first.window.getByRole('link', {name: 'Organs'}).click();
     await first.window.getByTestId('organ').click();
 
-    await first.window.getByTestId('remove-pipe').first().click();
+    await pickPipeMenuItem(first.window, 0, 'remove-pipe');
     await first.window.getByTestId('save-organ').click();
     const consequence = first.window.getByTestId('consequence');
     await expect(consequence).toContainText('Holes (5)');

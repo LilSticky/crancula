@@ -12,8 +12,12 @@ async function capture(window: Page, name: string): Promise<void> {
   await window.waitForLoadState('networkidle');
   // CSS transitions, CSS animations and Web Animations all show up in getAnimations(); loop in case one starts another.
   await window.evaluate(async () => {
-    while (document.getAnimations().length > 0) {
-      await Promise.allSettled(document.getAnimations().map((animation) => animation.finished));
+    // Endless animations (spinners, pulses) never finish; waiting for them would hang.
+    const finite = () => document.getAnimations().filter((animation) => animation.playState !== 'finished' && animation.effect?.getComputedTiming().endTime !== Infinity);
+    const start = Date.now();
+    while (finite().length > 0) {
+      if (Date.now() - start > 5000) throw new Error('ANIMS ' + finite().map((a) => `${a.playState}:${(a.effect as KeyframeEffect | null)?.target?.className}:${(a as CSSTransition).transitionProperty ?? (a as CSSAnimation).animationName}`).join('|'));
+      await Promise.race([Promise.allSettled(finite().map((animation) => animation.finished)), new Promise((r) => setTimeout(r, 100))]);
     }
   });
   await window.screenshot({path: join(SCREENS, `${name}.png`), fullPage: true});
@@ -44,16 +48,28 @@ test.describe('UX screens', () => {
     await window.getByTestId('name').fill('Street organ');
     await window.getByTestId('tape-width').fill('20');
     await window.getByTestId('add-pipe').click();
-    await window.getByTestId('name').click();
+    await window.getByTestId('save-organ').click();
+    await expect(window.getByTestId('error-summary')).toBeVisible();
     await capture(window, '03-organ-editor-invalid');
 
     await window.getByRole('link', {name: 'Organs'}).click();
     await expect(window.getByRole('dialog')).toBeVisible();
-    await expect(window.getByRole('button', {name: 'Discard changes'})).toBeVisible();
+    await expect(window.getByRole('dialog').getByRole('button', {name: 'Discard changes'})).toBeVisible();
+    // The dialog fades and scales in; settle it (and its backdrop) before the screenshot (#72).
+    await window.waitForFunction(() => {
+      const panel = document.querySelector('.mat-mdc-dialog-surface');
+      return panel !== null && getComputedStyle(panel).opacity === '1' && document.getAnimations().every((animation) => animation.effect?.getComputedTiming().endTime === Infinity);
+    });
     await capture(window, '03b-leave-unsaved-dialog');
-    await window.getByRole('button', {name: 'Discard changes'}).click();
+    await window.getByRole('dialog').getByRole('button', {name: 'Discard changes'}).click();
     await defineStreetOrgan(window);
     await capture(window, '04-organ-editor-filled');
+
+    await window.getByTestId('minimum-gap').fill('2');
+    await expect(window.getByTestId('unsaved-dot')).toBeVisible();
+    await capture(window, '04b-organ-editor-unsaved');
+    await window.getByTestId('discard-changes').click();
+    await expect(window.getByTestId('save-organ')).toBeDisabled();
 
     await window.getByRole('link', {name: 'Organs'}).click();
     await capture(window, '05-organ-list');
@@ -94,6 +110,11 @@ test.describe('UX screens', () => {
     // Keep the pointer off the rail so no tooltip is open while capturing.
     await window.mouse.move(640, 400);
     await capture(window, '12-organ-list-compact');
+
+    await window.getByTestId('organ').first().click();
+    await expect(window.getByTestId('save-organ')).toBeVisible();
+    await window.mouse.move(640, 400);
+    await capture(window, '13-organ-editor-compact');
     await resizeWindow(launched, 1280, 800);
   });
 });

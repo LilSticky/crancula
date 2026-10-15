@@ -2,9 +2,13 @@ import type {CdkDragDrop} from '@angular/cdk/drag-drop';
 import {CdkDropList} from '@angular/cdk/drag-drop';
 import {type ComponentFixture, TestBed} from '@angular/core/testing';
 import {By} from '@angular/platform-browser';
+import {TestbedHarnessEnvironment} from '@angular/cdk/testing/testbed';
 import {MatDialog} from '@angular/material/dialog';
+import {MatMenuHarness} from '@angular/material/menu/testing';
+import {MatTooltipHarness} from '@angular/material/tooltip/testing';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {provideRouter, Router} from '@angular/router';
+import {BreakpointObserver, type BreakpointState} from '@angular/cdk/layout';
 import {type Observable, of} from 'rxjs';
 import {
   type CranculaApi,
@@ -22,6 +26,7 @@ import {ConfirmableAction, ConfirmDialogComponent} from '../../shared/components
 import {provideTestTranslations} from '../../../../testing/test-translations';
 import {testOrgan} from '../../../../testing/organs';
 import {TapeLibrary} from '../../tape/tape-library.store';
+import {LanguagePreference} from '../../shared/language-preference';
 import {OrganLibrary} from '../organ-library.store';
 import {OrganEditorComponent} from './organ-editor.component';
 
@@ -102,6 +107,27 @@ async function open(id?: string) {
     await fixture.whenStable();
   };
   const pipeRows = () => [...element.querySelectorAll<HTMLElement>('[data-testid="pipe"]')];
+  const loader = TestbedHarnessEnvironment.loader(fixture);
+  /** The menu button of the Pipe in the 0-based `row`. */
+  const pipeMenu = async (row: number) => {
+    const menus = await loader.getAllHarnesses(MatMenuHarness.with({selector: '[data-testid="pipe-menu"]'}));
+    const menu = menus[row];
+    if (!menu) throw new Error(`no Pipe menu in row ${row}`);
+    return menu;
+  };
+  /** The item of the Pipe menu in the 0-based `row`: opens the menu, which stays open. */
+  const pipeMenuItem = async (row: number, testId: string) => {
+    const menu = await pipeMenu(row);
+    if (!(await menu.isOpen())) await menu.open();
+    const [item] = await menu.getItems({selector: `[data-testid="${testId}"]`});
+    if (!item) throw new Error(`no ${testId} in the menu of row ${row}`);
+    return item;
+  };
+  /** Chooses an item of the Pipe menu in the 0-based `row`. */
+  const choose = async (row: number, testId: string) => {
+    await (await pipeMenuItem(row, testId)).click();
+    await fixture.whenStable();
+  };
 
   async function fillValidOrgan() {
     await type(field('name'), 'Street organ');
@@ -117,7 +143,22 @@ async function open(id?: string) {
   const violationAt = (path: string) =>
     [...element.querySelectorAll(`[data-testid="violation"][data-path="${path}"]`)].map((error) => error.textContent?.trim());
 
-  return {fixture, element, field, type, typeUnreadableNumber, click, save, saveButton, pipeRows, fillValidOrgan, violationAt};
+  return {
+    fixture,
+    element,
+    field,
+    type,
+    typeUnreadableNumber,
+    click,
+    save,
+    saveButton,
+    pipeRows,
+    pipeMenu,
+    pipeMenuItem,
+    choose,
+    fillValidOrgan,
+    violationAt,
+  };
 }
 
 describe('OrganEditorComponent', () => {
@@ -165,6 +206,30 @@ describe('OrganEditorComponent', () => {
     });
   });
 
+  describe('the read-only Minimum Hole Length', () => {
+    it('is shown as the hole diameter with the decimal comma in German', async () => {
+      TestBed.configureTestingModule({providers: [provideRouter([]), provideTestTranslations('de')]});
+      vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+      const organ = testOrgan('Street organ', 2, {tapeBed: {tapeWidth: 120, holeDiameter: 2.5, rowSpacing: 3.5}});
+      await TestBed.inject(OrganLibrary).put(organ);
+      const {field} = await open(organ.id);
+
+      expect(field('minimum-hole-length').value).toBe('2,5');
+    });
+
+    it('has the class cr-readonly, the suffix "mm" and the hint "Equals the hole diameter"', async () => {
+      const {open: openEditor} = render();
+      const {field} = await openEditor();
+
+      const formField = field('minimum-hole-length').closest('mat-form-field');
+      expect(field('minimum-hole-length').readOnly).toBe(true);
+      expect(field('minimum-hole-length').classList).toContain('cr-readonly');
+      expect(formField?.querySelector('[matTextSuffix]')?.textContent?.trim()).toBe('mm');
+      expect(formField?.querySelector('mat-hint')?.textContent?.trim()).toBe('Equals the hole diameter');
+      expect(formField?.querySelector('mat-label')?.textContent).not.toContain('(mm)');
+    });
+  });
+
   describe('the derived Border', () => {
     /** The Border field's text; absent counts as empty. */
     const borderOf = (element: HTMLElement) =>
@@ -197,16 +262,28 @@ describe('OrganEditorComponent', () => {
       const {element} = await openEditor(organ.id);
 
       const labels = [...element.querySelectorAll('mat-label')].map((label) => label.textContent?.trim());
-      expect(labels).toContain('Border (mm)');
+      expect(labels).toContain('Border');
+    });
+
+    it('is a read-only field with the suffix "mm" and the hint "On each side, the rows are centred"', async () => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 31);
+      await library.put(organ);
+      const {field} = await openEditor(organ.id);
+
+      const formField = field('border').closest('mat-form-field');
+      expect(field('border').classList).toContain('cr-readonly');
+      expect(formField?.querySelector('[matTextSuffix]')?.textContent?.trim()).toBe('mm');
+      expect(formField?.querySelector('mat-hint')?.textContent?.trim()).toBe('On each side, the rows are centred');
     });
 
     it('updates when a Pipe is removed', async () => {
       const {open: openEditor, library} = render();
       const organ = testOrgan('Street organ', 31);
       await library.put(organ);
-      const {element, click} = await openEditor(organ.id);
+      const {element, choose} = await openEditor(organ.id);
 
-      await click('remove-pipe');
+      await choose(0, 'remove-pipe');
 
       expect(borderOf(element)).toBe('8');
     });
@@ -450,20 +527,20 @@ describe('OrganEditorComponent', () => {
       expect(saveButton().disabled).toBe(true);
     });
 
-    it('is disabled on an untouched new Organ', async () => {
+    it('is enabled on an untouched new Organ', async () => {
       const {open: openEditor} = render();
       const {saveButton} = await openEditor();
 
-      expect(saveButton().disabled).toBe(true);
+      expect(saveButton().disabled).toBe(false);
     });
 
-    it('is disabled while the Organ is changed but invalid', async () => {
+    it('is enabled while the Organ is changed but invalid', async () => {
       const {open: openEditor} = render();
       const {field, type, saveButton} = await openEditor();
 
       await type(field('name'), 'Street organ');
 
-      expect(saveButton().disabled).toBe(true);
+      expect(saveButton().disabled).toBe(false);
     });
 
     it('is enabled once the Organ is changed and valid', async () => {
@@ -506,6 +583,262 @@ describe('OrganEditorComponent', () => {
       await type(field('name'), 'Street organ');
 
       expect(saveButton().disabled).toBe(true);
+    });
+  });
+
+  describe('pressing Save on an invalid Organ', () => {
+    const summary = (element: HTMLElement) => element.querySelector<HTMLElement>('[data-testid="error-summary"]');
+    const entryElements = (element: HTMLElement) => [...element.querySelectorAll<HTMLElement>('[data-testid="error-summary-entry"]')];
+    const entries = (element: HTMLElement) => entryElements(element).map((entry) => entry.textContent?.trim());
+    const barState = (element: HTMLElement) =>
+      element.querySelector<HTMLElement>('cranc-action-bar [data-testid="action-bar-state"]')?.textContent?.replace(/\s+/g, ' ').trim();
+    const noteInput = (element: HTMLElement, row: number) => {
+      const input = element.querySelectorAll<HTMLInputElement>('[data-testid="pipe-note"]')[row];
+      if (!input) throw new Error(`no Pipe in row ${row}`);
+      return input;
+    };
+
+    /** A stored Organ of 3 Pipes with Tape width, Hole diameter and the note of row 3 cleared. */
+    async function openWithThreeProblems() {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 3);
+      await library.put(organ);
+      const editor = await openEditor(organ.id);
+      await editor.type(editor.field('tape-width'), '');
+      await editor.type(editor.field('hole-diameter'), '');
+      await editor.type(noteInput(editor.element, 2), '');
+      return {...editor, library, organ};
+    }
+
+    it('shows no summary before Save was pressed', async () => {
+      const {element} = await openWithThreeProblems();
+
+      expect(summary(element)).toBeNull();
+    });
+
+    it('writes nothing', async () => {
+      const {save, library, organ} = await openWithThreeProblems();
+
+      await save();
+
+      expect(library.entities()).toEqual([organ]);
+    });
+
+    it('shows an alert summary above the sheets with the fields in reading order', async () => {
+      const {element, save} = await openWithThreeProblems();
+
+      await save();
+
+      const shown = summary(element);
+      expect(shown?.getAttribute('role')).toBe('alert');
+      expect(shown?.textContent).toContain('3 problems prevent saving');
+      expect(entries(element)).toEqual(['Tape width', 'Hole diameter', 'Row 3']);
+      const sheet = element.querySelector('[data-testid="tape-bed-sheet"]');
+      expect(shown && sheet && shown.compareDocumentPosition(sheet)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    });
+
+    it('moves the focus to the summary', async () => {
+      const {element, save} = await openWithThreeProblems();
+
+      await save();
+
+      expect(document.activeElement).toBe(summary(element));
+    });
+
+    it('shows the message of every field, also of untouched missing values', async () => {
+      const {open: openEditor} = render();
+      const {element, save, violationAt} = await openEditor();
+
+      await save();
+
+      expect(violationAt('name')).toEqual(['Please enter a name.']);
+      expect(violationAt('tapeBed.tapeWidth')).toEqual(['Please enter a value.']);
+      expect(violationAt('tapeBed.holeDiameter')).toEqual(['Please enter a value.']);
+      expect(violationAt('tapeBed.rowSpacing')).toEqual(['Please enter a value.']);
+      expect(violationAt('minimumGap')).toEqual(['Please enter a value.']);
+      expect(violationAt('pipes')).toEqual(['Add at least one Pipe.']);
+      expect(entries(element)).toEqual(['Name', 'Tape width', 'Hole diameter', 'Spacing between rows', 'Minimum Gap', 'Pipes']);
+    });
+
+    it('lets an entry focus its field', async () => {
+      const {element, save} = await openWithThreeProblems();
+      await save();
+
+      entryElements(element)[1]?.click();
+
+      expect(document.activeElement).toBe(element.querySelector('[data-testid="hole-diameter"]'));
+    });
+
+    it('lets the entry of a Pipe row focus its note', async () => {
+      const {element, save} = await openWithThreeProblems();
+      await save();
+
+      entryElements(element)[2]?.click();
+
+      expect(document.activeElement).toBe(noteInput(element, 2));
+    });
+
+    it('lets the Pipes entry focus Add Pipe', async () => {
+      const {open: openEditor} = render();
+      const {element, save} = await openEditor();
+      await save();
+
+      entryElements(element).find((entry) => entry.textContent?.trim() === 'Pipes')?.click();
+
+      expect(document.activeElement).toBe(element.querySelector('[data-testid="add-pipe"]'));
+    });
+
+    it('says in the action bar how many problems prevent saving', async () => {
+      const {element, save} = await openWithThreeProblems();
+
+      await save();
+
+      expect(barState(element)).toBe('3 problems prevent saving');
+    });
+
+    it('says "1 problem prevents saving" for a single problem', async () => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 2);
+      await library.put(organ);
+      const {element, field, type, save} = await openEditor(organ.id);
+      await type(field('name'), '');
+
+      await save();
+
+      expect(summary(element)?.textContent).toContain('1 problem prevents saving');
+      expect(barState(element)).toBe('1 problem prevents saving');
+    });
+
+    it('drops the summary once all problems are fixed', async () => {
+      const {element, field, type, save} = await openWithThreeProblems();
+      await save();
+
+      await type(field('tape-width'), '125');
+      await type(field('hole-diameter'), '2.6');
+      await type(noteInput(element, 2), '66');
+
+      expect(summary(element)).toBeNull();
+      expect(barState(element)).toBe('Unsaved changes: Tape width, Hole diameter, Pipes');
+    });
+  });
+
+  describe('the action bar', () => {
+    const bar = (element: HTMLElement) => element.querySelector<HTMLElement>('cranc-action-bar[aria-label="Organ actions"]');
+    const state = (element: HTMLElement) =>
+      bar(element)?.querySelector<HTMLElement>('[data-testid="action-bar-state"]')?.textContent?.replace(/\s+/g, ' ').trim();
+
+    it('holds the Save button, not the page body', async () => {
+      const {open: openEditor} = render();
+      const {element, saveButton} = await openEditor();
+
+      expect(bar(element)?.contains(saveButton())).toBe(true);
+    });
+
+    it('names the changed field next to an oxblood dot', async () => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 2);
+      await library.put(organ);
+      const {element, field, type} = await openEditor(organ.id);
+
+      await type(field('hole-diameter'), '2.7');
+
+      expect(state(element)).toBe('Unsaved changes: Hole diameter');
+      expect(bar(element)?.querySelector('[data-testid="unsaved-dot"]')).not.toBeNull();
+    });
+
+    it('lists changed fields in reading order', async () => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 2);
+      await library.put(organ);
+      const {element, field, type, click} = await openEditor(organ.id);
+
+      await click('add-pipe');
+      await type(field('hole-diameter'), '2.7');
+
+      expect(state(element)).toBe('Unsaved changes: Hole diameter, Pipes');
+    });
+
+    it('says that nothing changed, with Save disabled', async () => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 2);
+      await library.put(organ);
+      const {element, saveButton} = await openEditor(organ.id);
+
+      expect(state(element)).toBe('No unsaved changes');
+      expect(saveButton().disabled).toBe(true);
+    });
+
+    it('says Saving while the write is pending, with Save disabled', async () => {
+      const inMemory = createInMemoryCranculaApi();
+      const api: CranculaApi = {
+        organs: {load: () => inMemory.organs.load(), save: () => new Promise<OrganLibrarySaveResult>(() => undefined)},
+        tapes: inMemory.tapes,
+        app: inMemory.app,
+      };
+      TestBed.configureTestingModule({
+        providers: [provideRouter([]), provideTestTranslations(), {provide: CRANCULA_API, useValue: api}],
+      });
+      vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+      const editor = await open();
+      await editor.fillValidOrgan();
+
+      editor.saveButton().click();
+      await Promise.resolve();
+      editor.fixture.detectChanges();
+
+      expect(state(editor.element)).toBe('Saving…');
+      expect(editor.saveButton().disabled).toBe(true);
+    });
+  });
+
+  describe('discarding changes', () => {
+    const discard = (element: HTMLElement) =>
+      [...element.querySelectorAll<HTMLButtonElement>('cranc-action-bar button')].find(
+        (button) => button.textContent?.trim() === 'Discard changes',
+      );
+
+    it('is offered only with unsaved changes', async () => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 2);
+      await library.put(organ);
+      const {element, field, type} = await openEditor(organ.id);
+      expect(discard(element)).toBeUndefined();
+
+      await type(field('name'), 'Renamed');
+
+      expect(discard(element)).toBeDefined();
+    });
+
+    it('restores the last saved version of a stored Organ without writing', async () => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 2);
+      await library.put(organ);
+      const save = vi.spyOn(library, 'put');
+      const {fixture, element, field, type} = await openEditor(organ.id);
+      await type(field('name'), 'Renamed');
+
+      discard(element)?.click();
+      await fixture.whenStable();
+
+      expect(field('name').value).toBe('Street organ');
+      expect(fixture.componentInstance.unsavedChanges()).toBeNull();
+      expect(save).not.toHaveBeenCalled();
+      expect(library.entities()).toEqual([organ]);
+    });
+
+    it('empties the fields of a new Organ', async () => {
+      const {open: openEditor, library} = render();
+      const {fixture, element, fillValidOrgan, field, pipeRows} = await openEditor();
+      await fillValidOrgan();
+
+      discard(element)?.click();
+      await fixture.whenStable();
+
+      expect(field('name').value).toBe('');
+      expect(field('tape-width').value).toBe('');
+      expect(pipeRows()).toHaveLength(0);
+      expect(fixture.componentInstance.unsavedChanges()).toBeNull();
+      expect(library.entities()).toEqual([]);
     });
   });
 
@@ -627,9 +960,9 @@ describe('OrganEditorComponent', () => {
       const {open: openEditor, library} = render();
       const organ = testOrgan('Street organ', 1);
       await library.put(organ);
-      const {fixture, click} = await openEditor(organ.id);
+      const {fixture, choose} = await openEditor(organ.id);
 
-      await click('remove-pipe');
+      await choose(0, 'remove-pipe');
 
       expect(fixture.componentInstance.unsavedChanges()?.problems).toEqual([
         {
@@ -697,6 +1030,102 @@ describe('OrganEditorComponent', () => {
     });
   });
 
+  describe('the Pipe rack', () => {
+    async function openWithRack(pipeCount: number) {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', pipeCount);
+      await library.put(organ);
+      const editor = await openEditor(organ.id);
+      const columns = () => [...editor.element.querySelectorAll<HTMLElement>('[data-testid="rack-column"]')];
+      return {...editor, columns};
+    }
+
+    it('lays 31 Pipes out in 3 columns, read down then across', async () => {
+      const {columns} = await openWithRack(31);
+
+      expect(columns()).toHaveLength(3);
+      expect(columns().map((column) => column.querySelectorAll('[data-testid="pipe"]').length)).toEqual([11, 11, 9]);
+    });
+
+    it('starts column 2 with row 12', async () => {
+      const {columns} = await openWithRack(31);
+
+      const firstOfSecond = columns()[1]?.querySelector('[data-testid="pipe"] [data-testid="pipe-row-number"]');
+      expect(firstOfSecond?.textContent?.trim()).toBe('12');
+    });
+
+    it('heads each column with "Row" and "MIDI note"', async () => {
+      const {columns} = await openWithRack(31);
+
+      for (const column of columns()) {
+        const headers = [...column.querySelectorAll('[data-testid="rack-header-cell"]')].map((cell) => cell.textContent?.trim());
+        expect(headers).toEqual(['Row', 'MIDI note']);
+      }
+    });
+
+    it('shows each Pipe row with row number, note input, note name and a menu button', async () => {
+      const {pipeRows} = await openWithRack(3);
+
+      const row = pipeRows()[1];
+      expect(row?.querySelector('[data-testid="pipe-row-number"]')?.textContent?.trim()).toBe('2');
+      expect(row?.querySelector<HTMLInputElement>('[data-testid="pipe-note"]')?.value).toBe('62');
+      expect(row?.querySelector('[data-testid="pipe-note-name"]')?.textContent?.trim()).toBe('D4');
+      expect(row?.querySelector('[data-testid="pipe-menu"]')).not.toBeNull();
+    });
+
+    it('marks sharp note names with the class sharp and leaves naturals unmarked', async () => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 2, {pipes: [{note: 60}, {note: 61}]});
+      await library.put(organ);
+      const {pipeRows} = await openEditor(organ.id);
+
+      const names = pipeRows().map((row) => row.querySelector('[data-testid="pipe-note-name"]'));
+      expect(names.map((name) => name?.classList.contains('sharp'))).toEqual([false, true]);
+    });
+  });
+
+  describe('the Pipe rack at different window widths', () => {
+    /** Evaluates `min-width` and `max-width` queries against a fixed window width. */
+    function stubBreakpointObserver(width: number): Pick<BreakpointObserver, 'observe' | 'isMatched'> {
+      const matches = (query: string): boolean => {
+        const max = /max-width:\s*([\d.]+)px/.exec(query);
+        const min = /min-width:\s*([\d.]+)px/.exec(query);
+        return (!max || width <= Number(max[1])) && (!min || width >= Number(min[1]));
+      };
+      const queries = (value: string | readonly string[]): string[] => (typeof value === 'string' ? [value] : [...value]);
+      return {
+        observe: (value: string | readonly string[]): Observable<BreakpointState> =>
+          of({matches: queries(value).some(matches), breakpoints: Object.fromEntries(queries(value).map((q) => [q, matches(q)]))}),
+        isMatched: (value: string | readonly string[]): boolean => queries(value).some(matches),
+      };
+    }
+
+    async function openRackAtWidth(width: number) {
+      TestBed.configureTestingModule({providers: [{provide: BreakpointObserver, useValue: stubBreakpointObserver(width)}]});
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 31);
+      await library.put(organ);
+      const {element} = await openEditor(organ.id);
+      const rack = element.querySelector<HTMLElement>('.rack');
+      if (!rack) throw new Error('no Pipe rack');
+      return {rack, columns: rack.querySelectorAll('[data-testid="rack-column"]')};
+    }
+
+    it('lays the rack out in 2 compact columns below 1180 px', async () => {
+      const {rack, columns} = await openRackAtWidth(1100);
+
+      expect(columns).toHaveLength(2);
+      expect(rack.classList.contains('compact')).toBe(true);
+    });
+
+    it('lays the rack out in 3 columns, not compact, from 1180 px', async () => {
+      const {rack, columns} = await openRackAtWidth(1280);
+
+      expect(columns).toHaveLength(3);
+      expect(rack.classList.contains('compact')).toBe(false);
+    });
+  });
+
   describe('arranging Pipes', () => {
     async function openWithPipes() {
       const {open: openEditor, library} = render();
@@ -710,12 +1139,7 @@ describe('OrganEditorComponent', () => {
         await editor.save();
         return storedNotes();
       };
-      const press = async (row: number, testId: string) => {
-        const button = editor.pipeRows()[row]?.querySelector<HTMLButtonElement>(`[data-testid="${testId}"]`);
-        if (!button) throw new Error(`no ${testId} in row ${row}`);
-        button.click();
-        await editor.fixture.whenStable();
-      };
+      const press = editor.choose;
       const drop = async (previousIndex: number, currentIndex: number) => {
         const list = editor.fixture.debugElement.query(By.directive(CdkDropList));
         const dropList: CdkDropList = list.injector.get(CdkDropList);
@@ -725,7 +1149,7 @@ describe('OrganEditorComponent', () => {
       return {...editor, notesInRows, storedNotes, saved, press, drop, original: organ.pipes.map((pipe) => pipe.note)};
     }
 
-    it('moves a Pipe up one row with its move-up button and saves the order', async () => {
+    it('moves a Pipe up one row with Move up in its menu and saves the order', async () => {
       const {press, notesInRows, storedNotes, saved, original} = await openWithPipes();
 
       await press(2, 'move-up');
@@ -736,7 +1160,7 @@ describe('OrganEditorComponent', () => {
       expect(await saved()).toEqual(expected);
     });
 
-    it('moves a Pipe down one row with its move-down button and saves the order', async () => {
+    it('moves a Pipe down one row with Move down in its menu and saves the order', async () => {
       const {press, notesInRows, saved, original} = await openWithPipes();
 
       await press(0, 'move-down');
@@ -746,18 +1170,152 @@ describe('OrganEditorComponent', () => {
       expect(await saved()).toEqual(expected);
     });
 
-    it('disables move-up on the first row and move-down on the last row', async () => {
-      const {pipeRows} = await openWithPipes();
-      const rows = pipeRows();
-      const button = (row: number, testId: string) =>
-        rows[row]?.querySelector<HTMLButtonElement>(`[data-testid="${testId}"]`);
+    it('disables Move up on the first row and Move down on the last row of the menu', async () => {
+      const {pipeMenu, pipeMenuItem} = await openWithPipes();
+      const disabled = async (row: number, testId: string) => (await pipeMenuItem(row, testId)).isDisabled();
 
-      expect(button(0, 'move-up')?.disabled).toBe(true);
-      expect(button(0, 'move-down')?.disabled).toBe(false);
-      expect(button(1, 'move-up')?.disabled).toBe(false);
-      expect(button(1, 'move-down')?.disabled).toBe(false);
-      expect(button(2, 'move-up')?.disabled).toBe(false);
-      expect(button(2, 'move-down')?.disabled).toBe(true);
+      expect(await disabled(0, 'move-up')).toBe(true);
+      expect(await disabled(0, 'move-down')).toBe(false);
+      await (await pipeMenu(0)).close();
+      expect(await disabled(1, 'move-up')).toBe(false);
+      expect(await disabled(1, 'move-down')).toBe(false);
+      await (await pipeMenu(1)).close();
+      expect(await disabled(2, 'move-up')).toBe(false);
+      expect(await disabled(2, 'move-down')).toBe(true);
+    });
+
+    it('offers Move up, Move down and Remove Pipe in the menu', async () => {
+      const {pipeMenu} = await openWithPipes();
+      const menu = await pipeMenu(1);
+
+      await menu.open();
+
+      const items = await menu.getItems();
+      expect(await Promise.all(items.map((item) => item.getText()))).toEqual(
+        expect.arrayContaining([expect.stringContaining('Move up'), expect.stringContaining('Move down'), expect.stringContaining('Remove Pipe')]),
+      );
+      expect(items).toHaveLength(3);
+    });
+
+    it('names the menu button "Move or remove the Pipe in row 2" for its label and its tooltip', async () => {
+      const {pipeRows, fixture} = await openWithPipes();
+      const button = pipeRows()[1]?.querySelector<HTMLButtonElement>('[data-testid="pipe-menu"]');
+
+      expect(button?.getAttribute('aria-label')).toBe('Move or remove the Pipe in row 2');
+      const tooltips = await TestbedHarnessEnvironment.loader(fixture).getAllHarnesses(
+        MatTooltipHarness.with({selector: '[data-testid="pipe-menu"]'}),
+      );
+      await tooltips[1]?.show();
+      expect(await tooltips[1]?.getTooltipText()).toBe('Move or remove the Pipe in row 2');
+    });
+
+    it('no longer has move-up, move-down and remove-pipe icon buttons in the rows', async () => {
+      const {pipeRows} = await openWithPipes();
+
+      for (const row of pipeRows()) {
+        for (const testId of ['move-up', 'move-down', 'remove-pipe']) {
+          expect(row.querySelector(`button[data-testid="${testId}"]`)).toBeNull();
+        }
+      }
+    });
+
+    describe('with the keyboard', () => {
+      const keydown = async (editor: Awaited<ReturnType<typeof openWithPipes>>, row: number, key: string, altKey = true) => {
+        const input = editor.pipeRows()[row]?.querySelector<HTMLInputElement>('[data-testid="pipe-note"]');
+        if (!input) throw new Error(`no note field in row ${row}`);
+        input.focus();
+        input.dispatchEvent(new KeyboardEvent('keydown', {key, altKey, bubbles: true, cancelable: true}));
+        await editor.fixture.whenStable();
+      };
+      const focusedRow = (editor: Awaited<ReturnType<typeof openWithPipes>>) =>
+        editor.pipeRows().findIndex((row) => row.contains(document.activeElement));
+      const focusedNote = () => (document.activeElement instanceof HTMLInputElement ? document.activeElement.value : null);
+
+      it('moves a Pipe up one row with Alt+ArrowUp and keeps the focus on its note input', async () => {
+        const editor = await openWithPipes();
+
+        await keydown(editor, 2, 'ArrowUp');
+
+        expect(editor.notesInRows()).toEqual([editor.original[0], editor.original[2], editor.original[1]]);
+        expect(focusedRow(editor)).toBe(1);
+        expect(focusedNote()).toBe(String(editor.original[2]));
+      });
+
+      it('moves a Pipe down one row with Alt+ArrowDown and keeps the focus on its note input', async () => {
+        const editor = await openWithPipes();
+
+        await keydown(editor, 0, 'ArrowDown');
+
+        expect(editor.notesInRows()).toEqual([editor.original[1], editor.original[0], editor.original[2]]);
+        expect(focusedRow(editor)).toBe(1);
+        expect(focusedNote()).toBe(String(editor.original[0]));
+      });
+
+      it('does nothing with Alt+ArrowUp on the first row', async () => {
+        const editor = await openWithPipes();
+
+        await keydown(editor, 0, 'ArrowUp');
+
+        expect(editor.notesInRows()).toEqual(editor.original);
+        expect(focusedRow(editor)).toBe(0);
+      });
+
+      it('does nothing with Alt+ArrowDown on the last row', async () => {
+        const editor = await openWithPipes();
+
+        await keydown(editor, 2, 'ArrowDown');
+
+        expect(editor.notesInRows()).toEqual(editor.original);
+        expect(focusedRow(editor)).toBe(2);
+      });
+
+      it('does nothing with ArrowUp alone', async () => {
+        const editor = await openWithPipes();
+
+        await keydown(editor, 2, 'ArrowUp', false);
+
+        expect(editor.notesInRows()).toEqual(editor.original);
+      });
+    });
+
+    describe('dragging between rack columns', () => {
+      async function openWithColumns() {
+        const {open: openEditor, library} = render();
+        const organ = testOrgan('Street organ', 31);
+        await library.put(organ);
+        const editor = await openEditor(organ.id);
+        const notes = () =>
+          editor.pipeRows().map((row) => Number(row.querySelector<HTMLInputElement>('[data-testid="pipe-note"]')?.value));
+        const dropBetween = async (from: number, to: number, previousIndex: number, currentIndex: number) => {
+          const lists = editor.fixture.debugElement.queryAll(By.directive(CdkDropList)).map((list) => list.injector.get(CdkDropList));
+          const previousContainer = lists[from];
+          const container = lists[to];
+          if (!previousContainer || !container) throw new Error('no such rack column');
+          container.dropped.emit({previousIndex, currentIndex, previousContainer, container} as CdkDragDrop<number>);
+          await editor.fixture.whenStable();
+        };
+        return {notes, dropBetween, original: organ.pipes.map((pipe) => pipe.note)};
+      }
+
+      it('moves a Pipe from column 1 into column 2 at the dropped place', async () => {
+        const {notes, dropBetween, original} = await openWithColumns();
+
+        await dropBetween(0, 1, 2, 1);
+
+        const expected = original.filter((_, row) => row !== 2);
+        expected.splice(11, 0, original[2] ?? 0);
+        expect(notes()).toEqual(expected);
+      });
+
+      it('moves a Pipe from column 2 back into column 1 at the dropped place', async () => {
+        const {notes, dropBetween, original} = await openWithColumns();
+
+        await dropBetween(1, 0, 1, 0);
+
+        const expected = original.filter((_, row) => row !== 12);
+        expected.splice(0, 0, original[12] ?? 0);
+        expect(notes()).toEqual(expected);
+      });
     });
 
     it('moves a Pipe to the dropped row when dragged and saves the order', async () => {
@@ -994,7 +1552,7 @@ describe('OrganEditorComponent', () => {
       const snackBarOpen = vi.spyOn(TestBed.inject(MatSnackBar), 'open');
       const editor = await open(organ.id);
       const removeRows = async (count: number) => {
-        for (let removed = 0; removed < count; removed++) await editor.click('remove-pipe');
+        for (let removed = 0; removed < count; removed++) await editor.choose(0, 'remove-pipe');
       };
       const storedNotes = () => library.entities()[0]?.pipes.map((pipe) => pipe.note);
       const holeCount = () => tapes.tapeEntities().reduce((sum, tape) => sum + tape.holes.length, 0);
@@ -1047,12 +1605,9 @@ describe('OrganEditorComponent', () => {
     });
 
     it('asks nothing when removed Pipes have no Holes', async () => {
-      const {pipeRows, fixture, save, dialog, storedNotes} = await openWithTapes();
+      const {choose, save, dialog, storedNotes} = await openWithTapes();
       // The last row (note 66) is a Pipe without Holes.
-      const last = pipeRows()[3]?.querySelector<HTMLButtonElement>('[data-testid="remove-pipe"]');
-      if (!last) throw new Error('no remove-pipe in the last row');
-      last.click();
-      await fixture.whenStable();
+      await choose(3, 'remove-pipe');
 
       await save();
 
@@ -1061,8 +1616,8 @@ describe('OrganEditorComponent', () => {
     });
 
     it('asks nothing when Pipes are only reordered or added', async () => {
-      const {press, click, element, type, save, dialog, storedNotes} = await openWithTapesForArranging();
-      await press(0, 'move-down');
+      const {choose, click, element, type, save, dialog, storedNotes} = await openWithTapes();
+      await choose(0, 'move-down');
       await click('add-pipe');
       const notes = element.querySelectorAll<HTMLInputElement>('[data-testid="pipe-note"]');
       const added = notes[notes.length - 1];
@@ -1094,25 +1649,14 @@ describe('OrganEditorComponent', () => {
 
       expect(library.entities()[0]?.name).toBe('Renamed');
     });
-
-    async function openWithTapesForArranging() {
-      const editor = await openWithTapes();
-      const press = async (row: number, testId: string) => {
-        const button = editor.pipeRows()[row]?.querySelector<HTMLButtonElement>(`[data-testid="${testId}"]`);
-        if (!button) throw new Error(`no ${testId} in row ${row}`);
-        button.click();
-        await editor.fixture.whenStable();
-      };
-      return {...editor, press};
-    }
   });
 
   describe('a number field with text that is not a number', () => {
     it('asks for a number next to the field', async () => {
       const {open: openEditor} = render();
-      const {field, typeUnreadableNumber, violationAt} = await openEditor();
+      const {field, type, violationAt} = await openEditor();
 
-      await typeUnreadableNumber(field('tape-width'));
+      await type(field('tape-width'), 'abc');
 
       expect(violationAt('tapeBed.tapeWidth')).toEqual(['Enter a number.']);
     });
@@ -1127,14 +1671,13 @@ describe('OrganEditorComponent', () => {
       expect(violationAt('pipes.0.note')).toEqual(['Enter a number.']);
     });
 
-    it('disables Save and lists the problem when leaving', async () => {
+    it('lists the problem when leaving', async () => {
       const {open: openEditor} = render();
-      const {fixture, field, fillValidOrgan, typeUnreadableNumber, saveButton} = await openEditor();
+      const {fixture, field, fillValidOrgan, type} = await openEditor();
       await fillValidOrgan();
 
-      await typeUnreadableNumber(field('tape-width'));
+      await type(field('tape-width'), 'abc');
 
-      expect(saveButton().disabled).toBe(true);
       expect(fixture.componentInstance.unsavedChanges()?.problems).toEqual([
         {
           field: {key: 'ORGAN.EDITOR.TAPE_WIDTH', params: {}},
@@ -1154,6 +1697,342 @@ describe('OrganEditorComponent', () => {
 
       expect(violationAt('tapeBed.tapeWidth')).toEqual([]);
       expect(saveButton().disabled).toBe(false);
+    });
+  });
+
+  describe('the mm fields', () => {
+    const mmFields = ['tape-width', 'hole-diameter', 'row-spacing', 'minimum-gap'];
+
+    it.each(mmFields)('%s is a text input for decimals', async (testId) => {
+      const {open: openEditor} = render();
+      const {field} = await openEditor();
+
+      expect(field(testId).type).toBe('text');
+      expect(field(testId).getAttribute('inputmode')).toBe('decimal');
+    });
+
+    it.each(mmFields)('%s has the visible suffix "mm" and a label without "(mm)"', async (testId) => {
+      const {open: openEditor} = render();
+      const {field} = await openEditor();
+
+      const formField = field(testId).closest('mat-form-field');
+      expect(formField?.querySelector('[matTextSuffix]')?.textContent?.trim()).toBe('mm');
+      expect(formField?.querySelector('mat-label')?.textContent).not.toContain('(mm)');
+    });
+
+    it.each(mmFields)('%s shows a stored 2.5 as 2.5 in English when not focused', async (testId) => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 2, {
+        tapeBed: {tapeWidth: 120, holeDiameter: 2.5, rowSpacing: 2.5},
+        minimumGap: 2.5,
+      });
+      await library.put(organ);
+      const {field} = await openEditor(organ.id);
+
+      expect(field(testId).value).toBe(testId === 'tape-width' ? '120' : '2.5');
+    });
+
+    it.each(mmFields)('%s shows a stored 2.5 as 2,5 in German when not focused', async (testId) => {
+      TestBed.configureTestingModule({providers: [provideRouter([]), provideTestTranslations('de')]});
+      vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+      const organ = testOrgan('Street organ', 2, {
+        tapeBed: {tapeWidth: 120, holeDiameter: 2.5, rowSpacing: 2.5},
+        minimumGap: 2.5,
+      });
+      await TestBed.inject(OrganLibrary).put(organ);
+      const {field} = await open(organ.id);
+
+      expect(field(testId).value).toBe(testId === 'tape-width' ? '120' : '2,5');
+    });
+
+    it('keeps "2," in the field while typing', async () => {
+      const {open: openEditor} = render();
+      const {field, type} = await openEditor();
+
+      await type(field('minimum-gap'), '2,');
+
+      expect(field('minimum-gap').value).toBe('2,');
+    });
+
+    it('stores 2.5 in the draft when "2,5" is typed', async () => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 2);
+      await library.put(organ);
+      const {field, type, save} = await openEditor(organ.id);
+
+      await type(field('minimum-gap'), '2,5');
+      await save();
+
+      expect(library.entities()[0]?.minimumGap).toBe(2.5);
+    });
+
+    it('asks for a number next to a field when "abc" is typed', async () => {
+      const {open: openEditor} = render();
+      const {field, type, violationAt} = await openEditor();
+
+      await type(field('tape-width'), 'abc');
+
+      expect(violationAt('tapeBed.tapeWidth')).toEqual(['Enter a number.']);
+    });
+  });
+
+  describe('the two sheets', () => {
+    const sheet = (element: HTMLElement, testId: string) => {
+      const found = element.querySelector<HTMLElement>(`[data-testid="${testId}"]`);
+      if (!found) throw new Error(`no ${testId}`);
+      return found;
+    };
+    const testIdsIn = (container: HTMLElement) =>
+      [...container.querySelectorAll('[data-testid]')].map((node) => node.getAttribute('data-testid'));
+
+    it('is a Tape Bed sheet titled "Tape Bed" in an outlined card', async () => {
+      const {open: openEditor} = render();
+      const {element} = await openEditor();
+
+      const tapeBed = sheet(element, 'tape-bed-sheet');
+      expect(tapeBed.tagName.toLowerCase()).toBe('mat-card');
+      expect(tapeBed.classList).toContain('mat-mdc-card-outlined');
+      expect(tapeBed.querySelector('.sheet-title')?.textContent?.trim()).toBe('Tape Bed');
+    });
+
+    it('orders Name, Tape width, Hole diameter, Spacing between rows, Minimum Gap, Border, Minimum Hole Length in the Tape Bed sheet', async () => {
+      const {open: openEditor} = render();
+      const {element} = await openEditor();
+
+      const wanted = ['name', 'tape-width', 'hole-diameter', 'row-spacing', 'minimum-gap', 'border', 'minimum-hole-length'];
+      expect(testIdsIn(sheet(element, 'tape-bed-sheet')).filter((id) => wanted.includes(id ?? ''))).toEqual(wanted);
+    });
+
+    it('lets the Name field span the full width of the sheet', async () => {
+      const {open: openEditor} = render();
+      const {field} = await openEditor();
+
+      expect(field('name').closest('mat-form-field')?.classList).toContain('full-width');
+    });
+
+    it('is a Pipes sheet with a head holding the title, the Pipe count and Add Pipe as a text button', async () => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 31);
+      await library.put(organ);
+      const {element} = await openEditor(organ.id);
+
+      const pipes = sheet(element, 'pipes-sheet');
+      expect(pipes.tagName.toLowerCase()).toBe('mat-card');
+      const head = pipes.querySelector<HTMLElement>('.sheet-head');
+      expect(head?.querySelector('.sheet-title')?.textContent?.trim()).toBe('Pipes');
+      expect(head?.querySelector('[data-testid="pipe-count"]')?.textContent?.trim()).toBe('31 Pipes');
+      expect(head?.querySelector('[data-testid="add-pipe"]')?.classList).toContain('mat-mdc-button');
+      expect(pipes.querySelectorAll('[data-testid="pipe"]')).toHaveLength(31);
+    });
+
+    it('keeps the Pipes out of the Tape Bed sheet', async () => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 2);
+      await library.put(organ);
+      const {element} = await openEditor(organ.id);
+
+      expect(sheet(element, 'tape-bed-sheet').querySelector('[data-testid="pipe"], [data-testid="add-pipe"]')).toBeNull();
+    });
+  });
+
+  describe('the fit check', () => {
+    const fitCheck = (element: HTMLElement) => element.querySelector<HTMLElement>('[data-testid="fit-check"]');
+    const text = (element: HTMLElement) => fitCheck(element)?.textContent?.replace(/\s+/g, ' ').trim();
+
+    it('says how many rows take how much of the tape width and what border is left (Street organ)', async () => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 31);
+      await library.put(organ);
+      const {element} = await openEditor(organ.id);
+
+      expect(text(element)).toContain('31 rows take 107.5 mm of the 120 mm tape width, a border of 6.25 mm on each side');
+      expect(fitCheck(element)?.classList).not.toContain('error');
+    });
+
+    it('lies in the Tape Bed sheet', async () => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 31);
+      await library.put(organ);
+      const {element} = await openEditor(organ.id);
+
+      expect(element.querySelector('[data-testid="tape-bed-sheet"] [data-testid="fit-check"]')).not.toBeNull();
+    });
+
+    it('uses the decimal comma in German', async () => {
+      TestBed.configureTestingModule({providers: [provideRouter([]), provideTestTranslations('de')]});
+      vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+      const organ = testOrgan('Street organ', 31);
+      await TestBed.inject(OrganLibrary).put(organ);
+      const {element} = await open(organ.id);
+
+      const sentence = text(element);
+      expect(sentence).toContain('107,5');
+      expect(sentence).toContain('6,25');
+      expect(sentence).toContain('120');
+      expect(sentence).not.toContain('107.5');
+    });
+
+    describe('with a tape width of 100 mm', () => {
+      async function openTooNarrow() {
+        const {open: openEditor, library} = render();
+        const organ = testOrgan('Street organ', 31);
+        await library.put(organ);
+        const editor = await openEditor(organ.id);
+        await editor.type(editor.field('tape-width'), '100');
+        return editor;
+      }
+
+      it('becomes an error with an icon, the 107.5 mm the rows take and the 100 mm tape width', async () => {
+        const {element} = await openTooNarrow();
+
+        expect(fitCheck(element)?.classList).toContain('error');
+        expect(fitCheck(element)?.querySelector('mat-icon')).not.toBeNull();
+        expect(text(element)).toContain('107.5');
+        expect(text(element)).toContain('100');
+        expect(text(element)).not.toContain('border of');
+      });
+
+      it('gives the Tape width field the error state but no second message', async () => {
+        const {field, violationAt} = await openTooNarrow();
+
+        expect(field('tape-width').closest('mat-form-field')?.classList).toContain('mat-form-field-invalid');
+        expect(violationAt('tapeBed.tapeWidth')).toEqual([]);
+      });
+    });
+
+    it.each(['tape-width', 'hole-diameter', 'row-spacing'])('is absent while the %s is missing', async (testId) => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 31);
+      await library.put(organ);
+      const {element, field, type} = await openEditor(organ.id);
+
+      await type(field(testId), '');
+
+      expect(fitCheck(element)).toBeNull();
+    });
+
+    it('is absent while there are no Pipes', async () => {
+      const {open: openEditor} = render();
+      const {element, field, type} = await openEditor();
+      await type(field('tape-width'), '120');
+      await type(field('hole-diameter'), '2.5');
+      await type(field('row-spacing'), '3.5');
+
+      expect(fitCheck(element)).toBeNull();
+    });
+  });
+
+  describe('one Pipe', () => {
+    it('counts "1 Pipe" and the fit check starts "1 row takes"', async () => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 1);
+      await library.put(organ);
+      const {element} = await openEditor(organ.id);
+
+      expect(element.querySelector('[data-testid="pipe-count"]')?.textContent?.trim()).toBe('1 Pipe');
+      expect(element.querySelector('[data-testid="fit-check"]')?.textContent?.replace(/\s+/g, ' ').trim()).toMatch(/^1 row takes /);
+    });
+
+    it('counts "1 Pfeife" and the fit check starts "1 Reihe belegt" in German', async () => {
+      TestBed.configureTestingModule({providers: [provideRouter([]), provideTestTranslations('de')]});
+      vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+      const organ = testOrgan('Street organ', 1);
+      await TestBed.inject(OrganLibrary).put(organ);
+      const {element} = await open(organ.id);
+
+      expect(element.querySelector('[data-testid="pipe-count"]')?.textContent?.trim()).toBe('1 Pfeife');
+      expect(element.querySelector('[data-testid="fit-check"]')?.textContent?.replace(/\s+/g, ' ').trim()).toMatch(/^1 Reihe belegt /);
+    });
+  });
+
+  describe('the Tape Bed drawing', () => {
+    const drawing = (element: HTMLElement) =>
+      element.querySelector<SVGSVGElement>('[data-testid="tape-bed-sheet"] svg[data-testid="tape-bed-drawing"]');
+    const numberAttribute = (node: Element, name: string) => Number(node.getAttribute(name));
+
+    async function openStreetOrgan(pipes: number) {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', pipes);
+      await library.put(organ);
+      return openEditor(organ.id);
+    }
+
+    it('is an SVG in the Tape Bed sheet whose viewBox is in mm and as high as the tape width (120 mm)', async () => {
+      const {element} = await openStreetOrgan(3);
+
+      const svg = drawing(element);
+      expect(svg).not.toBeNull();
+      const [minX, minY, width, height] = (svg?.getAttribute('viewBox') ?? '').split(/\s+/).map(Number);
+      expect([minX, minY]).toEqual([0, 0]);
+      expect(width).toBeGreaterThan(0);
+      expect(height).toBe(120);
+    });
+
+    it('draws the Tape as a rect as high as the tape width', async () => {
+      const {element} = await openStreetOrgan(3);
+
+      const tapes = drawing(element)?.querySelectorAll('rect[data-testid="tape-bed-tape"]') ?? [];
+      expect(tapes).toHaveLength(1);
+      expect(numberAttribute(tapes[0], 'y')).toBe(0);
+      expect(numberAttribute(tapes[0], 'height')).toBe(120);
+    });
+
+    it('draws a border band as high as the Border at the top and at the bottom edge', async () => {
+      const {element} = await openStreetOrgan(3);
+
+      const bands = [...(drawing(element)?.querySelectorAll('[data-testid="tape-bed-border"]') ?? [])];
+      expect(bands).toHaveLength(2);
+      expect(bands.map((band) => numberAttribute(band, 'height'))).toEqual([55.25, 55.25]);
+      const tops = bands.map((band) => numberAttribute(band, 'y')).sort((a, b) => a - b);
+      expect(tops[0]).toBeCloseTo(0);
+      expect(tops[1]).toBeCloseTo(120 - 55.25);
+    });
+
+    it('draws one line per row at border + hole diameter / 2 + (row - 1) x spacing, row 1 nearest the top', async () => {
+      const {element} = await openStreetOrgan(3);
+
+      const rows = [...(drawing(element)?.querySelectorAll('line[data-testid="tape-bed-row"]') ?? [])];
+      expect(rows).toHaveLength(3);
+      [56.5, 60, 63.5].forEach((y, index) => {
+        expect(numberAttribute(rows[index], 'y1')).toBeCloseTo(y);
+        expect(numberAttribute(rows[index], 'y2')).toBeCloseTo(y);
+      });
+    });
+
+    it('has a text alternative naming the tape width, the Border and the number of rows', async () => {
+      const {element} = await openStreetOrgan(3);
+
+      const svg = drawing(element);
+      expect(svg?.getAttribute('role')).toBe('img');
+      const label = svg?.getAttribute('aria-label') ?? '';
+      expect(label).toContain('120');
+      expect(label).toContain('55.25');
+      expect(label).toContain('3');
+    });
+
+    it('draws no Holes', async () => {
+      const {element} = await openStreetOrgan(3);
+
+      expect(drawing(element)).not.toBeNull();
+      expect(drawing(element)?.querySelector('circle, ellipse, [data-testid*="hole"]')).toBeNull();
+    });
+
+    it.each(['tape-width', 'hole-diameter', 'row-spacing'])('is absent while the %s is missing', async (testId) => {
+      const {element, field, type} = await openStreetOrgan(3);
+
+      expect(drawing(element)).not.toBeNull();
+      await type(field(testId), '');
+
+      expect(drawing(element)).toBeNull();
+    });
+
+    it('is absent while the Border is negative (tape width 100 mm, 31 rows)', async () => {
+      const {element, field, type} = await openStreetOrgan(31);
+
+      expect(drawing(element)).not.toBeNull();
+      await type(field('tape-width'), '100');
+
+      expect(drawing(element)).toBeNull();
     });
   });
 
@@ -1249,15 +2128,16 @@ describe('OrganEditorComponent', () => {
       ]);
     });
 
-    it('shows how much tape width the Pipes need', async () => {
+    it('shows how much tape width the Pipes need in the fit check, not next to the Tape width field', async () => {
       const {open: openEditor, library} = render();
       const organ = testOrgan('Street organ', 31);
       await library.put(organ);
-      const {field, type, violationAt} = await openEditor(organ.id);
+      const {element, field, type, violationAt} = await openEditor(organ.id);
 
       await type(field('tape-width'), '100');
 
-      expect(violationAt('tapeBed.tapeWidth')).toEqual(['The Pipes need 107.5 mm, but the tape is only 100 mm wide.']);
+      expect(violationAt('tapeBed.tapeWidth')).toEqual([]);
+      expect(element.querySelector('[data-testid="fit-check"]')?.textContent).toContain('107.5');
     });
 
     it('stores only the fixed version of a stored Organ edited into an invalid state, once saved', async () => {
@@ -1268,7 +2148,7 @@ describe('OrganEditorComponent', () => {
       const {field, type, save, saveButton} = await openEditor(organ.id);
 
       await type(field('name'), '');
-      expect(saveButton().disabled).toBe(true);
+      expect(saveButton().disabled).toBe(false);
       expect(put).not.toHaveBeenCalled();
       expect(library.entities()[0]?.name).toBe('Street organ');
 
@@ -1276,6 +2156,213 @@ describe('OrganEditorComponent', () => {
       await save();
       expect(put).toHaveBeenCalledTimes(1);
       expect(library.entities()[0]?.name).toBe('Fixed');
+    });
+  });
+
+  describe('Delete Organ in the page head', () => {
+    it('is a text button in the page head of a stored Organ, not in the action bar', async () => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 2);
+      await library.put(organ);
+      const {element} = await openEditor(organ.id);
+
+      const inHead = element.querySelector<HTMLElement>('cranc-page-head [data-testid="delete-organ"]');
+      expect(inHead).not.toBeNull();
+      expect(inHead?.hasAttribute('matButton') || inHead?.classList.contains('mat-mdc-button')).toBe(true);
+      expect(inHead?.classList.contains('mdc-button--outlined')).toBe(false);
+      expect(element.querySelector('cranc-action-bar [data-testid="delete-organ"]')).toBeNull();
+    });
+
+    it('is not offered for a new Organ', async () => {
+      const {open: openEditor} = render();
+      const {element} = await openEditor();
+
+      expect(element.querySelector('[data-testid="delete-organ"]')).toBeNull();
+    });
+  });
+
+  describe('the page head subtitle', () => {
+    const subtitleOf = (element: HTMLElement) => element.querySelector('cranc-page-head p')?.textContent?.trim();
+
+    it('says "Not saved yet" for a new Organ', async () => {
+      const {open: openEditor} = render();
+      const {element} = await openEditor();
+
+      expect(subtitleOf(element)).toBe('Not saved yet');
+    });
+
+    it('names the number of Pipes and the lowest and highest note of a stored Organ', async () => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 31, {pipes: Array.from({length: 31}, (_, row) => ({note: 83 - row}))});
+      await library.put(organ);
+      const {element} = await openEditor(organ.id);
+
+      expect(subtitleOf(element)).toBe('31 Pipes, F3–B5');
+    });
+
+    it('switches away from "Not saved yet" after the first save', async () => {
+      const {open: openEditor} = render();
+      const {element, fillValidOrgan, save, fixture} = await openEditor();
+      await fillValidOrgan();
+
+      await save();
+      fixture.detectChanges();
+
+      expect(subtitleOf(element)).toBeDefined();
+      expect(subtitleOf(element)).not.toBe('Not saved yet');
+      expect(subtitleOf(element)).toContain('C4');
+    });
+  });
+
+  describe('switching the language', () => {
+    afterEach(() => localStorage.removeItem('crancula.language'));
+
+    it('shows the page head subtitle and the unsaved changes text in the new language', async () => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 31, {pipes: Array.from({length: 31}, (_, row) => ({note: 83 - row}))});
+      await library.put(organ);
+      const {element, fixture, field, type} = await openEditor(organ.id);
+      await type(field('hole-diameter'), '2.7');
+
+      TestBed.inject(LanguagePreference).choose('de');
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      expect(element.querySelector('cranc-page-head p')?.textContent?.trim()).toBe('31 Pfeifen, F3–B5');
+      const state = element.querySelector('cranc-action-bar [data-testid="action-bar-state"]')?.textContent?.replace(/\s+/g, ' ').trim();
+      expect(state).toBe('Nicht gespeicherte Änderungen: Lochdurchmesser');
+    });
+  });
+
+  describe('the focus', () => {
+    it('returns to the error summary when Save is pressed a second time on an invalid Organ', async () => {
+      const {open: openEditor} = render();
+      const {element, field, save} = await openEditor();
+      await save();
+      field('name').focus();
+      expect(document.activeElement).toBe(field('name'));
+
+      await save();
+
+      expect(document.activeElement).toBe(element.querySelector('[data-testid="error-summary"]'));
+    });
+
+    describe('after removing a Pipe through its menu', () => {
+      const noteInputs = (element: HTMLElement) => [...element.querySelectorAll<HTMLInputElement>('[data-testid="pipe-note"]')];
+
+      it('moves to the note input of the row now at that position', async () => {
+        const {open: openEditor, library} = render();
+        const organ = testOrgan('Street organ', 3);
+        await library.put(organ);
+        const {element, choose, fixture} = await openEditor(organ.id);
+
+        await choose(1, 'remove-pipe');
+        await fixture.whenStable();
+
+        expect(document.activeElement).toBe(noteInputs(element)[1]);
+      });
+
+      it('moves to the note input of the last row when the last Pipe was removed', async () => {
+        const {open: openEditor, library} = render();
+        const organ = testOrgan('Street organ', 3);
+        await library.put(organ);
+        const {element, choose, fixture} = await openEditor(organ.id);
+
+        await choose(2, 'remove-pipe');
+        await fixture.whenStable();
+
+        expect(noteInputs(element)).toHaveLength(2);
+        expect(document.activeElement).toBe(noteInputs(element)[1]);
+      });
+
+      it('moves to Add Pipe when the only Pipe was removed', async () => {
+        const {open: openEditor, library} = render();
+        const organ = testOrgan('Street organ', 1);
+        await library.put(organ);
+        const {element, choose, fixture} = await openEditor(organ.id);
+
+        await choose(0, 'remove-pipe');
+        await fixture.whenStable();
+
+        expect(document.activeElement).toBe(element.querySelector('[data-testid="add-pipe"]'));
+      });
+
+      it('still returns the focus to the menu button when a later move uses the same row menu', async () => {
+        const {open: openEditor, library} = render();
+        const organ = testOrgan('Street organ', 4);
+        await library.put(organ);
+        const {element, choose, pipeMenuItem, fixture} = await openEditor(organ.id);
+
+        await choose(1, 'remove-pipe');
+        await fixture.whenStable();
+        const moveUp = await pipeMenuItem(1, 'move-up');
+        element.querySelector<HTMLElement>('[data-testid="name"]')?.focus(); // Focus is elsewhere when the item is chosen.
+        await moveUp.click();
+        await fixture.whenStable();
+
+        expect(document.activeElement).toBe(element.querySelectorAll('[data-testid="pipe-menu"]')[1]);
+      });
+    });
+  });
+
+  describe('the Pipe note inputs', () => {
+    it('ask for a numeric keyboard', async () => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 3);
+      await library.put(organ);
+      const {element} = await openEditor(organ.id);
+
+      const inputs = [...element.querySelectorAll('[data-testid="pipe-note"]')];
+      expect(inputs).toHaveLength(3);
+      expect(inputs.map((input) => input.getAttribute('inputmode'))).toEqual(['numeric', 'numeric', 'numeric']);
+    });
+  });
+
+  describe('the fit-check line', () => {
+    it('is a polite live region', async () => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 31);
+      await library.put(organ);
+      const {element} = await openEditor(organ.id);
+
+      expect(element.querySelector('[data-testid="fit-check"]')?.getAttribute('aria-live')).toBe('polite');
+    });
+  });
+
+  describe('the "Organ saved" snackbar', () => {
+    function renderWithWrite(result: OrganLibrarySaveResult) {
+      const inMemory = createInMemoryCranculaApi();
+      const api: CranculaApi = {
+        organs: {load: () => inMemory.organs.load(), save: () => Promise.resolve(result)},
+        tapes: inMemory.tapes,
+        app: inMemory.app,
+      };
+      TestBed.configureTestingModule({
+        providers: [provideRouter([]), provideTestTranslations(), {provide: CRANCULA_API, useValue: api}],
+      });
+      vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+      return vi.spyOn(TestBed.inject(MatSnackBar), 'open');
+    }
+
+    it('opens after a successful save', async () => {
+      const snackBarOpen = renderWithWrite({status: 'saved'});
+      const {fillValidOrgan, save} = await open();
+      await fillValidOrgan();
+
+      await save();
+
+      expect(snackBarOpen).toHaveBeenCalledTimes(1);
+      expect(snackBarOpen.mock.calls[0]?.[0]).toBe('Organ saved');
+    });
+
+    it('does not open when writing fails', async () => {
+      const snackBarOpen = renderWithWrite({status: 'failed', reason: 'disk full'});
+      const {fillValidOrgan, save} = await open();
+      await fillValidOrgan();
+
+      await save();
+
+      expect(snackBarOpen).not.toHaveBeenCalled();
     });
   });
 });

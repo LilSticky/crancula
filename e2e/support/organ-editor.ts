@@ -34,3 +34,9 @@ export async function saveOrgan(window: Page): Promise<void> {
   await window.getByTestId('save-organ').click();
   await expect(window.getByTestId('save-organ')).toBeDisabled();
 }
+
+/** Opens the row menu of the Pipe at `row` (0-based) and picks one of its items. */
+export async function pickPipeMenuItem(window: Page, row: number, item: 'move-up' | 'move-down' | 'remove-pipe'): Promise<void> {
+  await window.getByTestId('pipe').nth(row).getByTestId('pipe-menu').click();
+  await window.getByTestId(item).click();
+}

@@ -12,7 +12,9 @@ test.describe('I am warned before losing unsaved changes', () => {
 
     // The second Pipe now plays the same note as the first: a duplicate Pipe that cannot be saved.
     await window.getByTestId('pipe-note').nth(1).fill(STREET_ORGAN.notes[0]);
-    await expect(window.getByTestId('save-organ')).toBeDisabled();
+    await window.getByTestId('save-organ').click();
+    await expect(window.getByTestId('error-summary')).toBeVisible();
+    await expect(window.getByTestId('error-summary-entry').first()).toBeVisible();
 
     await window.getByRole('link', {name: 'Organs'}).click();
     await expect(window.getByTestId('leave-problem').first()).toBeVisible();

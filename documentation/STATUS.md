@@ -55,16 +55,25 @@ remembered in localStorage like the language (`SchemePreference`, `LanguagePrefe
 to 3:1. ux-review 33/50 (was 30/50), see [design/screens/current/ux-review.md](design/screens/current/ux-review.md).
 Gate: lint, i18n, unit tests and 32 e2e green locally.
 
-**Done (pull request pending):** #74 derived Border (2026-10-15). The Border is derived, not entered:
+**Done:** #74 derived Border (2026-10-15, PR #75, merged 2026-10-15). The Border is derived, not entered:
 (tape width - Row Span) / 2, rows centred, row 1 nearest the top; 0 is valid, negative means the rows
 don't fit. Domain (`border`, `tapeBedFit`, no `border` in `TapeBed`/draft/validation), Organ snapshot
 version 2 without `border` (version 1 still reads, [ADR 20](adr/0020-snapshots-migrated-on-read.md)),
 dictionary (Tape Bed, Border, Row Span), Organ editor shows the Border read-only, spec 001 amended.
 Gate: lint, i18n, 485 node and 315 Angular tests and 34 e2e.
 
-**Next concrete step:** #64 Organ editor on branch `064-design-organ-editor` (tasks pushed), after
-rebasing it on `main` (it still edits a Border field); then #65 Tape view, #66 lists and #69 Tape import
-screen (all sub-issues of [#59](https://github.com/LilSticky/crancula/issues/59)). Then
+**Done (pull request pending):** #64 Organ editor (2026-10-16). Two sheets: the Tape Bed with a fit
+check and a drawing, plus read-only Border and Minimum Hole Length; the Pipes in a 3-column rack
+(2 columns below 1180 px) with a row menu and Alt+arrow moves. Decimal fields take a comma or a point,
+in the language's notation. Action bar with save state and Discard changes; an error summary on Save;
+Delete and the subtitle sit in the page head; "Organ saved" snackbar; calmer leave dialog. The editor
+fits one screen at 1280×800 and 1024×700. ux-review 36/50 (was 31/50; values in
+[design/screens/current/ux-review.md](design/screens/current/ux-review.md)). #72 fixed on this branch.
+Gate: lint, i18n (162 keys), 486 node and 447 Angular tests, e2e green locally (e2e: see PR). Follow-up:
+[#76](https://github.com/LilSticky/crancula/issues/76) splits the editor component.
+
+**Next concrete step:** #65 Tape view, then #66 lists and #69 Tape import (sub-issues of
+[#59](https://github.com/LilSticky/crancula/issues/59)). Then
 `/speckit-specify` for "Punch a tape" ([#3](https://github.com/LilSticky/crancula/issues/3)).
 Open issues carry `priority:` and `size:` labels; triage sets them.
 

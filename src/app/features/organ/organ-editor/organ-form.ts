@@ -1,4 +1,4 @@
-import {Injectable} from '@angular/core';
+import {inject, Injectable, signal} from '@angular/core';
 import {
   type Field,
   type FieldTree,
@@ -91,13 +91,15 @@ function violationMessage(error: OrganFieldError): TranslatableText {
 }
 
 /** The messages of a field that the user should see now. */
-export function shownMessages(field: FieldTree<unknown>, organ: FieldTree<OrganDraft>): readonly TranslatableText[] {
+export function shownMessages(field: FieldTree<unknown>, organ: FieldTree<OrganDraft>, saveAttempted = false): readonly TranslatableText[] {
   // "Add at least one Pipe" belongs to the whole Organ: show it once anything was edited.
-  const dirty = field === organ.pipes ? organ().dirty() : field().dirty();
+  const dirty = saveAttempted || (field === organ.pipes ? organ().dirty() : field().dirty());
   return field()
     .errors()
     .flatMap((error) => {
       if (isNotANumber(error)) return [NOT_A_NUMBER];
+      // The fit check says it; the field only takes the error state.
+      if (isOrganFieldError(error) && error.kind === 'pipes-exceed-tape-width') return [];
       return isOrganFieldError(error) && isShown(error, dirty) ? [violationMessage(error)] : [];
     });
 }
@@ -119,6 +121,49 @@ export function organProblems(organ: FieldTree<OrganDraft>): readonly FieldProbl
     });
 }
 
+/** The label key of each field that has one fixed label, in reading order; Pipe notes are labelled by their row. */
+export const FIELD_LABEL_KEYS: Readonly<Record<string, string>> = {
+  name: 'ORGAN.EDITOR.NAME',
+  'tapeBed.tapeWidth': 'ORGAN.EDITOR.TAPE_WIDTH',
+  'tapeBed.holeDiameter': 'ORGAN.EDITOR.HOLE_DIAMETER',
+  'tapeBed.rowSpacing': 'ORGAN.EDITOR.ROW_SPACING',
+  minimumGap: 'ORGAN.EDITOR.MINIMUM_GAP',
+  pipes: 'ORGAN.EDITOR.PIPES',
+};
+
+/** A field with problems, as an entry of the error summary. */
+export interface ProblemField {
+  readonly path: string;
+  readonly label: TranslatableText;
+}
+
+const PIPE_ROW = /^pipes\.(\d+)\./;
+
+/** Where a field comes in reading order: the fixed fields before the Pipe rows (by number), the Pipes as a whole last. */
+function readingPosition(path: string): readonly [number, number] {
+  const row = PIPE_ROW.exec(path)?.[1];
+  const fixed = Object.keys(FIELD_LABEL_KEYS);
+  if (row !== undefined) return [fixed.length - 1, Number(row)];
+  const index = fixed.indexOf(path);
+  return [index === -1 ? fixed.length : index, -1];
+}
+
+/** The fields that have problems, each once, in reading order, with the label the error summary shows. */
+export function problemFields(problems: readonly FieldProblem[]): readonly ProblemField[] {
+  return [...new Set(problems.map(({path}) => path))]
+    .map((path): ProblemField => {
+      const row = PIPE_ROW.exec(path)?.[1];
+      const label: TranslatableText =
+        row === undefined ? {key: FIELD_LABEL_KEYS[path] ?? path, params: {}} : {key: 'ORGAN.EDITOR.ROW', params: {row: Number(row) + 1}};
+      return {path, label};
+    })
+    .sort((a, b) => {
+      const [aGroup, aRow] = readingPosition(a.path);
+      const [bGroup, bRow] = readingPosition(b.path);
+      return aGroup - bGroup || aRow - bRow;
+    });
+}
+
 /** The path of an input field of the Organ, as used by `OrganViolation`. */
 function pathOf(organ: ReadonlyFieldTree<OrganDraft>, field: ReadonlyFieldTree<unknown>): string | undefined {
   const paths = [
@@ -130,12 +175,38 @@ function pathOf(organ: ReadonlyFieldTree<OrganDraft>, field: ReadonlyFieldTree<u
   return paths.find((path) => fieldAt(organ, path) === field);
 }
 
+/** Whether the user pressed Save on an invalid Organ: from then on every message shows, edited or not. */
+@Injectable()
+export class SaveAttempt {
+  readonly attempted = signal(false);
+}
+
 /** Puts a Material input in its error state exactly while the editor shows a message for its field. */
 @Injectable()
 export class ShownViolationMatcher extends ErrorStateMatcher {
+  private readonly saveAttempt = inject(SaveAttempt);
+
   override isSignalErrorState(field: Field<unknown> | null): boolean {
     if (!field) return false;
     const state = field();
-    return state.errors().some((error) => isNotANumber(error) || (isOrganFieldError(error) && isShown(error, state.dirty())));
+    const dirty = this.saveAttempt.attempted() || state.dirty();
+    return state.errors().some((error) => isNotANumber(error) || (isOrganFieldError(error) && isShown(error, dirty)));
   }
+}
+
+/** The input fields of the Organ whose change the editor reports; every Pipe change counts as `pipes`. */
+export type ChangedField = 'name' | `tapeBed.${TapeBedField}` | 'minimumGap' | 'pipes';
+
+/** The fields of `draft` that differ from the `saved` draft, in reading order; `pipes` once for any Pipe change. */
+export function changedFields(saved: OrganDraft, draft: OrganDraft): readonly ChangedField[] {
+  const changed: ChangedField[] = [];
+  if (saved.name !== draft.name) changed.push('name');
+  for (const field of TAPE_BED_FIELDS) {
+    if (saved.tapeBed[field] !== draft.tapeBed[field]) changed.push(`tapeBed.${field}`);
+  }
+  if (saved.minimumGap !== draft.minimumGap) changed.push('minimumGap');
+  const pipesChanged =
+    saved.pipes.length !== draft.pipes.length || saved.pipes.some((pipe, row) => pipe.note !== draft.pipes[row]?.note);
+  if (pipesChanged) changed.push('pipes');
+  return changed;
 }
