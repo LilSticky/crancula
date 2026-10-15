@@ -2157,4 +2157,96 @@ describe('OrganEditorComponent', () => {
       expect(library.entities()[0]?.name).toBe('Fixed');
     });
   });
+
+  describe('Delete Organ in the page head', () => {
+    it('is a text button in the page head of a stored Organ, not in the action bar', async () => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 2);
+      await library.put(organ);
+      const {element} = await openEditor(organ.id);
+
+      const inHead = element.querySelector<HTMLElement>('cranc-page-head [data-testid="delete-organ"]');
+      expect(inHead).not.toBeNull();
+      expect(inHead?.hasAttribute('matButton') || inHead?.classList.contains('mat-mdc-button')).toBe(true);
+      expect(inHead?.classList.contains('mdc-button--outlined')).toBe(false);
+      expect(element.querySelector('cranc-action-bar [data-testid="delete-organ"]')).toBeNull();
+    });
+
+    it('is not offered for a new Organ', async () => {
+      const {open: openEditor} = render();
+      const {element} = await openEditor();
+
+      expect(element.querySelector('[data-testid="delete-organ"]')).toBeNull();
+    });
+  });
+
+  describe('the page head subtitle', () => {
+    const subtitleOf = (element: HTMLElement) => element.querySelector('cranc-page-head p')?.textContent?.trim();
+
+    it('says "Not saved yet" for a new Organ', async () => {
+      const {open: openEditor} = render();
+      const {element} = await openEditor();
+
+      expect(subtitleOf(element)).toBe('Not saved yet');
+    });
+
+    it('names the number of Pipes and the lowest and highest note of a stored Organ', async () => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 31, {pipes: Array.from({length: 31}, (_, row) => ({note: 83 - row}))});
+      await library.put(organ);
+      const {element} = await openEditor(organ.id);
+
+      expect(subtitleOf(element)).toBe('31 Pipes, F3–B5');
+    });
+
+    it('switches away from "Not saved yet" after the first save', async () => {
+      const {open: openEditor} = render();
+      const {element, fillValidOrgan, save, fixture} = await openEditor();
+      await fillValidOrgan();
+
+      await save();
+      fixture.detectChanges();
+
+      expect(subtitleOf(element)).toBeDefined();
+      expect(subtitleOf(element)).not.toBe('Not saved yet');
+      expect(subtitleOf(element)).toContain('C4');
+    });
+  });
+
+  describe('the "Organ saved" snackbar', () => {
+    function renderWithWrite(result: OrganLibrarySaveResult) {
+      const inMemory = createInMemoryCranculaApi();
+      const api: CranculaApi = {
+        organs: {load: () => inMemory.organs.load(), save: () => Promise.resolve(result)},
+        tapes: inMemory.tapes,
+        app: inMemory.app,
+      };
+      TestBed.configureTestingModule({
+        providers: [provideRouter([]), provideTestTranslations(), {provide: CRANCULA_API, useValue: api}],
+      });
+      vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+      return vi.spyOn(TestBed.inject(MatSnackBar), 'open');
+    }
+
+    it('opens after a successful save', async () => {
+      const snackBarOpen = renderWithWrite({status: 'saved'});
+      const {fillValidOrgan, save} = await open();
+      await fillValidOrgan();
+
+      await save();
+
+      expect(snackBarOpen).toHaveBeenCalledTimes(1);
+      expect(snackBarOpen.mock.calls[0]?.[0]).toBe('Organ saved');
+    });
+
+    it('does not open when writing fails', async () => {
+      const snackBarOpen = renderWithWrite({status: 'failed', reason: 'disk full'});
+      const {fillValidOrgan, save} = await open();
+      await fillValidOrgan();
+
+      await save();
+
+      expect(snackBarOpen).not.toHaveBeenCalled();
+    });
+  });
 });

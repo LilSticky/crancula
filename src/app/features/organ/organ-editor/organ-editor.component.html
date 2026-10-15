@@ -1,5 +1,14 @@
 <div class="organ-editor">
-  <cranc-page-head [title]="(id() ? 'ORGAN.EDITOR.TITLE' : 'ORGAN.EDITOR.TITLE_NEW') | translate"/>
+  <cranc-page-head [title]="(id() ? 'ORGAN.EDITOR.TITLE' : 'ORGAN.EDITOR.TITLE_NEW') | translate" [subtitle]="subtitle()">
+    <ng-container ngProjectAs="[pageHeadActions]">
+      @if (isStored()) {
+        <button matButton type="button" class="delete-organ" data-testid="delete-organ" (click)="deleteOrgan()">
+          <mat-icon>delete</mat-icon>
+          {{ 'ORGAN.EDITOR.DELETE' | translate }}
+        </button>
+      }
+    </ng-container>
+  </cranc-page-head>
 
   @if (summaryFields().length > 0) {
     <div #summary class="error-summary" data-testid="error-summary" role="alert" tabindex="-1">
@@ -170,13 +179,6 @@
         }
       </div>
     </mat-card>
-  </div>
-
-  <div>
-    <button matButton="outlined" type="button" data-testid="delete-organ" (click)="deleteOrgan()">
-      <mat-icon>delete</mat-icon>
-      {{ 'ORGAN.EDITOR.DELETE' | translate }}
-    </button>
   </div>
 
   <cranc-action-bar [label]="'ORGAN.EDITOR.ACTIONS' | translate">

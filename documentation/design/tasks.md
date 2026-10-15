@@ -178,14 +178,14 @@ Every task that adds or changes UI text adds the keys to `en.json` and `de.json`
   focuses Add Pipe); the action bar shows "3 problems prevent saving"; the summary goes once all
   are fixed. Then the summary (oxblood with icon, `role="alert"`) and a "save attempted" signal
   that `shownMessages` and `ShownViolationMatcher` honour.
-- [ ] **E17** Delete in the page head, component. Spec: a stored Organ has Delete Organ as an
+- [x] **E17** Delete in the page head, component. Spec: a stored Organ has Delete Organ as an
   oxblood text button in the page head (`data-testid="delete-organ"`), not in the action bar; a new
   Organ has no Delete. The deleting specs keep passing. Then move the button.
-- [ ] **E18** Subtitle, component. Spec: a new Organ's page head says "Not saved yet"; the Street
+- [x] **E18** Subtitle, component. Spec: a new Organ's page head says "Not saved yet"; the Street
   organ's says "31 Pipes, F3–B5"; after the first save the subtitle switches. Then the subtitle.
-- [ ] **E19** "Organ saved", component. Spec: a successful save opens a `MatSnackBar` "Organ
+- [x] **E19** "Organ saved", component. Spec: a successful save opens a `MatSnackBar` "Organ
   saved"; a failed write does not. Then the snackbar.
-- [ ] **E20** Leave dialog, component. Spec: Keep editing is the filled button with initial focus,
+- [x] **E20** Leave dialog, component. Spec: Keep editing is the filled button with initial focus,
   Discard changes a text button. Then the template and the keys.
 - [ ] **E21** e2e, existing tests. Update `e2e/support/organ-editor.ts`, `organ-edit`,
   `organ-leave` (Save is no longer disabled for a duplicate Pipe: press it and assert the error

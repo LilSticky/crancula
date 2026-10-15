@@ -30,7 +30,7 @@ import type {UnsavedChanges} from '../leave-unsaved.guard';
       <button matButton="filled" type="button" cdkFocusInitial data-testid="stay" (click)="close(false)">
         {{ 'ORGAN.LEAVE.STAY' | translate }}
       </button>
-      <button matButton="outlined" type="button" color="warn" data-testid="discard" (click)="close(true)">
+      <button matButton type="button" data-testid="discard" (click)="close(true)">
         {{ 'ORGAN.LEAVE.DISCARD' | translate }}
       </button>
     </mat-dialog-actions>

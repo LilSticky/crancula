@@ -62,6 +62,10 @@ const FIELD_TEST_IDS: Readonly<Record<string, string>> = {
   templateUrl: './organ-editor.component.html',
   providers: [SaveAttempt, {provide: ErrorStateMatcher, useClass: ShownViolationMatcher}],
   styles: `
+    .delete-organ {
+      --mat-button-text-label-text-color: var(--mat-sys-error);
+    }
+
     .unsaved-dot {
       display: inline-block;
       width: 8px;
@@ -260,9 +264,22 @@ export class OrganEditorComponent implements UnsavedChangesCheck {
 
   private readonly changed = computed(() => JSON.stringify(this.draft()) !== JSON.stringify(this.saved()));
   private readonly saving = signal(false);
-  private readonly isStored = computed(() => {
+  protected readonly isStored = computed(() => {
     const {id} = this.draft();
     return id !== undefined && this.library.entityMap()[id] !== undefined;
+  });
+
+  /** "Not saved yet" for a new Organ, else the number of Pipes and the lowest and highest note of the saved Organ. */
+  protected readonly subtitle = computed(() => {
+    const id = this.draft().id;
+    const stored = id ? this.library.entityMap()[id] : undefined;
+    if (!stored) return String(this.translate.instant('ORGAN.EDITOR.NOT_SAVED_YET'));
+    const notes = stored.pipes.map((pipe) => pipe.note).sort((a, b) => Number(a) - Number(b));
+    return String(this.translate.instant(notes.length === 1 ? 'ORGAN.EDITOR.PIPES_RANGE_ONE' : 'ORGAN.EDITOR.PIPES_RANGE', {
+      count: notes.length,
+      lowest: noteName(notes[0]),
+      highest: noteName(notes[notes.length - 1]),
+    }));
   });
 
   /** Save is only unavailable for a stored Organ without changes, or while a save is running. */
@@ -365,6 +382,7 @@ export class OrganEditorComponent implements UnsavedChangesCheck {
       if (!(await this.removeHolesOfRemovedPipes(result.value))) return;
       if (!(await this.library.put(result.value))) return; // Still unsaved: the library reports the storage problem.
       this.saved.set(sent);
+      this.snackBar.open(String(this.translate.instant('ORGAN.EDITOR.SAVED')), undefined, {duration: 3000});
     } finally {
       this.saving.set(false);
     }

@@ -140,6 +140,10 @@
       "DRAG_PIPE": "Pfeife in eine andere Reihe ziehen",
       "DELETE": "Drehorgel löschen",
       "ACTIONS": "Drehorgel-Aktionen",
+      "SAVED": "Drehorgel gespeichert",
+      "NOT_SAVED_YET": "Noch nicht gespeichert",
+      "PIPES_RANGE": "{{count}} Pfeifen, {{lowest}}–{{highest}}",
+      "PIPES_RANGE_ONE": "1 Pfeife, {{lowest}}",
       "SAVING": "Speichern …",
       "UNSAVED_CHANGES": "Nicht gespeicherte Änderungen: {{fields}}",
       "NO_UNSAVED_CHANGES": "Keine ungespeicherten Änderungen",
@@ -155,7 +159,7 @@
       "UNSAVED": "Deine Änderungen sind nicht gespeichert. Drücke im Editor auf Speichern, um sie zu behalten, oder verwirf sie.",
       "INVALID": "Deine Änderungen können noch nicht gespeichert werden. Behebe die unten aufgeführten Probleme und drücke auf Speichern, oder verwirf deine Änderungen.",
       "PIPE_FIELD": "Reihe {{row}} · MIDI-Note",
-      "STAY": "Bleiben",
+      "STAY": "Weiter bearbeiten",
       "DISCARD": "Änderungen verwerfen"
     },
     "VIOLATION": {

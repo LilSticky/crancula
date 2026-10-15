@@ -87,4 +87,13 @@ describe('LeaveUnsavedDialogComponent', () => {
 
     expect(button('stay').hasAttribute('cdkFocusInitial')).toBe(true);
   });
+
+  it('shows "stay" as the filled button and "discard" as a text button', async () => {
+    const {button} = await render({problems: []});
+
+    expect(button('stay').classList.contains('mdc-button--unelevated')).toBe(true);
+    expect(button('discard').classList.contains('mat-mdc-button')).toBe(true);
+    expect(button('discard').classList.contains('mdc-button--outlined')).toBe(false);
+    expect(button('discard').classList.contains('mdc-button--unelevated')).toBe(false);
+  });
 });

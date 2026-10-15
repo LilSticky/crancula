@@ -140,6 +140,10 @@
       "DRAG_PIPE": "Drag Pipe to another row",
       "DELETE": "Delete Organ",
       "ACTIONS": "Organ actions",
+      "SAVED": "Organ saved",
+      "NOT_SAVED_YET": "Not saved yet",
+      "PIPES_RANGE": "{{count}} Pipes, {{lowest}}–{{highest}}",
+      "PIPES_RANGE_ONE": "1 Pipe, {{lowest}}",
       "SAVING": "Saving…",
       "UNSAVED_CHANGES": "Unsaved changes: {{fields}}",
       "NO_UNSAVED_CHANGES": "No unsaved changes",
@@ -155,7 +159,7 @@
       "UNSAVED": "Your changes are not saved. Press Save in the editor to keep them, or discard them.",
       "INVALID": "Your changes can't be saved yet. Fix the problems listed below and press Save, or discard your changes.",
       "PIPE_FIELD": "Row {{row}} · MIDI note",
-      "STAY": "Stay",
+      "STAY": "Keep editing",
       "DISCARD": "Discard changes"
     },
     "VIOLATION": {
