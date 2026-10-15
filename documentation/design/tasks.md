@@ -52,7 +52,7 @@ mockup `variants/a-workshop/mockup.html` (rail, page head, action bar). Design c
   actions on the right) and `cranc-action-bar` (sticky bottom; projected state left, actions right).
   Component specs. Use the page head on every page now (Organ list, Organ editor, Tape list, Bring
   a Song onto a Tape, Tape view, not found); the action bar is adopted in #64.
-- [ ] **S6** e2e: update tests that used the top navbar; one e2e that the window starts on the
+- [x] **S6** e2e: update tests that used the top navbar; one e2e that the window starts on the
   Organ list with the rail and that the scheme choice survives a restart. Full `npm run e2e`.
 - [ ] **S7** `npm run ux:screens` (rename `01-home`; capture the dark scheme once), `ux-review`;
   score into STATUS.
