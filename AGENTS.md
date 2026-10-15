@@ -49,6 +49,9 @@ What to read per step:
   UI are adapters inside a slice.
 - **Spec Kit per slice**, on branch `NNN-slice-name` from `main`: `/speckit-specify` →
   `/speckit-clarify` → `/speckit-plan` → `/speckit-tasks` → `/speckit-implement`.
+- **The loop**: spec → failing test → implementation → code review, repeated until everything is
+  green. Follow the test pyramid in the `tdd` skill: run the cheapest test that shows the
+  behaviour (unit in seconds) and leave e2e (minutes) for what only real Electron can prove.
 - **TDD for all code**: domain, Angular UI, Electron main/preload/IPC, and bug fixes. Follow the
   `tdd` skill; use the `test-first` agent for the red phase and `implementer` for green. The TDD guard hook blocks edits to
   `src/`, `app/` and `api/` until a `*.spec.ts` or `e2e/` file has changed.
