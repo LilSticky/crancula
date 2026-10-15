@@ -96,8 +96,8 @@ Design choices made here (not domain):
 
 Every task that adds or changes UI text adds the keys to `en.json` and `de.json`.
 
-- [ ] **E1** Decimal numbers per language, unit. A pure helper in `src/app/features/shared/`
-  (`decimal-number.ts`): `formatDecimal(2.5, 'de')` → `2,5`, `'en'` → `2.5`, no trailing zeros
+- [x] **E1** Decimal numbers per language, unit. A pure helper in `src/app/features/shared/`
+  (`format-number.ts`): `formatNumber(2.5, 'de')` → `2,5`, `'en'` → `2.5`, no trailing zeros
   (`120`, `3,5`); `parseDecimal('2,5')` and `parseDecimal('2.5')` → 2.5, `''` → `null`; `'2,5,1'`,
   `'1.000,5'` and `'abc'` → not a number. Spec first, then the helper.
 - [ ] **E2** mm fields, component. Spec: Tape width, Hole diameter, Spacing between rows and Minimum

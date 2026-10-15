@@ -1,4 +1,4 @@
-import {formatNumber} from './format-number';
+import {formatNumber, parseDecimal} from './format-number';
 
 describe('formatNumber', () => {
   it('uses the decimal comma in German', () => {
@@ -15,5 +15,36 @@ describe('formatNumber', () => {
 
   it('does not group digits', () => {
     expect(formatNumber(1234.5, 'de')).toBe('1234,5');
+  });
+
+  it('shows no trailing zeros', () => {
+    expect(formatNumber(120, 'de')).toBe('120');
+    expect(formatNumber(3.5, 'de')).toBe('3,5');
+    expect(formatNumber(2.5, 'en')).toBe('2.5');
+  });
+});
+
+describe('parseDecimal', () => {
+  it('reads a decimal comma', () => {
+    expect(parseDecimal('2,5')).toBe(2.5);
+  });
+
+  it('reads a decimal point', () => {
+    expect(parseDecimal('2.5')).toBe(2.5);
+  });
+
+  it('reads an integer', () => {
+    expect(parseDecimal('120')).toBe(120);
+  });
+
+  it('returns null for empty or blank text', () => {
+    expect(parseDecimal('')).toBeNull();
+    expect(parseDecimal('   ')).toBeNull();
+  });
+
+  it('returns NaN for text that is not a number', () => {
+    expect(parseDecimal('2,5,1')).toBeNaN();
+    expect(parseDecimal('1.000,5')).toBeNaN();
+    expect(parseDecimal('abc')).toBeNaN();
   });
 });
