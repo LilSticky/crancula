@@ -187,14 +187,14 @@ Every task that adds or changes UI text adds the keys to `en.json` and `de.json`
   saved"; a failed write does not. Then the snackbar.
 - [x] **E20** Leave dialog, component. Spec: Keep editing is the filled button with initial focus,
   Discard changes a text button. Then the template and the keys.
-- [ ] **E21** e2e, existing tests. Update `e2e/support/organ-editor.ts`, `organ-edit`,
+- [x] **E21** e2e, existing tests. Update `e2e/support/organ-editor.ts`, `organ-edit`,
   `organ-leave` (Save is no longer disabled for a duplicate Pipe: press it and assert the error
   summary instead), `organ-german` and the Tape specs that move or remove Pipes, to the row menu,
   the page-head Delete and the new dialog labels. Run them.
-- [ ] **E22** e2e, German decimals. Extend `organ-german.spec.ts`: typing `2,5` and `3,5` saves the
+- [x] **E22** e2e, German decimals. Extend `organ-german.spec.ts`: typing `2,5` and `3,5` saves the
   Organ; after a restart the fields show `2,5` and `3,5`, Minimum Hole Length `2,5`, Border `6,25`,
   and the fit check uses commas. Real Electron, because the language goes through the main process.
-- [ ] **E23** e2e, one screen. New `organ-layout.spec.ts` with the Street organ: at 1280×800 the
+- [x] **E23** e2e, one screen. New `organ-layout.spec.ts` with the Street organ: at 1280×800 the
   document does not scroll, the rack has 3 columns and the action bar is in view; at 1024×700 the
   document does not scroll, the rack has 2 columns, only the Pipes sheet scrolls, and the Tape Bed
   sheet and the action bar stay in view; no two Tape Bed field boxes overlap. Needs real layout.

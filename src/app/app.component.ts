@@ -30,7 +30,7 @@ const COMPACT_QUERY = '(max-width: 1179.98px)';
   styles: `
     :host { position: fixed; inset: 0; }
     mat-sidenav-container { height: 100%; }
-    .page { box-sizing: border-box; padding: 32px; }
+    .page { box-sizing: border-box; display: flex; flex-direction: column; padding: 32px; }
     .page.cr-compact { padding: 24px; }
   `,
   imports: [RouterOutlet, RailComponent, MatSidenav, MatSidenavContainer, MatSidenavContent],

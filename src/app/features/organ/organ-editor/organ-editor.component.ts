@@ -75,26 +75,49 @@ const FIELD_TEST_IDS: Readonly<Record<string, string>> = {
       background: var(--mat-sys-error);
     }
 
+    :host {
+      display: flex;
+      flex: 1 1 auto;
+      flex-direction: column;
+      min-height: 0;
+    }
+
     .organ-editor {
+      display: flex;
+      flex: 1 1 auto;
+      flex-direction: column;
+      min-height: 0;
+      width: 100%;
       max-width: 72rem;
     }
 
     .sheets {
       display: grid;
-      grid-template-columns: 392px 1fr;
+      grid-template-columns: 392px minmax(0, 1fr);
       gap: 20px;
-      align-items: start;
+      flex: 1 1 auto;
+      grid-template-rows: minmax(0, 1fr);
+      min-height: 0;
       margin-bottom: 20px;
     }
 
     @media (max-width: 1180px) {
       .sheets {
-        grid-template-columns: 340px 1fr;
+        grid-template-columns: 340px minmax(0, 1fr);
       }
     }
 
     mat-card {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
       padding: 20px;
+    }
+
+    .rack-scroller {
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow-y: auto;
     }
 
     .sheet-title {
