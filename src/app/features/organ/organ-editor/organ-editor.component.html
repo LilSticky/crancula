@@ -143,9 +143,9 @@
                 <div class="pipe" data-testid="pipe" cdkDrag>
                   <mat-icon cdkDragHandle class="drag-handle" [attr.aria-label]="'ORGAN.EDITOR.DRAG_PIPE' | translate">drag_indicator</mat-icon>
                   <span class="row-cell" data-testid="pipe-row-number">{{ row + 1 }}</span>
-                  <mat-form-field subscriptSizing="dynamic">
-                    <mat-label>{{ 'ORGAN.EDITOR.PIPE_NOTE' | translate }}</mat-label>
+                  <mat-form-field class="note-field" subscriptSizing="dynamic">
                     <input matInput type="number" data-testid="pipe-note" [formField]="pipe.note" #noteInput
+                           [attr.aria-label]="'ORGAN.EDITOR.PIPE_NOTE_IN_ROW' | translate: {row: row + 1}"
                            (keydown.alt.arrowup)="moveByKeyboard($event, row, -1)" (keydown.alt.arrowdown)="moveByKeyboard($event, row, 1)"/>
                     <ng-container ngProjectAs="mat-error">
                       @for (message of messagesAt(pipe.note); track message.key) {

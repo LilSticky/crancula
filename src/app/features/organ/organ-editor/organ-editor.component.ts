@@ -133,6 +133,13 @@ const FIELD_TEST_IDS: Readonly<Record<string, string>> = {
       margin-top: 16px;
     }
 
+    @media (max-width: 1180px) {
+      .fields {
+        grid-template-columns: minmax(0, 1fr);
+        row-gap: 12px;
+      }
+    }
+
     .full-width {
       grid-column: 1 / -1;
     }
@@ -198,12 +205,22 @@ const FIELD_TEST_IDS: Readonly<Record<string, string>> = {
 
     .rack {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 0 18px;
     }
 
     .rack.compact {
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .rack-column {
+      min-width: 0;
+    }
+
+    .note-field {
+      flex: 1 1 0;
+      min-width: 0;
+      width: 100%;
     }
 
     .rack.compact .pipe {
@@ -236,7 +253,8 @@ const FIELD_TEST_IDS: Readonly<Record<string, string>> = {
     }
 
     .row-cell {
-      width: 26px;
+      flex: none;
+      width: 34px;
       text-align: right;
       color: var(--mat-sys-on-surface-variant);
       font-size: 0.75rem;
