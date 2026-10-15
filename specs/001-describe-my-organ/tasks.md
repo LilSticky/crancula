@@ -519,7 +519,7 @@ valid (old rule 2·border + span ≤ width implies span ≤ width).
   `ORGAN.VIOLATION.MUST_NOT_BE_NEGATIVE` (en + de) go if unused.
 - [x] **A4** A domain value the editor can show for a draft (may be negative), e.g.
   `tapeBedFit(tapeBed, pipeCount) → {rowSpan, border}`; unit tests.
-- [ ] **A5** Organ snapshot version 2 (`organ-library-snapshot.ts`): tests first. Version 1 with a
+- [x] **A5** Organ snapshot version 2 (`organ-library-snapshot.ts`): tests first. Version 1 with a
   `border` (also one that no longer matches) reads, the border is ignored; version 2 has no
   `border`; `toSnapshot` writes version 2; other versions are rejected as before.
 - [x] **A6** Fix the remaining fixtures that set `border` (`api/tape/*.spec.ts`,

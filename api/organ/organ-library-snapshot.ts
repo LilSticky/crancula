@@ -15,15 +15,15 @@ export interface OrganSnapshot {
   readonly pipes: readonly {readonly note: number}[];
 }
 
-/** Snapshot file format, version 1, stored at `<userData>/snapshots/organs.json` (ADR 8). */
+/** Snapshot file format, version 2, stored at `<userData>/snapshots/organs.json` (ADR 8, ADR 20). */
 export interface OrganLibrarySnapshot {
-  readonly version: 1;
+  readonly version: 2;
   readonly organs: readonly OrganSnapshot[];
 }
 
 export function toSnapshot(organs: readonly Organ[]): OrganLibrarySnapshot {
   return {
-    version: 1,
+    version: 2,
     organs: organs.map((organ) => ({
       id: organ.id,
       name: organ.name,
@@ -40,7 +40,8 @@ export function toSnapshot(organs: readonly Organ[]): OrganLibrarySnapshot {
  */
 export function parseOrganLibrarySnapshot(input: unknown): Result<Organ[], string> {
   if (!isRecord(input)) return err('snapshot is not an object');
-  if (input['version'] !== 1) return err(`unsupported snapshot version ${String(input['version'])}`);
+  // Version 1 stored a Border, which is derived now; its value is ignored (ADR 20).
+  if (input['version'] !== 1 && input['version'] !== 2) return err(`unsupported snapshot version ${String(input['version'])}`);
   const organs = input['organs'];
   if (!Array.isArray(organs)) return err('organs is not a list');
 

@@ -10,7 +10,7 @@ const ID = '3f2b8c1e-9d4a-4f6b-8e2c-1a2b3c4d5e6f';
 
 function snapshot(name: string): OrganLibrarySnapshot {
   return {
-    version: 1,
+    version: 2,
     organs: [
       {
         id: ID,
@@ -51,7 +51,7 @@ describe('load', () => {
 
   it.each([
     ['broken JSON', '{oops'],
-    ['an unknown version', JSON.stringify({version: 2, organs: []})],
+    ['an unknown version', JSON.stringify({version: 3, organs: []})],
     ['an invalid Organ', JSON.stringify({version: 1, organs: [{id: ID}]})],
   ])('moves a snapshot with %s aside untouched', async (_, content) => {
     await writeFile(organsFile(), content);
