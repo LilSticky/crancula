@@ -39,7 +39,11 @@ variants 40–42 (self-reviews). New tooling: `ux-review` skill, `ux-designer` a
 The Tape is drawn horizontally, row 1 on top (user decision). German for Tape is now Lochband
 (dictionary, UI texts). Applying the guide to the app: [#59](https://github.com/LilSticky/crancula/issues/59).
 
-**Next concrete step:** `/speckit-specify` for "Punch a tape" ([#3](https://github.com/LilSticky/crancula/issues/3)).
+**Next concrete step:** apply the design guide before the app grows (user decision, 2026-10-15):
+[#62](https://github.com/LilSticky/crancula/issues/62) theme and fonts, then #63 shell, #64 Organ
+editor, #65 Tape view, #66 lists (all sub-issues of [#59](https://github.com/LilSticky/crancula/issues/59)).
+After that: `/speckit-specify` for "Punch a tape" ([#3](https://github.com/LilSticky/crancula/issues/3)).
+Open issues carry `priority:` and `size:` labels; triage sets them.
 
 ## Known broken / WIP
 
