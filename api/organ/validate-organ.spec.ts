@@ -3,12 +3,12 @@ import {emptyOrganDraft, type OrganDraft} from './organ-draft';
 import {organId} from './organ';
 import {type OrganViolation, validateOrgan} from './validate-organ';
 
-/** "Street organ" from the quickstart: 31 Pipes from note 53, needs 117.5 mm of 120 mm. */
+/** "Street organ" from the quickstart: 31 Pipes from note 53, has a Row Span of 107.5 mm on 120 mm. */
 function validDraft(overrides: Partial<OrganDraft> = {}): OrganDraft {
   return {
     ...emptyOrganDraft(),
     name: 'Street organ',
-    tapeBed: {tapeWidth: 120, border: 5, holeDiameter: 2.5, rowSpacing: 3.5},
+    tapeBed: {tapeWidth: 120, holeDiameter: 2.5, rowSpacing: 3.5},
     minimumGap: 1.5,
     pipes: Array.from({length: 31}, (_, row) => ({note: 53 + row})),
     ...overrides,
@@ -28,7 +28,7 @@ describe('validateOrgan', () => {
       expect(result.ok).toBe(true);
       if (!result.ok) return;
       expect(result.value.name).toBe('Street organ');
-      expect(result.value.tapeBed).toEqual({tapeWidth: 120, border: 5, holeDiameter: 2.5, rowSpacing: 3.5});
+      expect(result.value.tapeBed).toEqual({tapeWidth: 120, holeDiameter: 2.5, rowSpacing: 3.5});
       expect(result.value.minimumGap).toBe(1.5);
       expect(result.value.pipes.map((pipe) => pipe.note)).toEqual(Array.from({length: 31}, (_, row) => 53 + row));
     });
@@ -44,16 +44,16 @@ describe('validateOrgan', () => {
       expect(result.ok && organId(result.value.id)).toBeTruthy();
     });
 
-    it('accepts a single Pipe, a border of 0 and decimals', () => {
+    it('accepts a single Pipe and decimals', () => {
       const draft = validDraft({
-        tapeBed: {tapeWidth: 3.1, border: 0, holeDiameter: 3.1, rowSpacing: 3.1},
+        tapeBed: {tapeWidth: 3.1, holeDiameter: 3.1, rowSpacing: 3.1},
         pipes: [{note: 60}],
       });
       expect(violationsOf(draft)).toEqual([]);
     });
 
-    it('accepts Pipes that fill the tape width exactly', () => {
-      expect(violationsOf(validDraft({tapeBed: {tapeWidth: 117.5, border: 5, holeDiameter: 2.5, rowSpacing: 3.5}}))).toEqual([]);
+    it('accepts Pipes whose Row Span equals the tape width exactly (Border 0)', () => {
+      expect(violationsOf(validDraft({tapeBed: {tapeWidth: 107.5, holeDiameter: 2.5, rowSpacing: 3.5}}))).toEqual([]);
     });
   });
 
@@ -87,12 +87,11 @@ describe('validateOrgan', () => {
 
     it('requires every measurement', () => {
       const draft = validDraft({
-        tapeBed: {tapeWidth: null, border: null, holeDiameter: null, rowSpacing: null},
+        tapeBed: {tapeWidth: null, holeDiameter: null, rowSpacing: null},
         minimumGap: null,
       });
       expect(violationsOf(draft)).toEqual([
         {code: 'value-required', path: 'tapeBed.tapeWidth'},
-        {code: 'value-required', path: 'tapeBed.border'},
         {code: 'value-required', path: 'tapeBed.holeDiameter'},
         {code: 'value-required', path: 'tapeBed.rowSpacing'},
         {code: 'value-required', path: 'minimumGap'},
@@ -105,7 +104,7 @@ describe('validateOrgan', () => {
 
     it('requires positive tape width, hole diameter, row spacing and Minimum Gap', () => {
       const draft = validDraft({
-        tapeBed: {tapeWidth: 0, border: 5, holeDiameter: -1, rowSpacing: 0},
+        tapeBed: {tapeWidth: 0, holeDiameter: -1, rowSpacing: 0},
         minimumGap: 0,
       });
       expect(violationsOf(draft)).toEqual([
@@ -116,21 +115,21 @@ describe('validateOrgan', () => {
       ]);
     });
 
-    it('rejects a negative border', () => {
-      expect(violationsOf(validDraft({tapeBed: {tapeWidth: 120, border: -0.5, holeDiameter: 2.5, rowSpacing: 3.5}}))).toEqual([
-        {code: 'must-not-be-negative', path: 'tapeBed.border'},
-      ]);
-    });
-
     it('rejects a row spacing smaller than the hole diameter', () => {
-      expect(violationsOf(validDraft({tapeBed: {tapeWidth: 120, border: 5, holeDiameter: 3, rowSpacing: 2.5}}))).toEqual([
+      expect(violationsOf(validDraft({tapeBed: {tapeWidth: 120, holeDiameter: 3, rowSpacing: 2.5}}))).toEqual([
         {code: 'row-spacing-below-hole-diameter', path: 'tapeBed.rowSpacing', params: {holeDiameter: 3}},
       ]);
     });
 
+    it('rejects Pipes whose Row Span is just above the tape width', () => {
+      expect(violationsOf(validDraft({tapeBed: {tapeWidth: 107.4, holeDiameter: 2.5, rowSpacing: 3.5}}))).toEqual([
+        {code: 'pipes-exceed-tape-width', path: 'tapeBed.tapeWidth', params: {requiredWidth: 107.5, availableWidth: 107.4}},
+      ]);
+    });
+
     it('rejects Pipes that do not fit across the tape width', () => {
-      expect(violationsOf(validDraft({tapeBed: {tapeWidth: 100, border: 5, holeDiameter: 2.5, rowSpacing: 3.5}}))).toEqual([
-        {code: 'pipes-exceed-tape-width', path: 'tapeBed.tapeWidth', params: {requiredWidth: 117.5, availableWidth: 100}},
+      expect(violationsOf(validDraft({tapeBed: {tapeWidth: 100, holeDiameter: 2.5, rowSpacing: 3.5}}))).toEqual([
+        {code: 'pipes-exceed-tape-width', path: 'tapeBed.tapeWidth', params: {requiredWidth: 107.5, availableWidth: 100}},
       ]);
     });
 
@@ -139,7 +138,6 @@ describe('validateOrgan', () => {
       expect(codes).toEqual([
         'name-required',
         'pipe-note-required',
-        'value-required',
         'value-required',
         'value-required',
         'value-required',

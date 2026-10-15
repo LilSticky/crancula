@@ -48,7 +48,7 @@ flowchart LR
 ```
 
 1. **Describe your Organ.** List its Pipes by the notes they play (C4, D4, …) and measure its
-   Tape Bed: tape width, border, hole diameter and row spacing in mm. Crancula refuses Organs
+   Tape Bed: tape width, hole diameter and row spacing in mm (Crancula works out the Border). Crancula refuses Organs
    that can't exist, for example duplicate Pipes or more Pipes than fit on the tape.
 2. **Bring a Song onto a Tape.** Import a MIDI file. Crancula shifts it up or down
    (Transposition) so that it fits the Pipes your Organ has.
@@ -86,7 +86,7 @@ Crancula uses the same words everywhere: in the app, in the code and here.
 | **Pipe** | Plays one note. Each Pipe has one row on the Tape |
 | **Tape** | A punched strip that holds one song for one Organ. Rows are Pipes, columns are time |
 | **Hole** | One note: a slot in a Pipe's row. The longer the slot, the longer the note |
-| **Tape Bed** | The surface the Tape runs over: tape width, border, hole diameter and row spacing |
+| **Tape Bed** | The surface the Tape runs over: tape width, hole diameter and row spacing; the Border is derived |
 | **Minimum Hole Length / Minimum Gap** | The shortest Hole, and the smallest space between two Holes, that your Organ can tell apart |
 | **Crank** | You turn it to draw the Tape through the Organ. Its speed sets the tempo |
 | **Plotter** | The machine that cuts the Holes, such as a vinyl cutter |

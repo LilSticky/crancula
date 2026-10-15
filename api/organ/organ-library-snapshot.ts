@@ -8,7 +8,6 @@ export interface OrganSnapshot {
   readonly name: string;
   readonly tapeBed: {
     readonly tapeWidth: number;
-    readonly border: number;
     readonly holeDiameter: number;
     readonly rowSpacing: number;
   };
@@ -16,15 +15,15 @@ export interface OrganSnapshot {
   readonly pipes: readonly {readonly note: number}[];
 }
 
-/** Snapshot file format, version 1, stored at `<userData>/snapshots/organs.json` (ADR 8). */
+/** Snapshot file format, version 2, stored at `<userData>/snapshots/organs.json` (ADR 8, ADR 20). */
 export interface OrganLibrarySnapshot {
-  readonly version: 1;
+  readonly version: 2;
   readonly organs: readonly OrganSnapshot[];
 }
 
 export function toSnapshot(organs: readonly Organ[]): OrganLibrarySnapshot {
   return {
-    version: 1,
+    version: 2,
     organs: organs.map((organ) => ({
       id: organ.id,
       name: organ.name,
@@ -41,7 +40,8 @@ export function toSnapshot(organs: readonly Organ[]): OrganLibrarySnapshot {
  */
 export function parseOrganLibrarySnapshot(input: unknown): Result<Organ[], string> {
   if (!isRecord(input)) return err('snapshot is not an object');
-  if (input['version'] !== 1) return err(`unsupported snapshot version ${String(input['version'])}`);
+  // Version 1 stored a Border, which is derived now; its value is ignored (ADR 20).
+  if (input['version'] !== 1 && input['version'] !== 2) return err(`unsupported snapshot version ${String(input['version'])}`);
   const organs = input['organs'];
   if (!Array.isArray(organs)) return err('organs is not a list');
 
@@ -61,8 +61,8 @@ function parseOrgan(input: unknown): Result<Organ, string> {
   if (typeof id !== 'string' || organId(id) === undefined) return err('id is not a UUID');
   if (typeof name !== 'string') return err('name is not a string');
   if (!isRecord(tapeBed)) return err('tapeBed is not an object');
-  const {tapeWidth, border, holeDiameter, rowSpacing} = tapeBed;
-  if (!isNumber(tapeWidth) || !isNumber(border) || !isNumber(holeDiameter) || !isNumber(rowSpacing) || !isNumber(minimumGap)) {
+  const {tapeWidth, holeDiameter, rowSpacing} = tapeBed;
+  if (!isNumber(tapeWidth) || !isNumber(holeDiameter) || !isNumber(rowSpacing) || !isNumber(minimumGap)) {
     return err('a measurement is not a number');
   }
   if (!Array.isArray(pipes)) return err('pipes is not a list');
@@ -75,7 +75,7 @@ function parseOrgan(input: unknown): Result<Organ, string> {
   const result = validateOrgan({
     id: organId(id),
     name,
-    tapeBed: {tapeWidth, border, holeDiameter, rowSpacing},
+    tapeBed: {tapeWidth, holeDiameter, rowSpacing},
     minimumGap,
     pipes: notes.map((note) => ({note})),
   });

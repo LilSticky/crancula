@@ -24,7 +24,7 @@ The user is a hobbyist who owns a barrel Organ and a Plotter (vinyl cutter), on 
 detail-oriented, works in millimetres. Core tasks (v0.1), with terms from
 `documentation/DICTIONARY.md`:
 
-1. **Describe my Organ**: name, Tape Bed (tape width, border, hole diameter, row spacing, minimum
+1. **Describe my Organ**: name, Tape Bed (tape width, hole diameter, row spacing, minimum
    gap, minimum hole length, all in mm), and 20–80 Pipes in row order with their MIDI notes.
 2. **Bring a Song onto a Tape**: pick a MIDI file, choose an Organ, see what changed on import
    (Transposition, dropped notes, Parts), get a Tape.

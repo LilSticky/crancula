@@ -19,7 +19,7 @@ Holes, a brass rule for measuring. Craft, not costume: no wood grain, scrolls or
    is for errors, unsaved changes and destructive actions only.
 4. **One screen, one job.** The Organ editor, the import and the Tape view fit a 1280×800 window
    without page scrolling; long lists become dense, ruled tables.
-5. **Check before you cut.** Physical checks (do the rows fit between the borders?) sit next to
+5. **Check before you cut.** Physical checks (do the rows fit across the tape?) sit next to
    the values they check, and say the numbers.
 
 ## Rules all variants agreed on
@@ -94,13 +94,14 @@ Roboto goes once nothing uses it. Add each licence text next to the font files.
   range (31 Pipes, F3–B5), a miniature of its Tape Bed to a common scale (width and row positions
   only, no invented Holes) and "3 Tapes" as a link to the Tape list filtered by this Organ.
   Primary: New Organ. A dashed next-step strip points to "Bring a Song onto a Tape".
-- **Organ editor:** left the Tape Bed sheet (name; tape width, border, hole diameter, spacing
+- **Organ editor:** left the Tape Bed sheet (name; tape width, hole diameter, spacing
   between rows, Minimum Gap in two columns of ~170 px; Minimum Hole Length read-only with a dashed
   outline and "Equals the hole diameter") with a Tape Bed drawing from the values. Right the Pipe
   rack: 3 columns of 11 rows (row, note, handle, menu), read down then across. Under the drawing
-  the **fit check**: rows need (Pipes − 1) × spacing + hole diameter, the space is tape width −
-  2 × border. Street organ: "31 rows take 107,5 mm of the 110 mm between the borders" (30 × 3,5 +
-  2,5 = 107,5; 120 − 2 × 5 = 110). If it does not fit, it becomes an error with icon and numbers.
+  the **fit check**: the Row Span is (Pipes − 1) × spacing + hole diameter, and the Border is
+  derived, never entered: (tape width − Row Span) / 2, shown read-only. Street organ: "31 rows take
+  107,5 mm of 120 mm; 6,25 mm Border on each side" (30 × 3,5 + 2,5 = 107,5; (120 − 107,5) / 2 =
+  6,25). If the Border would be negative it becomes an error with icon and numbers.
 - **Tape list:** a ledger of all Tapes: name, Organ (link), Columns, length in mm, created date;
   row click opens the Tape view, a row menu holds Rename and Delete Tape. Filter by Organ as a
   chip. Primary: Bring a Song onto a Tape. Empty: "No Tapes yet. Bring a Song onto a Tape." plus
@@ -158,9 +159,9 @@ Roboto goes once nothing uses it. Add each licence text next to the font files.
   Organ: its Tape Bed and Pipes." + New Organ).
 - **Error:** under the field after touch: oxblood outline, icon and a plain sentence. Save stays
   enabled; pressing it shows the **error summary** at the top of the form ("3 problems prevent
-  saving: Border, Hole diameter, Row 3"), each a link that focuses its field; focus moves to the
+  saving: Tape width, Hole diameter, Row 3"), each a link that focuses its field; focus moves to the
   summary. The action bar shows the same count.
-- **Unsaved:** oxblood dot + "Unsaved changes: Border" in the action bar; leaving asks first.
+- **Unsaved:** oxblood dot + "Unsaved changes: Tape width" in the action bar; leaving asks first.
 - **New, not saved:** no Delete; the subtitle says "Not saved yet".
 - **Later release:** a feature not built yet is shown disabled with a visible sentence, never a
   tooltip alone, and never as if it worked.

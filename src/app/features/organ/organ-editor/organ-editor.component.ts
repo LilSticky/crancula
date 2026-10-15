@@ -9,7 +9,6 @@ import {MatIcon} from '@angular/material/icon';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {Router} from '@angular/router';
 import {TranslatePipe, TranslateService} from '@ngx-translate/core';
-import {firstValueFrom} from 'rxjs';
 import {
   addPipe,
   emptyOrganDraft,
@@ -20,9 +19,13 @@ import {
   type Organ,
   type OrganDraft,
   removePipe,
+  tapeBedFit,
   toDraft,
   validateOrgan,
 } from '@api/index';
+import {firstValueFrom} from 'rxjs';
+import {formatNumber} from '../../shared/format-number';
+import {LanguagePreference} from '../../shared/language-preference';
 import {ConfirmableAction, ConfirmDialogComponent} from '../../shared/components/confirm-dialog/confirm-dialog.component';
 import type {LeaveProblem, TranslatableText, UnsavedChanges, UnsavedChangesCheck} from '../leave-unsaved.guard';
 import {PageHeadComponent} from '../../shared/components/page-head/page-head.component';
@@ -35,7 +38,6 @@ import {type FieldProblem, organFormSchema, organProblems, shownMessages, ShownV
 const FIELD_LABEL_KEYS: Readonly<Record<string, string>> = {
   name: 'ORGAN.EDITOR.NAME',
   'tapeBed.tapeWidth': 'ORGAN.EDITOR.TAPE_WIDTH',
-  'tapeBed.border': 'ORGAN.EDITOR.BORDER',
   'tapeBed.holeDiameter': 'ORGAN.EDITOR.HOLE_DIAMETER',
   'tapeBed.rowSpacing': 'ORGAN.EDITOR.ROW_SPACING',
   minimumGap: 'ORGAN.EDITOR.MINIMUM_GAP',
@@ -102,6 +104,17 @@ export class OrganEditorComponent implements UnsavedChangesCheck {
   private readonly changed = computed(() => JSON.stringify(this.draft()) !== JSON.stringify(this.saved()));
   private readonly saving = signal(false);
   protected readonly canSave = computed(() => this.changed() && this.organ().valid() && !this.saving());
+
+  private readonly language = inject(LanguagePreference).language;
+
+  /** The Border the rows leave on each side, in the current language; empty while it is unknown or negative. */
+  protected readonly border = computed(() => {
+    const {tapeWidth, holeDiameter, rowSpacing} = this.draft().tapeBed;
+    const pipeCount = this.draft().pipes.length;
+    if (tapeWidth === null || holeDiameter === null || rowSpacing === null || pipeCount === 0) return '';
+    const {border} = tapeBedFit({tapeWidth, holeDiameter, rowSpacing}, pipeCount);
+    return border < 0 ? '' : formatNumber(border, this.language());
+  });
 
   protected readonly minimumHoleLength = computed(() => this.organ.tapeBed.holeDiameter().value() ?? '');
 

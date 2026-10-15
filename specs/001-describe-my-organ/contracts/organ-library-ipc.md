@@ -27,16 +27,16 @@ Any other channel is neither registered nor exposed.
 ## Payloads
 
 ```ts
-/** Snapshot file format, version 1. Stored at <userData>/snapshots/organs.json */
+/** Snapshot file format, version 2 (amended 2026-10-15, #74). Stored at <userData>/snapshots/organs.json */
 interface OrganLibrarySnapshot {
-  version: 1;
+  version: 2;
   organs: OrganSnapshot[];
 }
 
 interface OrganSnapshot {
   id: string;
   name: string;
-  tapeBed: { tapeWidth: number; border: number; holeDiameter: number; rowSpacing: number };
+  tapeBed: { tapeWidth: number; holeDiameter: number; rowSpacing: number };
   minimumGap: number;
   pipes: { note: number }[]; // array order = row order
 }
@@ -55,8 +55,10 @@ type OrganLibrarySaveResult =
 ## Rules
 
 - **Validating the snapshot:** `parseOrganLibrarySnapshot(unknown)` in `api/organ` checks the
-  shape, `version === 1`, unique ids, and that every Organ passes `validateOrgan`. Both the load
-  and the save path use it.
+  shape, unique ids, and that every Organ passes `validateOrgan`. Both the load
+  and the save path use it. Version 2 is current. Version 1 (with a `border`) is still read: the
+  `border` is ignored and the Organ is validated without it; saving always writes version 2
+  (ADR 20). Other versions are rejected.
 - **Unreadable file:** if the file is unreadable (bad JSON, failed validation, unknown version),
   the main process renames it to `organs.unreadable-<ISO timestamp>.json` in the same folder and
   never writes into it. The reply is `unreadable` with that path.

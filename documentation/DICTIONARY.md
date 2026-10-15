@@ -71,8 +71,23 @@
 
 # Tape Bed
 * The surface in the Organ the Tape runs over while being played
-* Defines tape width, border, hole diameter and spacing between rows
+* Defines tape width, hole diameter and spacing between rows (centre to centre)
+* Rows are always centred across the Tape; row 1 is nearest the Tape's top edge, as drawn in the Tape view
 * German: Bandbett; its spacing between rows: Reihenabstand
+
+# Border
+* The free strip between a Tape edge and the holes of the outermost row; the same on both sides
+* Derived, never entered: (tape width − Row Span) / 2
+* Depends on the Organ's number of Pipes, not on the Tape Bed alone
+* A Border of 0 is valid: the holes may touch the Tape's edge
+* An Organ whose Border would be negative is invalid: its rows don't fit across the Tape
+* Shown read-only in the Organ editor and drawn in the Tape view
+* German: Rand
+
+# Row Span
+* The width the rows take across the Tape, from the outer edge of row 1's holes to the outer edge of the last row's holes
+* (Pipes − 1) × spacing between rows + hole diameter
+* German: Reihenbreite
 
 # Song Source
 * The material a Song is imported from: MIDI, MusicXML, PDF or printed Scores

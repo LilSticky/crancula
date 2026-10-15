@@ -148,7 +148,6 @@
       "DUPLICATE_PIPE": "Another Pipe already plays {{noteName}}.",
       "VALUE_REQUIRED": "Please enter a value.",
       "MUST_BE_POSITIVE": "Must be greater than 0.",
-      "MUST_NOT_BE_NEGATIVE": "Must not be negative.",
       "ROW_SPACING_BELOW_HOLE_DIAMETER": "Must be at least the hole diameter ({{holeDiameter}} mm), or neighbouring holes overlap.",
       "PIPES_EXCEED_TAPE_WIDTH": "The Pipes need {{requiredWidth}} mm, but the tape is only {{availableWidth}} mm wide."
     },

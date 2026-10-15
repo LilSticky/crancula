@@ -13,7 +13,6 @@ export type Millimetres = number & { readonly [millimetresBrand]: true };
 /** The surface in the Organ the Tape runs over while being played. */
 export interface TapeBed {
   readonly tapeWidth: Millimetres;
-  readonly border: Millimetres;
   readonly holeDiameter: Millimetres;
   /** Centre-to-centre distance between neighbouring rows. */
   readonly rowSpacing: Millimetres;
@@ -53,9 +52,28 @@ export function millimetres(value: number): Millimetres | undefined {
   return Number.isFinite(value) && value >= 0 ? (value as Millimetres) : undefined;
 }
 
-/** Width a Tape needs so that `pipeCount` rows fit between its borders. */
-export function requiredTapeWidth(tapeBed: TapeBed, pipeCount: number): number {
-  return 2 * tapeBed.border + (pipeCount - 1) * tapeBed.rowSpacing + tapeBed.holeDiameter;
+/** Width the rows of `pipeCount` Pipes take across the Tape: outer edge of the first to the last Hole. */
+export function rowSpan(tapeBed: {readonly holeDiameter: number; readonly rowSpacing: number}, pipeCount: number): number {
+  return (pipeCount - 1) * tapeBed.rowSpacing + tapeBed.holeDiameter;
+}
+
+/** How the rows of `pipeCount` Pipes sit on a Tape Bed; the Border is negative if they do not fit. */
+export interface TapeBedFit {
+  readonly rowSpan: number;
+  readonly border: number;
+}
+
+export function tapeBedFit(
+  tapeBed: {readonly tapeWidth: number; readonly holeDiameter: number; readonly rowSpacing: number},
+  pipeCount: number,
+): TapeBedFit {
+  const span = rowSpan(tapeBed, pipeCount);
+  return {rowSpan: span, border: (tapeBed.tapeWidth - span) / 2};
+}
+
+/** The free margin on each side of the rows, which are centred on the Tape Bed. */
+export function border(organ: Organ): number {
+  return tapeBedFit(organ.tapeBed, organ.pipes.length).border;
 }
 
 /** The shortest Hole an Organ can play: its hole diameter. */

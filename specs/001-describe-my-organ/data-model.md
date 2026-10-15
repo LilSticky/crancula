@@ -27,11 +27,11 @@ These are domain types in `api/organ/`, written in pure TypeScript. Names follow
 | Field | Type | Rule |
 |-------|------|------|
 | `tapeWidth` | `Millimetres` | > 0 |
-| `border` | `Millimetres` | ≥ 0 |
 | `holeDiameter` | `Millimetres` | > 0 |
 | `rowSpacing` | `Millimetres` | > 0, and ≥ `holeDiameter` (FR-009) |
 
 `rowSpacing` is the centre-to-centre distance between neighbouring rows (spec Assumptions).
+There is no `border` field: the Border is derived (amended 2026-10-15, #74).
 
 ## Organ (aggregate root)
 
@@ -45,8 +45,10 @@ These are domain types in `api/organ/`, written in pure TypeScript. Names follow
 
 **Derived values:**
 - `minimumHoleLength = tapeBed.holeDiameter` (FR-010, dictionary).
-- `requiredTapeWidth = 2 × border + (pipes.length − 1) × rowSpacing + holeDiameter`. It must be
-  ≤ `tapeWidth` (FR-008).
+- `rowSpan = (pipes.length − 1) × rowSpacing + holeDiameter`.
+- `border = (tapeWidth − rowSpan) / 2`, rows centred, row 1 nearest the top edge. It must be ≥ 0
+  (FR-008); 0 is valid. `tapeBedFit(tapeBed, pipeCount)` returns `{ rowSpan, border }`
+  (amended 2026-10-15, #74).
 
 **Operations** (pure; each returns a new value):
 - `addPipe(note)` appends a Pipe as the last row.
@@ -75,9 +77,8 @@ violation found. It never stops at the first one.
 | `duplicate-pipe` | `pipes[i].note` (one violation per affected Pipe) | `noteName` | FR-007 |
 | `value-required` | `tapeBed.*` / `minimumGap` | – | FR-007 |
 | `must-be-positive` | `tapeBed.tapeWidth`, `tapeBed.holeDiameter`, `tapeBed.rowSpacing`, `minimumGap` | – | FR-007 |
-| `must-not-be-negative` | `tapeBed.border` | – | FR-007 |
 | `row-spacing-below-hole-diameter` | `tapeBed.rowSpacing` | `holeDiameter` | FR-009 |
-| `pipes-exceed-tape-width` | `tapeBed.tapeWidth` | `requiredWidth`, `availableWidth` | FR-008 |
+| `pipes-exceed-tape-width` | `tapeBed.tapeWidth` | `rowSpan`, `tapeWidth` | FR-008 |
 
 The UI shows each code with the i18n key `ORGAN.VIOLATION.<CODE_IN_UPPER_SNAKE>`, in both en and
 de (FR-011, FR-016).
