@@ -3,7 +3,7 @@ import {TestBed} from '@angular/core/testing';
 import {form} from '@angular/forms/signals';
 import {emptyOrganDraft, type OrganDraft, toDraft} from '@api/index';
 import {testOrgan} from '../../../../testing/organs';
-import {changedFields, isOrganFieldError, type OrganFieldError, organFormSchema} from './organ-form';
+import {changedFields, type FieldProblem, isOrganFieldError, type OrganFieldError, organFormSchema, problemFields} from './organ-form';
 
 function organForm(draft: OrganDraft) {
   return TestBed.runInInjectionContext(() => form(signal(draft), organFormSchema));
@@ -119,5 +119,50 @@ describe('changedFields', () => {
 
   it('puts pipes after the other changed fields', () => {
     expect(changedFields(saved, {...saved, minimumGap: 9, pipes: saved.pipes.slice(1)})).toEqual(['minimumGap', 'pipes']);
+  });
+});
+
+describe('problemFields', () => {
+  const problem = (path: string, key = 'ORGAN.VIOLATION.VALUE_REQUIRED'): FieldProblem => ({path, message: {key, params: {}}});
+
+  it('is empty without problems', () => {
+    expect(problemFields([])).toEqual([]);
+  });
+
+  it('labels each field with its fixed label', () => {
+    const paths = ['name', 'tapeBed.tapeWidth', 'tapeBed.holeDiameter', 'tapeBed.rowSpacing', 'minimumGap', 'pipes'];
+
+    expect(problemFields(paths.map((path) => problem(path)))).toEqual([
+      {path: 'name', label: {key: 'ORGAN.EDITOR.NAME', params: {}}},
+      {path: 'tapeBed.tapeWidth', label: {key: 'ORGAN.EDITOR.TAPE_WIDTH', params: {}}},
+      {path: 'tapeBed.holeDiameter', label: {key: 'ORGAN.EDITOR.HOLE_DIAMETER', params: {}}},
+      {path: 'tapeBed.rowSpacing', label: {key: 'ORGAN.EDITOR.ROW_SPACING', params: {}}},
+      {path: 'minimumGap', label: {key: 'ORGAN.EDITOR.MINIMUM_GAP', params: {}}},
+      {path: 'pipes', label: {key: 'ORGAN.EDITOR.PIPES', params: {}}},
+    ]);
+  });
+
+  it('labels a Pipe note by its 1-based row', () => {
+    expect(problemFields([problem('pipes.2.note')])).toEqual([
+      {path: 'pipes.2.note', label: {key: 'ORGAN.EDITOR.ROW', params: {row: 3}}},
+    ]);
+  });
+
+  it('lists each field once, however many problems it has', () => {
+    const fields = problemFields([problem('tapeBed.tapeWidth'), problem('tapeBed.tapeWidth', 'ORGAN.VIOLATION.OTHER')]);
+
+    expect(fields.map(({path}) => path)).toEqual(['tapeBed.tapeWidth']);
+  });
+
+  it('puts the fields in reading order whatever the order of the problems', () => {
+    const fields = problemFields([problem('pipes.2.note'), problem('pipes.0.note'), problem('minimumGap'), problem('name'), problem('tapeBed.holeDiameter')]);
+
+    expect(fields.map(({path}) => path)).toEqual(['name', 'tapeBed.holeDiameter', 'minimumGap', 'pipes.0.note', 'pipes.2.note']);
+  });
+
+  it('orders rows numerically, not as text', () => {
+    const fields = problemFields([problem('pipes.10.note'), problem('pipes.9.note')]);
+
+    expect(fields.map(({path}) => path)).toEqual(['pipes.9.note', 'pipes.10.note']);
   });
 });

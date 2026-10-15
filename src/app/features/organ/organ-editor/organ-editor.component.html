@@ -1,6 +1,22 @@
 <div class="organ-editor">
   <cranc-page-head [title]="(id() ? 'ORGAN.EDITOR.TITLE' : 'ORGAN.EDITOR.TITLE_NEW') | translate"/>
 
+  @if (summaryFields().length > 0) {
+    <div #summary class="error-summary" data-testid="error-summary" role="alert" tabindex="-1">
+      <mat-icon aria-hidden="true" fontIcon="error"/>
+      <div>
+        <h2>{{ problemsKey() | translate: {count: summaryFields().length} }}</h2>
+        <ul>
+          @for (field of summaryFields(); track field.path) {
+            <li>
+              <button type="button" matButton data-testid="error-summary-entry" (click)="focusField(field.path)">{{ field.label.key | translate: field.label.params }}</button>
+            </li>
+          }
+        </ul>
+      </div>
+    </div>
+  }
+
   <div class="sheets">
     <mat-card appearance="outlined" data-testid="tape-bed-sheet">
       <h2 class="sheet-title">{{ 'ORGAN.EDITOR.TAPE_BED' | translate }}</h2>
@@ -167,6 +183,9 @@
     <span actionBarState class="action-state">
       @if (isSaving()) {
         {{ 'ORGAN.EDITOR.SAVING' | translate }}
+      } @else if (summaryFields().length > 0) {
+        <mat-icon aria-hidden="true" fontIcon="error"/>
+        {{ problemsKey() | translate: {count: summaryFields().length} }}
       } @else if (hasChanges()) {
         <span class="unsaved-dot" data-testid="unsaved-dot" aria-hidden="true"></span>
         {{ 'ORGAN.EDITOR.UNSAVED_CHANGES' | translate: {fields: changedLabels()} }}

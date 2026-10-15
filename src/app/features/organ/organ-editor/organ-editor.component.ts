@@ -1,4 +1,4 @@
-import {afterNextRender, ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, Injector, input, linkedSignal, signal, untracked, viewChildren} from '@angular/core';
+import {afterNextRender, ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, Injector, input, linkedSignal, signal, untracked, viewChild, viewChildren} from '@angular/core';
 import {BreakpointObserver} from '@angular/cdk/layout';
 import {toSignal} from '@angular/core/rxjs-interop';
 import {CdkDrag, CdkDragDrop, CdkDragHandle, CdkDropList, CdkDropListGroup} from '@angular/cdk/drag-drop';
@@ -40,19 +40,19 @@ import {TapeLibrary} from '../../tape/tape-library.store';
 import {OrganDeletion} from '../organ-deletion';
 import {OrganLibrary} from '../organ-library.store';
 import {rackColumns} from './pipe-rack';
-import {changedFields, type FieldProblem, organFormSchema, organProblems, shownMessages, ShownViolationMatcher} from './organ-form';
+import {changedFields, FIELD_LABEL_KEYS, type FieldProblem, organFormSchema, organProblems, problemFields, SaveAttempt, shownMessages, ShownViolationMatcher} from './organ-form';
 
 /** Below this width the Pipe rack has 2 columns of compact rows (the same threshold as the shell). */
 const COMPACT_QUERY = '(max-width: 1179.98px)';
 
-/** The label key of each field that has one fixed label; Pipe notes are labelled by their row. */
-const FIELD_LABEL_KEYS: Readonly<Record<string, string>> = {
-  name: 'ORGAN.EDITOR.NAME',
-  'tapeBed.tapeWidth': 'ORGAN.EDITOR.TAPE_WIDTH',
-  'tapeBed.holeDiameter': 'ORGAN.EDITOR.HOLE_DIAMETER',
-  'tapeBed.rowSpacing': 'ORGAN.EDITOR.ROW_SPACING',
-  minimumGap: 'ORGAN.EDITOR.MINIMUM_GAP',
-  pipes: 'ORGAN.EDITOR.PIPES',
+/** The test id of the element that takes the focus for each field outside the Pipe rows. */
+const FIELD_TEST_IDS: Readonly<Record<string, string>> = {
+  name: 'name',
+  'tapeBed.tapeWidth': 'tape-width',
+  'tapeBed.holeDiameter': 'hole-diameter',
+  'tapeBed.rowSpacing': 'row-spacing',
+  minimumGap: 'minimum-gap',
+  pipes: 'add-pipe',
 };
 
 @Component({
@@ -60,7 +60,7 @@ const FIELD_LABEL_KEYS: Readonly<Record<string, string>> = {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [TranslatePipe, MatFormField, MatLabel, MatInput, MatHint, MatError, MatSuffix, MatButton, MatIconButton, MatIcon, MatMenu, MatMenuItem, MatMenuTrigger, MatTooltip, MatCard, FormField, DecimalInputDirective, CdkDropList, CdkDropListGroup, CdkDrag, CdkDragHandle, PageHeadComponent, ActionBarComponent],
   templateUrl: './organ-editor.component.html',
-  providers: [{provide: ErrorStateMatcher, useClass: ShownViolationMatcher}],
+  providers: [SaveAttempt, {provide: ErrorStateMatcher, useClass: ShownViolationMatcher}],
   styles: `
     .unsaved-dot {
       display: inline-block;
@@ -141,6 +141,32 @@ const FIELD_LABEL_KEYS: Readonly<Record<string, string>> = {
 
     .violation {
       color: var(--mat-sys-error);
+    }
+
+    .error-summary {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+      padding: 16px 20px;
+      border: 1px solid var(--mat-sys-error);
+      border-radius: 4px;
+      color: var(--mat-sys-error);
+
+      h2 {
+        margin: 0 0 8px;
+        font-size: 1rem;
+      }
+
+      ul {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      button {
+        color: inherit;
+        text-decoration: underline;
+      }
     }
 
     .rack {
@@ -234,7 +260,10 @@ export class OrganEditorComponent implements UnsavedChangesCheck {
 
   private readonly changed = computed(() => JSON.stringify(this.draft()) !== JSON.stringify(this.saved()));
   private readonly saving = signal(false);
-  private readonly isStored = computed(() => !!this.library.entityMap()[this.draft().id]);
+  private readonly isStored = computed(() => {
+    const {id} = this.draft();
+    return id !== undefined && this.library.entityMap()[id] !== undefined;
+  });
 
   /** Save is only unavailable for a stored Organ without changes, or while a save is running. */
   protected readonly saveDisabled = computed(() => this.saving() || (this.isStored() && !this.changed()));
@@ -246,6 +275,13 @@ export class OrganEditorComponent implements UnsavedChangesCheck {
   protected readonly hasChanges = this.changed;
 
   private readonly language = inject(LanguagePreference).language;
+  private readonly saveAttempt = inject(SaveAttempt).attempted;
+  private readonly summary = viewChild<ElementRef<HTMLElement>>('summary');
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+
+  /** The fields that prevent saving, once Save was pressed; empty after that when all are fixed. */
+  protected readonly summaryFields = computed(() => (this.saveAttempt() ? problemFields(organProblems(this.organ)) : []));
+  protected readonly problemsKey = computed(() => (this.summaryFields().length === 1 ? 'ORGAN.EDITOR.PROBLEM_ONE' : 'ORGAN.EDITOR.PROBLEMS'));
 
   /** How the rows fit the Tape Bed; `null` while a value is missing or there are no Pipes. */
   private readonly tapeBedFit = computed(() => {
@@ -317,7 +353,12 @@ export class OrganEditorComponent implements UnsavedChangesCheck {
   /** Stores the valid, changed Organ (spec FR-012). */
   protected async save(): Promise<void> {
     const result = validateOrgan(this.draft());
-    if (!result.ok || !this.changed() || this.saving()) return;
+    if (!result.ok) {
+      this.saveAttempt.set(true);
+      afterNextRender(() => this.summary()?.nativeElement.focus(), {injector: this.injector});
+      return;
+    }
+    if (!this.changed() || this.saving()) return;
     const sent = this.draft();
     this.saving.set(true);
     try {
@@ -362,7 +403,18 @@ export class OrganEditorComponent implements UnsavedChangesCheck {
 
   /** The messages to show at a field now. */
   protected messagesAt(field: FieldTree<unknown>): readonly TranslatableText[] {
-    return shownMessages(field, this.organ);
+    return shownMessages(field, this.organ, this.saveAttempt());
+  }
+
+  /** Moves the focus to the field of an error summary entry. */
+  protected focusField(path: string): void {
+    const row = /^pipes\.(\d+)\./.exec(path)?.[1];
+    if (row !== undefined) {
+      this.noteInputs()[Number(row)]?.nativeElement.focus();
+      return;
+    }
+    const testId = FIELD_TEST_IDS[path];
+    if (testId) this.host.nativeElement.querySelector<HTMLElement>(`[data-testid="${testId}"]`)?.focus();
   }
 
   /** The name of the note a Pipe plays, or nothing while its note is missing or out of range. */

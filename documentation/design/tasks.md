@@ -168,10 +168,10 @@ Every task that adds or changes UI text adds the keys to `en.json` and `de.json`
 - [x] **E14** Discard changes, component. Spec: the button shows only with unsaved changes;
   pressing it restores the last saved version (empty fields for a new Organ), `unsavedChanges()`
   becomes `null`, nothing is written. Then the button.
-- [ ] **E15** Error summary content, unit. A pure helper in `organ-form.ts`: from `organProblems`
+- [x] **E15** Error summary content, unit. A pure helper in `organ-form.ts`: from `organProblems`
   the distinct fields with problems in reading order, each with its label ("Tape width", "Row 3" for
   `pipes.2.note`, "Pipes" for `pipes`) and the path to focus. Spec first.
-- [ ] **E16** Error summary behaviour, component. Spec: pressing Save on an invalid Organ writes
+- [x] **E16** Error summary behaviour, component. Spec: pressing Save on an invalid Organ writes
   nothing, shows every field message (also untouched missing values), and shows
   `data-testid="error-summary"` at the top of the form ("3 problems prevent saving: Tape width,
   Hole diameter, Row 3") with the focus on it; each entry is a link that focuses its field (`pipes`

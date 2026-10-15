@@ -585,6 +585,142 @@ describe('OrganEditorComponent', () => {
     });
   });
 
+  describe('pressing Save on an invalid Organ', () => {
+    const summary = (element: HTMLElement) => element.querySelector<HTMLElement>('[data-testid="error-summary"]');
+    const entryElements = (element: HTMLElement) => [...element.querySelectorAll<HTMLElement>('[data-testid="error-summary-entry"]')];
+    const entries = (element: HTMLElement) => entryElements(element).map((entry) => entry.textContent?.trim());
+    const barState = (element: HTMLElement) =>
+      element.querySelector<HTMLElement>('cranc-action-bar [data-testid="action-bar-state"]')?.textContent?.replace(/\s+/g, ' ').trim();
+    const noteInput = (element: HTMLElement, row: number) => {
+      const input = element.querySelectorAll<HTMLInputElement>('[data-testid="pipe-note"]')[row];
+      if (!input) throw new Error(`no Pipe in row ${row}`);
+      return input;
+    };
+
+    /** A stored Organ of 3 Pipes with Tape width, Hole diameter and the note of row 3 cleared. */
+    async function openWithThreeProblems() {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 3);
+      await library.put(organ);
+      const editor = await openEditor(organ.id);
+      await editor.type(editor.field('tape-width'), '');
+      await editor.type(editor.field('hole-diameter'), '');
+      await editor.type(noteInput(editor.element, 2), '');
+      return {...editor, library, organ};
+    }
+
+    it('shows no summary before Save was pressed', async () => {
+      const {element} = await openWithThreeProblems();
+
+      expect(summary(element)).toBeNull();
+    });
+
+    it('writes nothing', async () => {
+      const {save, library, organ} = await openWithThreeProblems();
+
+      await save();
+
+      expect(library.entities()).toEqual([organ]);
+    });
+
+    it('shows an alert summary above the sheets with the fields in reading order', async () => {
+      const {element, save} = await openWithThreeProblems();
+
+      await save();
+
+      const shown = summary(element);
+      expect(shown?.getAttribute('role')).toBe('alert');
+      expect(shown?.textContent).toContain('3 problems prevent saving');
+      expect(entries(element)).toEqual(['Tape width', 'Hole diameter', 'Row 3']);
+      const sheet = element.querySelector('[data-testid="tape-bed-sheet"]');
+      expect(shown && sheet && shown.compareDocumentPosition(sheet)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    });
+
+    it('moves the focus to the summary', async () => {
+      const {element, save} = await openWithThreeProblems();
+
+      await save();
+
+      expect(document.activeElement).toBe(summary(element));
+    });
+
+    it('shows the message of every field, also of untouched missing values', async () => {
+      const {open: openEditor} = render();
+      const {element, save, violationAt} = await openEditor();
+
+      await save();
+
+      expect(violationAt('name')).toEqual(['Please enter a name.']);
+      expect(violationAt('tapeBed.tapeWidth')).toEqual(['Please enter a value.']);
+      expect(violationAt('tapeBed.holeDiameter')).toEqual(['Please enter a value.']);
+      expect(violationAt('tapeBed.rowSpacing')).toEqual(['Please enter a value.']);
+      expect(violationAt('minimumGap')).toEqual(['Please enter a value.']);
+      expect(violationAt('pipes')).toEqual(['Add at least one Pipe.']);
+      expect(entries(element)).toEqual(['Name', 'Tape width', 'Hole diameter', 'Spacing between rows', 'Minimum Gap', 'Pipes']);
+    });
+
+    it('lets an entry focus its field', async () => {
+      const {element, save} = await openWithThreeProblems();
+      await save();
+
+      entryElements(element)[1]?.click();
+
+      expect(document.activeElement).toBe(element.querySelector('[data-testid="hole-diameter"]'));
+    });
+
+    it('lets the entry of a Pipe row focus its note', async () => {
+      const {element, save} = await openWithThreeProblems();
+      await save();
+
+      entryElements(element)[2]?.click();
+
+      expect(document.activeElement).toBe(noteInput(element, 2));
+    });
+
+    it('lets the Pipes entry focus Add Pipe', async () => {
+      const {open: openEditor} = render();
+      const {element, save} = await openEditor();
+      await save();
+
+      entryElements(element).find((entry) => entry.textContent?.trim() === 'Pipes')?.click();
+
+      expect(document.activeElement).toBe(element.querySelector('[data-testid="add-pipe"]'));
+    });
+
+    it('says in the action bar how many problems prevent saving', async () => {
+      const {element, save} = await openWithThreeProblems();
+
+      await save();
+
+      expect(barState(element)).toBe('3 problems prevent saving');
+    });
+
+    it('says "1 problem prevents saving" for a single problem', async () => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 2);
+      await library.put(organ);
+      const {element, field, type, save} = await openEditor(organ.id);
+      await type(field('name'), '');
+
+      await save();
+
+      expect(summary(element)?.textContent).toContain('1 problem prevents saving');
+      expect(barState(element)).toBe('1 problem prevents saving');
+    });
+
+    it('drops the summary once all problems are fixed', async () => {
+      const {element, field, type, save} = await openWithThreeProblems();
+      await save();
+
+      await type(field('tape-width'), '125');
+      await type(field('hole-diameter'), '2.6');
+      await type(noteInput(element, 2), '66');
+
+      expect(summary(element)).toBeNull();
+      expect(barState(element)).toBe('Unsaved changes: Tape width, Hole diameter, Pipes');
+    });
+  });
+
   describe('the action bar', () => {
     const bar = (element: HTMLElement) => element.querySelector<HTMLElement>('cranc-action-bar[aria-label="Organ actions"]');
     const state = (element: HTMLElement) =>

@@ -144,6 +144,8 @@
       "UNSAVED_CHANGES": "Nicht gespeicherte Änderungen: {{fields}}",
       "NO_UNSAVED_CHANGES": "Keine ungespeicherten Änderungen",
       "DISCARD_CHANGES": "Änderungen verwerfen",
+      "PROBLEMS": "{{count}} Probleme verhindern das Speichern",
+      "PROBLEM_ONE": "1 Problem verhindert das Speichern",
       "SAVE": "Speichern",
       "SAVE_BLOCKED": "Deine Lochbänder konnten nicht geladen werden, darum können Pfeifen mit Löchern vorerst nicht entfernt werden.",
       "REMOVE_PIPES_HOLES": "Beim Entfernen dieser Pfeifen werden auch ihre Löcher ({{holes}}) aus Lochbändern ({{tapes}}) dieser Drehorgel entfernt."
