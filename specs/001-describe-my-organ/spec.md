@@ -6,7 +6,7 @@
 
 **Status**: Clarified
 
-**Input**: User description: "Describe my organ: as the owner of a barrel organ I can define an Organ in Crancula so that Tapes can later be made for it. An Organ has a name, an ordered set of Pipes (each identified by the MIDI note number of the note it plays, shown as a note name like C4; one Pipe per row of the Tape), a Tape Bed (tape width, border, hole diameter, spacing between rows, all in mm), and the hard limits Minimum Hole Length and Minimum Gap (mm). I can create, view, edit (including adding, removing and reordering Pipes) and delete Organs. Invalid Organs cannot be saved (e.g. duplicate Pipes, Pipes that don't fit the Tape Bed width, non-positive measurements). Organs survive an app restart: the in-memory state is the source of truth and is kept as a snapshot on disk that is loaded on startup (ADR 3) through the strict Electron boundary (ADR 4). UI in English and German. Out of scope: Air Demand, Tapes, Songs."
+**Input**: User description: "Describe my organ: as the owner of a barrel organ I can define an Organ in Crancula so that Tapes can later be made for it. An Organ has a name, an ordered set of Pipes (each identified by the MIDI note number of the note it plays, shown as a note name like C4; one Pipe per row of the Tape), a Tape Bed (tape width, hole diameter, spacing between rows, all in mm; the Border is derived, not entered), and the hard limits Minimum Hole Length and Minimum Gap (mm). I can create, view, edit (including adding, removing and reordering Pipes) and delete Organs. Invalid Organs cannot be saved (e.g. duplicate Pipes, Pipes that don't fit the Tape Bed width, non-positive measurements). Organs survive an app restart: the in-memory state is the source of truth and is kept as a snapshot on disk that is loaded on startup (ADR 3) through the strict Electron boundary (ADR 4). UI in English and German. Out of scope: Air Demand, Tapes, Songs."
 
 ## Clarifications
 
@@ -174,8 +174,8 @@ untranslated.
 
 - **FR-001**: Users MUST be able to create an Organ with a name, a Tape Bed, a Minimum Gap and an
   ordered list of Pipes.
-- **FR-002**: The Tape Bed MUST consist of tape width, border, hole diameter and spacing between
-  rows, all in millimetres.
+- **FR-002**: The Tape Bed MUST consist of tape width, hole diameter and spacing between rows, all
+  in millimetres. The Border is not entered; it is derived (FR-008). (amended 2026-10-15, #74)
 - **FR-003**: Each Pipe MUST be identified by a MIDI note number (0–127) and MUST be displayed with
   its note name (e.g. 60 → "C4", 61 → "C#4").
 - **FR-004**: The order of Pipes MUST be the order of rows across the Tape. Users MUST be able to
@@ -186,11 +186,13 @@ untranslated.
   - no name;
   - no Pipes;
   - two Pipes with the same MIDI note number;
-  - a measurement (tape width, hole diameter, spacing between rows, Minimum Gap) that is 0 or less;
-  - a negative border.
-- **FR-008**: The system MUST NOT store an Organ whose Pipes don't fit across the tape width,
-  where the required width is
-  `2 × border + (number of Pipes − 1) × spacing between rows + hole diameter`.
+  - a measurement (tape width, hole diameter, spacing between rows, Minimum Gap) that is 0 or less. (amended 2026-10-15, #74)
+- **FR-008**: The Border MUST be derived as `(tape width − Row Span) / 2`, where the Row Span is
+  `(number of Pipes − 1) × spacing between rows + hole diameter`. The rows are centred across the
+  Tape, row 1 nearest the top edge. A Border of 0 is valid. The system MUST NOT store an Organ whose
+  Border would be negative (its rows don't fit across the tape width). The editor MUST show the
+  derived Border read-only, e.g. 6,25 mm for tape width 120, hole diameter 2.5, spacing 3.5 and 31
+  Pipes. (amended 2026-10-15, #74)
 - **FR-009**: The system MUST NOT store an Organ whose spacing between rows is smaller than its
   hole diameter, because neighbouring holes would overlap.
 - **FR-010**: The Organ's Minimum Hole Length MUST equal its Tape Bed's hole diameter. It is shown
@@ -204,6 +206,8 @@ untranslated.
   discard the changes. If the changes are invalid, the warning MUST list each broken rule with
   the field it belongs to.
 - **FR-013**: Stored Organs MUST survive an app restart unchanged: all values and the Pipe order.
+  Organs stored in snapshot version 1 (with a `border`) MUST still load; the `border` is ignored and
+  the next save writes version 2 without it (ADR 20). (amended 2026-10-15, #74)
 - **FR-014**: If stored Organs can't be read at startup, the app MUST start anyway, inform the user,
   and MUST NOT overwrite the unreadable data.
 - **FR-015**: If writing Organs to disk fails, the app MUST inform the user.
@@ -221,8 +225,9 @@ untranslated.
   It is identified independently of its name, and Tapes will later reference it.
 - **Pipe**: plays one note, identified by its MIDI note number. Its position in the Organ's list
   is its row on the Tape.
-- **Tape Bed**: the surface in the Organ the Tape runs over. It has tape width, border, hole
-  diameter and spacing between rows (mm). It determines how many Pipes physically fit.
+- **Tape Bed**: the surface in the Organ the Tape runs over. It has tape width, hole diameter and
+  spacing between rows (mm). Together with the number of Pipes it determines the Row Span and the
+  derived Border, and so how many Pipes physically fit. (amended 2026-10-15, #74)
 
 ## Success Criteria *(mandatory)*
 
@@ -240,9 +245,9 @@ untranslated.
 ## Assumptions
 
 - **Single user:** Crancula runs on one computer for one user; no syncing or sharing in this slice.
-- **Row layout:** rows are evenly spaced across the tape, and "spacing between rows" is the
-  centre-to-centre distance. The outermost holes keep at least the border distance from the
-  tape edge (FR-008).
+- **Row layout:** rows are evenly spaced and centred across the tape, row 1 nearest the top edge,
+  and "spacing between rows" is the centre-to-centre distance. The Border on each side follows
+  from this and is never entered (FR-008). (amended 2026-10-15, #74)
 - **Duplicate notes:** an Organ never has two Pipes for the same note. Organs with doubled Pipes
   are out of scope.
 - **Defaults:** a new Organ starts with empty measurements and no Pipes; there are no presets.

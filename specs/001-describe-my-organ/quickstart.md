@@ -26,16 +26,17 @@ How to prove the slice works end to end. It refers to the [spec](spec.md),
    set `$env:CRANCULA_USER_DATA` to an empty folder before starting.
 2. **Create an Organ.** Enter:
    - name "Street organ";
-   - tape width 120, border 5, hole diameter 2.5, row spacing 3.5, Minimum Gap 1.5;
+   - tape width 120, hole diameter 2.5, row spacing 3.5, Minimum Gap 1.5;
    - 31 Pipes, starting at note 53.
 
    Expected:
    - note 60 is shown as **C4**;
    - Minimum Hole Length is shown as 2.5 and can't be edited;
+   - the Border is shown read-only as 6.25 mm (not entered, amended 2026-10-15, #74);
    - the Organ is not in the list yet. Press **Save**. It appears in the list, and Save is disabled
      again.
 3. **Rule check.** Set the tape width to 100. A message next to the tape width says that
-   117.5 mm are needed and 100 mm are available (2 × 5 + 30 × 3.5 + 2.5, FR-008). Save is disabled
+   the rows don't fit: 107.5 mm are needed and 100 mm are available (30 × 3.5 + 2.5, FR-008). Save is disabled
    while the draft is invalid, and the list still shows the last saved version. Set the tape width
    back to 120, press **Save**, and the change is stored.
 4. **Duplicate note.** Make two Pipes use note 60. Both are marked as duplicates, and Save is

@@ -530,7 +530,7 @@ valid (old rule 2·border + span ≤ width implies span ≤ width).
 - [x] **A8** e2e: update helpers and tests that fill the Border (`e2e/support/*`, organ and tape
   specs); one e2e that an Organ saved in version 1 with a border loads after a restart and is
   saved again as version 2. Full `npm run e2e`.
-- [ ] **A9** Docs: spec.md (FR-002, FR-007, FR-008, FR-013, Key Entities, row layout assumption),
+- [x] **A9** Docs: spec.md (FR-002, FR-007, FR-008, FR-013, Key Entities, row layout assumption),
   data-model.md, contracts/organ-library-ipc.md, quickstart.md, DESIGN-GUIDE fit check sentence
   and examples that name the Border, CHANGELOG `[Unreleased]` (Border derived; downgrade note),
   STATUS.
