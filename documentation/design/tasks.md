@@ -198,7 +198,7 @@ Every task that adds or changes UI text adds the keys to `en.json` and `de.json`
   document does not scroll, the rack has 3 columns and the action bar is in view; at 1024×700 the
   document does not scroll, the rack has 2 columns, only the Pipes sheet scrolls, and the Tape Bed
   sheet and the action bar stay in view; no two Tape Bed field boxes overlap. Needs real layout.
-- [ ] **E24** Full `npm run e2e`, `npm run test`, `npm run lint`, `npm run i18n:check`. Then
+- [x] **E24** Full `npm run e2e`, `npm run test`, `npm run lint`, `npm run i18n:check`. Then
   `npm run ux:screens` (03 shows the error summary after pressing Save; add the editor with
   unsaved changes and the editor at 1024×700), `ux-review`; score into STATUS.
 
