@@ -524,7 +524,7 @@ valid (old rule 2·border + span ≤ width implies span ≤ width).
   `border`; `toSnapshot` writes version 2; other versions are rejected as before.
 - [x] **A6** Fix the remaining fixtures that set `border` (`api/tape/*.spec.ts`,
   `app/organ-library-file.spec.ts`, `src/testing/organs.ts` and Angular specs). Tests stay green.
-- [ ] **A7** Organ editor: component tests first. No Border input; the derived Border shown
+- [x] **A7** Organ editor: component tests first. No Border input; the derived Border shown
   read-only ("6,25 mm" in German, "6.25 mm" in English), absent while a value is missing; labels
   and violations without `tapeBed.border`. en/de parity.
 - [ ] **A8** e2e: update helpers and tests that fill the Border (`e2e/support/*`, organ and tape

@@ -40,6 +40,10 @@
     </ng-container>
   </mat-form-field>
   <mat-form-field>
+    <mat-label>{{ 'ORGAN.EDITOR.BORDER' | translate }}</mat-label>
+    <input matInput readonly data-testid="border" [value]="border()"/>
+  </mat-form-field>
+  <mat-form-field>
     <mat-label>{{ 'ORGAN.EDITOR.MINIMUM_GAP' | translate }}</mat-label>
     <input matInput type="number" data-testid="minimum-gap" [formField]="organ.minimumGap"/>
     <ng-container ngProjectAs="mat-error">

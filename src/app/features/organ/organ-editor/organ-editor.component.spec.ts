@@ -165,6 +165,107 @@ describe('OrganEditorComponent', () => {
     });
   });
 
+  describe('the derived Border', () => {
+    /** The Border field's text; absent counts as empty. */
+    const borderOf = (element: HTMLElement) =>
+      element.querySelector<HTMLInputElement>('[data-testid="border"]')?.value ?? '';
+
+    it('is shown read-only, centring the rows of the Pipes on the tape width (6.25 for the street organ)', async () => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 31);
+      await library.put(organ);
+      const {element, field} = await openEditor(organ.id);
+
+      expect(field('border').readOnly).toBe(true);
+      expect(borderOf(element)).toBe('6.25');
+    });
+
+    it('is formatted with the decimal comma in German', async () => {
+      TestBed.configureTestingModule({providers: [provideRouter([]), provideTestTranslations('de')]});
+      vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+      const organ = testOrgan('Street organ', 31);
+      await TestBed.inject(OrganLibrary).put(organ);
+      const {element} = await open(organ.id);
+
+      expect(borderOf(element)).toBe('6,25');
+    });
+
+    it('is labelled with the Border label', async () => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 31);
+      await library.put(organ);
+      const {element} = await openEditor(organ.id);
+
+      const labels = [...element.querySelectorAll('mat-label')].map((label) => label.textContent?.trim());
+      expect(labels).toContain('Border (mm)');
+    });
+
+    it('updates when a Pipe is removed', async () => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 31);
+      await library.put(organ);
+      const {element, click} = await openEditor(organ.id);
+
+      await click('remove-pipe');
+
+      expect(borderOf(element)).toBe('8');
+    });
+
+    it('updates when a Pipe is added', async () => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 31);
+      await library.put(organ);
+      const {element, click} = await openEditor(organ.id);
+
+      await click('add-pipe');
+
+      expect(borderOf(element)).toBe('4.5');
+    });
+
+    it('updates when the tape width changes', async () => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 31);
+      await library.put(organ);
+      const {element, field, type} = await openEditor(organ.id);
+
+      await type(field('tape-width'), '130');
+
+      expect(borderOf(element)).toBe('11.25');
+    });
+
+    it.each(['tape-width', 'hole-diameter', 'row-spacing'])('is empty while the %s is missing', async (testId) => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 31);
+      await library.put(organ);
+      const {element, field, type} = await openEditor(organ.id);
+
+      await type(field(testId), '');
+
+      expect(borderOf(element)).toBe('');
+    });
+
+    it('is empty while there are no Pipes', async () => {
+      const {open: openEditor} = render();
+      const {element, field, type} = await openEditor();
+      await type(field('tape-width'), '120');
+      await type(field('hole-diameter'), '2.5');
+      await type(field('row-spacing'), '3.5');
+
+      expect(borderOf(element)).toBe('');
+    });
+
+    it('is not shown when the rows do not fit the tape width', async () => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 31);
+      await library.put(organ);
+      const {element, field, type} = await openEditor(organ.id);
+
+      await type(field('tape-width'), '100');
+
+      expect(borderOf(element)).toBe('');
+    });
+  });
+
   describe('saving', () => {
     it('stores nothing while a valid Organ is only edited', async () => {
       const {open: openEditor, library, navigate} = render();
