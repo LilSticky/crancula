@@ -3,6 +3,7 @@ import {bootstrapApplication} from '@angular/platform-browser';
 import {provideHttpClient, withInterceptorsFromDi, withXhr} from '@angular/common/http';
 import {provideRouter, withComponentInputBinding} from '@angular/router';
 
+import {MAT_FORM_FIELD_DEFAULT_OPTIONS, MatFormFieldDefaultOptions} from '@angular/material/form-field';
 import {AppComponent} from './app/app.component';
 import {APP_CONFIG} from './environments/environment';
 import {CoreModule} from './app/core/core.module';
@@ -32,6 +33,10 @@ bootstrapApplication(AppComponent, {
     provideRouter(routes, withComponentInputBinding()),
     provideOrganLibrary(),
     provideTapeLibrary(),
+    {
+      provide: MAT_FORM_FIELD_DEFAULT_OPTIONS,
+      useValue: {appearance: 'outline', subscriptSizing: 'dynamic'} satisfies MatFormFieldDefaultOptions
+    },
     importProvidersFrom(
       CoreModule,
       SharedModule
