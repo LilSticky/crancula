@@ -43,9 +43,7 @@ The Tape is drawn horizontally, row 1 on top (user decision). German for Tape is
 fonts on branch `062-design-theme-and-fonts` (pushed, no pull request yet). D1–D3 of
 [design/tasks.md](design/tasks.md) done and committed (fonts bundled, workshop theme, `scripts/styles.spec.ts`
 14 tests green, fonts e2e green). To resume, in this order:
-1. PR [#68](https://github.com/LilSticky/crancula/pull/68) (test pyramid, docs only) first: it was blocked by
-   the flaky headless test [#48](https://github.com/LilSticky/crancula/issues/48) on Windows; the failed job was
-   re-run with auto-merge on. If still red, re-run again or merge once green. Then rebase this branch on `main`.
+1. Done: PR #68 merged after a re-run; this branch is rebased on `main`.
 2. Reviewer's should-fixes on `scripts/styles.spec.ts`: drop the blanket `silenceDeprecations` (or name the
    warning that needs it); test `html.cr-dark { color-scheme: dark }` and the high-contrast media rule; note
    that the `[^}]*` rule regex can't see nested rules. Comment nits: Libertinus ships only weight 600
