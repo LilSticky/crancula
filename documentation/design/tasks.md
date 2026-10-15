@@ -159,13 +159,13 @@ Every task that adds or changes UI text adds the keys to `en.json` and `de.json`
 - [x] **E12** Changed fields, unit. A pure helper in `organ-form.ts`: `changedFields(saved, draft)`
   returns the changed paths in reading order (`name`, the Tape Bed fields, `minimumGap`, and
   `pipes` once for any Pipe change); nothing for equal drafts. Spec first.
-- [ ] **E13** Action bar, component. Spec: Save sits in `cranc-action-bar` (label "Organ
+- [x] **E13** Action bar, component. Spec: Save sits in `cranc-action-bar` (label "Organ
   actions"), not in the page body; the state reads "Unsaved changes: Hole diameter" (oxblood dot
   plus text) after editing the hole diameter, "No unsaved changes" with Save disabled when nothing changed,
   "Saving…" with Save disabled while writing; Save is enabled on an untouched new Organ. Rewrite
   the "the Save button" specs that expect Save disabled for new or invalid Organs. Then adopt the
   bar.
-- [ ] **E14** Discard changes, component. Spec: the button shows only with unsaved changes;
+- [x] **E14** Discard changes, component. Spec: the button shows only with unsaved changes;
   pressing it restores the last saved version (empty fields for a new Organ), `unsavedChanges()`
   becomes `null`, nothing is written. Then the button.
 - [ ] **E15** Error summary content, unit. A pure helper in `organ-form.ts`: from `organProblems`

@@ -526,20 +526,20 @@ describe('OrganEditorComponent', () => {
       expect(saveButton().disabled).toBe(true);
     });
 
-    it('is disabled on an untouched new Organ', async () => {
+    it('is enabled on an untouched new Organ', async () => {
       const {open: openEditor} = render();
       const {saveButton} = await openEditor();
 
-      expect(saveButton().disabled).toBe(true);
+      expect(saveButton().disabled).toBe(false);
     });
 
-    it('is disabled while the Organ is changed but invalid', async () => {
+    it('is enabled while the Organ is changed but invalid', async () => {
       const {open: openEditor} = render();
       const {field, type, saveButton} = await openEditor();
 
       await type(field('name'), 'Street organ');
 
-      expect(saveButton().disabled).toBe(true);
+      expect(saveButton().disabled).toBe(false);
     });
 
     it('is enabled once the Organ is changed and valid', async () => {
@@ -582,6 +582,126 @@ describe('OrganEditorComponent', () => {
       await type(field('name'), 'Street organ');
 
       expect(saveButton().disabled).toBe(true);
+    });
+  });
+
+  describe('the action bar', () => {
+    const bar = (element: HTMLElement) => element.querySelector<HTMLElement>('cranc-action-bar[aria-label="Organ actions"]');
+    const state = (element: HTMLElement) =>
+      bar(element)?.querySelector<HTMLElement>('[data-testid="action-bar-state"]')?.textContent?.replace(/\s+/g, ' ').trim();
+
+    it('holds the Save button, not the page body', async () => {
+      const {open: openEditor} = render();
+      const {element, saveButton} = await openEditor();
+
+      expect(bar(element)?.contains(saveButton())).toBe(true);
+    });
+
+    it('names the changed field next to an oxblood dot', async () => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 2);
+      await library.put(organ);
+      const {element, field, type} = await openEditor(organ.id);
+
+      await type(field('hole-diameter'), '2.7');
+
+      expect(state(element)).toBe('Unsaved changes: Hole diameter');
+      expect(bar(element)?.querySelector('[data-testid="unsaved-dot"]')).not.toBeNull();
+    });
+
+    it('lists changed fields in reading order', async () => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 2);
+      await library.put(organ);
+      const {element, field, type, click} = await openEditor(organ.id);
+
+      await click('add-pipe');
+      await type(field('hole-diameter'), '2.7');
+
+      expect(state(element)).toBe('Unsaved changes: Hole diameter, Pipes');
+    });
+
+    it('says that nothing changed, with Save disabled', async () => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 2);
+      await library.put(organ);
+      const {element, saveButton} = await openEditor(organ.id);
+
+      expect(state(element)).toBe('No unsaved changes');
+      expect(saveButton().disabled).toBe(true);
+    });
+
+    it('says Saving while the write is pending, with Save disabled', async () => {
+      const inMemory = createInMemoryCranculaApi();
+      const api: CranculaApi = {
+        organs: {load: () => inMemory.organs.load(), save: () => new Promise<OrganLibrarySaveResult>(() => undefined)},
+        tapes: inMemory.tapes,
+        app: inMemory.app,
+      };
+      TestBed.configureTestingModule({
+        providers: [provideRouter([]), provideTestTranslations(), {provide: CRANCULA_API, useValue: api}],
+      });
+      vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+      const editor = await open();
+      await editor.fillValidOrgan();
+
+      editor.saveButton().click();
+      await Promise.resolve();
+      editor.fixture.detectChanges();
+
+      expect(state(editor.element)).toBe('Saving…');
+      expect(editor.saveButton().disabled).toBe(true);
+    });
+  });
+
+  describe('discarding changes', () => {
+    const discard = (element: HTMLElement) =>
+      [...element.querySelectorAll<HTMLButtonElement>('cranc-action-bar button')].find(
+        (button) => button.textContent?.trim() === 'Discard changes',
+      );
+
+    it('is offered only with unsaved changes', async () => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 2);
+      await library.put(organ);
+      const {element, field, type} = await openEditor(organ.id);
+      expect(discard(element)).toBeUndefined();
+
+      await type(field('name'), 'Renamed');
+
+      expect(discard(element)).toBeDefined();
+    });
+
+    it('restores the last saved version of a stored Organ without writing', async () => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 2);
+      await library.put(organ);
+      const save = vi.spyOn(library, 'put');
+      const {fixture, element, field, type} = await openEditor(organ.id);
+      await type(field('name'), 'Renamed');
+
+      discard(element)?.click();
+      await fixture.whenStable();
+
+      expect(field('name').value).toBe('Street organ');
+      expect(fixture.componentInstance.unsavedChanges()).toBeNull();
+      expect(save).not.toHaveBeenCalled();
+      expect(library.entities()).toEqual([organ]);
+    });
+
+    it('empties the fields of a new Organ', async () => {
+      const {open: openEditor, library} = render();
+      const {fixture, element, fillValidOrgan, field, pipeRows} = await openEditor();
+      await fillValidOrgan();
+
+      discard(element)?.click();
+      await fixture.whenStable();
+
+      expect(field('name').value).toBe('');
+      expect(field('tape-width').value).toBe('');
+      expect(pipeRows()).toHaveLength(0);
+      expect(fixture.componentInstance.unsavedChanges()).toBeNull();
+      expect(library.entities()).toEqual([]);
     });
   });
 
@@ -1414,14 +1534,13 @@ describe('OrganEditorComponent', () => {
       expect(violationAt('pipes.0.note')).toEqual(['Enter a number.']);
     });
 
-    it('disables Save and lists the problem when leaving', async () => {
+    it('lists the problem when leaving', async () => {
       const {open: openEditor} = render();
-      const {fixture, field, fillValidOrgan, type, saveButton} = await openEditor();
+      const {fixture, field, fillValidOrgan, type} = await openEditor();
       await fillValidOrgan();
 
       await type(field('tape-width'), 'abc');
 
-      expect(saveButton().disabled).toBe(true);
       expect(fixture.componentInstance.unsavedChanges()?.problems).toEqual([
         {
           field: {key: 'ORGAN.EDITOR.TAPE_WIDTH', params: {}},
@@ -1892,7 +2011,7 @@ describe('OrganEditorComponent', () => {
       const {field, type, save, saveButton} = await openEditor(organ.id);
 
       await type(field('name'), '');
-      expect(saveButton().disabled).toBe(true);
+      expect(saveButton().disabled).toBe(false);
       expect(put).not.toHaveBeenCalled();
       expect(library.entities()[0]?.name).toBe('Street organ');
 

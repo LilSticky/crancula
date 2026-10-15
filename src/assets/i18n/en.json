@@ -139,6 +139,11 @@
       "REMOVE_PIPE": "Remove Pipe",
       "DRAG_PIPE": "Drag Pipe to another row",
       "DELETE": "Delete Organ",
+      "ACTIONS": "Organ actions",
+      "SAVING": "Saving…",
+      "UNSAVED_CHANGES": "Unsaved changes: {{fields}}",
+      "NO_UNSAVED_CHANGES": "No unsaved changes",
+      "DISCARD_CHANGES": "Discard changes",
       "SAVE": "Save",
       "SAVE_BLOCKED": "Your Tapes couldn't be loaded, so Pipes with Holes can't be removed for now.",
       "REMOVE_PIPES_HOLES": "Removing these Pipes also removes their Holes ({{holes}}) from Tapes ({{tapes}}) of this Organ."

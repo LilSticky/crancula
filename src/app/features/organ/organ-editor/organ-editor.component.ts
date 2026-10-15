@@ -34,12 +34,13 @@ import {formatNumber} from '../../shared/format-number';
 import {LanguagePreference} from '../../shared/language-preference';
 import {ConfirmableAction, ConfirmDialogComponent} from '../../shared/components/confirm-dialog/confirm-dialog.component';
 import type {LeaveProblem, TranslatableText, UnsavedChanges, UnsavedChangesCheck} from '../leave-unsaved.guard';
+import {ActionBarComponent} from '../../shared/components/action-bar/action-bar.component';
 import {PageHeadComponent} from '../../shared/components/page-head/page-head.component';
 import {TapeLibrary} from '../../tape/tape-library.store';
 import {OrganDeletion} from '../organ-deletion';
 import {OrganLibrary} from '../organ-library.store';
 import {rackColumns} from './pipe-rack';
-import {type FieldProblem, organFormSchema, organProblems, shownMessages, ShownViolationMatcher} from './organ-form';
+import {changedFields, type FieldProblem, organFormSchema, organProblems, shownMessages, ShownViolationMatcher} from './organ-form';
 
 /** Below this width the Pipe rack has 2 columns of compact rows (the same threshold as the shell). */
 const COMPACT_QUERY = '(max-width: 1179.98px)';
@@ -57,10 +58,19 @@ const FIELD_LABEL_KEYS: Readonly<Record<string, string>> = {
 @Component({
   selector: 'cranc-organ-editor',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslatePipe, MatFormField, MatLabel, MatInput, MatHint, MatError, MatSuffix, MatButton, MatIconButton, MatIcon, MatMenu, MatMenuItem, MatMenuTrigger, MatTooltip, MatCard, FormField, DecimalInputDirective, CdkDropList, CdkDropListGroup, CdkDrag, CdkDragHandle, PageHeadComponent],
+  imports: [TranslatePipe, MatFormField, MatLabel, MatInput, MatHint, MatError, MatSuffix, MatButton, MatIconButton, MatIcon, MatMenu, MatMenuItem, MatMenuTrigger, MatTooltip, MatCard, FormField, DecimalInputDirective, CdkDropList, CdkDropListGroup, CdkDrag, CdkDragHandle, PageHeadComponent, ActionBarComponent],
   templateUrl: './organ-editor.component.html',
   providers: [{provide: ErrorStateMatcher, useClass: ShownViolationMatcher}],
   styles: `
+    .unsaved-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      margin-right: 8px;
+      border-radius: 50%;
+      background: var(--mat-sys-error);
+    }
+
     .organ-editor {
       max-width: 72rem;
     }
@@ -224,7 +234,16 @@ export class OrganEditorComponent implements UnsavedChangesCheck {
 
   private readonly changed = computed(() => JSON.stringify(this.draft()) !== JSON.stringify(this.saved()));
   private readonly saving = signal(false);
-  protected readonly canSave = computed(() => this.changed() && this.organ().valid() && !this.saving());
+  private readonly isStored = computed(() => !!this.library.entityMap()[this.draft().id]);
+
+  /** Save is only unavailable for a stored Organ without changes, or while a save is running. */
+  protected readonly saveDisabled = computed(() => this.saving() || (this.isStored() && !this.changed()));
+  protected readonly changedLabels = computed(() => {
+    const names = changedFields(this.saved(), this.draft()).map((field): string => String(this.translate.instant(FIELD_LABEL_KEYS[field] ?? field)));
+    return names.join(', ');
+  });
+  protected readonly isSaving = this.saving.asReadonly();
+  protected readonly hasChanges = this.changed;
 
   private readonly language = inject(LanguagePreference).language;
 
@@ -290,10 +309,15 @@ export class OrganEditorComponent implements UnsavedChangesCheck {
     return {problems: organProblems(this.organ).map(toProblem)};
   }
 
+  /** Resets the draft to the last saved version (empty for a new Organ), without writing. */
+  protected discard(): void {
+    this.draft.set(this.saved());
+  }
+
   /** Stores the valid, changed Organ (spec FR-012). */
   protected async save(): Promise<void> {
     const result = validateOrgan(this.draft());
-    if (!result.ok || !this.canSave()) return;
+    if (!result.ok || !this.changed() || this.saving()) return;
     const sent = this.draft();
     this.saving.set(true);
     try {

@@ -157,13 +157,31 @@
   </div>
 
   <div>
-    <button matButton="filled" type="button" data-testid="save-organ" [disabled]="!canSave()" (click)="save()">
-      <mat-icon>save</mat-icon>
-      {{ 'ORGAN.EDITOR.SAVE' | translate }}
-    </button>
     <button matButton="outlined" type="button" data-testid="delete-organ" (click)="deleteOrgan()">
       <mat-icon>delete</mat-icon>
       {{ 'ORGAN.EDITOR.DELETE' | translate }}
     </button>
   </div>
+
+  <cranc-action-bar [label]="'ORGAN.EDITOR.ACTIONS' | translate">
+    <span actionBarState class="action-state">
+      @if (isSaving()) {
+        {{ 'ORGAN.EDITOR.SAVING' | translate }}
+      } @else if (hasChanges()) {
+        <span class="unsaved-dot" data-testid="unsaved-dot" aria-hidden="true"></span>
+        {{ 'ORGAN.EDITOR.UNSAVED_CHANGES' | translate: {fields: changedLabels()} }}
+      } @else {
+        {{ 'ORGAN.EDITOR.NO_UNSAVED_CHANGES' | translate }}
+      }
+    </span>
+    @if (hasChanges()) {
+      <button matButton type="button" data-testid="discard-changes" (click)="discard()">
+        {{ 'ORGAN.EDITOR.DISCARD_CHANGES' | translate }}
+      </button>
+    }
+    <button matButton="filled" type="button" data-testid="save-organ" [disabled]="saveDisabled()" (click)="save()">
+      <mat-icon>save</mat-icon>
+      {{ 'ORGAN.EDITOR.SAVE' | translate }}
+    </button>
+  </cranc-action-bar>
 </div>
