@@ -1,4 +1,4 @@
-import {Directive, inject, model} from '@angular/core';
+import {Directive, ElementRef, inject, input, model, output, signal} from '@angular/core';
 import type {FormValueControl} from '@angular/forms/signals';
 import {transformedValue} from '@angular/forms/signals';
 import {formatNumber, parseDecimal} from './format-number';
@@ -15,25 +15,41 @@ import {LanguagePreference} from './language-preference';
     type: 'text',
     inputmode: 'decimal',
     '[value]': 'text()',
-    '(input)': 'type($event)',
-    '(blur)': 'show()',
+    '(input)': 'type()',
+    '[attr.aria-invalid]': 'invalid() ? "true" : null',
+    '(focus)': 'focused.set(true)',
+    '(blur)': 'leave()',
   },
 })
 export class DecimalInputDirective implements FormValueControl<number | null> {
   readonly value = model.required<number | null>();
 
+  readonly invalid = input(false);
+  readonly touch = output<void>();
+
+  private readonly element = inject<ElementRef<HTMLInputElement>>(ElementRef).nativeElement;
   private readonly language = inject(LanguagePreference).language;
+  private readonly focused = signal(false);
 
   protected readonly text = transformedValue<number | null, string>(this.value, {
     parse: (typed) => {
       const parsed = parseDecimal(typed);
       return parsed !== null && Number.isNaN(parsed) ? {error: {kind: 'parse'}} : {value: parsed};
     },
-    format: (value) => (value === null ? '' : formatNumber(value, this.language())),
+    format: (value) => {
+      if (this.focused()) return this.element.value;
+      return value === null ? '' : formatNumber(value, this.language());
+    },
   });
 
-  protected type(event: Event): void {
-    if (event.target instanceof HTMLInputElement) this.text.set(event.target.value);
+  protected type(): void {
+    this.text.set(this.element.value);
+  }
+
+  protected leave(): void {
+    this.focused.set(false);
+    this.touch.emit();
+    this.show();
   }
 
   /** Replaces the typed text by the value in the notation of the language. */
