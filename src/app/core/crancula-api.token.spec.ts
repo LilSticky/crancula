@@ -8,7 +8,7 @@ const snapshot: OrganLibrarySnapshot = {
     {
       id: '3f2b8c1e-9d4a-4f6b-8e2c-1a2b3c4d5e6f',
       name: 'Street organ',
-      tapeBed: {tapeWidth: 120, border: 5, holeDiameter: 2.5, rowSpacing: 3.5},
+      tapeBed: {tapeWidth: 120, holeDiameter: 2.5, rowSpacing: 3.5},
       minimumGap: 1.5,
       pipes: [{note: 60}],
     },

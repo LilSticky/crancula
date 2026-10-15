@@ -1,10 +1,9 @@
 import {expect, type Page} from '@playwright/test';
 
-/** The quickstart Organ: needs 117.5 mm of its 120 mm tape width. */
+/** The quickstart Organ: has a Row Span of 107.5 mm on its 120 mm tape width. */
 export const STREET_ORGAN = {
   name: 'Street organ',
   tapeWidth: '120',
-  border: '5',
   holeDiameter: '2.5',
   rowSpacing: '3.5',
   minimumGap: '1.5',
@@ -19,7 +18,6 @@ export async function defineStreetOrgan(window: Page): Promise<void> {
 
   await window.getByTestId('name').fill(STREET_ORGAN.name);
   await window.getByTestId('tape-width').fill(STREET_ORGAN.tapeWidth);
-  await window.getByTestId('border').fill(STREET_ORGAN.border);
   await window.getByTestId('hole-diameter').fill(STREET_ORGAN.holeDiameter);
   await window.getByTestId('row-spacing').fill(STREET_ORGAN.rowSpacing);
   await window.getByTestId('minimum-gap').fill(STREET_ORGAN.minimumGap);

@@ -54,7 +54,7 @@ function anOrgan(pipeNotes: readonly number[]): Organ {
   return asValidOrgan({
     id: defined(organId('3f2b8c1e-9d4a-4f6b-8e2c-1a2b3c4d5e6f'), 'organ id'),
     name: 'Organ',
-    tapeBed: {tapeWidth: one, border: one, holeDiameter: one, rowSpacing: one},
+    tapeBed: {tapeWidth: one, holeDiameter: one, rowSpacing: one},
     minimumGap: one,
     pipes: pipeNotes.map((each) => ({note: defined(midiNoteNumber(each), 'pipe')})),
   });

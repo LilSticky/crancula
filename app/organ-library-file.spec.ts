@@ -15,7 +15,7 @@ function snapshot(name: string): OrganLibrarySnapshot {
       {
         id: ID,
         name,
-        tapeBed: {tapeWidth: 120, border: 5, holeDiameter: 2.5, rowSpacing: 3.5},
+        tapeBed: {tapeWidth: 120, holeDiameter: 2.5, rowSpacing: 3.5},
         minimumGap: 1.5,
         pipes: [{note: 60}, {note: 62}],
       },

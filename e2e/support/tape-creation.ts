@@ -11,7 +11,6 @@ export async function defineOctaveOrgan(window: Page, name: string): Promise<voi
   await window.getByTestId('new-organ').click();
   await window.getByTestId('name').fill(name);
   await window.getByTestId('tape-width').fill('120');
-  await window.getByTestId('border').fill('5');
   await window.getByTestId('hole-diameter').fill('2.5');
   await window.getByTestId('row-spacing').fill('3.5');
   await window.getByTestId('minimum-gap').fill('1.5');

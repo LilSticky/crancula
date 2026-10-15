@@ -16,7 +16,6 @@ test.describe('My organs are still there after a restart', () => {
 
     await expect(window.getByTestId('name')).toHaveValue(STREET_ORGAN.name);
     await expect(window.getByTestId('tape-width')).toHaveValue(STREET_ORGAN.tapeWidth);
-    await expect(window.getByTestId('border')).toHaveValue(STREET_ORGAN.border);
     await expect(window.getByTestId('hole-diameter')).toHaveValue(STREET_ORGAN.holeDiameter);
     await expect(window.getByTestId('row-spacing')).toHaveValue(STREET_ORGAN.rowSpacing);
     await expect(window.getByTestId('minimum-gap')).toHaveValue(STREET_ORGAN.minimumGap);
