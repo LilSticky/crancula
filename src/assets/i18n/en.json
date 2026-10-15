@@ -130,6 +130,8 @@
       "PIPES": "Pipes",
       "ROW": "Row {{row}}",
       "PIPE_NOTE": "MIDI note",
+      "RACK_ROW": "Row",
+      "PIPE_MENU": "Move or remove the Pipe in row {{row}}",
       "NOT_A_NUMBER": "Enter a number.",
       "ADD_PIPE": "Add Pipe",
       "MOVE_PIPE_UP": "Move Pipe up",

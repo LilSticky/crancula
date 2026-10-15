@@ -130,6 +130,8 @@
       "PIPES": "Pfeifen",
       "ROW": "Reihe {{row}}",
       "PIPE_NOTE": "MIDI-Note",
+      "RACK_ROW": "Reihe",
+      "PIPE_MENU": "Pfeife in Reihe {{row}} verschieben oder entfernen",
       "NOT_A_NUMBER": "Gib eine Zahl ein.",
       "ADD_PIPE": "Pfeife hinzufügen",
       "MOVE_PIPE_UP": "Pfeife nach oben verschieben",

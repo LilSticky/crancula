@@ -733,6 +733,60 @@ describe('OrganEditorComponent', () => {
     });
   });
 
+  describe('the Pipe rack', () => {
+    async function openWithRack(pipeCount: number) {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', pipeCount);
+      await library.put(organ);
+      const editor = await openEditor(organ.id);
+      const columns = () => [...editor.element.querySelectorAll<HTMLElement>('[data-testid="rack-column"]')];
+      return {...editor, columns};
+    }
+
+    it('lays 31 Pipes out in 3 columns, read down then across', async () => {
+      const {columns} = await openWithRack(31);
+
+      expect(columns()).toHaveLength(3);
+      expect(columns().map((column) => column.querySelectorAll('[data-testid="pipe"]').length)).toEqual([11, 11, 9]);
+    });
+
+    it('starts column 2 with row 12', async () => {
+      const {columns} = await openWithRack(31);
+
+      const firstOfSecond = columns()[1]?.querySelector('[data-testid="pipe"] [data-testid="pipe-row-number"]');
+      expect(firstOfSecond?.textContent?.trim()).toBe('12');
+    });
+
+    it('heads each column with "Row" and "MIDI note"', async () => {
+      const {columns} = await openWithRack(31);
+
+      for (const column of columns()) {
+        const headers = [...column.querySelectorAll('[data-testid="rack-header-cell"]')].map((cell) => cell.textContent?.trim());
+        expect(headers).toEqual(['Row', 'MIDI note']);
+      }
+    });
+
+    it('shows each Pipe row with row number, note input, note name and a menu button', async () => {
+      const {pipeRows} = await openWithRack(3);
+
+      const row = pipeRows()[1];
+      expect(row?.querySelector('[data-testid="pipe-row-number"]')?.textContent?.trim()).toBe('2');
+      expect(row?.querySelector<HTMLInputElement>('[data-testid="pipe-note"]')?.value).toBe('62');
+      expect(row?.querySelector('[data-testid="pipe-note-name"]')?.textContent?.trim()).toBe('D4');
+      expect(row?.querySelector('[data-testid="pipe-menu"]')).not.toBeNull();
+    });
+
+    it('marks sharp note names with the class sharp and leaves naturals unmarked', async () => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 2, {pipes: [{note: 60}, {note: 61}]});
+      await library.put(organ);
+      const {pipeRows} = await openEditor(organ.id);
+
+      const names = pipeRows().map((row) => row.querySelector('[data-testid="pipe-note-name"]'));
+      expect(names.map((name) => name?.classList.contains('sharp'))).toEqual([false, true]);
+    });
+  });
+
   describe('arranging Pipes', () => {
     async function openWithPipes() {
       const {open: openEditor, library} = render();

@@ -1,5 +1,5 @@
 import {ChangeDetectionStrategy, Component, computed, effect, inject, input, linkedSignal, signal, untracked} from '@angular/core';
-import {CdkDrag, CdkDragDrop, CdkDragHandle, CdkDropList} from '@angular/cdk/drag-drop';
+import {CdkDrag, CdkDragDrop, CdkDragHandle, CdkDropList, CdkDropListGroup} from '@angular/cdk/drag-drop';
 import {type FieldTree, form, FormField} from '@angular/forms/signals';
 import {ErrorStateMatcher} from '@angular/material/core';
 import {MatButton, MatIconButton} from '@angular/material/button';
@@ -34,6 +34,7 @@ import {PageHeadComponent} from '../../shared/components/page-head/page-head.com
 import {TapeLibrary} from '../../tape/tape-library.store';
 import {OrganDeletion} from '../organ-deletion';
 import {OrganLibrary} from '../organ-library.store';
+import {rackColumns} from './pipe-rack';
 import {type FieldProblem, organFormSchema, organProblems, shownMessages, ShownViolationMatcher} from './organ-form';
 
 /** The label key of each field that has one fixed label; Pipe notes are labelled by their row. */
@@ -49,7 +50,7 @@ const FIELD_LABEL_KEYS: Readonly<Record<string, string>> = {
 @Component({
   selector: 'cranc-organ-editor',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslatePipe, MatFormField, MatLabel, MatInput, MatHint, MatError, MatSuffix, MatButton, MatIconButton, MatIcon, MatCard, FormField, DecimalInputDirective, CdkDropList, CdkDrag, CdkDragHandle, PageHeadComponent],
+  imports: [TranslatePipe, MatFormField, MatLabel, MatInput, MatHint, MatError, MatSuffix, MatButton, MatIconButton, MatIcon, MatCard, FormField, DecimalInputDirective, CdkDropList, CdkDropListGroup, CdkDrag, CdkDragHandle, PageHeadComponent],
   templateUrl: './organ-editor.component.html',
   providers: [{provide: ErrorStateMatcher, useClass: ShownViolationMatcher}],
   styles: `
@@ -125,10 +126,50 @@ const FIELD_LABEL_KEYS: Readonly<Record<string, string>> = {
       color: var(--mat-sys-error);
     }
 
+    .rack {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0 18px;
+    }
+
+    .rack-head {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      display: flex;
+      gap: 4px;
+      padding-bottom: 4px;
+      font-size: 0.75rem;
+      color: var(--mat-sys-on-surface-variant);
+      background: var(--mat-card-outlined-container-color, var(--mat-sys-surface));
+      border-bottom: 1px solid var(--cr-paper-edge);
+
+      span:first-child {
+        margin-left: 24px;
+      }
+    }
+
     .pipe {
       display: flex;
-      align-items: baseline;
-      gap: 1rem;
+      align-items: center;
+      gap: 4px;
+      min-height: 34px;
+      border-bottom: 1px solid var(--cr-paper-edge);
+    }
+
+    .row-cell {
+      width: 26px;
+      text-align: right;
+      color: var(--mat-sys-on-surface-variant);
+      font-size: 0.75rem;
+    }
+
+    .note-name {
+      font-weight: 600;
+    }
+
+    .note-name.sharp {
+      font-weight: 400;
     }
 
     .drag-handle {
@@ -290,6 +331,22 @@ export class OrganEditorComponent implements UnsavedChangesCheck {
     return valid === undefined ? '' : noteName(valid);
   }
 
+  /** The Pipe rack's columns (3 for now): where each starts in the Pipe order and its Pipe fields. */
+  protected readonly rack = computed(() => {
+    const pipes = [...this.organ.pipes];
+    let start = 0;
+    return rackColumns(pipes.length, 3).map((rows) => {
+      const column = {start, pipes: pipes.slice(start, start + rows)};
+      start += rows;
+      return column;
+    });
+  });
+
+  /** Whether a Pipe's note is a sharp, for the regular weight of its name. */
+  protected isSharp(note: number | null): boolean {
+    return this.noteNameOf(note).includes('#');
+  }
+
   protected addPipe(): void {
     this.draft.update(addPipe);
   }
@@ -302,8 +359,12 @@ export class OrganEditorComponent implements UnsavedChangesCheck {
     this.draft.update((draft) => removePipe(draft, row));
   }
 
-  protected dropPipe(event: CdkDragDrop<unknown>): void {
-    this.movePipe(event.previousIndex, event.currentIndex);
+  /** A drop in the column starting at `columnStart`; the indices are within the column, and a drop from another column shifts the rows after the removed Pipe. */
+  protected dropPipe(event: CdkDragDrop<number>, columnStart: number): void {
+    const sameColumn = event.previousContainer === event.container;
+    const fromStart = sameColumn ? columnStart : event.previousContainer.data;
+    const shift = fromStart < columnStart ? 1 : 0;
+    this.movePipe(fromStart + event.previousIndex, columnStart + event.currentIndex - shift);
   }
 
   protected async deleteOrgan(): Promise<void> {

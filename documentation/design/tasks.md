@@ -134,15 +134,18 @@ Every task that adds or changes UI text adds the keys to `en.json` and `de.json`
   Tape to scale, the derived border on both edges, one line per row centred between them, row 1
   nearest the top edge (as the Tape is drawn); a text alternative names tape width, border and
   rows; absent while a value is missing or the border would be negative. No Holes.
-- [ ] **E7** Pipe rack order, unit. A pure helper `pipe-rack.ts` next to the editor:
+- [x] **E7** Pipe rack order, unit. A pure helper `pipe-rack.ts` next to the editor:
   `rackColumns(pipeCount, columns)` gives the rows per column, read down then across: 31 in 3 →
   11, 11, 9; 31 in 2 → 16, 15; 0 → none. Spec first.
-- [ ] **E8** Pipe rack grid, component. Spec: with 31 Pipes the rack has 3 columns
+- [x] **E8** Pipe rack grid, component. Spec: with 31 Pipes the rack has 3 columns
   (`data-testid="rack-column"`) and row 12 is the first of column 2; each column has the header
   "Row", "MIDI note"; each Pipe row shows row number, note input, note name (naturals bold, sharps
   regular with class `sharp`) and a menu button; a drop still reorders (existing drag spec). Then
   one `cdkDropList` with `cdkDropListOrientation="mixed"` over a column-flow CSS grid (rows per
   column from E7), 34 px rows, sticky column headers.
+  Done differently: one `cdkDropList` per `rack-column` inside a `cdkDropListGroup` (data = the column's first row,
+  `dropPipe` maps to global rows), because the specs need each row inside its column element and `mixed` over one
+  grid would not.
 - [ ] **E9** Pipe row menu, component. Spec: the menu button has the aria-label and `matTooltip`
   "Move or remove the Pipe in row N"; the menu holds Move up (disabled on row 1), Move down
   (disabled on the last row) and Remove Pipe, each doing what today's icon buttons do (rewrite

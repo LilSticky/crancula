@@ -104,33 +104,48 @@
       @for (message of messagesAt(organ.pipes); track message.key) {
         <p class="violation" data-testid="violation" data-path="pipes">{{ message.key | translate: message.params }}</p>
       }
-      <div cdkDropList (cdkDropListDropped)="dropPipe($event)">
-        @for (pipe of organ.pipes; track pipe; let row = $index; let first = $first; let last = $last) {
-          <div class="pipe" data-testid="pipe" cdkDrag>
-            <mat-icon cdkDragHandle class="drag-handle" [attr.aria-label]="'ORGAN.EDITOR.DRAG_PIPE' | translate">drag_indicator</mat-icon>
-            <span>{{ 'ORGAN.EDITOR.ROW' | translate: {row: row + 1} }}</span>
-            <mat-form-field>
-              <mat-label>{{ 'ORGAN.EDITOR.PIPE_NOTE' | translate }}</mat-label>
-              <input matInput type="number" data-testid="pipe-note" [formField]="pipe.note"/>
-              <ng-container ngProjectAs="mat-error">
-                @for (message of messagesAt(pipe.note); track message.key) {
-                  <mat-error data-testid="violation" [attr.data-path]="'pipes.' + row + '.note'">{{ message.key | translate: message.params }}</mat-error>
-                }
-              </ng-container>
-            </mat-form-field>
-            <span data-testid="pipe-note-name">{{ noteNameOf(pipe.note().value()) }}</span>
-            <button matIconButton type="button" data-testid="move-up" [disabled]="first"
-                    [attr.aria-label]="'ORGAN.EDITOR.MOVE_PIPE_UP' | translate" (click)="movePipe(row, row - 1)">
-              <mat-icon>arrow_upward</mat-icon>
-            </button>
-            <button matIconButton type="button" data-testid="move-down" [disabled]="last"
-                    [attr.aria-label]="'ORGAN.EDITOR.MOVE_PIPE_DOWN' | translate" (click)="movePipe(row, row + 1)">
-              <mat-icon>arrow_downward</mat-icon>
-            </button>
-            <button matIconButton type="button" data-testid="remove-pipe"
-                    [attr.aria-label]="'ORGAN.EDITOR.REMOVE_PIPE' | translate" (click)="removePipe(row)">
-              <mat-icon>delete</mat-icon>
-            </button>
+      <div class="rack" cdkDropListGroup>
+        @for (column of rack(); track column.start) {
+          <div class="rack-column" data-testid="rack-column">
+            <div class="rack-head">
+              <span class="row-cell" data-testid="rack-header-cell">{{ 'ORGAN.EDITOR.RACK_ROW' | translate }}</span>
+              <span data-testid="rack-header-cell">{{ 'ORGAN.EDITOR.PIPE_NOTE' | translate }}</span>
+            </div>
+            <div cdkDropList [cdkDropListData]="column.start" (cdkDropListDropped)="dropPipe($event, column.start)">
+              @for (pipe of column.pipes; track $index; let index = $index) {
+                @let row = column.start + index;
+                <div class="pipe" data-testid="pipe" cdkDrag>
+                  <mat-icon cdkDragHandle class="drag-handle" [attr.aria-label]="'ORGAN.EDITOR.DRAG_PIPE' | translate">drag_indicator</mat-icon>
+                  <span class="row-cell" data-testid="pipe-row-number">{{ row + 1 }}</span>
+                  <mat-form-field subscriptSizing="dynamic">
+                    <mat-label>{{ 'ORGAN.EDITOR.PIPE_NOTE' | translate }}</mat-label>
+                    <input matInput type="number" data-testid="pipe-note" [formField]="pipe.note"/>
+                    <ng-container ngProjectAs="mat-error">
+                      @for (message of messagesAt(pipe.note); track message.key) {
+                        <mat-error data-testid="violation" [attr.data-path]="'pipes.' + row + '.note'">{{ message.key | translate: message.params }}</mat-error>
+                      }
+                    </ng-container>
+                  </mat-form-field>
+                  <span class="note-name" data-testid="pipe-note-name" [class.sharp]="isSharp(pipe.note().value())">{{ noteNameOf(pipe.note().value()) }}</span>
+                  <button matIconButton type="button" data-testid="move-up" [disabled]="row === 0"
+                          [attr.aria-label]="'ORGAN.EDITOR.MOVE_PIPE_UP' | translate" (click)="movePipe(row, row - 1)">
+                    <mat-icon>arrow_upward</mat-icon>
+                  </button>
+                  <button matIconButton type="button" data-testid="move-down" [disabled]="row === organ.pipes.length - 1"
+                          [attr.aria-label]="'ORGAN.EDITOR.MOVE_PIPE_DOWN' | translate" (click)="movePipe(row, row + 1)">
+                    <mat-icon>arrow_downward</mat-icon>
+                  </button>
+                  <button matIconButton type="button" data-testid="remove-pipe"
+                          [attr.aria-label]="'ORGAN.EDITOR.REMOVE_PIPE' | translate" (click)="removePipe(row)">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                  <button matIconButton type="button" data-testid="pipe-menu"
+                          [attr.aria-label]="'ORGAN.EDITOR.PIPE_MENU' | translate: {row: row + 1}">
+                    <mat-icon>more_vert</mat-icon>
+                  </button>
+                </div>
+              }
+            </div>
           </div>
         }
       </div>
