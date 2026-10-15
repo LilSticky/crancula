@@ -54,5 +54,5 @@ mockup `variants/a-workshop/mockup.html` (rail, page head, action bar). Design c
   a Song onto a Tape, Tape view, not found); the action bar is adopted in #64.
 - [x] **S6** e2e: update tests that used the top navbar; one e2e that the window starts on the
   Organ list with the rail and that the scheme choice survives a restart. Full `npm run e2e`.
-- [ ] **S7** `npm run ux:screens` (rename `01-home`; capture the dark scheme once), `ux-review`;
+- [x] **S7** `npm run ux:screens` (drop `01-home`; capture the dark scheme and the 1024×700 window), `ux-review`;
   score into STATUS.

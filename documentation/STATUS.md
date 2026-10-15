@@ -47,7 +47,15 @@ ux-review). The Libertinus licence now carries the upstream notice. `ux:screens`
 animations. ux-review 30/50 (was 29/50), see [design/screens/current/ux-review.md](design/screens/current/ux-review.md).
 Gate: lint, 253 Angular tests and node tests, 31 e2e green locally.
 
-**Next concrete step:** #63 shell, then #64 Organ editor, #65 Tape view, #66 lists and #69 Tape import
+**Done (pull request pending):** #63 shell and navigation (2026-10-15). Walnut rail in a `mat-sidenav`
+shell (icon rail with tooltips below 1180 px; only the content scrolls). Organs is the start page,
+Overview removed. Language and scheme toggles sit in the rail; scheme is System, Light or Dark and is
+remembered in localStorage like the language (`SchemePreference`, `LanguagePreference`). Shared
+`cranc-page-head` on every page, `cranc-action-bar` ready for #64. Toggle outlines on walnut lightened
+to 3:1. ux-review 33/50 (was 30/50), see [design/screens/current/ux-review.md](design/screens/current/ux-review.md).
+Gate: lint, i18n, unit tests and 32 e2e green locally.
+
+**Next concrete step:** #64 Organ editor, then #65 Tape view, #66 lists and #69 Tape import
 screen (all sub-issues of [#59](https://github.com/LilSticky/crancula/issues/59)). Then
 `/speckit-specify` for "Punch a tape" ([#3](https://github.com/LilSticky/crancula/issues/3)).
 Open issues carry `priority:` and `size:` labels; triage sets them.
