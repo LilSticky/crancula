@@ -62,6 +62,12 @@ async function render() {
 }
 
 describe('OrganListComponent', () => {
+  it('titles the page in a page head', async () => {
+    const {element} = await render();
+
+    expect(element.querySelector('cranc-page-head h1')?.textContent?.trim()).toBe('Organs');
+  });
+
   it('says that there are no Organs yet', async () => {
     const {element} = await render();
     expect(element.textContent).toContain('No Organs yet.');

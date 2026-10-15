@@ -15,8 +15,8 @@ export class CranculaNavigations {
     routes.forEach((route: CranculaRoute) => this.addChildrenOf(route));
   }
 
-  public static forNavbar(): CranculaNavigation[] {
-    return this.fromRoutes().items.filter((nav: CranculaNavigation) => nav.showIn.navbar);
+  public static forRail(): CranculaNavigation[] {
+    return this.fromRoutes().items.filter((nav: CranculaNavigation) => nav.showIn.rail);
   }
 
   private static fromRoutes(): CranculaNavigations {

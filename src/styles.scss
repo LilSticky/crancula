@@ -13,6 +13,7 @@
 
 html {
   height: 100%;
+  overflow: hidden; // the shell fills the window; only mat-sidenav-content scrolls
   color-scheme: light dark;
 
   &.cr-light { color-scheme: light; }
@@ -40,7 +41,8 @@ html {
     on-primary: light-dark(#fbf9f4, #1e1a16),
     error: light-dark(#7a2a24, #e3a49b),             // oxblood: errors, unsaved, Delete
     on-error: light-dark(#ffffff, #3b0f0b),
-    surface: light-dark(#d6d0c4, #1c1916),           // the bench (page background)
+    background: light-dark(#d6d0c4, #1c1916),        // the bench (page background)
+    surface: light-dark(#d6d0c4, #1c1916),
     on-surface: light-dark(#1e1a16, #ede6d8),
     on-surface-variant: light-dark(#4a433b, #c2b8a8),
     outline: light-dark(#8f8576, #8a8072),           // field outlines, >= 3:1 on paper
@@ -67,6 +69,8 @@ html {
   --cr-walnut: light-dark(#2e2722, #14110f);         // navigation rail
   --cr-walnut-raised: light-dark(#463c35, #2e2722);  // active rail item
   --cr-walnut-text: #ede6d8;
+  --cr-walnut-muted: #b8ad9f;                        // small print on walnut (5.8:1)
+  --cr-walnut-edge: #857a6e;                         // toggle outlines on walnut (3.5:1)
   --cr-mm: 3.78px;                                   // 1 mm at 96 dpi, the 1:1 Tape zoom
 
   // --- Component overrides (tokens, not selectors) ---------------------------
@@ -114,6 +118,18 @@ html {
   ));
 }
 
+// Icon rail below 1180 px (class set by AppComponent on mat-sidenav): 84 px, icons centred.
+.cr-compact {
+  @include mat.sidenav-overrides((container-width: 84px));
+
+  .cr-rail {
+    @include mat.list-overrides((
+      list-item-leading-icon-start-space: 22px,
+      list-item-leading-icon-end-space: 0,
+    ));
+  }
+}
+
 // The rail's list is light-on-walnut; every other mat-list keeps the defaults.
 .cr-rail {
   @include mat.list-overrides((
@@ -125,6 +141,18 @@ html {
     list-item-hover-leading-icon-color: var(--cr-walnut-text),
     list-item-focus-label-text-color: var(--cr-walnut-text),
   ));
+
+  // Language and scheme toggles: light outline and text, inverted when selected.
+  @include mat.button-toggle-overrides((
+    text-color: var(--cr-walnut-text),
+    background-color: transparent,
+    state-layer-color: var(--cr-walnut-text),
+    divider-color: var(--cr-walnut-edge),
+    selected-state-background-color: var(--cr-walnut-text),
+    selected-state-text-color: var(--cr-walnut),
+  ));
+
+  .mat-button-toggle-group { border-color: var(--cr-walnut-edge); }
 
   :focus-visible { outline-color: var(--cr-brass-on-walnut); }
 }

@@ -159,6 +159,12 @@ async function render(options: {organs?: readonly Organ[]; failToSave?: boolean;
 }
 
 describe('TapeImportComponent', () => {
+  it('titles the page in a page head', async () => {
+    const {element} = await render();
+
+    expect(element.querySelector('cranc-page-head h1')?.textContent?.trim()).toBe('Bring a Song onto a Tape');
+  });
+
   describe('without a stored Organ', () => {
     it('shows a hint with a link to the new Organ page and no form', async () => {
       const {query, element} = await render();

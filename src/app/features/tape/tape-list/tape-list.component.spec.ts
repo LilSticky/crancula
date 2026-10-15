@@ -82,6 +82,12 @@ async function render(dialogConfirms?: boolean) {
 }
 
 describe('TapeListComponent', () => {
+  it('titles the page in a page head', async () => {
+    const {element} = await render();
+
+    expect(element.querySelector('cranc-page-head h1')?.textContent?.trim()).toBe('Tapes');
+  });
+
   it('says that there are no Tapes yet', async () => {
     const {element} = await render();
 

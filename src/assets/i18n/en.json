@@ -1,9 +1,4 @@
 {
-  "PAGES": {
-    "HOME": {
-      "TITLE": "Overview"
-    }
-  },
   "CONFIRMATION_DIALOG": {
     "TITLE": "Confirm Action",
     "CANCEL": "Cancel",
@@ -11,12 +6,17 @@
     "DELETE": "Are you sure you want to delete {{ref}} forever?",
     "DISCARD": "Are you sure you want to discard all changes to {{ref}}?"
   },
-  "NAVBAR": {
-    "LANGUAGE": "Language"
-  },
   "NOT_FOUND": {
     "TITLE": "Something went wrong!",
     "MESSAGE": "Page could not be found"
+  },
+  "RAIL": {
+    "LANGUAGE": "Language",
+    "SCHEME": "Colour scheme",
+    "SCHEME_SYSTEM": "System",
+    "SCHEME_LIGHT": "Light",
+    "SCHEME_DARK": "Dark",
+    "SAVED_HERE": "Saved on this computer"
   },
   "TAPE": {
     "NAV": "Tapes",

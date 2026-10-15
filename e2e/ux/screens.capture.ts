@@ -19,6 +19,10 @@ async function capture(window: Page, name: string): Promise<void> {
   await window.screenshot({path: join(SCREENS, `${name}.png`), fullPage: true});
 }
 
+async function resizeWindow({app}: LaunchedApp, width: number, height: number): Promise<void> {
+  await app.evaluate(({BrowserWindow}, size) => BrowserWindow.getAllWindows()[0]?.setContentSize(size.width, size.height), {width, height});
+}
+
 test.describe('UX screens', () => {
   let launched: LaunchedApp;
 
@@ -34,9 +38,6 @@ test.describe('UX screens', () => {
   test('captures every screen', async () => {
     const {window} = launched;
 
-    await capture(window, '01-home');
-
-    await window.getByRole('link', {name: 'Organs'}).click();
     await capture(window, '02-organ-list-empty');
 
     await window.getByTestId('new-organ').click();
@@ -75,5 +76,24 @@ test.describe('UX screens', () => {
     await window.getByRole('link', {name: 'Orgeln'}).click();
     await window.getByTestId('organ').first().click();
     await capture(window, '10-organ-editor-german');
+
+    await window.getByTestId('language-switch').locator('[data-language="en"]').click();
+    const schemeSwitch = window.getByTestId('scheme-switch');
+
+    await schemeSwitch.locator('[data-scheme="dark"]').click();
+    await expect(window.locator('html')).toHaveClass(/\bcr-dark\b/);
+    await window.getByRole('link', {name: 'Tapes'}).click();
+    await window.getByTestId('open-tape').first().click();
+    await expect(window.getByTestId('tape-name')).toBeVisible();
+    await capture(window, '11-tape-view-dark');
+    await schemeSwitch.locator('[data-scheme="system"]').click();
+
+    await resizeWindow(launched, 1024, 700);
+    await window.getByRole('link', {name: 'Organs'}).click();
+    await expect(window.getByTestId('new-organ')).toBeVisible();
+    // Keep the pointer off the rail so no tooltip is open while capturing.
+    await window.mouse.move(640, 400);
+    await capture(window, '12-organ-list-compact');
+    await resizeWindow(launched, 1280, 800);
   });
 });

@@ -25,3 +25,34 @@ level first (`tdd` skill, test pyramid). Tick a task once its tests are green.
 - [x] **D3** e2e: update `e2e/fonts.spec.ts` to expect Noto Sans, Libertinus Serif and Material
   Icons loaded from the app (no Roboto). Run it once, then the full `npm run e2e` before the PR.
 - [x] **D4** `npm run ux:screens`, `ux-review` of the result; record the score in STATUS.
+
+## #63 Shell and navigation
+
+Guide sections "Layout and navigation", "Component usage" and "Accessibility commitments"; reference
+mockup `variants/a-workshop/mockup.html` (rail, page head, action bar). Design choices made here
+(not domain): the scheme toggle has three states, System, Light and Dark, and is remembered in
+`localStorage` (`crancula.scheme`) like the language (`crancula.language`).
+
+- [x] **S1** Organs is the start page; the Overview page goes. Unit: `''` redirects to `organs`;
+  no `home` route; the brand links to `/organs`. Remove `HomePage`, `PAGES.HOME.*` keys (en + de),
+  and the e2e "shows the home page title" (replace it with "opens on the Organ list").
+- [x] **S2** Scheme. A `SchemePreference` (`'system' | 'light' | 'dark'`) service in
+  `src/app/features/shared/`: reads and writes `crancula.scheme`, sets class `cr-light` or `cr-dark`
+  on `<html>` (none for System). Unit spec with jsdom.
+- [x] **S3** Rail component `cranc-rail` replaces `cranc-navbar`: brand, `mat-nav-list` with Organs
+  (icon `piano`) and Tapes (icon `receipt_long`), active item with `aria-current="page"`; at the
+  bottom the language toggle (keeps `data-testid="language-switch"`, `data-language`, the existing
+  persistence and `api.app.setLanguage`), the scheme toggle (`data-testid="scheme-switch"`, three
+  icon toggles with labels), and "Saved on this computer". Class `cr-rail` (walnut tokens in
+  `styles.scss`). Component spec.
+- [x] **S4** `AppComponent` shell: `mat-sidenav-container`, `mat-sidenav` mode `side`, always open,
+  196 px; below 1180 px an 84 px icon rail with tooltips (`BreakpointObserver`), labels hidden.
+  Content area padding 32 px (24 px below 1180 px). Component spec for both widths.
+- [x] **S5** Shared `cranc-page-head` (serif `h1` title, optional one-sentence subtitle, projected
+  actions on the right) and `cranc-action-bar` (sticky bottom; projected state left, actions right).
+  Component specs. Use the page head on every page now (Organ list, Organ editor, Tape list, Bring
+  a Song onto a Tape, Tape view, not found); the action bar is adopted in #64.
+- [x] **S6** e2e: update tests that used the top navbar; one e2e that the window starts on the
+  Organ list with the rail and that the scheme choice survives a restart. Full `npm run e2e`.
+- [x] **S7** `npm run ux:screens` (drop `01-home`; capture the dark scheme and the 1024×700 window), `ux-review`;
+  score into STATUS.

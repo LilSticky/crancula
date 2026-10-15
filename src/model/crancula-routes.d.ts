@@ -1,7 +1,8 @@
 import {Route} from "@angular/router";
 
 export type MenuData = {
-  navbar?: boolean
+  rail?: boolean
+  icon?: string
 };
 export type TranslateData = {
   title?: string

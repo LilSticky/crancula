@@ -130,4 +130,37 @@ describe('theme (src/styles.scss)', () => {
   it('references no Roboto', () => {
     expect(css).not.toMatch(/roboto/i);
   });
+
+  /** The hex colours a token resolves to: both values of `light-dark(a, b)`, or the one plain colour. */
+  function colours(name: string): readonly string[] {
+    return htmlToken(name).match(/#[0-9a-f]{6}\b/gi) ?? [];
+  }
+
+  /** WCAG 2.x relative luminance of a #rrggbb colour. */
+  function luminance(hex: string): number {
+    const [r = 0, g = 0, b = 0] = [1, 3, 5].map((i) => {
+      const channel = parseInt(hex.slice(i, i + 2), 16) / 255;
+      return channel <= 0.03928 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
+    });
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  }
+
+  function contrast(a: string, b: string): number {
+    const [light, dark] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+    return ((light ?? 0) + 0.05) / ((dark ?? 0) + 0.05);
+  }
+
+  it.each([
+    ['--cr-walnut-edge', 3],
+    ['--cr-walnut-muted', 4.5],
+  ])('keeps %s at a contrast of at least %s:1 on both values of --cr-walnut', (token, minimum) => {
+    const walnut = colours('--cr-walnut');
+    const foreground = colours(token);
+    expect(walnut).toHaveLength(2);
+    expect(foreground.length).toBeGreaterThan(0);
+    const ratios = walnut.flatMap((background) =>
+      foreground.map((colour) => ({background, colour, ratio: Math.round(contrast(colour, background) * 100) / 100})),
+    );
+    expect(ratios.filter(({ratio}) => ratio < minimum)).toEqual([]);
+  });
 });

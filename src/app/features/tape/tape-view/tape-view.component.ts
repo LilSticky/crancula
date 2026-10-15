@@ -4,6 +4,7 @@ import {ActivatedRoute, Router} from '@angular/router';
 import {map} from 'rxjs';
 import {noteName, type ImportSummary, type Tape} from '@api/index';
 import {TranslatePipe} from '@ngx-translate/core';
+import {PageHeadComponent} from '../../shared/components/page-head/page-head.component';
 import {OrganLibrary} from '../../organ/organ-library.store';
 import {ImportSummaryComponent} from '../import-summary/import-summary.component';
 import {TapeLibrary} from '../tape-library.store';
@@ -36,7 +37,7 @@ const COLUMNS_PER_MARK = 8;
 @Component({
   selector: 'cranc-tape-view',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ImportSummaryComponent, TranslatePipe],
+  imports: [ImportSummaryComponent, TranslatePipe, PageHeadComponent],
   templateUrl: './tape-view.component.html',
   styles: `
     .drawing {

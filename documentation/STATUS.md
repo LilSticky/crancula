@@ -39,15 +39,23 @@ variants 40–42 (self-reviews). New tooling: `ux-review` skill, `ux-designer` a
 The Tape is drawn horizontally, row 1 on top (user decision). German for Tape is now Lochband
 (dictionary, UI texts). Applying the guide to the app: [#59](https://github.com/LilSticky/crancula/issues/59).
 
-**Done (pull request pending):** [#62](https://github.com/LilSticky/crancula/issues/62) theme and fonts
-(2026-10-15, branch `062-design-theme-and-fonts`). Noto Sans and Libertinus Serif bundled, Roboto removed.
+**Done:** [#62](https://github.com/LilSticky/crancula/issues/62) theme and fonts
+(2026-10-15, PR #70). Noto Sans and Libertinus Serif bundled, Roboto removed.
 Workshop theme with light-dark tokens; the scheme follows the system until #63. `provideFormFieldDefaults()`
 makes fields outlined app-wide, because the theme's density -2 hides fill-field labels (found by the
 ux-review). The Libertinus licence now carries the upstream notice. `ux:screens` waits for dialogs and
 animations. ux-review 30/50 (was 29/50), see [design/screens/current/ux-review.md](design/screens/current/ux-review.md).
 Gate: lint, 253 Angular tests and node tests, 31 e2e green locally.
 
-**Next concrete step:** #63 shell, then #64 Organ editor, #65 Tape view, #66 lists and #69 Tape import
+**Done (pull request pending):** #63 shell and navigation (2026-10-15). Walnut rail in a `mat-sidenav`
+shell (icon rail with tooltips below 1180 px; only the content scrolls). Organs is the start page,
+Overview removed. Language and scheme toggles sit in the rail; scheme is System, Light or Dark and is
+remembered in localStorage like the language (`SchemePreference`, `LanguagePreference`). Shared
+`cranc-page-head` on every page, `cranc-action-bar` ready for #64. Toggle outlines on walnut lightened
+to 3:1. ux-review 33/50 (was 30/50), see [design/screens/current/ux-review.md](design/screens/current/ux-review.md).
+Gate: lint, i18n, unit tests and 32 e2e green locally.
+
+**Next concrete step:** #64 Organ editor, then #65 Tape view, #66 lists and #69 Tape import
 screen (all sub-issues of [#59](https://github.com/LilSticky/crancula/issues/59)). Then
 `/speckit-specify` for "Punch a tape" ([#3](https://github.com/LilSticky/crancula/issues/3)).
 Open issues carry `priority:` and `size:` labels; triage sets them.

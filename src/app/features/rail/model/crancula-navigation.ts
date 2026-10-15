@@ -3,7 +3,8 @@ import {CranculaRoute, RouteData} from "../../../../model/crancula-routes";
 export class CranculaNavigation implements RouteData {
   path: string;
   showIn: {
-    navbar: boolean
+    rail: boolean
+    icon: string
   };
   translate: {
     title: string
@@ -12,11 +13,11 @@ export class CranculaNavigation implements RouteData {
   constructor({data, path}: CranculaRoute, parentPath: string = '') {
     this.path = (parentPath ? ['', parentPath, path] : [parentPath, path]).join('/');
     this.showIn = {
-      navbar: data?.showIn.navbar ?? false
+      rail: data?.showIn.rail ?? false,
+      icon: data?.showIn.icon ?? ''
     };
     this.translate = {
       title: data?.translate.title ?? ''
     };
   }
 }
-

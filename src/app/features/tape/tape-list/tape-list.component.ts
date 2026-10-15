@@ -6,19 +6,21 @@ import {RouterLink} from '@angular/router';
 import {TranslatePipe} from '@ngx-translate/core';
 import {type Tape, tapeLengthInMillimetres} from '@api/index';
 import {ConfirmableAction, ConfirmDialogComponent} from '../../shared/components/confirm-dialog/confirm-dialog.component';
+import {PageHeadComponent} from '../../shared/components/page-head/page-head.component';
 import {OrganLibrary} from '../../organ/organ-library.store';
 import {TapeLibrary} from '../tape-library.store';
 
 @Component({
   selector: 'cranc-tape-list',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslatePipe, RouterLink, MatButton, MatIconButton, MatIcon],
+  imports: [TranslatePipe, RouterLink, MatButton, MatIconButton, MatIcon, PageHeadComponent],
   template: `
-    <h2>{{ 'TAPE.LIST.TITLE' | translate }}</h2>
-    <a matButton="filled" routerLink="/tapes/new" data-testid="new-tape">
-      <mat-icon>add</mat-icon>
-      {{ 'TAPE.LIST.NEW' | translate }}
-    </a>
+    <cranc-page-head [title]="'TAPE.LIST.TITLE' | translate">
+      <a pageHeadActions matButton="filled" routerLink="/tapes/new" data-testid="new-tape">
+        <mat-icon>add</mat-icon>
+        {{ 'TAPE.LIST.NEW' | translate }}
+      </a>
+    </cranc-page-head>
     @if (rows().length === 0) {
       <p>{{ 'TAPE.LIST.EMPTY' | translate }}</p>
     } @else {

@@ -1,7 +1,7 @@
 import {expect, test} from '@playwright/test';
 import {launchApp, type LaunchedApp} from './support/launch-app';
 
-test.describe('Home page', () => {
+test.describe('Start page', () => {
   let launched: LaunchedApp;
 
   test.beforeAll(async () => {
@@ -27,7 +27,8 @@ test.describe('Home page', () => {
     expect(windowState.isCrashed).toBeFalsy();
   });
 
-  test('shows the home page title', async () => {
-    await expect(launched.window.locator('cranc-home-page h1')).toHaveText('Overview');
+  test('opens on the Organ list', async () => {
+    await expect(launched.window.locator('cranc-organ-list')).toBeVisible();
+    await expect(launched.window.getByTestId('new-organ')).toBeVisible();
   });
 });

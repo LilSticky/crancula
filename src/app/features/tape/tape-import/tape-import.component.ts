@@ -21,6 +21,7 @@ import {
   type Song,
   type SongRejection,
 } from '@api/index';
+import {PageHeadComponent} from '../../shared/components/page-head/page-head.component';
 import {OrganLibrary} from '../../organ/organ-library.store';
 import {TapeLibrary} from '../tape-library.store';
 import {
@@ -39,7 +40,7 @@ const NO_SONG_DRAFT: TapeImportDraft = {name: '', columnLength: null, transposit
 @Component({
   selector: 'cranc-tape-import',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslatePipe, RouterLink, MatFormField, MatLabel, MatInput, MatError, MatButton, MatCheckbox, MatIcon, FormField],
+  imports: [TranslatePipe, RouterLink, MatFormField, MatLabel, MatInput, MatError, MatButton, MatCheckbox, MatIcon, FormField, PageHeadComponent],
   templateUrl: './tape-import.component.html',
   providers: [{provide: ErrorStateMatcher, useClass: ShownViolationMatcher}],
   styles: `
