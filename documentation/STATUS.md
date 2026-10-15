@@ -39,6 +39,19 @@ variants 40–42 (self-reviews). New tooling: `ux-review` skill, `ux-designer` a
 The Tape is drawn horizontally, row 1 on top (user decision). German for Tape is now Lochband
 (dictionary, UI texts). Applying the guide to the app: [#59](https://github.com/LilSticky/crancula/issues/59).
 
+**In progress (paused 2026-10-15, night):** [#62](https://github.com/LilSticky/crancula/issues/62) theme and
+fonts on branch `062-design-theme-and-fonts` (pushed, no pull request yet). D1–D3 of
+[design/tasks.md](design/tasks.md) done and committed (fonts bundled, workshop theme, `scripts/styles.spec.ts`
+14 tests green, fonts e2e green). To resume, in this order:
+1. PR [#68](https://github.com/LilSticky/crancula/pull/68) (test pyramid, docs only) first: it was blocked by
+   the flaky headless test [#48](https://github.com/LilSticky/crancula/issues/48) on Windows; the failed job was
+   re-run with auto-merge on. If still red, re-run again or merge once green. Then rebase this branch on `main`.
+2. Reviewer's should-fixes on `scripts/styles.spec.ts`: drop the blanket `silenceDeprecations` (or name the
+   warning that needs it); test `html.cr-dark { color-scheme: dark }` and the high-contrast media rule; note
+   that the `[^}]*` rule regex can't see nested rules. Comment nits: Libertinus ships only weight 600
+   (`_fonts.scss`), the reduced-motion reset is intentional, check whether the `h1–h3` rule is needed.
+3. D4: `npm run ux:screens`, `ux-review`, score into STATUS; full `npm run e2e`; pull request `Closes #62`.
+
 **Next concrete step:** apply the design guide before the app grows (user decision, 2026-10-15):
 [#62](https://github.com/LilSticky/crancula/issues/62) theme and fonts, then #63 shell, #64 Organ
 editor, #65 Tape view, #66 lists (all sub-issues of [#59](https://github.com/LilSticky/crancula/issues/59)).
