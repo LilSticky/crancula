@@ -40,9 +40,9 @@ function toFieldError(violation: OrganViolation, organ: ReadonlyFieldTree<OrganD
 }
 
 type TapeBedField = keyof OrganDraft['tapeBed'];
-const TAPE_BED_FIELDS: readonly TapeBedField[] = ['tapeWidth', 'border', 'holeDiameter', 'rowSpacing'];
+const TAPE_BED_FIELDS: readonly TapeBedField[] = ['tapeWidth', 'holeDiameter', 'rowSpacing'];
 
-/** The field a violation path like `name`, `tapeBed.border` or `pipes.3.note` points to; else the whole Organ. */
+/** The field a violation path like `name`, `tapeBed.tapeWidth` or `pipes.3.note` points to; else the whole Organ. */
 function fieldAt(organ: ReadonlyFieldTree<OrganDraft>, path: string): ReadonlyFieldTree<unknown> {
   const [head, ...rest] = path.split('.');
   switch (head) {

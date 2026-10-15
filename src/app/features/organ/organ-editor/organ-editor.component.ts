@@ -35,7 +35,6 @@ import {type FieldProblem, organFormSchema, organProblems, shownMessages, ShownV
 const FIELD_LABEL_KEYS: Readonly<Record<string, string>> = {
   name: 'ORGAN.EDITOR.NAME',
   'tapeBed.tapeWidth': 'ORGAN.EDITOR.TAPE_WIDTH',
-  'tapeBed.border': 'ORGAN.EDITOR.BORDER',
   'tapeBed.holeDiameter': 'ORGAN.EDITOR.HOLE_DIAMETER',
   'tapeBed.rowSpacing': 'ORGAN.EDITOR.ROW_SPACING',
   minimumGap: 'ORGAN.EDITOR.MINIMUM_GAP',

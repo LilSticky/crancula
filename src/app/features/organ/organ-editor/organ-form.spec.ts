@@ -35,7 +35,7 @@ describe('organFormSchema', () => {
     const [error] = organErrors(root.tapeBed.tapeWidth().errors());
 
     expect(error?.kind).toBe('pipes-exceed-tape-width');
-    expect(error?.violation.params).toEqual({requiredWidth: 117.5, availableWidth: 100});
+    expect(error?.violation.params).toEqual({requiredWidth: 107.5, availableWidth: 100});
     expect(root.tapeBed.rowSpacing().errors()).toEqual([]);
   });
 
