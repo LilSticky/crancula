@@ -18,8 +18,7 @@ test.describe('I can use the Organ editor in German', () => {
     await window.getByTestId('new-organ').click();
 
     await window.getByTestId('name').fill('Drehorgel');
-    await window.getByTestId('tape-width').fill('20');
-    await window.getByTestId('border').fill('5');
+    await window.getByTestId('tape-width').fill('10');
     await window.getByTestId('hole-diameter').fill('2.5');
     await window.getByTestId('row-spacing').fill('3.5');
     await window.getByTestId('minimum-gap').fill('1.5');

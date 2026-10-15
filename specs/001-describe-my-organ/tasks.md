@@ -527,7 +527,7 @@ valid (old rule 2·border + span ≤ width implies span ≤ width).
 - [x] **A7** Organ editor: component tests first. No Border input; the derived Border shown
   read-only ("6,25 mm" in German, "6.25 mm" in English), absent while a value is missing; labels
   and violations without `tapeBed.border`. en/de parity.
-- [ ] **A8** e2e: update helpers and tests that fill the Border (`e2e/support/*`, organ and tape
+- [x] **A8** e2e: update helpers and tests that fill the Border (`e2e/support/*`, organ and tape
   specs); one e2e that an Organ saved in version 1 with a border loads after a restart and is
   saved again as version 2. Full `npm run e2e`.
 - [ ] **A9** Docs: spec.md (FR-002, FR-007, FR-008, FR-013, Key Entities, row layout assumption),

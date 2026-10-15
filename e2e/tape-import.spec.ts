@@ -29,7 +29,6 @@ test.describe('Bring a MIDI song onto a tape', () => {
 
     await window.getByTestId('name').fill('Octave organ');
     await window.getByTestId('tape-width').fill('120');
-    await window.getByTestId('border').fill('5');
     await window.getByTestId('hole-diameter').fill('2.5');
     await window.getByTestId('row-spacing').fill('3.5');
     await window.getByTestId('minimum-gap').fill('1.5');
