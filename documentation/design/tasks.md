@@ -106,11 +106,11 @@ Every task that adds or changes UI text adds the keys to `en.json` and `de.json`
   field; `2,5` stores 2.5; `abc` shows "Enter a number." as today. Then bind the fields through E1
   (check the signal-forms parser hook with the Angular MCP `search_documentation` first, else a
   small directive) and update the label keys.
-- [ ] **E3** Read-only Minimum Hole Length, component. Spec: shows the hole diameter with the
+- [x] **E3** Read-only Minimum Hole Length, component. Spec: shows the hole diameter with the
   language's separator (`2,5` in German: the issue comment), the "mm" suffix and the hint "Equals
   the hole diameter"; the input is `readonly` and carries class `cr-readonly`. Then the template
   and the class in `styles.scss` (dashed outline, Ink 2 text, transparent fill).
-- [ ] **E3b** Read-only Border, component. Spec: a read-only field Border (`data-testid="border"`,
+- [x] **E3b** Read-only Border, component. Spec: a read-only field Border (`data-testid="border"`,
   class `cr-readonly`, "mm" suffix, hint "On each side, the rows are centred") shows the derived
   border of #74: `6.25` for the Street organ (120 mm, 31 rows at 3.5 mm, hole 2.5 mm),
   `6,25` in German; empty while tape width, hole diameter, spacing or the Pipes are missing, or

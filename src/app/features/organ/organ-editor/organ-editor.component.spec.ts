@@ -165,6 +165,30 @@ describe('OrganEditorComponent', () => {
     });
   });
 
+  describe('the read-only Minimum Hole Length', () => {
+    it('is shown as the hole diameter with the decimal comma in German', async () => {
+      TestBed.configureTestingModule({providers: [provideRouter([]), provideTestTranslations('de')]});
+      vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+      const organ = testOrgan('Street organ', 2, {tapeBed: {tapeWidth: 120, holeDiameter: 2.5, rowSpacing: 3.5}});
+      await TestBed.inject(OrganLibrary).put(organ);
+      const {field} = await open(organ.id);
+
+      expect(field('minimum-hole-length').value).toBe('2,5');
+    });
+
+    it('has the class cr-readonly, the suffix "mm" and the hint "Equals the hole diameter"', async () => {
+      const {open: openEditor} = render();
+      const {field} = await openEditor();
+
+      const formField = field('minimum-hole-length').closest('mat-form-field');
+      expect(field('minimum-hole-length').readOnly).toBe(true);
+      expect(field('minimum-hole-length').classList).toContain('cr-readonly');
+      expect(formField?.querySelector('[matTextSuffix]')?.textContent?.trim()).toBe('mm');
+      expect(formField?.querySelector('mat-hint')?.textContent?.trim()).toBe('Equals the hole diameter');
+      expect(formField?.querySelector('mat-label')?.textContent).not.toContain('(mm)');
+    });
+  });
+
   describe('the derived Border', () => {
     /** The Border field's text; absent counts as empty. */
     const borderOf = (element: HTMLElement) =>
@@ -197,7 +221,19 @@ describe('OrganEditorComponent', () => {
       const {element} = await openEditor(organ.id);
 
       const labels = [...element.querySelectorAll('mat-label')].map((label) => label.textContent?.trim());
-      expect(labels).toContain('Border (mm)');
+      expect(labels).toContain('Border');
+    });
+
+    it('is a read-only field with the suffix "mm" and the hint "On each side, the rows are centred"', async () => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 31);
+      await library.put(organ);
+      const {field} = await openEditor(organ.id);
+
+      const formField = field('border').closest('mat-form-field');
+      expect(field('border').classList).toContain('cr-readonly');
+      expect(formField?.querySelector('[matTextSuffix]')?.textContent?.trim()).toBe('mm');
+      expect(formField?.querySelector('mat-hint')?.textContent?.trim()).toBe('On each side, the rows are centred');
     });
 
     it('updates when a Pipe is removed', async () => {

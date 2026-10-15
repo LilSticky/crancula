@@ -117,7 +117,10 @@ export class OrganEditorComponent implements UnsavedChangesCheck {
     return border < 0 ? '' : formatNumber(border, this.language());
   });
 
-  protected readonly minimumHoleLength = computed(() => this.organ.tapeBed.holeDiameter().value() ?? '');
+  protected readonly minimumHoleLength = computed(() => {
+    const diameter = this.organ.tapeBed.holeDiameter().value();
+    return typeof diameter === 'number' ? formatNumber(diameter, this.language()) : '';
+  });
 
   constructor() {
     effect(() => {

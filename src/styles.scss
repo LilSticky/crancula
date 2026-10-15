@@ -202,3 +202,17 @@ h1, h2, h3 { font-family: var(--mat-sys-headline-small-font); font-weight: 600; 
     padding-right: 2rem;
   }
 }
+
+// Derived, not entered: dashed outline, Ink 2 text, transparent fill (DESIGN-GUIDE).
+.mat-mdc-form-field:has(.cr-readonly) {
+  --mat-form-field-outlined-outline-color: var(--mat-sys-outline-variant);
+  --mat-form-field-filled-container-color: transparent;
+  --mat-form-field-filled-active-indicator-color: transparent;
+  outline: 1px dashed var(--mat-sys-outline-variant);
+  outline-offset: -1px;
+  border-radius: 4px;
+}
+
+.cr-readonly {
+  color: var(--mat-sys-on-surface-variant);
+}
