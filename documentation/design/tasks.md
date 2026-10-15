@@ -129,8 +129,8 @@ Every task that adds or changes UI text adds the keys to `en.json` and `de.json`
   tape width), the Tape width field gets the error outline but no second message; with a Tape Bed
   value missing or no Pipes the line is absent. The numbers come from `rowSpan` and `border` (#74) and the
   derived border, formatted with E1; a sentence only, no new names in code.
-- [ ] **E5b** Singular texts, component. Spec: one Pipe shows "1 Pipe" in the Pipes sheet head and the fit check says "1 row takes …" (German "1 Pfeife", "1 Reihe belegt …"). Then separate keys for one and many.
-- [ ] **E6** Tape Bed drawing, component. Spec: an SVG under the fields drawn from the values: the
+- [x] **E5b** Singular texts, component. Spec: one Pipe shows "1 Pipe" in the Pipes sheet head and the fit check says "1 row takes …" (German "1 Pfeife", "1 Reihe belegt …"). Then separate keys for one and many.
+- [x] **E6** Tape Bed drawing, component. Spec: an SVG under the fields drawn from the values: the
   Tape to scale, the derived border on both edges, one line per row centred between them, row 1
   nearest the top edge (as the Tape is drawn); a text alternative names tape width, border and
   rows; absent while a value is missing or the border would be negative. No Holes.

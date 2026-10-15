@@ -72,18 +72,30 @@
         <p class="fit-check" data-testid="fit-check" [class.error]="fit.tooWide">
           @if (fit.tooWide) {
             <mat-icon>error</mat-icon>
-            <span>{{ 'ORGAN.EDITOR.FIT_TOO_WIDE' | translate: fit }}</span>
+            <span>{{ fit.fitKey | translate: fit }}</span>
           } @else {
-            <span>{{ 'ORGAN.EDITOR.FIT' | translate: fit }}</span>
+            <span>{{ fit.fitKey | translate: fit }}</span>
           }
         </p>
+        @if (drawing(); as bed) {
+          <svg class="tape-bed-drawing" data-testid="tape-bed-drawing" role="img" [attr.viewBox]="'0 0 ' + bed.length + ' ' + bed.tapeWidth"
+               [attr.aria-label]="fit.drawingKey | translate: fit">
+            <rect data-testid="tape-bed-tape" x="0" y="0" [attr.width]="bed.length" [attr.height]="bed.tapeWidth"
+                  fill="var(--cr-tape)" stroke="var(--cr-tape-edge)" stroke-width="0.5"/>
+            <rect data-testid="tape-bed-border" x="0" y="0" [attr.width]="bed.length" [attr.height]="bed.border" fill="var(--cr-tape-guide)"/>
+            <rect data-testid="tape-bed-border" x="0" [attr.y]="bed.bottomBorderTop" [attr.width]="bed.length" [attr.height]="bed.border" fill="var(--cr-tape-guide)"/>
+            @for (y of bed.rows; track $index) {
+              <line data-testid="tape-bed-row" x1="0" [attr.x2]="bed.length" [attr.y1]="y" [attr.y2]="y" stroke="var(--cr-tape-guide-strong)" stroke-width="0.3"/>
+            }
+          </svg>
+        }
       }
     </mat-card>
 
     <mat-card appearance="outlined" data-testid="pipes-sheet">
       <div class="sheet-head">
         <h2 class="sheet-title">{{ 'ORGAN.EDITOR.PIPES' | translate }}</h2>
-        <span data-testid="pipe-count">{{ 'ORGAN.EDITOR.PIPE_COUNT' | translate: {count: organ.pipes.length} }}</span>
+        <span data-testid="pipe-count">{{ pipeCountKey() | translate: {count: organ.pipes.length} }}</span>
         <button matButton type="button" data-testid="add-pipe" (click)="addPipe()">
           <mat-icon>add</mat-icon>
           {{ 'ORGAN.EDITOR.ADD_PIPE' | translate }}

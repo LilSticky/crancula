@@ -1415,6 +1415,120 @@ describe('OrganEditorComponent', () => {
     });
   });
 
+  describe('one Pipe', () => {
+    it('counts "1 Pipe" and the fit check starts "1 row takes"', async () => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 1);
+      await library.put(organ);
+      const {element} = await openEditor(organ.id);
+
+      expect(element.querySelector('[data-testid="pipe-count"]')?.textContent?.trim()).toBe('1 Pipe');
+      expect(element.querySelector('[data-testid="fit-check"]')?.textContent?.replace(/\s+/g, ' ').trim()).toMatch(/^1 row takes /);
+    });
+
+    it('counts "1 Pfeife" and the fit check starts "1 Reihe belegt" in German', async () => {
+      TestBed.configureTestingModule({providers: [provideRouter([]), provideTestTranslations('de')]});
+      vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+      const organ = testOrgan('Street organ', 1);
+      await TestBed.inject(OrganLibrary).put(organ);
+      const {element} = await open(organ.id);
+
+      expect(element.querySelector('[data-testid="pipe-count"]')?.textContent?.trim()).toBe('1 Pfeife');
+      expect(element.querySelector('[data-testid="fit-check"]')?.textContent?.replace(/\s+/g, ' ').trim()).toMatch(/^1 Reihe belegt /);
+    });
+  });
+
+  describe('the Tape Bed drawing', () => {
+    const drawing = (element: HTMLElement) =>
+      element.querySelector<SVGSVGElement>('[data-testid="tape-bed-sheet"] svg[data-testid="tape-bed-drawing"]');
+    const numberAttribute = (node: Element, name: string) => Number(node.getAttribute(name));
+
+    async function openStreetOrgan(pipes: number) {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', pipes);
+      await library.put(organ);
+      return openEditor(organ.id);
+    }
+
+    it('is an SVG in the Tape Bed sheet whose viewBox is in mm and as high as the tape width (120 mm)', async () => {
+      const {element} = await openStreetOrgan(3);
+
+      const svg = drawing(element);
+      expect(svg).not.toBeNull();
+      const [minX, minY, width, height] = (svg?.getAttribute('viewBox') ?? '').split(/\s+/).map(Number);
+      expect([minX, minY]).toEqual([0, 0]);
+      expect(width).toBeGreaterThan(0);
+      expect(height).toBe(120);
+    });
+
+    it('draws the Tape as a rect as high as the tape width', async () => {
+      const {element} = await openStreetOrgan(3);
+
+      const tapes = drawing(element)?.querySelectorAll('rect[data-testid="tape-bed-tape"]') ?? [];
+      expect(tapes).toHaveLength(1);
+      expect(numberAttribute(tapes[0], 'y')).toBe(0);
+      expect(numberAttribute(tapes[0], 'height')).toBe(120);
+    });
+
+    it('draws a border band as high as the Border at the top and at the bottom edge', async () => {
+      const {element} = await openStreetOrgan(3);
+
+      const bands = [...(drawing(element)?.querySelectorAll('[data-testid="tape-bed-border"]') ?? [])];
+      expect(bands).toHaveLength(2);
+      expect(bands.map((band) => numberAttribute(band, 'height'))).toEqual([55.25, 55.25]);
+      const tops = bands.map((band) => numberAttribute(band, 'y')).sort((a, b) => a - b);
+      expect(tops[0]).toBeCloseTo(0);
+      expect(tops[1]).toBeCloseTo(120 - 55.25);
+    });
+
+    it('draws one line per row at border + hole diameter / 2 + (row - 1) x spacing, row 1 nearest the top', async () => {
+      const {element} = await openStreetOrgan(3);
+
+      const rows = [...(drawing(element)?.querySelectorAll('line[data-testid="tape-bed-row"]') ?? [])];
+      expect(rows).toHaveLength(3);
+      [56.5, 60, 63.5].forEach((y, index) => {
+        expect(numberAttribute(rows[index], 'y1')).toBeCloseTo(y);
+        expect(numberAttribute(rows[index], 'y2')).toBeCloseTo(y);
+      });
+    });
+
+    it('has a text alternative naming the tape width, the Border and the number of rows', async () => {
+      const {element} = await openStreetOrgan(3);
+
+      const svg = drawing(element);
+      expect(svg?.getAttribute('role')).toBe('img');
+      const label = svg?.getAttribute('aria-label') ?? '';
+      expect(label).toContain('120');
+      expect(label).toContain('55.25');
+      expect(label).toContain('3');
+    });
+
+    it('draws no Holes', async () => {
+      const {element} = await openStreetOrgan(3);
+
+      expect(drawing(element)).not.toBeNull();
+      expect(drawing(element)?.querySelector('circle, ellipse, [data-testid*="hole"]')).toBeNull();
+    });
+
+    it.each(['tape-width', 'hole-diameter', 'row-spacing'])('is absent while the %s is missing', async (testId) => {
+      const {element, field, type} = await openStreetOrgan(3);
+
+      expect(drawing(element)).not.toBeNull();
+      await type(field(testId), '');
+
+      expect(drawing(element)).toBeNull();
+    });
+
+    it('is absent while the Border is negative (tape width 100 mm, 31 rows)', async () => {
+      const {element, field, type} = await openStreetOrgan(31);
+
+      expect(drawing(element)).not.toBeNull();
+      await type(field('tape-width'), '100');
+
+      expect(drawing(element)).toBeNull();
+    });
+  });
+
   describe('rule violations', () => {
     it('shows no "missing value" messages on an untouched new Organ', async () => {
       const {open: openEditor} = render();

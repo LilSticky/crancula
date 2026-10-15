@@ -103,6 +103,13 @@ const FIELD_LABEL_KEYS: Readonly<Record<string, string>> = {
       color: var(--mat-sys-error);
     }
 
+    .tape-bed-drawing {
+      display: block;
+      width: 100%;
+      max-height: 160px;
+      margin-top: 16px;
+    }
+
     .sheet-head {
       display: flex;
       align-items: baseline;
@@ -169,7 +176,7 @@ export class OrganEditorComponent implements UnsavedChangesCheck {
     const {tapeWidth, holeDiameter, rowSpacing} = this.draft().tapeBed;
     const pipeCount = this.draft().pipes.length;
     if (tapeWidth === null || holeDiameter === null || rowSpacing === null || pipeCount === 0) return null;
-    return {pipeCount, tapeWidth, ...tapeBedFit({tapeWidth, holeDiameter, rowSpacing}, pipeCount)};
+    return {pipeCount, tapeWidth, holeDiameter, rowSpacing, ...tapeBedFit({tapeWidth, holeDiameter, rowSpacing}, pipeCount)};
   });
 
   /** The Border the rows leave on each side, in the current language; empty while it is unknown or negative. */
@@ -183,14 +190,28 @@ export class OrganEditorComponent implements UnsavedChangesCheck {
     const fit = this.tapeBedFit();
     if (fit === null) return null;
     const language = this.language();
+    const one = fit.pipeCount === 1 ? '_ONE' : '';
     return {
       count: fit.pipeCount,
       rowSpan: formatNumber(fit.rowSpan, language),
       tapeWidth: formatNumber(fit.tapeWidth, language),
       border: formatNumber(fit.border, language),
       tooWide: fit.border < 0,
+      fitKey: `ORGAN.EDITOR.${fit.border < 0 ? 'FIT_TOO_WIDE' : 'FIT'}${one}`,
+      drawingKey: `ORGAN.EDITOR.TAPE_BED_DRAWING${one}`,
     };
   });
+
+  /** The Tape Bed in mm, for the drawing; `null` while a value is missing or the Border would be negative. */
+  protected readonly drawing = computed(() => {
+    const fit = this.tapeBedFit();
+    if (fit === null || fit.border < 0) return null;
+    const rows = Array.from({length: fit.pipeCount}, (_, row) => fit.border + fit.holeDiameter / 2 + row * fit.rowSpacing);
+    return {tapeWidth: fit.tapeWidth, length: 2 * fit.tapeWidth, border: fit.border, bottomBorderTop: fit.tapeWidth - fit.border, rows};
+  });
+
+  /** The Pipes sheet head's count text key: separate texts for one and many. */
+  protected readonly pipeCountKey = computed(() => (this.draft().pipes.length === 1 ? 'ORGAN.EDITOR.PIPE_COUNT_ONE' : 'ORGAN.EDITOR.PIPE_COUNT'));
 
   protected readonly minimumHoleLength = computed(() => {
     const diameter = this.organ.tapeBed.holeDiameter().value();
