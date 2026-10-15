@@ -10,7 +10,15 @@ repository. Keep it that way.
 ## Start here
 
 Read [`documentation/STATUS.md`](documentation/STATUS.md) first: the current slice, the **one next
-step**, known broken/WIP items, and open questions. Then read only what that step needs:
+step**, known broken/WIP items, and open questions. Then read only what that step needs.
+
+**"go"** means: resume the iteration without asking. Orient yourself (`git status`, open pull
+requests, STATUS's next step, `gh issue list --state open --label "priority: high"`), triage what
+lacks labels (`/triage`), take the highest-priority triaged issue without `needs-info` (STATUS's
+next step breaks ties; split `size: XL` first), and run the usual loop through to the merge and the
+cleanup. Ask only about domain, dictionary or scope questions.
+
+What to read per step:
 
 | When you… | Read |
 |-----------|------|
@@ -52,8 +60,8 @@ step**, known broken/WIP items, and open questions. Then read only what that ste
   set per repository (`git config user.name` / `user.email`) on every machine, so that a work
   identity in the global Git config never reaches the public history.
 - **Tickets** (ADR 15): GitHub Issues are the ticket system. Issue forms add `triage`; the Claude
-  triage Action labels the issue, flags `duplicate` and `needs-info`, and comments. Run `/triage`
-  locally to triage what the Action missed. Take work from triaged issues without `needs-info`;
+  triage Action sets type, `priority:` and `size:` labels, flags `duplicate` and `needs-info`, and comments. Run `/triage`
+  locally to triage what the Action missed. Take work from triaged issues without `needs-info`, highest priority first;
   `@claude` in an issue or pull request runs the harness in GitHub Actions.
 - **Pull requests** (ADR 10): every branch reaches `main` through a pull request, never a local
   merge or a direct push. Open it with `gh pr create`; the body lists every issue it touches,
