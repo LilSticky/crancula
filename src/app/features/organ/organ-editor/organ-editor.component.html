@@ -1,110 +1,130 @@
 <div class="organ-editor">
   <cranc-page-head [title]="(id() ? 'ORGAN.EDITOR.TITLE' : 'ORGAN.EDITOR.TITLE_NEW') | translate"/>
 
-  <mat-form-field>
-    <mat-label>{{ 'ORGAN.EDITOR.NAME' | translate }}</mat-label>
-    <input matInput data-testid="name" [formField]="organ.name"/>
-    <ng-container ngProjectAs="mat-error">
-      @for (message of messagesAt(organ.name); track message.key) {
-        <mat-error data-testid="violation" data-path="name">{{ message.key | translate: message.params }}</mat-error>
-      }
-    </ng-container>
-  </mat-form-field>
-
-  <h3>{{ 'ORGAN.EDITOR.TAPE_BED' | translate }}</h3>
-  <mat-form-field>
-    <mat-label>{{ 'ORGAN.EDITOR.TAPE_WIDTH' | translate }}</mat-label>
-    <input matInput crancDecimalInput data-testid="tape-width" [formField]="organ.tapeBed.tapeWidth"/>
-    <span matTextSuffix>mm</span>
-    <ng-container ngProjectAs="mat-error">
-      @for (message of messagesAt(organ.tapeBed.tapeWidth); track message.key) {
-        <mat-error data-testid="violation" data-path="tapeBed.tapeWidth">{{ message.key | translate: message.params }}</mat-error>
-      }
-    </ng-container>
-  </mat-form-field>
-  <mat-form-field>
-    <mat-label>{{ 'ORGAN.EDITOR.HOLE_DIAMETER' | translate }}</mat-label>
-    <input matInput crancDecimalInput data-testid="hole-diameter" [formField]="organ.tapeBed.holeDiameter"/>
-    <span matTextSuffix>mm</span>
-    <ng-container ngProjectAs="mat-error">
-      @for (message of messagesAt(organ.tapeBed.holeDiameter); track message.key) {
-        <mat-error data-testid="violation" data-path="tapeBed.holeDiameter">{{ message.key | translate: message.params }}</mat-error>
-      }
-    </ng-container>
-  </mat-form-field>
-  <mat-form-field>
-    <mat-label>{{ 'ORGAN.EDITOR.ROW_SPACING' | translate }}</mat-label>
-    <input matInput crancDecimalInput data-testid="row-spacing" [formField]="organ.tapeBed.rowSpacing"/>
-    <span matTextSuffix>mm</span>
-    <ng-container ngProjectAs="mat-error">
-      @for (message of messagesAt(organ.tapeBed.rowSpacing); track message.key) {
-        <mat-error data-testid="violation" data-path="tapeBed.rowSpacing">{{ message.key | translate: message.params }}</mat-error>
-      }
-    </ng-container>
-  </mat-form-field>
-  <mat-form-field>
-    <mat-label>{{ 'ORGAN.EDITOR.BORDER' | translate }}</mat-label>
-    <input matInput readonly class="cr-readonly" data-testid="border" [value]="border()"/>
-    <span matTextSuffix>mm</span>
-    <mat-hint>{{ 'ORGAN.EDITOR.BORDER_HINT' | translate }}</mat-hint>
-  </mat-form-field>
-  <mat-form-field>
-    <mat-label>{{ 'ORGAN.EDITOR.MINIMUM_GAP' | translate }}</mat-label>
-    <input matInput crancDecimalInput data-testid="minimum-gap" [formField]="organ.minimumGap"/>
-    <span matTextSuffix>mm</span>
-    <ng-container ngProjectAs="mat-error">
-      @for (message of messagesAt(organ.minimumGap); track message.key) {
-        <mat-error data-testid="violation" data-path="minimumGap">{{ message.key | translate: message.params }}</mat-error>
-      }
-    </ng-container>
-  </mat-form-field>
-  <mat-form-field>
-    <mat-label>{{ 'ORGAN.EDITOR.MINIMUM_HOLE_LENGTH' | translate }}</mat-label>
-    <input matInput readonly class="cr-readonly" data-testid="minimum-hole-length" [value]="minimumHoleLength()"/>
-    <span matTextSuffix>mm</span>
-    <mat-hint>{{ 'ORGAN.EDITOR.MINIMUM_HOLE_LENGTH_HINT' | translate }}</mat-hint>
-  </mat-form-field>
-
-  <h3>{{ 'ORGAN.EDITOR.PIPES' | translate }}</h3>
-  @for (message of messagesAt(organ.pipes); track message.key) {
-    <p class="violation" data-testid="violation" data-path="pipes">{{ message.key | translate: message.params }}</p>
-  }
-  <div cdkDropList (cdkDropListDropped)="dropPipe($event)">
-    @for (pipe of organ.pipes; track pipe; let row = $index; let first = $first; let last = $last) {
-      <div class="pipe" data-testid="pipe" cdkDrag>
-        <mat-icon cdkDragHandle class="drag-handle" [attr.aria-label]="'ORGAN.EDITOR.DRAG_PIPE' | translate">drag_indicator</mat-icon>
-        <span>{{ 'ORGAN.EDITOR.ROW' | translate: {row: row + 1} }}</span>
-        <mat-form-field>
-          <mat-label>{{ 'ORGAN.EDITOR.PIPE_NOTE' | translate }}</mat-label>
-          <input matInput type="number" data-testid="pipe-note" [formField]="pipe.note"/>
+  <div class="sheets">
+    <mat-card appearance="outlined" data-testid="tape-bed-sheet">
+      <h2 class="sheet-title">{{ 'ORGAN.EDITOR.TAPE_BED' | translate }}</h2>
+      <div class="fields">
+        <mat-form-field class="full-width">
+          <mat-label>{{ 'ORGAN.EDITOR.NAME' | translate }}</mat-label>
+          <input matInput data-testid="name" [formField]="organ.name"/>
           <ng-container ngProjectAs="mat-error">
-            @for (message of messagesAt(pipe.note); track message.key) {
-              <mat-error data-testid="violation" [attr.data-path]="'pipes.' + row + '.note'">{{ message.key | translate: message.params }}</mat-error>
+            @for (message of messagesAt(organ.name); track message.key) {
+              <mat-error data-testid="violation" data-path="name">{{ message.key | translate: message.params }}</mat-error>
             }
           </ng-container>
         </mat-form-field>
-        <span data-testid="pipe-note-name">{{ noteNameOf(pipe.note().value()) }}</span>
-        <button matIconButton type="button" data-testid="move-up" [disabled]="first"
-                [attr.aria-label]="'ORGAN.EDITOR.MOVE_PIPE_UP' | translate" (click)="movePipe(row, row - 1)">
-          <mat-icon>arrow_upward</mat-icon>
-        </button>
-        <button matIconButton type="button" data-testid="move-down" [disabled]="last"
-                [attr.aria-label]="'ORGAN.EDITOR.MOVE_PIPE_DOWN' | translate" (click)="movePipe(row, row + 1)">
-          <mat-icon>arrow_downward</mat-icon>
-        </button>
-        <button matIconButton type="button" data-testid="remove-pipe"
-                [attr.aria-label]="'ORGAN.EDITOR.REMOVE_PIPE' | translate" (click)="removePipe(row)">
-          <mat-icon>delete</mat-icon>
+
+        <mat-form-field>
+          <mat-label>{{ 'ORGAN.EDITOR.TAPE_WIDTH' | translate }}</mat-label>
+          <input matInput crancDecimalInput data-testid="tape-width" [formField]="organ.tapeBed.tapeWidth"/>
+          <span matTextSuffix>mm</span>
+          <ng-container ngProjectAs="mat-error">
+            @for (message of messagesAt(organ.tapeBed.tapeWidth); track message.key) {
+              <mat-error data-testid="violation" data-path="tapeBed.tapeWidth">{{ message.key | translate: message.params }}</mat-error>
+            }
+          </ng-container>
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label>{{ 'ORGAN.EDITOR.HOLE_DIAMETER' | translate }}</mat-label>
+          <input matInput crancDecimalInput data-testid="hole-diameter" [formField]="organ.tapeBed.holeDiameter"/>
+          <span matTextSuffix>mm</span>
+          <ng-container ngProjectAs="mat-error">
+            @for (message of messagesAt(organ.tapeBed.holeDiameter); track message.key) {
+              <mat-error data-testid="violation" data-path="tapeBed.holeDiameter">{{ message.key | translate: message.params }}</mat-error>
+            }
+          </ng-container>
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label>{{ 'ORGAN.EDITOR.ROW_SPACING' | translate }}</mat-label>
+          <input matInput crancDecimalInput data-testid="row-spacing" [formField]="organ.tapeBed.rowSpacing"/>
+          <span matTextSuffix>mm</span>
+          <ng-container ngProjectAs="mat-error">
+            @for (message of messagesAt(organ.tapeBed.rowSpacing); track message.key) {
+              <mat-error data-testid="violation" data-path="tapeBed.rowSpacing">{{ message.key | translate: message.params }}</mat-error>
+            }
+          </ng-container>
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label>{{ 'ORGAN.EDITOR.MINIMUM_GAP' | translate }}</mat-label>
+          <input matInput crancDecimalInput data-testid="minimum-gap" [formField]="organ.minimumGap"/>
+          <span matTextSuffix>mm</span>
+          <ng-container ngProjectAs="mat-error">
+            @for (message of messagesAt(organ.minimumGap); track message.key) {
+              <mat-error data-testid="violation" data-path="minimumGap">{{ message.key | translate: message.params }}</mat-error>
+            }
+          </ng-container>
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label>{{ 'ORGAN.EDITOR.BORDER' | translate }}</mat-label>
+          <input matInput readonly class="cr-readonly" data-testid="border" [value]="border()"/>
+          <span matTextSuffix>mm</span>
+          <mat-hint>{{ 'ORGAN.EDITOR.BORDER_HINT' | translate }}</mat-hint>
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label>{{ 'ORGAN.EDITOR.MINIMUM_HOLE_LENGTH' | translate }}</mat-label>
+          <input matInput readonly class="cr-readonly" data-testid="minimum-hole-length" [value]="minimumHoleLength()"/>
+          <span matTextSuffix>mm</span>
+          <mat-hint>{{ 'ORGAN.EDITOR.MINIMUM_HOLE_LENGTH_HINT' | translate }}</mat-hint>
+        </mat-form-field>
+      </div>
+      @if (fit(); as fit) {
+        <p class="fit-check" data-testid="fit-check" [class.error]="fit.tooWide">
+          @if (fit.tooWide) {
+            <mat-icon>error</mat-icon>
+            <span>{{ 'ORGAN.EDITOR.FIT_TOO_WIDE' | translate: fit }}</span>
+          } @else {
+            <span>{{ 'ORGAN.EDITOR.FIT' | translate: fit }}</span>
+          }
+        </p>
+      }
+    </mat-card>
+
+    <mat-card appearance="outlined" data-testid="pipes-sheet">
+      <div class="sheet-head">
+        <h2 class="sheet-title">{{ 'ORGAN.EDITOR.PIPES' | translate }}</h2>
+        <span data-testid="pipe-count">{{ 'ORGAN.EDITOR.PIPE_COUNT' | translate: {count: organ.pipes.length} }}</span>
+        <button matButton type="button" data-testid="add-pipe" (click)="addPipe()">
+          <mat-icon>add</mat-icon>
+          {{ 'ORGAN.EDITOR.ADD_PIPE' | translate }}
         </button>
       </div>
-    }
+      @for (message of messagesAt(organ.pipes); track message.key) {
+        <p class="violation" data-testid="violation" data-path="pipes">{{ message.key | translate: message.params }}</p>
+      }
+      <div cdkDropList (cdkDropListDropped)="dropPipe($event)">
+        @for (pipe of organ.pipes; track pipe; let row = $index; let first = $first; let last = $last) {
+          <div class="pipe" data-testid="pipe" cdkDrag>
+            <mat-icon cdkDragHandle class="drag-handle" [attr.aria-label]="'ORGAN.EDITOR.DRAG_PIPE' | translate">drag_indicator</mat-icon>
+            <span>{{ 'ORGAN.EDITOR.ROW' | translate: {row: row + 1} }}</span>
+            <mat-form-field>
+              <mat-label>{{ 'ORGAN.EDITOR.PIPE_NOTE' | translate }}</mat-label>
+              <input matInput type="number" data-testid="pipe-note" [formField]="pipe.note"/>
+              <ng-container ngProjectAs="mat-error">
+                @for (message of messagesAt(pipe.note); track message.key) {
+                  <mat-error data-testid="violation" [attr.data-path]="'pipes.' + row + '.note'">{{ message.key | translate: message.params }}</mat-error>
+                }
+              </ng-container>
+            </mat-form-field>
+            <span data-testid="pipe-note-name">{{ noteNameOf(pipe.note().value()) }}</span>
+            <button matIconButton type="button" data-testid="move-up" [disabled]="first"
+                    [attr.aria-label]="'ORGAN.EDITOR.MOVE_PIPE_UP' | translate" (click)="movePipe(row, row - 1)">
+              <mat-icon>arrow_upward</mat-icon>
+            </button>
+            <button matIconButton type="button" data-testid="move-down" [disabled]="last"
+                    [attr.aria-label]="'ORGAN.EDITOR.MOVE_PIPE_DOWN' | translate" (click)="movePipe(row, row + 1)">
+              <mat-icon>arrow_downward</mat-icon>
+            </button>
+            <button matIconButton type="button" data-testid="remove-pipe"
+                    [attr.aria-label]="'ORGAN.EDITOR.REMOVE_PIPE' | translate" (click)="removePipe(row)">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+        }
+      </div>
+    </mat-card>
   </div>
-  <div>
-    <button matButton="tonal" type="button" data-testid="add-pipe" (click)="addPipe()">
-      <mat-icon>add</mat-icon>
-      {{ 'ORGAN.EDITOR.ADD_PIPE' | translate }}
-    </button>
-  </div>
+
   <div>
     <button matButton="filled" type="button" data-testid="save-organ" [disabled]="!canSave()" (click)="save()">
       <mat-icon>save</mat-icon>

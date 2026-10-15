@@ -4,6 +4,7 @@ import {type FieldTree, form, FormField} from '@angular/forms/signals';
 import {ErrorStateMatcher} from '@angular/material/core';
 import {MatButton, MatIconButton} from '@angular/material/button';
 import {MatError, MatFormField, MatHint, MatInput, MatLabel, MatSuffix} from '@angular/material/input';
+import {MatCard} from '@angular/material/card';
 import {MatDialog} from '@angular/material/dialog';
 import {MatIcon} from '@angular/material/icon';
 import {MatSnackBar} from '@angular/material/snack-bar';
@@ -48,14 +49,69 @@ const FIELD_LABEL_KEYS: Readonly<Record<string, string>> = {
 @Component({
   selector: 'cranc-organ-editor',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslatePipe, MatFormField, MatLabel, MatInput, MatHint, MatError, MatSuffix, MatButton, MatIconButton, MatIcon, FormField, DecimalInputDirective, CdkDropList, CdkDrag, CdkDragHandle, PageHeadComponent],
+  imports: [TranslatePipe, MatFormField, MatLabel, MatInput, MatHint, MatError, MatSuffix, MatButton, MatIconButton, MatIcon, MatCard, FormField, DecimalInputDirective, CdkDropList, CdkDrag, CdkDragHandle, PageHeadComponent],
   templateUrl: './organ-editor.component.html',
   providers: [{provide: ErrorStateMatcher, useClass: ShownViolationMatcher}],
   styles: `
     .organ-editor {
+      max-width: 72rem;
+    }
+
+    .sheets {
+      display: grid;
+      grid-template-columns: 392px 1fr;
+      gap: 20px;
+      align-items: start;
+      margin-bottom: 20px;
+    }
+
+    @media (max-width: 1180px) {
+      .sheets {
+        grid-template-columns: 340px 1fr;
+      }
+    }
+
+    mat-card {
+      padding: 20px;
+    }
+
+    .sheet-title {
+      margin: 0;
+      font-size: 1.25rem;
+    }
+
+    .fields {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      column-gap: 16px;
+      row-gap: 20px;
+      margin-top: 16px;
+    }
+
+    .full-width {
+      grid-column: 1 / -1;
+    }
+
+    .fit-check {
       display: flex;
-      flex-direction: column;
-      max-width: 40rem;
+      align-items: center;
+      gap: 8px;
+      margin: 16px 0 0;
+    }
+
+    .fit-check.error {
+      color: var(--mat-sys-error);
+    }
+
+    .sheet-head {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      margin-bottom: 12px;
+
+      button {
+        margin-left: auto;
+      }
     }
 
     .violation {
@@ -108,13 +164,32 @@ export class OrganEditorComponent implements UnsavedChangesCheck {
 
   private readonly language = inject(LanguagePreference).language;
 
-  /** The Border the rows leave on each side, in the current language; empty while it is unknown or negative. */
-  protected readonly border = computed(() => {
+  /** How the rows fit the Tape Bed; `null` while a value is missing or there are no Pipes. */
+  private readonly tapeBedFit = computed(() => {
     const {tapeWidth, holeDiameter, rowSpacing} = this.draft().tapeBed;
     const pipeCount = this.draft().pipes.length;
-    if (tapeWidth === null || holeDiameter === null || rowSpacing === null || pipeCount === 0) return '';
-    const {border} = tapeBedFit({tapeWidth, holeDiameter, rowSpacing}, pipeCount);
-    return border < 0 ? '' : formatNumber(border, this.language());
+    if (tapeWidth === null || holeDiameter === null || rowSpacing === null || pipeCount === 0) return null;
+    return {pipeCount, tapeWidth, ...tapeBedFit({tapeWidth, holeDiameter, rowSpacing}, pipeCount)};
+  });
+
+  /** The Border the rows leave on each side, in the current language; empty while it is unknown or negative. */
+  protected readonly border = computed(() => {
+    const fit = this.tapeBedFit();
+    return fit === null || fit.border < 0 ? '' : formatNumber(fit.border, this.language());
+  });
+
+  /** The numbers of the fit check in the current language; `null` while it can't be computed. */
+  protected readonly fit = computed(() => {
+    const fit = this.tapeBedFit();
+    if (fit === null) return null;
+    const language = this.language();
+    return {
+      count: fit.pipeCount,
+      rowSpan: formatNumber(fit.rowSpan, language),
+      tapeWidth: formatNumber(fit.tapeWidth, language),
+      border: formatNumber(fit.border, language),
+      tooWide: fit.border < 0,
+    };
   });
 
   protected readonly minimumHoleLength = computed(() => {

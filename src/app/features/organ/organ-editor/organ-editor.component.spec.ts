@@ -1269,6 +1269,152 @@ describe('OrganEditorComponent', () => {
     });
   });
 
+  describe('the two sheets', () => {
+    const sheet = (element: HTMLElement, testId: string) => {
+      const found = element.querySelector<HTMLElement>(`[data-testid="${testId}"]`);
+      if (!found) throw new Error(`no ${testId}`);
+      return found;
+    };
+    const testIdsIn = (container: HTMLElement) =>
+      [...container.querySelectorAll('[data-testid]')].map((node) => node.getAttribute('data-testid'));
+
+    it('is a Tape Bed sheet titled "Tape Bed" in an outlined card', async () => {
+      const {open: openEditor} = render();
+      const {element} = await openEditor();
+
+      const tapeBed = sheet(element, 'tape-bed-sheet');
+      expect(tapeBed.tagName.toLowerCase()).toBe('mat-card');
+      expect(tapeBed.classList).toContain('mat-mdc-card-outlined');
+      expect(tapeBed.querySelector('.sheet-title')?.textContent?.trim()).toBe('Tape Bed');
+    });
+
+    it('orders Name, Tape width, Hole diameter, Spacing between rows, Minimum Gap, Border, Minimum Hole Length in the Tape Bed sheet', async () => {
+      const {open: openEditor} = render();
+      const {element} = await openEditor();
+
+      const wanted = ['name', 'tape-width', 'hole-diameter', 'row-spacing', 'minimum-gap', 'border', 'minimum-hole-length'];
+      expect(testIdsIn(sheet(element, 'tape-bed-sheet')).filter((id) => wanted.includes(id ?? ''))).toEqual(wanted);
+    });
+
+    it('lets the Name field span the full width of the sheet', async () => {
+      const {open: openEditor} = render();
+      const {field} = await openEditor();
+
+      expect(field('name').closest('mat-form-field')?.classList).toContain('full-width');
+    });
+
+    it('is a Pipes sheet with a head holding the title, the Pipe count and Add Pipe as a text button', async () => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 31);
+      await library.put(organ);
+      const {element} = await openEditor(organ.id);
+
+      const pipes = sheet(element, 'pipes-sheet');
+      expect(pipes.tagName.toLowerCase()).toBe('mat-card');
+      const head = pipes.querySelector<HTMLElement>('.sheet-head');
+      expect(head?.querySelector('.sheet-title')?.textContent?.trim()).toBe('Pipes');
+      expect(head?.querySelector('[data-testid="pipe-count"]')?.textContent?.trim()).toBe('31 Pipes');
+      expect(head?.querySelector('[data-testid="add-pipe"]')?.classList).toContain('mat-mdc-button');
+      expect(pipes.querySelectorAll('[data-testid="pipe"]')).toHaveLength(31);
+    });
+
+    it('keeps the Pipes out of the Tape Bed sheet', async () => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 2);
+      await library.put(organ);
+      const {element} = await openEditor(organ.id);
+
+      expect(sheet(element, 'tape-bed-sheet').querySelector('[data-testid="pipe"], [data-testid="add-pipe"]')).toBeNull();
+    });
+  });
+
+  describe('the fit check', () => {
+    const fitCheck = (element: HTMLElement) => element.querySelector<HTMLElement>('[data-testid="fit-check"]');
+    const text = (element: HTMLElement) => fitCheck(element)?.textContent?.replace(/\s+/g, ' ').trim();
+
+    it('says how many rows take how much of the tape width and what border is left (Street organ)', async () => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 31);
+      await library.put(organ);
+      const {element} = await openEditor(organ.id);
+
+      expect(text(element)).toContain('31 rows take 107.5 mm of the 120 mm tape width, a border of 6.25 mm on each side');
+      expect(fitCheck(element)?.classList).not.toContain('error');
+    });
+
+    it('lies in the Tape Bed sheet', async () => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 31);
+      await library.put(organ);
+      const {element} = await openEditor(organ.id);
+
+      expect(element.querySelector('[data-testid="tape-bed-sheet"] [data-testid="fit-check"]')).not.toBeNull();
+    });
+
+    it('uses the decimal comma in German', async () => {
+      TestBed.configureTestingModule({providers: [provideRouter([]), provideTestTranslations('de')]});
+      vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+      const organ = testOrgan('Street organ', 31);
+      await TestBed.inject(OrganLibrary).put(organ);
+      const {element} = await open(organ.id);
+
+      const sentence = text(element);
+      expect(sentence).toContain('107,5');
+      expect(sentence).toContain('6,25');
+      expect(sentence).toContain('120');
+      expect(sentence).not.toContain('107.5');
+    });
+
+    describe('with a tape width of 100 mm', () => {
+      async function openTooNarrow() {
+        const {open: openEditor, library} = render();
+        const organ = testOrgan('Street organ', 31);
+        await library.put(organ);
+        const editor = await openEditor(organ.id);
+        await editor.type(editor.field('tape-width'), '100');
+        return editor;
+      }
+
+      it('becomes an error with an icon, the 107.5 mm the rows take and the 100 mm tape width', async () => {
+        const {element} = await openTooNarrow();
+
+        expect(fitCheck(element)?.classList).toContain('error');
+        expect(fitCheck(element)?.querySelector('mat-icon')).not.toBeNull();
+        expect(text(element)).toContain('107.5');
+        expect(text(element)).toContain('100');
+        expect(text(element)).not.toContain('border of');
+      });
+
+      it('gives the Tape width field the error state but no second message', async () => {
+        const {field, violationAt} = await openTooNarrow();
+
+        expect(field('tape-width').closest('mat-form-field')?.classList).toContain('mat-form-field-invalid');
+        expect(violationAt('tapeBed.tapeWidth')).toEqual([]);
+      });
+    });
+
+    it.each(['tape-width', 'hole-diameter', 'row-spacing'])('is absent while the %s is missing', async (testId) => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 31);
+      await library.put(organ);
+      const {element, field, type} = await openEditor(organ.id);
+
+      await type(field(testId), '');
+
+      expect(fitCheck(element)).toBeNull();
+    });
+
+    it('is absent while there are no Pipes', async () => {
+      const {open: openEditor} = render();
+      const {element, field, type} = await openEditor();
+      await type(field('tape-width'), '120');
+      await type(field('hole-diameter'), '2.5');
+      await type(field('row-spacing'), '3.5');
+
+      expect(fitCheck(element)).toBeNull();
+    });
+  });
+
   describe('rule violations', () => {
     it('shows no "missing value" messages on an untouched new Organ', async () => {
       const {open: openEditor} = render();
@@ -1361,15 +1507,16 @@ describe('OrganEditorComponent', () => {
       ]);
     });
 
-    it('shows how much tape width the Pipes need', async () => {
+    it('shows how much tape width the Pipes need in the fit check, not next to the Tape width field', async () => {
       const {open: openEditor, library} = render();
       const organ = testOrgan('Street organ', 31);
       await library.put(organ);
-      const {field, type, violationAt} = await openEditor(organ.id);
+      const {element, field, type, violationAt} = await openEditor(organ.id);
 
       await type(field('tape-width'), '100');
 
-      expect(violationAt('tapeBed.tapeWidth')).toEqual(['The Pipes need 107.5 mm, but the tape is only 100 mm wide.']);
+      expect(violationAt('tapeBed.tapeWidth')).toEqual([]);
+      expect(element.querySelector('[data-testid="fit-check"]')?.textContent).toContain('107.5');
     });
 
     it('stores only the fixed version of a stored Organ edited into an invalid state, once saved', async () => {

@@ -115,20 +115,21 @@ Every task that adds or changes UI text adds the keys to `en.json` and `de.json`
   border of #74: `6.25` for the Street organ (120 mm, 31 rows at 3.5 mm, hole 2.5 mm),
   `6,25` in German; empty while tape width, hole diameter, spacing or the Pipes are missing, or
   while the derived border is negative (the fit check, E5, says why). Then the field.
-- [ ] **E4** Two sheets, component. Spec: a Tape Bed sheet (`data-testid="tape-bed-sheet"`, serif
+- [x] **E4** Two sheets, component. Spec: a Tape Bed sheet (`data-testid="tape-bed-sheet"`, serif
   sheet title "Tape Bed") holds Name (full width), then Tape width, Hole diameter, Spacing between rows,
   Minimum Gap and the read-only Border and Minimum Hole Length in two columns; a
   Pipes sheet (`data-testid="pipes-sheet"`) has a head with the title, the Pipe count and Add Pipe
   (text button). Then `mat-card appearance="outlined"` sheets in a grid (392 px + 1fr, gap 20 px;
   340 px below 1180 px) and the fields in a two-column grid with a 20 px row gap (fixes the clipped
   floating labels, ux-review 4). Remove `.cranc-form-section` if nothing uses it any more.
-- [ ] **E5** Fit check, component. Spec with the Street organ: under the Tape Bed fields a line
+- [x] **E5** Fit check, component. Spec with the Street organ: under the Tape Bed fields a line
   `data-testid="fit-check"` reads "31 rows take 107.5 mm of the 120 mm tape width, a border of
   6.25 mm on each side" (German with commas); with tape width 100 the derived border would be
   negative and the line becomes an error (icon, oxblood, the 107.5 mm the rows take and the 100 mm
   tape width), the Tape width field gets the error outline but no second message; with a Tape Bed
   value missing or no Pipes the line is absent. The numbers come from `rowSpan` and `border` (#74) and the
   derived border, formatted with E1; a sentence only, no new names in code.
+- [ ] **E5b** Singular texts, component. Spec: one Pipe shows "1 Pipe" in the Pipes sheet head and the fit check says "1 row takes …" (German "1 Pfeife", "1 Reihe belegt …"). Then separate keys for one and many.
 - [ ] **E6** Tape Bed drawing, component. Spec: an SVG under the fields drawn from the values: the
   Tape to scale, the derived border on both edges, one line per row centred between them, row 1
   nearest the top edge (as the Tape is drawn); a text alternative names tape width, border and

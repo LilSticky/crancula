@@ -180,29 +180,6 @@ h1, h2, h3 { font-family: var(--mat-sys-headline-small-font); font-weight: 600; 
   * { transition-duration: 0s !important; animation-duration: 0s !important; }
 }
 
-// Remove with the form restyle (#64).
-.cranc-form-section {
-  border: 1px solid #ccc;
-  padding: 1rem;
-  margin-top: 1rem;
-  border-radius: 4px;
-
-  h3 {
-    margin-top: 0;
-  }
-
-  .actions {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .column {
-    padding-right: 2rem;
-  }
-}
-
 // Derived, not entered: dashed outline, Ink 2 text, transparent fill (DESIGN-GUIDE).
 .mat-mdc-form-field:has(.cr-readonly) {
   --mat-form-field-outlined-outline-color: var(--mat-sys-outline-variant);

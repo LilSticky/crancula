@@ -98,6 +98,8 @@ export function shownMessages(field: FieldTree<unknown>, organ: FieldTree<OrganD
     .errors()
     .flatMap((error) => {
       if (isNotANumber(error)) return [NOT_A_NUMBER];
+      // The fit check says it; the field only takes the error state.
+      if (isOrganFieldError(error) && error.kind === 'pipes-exceed-tape-width') return [];
       return isOrganFieldError(error) && isShown(error, dirty) ? [violationMessage(error)] : [];
     });
 }
