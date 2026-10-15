@@ -47,7 +47,7 @@ ux-review). The Libertinus licence now carries the upstream notice. `ux:screens`
 animations. ux-review 30/50 (was 29/50), see [design/screens/current/ux-review.md](design/screens/current/ux-review.md).
 Gate: lint, 253 Angular tests and node tests, 31 e2e green locally.
 
-**Done (pull request pending):** #63 shell and navigation (2026-10-15). Walnut rail in a `mat-sidenav`
+**Done:** #63 shell and navigation (2026-10-15, PR #71). Walnut rail in a `mat-sidenav`
 shell (icon rail with tooltips below 1180 px; only the content scrolls). Organs is the start page,
 Overview removed. Language and scheme toggles sit in the rail; scheme is System, Light or Dark and is
 remembered in localStorage like the language (`SchemePreference`, `LanguagePreference`). Shared
@@ -55,7 +55,15 @@ remembered in localStorage like the language (`SchemePreference`, `LanguagePrefe
 to 3:1. ux-review 33/50 (was 30/50), see [design/screens/current/ux-review.md](design/screens/current/ux-review.md).
 Gate: lint, i18n, unit tests and 32 e2e green locally.
 
-**Next concrete step:** #64 Organ editor, then #65 Tape view, #66 lists and #69 Tape import
+**Done (pull request pending):** #74 derived Border (2026-10-15). The Border is derived, not entered:
+(tape width - Row Span) / 2, rows centred, row 1 nearest the top; 0 is valid, negative means the rows
+don't fit. Domain (`border`, `tapeBedFit`, no `border` in `TapeBed`/draft/validation), Organ snapshot
+version 2 without `border` (version 1 still reads, [ADR 20](adr/0020-snapshots-migrated-on-read.md)),
+dictionary (Tape Bed, Border, Row Span), Organ editor shows the Border read-only, spec 001 amended.
+Gate: lint, i18n, 485 node and 315 Angular tests and 34 e2e.
+
+**Next concrete step:** #64 Organ editor on branch `064-design-organ-editor` (tasks pushed), after
+rebasing it on `main` (it still edits a Border field); then #65 Tape view, #66 lists and #69 Tape import
 screen (all sub-issues of [#59](https://github.com/LilSticky/crancula/issues/59)). Then
 `/speckit-specify` for "Punch a tape" ([#3](https://github.com/LilSticky/crancula/issues/3)).
 Open issues carry `priority:` and `size:` labels; triage sets them.
@@ -64,9 +72,6 @@ Open issues carry `priority:` and `size:` labels; triage sets them.
 
 - `e2e/fonts.spec.ts` "requests no font from an external origin" failed intermittently twice locally
   (`ERR_FILE_NOT_FOUND` on reload). Not reproducible yet.
-- Fixed on 2026-10-14: fonts no longer load from Google; Roboto and Material
-  Icons ship with the app from `src/fonts/`, licenses in `src/assets/fonts/`
-  ([#24](https://github.com/LilSticky/crancula/issues/24)).
 
 ## Open questions
 
