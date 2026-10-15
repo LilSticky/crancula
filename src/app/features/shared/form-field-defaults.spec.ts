@@ -37,6 +37,6 @@ describe('provideFormFieldDefaults', () => {
 
     const field = element.querySelector('mat-form-field');
     expect(field?.classList.contains('mat-form-field-appearance-outline')).toBe(true);
-    expect(element.querySelector('label.mdc-floating-label, mat-label, label')?.textContent).toContain('Tape width');
+    expect(element.querySelector('mat-label')?.textContent).toContain('Tape width');
   });
 });
