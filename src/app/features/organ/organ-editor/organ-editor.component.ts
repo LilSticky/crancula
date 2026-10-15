@@ -1,4 +1,6 @@
 import {afterNextRender, ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, Injector, input, linkedSignal, signal, untracked, viewChildren} from '@angular/core';
+import {BreakpointObserver} from '@angular/cdk/layout';
+import {toSignal} from '@angular/core/rxjs-interop';
 import {CdkDrag, CdkDragDrop, CdkDragHandle, CdkDropList, CdkDropListGroup} from '@angular/cdk/drag-drop';
 import {type FieldTree, form, FormField} from '@angular/forms/signals';
 import {ErrorStateMatcher} from '@angular/material/core';
@@ -26,7 +28,7 @@ import {
   toDraft,
   validateOrgan,
 } from '@api/index';
-import {firstValueFrom} from 'rxjs';
+import {firstValueFrom, map} from 'rxjs';
 import {DecimalInputDirective} from '../../shared/decimal-input.directive';
 import {formatNumber} from '../../shared/format-number';
 import {LanguagePreference} from '../../shared/language-preference';
@@ -38,6 +40,9 @@ import {OrganDeletion} from '../organ-deletion';
 import {OrganLibrary} from '../organ-library.store';
 import {rackColumns} from './pipe-rack';
 import {type FieldProblem, organFormSchema, organProblems, shownMessages, ShownViolationMatcher} from './organ-form';
+
+/** Below this width the Pipe rack has 2 columns of compact rows (the same threshold as the shell). */
+const COMPACT_QUERY = '(max-width: 1179.98px)';
 
 /** The label key of each field that has one fixed label; Pipe notes are labelled by their row. */
 const FIELD_LABEL_KEYS: Readonly<Record<string, string>> = {
@@ -134,6 +139,14 @@ const FIELD_LABEL_KEYS: Readonly<Record<string, string>> = {
       gap: 0 18px;
     }
 
+    .rack.compact {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .rack.compact .pipe {
+      min-height: 30px;
+    }
+
     .rack-head {
       position: sticky;
       top: 0;
@@ -183,6 +196,7 @@ export class OrganEditorComponent implements UnsavedChangesCheck {
   /** Route parameter; absent for a new Organ. */
   readonly id = input<string>();
 
+  private readonly breakpoints = inject(BreakpointObserver);
   private readonly library = inject(OrganLibrary);
   private readonly router = inject(Router);
   private readonly dialog = inject(MatDialog);
@@ -333,11 +347,16 @@ export class OrganEditorComponent implements UnsavedChangesCheck {
     return valid === undefined ? '' : noteName(valid);
   }
 
-  /** The Pipe rack's columns (3 for now): where each starts in the Pipe order and its Pipe fields. */
+  /** Whether the window is narrow: the Pipe rack then has 2 compact columns instead of 3. */
+  protected readonly compact = toSignal(this.breakpoints.observe(COMPACT_QUERY).pipe(map((state) => state.matches)), {
+    initialValue: this.breakpoints.isMatched(COMPACT_QUERY),
+  });
+
+  /** The Pipe rack's columns (2 when compact, else 3): where each starts in the Pipe order and its Pipe fields. */
   protected readonly rack = computed(() => {
     const pipes = [...this.organ.pipes];
     let start = 0;
-    return rackColumns(pipes.length, 3).map((rows) => {
+    return rackColumns(pipes.length, this.compact() ? 2 : 3).map((rows) => {
       const column = {start, pipes: pipes.slice(start, start + rows)};
       start += rows;
       return column;

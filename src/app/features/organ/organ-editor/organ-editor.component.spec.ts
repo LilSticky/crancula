@@ -8,6 +8,7 @@ import {MatMenuHarness} from '@angular/material/menu/testing';
 import {MatTooltipHarness} from '@angular/material/tooltip/testing';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {provideRouter, Router} from '@angular/router';
+import {BreakpointObserver, type BreakpointState} from '@angular/cdk/layout';
 import {type Observable, of} from 'rxjs';
 import {
   type CranculaApi,
@@ -823,6 +824,48 @@ describe('OrganEditorComponent', () => {
 
       const names = pipeRows().map((row) => row.querySelector('[data-testid="pipe-note-name"]'));
       expect(names.map((name) => name?.classList.contains('sharp'))).toEqual([false, true]);
+    });
+  });
+
+  describe('the Pipe rack at different window widths', () => {
+    /** Evaluates `min-width` and `max-width` queries against a fixed window width. */
+    function stubBreakpointObserver(width: number): Pick<BreakpointObserver, 'observe' | 'isMatched'> {
+      const matches = (query: string): boolean => {
+        const max = /max-width:\s*([\d.]+)px/.exec(query);
+        const min = /min-width:\s*([\d.]+)px/.exec(query);
+        return (!max || width <= Number(max[1])) && (!min || width >= Number(min[1]));
+      };
+      const queries = (value: string | readonly string[]): string[] => (typeof value === 'string' ? [value] : [...value]);
+      return {
+        observe: (value: string | readonly string[]): Observable<BreakpointState> =>
+          of({matches: queries(value).some(matches), breakpoints: Object.fromEntries(queries(value).map((q) => [q, matches(q)]))}),
+        isMatched: (value: string | readonly string[]): boolean => queries(value).some(matches),
+      };
+    }
+
+    async function openRackAtWidth(width: number) {
+      TestBed.configureTestingModule({providers: [{provide: BreakpointObserver, useValue: stubBreakpointObserver(width)}]});
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 31);
+      await library.put(organ);
+      const {element} = await openEditor(organ.id);
+      const rack = element.querySelector<HTMLElement>('.rack');
+      if (!rack) throw new Error('no Pipe rack');
+      return {rack, columns: rack.querySelectorAll('[data-testid="rack-column"]')};
+    }
+
+    it('lays the rack out in 2 compact columns below 1180 px', async () => {
+      const {rack, columns} = await openRackAtWidth(1100);
+
+      expect(columns).toHaveLength(2);
+      expect(rack.classList.contains('compact')).toBe(true);
+    });
+
+    it('lays the rack out in 3 columns, not compact, from 1180 px', async () => {
+      const {rack, columns} = await openRackAtWidth(1280);
+
+      expect(columns).toHaveLength(3);
+      expect(rack.classList.contains('compact')).toBe(false);
     });
   });
 

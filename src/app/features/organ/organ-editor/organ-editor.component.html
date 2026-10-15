@@ -104,7 +104,7 @@
       @for (message of messagesAt(organ.pipes); track message.key) {
         <p class="violation" data-testid="violation" data-path="pipes">{{ message.key | translate: message.params }}</p>
       }
-      <div class="rack" cdkDropListGroup>
+      <div class="rack" [class.compact]="compact()" cdkDropListGroup>
         @for (column of rack(); track column.start) {
           <div class="rack-column" data-testid="rack-column">
             <div class="rack-head">

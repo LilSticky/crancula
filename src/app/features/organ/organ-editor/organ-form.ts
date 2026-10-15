@@ -141,3 +141,20 @@ export class ShownViolationMatcher extends ErrorStateMatcher {
     return state.errors().some((error) => isNotANumber(error) || (isOrganFieldError(error) && isShown(error, state.dirty())));
   }
 }
+
+/** The input fields of the Organ whose change the editor reports; every Pipe change counts as `pipes`. */
+export type ChangedField = 'name' | `tapeBed.${TapeBedField}` | 'minimumGap' | 'pipes';
+
+/** The fields of `draft` that differ from the `saved` draft, in reading order; `pipes` once for any Pipe change. */
+export function changedFields(saved: OrganDraft, draft: OrganDraft): readonly ChangedField[] {
+  const changed: ChangedField[] = [];
+  if (saved.name !== draft.name) changed.push('name');
+  for (const field of TAPE_BED_FIELDS) {
+    if (saved.tapeBed[field] !== draft.tapeBed[field]) changed.push(`tapeBed.${field}`);
+  }
+  if (saved.minimumGap !== draft.minimumGap) changed.push('minimumGap');
+  const pipesChanged =
+    saved.pipes.length !== draft.pipes.length || saved.pipes.some((pipe, row) => pipe.note !== draft.pipes[row]?.note);
+  if (pipesChanged) changed.push('pipes');
+  return changed;
+}

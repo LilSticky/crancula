@@ -3,7 +3,7 @@ import {TestBed} from '@angular/core/testing';
 import {form} from '@angular/forms/signals';
 import {emptyOrganDraft, type OrganDraft, toDraft} from '@api/index';
 import {testOrgan} from '../../../../testing/organs';
-import {isOrganFieldError, type OrganFieldError, organFormSchema} from './organ-form';
+import {changedFields, isOrganFieldError, type OrganFieldError, organFormSchema} from './organ-form';
 
 function organForm(draft: OrganDraft) {
   return TestBed.runInInjectionContext(() => form(signal(draft), organFormSchema));
@@ -74,5 +74,50 @@ describe('organFormSchema', () => {
 
   it('recognises only its own errors', () => {
     expect(isOrganFieldError({kind: 'parse'})).toBe(false);
+  });
+});
+
+describe('changedFields', () => {
+  const saved = toDraft(testOrgan('Street organ', 3));
+
+  it('is empty for equal drafts', () => {
+    expect(changedFields(saved, {...saved, tapeBed: {...saved.tapeBed}, pipes: saved.pipes.map((pipe) => ({...pipe}))})).toEqual([]);
+  });
+
+  it('names the changed fields in reading order', () => {
+    const draft: OrganDraft = {
+      ...saved,
+      name: 'Fair organ',
+      tapeBed: {...saved.tapeBed, rowSpacing: 4, tapeWidth: 90},
+      minimumGap: 9,
+    };
+
+    expect(changedFields(saved, draft)).toEqual(['name', 'tapeBed.tapeWidth', 'tapeBed.rowSpacing', 'minimumGap']);
+  });
+
+  it('names the hole diameter alone when only it changed', () => {
+    expect(changedFields(saved, {...saved, tapeBed: {...saved.tapeBed, holeDiameter: 3.3}})).toEqual(['tapeBed.holeDiameter']);
+  });
+
+  it('names pipes once for a note edit', () => {
+    const pipes = saved.pipes.map((pipe, row) => (row === 1 ? {...pipe, note: 99} : pipe));
+
+    expect(changedFields(saved, {...saved, pipes})).toEqual(['pipes']);
+  });
+
+  it('names pipes once for an added Pipe', () => {
+    expect(changedFields(saved, {...saved, pipes: [...saved.pipes, {note: 99}]})).toEqual(['pipes']);
+  });
+
+  it('names pipes once for a removed Pipe', () => {
+    expect(changedFields(saved, {...saved, pipes: saved.pipes.slice(1)})).toEqual(['pipes']);
+  });
+
+  it('names pipes once for a moved Pipe', () => {
+    expect(changedFields(saved, {...saved, pipes: [...saved.pipes].reverse()})).toEqual(['pipes']);
+  });
+
+  it('puts pipes after the other changed fields', () => {
+    expect(changedFields(saved, {...saved, minimumGap: 9, pipes: saved.pipes.slice(1)})).toEqual(['minimumGap', 'pipes']);
   });
 });

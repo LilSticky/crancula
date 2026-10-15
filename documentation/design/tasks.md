@@ -153,10 +153,10 @@ Every task that adds or changes UI text adds the keys to `en.json` and `de.json`
 - [x] **E10** Moving Pipes by keyboard, component. Spec: Alt+↑ / Alt+↓ in a note input moves its
   Pipe one row and keeps the focus on that Pipe's input in its new row; nothing happens on the
   first / last row. Then the key handler.
-- [ ] **E11** Compact rack below 1180 px, component. Spec with a faked `BreakpointObserver` (as the
+- [x] **E11** Compact rack below 1180 px, component. Spec with a faked `BreakpointObserver` (as the
   shell spec does): 2 rack columns and 30 px rows (class `compact`); 3 columns above. Then the
   breakpoint signal.
-- [ ] **E12** Changed fields, unit. A pure helper in `organ-form.ts`: `changedFields(saved, draft)`
+- [x] **E12** Changed fields, unit. A pure helper in `organ-form.ts`: `changedFields(saved, draft)`
   returns the changed paths in reading order (`name`, the Tape Bed fields, `minimumGap`, and
   `pipes` once for any Pipe change); nothing for equal drafts. Spec first.
 - [ ] **E13** Action bar, component. Spec: Save sits in `cranc-action-bar` (label "Organ
