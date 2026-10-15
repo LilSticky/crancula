@@ -49,10 +49,32 @@ describe('load', () => {
     expect(await createOrganLibraryFile(dir).load()).toEqual({status: 'loaded', snapshot: snapshot('Street organ')});
   });
 
+  it('loads a version 1 snapshot with a Border as Organs without a Border and leaves the file untouched', async () => {
+    const legacy = JSON.stringify({
+      version: 1,
+      organs: [
+        {
+          id: ID,
+          name: 'Street organ',
+          tapeBed: {tapeWidth: 120, holeDiameter: 2.5, rowSpacing: 3.5, border: 4},
+          minimumGap: 1.5,
+          pipes: [{note: 60}, {note: 62}],
+        },
+      ],
+    });
+    await writeFile(organsFile(), legacy);
+
+    const result = await createOrganLibraryFile(dir).load();
+
+    expect(result).toEqual({status: 'loaded', snapshot: snapshot('Street organ')});
+    expect(await readFile(organsFile(), 'utf8')).toBe(legacy);
+    expect(await readdir(dir)).toEqual(['organs.json']);
+  });
+
   it.each([
     ['broken JSON', '{oops'],
     ['an unknown version', JSON.stringify({version: 3, organs: []})],
-    ['an invalid Organ', JSON.stringify({version: 1, organs: [{id: ID}]})],
+    ['an invalid Organ', JSON.stringify({version: 2, organs: [{id: ID}]})],
   ])('moves a snapshot with %s aside untouched', async (_, content) => {
     await writeFile(organsFile(), content);
     const now = () => new Date('2026-10-14T12:34:56.789Z');
@@ -83,7 +105,7 @@ describe('save', () => {
   });
 
   it('rejects an invalid payload without writing', async () => {
-    const result = await createOrganLibraryFile(dir, {debounceMs: 5}).save({version: 1, organs: [{id: 'x'}]});
+    const result = await createOrganLibraryFile(dir, {debounceMs: 5}).save({version: 2, organs: [{id: 'x'}]});
 
     expect(result).toEqual({status: 'rejected', reason: expect.any(String)});
     expect(await readdir(dir)).toEqual([]);
