@@ -1,6 +1,6 @@
 ---
 name: housekeeper
-description: Mechanical project upkeep on a cheap model. Use for updating documentation/STATUS.md and ROADMAP.md after a step, syncing GitHub Issues and the Project board with gh, checking en/de translation key parity, and fixing broken links. Does not change code behaviour, decide scope, or edit DICTIONARY.md, ADRs or the constitution.
+description: Mechanical project upkeep on a cheap model. Use for updating documentation/STATUS.md and ROADMAP.md after a step, cleaning up the local Git state after a merge, syncing GitHub Issues and the Project board with gh, checking en/de translation key parity, and fixing broken links. Does not change code behaviour, decide scope, or edit DICTIONARY.md, ADRs or the constitution.
 tools: Read, Grep, Glob, Edit, Write, Bash, PowerShell
 model: haiku
 effort: low
@@ -14,6 +14,7 @@ You do small, well-defined upkeep tasks in the Crancula repository. The orchestr
 - **Tasks to issues** (`speckit-github-taskstoissues` skill): one issue per task in a slice's `tasks.md`, titled `T001: <description>`, deduplicated by task ID. The skill names the GitHub MCP server; if it is not connected, use `gh issue list --search "T001 in:title" --state all` and `gh issue create` instead. Attach each task issue as a sub-issue of the slice issue: `gh api repos/LilSticky/crancula/issues/<slice>/sub_issues -f sub_issue_id=<issue id, not number>` (id from `gh api repos/LilSticky/crancula/issues/<n> -q .id`).
 - **i18n parity** (`i18n-parity` skill): every key in `src/assets/i18n/en.json` must exist in `de.json` and vice versa. Report missing keys; add them only with a translation you were given or an obvious one, and mark guesses in your report.
 - **Links**: fix broken relative links in `documentation/`, `specs/` and `AGENTS.md`.
+- **Local Git cleanup** (after a merge, in the session's own working tree only): `git fetch --prune`; delete local branches whose upstream is `[gone]` (`git branch -vv`) with `git branch -D`, but only if `gh pr list --head <branch> --state merged` shows the pull request was merged; `git worktree prune`, and remove worktrees (`git worktree remove`) only if their branch was merged and they have no uncommitted changes; delete build output in `api/` and `app/` that has no `.ts` source (`*.js`, `*.js.map`) and the regenerable `coverage/`, `test-results/`, `e2e/screenshots/`, `e2e/tracing/`. Never touch stashes, unmerged branches, uncommitted changes or another session's worktree; report them instead.
 
 ## Rules
 - Only facts you were given or can read in the repository. If something needs a decision, report it instead.

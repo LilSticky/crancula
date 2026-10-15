@@ -61,6 +61,8 @@ The Tape is drawn horizontally, row 1 on top (user decision). German for Tape is
 
 ## Process changes
 
+- 2026-10-15: after every merge the `housekeeper` cleans up the local Git state (pruned remote
+  branches, merged local branches and worktrees, stale build output); part of the workflow in AGENTS.md.
 - 2026-10-14: commits are authored as LilSticky with the GitHub noreply address, set per repository.
   `main` was rewritten once (force-push with the ruleset paused) to remove `Co-authored-by` lines
   with a work email; the trees are unchanged, all commit SHAs changed. Open branches were rewritten too.

@@ -65,6 +65,8 @@ step**, known broken/WIP items, and open questions. Then read only what that ste
   suite is green in CI, ADR 13); tests and lint green; STATUS/ROADMAP/DICTIONARY/ADRs updated;
   committed. If you merge with something red, say so explicitly in the pull request and record it
   in STATUS. A ruleset on `main` (#18) enforces this: pull request, green CI checks, squash only.
+- **After merging**: switch to `main`, `git pull`, then have the `housekeeper` clean up the local
+  Git state (pruned remote branches, merged local branches and worktrees, stale build output).
 - **Talking to the user**: work autonomously. Ask only about domain questions, dictionary changes
   and scope changes. Always ask through interactive prompts, never only in prose, and keep chat
   output short. Detail belongs in files.
@@ -86,7 +88,7 @@ and commits. It does not write code itself, which keeps its context small across
 | Review `app/` and IPC changes | `electron-reviewer` | sonnet |
 | Slice vs. `spec.md` before merging | `spec-auditor` | sonnet |
 | Design variant: guide, theme, mockup, `ux-review` (run several in parallel) | `ux-designer` | opus |
-| STATUS/ROADMAP, GitHub Issues and board, i18n parity | `housekeeper` | haiku |
+| STATUS/ROADMAP, GitHub Issues and board, i18n parity, local Git cleanup | `housekeeper` | haiku |
 | Broad read-only code search | `Explore` | haiku |
 
 - **Loop per task**: `test-first` → `implementer` → the matching reviewer(s), run in parallel →
