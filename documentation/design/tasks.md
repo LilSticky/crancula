@@ -6,7 +6,7 @@ level first (`tdd` skill, test pyramid). Tick a task once its tests are green.
 
 ## #62 Theme and fonts
 
-- [ ] **D1** Fonts as a node unit test, then the files. A Vitest node test (`scripts/styles.spec.ts`,
+- [x] **D1** Fonts as a node unit test, then the files. A Vitest node test (`scripts/styles.spec.ts`,
   add `scripts/**/*.spec.ts` to `vitest.node.config.ts`) proves: every `url()` in
   `src/styles/_fonts.scss` points to an existing file in `src/fonts/`; `@font-face` rules exist for
   `Libertinus Serif` (600) and `Noto Sans` (400–600, latin + latin-ext ranges like Roboto today) and
