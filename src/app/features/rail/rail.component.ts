@@ -1,18 +1,14 @@
-import {ChangeDetectionStrategy, Component, inject, input, signal} from '@angular/core';
+import {ChangeDetectionStrategy, Component, inject, input} from '@angular/core';
 import {MatButtonToggle, MatButtonToggleGroup} from '@angular/material/button-toggle';
 import {MatIcon} from '@angular/material/icon';
 import {MatListItem, MatListItemIcon, MatListItemTitle, MatNavList} from '@angular/material/list';
 import {MatTooltip} from '@angular/material/tooltip';
 import {RouterLink, RouterLinkActive} from '@angular/router';
-import {TranslatePipe, TranslateService} from '@ngx-translate/core';
-import {isLanguage, type Language} from '@api/index';
-import {firstValueFrom} from 'rxjs';
-import {CRANCULA_API} from '../../core/crancula-api.token';
+import {TranslatePipe} from '@ngx-translate/core';
+import {LanguagePreference} from '../shared/language-preference';
 import {SchemePreference, type Scheme} from '../shared/scheme-preference';
 import {CranculaNavigation} from './model/crancula-navigation';
 import {CranculaNavigations} from './model/crancula-navigations';
-
-const LANGUAGE_KEY = 'crancula.language';
 
 interface SchemeOption {
   readonly value: Scheme;
@@ -65,8 +61,8 @@ interface SchemeOption {
       </mat-nav-list>
       <div class="spacer"></div>
       <mat-button-toggle-group data-testid="language-switch" hideSingleSelectionIndicator [vertical]="compact()"
-                               [value]="language()" [attr.aria-label]="'RAIL.LANGUAGE' | translate"
-                               (change)="choose($event.value)">
+                               [value]="languagePreference.language()" [attr.aria-label]="'RAIL.LANGUAGE' | translate"
+                               (change)="languagePreference.choose($event.value)">
         <mat-button-toggle data-language="en" value="en">EN</mat-button-toggle>
         <mat-button-toggle data-language="de" value="de">DE</mat-button-toggle>
       </mat-button-toggle-group>
@@ -108,24 +104,5 @@ export class RailComponent {
     {value: 'dark', icon: 'dark_mode', label: 'RAIL.SCHEME_DARK'},
   ];
   protected readonly schemePreference = inject(SchemePreference);
-  protected readonly language = signal<Language>('en');
-
-  private readonly translate = inject(TranslateService);
-  private readonly api = inject(CRANCULA_API);
-
-  constructor() {
-    const stored = localStorage.getItem(LANGUAGE_KEY);
-    const current = this.translate.getCurrentLang();
-    const initial: Language = isLanguage(stored) ? stored : isLanguage(current) ? current : 'en';
-    this.language.set(initial);
-    void firstValueFrom(this.translate.use(initial));
-    void this.api.app.setLanguage(initial);
-  }
-
-  protected choose(language: Language): void {
-    localStorage.setItem(LANGUAGE_KEY, language);
-    this.language.set(language);
-    void firstValueFrom(this.translate.use(language));
-    void this.api.app.setLanguage(language);
-  }
+  protected readonly languagePreference = inject(LanguagePreference);
 }

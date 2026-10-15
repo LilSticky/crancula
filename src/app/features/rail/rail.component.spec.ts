@@ -1,4 +1,4 @@
-import {Component} from '@angular/core';
+import {Component, signal} from '@angular/core';
 import {ComponentFixture, TestBed} from '@angular/core/testing';
 import {TestbedHarnessEnvironment} from '@angular/cdk/testing/testbed';
 import {MatTooltipHarness} from '@angular/material/tooltip/testing';
@@ -7,16 +7,20 @@ import {TranslateService} from '@ngx-translate/core';
 import {vi} from 'vitest';
 import {CRANCULA_API, createInMemoryCranculaApi} from '../../core/crancula-api.token';
 import {provideTestTranslations} from '../../../testing/test-translations';
+import type {Language} from '@api/index';
+import {LanguagePreference} from '../shared/language-preference';
 import {SchemePreference, type Scheme} from '../shared/scheme-preference';
 import {RailComponent} from './rail.component';
 
-const LANGUAGE_KEY = 'crancula.language';
 const SCHEME_KEY = 'crancula.scheme';
 
 @Component({template: ''})
 class StubPage {}
 
 async function startRail(options: {api?: ReturnType<typeof createInMemoryCranculaApi>; compact?: boolean} = {}) {
+  const language = signal<Language>('en');
+  const choose = vi.fn<(language: Language) => void>();
+  const languagePreference: Pick<LanguagePreference, 'language' | 'choose'> = {language: language.asReadonly(), choose};
   TestBed.resetTestingModule();
   TestBed.configureTestingModule({
     providers: [
@@ -26,6 +30,7 @@ async function startRail(options: {api?: ReturnType<typeof createInMemoryCrancul
       ]),
       provideTestTranslations('en'),
       {provide: CRANCULA_API, useValue: options.api ?? createInMemoryCranculaApi()},
+      {provide: LanguagePreference, useValue: languagePreference},
     ],
   });
   const translate = TestBed.inject(TranslateService);
@@ -41,12 +46,14 @@ async function startRail(options: {api?: ReturnType<typeof createInMemoryCrancul
     (option.tagName === 'BUTTON' ? option : (option.querySelector<HTMLElement>('button') ?? option)).click();
     await fixture.whenStable();
   };
-  const chooseLanguage = (language: 'en' | 'de') => press(`[data-testid="language-switch"] [data-language="${language}"]`);
+  const chooseLanguage = (language: Language) => press(`[data-testid="language-switch"] [data-language="${language}"]`);
+  const languageButton = (language: Language) =>
+    element.querySelector<HTMLElement>(`[data-testid="language-switch"] [data-language="${language}"] button`);
   const chooseScheme = (scheme: Scheme) => press(`[data-testid="scheme-switch"] [data-scheme="${scheme}"]`);
   const navItem = (path: string) => element.querySelector<HTMLAnchorElement>(`[data-testid="rail-nav"] a[href="${path}"]`);
   const schemeButton = (scheme: Scheme) =>
     element.querySelector<HTMLElement>(`[data-testid="scheme-switch"] [data-scheme="${scheme}"] button`);
-  return {fixture, translate, element, chooseLanguage, chooseScheme, navItem, schemeButton};
+  return {fixture, translate, element, language, choose, chooseLanguage, languageButton, chooseScheme, navItem, schemeButton};
 }
 
 // jsdom's localStorage is unavailable here, so the app's UI preference store is an in-memory stand-in.
@@ -152,71 +159,31 @@ describe('RailComponent language switch', () => {
   beforeEach(stubLocalStorage);
   afterEach(resetEnvironment);
 
-  it('starts in the default language when no choice was stored', async () => {
-    const {translate} = await startRail();
+  it('shows the language of the language preference as selected', async () => {
+    const {languageButton} = await startRail();
 
-    expect(translate.getCurrentLang()).toBe('en');
+    expect(languageButton('en')?.getAttribute('aria-checked')).toBe('true');
+    expect(languageButton('de')?.getAttribute('aria-checked')).toBe('false');
   });
 
-  it('switches the app to German and back to English', async () => {
-    const {translate, chooseLanguage} = await startRail();
+  it('reflects a language chosen elsewhere', async () => {
+    const {fixture, language, languageButton} = await startRail();
+
+    language.set('de');
+    await fixture.whenStable();
+
+    expect(languageButton('de')?.getAttribute('aria-checked')).toBe('true');
+    expect(languageButton('en')?.getAttribute('aria-checked')).toBe('false');
+  });
+
+  it('hands the chosen language to the language preference', async () => {
+    const {choose, chooseLanguage} = await startRail();
 
     await chooseLanguage('de');
-    expect(translate.getCurrentLang()).toBe('de');
+    expect(choose).toHaveBeenLastCalledWith('de');
 
     await chooseLanguage('en');
-    expect(translate.getCurrentLang()).toBe('en');
-  });
-
-  it('remembers the chosen language in localStorage', async () => {
-    const {chooseLanguage} = await startRail();
-
-    await chooseLanguage('de');
-
-    expect(localStorage.getItem(LANGUAGE_KEY)).toBe('de');
-  });
-
-  it('restores the stored language on a fresh app start', async () => {
-    const first = await startRail();
-    await first.chooseLanguage('de');
-
-    const {translate} = await startRail();
-
-    expect(translate.getCurrentLang()).toBe('de');
-  });
-
-  it('tells the main process the language on start', async () => {
-    const api = createInMemoryCranculaApi();
-    const setLanguage = vi.spyOn(api.app, 'setLanguage');
-
-    await startRail({api});
-
-    expect(setLanguage).toHaveBeenCalledWith('en');
-  });
-
-  it('tells the main process the stored language on start', async () => {
-    const first = await startRail();
-    await first.chooseLanguage('de');
-    const api = createInMemoryCranculaApi();
-    const setLanguage = vi.spyOn(api.app, 'setLanguage');
-
-    await startRail({api});
-
-    expect(setLanguage).toHaveBeenCalledWith('de');
-  });
-
-  it('tells the main process on every switch', async () => {
-    const api = createInMemoryCranculaApi();
-    const setLanguage = vi.spyOn(api.app, 'setLanguage');
-    const {chooseLanguage} = await startRail({api});
-    setLanguage.mockClear();
-
-    await chooseLanguage('de');
-    expect(setLanguage).toHaveBeenLastCalledWith('de');
-
-    await chooseLanguage('en');
-    expect(setLanguage).toHaveBeenLastCalledWith('en');
-    expect(setLanguage).toHaveBeenCalledTimes(2);
+    expect(choose).toHaveBeenLastCalledWith('en');
   });
 });
 
