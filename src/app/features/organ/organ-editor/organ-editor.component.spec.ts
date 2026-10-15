@@ -1110,9 +1110,9 @@ describe('OrganEditorComponent', () => {
   describe('a number field with text that is not a number', () => {
     it('asks for a number next to the field', async () => {
       const {open: openEditor} = render();
-      const {field, typeUnreadableNumber, violationAt} = await openEditor();
+      const {field, type, violationAt} = await openEditor();
 
-      await typeUnreadableNumber(field('tape-width'));
+      await type(field('tape-width'), 'abc');
 
       expect(violationAt('tapeBed.tapeWidth')).toEqual(['Enter a number.']);
     });
@@ -1129,10 +1129,10 @@ describe('OrganEditorComponent', () => {
 
     it('disables Save and lists the problem when leaving', async () => {
       const {open: openEditor} = render();
-      const {fixture, field, fillValidOrgan, typeUnreadableNumber, saveButton} = await openEditor();
+      const {fixture, field, fillValidOrgan, type, saveButton} = await openEditor();
       await fillValidOrgan();
 
-      await typeUnreadableNumber(field('tape-width'));
+      await type(field('tape-width'), 'abc');
 
       expect(saveButton().disabled).toBe(true);
       expect(fixture.componentInstance.unsavedChanges()?.problems).toEqual([
@@ -1154,6 +1154,82 @@ describe('OrganEditorComponent', () => {
 
       expect(violationAt('tapeBed.tapeWidth')).toEqual([]);
       expect(saveButton().disabled).toBe(false);
+    });
+  });
+
+  describe('the mm fields', () => {
+    const mmFields = ['tape-width', 'hole-diameter', 'row-spacing', 'minimum-gap'];
+
+    it.each(mmFields)('%s is a text input for decimals', async (testId) => {
+      const {open: openEditor} = render();
+      const {field} = await openEditor();
+
+      expect(field(testId).type).toBe('text');
+      expect(field(testId).getAttribute('inputmode')).toBe('decimal');
+    });
+
+    it.each(mmFields)('%s has the visible suffix "mm" and a label without "(mm)"', async (testId) => {
+      const {open: openEditor} = render();
+      const {field} = await openEditor();
+
+      const formField = field(testId).closest('mat-form-field');
+      expect(formField?.querySelector('[matTextSuffix]')?.textContent?.trim()).toBe('mm');
+      expect(formField?.querySelector('mat-label')?.textContent).not.toContain('(mm)');
+    });
+
+    it.each(mmFields)('%s shows a stored 2.5 as 2.5 in English when not focused', async (testId) => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 2, {
+        tapeBed: {tapeWidth: 120, holeDiameter: 2.5, rowSpacing: 2.5},
+        minimumGap: 2.5,
+      });
+      await library.put(organ);
+      const {field} = await openEditor(organ.id);
+
+      expect(field(testId).value).toBe(testId === 'tape-width' ? '120' : '2.5');
+    });
+
+    it.each(mmFields)('%s shows a stored 2.5 as 2,5 in German when not focused', async (testId) => {
+      TestBed.configureTestingModule({providers: [provideRouter([]), provideTestTranslations('de')]});
+      vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+      const organ = testOrgan('Street organ', 2, {
+        tapeBed: {tapeWidth: 120, holeDiameter: 2.5, rowSpacing: 2.5},
+        minimumGap: 2.5,
+      });
+      await TestBed.inject(OrganLibrary).put(organ);
+      const {field} = await open(organ.id);
+
+      expect(field(testId).value).toBe(testId === 'tape-width' ? '120' : '2,5');
+    });
+
+    it('keeps "2," in the field while typing', async () => {
+      const {open: openEditor} = render();
+      const {field, type} = await openEditor();
+
+      await type(field('minimum-gap'), '2,');
+
+      expect(field('minimum-gap').value).toBe('2,');
+    });
+
+    it('stores 2.5 in the draft when "2,5" is typed', async () => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 2);
+      await library.put(organ);
+      const {field, type, save} = await openEditor(organ.id);
+
+      await type(field('minimum-gap'), '2,5');
+      await save();
+
+      expect(library.entities()[0]?.minimumGap).toBe(2.5);
+    });
+
+    it('asks for a number next to a field when "abc" is typed', async () => {
+      const {open: openEditor} = render();
+      const {field, type, violationAt} = await openEditor();
+
+      await type(field('tape-width'), 'abc');
+
+      expect(violationAt('tapeBed.tapeWidth')).toEqual(['Enter a number.']);
     });
   });
 

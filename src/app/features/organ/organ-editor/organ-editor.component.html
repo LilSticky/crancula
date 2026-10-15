@@ -14,7 +14,8 @@
   <h3>{{ 'ORGAN.EDITOR.TAPE_BED' | translate }}</h3>
   <mat-form-field>
     <mat-label>{{ 'ORGAN.EDITOR.TAPE_WIDTH' | translate }}</mat-label>
-    <input matInput type="number" data-testid="tape-width" [formField]="organ.tapeBed.tapeWidth"/>
+    <input matInput crancDecimalInput data-testid="tape-width" [formField]="organ.tapeBed.tapeWidth"/>
+    <span matTextSuffix>mm</span>
     <ng-container ngProjectAs="mat-error">
       @for (message of messagesAt(organ.tapeBed.tapeWidth); track message.key) {
         <mat-error data-testid="violation" data-path="tapeBed.tapeWidth">{{ message.key | translate: message.params }}</mat-error>
@@ -23,7 +24,8 @@
   </mat-form-field>
   <mat-form-field>
     <mat-label>{{ 'ORGAN.EDITOR.HOLE_DIAMETER' | translate }}</mat-label>
-    <input matInput type="number" data-testid="hole-diameter" [formField]="organ.tapeBed.holeDiameter"/>
+    <input matInput crancDecimalInput data-testid="hole-diameter" [formField]="organ.tapeBed.holeDiameter"/>
+    <span matTextSuffix>mm</span>
     <ng-container ngProjectAs="mat-error">
       @for (message of messagesAt(organ.tapeBed.holeDiameter); track message.key) {
         <mat-error data-testid="violation" data-path="tapeBed.holeDiameter">{{ message.key | translate: message.params }}</mat-error>
@@ -32,7 +34,8 @@
   </mat-form-field>
   <mat-form-field>
     <mat-label>{{ 'ORGAN.EDITOR.ROW_SPACING' | translate }}</mat-label>
-    <input matInput type="number" data-testid="row-spacing" [formField]="organ.tapeBed.rowSpacing"/>
+    <input matInput crancDecimalInput data-testid="row-spacing" [formField]="organ.tapeBed.rowSpacing"/>
+    <span matTextSuffix>mm</span>
     <ng-container ngProjectAs="mat-error">
       @for (message of messagesAt(organ.tapeBed.rowSpacing); track message.key) {
         <mat-error data-testid="violation" data-path="tapeBed.rowSpacing">{{ message.key | translate: message.params }}</mat-error>
@@ -45,7 +48,8 @@
   </mat-form-field>
   <mat-form-field>
     <mat-label>{{ 'ORGAN.EDITOR.MINIMUM_GAP' | translate }}</mat-label>
-    <input matInput type="number" data-testid="minimum-gap" [formField]="organ.minimumGap"/>
+    <input matInput crancDecimalInput data-testid="minimum-gap" [formField]="organ.minimumGap"/>
+    <span matTextSuffix>mm</span>
     <ng-container ngProjectAs="mat-error">
       @for (message of messagesAt(organ.minimumGap); track message.key) {
         <mat-error data-testid="violation" data-path="minimumGap">{{ message.key | translate: message.params }}</mat-error>

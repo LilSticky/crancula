@@ -100,7 +100,7 @@ Every task that adds or changes UI text adds the keys to `en.json` and `de.json`
   (`format-number.ts`): `formatNumber(2.5, 'de')` → `2,5`, `'en'` → `2.5`, no trailing zeros
   (`120`, `3,5`); `parseDecimal('2,5')` and `parseDecimal('2.5')` → 2.5, `''` → `null`; `'2,5,1'`,
   `'1.000,5'` and `'abc'` → not a number. Spec first, then the helper.
-- [ ] **E2** mm fields, component. Spec: Tape width, Hole diameter, Spacing between rows and Minimum
+- [x] **E2** mm fields, component. Spec: Tape width, Hole diameter, Spacing between rows and Minimum
   Gap are text inputs (there is no Border input any more) with `inputmode="decimal"` and a visible "mm" suffix; the labels have
   no "(mm)"; a stored 2.5 shows `2,5` in German and `2.5` in English; typing `2,` keeps `2,` in the
   field; `2,5` stores 2.5; `abc` shows "Enter a number." as today. Then bind the fields through E1

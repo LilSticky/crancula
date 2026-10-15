@@ -3,7 +3,7 @@ import {CdkDrag, CdkDragDrop, CdkDragHandle, CdkDropList} from '@angular/cdk/dra
 import {type FieldTree, form, FormField} from '@angular/forms/signals';
 import {ErrorStateMatcher} from '@angular/material/core';
 import {MatButton, MatIconButton} from '@angular/material/button';
-import {MatError, MatFormField, MatHint, MatInput, MatLabel} from '@angular/material/input';
+import {MatError, MatFormField, MatHint, MatInput, MatLabel, MatSuffix} from '@angular/material/input';
 import {MatDialog} from '@angular/material/dialog';
 import {MatIcon} from '@angular/material/icon';
 import {MatSnackBar} from '@angular/material/snack-bar';
@@ -24,6 +24,7 @@ import {
   validateOrgan,
 } from '@api/index';
 import {firstValueFrom} from 'rxjs';
+import {DecimalInputDirective} from '../../shared/decimal-input.directive';
 import {formatNumber} from '../../shared/format-number';
 import {LanguagePreference} from '../../shared/language-preference';
 import {ConfirmableAction, ConfirmDialogComponent} from '../../shared/components/confirm-dialog/confirm-dialog.component';
@@ -47,7 +48,7 @@ const FIELD_LABEL_KEYS: Readonly<Record<string, string>> = {
 @Component({
   selector: 'cranc-organ-editor',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslatePipe, MatFormField, MatLabel, MatInput, MatHint, MatError, MatButton, MatIconButton, MatIcon, FormField, CdkDropList, CdkDrag, CdkDragHandle, PageHeadComponent],
+  imports: [TranslatePipe, MatFormField, MatLabel, MatInput, MatHint, MatError, MatSuffix, MatButton, MatIconButton, MatIcon, FormField, DecimalInputDirective, CdkDropList, CdkDrag, CdkDragHandle, PageHeadComponent],
   templateUrl: './organ-editor.component.html',
   providers: [{provide: ErrorStateMatcher, useClass: ShownViolationMatcher}],
   styles: `
