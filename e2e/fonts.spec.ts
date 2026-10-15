@@ -29,27 +29,44 @@ test.describe('Fonts ship with the app', () => {
     expect(external).toEqual([]);
   });
 
-  test('loads Roboto and Material Icons from the app', async () => {
+  test('loads Noto Sans, Libertinus Serif and Material Icons from the app, and no Roboto', async () => {
     const {window} = launched;
 
     const fonts = await window.evaluate(async () => {
       await document.fonts.ready;
-      await Promise.all([document.fonts.load('16px Roboto'), document.fonts.load('24px "Material Icons"')]);
+      await Promise.all([
+        document.fonts.load('16px "Noto Sans"'),
+        document.fonts.load('600 16px "Libertinus Serif"'),
+        document.fonts.load('24px "Material Icons"'),
+      ]);
       const loaded = (family: string): boolean =>
         [...document.fonts].some((face) => face.family.replace(/["']/g, '') === family && face.status === 'loaded');
       return {
-        robotoUsable: document.fonts.check('16px Roboto'),
+        notoSansUsable: document.fonts.check('16px "Noto Sans"'),
+        libertinusUsable: document.fonts.check('600 16px "Libertinus Serif"'),
         iconsUsable: document.fonts.check('24px "Material Icons"'),
-        robotoLoaded: loaded('Roboto'),
+        notoSansLoaded: loaded('Noto Sans'),
+        libertinusLoaded: loaded('Libertinus Serif'),
         iconsLoaded: loaded('Material Icons'),
+        robotoDeclared: [...document.fonts].some((face) => face.family.replace(/["']/g, '') === 'Roboto'),
       };
     });
 
-    expect(fonts).toEqual({robotoUsable: true, iconsUsable: true, robotoLoaded: true, iconsLoaded: true});
+    expect(fonts).toEqual({
+      notoSansUsable: true,
+      libertinusUsable: true,
+      iconsUsable: true,
+      notoSansLoaded: true,
+      libertinusLoaded: true,
+      iconsLoaded: true,
+      robotoDeclared: false,
+    });
 
     // The font files themselves must come from the app, not from the network.
     const appFontFiles = requestedUrls.filter((url) => /\.woff2(\?|$)/.test(url) && !/^https?:/.test(url));
-    expect(appFontFiles.filter((url) => /roboto/i.test(url))).not.toEqual([]);
+    expect(appFontFiles.filter((url) => /noto-?sans/i.test(url))).not.toEqual([]);
+    expect(appFontFiles.filter((url) => /libertinus/i.test(url))).not.toEqual([]);
     expect(appFontFiles.filter((url) => /material-?icons/i.test(url))).not.toEqual([]);
+    expect(appFontFiles.filter((url) => /roboto/i.test(url))).toEqual([]);
   });
 });

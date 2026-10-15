@@ -14,7 +14,7 @@ level first (`tdd` skill, test pyramid). Tick a task once its tests are green.
   `src/assets/fonts/` (`OFL-LibertinusSerif.txt`, `OFL-NotoSans.txt`, `LICENSE-MaterialIcons.txt`).
   Then bundle the woff2 files from the `@fontsource/libertinus-serif` and `@fontsource/noto-sans`
   packages (copy the files; do not add the packages as dependencies) and remove the Roboto files.
-- [ ] **D2** Theme as a node unit test, then `src/styles.scss`. The same spec compiles
+- [x] **D2** Theme as a node unit test, then `src/styles.scss`. The same spec compiles
   `src/styles.scss` with `sass` (load path `node_modules`, `src/`) and asserts: `color-scheme: light dark`
   on `html`; `--mat-sys-surface` and `--mat-sys-primary` use the `light-dark()` values of
   `documentation/design/theme.scss`; the typography tokens name `Noto Sans` (plain) and
@@ -22,6 +22,6 @@ level first (`tdd` skill, test pyramid). Tick a task once its tests are green.
   the `theme-color` schematic command in `theme.scss`, and move `theme.scss` into `src/styles.scss`.
   Keep `.cranc-form-section` until #64 restyles the Organ editor. The scheme toggle is #63; the
   scheme follows the system until then.
-- [ ] **D3** e2e: update `e2e/fonts.spec.ts` to expect Noto Sans, Libertinus Serif and Material
+- [x] **D3** e2e: update `e2e/fonts.spec.ts` to expect Noto Sans, Libertinus Serif and Material
   Icons loaded from the app (no Roboto). Run it once, then the full `npm run e2e` before the PR.
 - [ ] **D4** `npm run ux:screens`, `ux-review` of the result; record the score in STATUS.
