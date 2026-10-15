@@ -31,6 +31,14 @@ research R6 revised): `form()` over `OrganDraft`, `[formField]` inputs, one `val
 `validateOrgan`, a `ShownViolationMatcher` instead of the `crancErrorState` directive. Lint, i18n,
 120 Angular tests and 18 e2e green. Unreadable number text shows "Enter a number.".
 
+**Design guide** (2026-10-15, [#12](https://github.com/LilSticky/crancula/issues/12)):
+[DESIGN-GUIDE.md](DESIGN-GUIDE.md) and [design/theme.scss](design/theme.scss), direction "the organ
+builder's workshop" with borrowings, chosen by the user from four parallel variants
+([COMPARISON.md](design/COMPARISON.md)); the current UI scores 29/50 in the `ux-review` rubric, the
+variants 40–42 (self-reviews). New tooling: `ux-review` skill, `ux-designer` agent, `npm run ux:screens`.
+The Tape is drawn horizontally, row 1 on top (user decision). German for Tape is now Lochband
+(dictionary, UI texts). Applying the guide to the app: [#59](https://github.com/LilSticky/crancula/issues/59).
+
 **Next concrete step:** `/speckit-specify` for "Punch a tape" ([#3](https://github.com/LilSticky/crancula/issues/3)).
 
 ## Known broken / WIP

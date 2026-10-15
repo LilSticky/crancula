@@ -25,8 +25,8 @@ Release v0.1 as cross-platform GitHub Releases built in CI, once all of the abov
   A release workflow (`.github/workflows/release.yml`) packages unsigned builds for all three
   platforms on a `v*` tag and creates a draft GitHub Release; publishing is untested until the first tag
   ([#11](https://github.com/LilSticky/crancula/issues/11)).
-- **Later: design guide.** Create a design guide and unified styling with the frontend-design
-  skill, on top of Angular Material.
+- **Design guide**: done 2026-10-15 ([DESIGN-GUIDE.md](DESIGN-GUIDE.md), #12); applying it to the
+  app is [#59](https://github.com/LilSticky/crancula/issues/59).
 
 ## Later (unordered)
 
