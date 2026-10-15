@@ -1,5 +1,5 @@
 import {BreakpointObserver} from '@angular/cdk/layout';
-import {Component, effect, inject, untracked} from '@angular/core';
+import {ChangeDetectionStrategy, Component, effect, inject, untracked} from '@angular/core';
 import {toSignal} from '@angular/core/rxjs-interop';
 import {MatSidenav, MatSidenavContainer, MatSidenavContent} from '@angular/material/sidenav';
 import {MatSnackBar} from '@angular/material/snack-bar';
@@ -16,6 +16,7 @@ const COMPACT_QUERY = '(max-width: 1179.98px)';
 @Component({
   // eslint-disable-next-line @angular-eslint/component-selector
   selector: 'app-root',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <mat-sidenav-container>
       <mat-sidenav mode="side" opened disableClose [class.cr-compact]="compact()">
