@@ -26,4 +26,4 @@ level first (`tdd` skill, test pyramid). Tick a task once its tests are green.
   Icons loaded from the app (no Roboto). Run it once, then the full `npm run e2e` before the PR.
 - [x] **D3b** Labels stay visible at density -2: outlined form fields app-wide
   (`MAT_FORM_FIELD_DEFAULT_OPTIONS`); e2e checks a visible label in the Organ editor.
-- [ ] **D4** `npm run ux:screens`, `ux-review` of the result; record the score in STATUS.
+- [x] **D4** `npm run ux:screens`, `ux-review` of the result; record the score in STATUS.

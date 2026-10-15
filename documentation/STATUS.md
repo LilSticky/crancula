@@ -39,22 +39,9 @@ variants 40–42 (self-reviews). New tooling: `ux-review` skill, `ux-designer` a
 The Tape is drawn horizontally, row 1 on top (user decision). German for Tape is now Lochband
 (dictionary, UI texts). Applying the guide to the app: [#59](https://github.com/LilSticky/crancula/issues/59).
 
-**In progress (paused 2026-10-15, night):** [#62](https://github.com/LilSticky/crancula/issues/62) theme and
-fonts on branch `062-design-theme-and-fonts` (pushed, no pull request yet). D1–D3 of
-[design/tasks.md](design/tasks.md) done and committed (fonts bundled, workshop theme, `scripts/styles.spec.ts`
-14 tests green, fonts e2e green). To resume, in this order:
-1. Done: PR #68 merged after a re-run; this branch is rebased on `main`.
-2. Reviewer's should-fixes on `scripts/styles.spec.ts`: drop the blanket `silenceDeprecations` (or name the
-   warning that needs it); test `html.cr-dark { color-scheme: dark }` and the high-contrast media rule; note
-   that the `[^}]*` rule regex can't see nested rules. Comment nits: Libertinus ships only weight 600
-   (`_fonts.scss`), the reduced-motion reset is intentional, check whether the `h1–h3` rule is needed.
-3. D4: `npm run ux:screens`, `ux-review`, score into STATUS; full `npm run e2e`; pull request `Closes #62`.
+**Done (pull request pending):** [#62](https://github.com/LilSticky/crancula/issues/62) theme and fonts on branch `062-design-theme-and-fonts`. Fonts bundled (Libertinus Serif 600, Noto Sans), workshop theme in light, dark and high-contrast, outlined form fields app-wide (filled fields hid their labels at density -2, found by the ux-review; `e2e/form-field-labels.spec.ts`). `scripts/styles.spec.ts` 16 tests. ux-review 31/50 (was 29/50; H9 character 2 to 4). Gate: lint, i18n 136 keys, 472 node and 251 Angular tests, 33 e2e green locally. Top remaining findings: [#64](https://github.com/LilSticky/crancula/issues/64) (stacked outlined fields with no gap clip labels, editor height, disabled Save with no reason) and [#65](https://github.com/LilSticky/crancula/issues/65) (Tape view scale). New: [#72](https://github.com/LilSticky/crancula/issues/72), `ux:screens` captures the leave-unsaved dialog mid fade-in.
 
-**Next concrete step:** apply the design guide before the app grows (user decision, 2026-10-15):
-[#62](https://github.com/LilSticky/crancula/issues/62) theme and fonts, then #63 shell, #64 Organ
-editor, #65 Tape view, #66 lists (all sub-issues of [#59](https://github.com/LilSticky/crancula/issues/59)).
-After that: `/speckit-specify` for "Punch a tape" ([#3](https://github.com/LilSticky/crancula/issues/3)).
-Open issues carry `priority:` and `size:` labels; triage sets them.
+**Next concrete step:** #63 shell next (sub-issue of [#59](https://github.com/LilSticky/crancula/issues/59)), then [#64](https://github.com/LilSticky/crancula/issues/64), [#65](https://github.com/LilSticky/crancula/issues/65), [#66](https://github.com/LilSticky/crancula/issues/66) (all sub-issues of #59). After that: `/speckit-specify` for "Punch a tape" ([#3](https://github.com/LilSticky/crancula/issues/3)). Open issues carry `priority:` and `size:` labels; triage sets them.
 
 ## Known broken / WIP
 
