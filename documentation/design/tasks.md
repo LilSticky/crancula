@@ -431,3 +431,155 @@ keys to `en.json` and `de.json` (German: Lochband).
 5. **Zoom labels:** Whole Tape, 1:1, 2:1; not "Fit", which is a dictionary term.
 6. **SC-006 stays:** the 1:1 view must open the 5-minute Song within 2 s; if needed, only the
    visible Columns are rendered (V6b). The test is not relaxed.
+
+## #66 Organ and Tape lists
+
+Guide sections "Screens → Organ list" and "Screens → Tape list", "Layout and navigation" (lists are
+ruled ledgers, page head), "Component usage" (`mat-table`, row menu `mat-menu`, `mat-chip` for the
+Organ filter), "States" (Empty) and "Accessibility commitments"; reference mockup
+`variants/a-workshop/mockup.html` (screen `organ-list`: ledger rows with miniature, facts, "3 Tapes",
+row menu, dashed next-step strip; where it differs, the guide wins). Fixes ux-review findings 5
+(empty states are one grey line) and 6 (plain rows, bare icons, unlabelled facts). Uses the shared
+`cranc-page-head`, `formatNumber`, `LanguagePreference` and `noteName`; the Pipe range is the one the
+Organ editor's subtitle shows (E18). No new domain rule and no new term: the ledgers show only
+values the domain already has (no created date; Decided 1).
+
+Design choices made here (not domain):
+- **Ledger:** one `mat-card appearance="outlined"` sheet per list holding a `mat-table`; rows ruled,
+  44 px high (density -2), a hover tint, numbers right-aligned with `tabular-nums`; a shared class
+  `cr-ledger` in `styles.scss` so both lists look alike. Column headers in Ink 2, 12 px, sentence case.
+- **Rows open by their name:** the name is a real link (keyboard and screen readers); a click
+  anywhere else on the row does the same; the row menu button stops the click.
+- **Organ row:** miniature, name (serif) with the facts line under it, Tapes, menu. Facts: "31 Pipes,
+  F3–B5. 120 mm Tape, hole diameter 2.5 mm" (German with commas; "1 Pipe, C4" for one Pipe).
+- **Miniature** (132 × 60 px SVG, `aria-hidden`): the Tape Bed drawn horizontally as on the Tape,
+  manila body, one faint line per row, rows centred with `border(organ)`; common scale: the widest
+  tape width of the listed Organs fills 56 px, so a 70 mm Tape looks narrower than a 120 mm one.
+  No Holes.
+- **Tapes per Organ:** "3 Tapes", "1 Tape" as a link to the Tape list filtered by this Organ
+  (`/tapes?organ=<id>`); "No Tapes" as plain text; absent while the Tape library could not be read.
+- **Row menus:** a `more_vert` icon button (`aria-label` and `matTooltip` "More actions for Street
+  organ") with the destructive item in oxblood: Delete Organ (the existing `OrganDeletion` flow) and
+  Delete Tape (the existing confirm dialog). The Tape list's "Remove" wording becomes "Delete Tape",
+  as in the guide and the confirm dialog.
+- **Organ filter:** the query parameter `organ` filters the Tape list; it shows as a removable
+  `mat-chip` "Street organ" above the ledger (remove `aria-label` "Show all Tapes"); an unknown id
+  shows all Tapes and no chip. The import keeps its own Organ choice (#69 owns that page).
+- **One primary per screen:** while a list is empty its primary button moves from the page head
+  into the empty state, so it is never shown twice. Test ids `new-organ` and `new-tape` stay on the
+  one button.
+- **Empty states** (a paper sheet with an icon, one sentence and the button):
+  Organs: "No Organs yet. Describe your Organ: its Tape Bed and Pipes." + New Organ.
+  Tapes with an Organ: "No Tapes yet. Bring a Song onto a Tape." + Bring a Song onto a Tape.
+  Tapes without an Organ: "No Tapes yet. A Tape is punched for one Organ: describe your Organ
+  first.", "describe your Organ" a link to New Organ, + Bring a Song onto a Tape (its page explains
+  the missing Organ, as today).
+  Filtered without a match: "No Tapes for the Street organ yet." + the chip and the button.
+- **Next-step strip** (dashed, under the Organ ledger): shown while there is at least one Organ and
+  no Tape: "Your Organ is ready. Bring a MIDI Song onto a Tape for it." + Bring a Song onto a Tape
+  (outlined). Hidden once a Tape exists, so it does not nag.
+- **Subtitles:** Organs "Each Organ knows its Tape Bed and its Pipes. Tapes are punched for one
+  Organ."; Tapes "Each Tape is punched for one Organ and holds a Song as Holes."
+- **Button label** "Bring a song onto a tape" becomes "Bring a Song onto a Tape" (dictionary casing,
+  as the guide writes it).
+- **Order** by name, locale-aware (Decided 3): Organs by name; Tapes grouped by their Organ's name,
+  then by Tape name; Tapes whose Organ is not available last. The Tape row menu holds Delete Tape
+  only; Rename is a separate issue (Decided 2).
+
+Keep the test ids e2e uses: `organ` (now on the name link), `new-organ`, `delete-organ` (now the
+menu item), `tape`, `tape-name`, `tape-organ`, `tape-length-columns`, `tape-length-mm`, `open-tape`
+(now the name link, `aria-disabled="true"` when the Organ is not available), `new-tape`;
+`remove-tape` becomes `delete-tape`. Every task that adds or changes UI text adds the keys to
+`en.json` and `de.json`.
+
+- [x] **G1** Pipe range, unit. A pure helper `pipe-range.ts` in `src/app/features/organ/`:
+  `pipeRange(organ)` gives the Pipe count and the lowest and highest note name (by MIDI note, not
+  by row): Street organ → 31, F3, B5; one Pipe → 1, C4, C4. Lowest–highest only, no marker for
+  skipped notes (Decided 4). Spec first, then the helper; the Organ editor's subtitle (E18) switches
+  to it with its specs still green, and the list reuses its keys (`ORGAN.EDITOR.PIPES_RANGE`,
+  `PIPES_RANGE_ONE`, moved to a shared key if both use them).
+- [x] **G1b** Ledger order, unit. A pure helper `ledger-order.ts` in `src/app/features/shared/`:
+  `byName(items, language)` sorts with `Intl.Collator(language)`; `tapesByOrgan(rows, language)`
+  sorts by Organ name, then Tape name, rows without an Organ last. Spec: "Ärger" sorts with "Anton"
+  before "Bach" in German; equal names keep a stable order; "Street organ"'s Tapes "B" and "a" come
+  out "a", "B". Spec first.
+- [x] **G2** Miniature geometry, unit. A pure helper `tape-bed-miniature.ts` next to the Organ list:
+  `tapeBedMiniature(organ, widestTapeWidth, heightPx)` → the body height in px and the y of each
+  row centre, rows centred with `border(organ)`, row 1 on top. Spec: the Street organ alone at
+  56 px → body 56 px, row 1 at (6,25 + 1,25) × 56 / 120 = 3,5 px; next to a 140 mm Organ its body
+  is 48 px. Spec first.
+- [x] **G3** Organ ledger, component. Rewrite "lists the Organs by name with their Pipe count": a
+  `mat-table` (class `cr-ledger`) inside an outlined `mat-card`, one row per Organ with the
+  miniature (`data-testid="organ-miniature"`, `aria-hidden`, one `line` per row from G2), the name
+  link (`organ`, serif, to `/organs/:id`) and the facts (`data-testid="organ-facts"`: "31 Pipes,
+  F3–B5. 120 mm Tape, hole diameter 2.5 mm"; German "2,5 mm"; singular for one Pipe); a click on
+  the row outside the link and the menu opens the editor; rows in G1b's order by name (and again
+  after a language switch). Then the template and `cr-ledger` in
+  `styles.scss`.
+- [x] **G4** Tapes per Organ, component. Spec: with two Tapes of the Street organ the row shows
+  "2 Tapes" (`data-testid="organ-tapes"`) as a link to `/tapes` with `organ=<id>`; one Tape
+  "1 Tape"; none "No Tapes" without a link (German "2 Lochbänder", "1 Lochband", "Keine
+  Lochbänder"); absent while the Tape library has a load problem. Then the cell.
+- [x] **G5** Organ row menu, component. Rewrite the `delete` and `delete with Tapes` specs to go
+  through the menu: the `more_vert` button has the `aria-label` and `matTooltip` "More actions for
+  Street organ"; its menu holds Delete Organ (`delete-organ`, oxblood); every existing deletion
+  behaviour (Tape count in the dialog, blocked while Tapes are unreadable) keeps passing. Then the
+  menu, replacing the bare delete icon.
+- [x] **G6** Organ page head and empty state, component. Spec: the page head has the subtitle;
+  with no Organs there is no ledger, `data-testid="empty-state"` says "No Organs yet. Describe your
+  Organ: its Tape Bed and Pipes." and holds the only New Organ button (`new-organ`, filled, to
+  `/organs/new`); with Organs, New Organ is in the page head and there is no empty state. Then the
+  template.
+- [x] **G7** Next-step strip, component. Spec: with one Organ and no Tapes,
+  `data-testid="next-step"` reads "Your Organ is ready. Bring a MIDI Song onto a Tape for it." with
+  an outlined link to `/tapes/new`; absent with no Organ and absent once a Tape exists. Then the
+  strip (dashed border, `music_note` icon).
+- [x] **G8** Tape ledger, component. Rewrite "lists each Tape …" and "links the open action …": a
+  `mat-table` (`cr-ledger`) with the headers Name, Organ, Columns, Length; per row (`tape`) the name
+  link (`open-tape` holding `tape-name`, to `/tapes/:id`), the Organ as a link to its editor
+  (`tape-organ`), the Columns "192" (`tape-length-columns`) and the length "480 mm"
+  (`tape-length-mm`, decimals per language via `formatNumber`: "187.5 mm" / "187,5 mm"); a row
+  click opens the Tape view; rows in G1b's order (by Organ name, then Tape name). With an unknown Organ: "Organ not available" as plain text, the name
+  link `aria-disabled="true"` without a target, and a row click does nothing (rewrite the existing
+  spec). Then the template.
+- [x] **G9** Tape row menu, component. Rewrite the `remove` specs: a `more_vert` button ("More
+  actions for Kirmes-Walzer") with Delete Tape (`delete-tape`, oxblood) opening the existing confirm
+  dialog; cancel changes nothing, confirm removes the Tape; the menu has no Rename (Decided 2).
+  Then the menu; the key
+  `TAPE.LIST.REMOVE` becomes `TAPE.LIST.DELETE` ("Delete Tape {{name}}").
+- [x] **G10** Organ filter, component. Spec with a faked `ActivatedRoute` query parameter: `organ`
+  of the Street organ lists only its Tapes and shows a chip (`data-testid="organ-filter"`) "Street
+  organ"; removing the chip (`aria-label` "Show all Tapes") navigates to `/tapes` without the
+  parameter and lists all; an unknown id lists all and shows no chip. Then the filter (`toSignal`
+  of the query parameter map).
+- [x] **G11** Tape page head and empty states, component. Spec: the subtitle; with no Tapes and an
+  Organ, `empty-state` says "No Tapes yet. Bring a Song onto a Tape." and holds the only `new-tape`
+  (filled); with no Organ the sentence is "No Tapes yet. A Tape is punched for one Organ: describe
+  your Organ first." with a link (`data-testid="empty-new-organ"`) to `/organs/new`, and `new-tape`
+  is still there; filtered without a match: "No Tapes for the Street organ yet.", the chip and
+  `new-tape`; with Tapes, `new-tape` is in the page head. The button reads "Bring a Song onto a
+  Tape". Then the template and the keys.
+- [x] **G12** e2e, existing tests. Update `organ-define` (the facts are in `organ-facts`),
+  `tape-restart` (`remove-tape` → the row menu and `delete-tape`; "Organ not available" and the
+  disabled name link), `tape-import`, `tape-german` and `e2e/ux/screens.capture.ts` where they click
+  `organ` or `open-tape`. Run them.
+- [x] **G13** e2e, lists in Electron. New `lists.spec.ts`: a fresh app shows the Organ empty state;
+  after saving the Street organ the list shows its row and the next-step strip; after bringing a
+  Song onto a Tape the strip is gone and "1 Tape" opens the Tape list filtered by the Street organ
+  with its chip; removing the chip shows all Tapes; on a fresh app the Tape list's empty sentence
+  links to New Organ. In German at 1024×700 (`resizeWindowOrSkip`) neither ledger scrolls sideways
+  and no facts line overflows its cell. Needs the real stores, routing and layout.
+- [x] **G14** Full `npm run e2e`, `npm run test`, `npm run lint`, `npm run i18n:check`. Then
+  `npm run ux:screens` (02 and 06 empty states, 06b the Tape list empty without an Organ, 05 with
+  the next-step strip, 09 the Tape ledger and 09b filtered by an Organ, both lists in German at
+  1024×700), `ux-review`; score into STATUS.
+
+### Decided (2026-10-16)
+
+1. **No created date:** the Tape list has no created-date column; a Tape stores no date (G8).
+2. **Rename a Tape** is left out of the Tape row menu here; it is a separate issue,
+   [#82](https://github.com/LilSticky/crancula/issues/82) (G9).
+3. **Order by name, locale-aware** (`Intl.Collator` for the current language, so ä sorts with a):
+   Organs by name; Tapes grouped by Organ (Organ name), then by Tape name (G1b, G3, G8).
+4. **Pipe range** shows lowest–highest only ("31 Pipes, F3–B5"), with the editor's subtitle logic
+   and keys and no marker for skipped notes (G1).

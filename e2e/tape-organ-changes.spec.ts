@@ -30,6 +30,7 @@ test.describe('Changing an Organ carries over to its Tapes', () => {
     const first = await organWithTwoTapes();
     await first.window.getByRole('link', {name: 'Organs'}).click();
 
+    await first.window.getByRole('button', {name: 'More actions for Octave organ'}).click();
     await first.window.getByTestId('delete-organ').click();
     await expect(first.window.getByTestId('consequence')).toContainText('(2)');
     await first.window.getByRole('button', {name: 'Confirm'}).click();

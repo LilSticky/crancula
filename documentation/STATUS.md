@@ -79,7 +79,7 @@ empty and required. Organ snapshot version 3 with `leadIn`; versions 1 and 2 loa
 dictionary (Lead-in) and spec 001 (FR-017) amended. Gate: lint, i18n, 495 node and 457 Angular tests,
 44 e2e green locally.
 
-**Done (pull request pending):** #65 Tape view (2026-10-16). Tape at true millimetres with the Lead-in
+**Done:** #65 Tape view (2026-10-16, PR #81 merged 2026-10-16). Tape at true millimetres with the Lead-in
 (angled start), rows centred with row 1 on top, Holes drawn as cut (slots with half-circle ends). mm
 ruler and Column numbers; zoom Whole Tape / 1:1 / 2:1; overview strip. Side panel with a Tape section,
 Import Summary (Transposition, Notes moved by octaves, Unplayable Notes, Holes fixed; dismissable) and
@@ -87,13 +87,25 @@ Selected Hole inspector (gap to the next Hole or the Tape's end, warnings below 
 Minimum Gap). Keyboard selection; status line with pointer position and save state; Tape details toggle
 below 1180 px; only visible Columns render. User decisions 2026-10-16 recorded in
 [DICTIONARY](DICTIONARY.md) (Hole shape, Import Summary / Importübersicht / Angepasste Löcher, Lead-in /
-Vorlauf). ux-review 36/50 (see [design/screens/current/ux-review.md](design/screens/current/ux-review.md)).
-Gate: lint, i18n (197 keys), 495 node and 585 Angular tests, 56 e2e green locally. Follow-up:
-[#80](https://github.com/LilSticky/crancula/issues/80) splits the Tape view.
+Vorlauf). ux-review 38/50 (see [design/screens/current/ux-review.md](design/screens/current/ux-review.md)).
+Gate: lint, i18n (197 keys), 495 node and 585 Angular tests, 56 e2e green locally. On macOS CI the
+21 layout e2e tests skip because the runner's screen is too small; they run on Windows and Linux.
+Follow-up: [#80](https://github.com/LilSticky/crancula/issues/80) splits the Tape view.
 
-**Next concrete step:** #66 lists, then #69 Tape import (sub-issues of
+**Done (pull request pending):** #66 Organ and Tape lists (2026-10-16). Ledgers (mat-table with column
+headers) sorted by name per language. Organ rows show the Pipe range, Tape Bed facts, a Tape Bed
+miniature and a Tapes link that filters the Tape list; row menus with Delete. The Tape list is grouped
+by Organ with an Organ filter chip. Empty states lead to the next step (describe an Organ first; bring a
+Song onto a Tape); next-step strip. User decisions 2026-10-16: no created date, order by name, Pipe range
+lowest–highest only, Rename a Tape split to [#82](https://github.com/LilSticky/crancula/issues/82).
+ux-review 38/50. Gate: lint, i18n (213 keys), 495 node and 640 Angular tests, 60 e2e green locally.
+
+**Next concrete step:** #69 Tape import (last sub-issue of
 [#59](https://github.com/LilSticky/crancula/issues/59)). Then
 `/speckit-specify` for "Punch a tape" ([#3](https://github.com/LilSticky/crancula/issues/3)).
+Follow-ups: [#76](https://github.com/LilSticky/crancula/issues/76) and
+[#80](https://github.com/LilSticky/crancula/issues/80) (component splits),
+[#82](https://github.com/LilSticky/crancula/issues/82) (Rename a Tape).
 Open issues carry `priority:` and `size:` labels; triage sets them.
 
 ## Known broken / WIP

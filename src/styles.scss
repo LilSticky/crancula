@@ -130,6 +130,15 @@ html {
   }
 }
 
+// Quiet ruled ledger: a mat-table with class cr-ledger inside an outlined mat-card.
+.cr-ledger {
+  font-variant-numeric: tabular-nums;
+
+  .mat-mdc-row:hover { background: color-mix(in srgb, var(--cr-paper-edge) 25%, transparent); }
+  .mat-mdc-header-cell { font-size: 12px; }
+  .mat-mdc-cell:last-child { text-align: end; }
+}
+
 // The rail's list is light-on-walnut; every other mat-list keeps the defaults.
 .cr-rail {
   @include mat.list-overrides((
@@ -192,4 +201,14 @@ h1, h2, h3 { font-family: var(--mat-sys-headline-small-font); font-weight: 600; 
 
 .cr-readonly {
   color: var(--mat-sys-on-surface-variant);
+}
+
+// Ledger links read as ink, not link blue; the underline only answers hover and focus.
+.cr-ledger a {
+  color: var(--mat-sys-on-surface);
+  text-decoration: none;
+
+  &:hover, &:focus-visible { text-decoration: underline; }
+
+  &.name { font-family: var(--mat-sys-headline-small-font); }
 }

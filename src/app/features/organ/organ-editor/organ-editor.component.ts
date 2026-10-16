@@ -39,6 +39,7 @@ import {PageHeadComponent} from '../../shared/components/page-head/page-head.com
 import {TapeLibrary} from '../../tape/tape-library.store';
 import {OrganDeletion} from '../organ-deletion';
 import {OrganLibrary} from '../organ-library.store';
+import {pipeRange} from '../pipe-range';
 import {rackColumns} from './pipe-rack';
 import {changedFields, FIELD_LABEL_KEYS, type FieldProblem, organFormSchema, organProblems, problemFields, SaveAttempt, shownMessages, ShownViolationMatcher} from './organ-form';
 
@@ -319,12 +320,8 @@ export class OrganEditorComponent implements UnsavedChangesCheck {
     const id = this.draft().id;
     const stored = id ? this.library.entityMap()[id] : undefined;
     if (!stored) return String(this.translate.instant('ORGAN.EDITOR.NOT_SAVED_YET'));
-    const notes = stored.pipes.map((pipe) => pipe.note).sort((a, b) => Number(a) - Number(b));
-    return String(this.translate.instant(notes.length === 1 ? 'ORGAN.EDITOR.PIPES_RANGE_ONE' : 'ORGAN.EDITOR.PIPES_RANGE', {
-      count: notes.length,
-      lowest: noteName(notes[0]),
-      highest: noteName(notes[notes.length - 1]),
-    }));
+    const range = pipeRange(stored);
+    return String(this.translate.instant(range.count === 1 ? 'ORGAN.EDITOR.PIPES_RANGE_ONE' : 'ORGAN.EDITOR.PIPES_RANGE', {...range}));
   });
 
   /** Save is only unavailable for a stored Organ without changes, or while a save is running. */

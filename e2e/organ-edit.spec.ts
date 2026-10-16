@@ -58,6 +58,7 @@ test.describe('I can rearrange and delete my organs', () => {
     const first = await launchApp();
     await defineStreetOrgan(first.window);
     await first.window.getByRole('link', {name: 'Organs'}).click();
+    await first.window.getByRole('button', {name: 'More actions for Street organ'}).click();
     await first.window.getByTestId('delete-organ').click();
     await first.window.getByRole('button', {name: 'Confirm'}).click();
     await expect(first.window.getByText('No Organs yet.')).toBeVisible();

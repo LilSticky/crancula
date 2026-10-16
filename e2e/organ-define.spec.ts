@@ -23,6 +23,7 @@ test.describe('Define my organ', () => {
     await expect(window.getByTestId('minimum-hole-length')).toHaveValue('2.5');
 
     await window.getByRole('link', {name: 'Organs'}).click();
-    await expect(window.getByTestId('organ')).toHaveText(/Street organ\s*31 Pipes/);
+    await expect(window.getByTestId('organ')).toHaveText('Street organ');
+    await expect(window.getByTestId('organ-facts')).toHaveText('31 Pipes, F3–B5. 120 mm Tape, hole diameter 2.5 mm');
   });
 });
