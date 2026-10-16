@@ -30,7 +30,7 @@
       }
     </ul>
     <div class="scroll" #scroll data-testid="tape-scroll" (scroll)="onScroll(scroll)">
-      <svg #tapeSvg role="img" [attr.aria-label]="'TAPE.VIEW.DRAWING' | translate: drawing.drawingParams" [attr.width]="drawing.width" [attr.height]="drawing.totalHeight" tabindex="0" (keydown)="onKeydown($event)" (pointermove)="onPointerMove($event, tapeSvg)" (pointerleave)="onPointerLeave()">
+      <svg #tapeSvg role="application" [attr.aria-label]="'TAPE.VIEW.DRAWING' | translate: drawing.drawingParams" [attr.width]="drawing.width" [attr.height]="drawing.totalHeight" tabindex="0" (keydown)="onKeydown($event)" (pointermove)="onPointerMove($event, tapeSvg)" (pointerleave)="onPointerLeave()">
         <defs>
           <pattern id="ruler-ticks" patternUnits="userSpaceOnUse" [attr.x]="drawing.leadIn" [attr.width]="5 * scale()" height="8">
             @for (tick of rulerTicks; track tick) {
@@ -50,17 +50,17 @@
           @for (border of drawing.borders; track border) {
             <line class="border-line" data-testid="border-line" [attr.x1]="drawing.leadIn" [attr.x2]="drawing.width" [attr.y1]="border" [attr.y2]="border" />
           }
-          @for (row of drawing.rows; track $index) {
+          @for (row of drawing.rows; track row.row) {
             <line class="guide" [class.natural]="row.natural" [attr.x1]="drawing.leadIn" [attr.x2]="drawing.width" [attr.y1]="row.y" [attr.y2]="row.y" />
           }
           @for (mark of drawing.marks; track mark.column) {
             <line class="mark" [class.strong]="mark.strong" data-testid="column-mark" [attr.x1]="mark.x" [attr.x2]="mark.x" y1="0" [attr.y2]="drawing.height" />
           }
-          @for (hole of drawing.holes; track $index) {
+          @for (hole of drawing.holes; track hole.row + ':' + hole.start) {
             <rect
               class="hole"
               [class.selected]="hole.selected"
-              [attr.aria-selected]="hole.selected"
+              [attr.aria-label]="hole.selected && inspection() ? (('TAPE.HOLE.ROW' | translate: {row: inspection()?.rowText, note: inspection()?.noteName}) + '. ' + ('TAPE.HOLE.COLUMNS_RANGE' | translate: {from: inspection()?.fromText, to: inspection()?.toText})) : null"
               data-testid="hole"
               (click)="select(hole)"
               [attr.data-row]="hole.row"
@@ -96,13 +96,13 @@
         <path class="lead-in" [attr.d]="overview.leadInPath" />
       }
       <rect class="tape" [attr.x]="overview.leadIn" y="0" [attr.width]="overview.bodyWidth" [attr.height]="overview.height" />
-      @for (hole of overview.holes; track $index) {
-        <rect class="hole" data-testid="hole" [attr.x]="hole.x" [attr.y]="hole.y" [attr.width]="hole.width" [attr.height]="hole.height" [attr.rx]="hole.radius" [attr.ry]="hole.radius" />
+      <path class="hole" data-testid="overview-holes" [attr.d]="overview.holesPath" />
+      @if (overviewMark(); as frame) {
+        <rect class="overview-frame" data-testid="overview-frame" [attr.x]="frame.x" y="0" [attr.width]="frame.width" [attr.height]="overview.height" />
       }
-      <rect class="overview-frame" data-testid="overview-frame" [attr.x]="overview.frame.x" y="0" [attr.width]="overview.frame.width" [attr.height]="overview.height" />
     </svg>
   }
-  <div class="status-line" data-testid="status-line" style="height: 26px">
+  <div class="status-line" data-testid="status-line">
     @if (pointerText(); as pointer) {
       <span data-testid="pointer-column">{{ 'TAPE.VIEW.STATUS_COLUMN' | translate: {column: pointer.column, mm: pointer.mm} }}</span>
       @if (pointer.row !== undefined) {
@@ -144,7 +144,7 @@
         }
       </ul>
     </section>
-    <section data-testid="selected-hole">
+    <section data-testid="selected-hole" aria-live="polite">
       <h2>{{ 'TAPE.HOLE.TITLE' | translate }}</h2>
       @if (inspection(); as hole) {
         <p>{{ 'TAPE.HOLE.ROW' | translate: {row: hole.rowText, note: hole.noteName} }}</p>

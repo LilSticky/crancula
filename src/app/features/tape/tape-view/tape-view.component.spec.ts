@@ -460,17 +460,15 @@ describe('TapeViewComponent', () => {
       await open(`/tapes/${tape.id}`);
 
       expect(selected(view())).toEqual([]);
-      expect(drawn(view()).some((rect) => rect.getAttribute('aria-selected') === 'true')).toBe(false);
     });
 
-    it('gives a clicked Hole the class selected and aria-selected true', async () => {
+    it('gives a clicked Hole the class selected', async () => {
       const {tape, open, view, settle} = await render({holes});
       await open(`/tapes/${tape.id}`);
 
       await click(drawn(view())[1], settle);
 
       expect(selected(view())).toEqual(['24:64']);
-      expect(drawn(view())[1].getAttribute('aria-selected')).toBe('true');
     });
 
     it('selects one Hole at a time', async () => {
@@ -481,7 +479,6 @@ describe('TapeViewComponent', () => {
       await click(drawn(view())[2], settle);
 
       expect(selected(view())).toEqual(['24:83']);
-      expect(drawn(view()).filter((rect) => rect.getAttribute('aria-selected') === 'true')).toHaveLength(1);
     });
 
     it('makes the Tape drawing focusable', async () => {
@@ -534,7 +531,6 @@ describe('TapeViewComponent', () => {
       await press(view(), 'Escape', settle);
 
       expect(selected(view())).toEqual([]);
-      expect(drawn(view()).some((rect) => rect.getAttribute('aria-selected') === 'true')).toBe(false);
     });
 
     it('scrolls the selected Hole into view', async () => {
@@ -585,7 +581,7 @@ describe('TapeViewComponent', () => {
 
       await open(`/tapes/${tape.id}`);
 
-      expect(text(view())).toContain('Select a Hole');
+      expect(text(view())).toContain('Select a Hole to see where it is and how long it is.');
       expect(warnings(view())).toEqual([]);
     });
 
@@ -692,7 +688,7 @@ describe('TapeViewComponent', () => {
 
       const element = line(view()) as HTMLElement | null;
       expect(element).not.toBeNull();
-      expect(element?.style.height).toBe('26px');
+      expect(getComputedStyle(element as Element).height).toBe('26px');
       const overview = view()?.querySelector('[data-testid="overview"]');
       expect(overview?.compareDocumentPosition(element as Node) ?? 0).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
     });
@@ -1199,13 +1195,13 @@ describe('TapeViewComponent', () => {
       const frame = (overview: Element) => overview.querySelector('[data-testid="overview-frame"]') as Element;
 
       it('draws the whole Tape at stage width: body and Holes, no ruler', async () => {
-        const {tape, organ, overview} = await prepare({leadIn: 0});
+        const {overview} = await prepare({leadIn: 0});
 
         expect(overview).not.toBeNull();
         expect(overview.getAttribute('aria-label')).toBe('Whole Tape, the framed part is shown above');
         expect(numberAttribute(overview, 'width')).toBeCloseTo(STAGE_PX, 0);
         expect(overview.querySelector('.tape')).not.toBeNull();
-        expect(overview.querySelectorAll('[data-testid="hole"]')).toHaveLength(tapeGeometry(tape, organ).slots.length);
+        expect(overview.querySelector('path[data-testid="overview-holes"]')).not.toBeNull();
         expect(overview.querySelector('[data-testid="ruler-number"]')).toBeNull();
       });
 
@@ -1237,6 +1233,152 @@ describe('TapeViewComponent', () => {
         expect(scroll.scrollLeft).toBeCloseTo(scrollLeftFor(400, STAGE_PX, SCROLL_PX, CLIENT_PX), 0);
       });
     });
+
+    describe('a keyboard widget with a stable DOM (review findings)', () => {
+      const HOLES = [
+        {row: 24, start: 10, length: 5},
+        {row: 25, start: 64, length: 15},
+      ];
+      const tapeSvg = (view: HTMLElement | null) => view?.querySelector('[data-testid="tape-scroll"] svg') as SVGSVGElement;
+      const press = async (view: HTMLElement | null, key: string, settle: () => Promise<void>) => {
+        tapeSvg(view).dispatchEvent(new KeyboardEvent('keydown', {key, bubbles: true}));
+        await settle();
+      };
+      const selectedRects = (view: HTMLElement | null) =>
+        all(view, '[data-testid="tape-scroll"] rect[data-testid="hole"].selected');
+
+      /** A scroll container with a settable `scrollLeft` that, like a browser, then fires `scroll`. */
+      const driveScrolling = (scroll: HTMLElement, clientWidth: number) => {
+        let scrollLeft = 0;
+        Object.defineProperty(scroll, 'clientWidth', {value: clientWidth, configurable: true});
+        Object.defineProperty(scroll, 'scrollLeft', {
+          configurable: true,
+          get: () => scrollLeft,
+          set: (value: number) => {
+            scrollLeft = value;
+            scroll.dispatchEvent(new Event('scroll'));
+          },
+        });
+      };
+
+      it('scrolls to a keyboard-selected Hole outside the rendered window and draws it selected', async () => {
+        const {tape, organ, open, view, settle} = await render({longTape: true});
+        await open(`/tapes/${tape.id}`);
+        const scroll = view()?.querySelector('[data-testid="tape-scroll"]') as HTMLElement;
+        const clientWidth = 1000;
+        driveScrolling(scroll, clientWidth);
+        const geometry = tapeGeometry(tape, organ);
+        const total = (geometry.leadIn + geometry.length) * SCALE;
+        scroll.scrollLeft = total - clientWidth;
+        await settle();
+        const lastDrawn = holeRects(view()).at(-1) as Element;
+        lastDrawn.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+        await settle();
+        scroll.scrollLeft = 0;
+        await settle();
+        expect(selectedRects(view())).toHaveLength(0); // The selected Hole is outside the window now.
+
+        await press(view(), 'ArrowLeft', settle);
+
+        const row = Number(lastDrawn.getAttribute('data-row')) + 1;
+        const start = Number(lastDrawn.getAttribute('data-start')) - 4;
+        const slot = geometry.slots.find((candidate) => candidate.row === row && candidate.start === start);
+        expect(slot).toBeDefined();
+        const left = (geometry.leadIn + (slot?.x ?? 0)) * SCALE;
+        expect(scroll.scrollLeft).toBeLessThanOrEqual(left);
+        expect(scroll.scrollLeft + clientWidth).toBeGreaterThanOrEqual(left + (slot?.width ?? 0) * SCALE);
+        const rects = selectedRects(view());
+        expect(rects).toHaveLength(1);
+        expect(rects[0].getAttribute('data-start')).toBe(String(start));
+      });
+
+      it('makes the Tape drawing an application, not an image', async () => {
+        const {tape, open, view} = await render({holes: HOLES});
+
+        await open(`/tapes/${tape.id}`);
+
+        expect(tapeSvg(view()).getAttribute('role')).toBe('application');
+      });
+
+      it('names the selected Hole with its row, note and Columns, and sets no aria-selected on Holes', async () => {
+        const {tape, open, view, settle} = await render({holes: HOLES});
+        await open(`/tapes/${tape.id}`);
+
+        await press(view(), 'ArrowRight', settle);
+        await press(view(), 'ArrowDown', settle);
+
+        const [rect] = selectedRects(view());
+        const inspector = all(view(), '[data-testid="selected-hole"] p').map((paragraph) => paragraph.textContent?.trim() ?? '');
+        expect(inspector.length).toBeGreaterThanOrEqual(2);
+        expect(rect.getAttribute('aria-label')).toContain(inspector[0]); // "Row 25, F5"
+        expect(rect.getAttribute('aria-label')).toContain(inspector[1]); // "Columns a-b"
+        expect(all(view(), '[aria-selected]')).toHaveLength(0);
+      });
+
+      it('announces the Selected Hole section politely', async () => {
+        const {tape, open, view} = await render({holes: HOLES});
+
+        await open(`/tapes/${tape.id}`);
+
+        expect(view()?.querySelector('[data-testid="selected-hole"]')?.getAttribute('aria-live')).toBe('polite');
+      });
+
+      for (const key of ['Enter', ' ']) {
+        it(`selects the first Hole on ${key === ' ' ? 'Space' : key} when none is selected`, async () => {
+          const {tape, open, view, settle} = await render({holes: HOLES});
+          await open(`/tapes/${tape.id}`);
+
+          await press(view(), key, settle);
+
+          expect(selectedRects(view()).map((rect) => rect.getAttribute('data-start'))).toEqual(['10']);
+        });
+      }
+
+      it('draws all Holes in the overview as one path and no rects', async () => {
+        const {tape, open, view} = await render({holes: HOLES});
+
+        await open(`/tapes/${tape.id}`);
+
+        const overview = view()?.querySelector('[data-testid="overview"]') as Element;
+        expect(overview.querySelectorAll('path[data-testid="overview-holes"]')).toHaveLength(1);
+        expect(overview.querySelectorAll('rect[data-testid="hole"]')).toHaveLength(0);
+      });
+
+      it('keeps the overview Hole path element and its data when the stage scrolls', async () => {
+        const {tape, open, view, settle} = await render({longTape: true});
+        await open(`/tapes/${tape.id}`);
+        const scroll = view()?.querySelector('[data-testid="tape-scroll"]') as HTMLElement;
+        const path = view()?.querySelector('[data-testid="overview-holes"]') as Element;
+        expect(path).not.toBeNull();
+        const data = path.getAttribute('d');
+
+        Object.defineProperty(scroll, 'scrollLeft', {value: 300, configurable: true});
+        scroll.dispatchEvent(new Event('scroll'));
+        await settle();
+
+        expect(view()?.querySelector('[data-testid="overview-holes"]')).toBe(path);
+        expect(path.getAttribute('d')).toBe(data);
+      });
+
+      it('keeps the DOM node of an already drawn Hole after a small scroll that drops the first Holes', async () => {
+        const {tape, open, view, settle} = await render({longTape: true});
+        await open(`/tapes/${tape.id}`);
+        const scroll = view()?.querySelector('[data-testid="tape-scroll"]') as HTMLElement;
+        const key = (rect: Element) => `${rect.getAttribute('data-row')}:${rect.getAttribute('data-start')}`;
+        const before = new Map(holeRects(view()).map((rect) => [key(rect), rect]));
+
+        Object.defineProperty(scroll, 'scrollLeft', {value: 2500, configurable: true});
+        scroll.dispatchEvent(new Event('scroll'));
+        await settle();
+
+        const after = holeRects(view());
+        const kept = after.filter((rect) => before.get(key(rect)) === rect);
+        const common = after.filter((rect) => before.has(key(rect)));
+        expect(common.length).toBeGreaterThan(0);
+        expect(kept).toHaveLength(common.length);
+      });
+    });
+
 
     it('shows the names of the selected Parts only', async () => {
       const {tape, open, view} = await render();

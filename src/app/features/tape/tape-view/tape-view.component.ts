@@ -79,151 +79,7 @@ function windowWidth(element: HTMLElement): number {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [ImportSummaryComponent, TranslatePipe, PageHeadComponent, MatButton, MatButtonToggle, MatButtonToggleGroup, MatIcon, RouterLink],
   templateUrl: './tape-view.component.html',
-  styles: `
-    :host {
-      display: flex;
-      flex-direction: column;
-      min-height: 0;
-    }
-    .layout {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) 300px;
-      gap: 20px;
-      flex: 1;
-      min-height: 0;
-    }
-    .layout.compact {
-      grid-template-columns: minmax(0, 1fr);
-    }
-    .stage {
-      min-width: 0;
-    }
-    .status-line {
-      display: flex;
-      align-items: center;
-      gap: 1.5rem;
-      overflow: hidden;
-      white-space: nowrap;
-      font-size: 0.875rem;
-    }
-    .status-line .save-state {
-      margin-left: auto;
-    }
-    .side-panel {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      overflow-y: auto;
-    }
-    .side-panel h2,
-    .side-panel h3 {
-      margin: 0 0 0.5rem;
-    }
-    .side-panel dl {
-      display: grid;
-      grid-template-columns: auto 1fr;
-      gap: 4px 12px;
-      margin: 0;
-    }
-    .side-panel dd {
-      margin: 0;
-      text-align: right;
-    }
-    .parts {
-      margin: 0;
-      padding-left: 1.25rem;
-    }
-    .export-later {
-      line-height: 40px;
-      white-space: nowrap;
-      color: var(--mat-sys-on-surface-variant);
-    }
-    .drawing {
-      display: flex;
-    }
-    .labels {
-      flex: none;
-      position: relative;
-      width: 3rem;
-      margin: 0;
-      padding: 0;
-      list-style: none;
-    }
-    .labels li {
-      position: absolute;
-      right: 0;
-      padding-right: 0.5rem;
-      text-align: right;
-      transform: translateY(-50%);
-      white-space: nowrap;
-    }
-    .scroll {
-      flex: 1;
-      overflow-x: auto;
-    }
-    .scroll svg,
-    .overview {
-      display: block;
-    }
-    .zoom,
-    [data-testid='export'],
-    [data-testid='side-panel-toggle'] {
-      --mat-button-toggle-height: 40px;
-      --mat-button-outlined-container-height: 40px;
-      height: 40px;
-      box-sizing: border-box;
-    }
-    .overview {
-      cursor: pointer;
-      flex: none;
-      width: 100%;
-      height: 44px;
-    }
-    .overview-frame {
-      vector-effect: non-scaling-stroke;
-      fill: none;
-      stroke: var(--cr-brass);
-      stroke-width: 2;
-    }
-    .tape,
-    .lead-in {
-      fill: var(--cr-tape);
-      stroke: var(--cr-tape-edge);
-    }
-    .hole {
-      fill: var(--cr-hole);
-    }
-    .hole.selected {
-      stroke: var(--cr-select);
-      stroke-width: 2;
-    }
-    .warning {
-      display: flex;
-      align-items: center;
-      gap: 0.25rem;
-      color: var(--mat-sys-error);
-    }
-    .guide,
-    .mark {
-      stroke: var(--cr-tape-guide);
-    }
-    .guide.natural,
-    .mark.strong,
-    .border-line {
-      stroke: var(--cr-tape-guide-strong);
-    }
-    .ruler {
-      stroke: var(--cr-brass);
-    }
-    .ruler-number {
-      fill: var(--cr-brass);
-      font-size: 11px;
-    }
-    .column-number {
-      fill: currentColor;
-      font-size: 11px;
-    }
-  `,
+  styleUrl: './tape-view.component.scss',
 })
 export class TapeViewComponent {
   private readonly library = inject(TapeLibrary);
@@ -340,16 +196,19 @@ export class TapeViewComponent {
       leadIn,
       leadInPath: `M${slant},0 H${leadIn} V${height} H0 Z`,
       bodyWidth: geometry.length * scale,
-      frame: overviewFrame(this.scrollLeft(), this.stageClientWidth(), this.stageScrollWidth(), this.stageWidth()),
-      holes: geometry.slots.map((slot) => ({
-        x: leadIn + slot.x * scale,
-        y: slot.y * scale,
-        width: slot.width * scale,
-        height: slot.height * scale,
-        radius: slot.radius * scale,
-      })),
+      holesPath: geometry.slots
+        .map((slot) => {
+          const x = leadIn + slot.x * scale;
+          return `M${x},${slot.y * scale}h${slot.width * scale}v${slot.height * scale}h${-slot.width * scale}z`;
+        })
+        .join(''),
     };
   });
+
+  /** The framed part of the overview strip; changes with every scroll, unlike the overview itself. */
+  protected readonly overviewMark = computed(() =>
+    overviewFrame(this.scrollLeft(), this.stageClientWidth(), this.stageScrollWidth(), this.stageWidth()),
+  );
 
   /** What the template draws, in px; `undefined` while the Tape or its Organ is not available. */
   protected readonly drawing = computed(() => {
@@ -357,13 +216,13 @@ export class TapeViewComponent {
     const organ = this.organ();
     const geometry = this.geometry();
     if (tape === undefined || organ === undefined || geometry === undefined) return undefined;
-    const SCALE = this.scale();
-    const columnPx = tape.columnLength * SCALE;
-    const range = visibleColumns(this.scrollLeft(), this.clientWidth(), SCALE, geometry);
+    const scale = this.scale();
+    const columnPx = tape.columnLength * scale;
+    const range = visibleColumns(this.scrollLeft(), this.clientWidth(), scale, geometry);
     const inRange = (column: number): boolean => column >= range.first && column <= range.last;
-    const leadIn = geometry.leadIn * SCALE;
-    const height = geometry.width * SCALE;
-    const slant = Math.min(geometry.leadIn, LEAD_IN_SLANT_MM) * SCALE;
+    const leadIn = geometry.leadIn * scale;
+    const height = geometry.width * scale;
+    const slant = Math.min(geometry.leadIn, LEAD_IN_SLANT_MM) * scale;
     const firstMm = range.first * tape.columnLength;
     const lastMm = (range.last + 1) * tape.columnLength;
     const language = this.language();
@@ -381,10 +240,11 @@ export class TapeViewComponent {
       labels: names.map((name, index) => ({
         name,
         sharp: name.includes('#'),
-        y: (geometry.rowCentres[index] ?? 0) * SCALE + RULER_HEIGHT,
+        y: (geometry.rowCentres[index] ?? 0) * scale + RULER_HEIGHT,
       })),
       rows: names.map((name, index) => ({
-        y: (geometry.rowCentres[index] ?? 0) * SCALE,
+        row: index + 1,
+        y: (geometry.rowCentres[index] ?? 0) * scale,
         natural: !name.includes('#'),
       })),
       holes: geometry.slots
@@ -393,11 +253,11 @@ export class TapeViewComponent {
           row: slot.row - 1,
           selected: slot.row === this.selectedHole()?.row && slot.start === this.selectedHole()?.start,
           start: slot.start,
-          x: leadIn + slot.x * SCALE,
-          y: slot.y * SCALE,
-          width: slot.width * SCALE,
-          height: slot.height * SCALE,
-          radius: slot.radius * SCALE,
+          x: leadIn + slot.x * scale,
+          y: slot.y * scale,
+          width: slot.width * scale,
+          height: slot.height * scale,
+          radius: slot.radius * scale,
         })),
       marks: columnLines(tape.length)
         .filter((line) => inRange(line.column))
@@ -407,12 +267,12 @@ export class TapeViewComponent {
         .map((entry) => ({...entry, x: leadIn + entry.column * columnPx})),
       rulerNumbers: rulerNumbers(geometry.length)
         .filter((mm) => mm >= firstMm && mm <= lastMm)
-        .map((mm) => ({mm, x: leadIn + mm * SCALE})),
+        .map((mm) => ({mm, x: leadIn + mm * scale})),
       leadIn,
       leadInPath: `M${slant},0 H${leadIn} V${height} H0 Z`,
-      bodyWidth: geometry.length * SCALE,
-      borders: [geometry.border * SCALE, (geometry.width - geometry.border) * SCALE],
-      width: leadIn + geometry.length * SCALE,
+      bodyWidth: geometry.length * scale,
+      borders: [geometry.border * scale, (geometry.width - geometry.border) * scale],
+      width: leadIn + geometry.length * scale,
       height,
       totalHeight: RULER_HEIGHT + height + NUMBERS_HEIGHT,
       numbersY: height + NUMBERS_HEIGHT - 6,
@@ -436,13 +296,23 @@ export class TapeViewComponent {
       this.selectedHole.set(undefined);
       return;
     }
-    const direction = ARROW_DIRECTIONS[event.key];
     const slots = this.geometry()?.slots;
-    if (direction === undefined || slots === undefined) return;
-    event.preventDefault();
+    if (slots === undefined) return;
     const current = this.selectedHole();
+    if ((event.key === 'Enter' || event.key === ' ') && current === undefined) {
+      event.preventDefault();
+      this.moveSelection(nextHole(slots, undefined, 'right'));
+      return;
+    }
+    const direction = ARROW_DIRECTIONS[event.key];
+    if (direction === undefined) return;
+    event.preventDefault();
     const selected = current === undefined ? undefined : slots.find((slot) => slot.row === current.row && slot.start === current.start);
     const target = nextHole(slots, selected, direction);
+    this.moveSelection(target);
+  }
+
+  private moveSelection(target: SelectableHole | undefined): void {
     if (target === undefined) return;
     this.selectedHole.set({row: target.row, start: target.start});
     this.scrollToSelection = true;
@@ -509,9 +379,19 @@ export class TapeViewComponent {
       this.readStage(element);
       if (!this.scrollToSelection) return;
       const selected = element.querySelector('rect.selected');
-      if (selected === null) return;
+      if (selected !== null) {
+        this.scrollToSelection = false;
+        selected.scrollIntoView({block: 'nearest', inline: 'nearest'});
+        return;
+      }
+      const current = this.selectedHole();
+      const geometry = this.geometry();
+      const slot = geometry?.slots.find((candidate) => candidate.row === current?.row && candidate.start === current?.start);
+      if (geometry === undefined || slot === undefined) return;
+      const rendered = this.drawing()?.holes.some((hole) => hole.row === slot.row - 1 && hole.start === slot.start);
+      if (rendered) return; // Its rect is drawn on the next render.
       this.scrollToSelection = false;
-      selected.scrollIntoView({block: 'nearest', inline: 'nearest'});
+      element.scrollLeft = (geometry.leadIn + slot.x) * this.scale();
     });
     effect(() => {
       if (this.library.loaded() && this.drawing() === undefined) void this.router.navigateByUrl('/tapes');

@@ -122,7 +122,7 @@
     },
     "HOLE": {
       "TITLE": "Selected Hole",
-      "EMPTY": "Select a Hole to see its details.",
+      "EMPTY": "Select a Hole to see where it is and how long it is.",
       "ROW": "Row {{row}}, {{note}}",
       "COLUMNS_RANGE": "Columns {{from}}–{{to}}",
       "LENGTH": "{{columns}}, {{mm}} mm",

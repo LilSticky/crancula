@@ -140,11 +140,11 @@ test.describe('The Tape view in true millimetres on one screen', () => {
     await rowOne.nth(0).click();
     const clicked = await inspector.innerText();
     expect(clicked).not.toBe(before);
-    await expect(rowOne.nth(0)).toHaveAttribute('aria-selected', 'true');
+    await expect(rowOne.nth(0)).toHaveClass(/selected/);
 
     await window.keyboard.press('ArrowRight');
-    await expect(rowOne.nth(1)).toHaveAttribute('aria-selected', 'true');
-    await expect(rowOne.nth(0)).toHaveAttribute('aria-selected', 'false');
+    await expect(rowOne.nth(1)).toHaveClass(/selected/);
+    await expect(rowOne.nth(0)).not.toHaveClass(/selected/);
     expect(await inspector.innerText()).not.toBe(clicked);
   });
 
@@ -171,7 +171,7 @@ test.describe('The Tape view in true millimetres on one screen', () => {
         const {window} = launched;
         await window.getByTestId('zoom').getByRole('radio', {name: 'Whole Tape'}).click();
         const stage = window.getByTestId('tape-scroll');
-        const svg = stage.locator('svg[role="img"]');
+        const svg = stage.locator('svg[role="application"]');
 
         await expect
           .poll(async () => {
@@ -227,4 +227,28 @@ test.describe('The Tape view in true millimetres on one screen', () => {
       });
     });
   }
+
+  test('scrolls back to a Hole selected by keyboard after the stage was scrolled far away, and draws it selected', async () => {
+    const {window} = launched;
+    await resizeWindow(launched, 1280, 800);
+    await createTapeFromSong(window, 'Far away', songRepeatingC4('far.mid', 300));
+    await window.getByTestId('zoom').getByRole('radio', {name: '2:1'}).click();
+
+    const stage = window.getByTestId('tape-scroll');
+    await stage.locator('[data-testid="hole"][data-row="0"]').first().click();
+    const overview = window.getByTestId('overview');
+    const box = await boxOf(overview);
+    await overview.click({position: {x: box.right - box.left - 1, y: (box.bottom - box.top) / 2}});
+    await expect.poll(() => stage.evaluate((element) => element.scrollLeft)).toBeGreaterThan(1000);
+    await stage.locator('svg').focus();
+
+    await window.keyboard.press('ArrowRight'); // The next Hole of the row is far left of the window.
+
+    const selected = stage.locator('rect.hole.selected');
+    await expect(selected).toHaveCount(1);
+    const hole = await boxOf(selected);
+    const view = await boxOf(stage);
+    expect(hole.left).toBeGreaterThanOrEqual(view.left - 0.5);
+    expect(hole.right).toBeLessThanOrEqual(view.right + 0.5);
+  });
 });

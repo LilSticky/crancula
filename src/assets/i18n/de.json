@@ -122,7 +122,7 @@
     },
     "HOLE": {
       "TITLE": "Ausgewähltes Loch",
-      "EMPTY": "Wähle ein Loch, um Einzelheiten zu sehen.",
+      "EMPTY": "Wähle ein Loch, um zu sehen, wo es liegt und wie lang es ist.",
       "ROW": "Reihe {{row}}, {{note}}",
       "COLUMNS_RANGE": "Spalten {{from}}–{{to}}",
       "LENGTH": "{{columns}}, {{mm}} mm",
