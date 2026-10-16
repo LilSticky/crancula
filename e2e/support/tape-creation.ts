@@ -42,7 +42,7 @@ export function songRepeatingC4(fileName: string, repeats: number): MidiFilePayl
 /** Brings the Song onto a new Tape of the only stored Organ and waits for the Tape to be stored. */
 export async function createTapeFromSong(window: Page, tapeName: string, song: MidiFilePayload): Promise<void> {
   await window.getByRole('link', {name: 'Tapes'}).click();
-  await window.getByRole('link', {name: 'Bring a song onto a tape'}).click();
+  await window.getByTestId('new-tape').click();
   await window.getByTestId('song-file').setInputFiles(song);
   await expect(window.getByTestId('name')).not.toHaveValue(''); // The suggested name arrives once the Song is read.
   await expect(window.getByTestId('song-rejection')).toHaveCount(0);

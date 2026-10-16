@@ -21,7 +21,7 @@ test.describe('Bring a MIDI song onto a tape', () => {
     const {window} = launched;
 
     await window.getByRole('link', {name: 'Tapes'}).click();
-    await window.getByRole('link', {name: 'Bring a song onto a tape'}).click();
+    await window.getByTestId('new-tape').click();
     await expect(window.getByTestId('no-organ-hint')).toBeVisible();
     await expect(window.getByTestId('import-form')).toHaveCount(0);
     await window.getByTestId('no-organ-hint').getByRole('link').click();
@@ -42,7 +42,7 @@ test.describe('Bring a MIDI song onto a tape', () => {
     await expect(window).toHaveURL(/#?\/organs\/[0-9a-f-]{36}$/);
 
     await window.getByRole('link', {name: 'Tapes'}).click();
-    await window.getByRole('link', {name: 'Bring a song onto a tape'}).click();
+    await window.getByTestId('new-tape').click();
     await expect(window.getByTestId('import-form')).toBeVisible();
     await window.getByTestId('song-file').setInputFiles(notAMidiFile());
     await expect(window.getByTestId('song-rejection')).toHaveAttribute('data-code', 'not-a-midi-file');
@@ -60,7 +60,7 @@ test.describe('Bring a MIDI song onto a tape', () => {
     const {window, userDataDir} = launched;
     await defineOctaveOrgan(window, 'Parts organ');
     await window.getByRole('link', {name: 'Tapes'}).click();
-    await window.getByRole('link', {name: 'Bring a song onto a tape'}).click();
+    await window.getByTestId('new-tape').click();
     await window.getByTestId('organ').selectOption({label: 'Parts organ'});
     await window.getByTestId('song-file').setInputFiles(threePartsWithPercussion());
     await expect(window.getByTestId('part')).toHaveCount(3);

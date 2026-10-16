@@ -78,7 +78,7 @@ test.describe('UX screens', () => {
     await window.getByRole('link', {name: 'Tapes'}).click();
     await capture(window, '06-tape-list-empty');
 
-    await window.getByRole('link', {name: 'Bring a song onto a tape'}).click();
+    await window.getByTestId('new-tape').click();
     await window.getByTestId('song-file').setInputFiles(threePartsWithPercussion());
     await expect(window.getByTestId('name')).not.toHaveValue('');
     await capture(window, '07-tape-import');

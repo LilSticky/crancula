@@ -559,11 +559,11 @@ menu item), `tape`, `tape-name`, `tape-organ`, `tape-length-columns`, `tape-leng
   is still there; filtered without a match: "No Tapes for the Street organ yet.", the chip and
   `new-tape`; with Tapes, `new-tape` is in the page head. The button reads "Bring a Song onto a
   Tape". Then the template and the keys.
-- [ ] **G12** e2e, existing tests. Update `organ-define` (the facts are in `organ-facts`),
+- [x] **G12** e2e, existing tests. Update `organ-define` (the facts are in `organ-facts`),
   `tape-restart` (`remove-tape` → the row menu and `delete-tape`; "Organ not available" and the
   disabled name link), `tape-import`, `tape-german` and `e2e/ux/screens.capture.ts` where they click
   `organ` or `open-tape`. Run them.
-- [ ] **G13** e2e, lists in Electron. New `lists.spec.ts`: a fresh app shows the Organ empty state;
+- [x] **G13** e2e, lists in Electron. New `lists.spec.ts`: a fresh app shows the Organ empty state;
   after saving the Street organ the list shows its row and the next-step strip; after bringing a
   Song onto a Tape the strip is gone and "1 Tape" opens the Tape list filtered by the Street organ
   with its chip; removing the chip shows all Tapes; on a fresh app the Tape list's empty sentence
