@@ -569,7 +569,7 @@ menu item), `tape`, `tape-name`, `tape-organ`, `tape-length-columns`, `tape-leng
   with its chip; removing the chip shows all Tapes; on a fresh app the Tape list's empty sentence
   links to New Organ. In German at 1024×700 (`resizeWindowOrSkip`) neither ledger scrolls sideways
   and no facts line overflows its cell. Needs the real stores, routing and layout.
-- [ ] **G14** Full `npm run e2e`, `npm run test`, `npm run lint`, `npm run i18n:check`. Then
+- [x] **G14** Full `npm run e2e`, `npm run test`, `npm run lint`, `npm run i18n:check`. Then
   `npm run ux:screens` (02 and 06 empty states, 06b the Tape list empty without an Organ, 05 with
   the next-step strip, 09 the Tape ledger and 09b filtered by an Organ, both lists in German at
   1024×700), `ux-review`; score into STATUS.

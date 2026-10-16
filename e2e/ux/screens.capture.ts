@@ -44,6 +44,11 @@ test.describe('UX screens', () => {
 
     await capture(window, '02-organ-list-empty');
 
+    await window.getByRole('link', {name: 'Tapes'}).click();
+    await expect(window.getByTestId('empty-new-organ')).toBeVisible();
+    await capture(window, '06b-tape-list-empty-without-organ');
+    await window.getByRole('link', {name: 'Organs'}).click();
+
     await window.getByTestId('new-organ').click();
     await window.getByTestId('name').fill('Street organ');
     await window.getByTestId('tape-width').fill('20');
@@ -87,12 +92,18 @@ test.describe('UX screens', () => {
     await capture(window, '08-tape-view');
 
     await window.getByTestId('tape-scroll').locator('[data-testid="hole"]').first().click();
-    await expect(window.getByTestId('tape-scroll').locator('[data-testid="hole"][aria-selected="true"]')).toHaveCount(1);
+    await expect(window.getByTestId('tape-scroll').locator('rect.hole.selected')).toHaveCount(1);
     await window.mouse.move(640, 400);
     await capture(window, '08b-tape-view-selected-hole');
 
     await window.getByRole('link', {name: 'Tapes'}).click();
     await capture(window, '09-tape-list');
+
+    await window.getByRole('link', {name: 'Organs'}).click();
+    await window.getByTestId('organ-tapes').click();
+    await expect(window.getByTestId('organ-filter')).toBeVisible();
+    await window.mouse.move(640, 400);
+    await capture(window, '09b-tape-list-filtered-by-organ');
 
     await window.getByTestId('language-switch').locator('[data-language="de"]').click();
     await window.getByRole('link', {name: 'Orgeln'}).click();
@@ -133,6 +144,16 @@ test.describe('UX screens', () => {
     await expect(window.getByTestId('tape-name')).toBeVisible();
     await window.mouse.move(640, 400);
     await capture(window, '15-tape-view-german');
+
+    await resizeWindow(launched, 1024, 700);
+    await window.getByRole('link', {name: 'Orgeln'}).click();
+    await expect(window.getByTestId('organ-facts')).toBeVisible();
+    await window.mouse.move(640, 400);
+    await capture(window, '16-organ-list-german-compact');
+    await window.getByRole('link', {name: 'Lochbänder'}).click();
+    await expect(window.getByTestId('tape').first()).toBeVisible();
+    await window.mouse.move(640, 400);
+    await capture(window, '17-tape-list-german-compact');
     await window.getByTestId('language-switch').locator('[data-language="en"]').click();
   });
 });
