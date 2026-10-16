@@ -2,6 +2,7 @@
 * Has a defined set of pipes
 * Has a Tape Bed
 * Defines the Minimum Hole Length and Minimum Gap its tapes must respect
+* Defines the length of the Lead-in its tapes start with
 * Defines the physical characteristics and capabilities of a barrel organ
 * Plays punched tape
   * tape is drawn through a pneumatic system
@@ -35,6 +36,7 @@
 * Each hole in the tape represents one note being played by a pipe
 * Can be extended along the row to extend the note duration
 * Has position (its Pipe, start column) and dimensions (length)
+* Cut as a slot from the start of its first Column to the end of its last Column, one hole diameter wide, with half-circle ends inside that length; the Tape view draws exactly this shape
 * Belongs to its Pipe, not to a row number: when the Organ's Pipes are reordered, the Hole moves with its Pipe
 * Usually placed on regular note-value boundaries; can be shifted by single Columns for finer adjustment
 * Can be moved to another pipe or column, or removed
@@ -117,7 +119,8 @@
 
 # Import Summary
 * What the user sees after a Song is brought onto a Tape
-* Shows the Transposition, the Notes moved by octaves, the Unplayable Notes and the Holes fixed
+* Shows the Transposition, the Notes moved by octaves, the Unplayable Notes and the Holes fixed, nothing else
+* "Holes fixed" is its name for the Holes changed to respect the Minimum Hole Length and Minimum Gap (not "Changed Holes")
 * Shown once; not stored with the Tape
 
 # Minimum Hole Length
@@ -126,6 +129,12 @@
 * Together with the Crank speed it gives the shortest note duration
 * Limits a Hole's length, not where it starts: a Hole's start can be shifted by less than this length
 * German: Mindestlochlänge
+
+# Lead-in
+* The blank Tape before Column 1 that threads the Tape into the Organ; carries no Holes
+* Its length in mm is set per Organ; 0 means no Lead-in (Organs saved before it existed load with 0)
+* Starts with an angled cut
+* German: Vorlauf
 
 # Minimum Gap
 * Shortest space in mm between two Holes in the same row the Organ can separate; a hard physical limit
