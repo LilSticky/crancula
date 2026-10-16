@@ -136,10 +136,15 @@
     "NAV": "Organs",
     "LIST": {
       "TITLE": "Organs",
-      "EMPTY": "No Organs yet.",
+      "SUBTITLE": "Each Organ knows its Tape Bed and its Pipes. Tapes are punched for one Organ.",
+      "EMPTY": "No Organs yet. Describe your Organ: its Tape Bed and Pipes.",
       "NEW": "New Organ",
-      "PIPE_COUNT": "{{count}} Pipes",
-      "DELETE": "Delete Organ {{name}}",
+      "TAPE_BED_FACTS": "{{tapeWidth}} mm Tape, hole diameter {{hole}} mm",
+      "TAPES": "{{count}} Tapes",
+      "TAPES_ONE": "1 Tape",
+      "TAPES_NONE": "No Tapes",
+      "MORE_ACTIONS": "More actions for {{name}}",
+      "NEXT_STEP": "Your Organ is ready. Bring a MIDI Song onto a Tape for it.",
       "DELETE_BLOCKED": "Your Tapes couldn't be loaded, so this Organ can't be deleted for now.",
       "DELETE_TAPES": "This also deletes its Tapes ({{count}}) forever."
     },

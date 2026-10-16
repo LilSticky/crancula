@@ -508,7 +508,7 @@ menu item), `tape`, `tape-name`, `tape-organ`, `tape-length-columns`, `tape-leng
   row centre, rows centred with `border(organ)`, row 1 on top. Spec: the Street organ alone at
   56 px → body 56 px, row 1 at (6,25 + 1,25) × 56 / 120 = 3,5 px; next to a 140 mm Organ its body
   is 48 px. Spec first.
-- [ ] **G3** Organ ledger, component. Rewrite "lists the Organs by name with their Pipe count": a
+- [x] **G3** Organ ledger, component. Rewrite "lists the Organs by name with their Pipe count": a
   `mat-table` (class `cr-ledger`) inside an outlined `mat-card`, one row per Organ with the
   miniature (`data-testid="organ-miniature"`, `aria-hidden`, one `line` per row from G2), the name
   link (`organ`, serif, to `/organs/:id`) and the facts (`data-testid="organ-facts"`: "31 Pipes,
@@ -516,21 +516,21 @@ menu item), `tape`, `tape-name`, `tape-organ`, `tape-length-columns`, `tape-leng
   the row outside the link and the menu opens the editor; rows in G1b's order by name (and again
   after a language switch). Then the template and `cr-ledger` in
   `styles.scss`.
-- [ ] **G4** Tapes per Organ, component. Spec: with two Tapes of the Street organ the row shows
+- [x] **G4** Tapes per Organ, component. Spec: with two Tapes of the Street organ the row shows
   "2 Tapes" (`data-testid="organ-tapes"`) as a link to `/tapes` with `organ=<id>`; one Tape
   "1 Tape"; none "No Tapes" without a link (German "2 Lochbänder", "1 Lochband", "Keine
   Lochbänder"); absent while the Tape library has a load problem. Then the cell.
-- [ ] **G5** Organ row menu, component. Rewrite the `delete` and `delete with Tapes` specs to go
+- [x] **G5** Organ row menu, component. Rewrite the `delete` and `delete with Tapes` specs to go
   through the menu: the `more_vert` button has the `aria-label` and `matTooltip` "More actions for
   Street organ"; its menu holds Delete Organ (`delete-organ`, oxblood); every existing deletion
   behaviour (Tape count in the dialog, blocked while Tapes are unreadable) keeps passing. Then the
   menu, replacing the bare delete icon.
-- [ ] **G6** Organ page head and empty state, component. Spec: the page head has the subtitle;
+- [x] **G6** Organ page head and empty state, component. Spec: the page head has the subtitle;
   with no Organs there is no ledger, `data-testid="empty-state"` says "No Organs yet. Describe your
   Organ: its Tape Bed and Pipes." and holds the only New Organ button (`new-organ`, filled, to
   `/organs/new`); with Organs, New Organ is in the page head and there is no empty state. Then the
   template.
-- [ ] **G7** Next-step strip, component. Spec: with one Organ and no Tapes,
+- [x] **G7** Next-step strip, component. Spec: with one Organ and no Tapes,
   `data-testid="next-step"` reads "Your Organ is ready. Bring a MIDI Song onto a Tape for it." with
   an outlined link to `/tapes/new`; absent with no Organ and absent once a Tape exists. Then the
   strip (dashed border, `music_note` icon).

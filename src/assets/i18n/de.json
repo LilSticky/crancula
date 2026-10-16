@@ -136,10 +136,15 @@
     "NAV": "Drehorgeln",
     "LIST": {
       "TITLE": "Drehorgeln",
-      "EMPTY": "Noch keine Drehorgeln.",
+      "SUBTITLE": "Jede Drehorgel kennt ihr Bandbett und ihre Pfeifen. Lochbänder werden für eine Drehorgel gestanzt.",
+      "EMPTY": "Noch keine Drehorgeln. Beschreibe deine Drehorgel: ihr Bandbett und ihre Pfeifen.",
       "NEW": "Neue Drehorgel",
-      "PIPE_COUNT": "{{count}} Pfeifen",
-      "DELETE": "Drehorgel {{name}} löschen",
+      "TAPE_BED_FACTS": "{{tapeWidth}} mm Lochband, Lochdurchmesser {{hole}} mm",
+      "TAPES": "{{count}} Lochbänder",
+      "TAPES_ONE": "1 Lochband",
+      "TAPES_NONE": "Keine Lochbänder",
+      "MORE_ACTIONS": "Weitere Aktionen für {{name}}",
+      "NEXT_STEP": "Deine Drehorgel ist bereit. Bringe ein MIDI-Lied auf ein Lochband für sie.",
       "DELETE_BLOCKED": "Deine Lochbänder konnten nicht geladen werden, darum kann diese Drehorgel vorerst nicht gelöscht werden.",
       "DELETE_TAPES": "Dabei werden auch ihre Lochbänder ({{count}}) für immer gelöscht."
     },

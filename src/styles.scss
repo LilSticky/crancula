@@ -130,6 +130,15 @@ html {
   }
 }
 
+// Quiet ruled ledger: a mat-table with class cr-ledger inside an outlined mat-card.
+.cr-ledger {
+  font-variant-numeric: tabular-nums;
+
+  .mat-mdc-row:hover { background: color-mix(in srgb, var(--cr-paper-edge) 25%, transparent); }
+  .mat-mdc-header-cell { font-size: 12px; }
+  .mat-mdc-cell:last-child { text-align: end; }
+}
+
 // The rail's list is light-on-walnut; every other mat-list keeps the defaults.
 .cr-rail {
   @include mat.list-overrides((
