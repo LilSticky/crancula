@@ -534,3 +534,23 @@ valid (old rule 2·border + span ≤ width implies span ≤ width).
   data-model.md, contracts/organ-library-ipc.md, quickstart.md, DESIGN-GUIDE fit check sentence
   and examples that name the Border, CHANGELOG `[Unreleased]` (Border derived; downgrade note),
   STATUS.
+
+## Amendment: Lead-in ([#78](https://github.com/LilSticky/crancula/issues/78), 2026-10-16)
+
+User decisions: every Organ defines a Lead-in, the blank Tape before Column 1 with an angled start
+(German Vorlauf). Its length is in mm, 0 means none and is valid; Organs saved before load with 0.
+New Organs start with the field empty and required. Snapshot version 3 (ADR 20).
+
+- [ ] **L1** Domain (`api/organ/`): unit tests first. `Organ.leadIn: Millimetres` (≥ 0); draft
+  `leadIn: number | null` (empty in `emptyOrganDraft`); `validateOrgan`: empty → value-required,
+  negative → a violation, 0 valid. Export via `api/index.ts`.
+- [ ] **L2** Organ snapshot version 3 with `leadIn`: tests first. Versions 1 and 2 read with
+  `leadIn` 0; `toSnapshot` writes version 3; unknown versions rejected as before.
+- [ ] **L3** Fixtures that build Organs get a `leadIn` (api, app, src/testing, e2e support).
+- [ ] **L4** Organ editor: component tests first. A Lead-in field in the Tape Bed sheet (decimal
+  input, "mm" suffix, German "Vorlauf"), after Minimum Gap; violations shown like the other mm
+  fields; it counts in `changedFields` and `problemFields` in reading order. en/de parity.
+- [ ] **L5** e2e: helpers fill the Lead-in; a version 2 Organ loads with Lead-in 0 after a restart
+  and is saved as version 3. Full `npm run e2e`.
+- [ ] **L6** Docs: spec.md (Organ entity, FR for the Lead-in, amended 2026-10-16, #78),
+  data-model.md, contracts, CHANGELOG `[Unreleased]` (downgrade note as in #74), STATUS.
