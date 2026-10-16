@@ -62,24 +62,36 @@ version 2 without `border` (version 1 still reads, [ADR 20](adr/0020-snapshots-m
 dictionary (Tape Bed, Border, Row Span), Organ editor shows the Border read-only, spec 001 amended.
 Gate: lint, i18n, 485 node and 315 Angular tests and 34 e2e.
 
-**Done (pull request pending):** #64 Organ editor (2026-10-16). Two sheets: the Tape Bed with a fit
+**Done:** #64 Organ editor (2026-10-16, PR #77 merged 2026-10-16). Two sheets: the Tape Bed with a fit
 check and a drawing, plus read-only Border and Minimum Hole Length; the Pipes in a 3-column rack
 (2 columns below 1180 px) with a row menu and Alt+arrow moves. Decimal fields take a comma or a point,
 in the language's notation. Action bar with save state and Discard changes; an error summary on Save;
 Delete and the subtitle sit in the page head; "Organ saved" snackbar; calmer leave dialog. The editor
 fits one screen at 1280×800 and 1024×700. ux-review 36/50 (was 31/50; values in
 [design/screens/current/ux-review.md](design/screens/current/ux-review.md)). #72 fixed on this branch.
-Gate: lint, i18n (162 keys), 486 node and 447 Angular tests, e2e green locally (e2e: see PR). Follow-up:
+Gate: lint, i18n (162 keys), 486 node and 447 Angular tests, e2e green locally. Follow-up:
 [#76](https://github.com/LilSticky/crancula/issues/76) splits the editor component.
 
-**Done (pull request pending):** #78 Lead-in (2026-10-16). Every Organ has a Lead-in, the blank Tape
+**Done:** #78 Lead-in (2026-10-16, PR #79 merged 2026-10-16). Every Organ has a Lead-in, the blank Tape
 before Column 1 with an angled start (Vorlauf): mm, 0 is valid, negative is not, new Organs start
 empty and required. Organ snapshot version 3 with `leadIn`; versions 1 and 2 load with 0
 ([ADR 20](adr/0020-snapshots-migrated-on-read.md)). The Organ editor shows it after Minimum Gap;
 dictionary (Lead-in) and spec 001 (FR-017) amended. Gate: lint, i18n, 495 node and 457 Angular tests,
-44 e2e green locally. The Tape view draws it in #65.
+44 e2e green locally.
 
-**Next concrete step:** #65 Tape view (tasks on branch 065-design-tape-view, rebase after #78), then #66 lists and #69 Tape import (sub-issues of
+**Done (pull request pending):** #65 Tape view (2026-10-16). Tape at true millimetres with the Lead-in
+(angled start), rows centred with row 1 on top, Holes drawn as cut (slots with half-circle ends). mm
+ruler and Column numbers; zoom Whole Tape / 1:1 / 2:1; overview strip. Side panel with a Tape section,
+Import Summary (Transposition, Notes moved by octaves, Unplayable Notes, Holes fixed; dismissable) and
+Selected Hole inspector (gap to the next Hole or the Tape's end, warnings below Minimum Hole Length /
+Minimum Gap). Keyboard selection; status line with pointer position and save state; Tape details toggle
+below 1180 px; only visible Columns render. User decisions 2026-10-16 recorded in
+[DICTIONARY](DICTIONARY.md) (Hole shape, Import Summary / Importübersicht / Angepasste Löcher, Lead-in /
+Vorlauf). ux-review 36/50 (see [design/screens/current/ux-review.md](design/screens/current/ux-review.md)).
+Gate: lint, i18n (197 keys), 495 node and 585 Angular tests, 56 e2e green locally. Follow-up:
+[#80](https://github.com/LilSticky/crancula/issues/80) splits the Tape view.
+
+**Next concrete step:** #66 lists, then #69 Tape import (sub-issues of
 [#59](https://github.com/LilSticky/crancula/issues/59)). Then
 `/speckit-specify` for "Punch a tape" ([#3](https://github.com/LilSticky/crancula/issues/3)).
 Open issues carry `priority:` and `size:` labels; triage sets them.
