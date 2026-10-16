@@ -46,6 +46,13 @@ interface RenderOptions {
   readonly longTape?: boolean;
   /** A Tape of one Column without Holes. */
   readonly oneColumn?: boolean;
+  /**
+   * A Tape of 100 Columns of 2.5 mm with exactly these Holes, on an Organ of 25 rows: the Pipe of row r
+   * (from 1) is note 52 + r, so row 25 is F5. The Minimum Hole Length is 2.5 mm, the Minimum Gap 1.5 mm.
+   */
+  readonly holes?: readonly {readonly row: number; readonly start: number; readonly length: number}[];
+  /** The Column length of the Tape with `holes` in mm; 2.5 when not given. */
+  readonly columnLength?: number;
   /** The language of the texts; English when not given. */
   readonly language?: 'en' | 'de';
 }
@@ -77,7 +84,12 @@ async function render(options: RenderOptions = {}) {
       {provide: CRANCULA_API, useValue: api},
     ],
   });
-  const organ = testOrgan('Street organ', 3, options.leadIn === undefined ? {} : {leadIn: options.leadIn});
+  const organ = options.holes
+    ? testOrgan('Street organ', 25, {
+        leadIn: options.leadIn ?? 0,
+        pipes: Array.from({length: 25}, (_, index) => ({note: 52 + index + 1})),
+      })
+    : testOrgan('Street organ', 3, options.leadIn === undefined ? {} : {leadIn: options.leadIn});
   const organs = TestBed.inject(OrganLibrary);
   await organs.put(organ);
 
@@ -113,6 +125,17 @@ async function render(options: RenderOptions = {}) {
   const shortTape: Tape = created.value.tape;
   const tape: Tape = options.oneColumn
     ? asValidTape({...shortTape, length: 1 as ColumnCount, holes: []})
+    : options.holes
+    ? asValidTape({
+        ...shortTape,
+        length: 100 as ColumnCount,
+        columnLength: (options.columnLength ?? 2.5) as Tape['columnLength'],
+        holes: options.holes.map(({row, start, length}) => ({
+          pipe: (organ.pipes[row - 1]?.note ?? 0),
+          start: start as Column,
+          length: length as ColumnCount,
+        })),
+      })
     : options.longTape
     ? asValidTape({
         ...shortTape,
@@ -362,6 +385,245 @@ describe('TapeViewComponent', () => {
       await settle();
 
       expect(summaryShown()).toBeNull();
+    });
+  });
+
+  describe('selecting a Hole (V16)', () => {
+    // Row 24 has one Hole; row 25 (F5) has two.
+    const holes = [
+      {row: 24, start: 10, length: 5},
+      {row: 25, start: 64, length: 15},
+      {row: 25, start: 83, length: 3},
+    ];
+    const drawn = (view: HTMLElement | null) =>
+      all(view, '[data-testid="tape-scroll"] rect[data-testid="hole"]') as SVGRectElement[];
+    const selected = (view: HTMLElement | null) =>
+      drawn(view)
+        .filter((rect) => rect.classList.contains('selected'))
+        .map((rect) => `${rect.getAttribute('data-row')}:${rect.getAttribute('data-start')}`);
+    const tapeSvg = (view: HTMLElement | null) => view?.querySelector('[data-testid="tape-scroll"] svg') as SVGSVGElement;
+    const press = async (view: HTMLElement | null, key: string, settle: () => Promise<void>) => {
+      tapeSvg(view).dispatchEvent(new KeyboardEvent('keydown', {key, bubbles: true}));
+      await settle();
+    };
+    const click = async (rect: Element, settle: () => Promise<void>) => {
+      rect.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+      await settle();
+    };
+
+    it('selects nothing at first', async () => {
+      const {tape, open, view} = await render({holes});
+
+      await open(`/tapes/${tape.id}`);
+
+      expect(selected(view())).toEqual([]);
+      expect(drawn(view()).some((rect) => rect.getAttribute('aria-selected') === 'true')).toBe(false);
+    });
+
+    it('gives a clicked Hole the class selected and aria-selected true', async () => {
+      const {tape, open, view, settle} = await render({holes});
+      await open(`/tapes/${tape.id}`);
+
+      await click(drawn(view())[1], settle);
+
+      expect(selected(view())).toEqual(['24:64']);
+      expect(drawn(view())[1].getAttribute('aria-selected')).toBe('true');
+    });
+
+    it('selects one Hole at a time', async () => {
+      const {tape, open, view, settle} = await render({holes});
+      await open(`/tapes/${tape.id}`);
+
+      await click(drawn(view())[0], settle);
+      await click(drawn(view())[2], settle);
+
+      expect(selected(view())).toEqual(['24:83']);
+      expect(drawn(view()).filter((rect) => rect.getAttribute('aria-selected') === 'true')).toHaveLength(1);
+    });
+
+    it('makes the Tape drawing focusable', async () => {
+      const {tape, open, view} = await render({holes});
+
+      await open(`/tapes/${tape.id}`);
+
+      expect(tapeSvg(view()).getAttribute('tabindex')).toBe('0');
+    });
+
+    it('selects the first Hole of the topmost row with Holes on any arrow key when nothing is selected', async () => {
+      const {tape, open, view, settle} = await render({holes});
+      await open(`/tapes/${tape.id}`);
+
+      await press(view(), 'ArrowRight', settle);
+
+      expect(selected(view())).toEqual(['23:10']);
+    });
+
+    it('moves the selection with the arrow keys along the row and across rows', async () => {
+      const {tape, open, view, settle} = await render({holes});
+      await open(`/tapes/${tape.id}`);
+      await click(drawn(view())[0], settle);
+
+      await press(view(), 'ArrowDown', settle);
+      expect(selected(view())).toEqual(['24:64']);
+      await press(view(), 'ArrowRight', settle);
+      expect(selected(view())).toEqual(['24:83']);
+      await press(view(), 'ArrowLeft', settle);
+      expect(selected(view())).toEqual(['24:64']);
+      await press(view(), 'ArrowUp', settle);
+      expect(selected(view())).toEqual(['23:10']);
+    });
+
+    it('keeps the selection at the end of a row', async () => {
+      const {tape, open, view, settle} = await render({holes});
+      await open(`/tapes/${tape.id}`);
+      await click(drawn(view())[2], settle);
+
+      await press(view(), 'ArrowRight', settle);
+
+      expect(selected(view())).toEqual(['24:83']);
+    });
+
+    it('clears the selection on Escape', async () => {
+      const {tape, open, view, settle} = await render({holes});
+      await open(`/tapes/${tape.id}`);
+      await click(drawn(view())[1], settle);
+
+      await press(view(), 'Escape', settle);
+
+      expect(selected(view())).toEqual([]);
+      expect(drawn(view()).some((rect) => rect.getAttribute('aria-selected') === 'true')).toBe(false);
+    });
+
+    it('scrolls the selected Hole into view', async () => {
+      const {tape, open, view, settle} = await render({holes});
+      await open(`/tapes/${tape.id}`);
+      const scrollIntoView = vi.spyOn(Element.prototype, 'scrollIntoView').mockImplementation(() => undefined);
+
+      try {
+        await press(view(), 'ArrowRight', settle);
+
+        const target = drawn(view()).find((rect) => rect.classList.contains('selected'));
+        expect(target).toBeDefined();
+        expect(scrollIntoView.mock.contexts).toContain(target);
+      } finally {
+        scrollIntoView.mockRestore();
+      }
+    });
+
+    it('does not change the Tape', async () => {
+      const {tape, open, view, settle} = await render({holes});
+      await open(`/tapes/${tape.id}`);
+
+      await click(drawn(view())[1], settle);
+      await press(view(), 'ArrowRight', settle);
+
+      expect(drawn(view())).toHaveLength(holes.length);
+      expect(TestBed.inject(TapeLibrary).tapeEntities().find((candidate) => candidate.id === tape.id)).toEqual(tape);
+    });
+  });
+
+  describe('the Selected Hole section (V18)', () => {
+    const holes = [
+      {row: 25, start: 64, length: 15},
+      {row: 25, start: 83, length: 3},
+    ];
+    const section = (view: HTMLElement | null) => view?.querySelector('[data-testid="selected-hole"]') as HTMLElement;
+    const text = (view: HTMLElement | null) => section(view).textContent?.replace(/\s+/g, ' ').trim() ?? '';
+    const warnings = (view: HTMLElement | null) =>
+      all(section(view), '[data-testid="hole-warning"]').map((warning) => warning.textContent?.replace(/\s+/g, ' ').trim());
+    const select = async (view: HTMLElement | null, index: number, settle: () => Promise<void>) => {
+      const rects = all(view, '[data-testid="tape-scroll"] rect[data-testid="hole"]');
+      rects[index].dispatchEvent(new MouseEvent('click', {bubbles: true}));
+      await settle();
+    };
+
+    it('shows the empty sentence without a selection', async () => {
+      const {tape, open, view} = await render({holes});
+
+      await open(`/tapes/${tape.id}`);
+
+      expect(text(view())).toContain('Select a Hole');
+      expect(warnings(view())).toEqual([]);
+    });
+
+    it('shows row, note, Columns, length and the gap to the next Hole of the selection', async () => {
+      const {tape, open, view, settle} = await render({holes});
+      await open(`/tapes/${tape.id}`);
+
+      await select(view(), 0, settle);
+
+      expect(text(view())).toContain('Row 25, F5');
+      expect(text(view())).toContain('Columns 65–79');
+      expect(text(view())).toContain('15 Columns, 37.5 mm');
+      expect(text(view())).toContain('Gap to the next Hole: 4 Columns, 10 mm');
+    });
+
+    it('shows the space to the end of the Tape for the last Hole of its row', async () => {
+      const {tape, open, view, settle} = await render({holes});
+      await open(`/tapes/${tape.id}`);
+
+      await select(view(), 1, settle);
+
+      expect(text(view())).toContain('To the end of the Tape: 14 Columns, 35 mm');
+      expect(text(view())).not.toContain('Gap to the next Hole');
+    });
+
+    it('says "1 Column" in the singular', async () => {
+      const {tape, open, view, settle} = await render({
+        holes: [
+          {row: 25, start: 10, length: 1},
+          {row: 25, start: 12, length: 5},
+        ],
+      });
+      await open(`/tapes/${tape.id}`);
+
+      await select(view(), 0, settle);
+
+      expect(text(view())).toContain('1 Column, 2.5 mm');
+      expect(text(view())).toContain('Gap to the next Hole: 1 Column, 2.5 mm');
+    });
+
+    it('writes the numbers with the decimal comma in German', async () => {
+      const {tape, open, view, settle} = await render({holes, language: 'de'});
+      await open(`/tapes/${tape.id}`);
+
+      await select(view(), 0, settle);
+
+      expect(text(view())).toContain('37,5 mm');
+    });
+
+    it('warns with the numbers when the Hole is shorter than the Minimum Hole Length', async () => {
+      const {tape, open, view, settle} = await render({holes: [{row: 25, start: 10, length: 1}], columnLength: 2});
+      await open(`/tapes/${tape.id}`);
+
+      await select(view(), 0, settle);
+
+      expect(warnings(view())).toEqual(['Shorter than the Minimum Hole Length: 2 mm of 2.5 mm']);
+    });
+
+    it('warns with the numbers when a gap is below the Minimum Gap', async () => {
+      const {tape, open, view, settle} = await render({
+        holes: [
+          {row: 25, start: 10, length: 5},
+          {row: 25, start: 16, length: 5},
+        ],
+        columnLength: 1,
+      });
+      await open(`/tapes/${tape.id}`);
+
+      await select(view(), 0, settle);
+
+      expect(warnings(view())).toEqual(['Gap below the Minimum Gap: 1 mm of 1.5 mm']);
+    });
+
+    it('shows no warning for a Hole within the limits', async () => {
+      const {tape, open, view, settle} = await render({holes});
+      await open(`/tapes/${tape.id}`);
+
+      await select(view(), 0, settle);
+
+      expect(warnings(view())).toEqual([]);
+      expect(section(view()).querySelector('[data-testid="hole-warning"]')).toBeNull();
     });
   });
 

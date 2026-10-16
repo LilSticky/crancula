@@ -29,7 +29,7 @@
       }
     </ul>
     <div class="scroll" #scroll data-testid="tape-scroll" (scroll)="onScroll(scroll)">
-      <svg role="img" [attr.aria-label]="'TAPE.VIEW.DRAWING' | translate: {name: drawing.tape.name}" [attr.width]="drawing.width" [attr.height]="drawing.totalHeight">
+      <svg role="img" [attr.aria-label]="'TAPE.VIEW.DRAWING' | translate: {name: drawing.tape.name}" [attr.width]="drawing.width" [attr.height]="drawing.totalHeight" tabindex="0" (keydown)="onKeydown($event)">
         <defs>
           <pattern id="ruler-ticks" patternUnits="userSpaceOnUse" [attr.x]="drawing.leadIn" [attr.width]="5 * scale()" height="8">
             @for (tick of rulerTicks; track tick) {
@@ -58,7 +58,10 @@
           @for (hole of drawing.holes; track $index) {
             <rect
               class="hole"
+              [class.selected]="hole.selected"
+              [attr.aria-selected]="hole.selected"
               data-testid="hole"
+              (click)="select(hole)"
               [attr.data-row]="hole.row"
               [attr.data-start]="hole.start"
               [attr.x]="hole.x"
@@ -122,8 +125,23 @@
         }
       </ul>
     </section>
-    <!-- The Selected Hole section (V18) takes this place. -->
-    <section data-testid="selected-hole"></section>
+    <section data-testid="selected-hole">
+      <h2>{{ 'TAPE.HOLE.TITLE' | translate }}</h2>
+      @if (inspection(); as hole) {
+        <p>{{ 'TAPE.HOLE.ROW' | translate: {row: hole.rowText, note: hole.noteName} }}</p>
+        <p>{{ 'TAPE.HOLE.COLUMNS_RANGE' | translate: {from: hole.fromText, to: hole.toText} }}</p>
+        <p>{{ 'TAPE.HOLE.LENGTH' | translate: {columns: (hole.lengthColumns === 1 ? 'TAPE.VIEW.COLUMNS_ONE' : 'TAPE.VIEW.COLUMNS_OTHER') | translate: {count: hole.lengthColumnsText}, mm: hole.lengthMmText} }}</p>
+        <p>{{ (hole.gap.to === 'nextHole' ? 'TAPE.HOLE.GAP_NEXT' : 'TAPE.HOLE.GAP_END') | translate: {columns: (hole.gap.columns === 1 ? 'TAPE.VIEW.COLUMNS_ONE' : 'TAPE.VIEW.COLUMNS_OTHER') | translate: {count: hole.gapColumnsText}, mm: hole.gapMmText} }}</p>
+        @for (warning of hole.warnings; track warning.kind) {
+          <p class="warning" data-testid="hole-warning">
+            <mat-icon aria-hidden="true" fontIcon="warning" />
+            {{ (warning.kind === 'tooShort' ? 'TAPE.HOLE.TOO_SHORT' : 'TAPE.HOLE.GAP_TOO_SMALL') | translate: {mm: warning.mmText, minimum: warning.minimumText} }}
+          </p>
+        }
+      } @else {
+        <p>{{ 'TAPE.HOLE.EMPTY' | translate }}</p>
+      }
+    </section>
     @if (importSummary(); as summary) {
       <cranc-import-summary data-testid="import-summary" [importSummary]="summary" (dismissed)="importSummary.set(null)" />
     }

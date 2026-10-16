@@ -105,6 +105,7 @@
           "builder": "@angular/build:unit-test",
           "options": {
             "runner": "vitest",
+            "setupFiles": ["src/testing/setup.ts"],
             "tsConfig": "src/tsconfig.spec.json",
             "buildTarget": "crancula:build:testing",
             "coverage": true,

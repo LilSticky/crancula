@@ -115,6 +115,17 @@
       "HOLES": "Holes",
       "PARTS": "Parts on the Tape",
       "MM": "{{value}} mm"
+    },
+    "HOLE": {
+      "TITLE": "Selected Hole",
+      "EMPTY": "Select a Hole to see its details.",
+      "ROW": "Row {{row}}, {{note}}",
+      "COLUMNS_RANGE": "Columns {{from}}–{{to}}",
+      "LENGTH": "{{columns}}, {{mm}} mm",
+      "GAP_NEXT": "Gap to the next Hole: {{columns}}, {{mm}} mm",
+      "GAP_END": "To the end of the Tape: {{columns}}, {{mm}} mm",
+      "TOO_SHORT": "Shorter than the Minimum Hole Length: {{mm}} mm of {{minimum}} mm",
+      "GAP_TOO_SMALL": "Gap below the Minimum Gap: {{mm}} mm of {{minimum}} mm"
     }
   },
   "ORGAN": {

@@ -23,6 +23,8 @@ import {PageHeadComponent} from '../../shared/components/page-head/page-head.com
 import {OrganLibrary} from '../../organ/organ-library.store';
 import {ImportSummaryComponent} from '../import-summary/import-summary.component';
 import {TapeLibrary} from '../tape-library.store';
+import {nextHole, type Direction, type SelectableHole} from './hole-selection';
+import {inspectHole} from './inspect-hole';
 import {overviewFrame, scrollLeftFor} from './overview-frame';
 import {pixelsPerMillimetre, type Zoom} from './pixels-per-millimetre';
 import {tapeGeometry} from './tape-geometry';
@@ -40,6 +42,13 @@ function isImportSummary(value: unknown): value is ImportSummary {
     Array.isArray(summary.holesFixed)
   );
 }
+
+const ARROW_DIRECTIONS: Readonly<Record<string, Direction>> = {
+  ArrowLeft: 'left',
+  ArrowRight: 'right',
+  ArrowUp: 'up',
+  ArrowDown: 'down',
+};
 
 function importSummaryOf(state: unknown): ImportSummary | null {
   if (typeof state !== 'object' || state === null || !('importSummary' in state)) return null;
@@ -152,6 +161,16 @@ function windowWidth(element: HTMLElement): number {
     .hole {
       fill: var(--cr-hole);
     }
+    .hole.selected {
+      stroke: var(--cr-select);
+      stroke-width: 2;
+    }
+    .warning {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      color: var(--mat-sys-error);
+    }
     .guide,
     .mark {
       stroke: var(--cr-tape-guide);
@@ -193,6 +212,8 @@ export class TapeViewComponent {
 
   private readonly scrollElement = viewChild<ElementRef<HTMLElement>>('scroll');
   private readonly scrollLeft = signal(0);
+  private readonly selectedHole = signal<SelectableHole | undefined>(undefined);
+  private scrollToSelection = false;
   private readonly clientWidth = signal(0);
 
   protected readonly importSummary = signal(importSummaryOf(this.router.currentNavigation()?.extras.state));
@@ -219,6 +240,35 @@ export class TapeViewComponent {
     const geometry = this.geometry();
     if (geometry === undefined) return pixelsPerMillimetre('1:1', 0, 0);
     return pixelsPerMillimetre(this.zoom(), this.stageWidth(), geometry.leadIn + geometry.length);
+  });
+
+  /** The Hole the Selected Hole section tells about. */
+  protected readonly inspection = computed(() => {
+    const selected = this.selectedHole();
+    const tape = this.tape();
+    const organ = this.organ();
+    if (selected === undefined || tape === undefined || organ === undefined) return undefined;
+    const pipe = organ.pipes[selected.row - 1]?.note;
+    const hole = tape.holes.find((candidate) => candidate.pipe === pipe && candidate.start === selected.start);
+    if (hole === undefined) return undefined;
+    const inspection = inspectHole(tape, organ, hole);
+    const language = this.language();
+    const number = (value: number): string => formatNumber(value, language);
+    return {
+      ...inspection,
+      rowText: number(inspection.row),
+      fromText: number(inspection.fromColumn),
+      toText: number(inspection.toColumn),
+      lengthColumnsText: number(inspection.lengthColumns),
+      lengthMmText: number(inspection.lengthMm),
+      gapColumnsText: number(inspection.gap.columns),
+      gapMmText: number(inspection.gap.mm),
+      warnings: inspection.warnings.map((warning) => ({
+        kind: warning.kind,
+        mmText: number(warning.mm),
+        minimumText: number(warning.minimumMm),
+      })),
+    };
   });
 
   /** The whole Tape at stage width, for the overview strip. */
@@ -286,6 +336,7 @@ export class TapeViewComponent {
         .filter((slot) => inRange(slot.start) || (slot.start < range.first && slot.start + slot.width / tape.columnLength > range.first))
         .map((slot) => ({
           row: slot.row - 1,
+          selected: slot.row === this.selectedHole()?.row && slot.start === this.selectedHole()?.start,
           start: slot.start,
           x: leadIn + slot.x * SCALE,
           y: slot.y * SCALE,
@@ -313,6 +364,28 @@ export class TapeViewComponent {
       partNames: this.partNames(tape),
     };
   });
+
+  protected select(hole: {readonly row: number; readonly start: number}): void {
+    this.selectedHole.set({row: hole.row + 1, start: hole.start});
+    this.scrollToSelection = true;
+  }
+
+  protected onKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Escape') {
+      this.selectedHole.set(undefined);
+      return;
+    }
+    const direction = ARROW_DIRECTIONS[event.key];
+    const slots = this.geometry()?.slots;
+    if (direction === undefined || slots === undefined) return;
+    event.preventDefault();
+    const current = this.selectedHole();
+    const selected = current === undefined ? undefined : slots.find((slot) => slot.row === current.row && slot.start === current.start);
+    const target = nextHole(slots, selected, direction);
+    if (target === undefined) return;
+    this.selectedHole.set({row: target.row, start: target.start});
+    this.scrollToSelection = true;
+  }
 
   protected onScroll(element: HTMLElement): void {
     this.scrollLeft.set(element.scrollLeft);
@@ -352,7 +425,13 @@ export class TapeViewComponent {
     });
     afterEveryRender(() => {
       const element = this.scrollElement()?.nativeElement;
-      if (element !== undefined) this.readStage(element);
+      if (element === undefined) return;
+      this.readStage(element);
+      if (!this.scrollToSelection) return;
+      const selected = element.querySelector('rect.selected');
+      if (selected === null) return;
+      this.scrollToSelection = false;
+      selected.scrollIntoView({block: 'nearest', inline: 'nearest'});
     });
     effect(() => {
       if (this.library.loaded() && this.drawing() === undefined) void this.router.navigateByUrl('/tapes');

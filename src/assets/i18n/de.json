@@ -115,6 +115,17 @@
       "HOLES": "Löcher",
       "PARTS": "Stimmen auf dem Lochband",
       "MM": "{{value}} mm"
+    },
+    "HOLE": {
+      "TITLE": "Ausgewähltes Loch",
+      "EMPTY": "Wähle ein Loch, um Einzelheiten zu sehen.",
+      "ROW": "Reihe {{row}}, {{note}}",
+      "COLUMNS_RANGE": "Spalten {{from}}–{{to}}",
+      "LENGTH": "{{columns}}, {{mm}} mm",
+      "GAP_NEXT": "Abstand zum nächsten Loch: {{columns}}, {{mm}} mm",
+      "GAP_END": "Bis zum Ende des Lochbands: {{columns}}, {{mm}} mm",
+      "TOO_SHORT": "Kürzer als die Mindestlochlänge: {{mm}} mm von {{minimum}} mm",
+      "GAP_TOO_SMALL": "Abstand unter dem Mindestabstand: {{mm}} mm von {{minimum}} mm"
     }
   },
   "ORGAN": {

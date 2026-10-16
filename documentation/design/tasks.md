@@ -356,16 +356,16 @@ keys to `en.json` and `de.json` (German: Lochband).
   Then the template as a `dl` and the keys (`TAPE.SUMMARY.TITLE`, `HOLE_CHANGES` → `HOLES_FIXED`,
   `HOLE_CHANGE.*` → `HOLE_FIX.*`, `NOTES_ON_TAPE` removed) in en and de. `notesOnTape` stays in
   the domain while the Tape import uses it; it is only no longer shown here.
-- [ ] **V15** Hole navigation, unit. A pure helper `hole-selection.ts`: `nextHole(holes, current,
+- [x] **V15** Hole navigation, unit. A pure helper `hole-selection.ts`: `nextHole(holes, current,
   direction)` for `left` / `right` (previous / next Hole by start in the same row) and `up` / `down`
   (the Hole in the nearest row above / below that has Holes, nearest start; ties to the earlier
   start); `undefined` at the ends; with nothing selected any arrow picks the first Hole of the
   topmost row with Holes. Spec first.
-- [ ] **V16** Selecting a Hole, component. Spec: clicking a `hole` gives it class `selected` and
+- [x] **V16** Selecting a Hole, component. Spec: clicking a `hole` gives it class `selected` and
   `aria-selected="true"` (one at a time); the Tape SVG has `tabindex="0"` and the arrow keys move
   the selection by V15; Escape clears it; the selected Hole is scrolled into view. Then the
   handlers and a `selectedHole` signal (no change to the Tape).
-- [ ] **V17** Inspector content, unit. A pure helper `inspectHole(tape, organ, hole)`: row (from 1)
+- [x] **V17** Inspector content, unit. A pure helper `inspectHole(tape, organ, hole)`: row (from 1)
   and note name, Columns from–to (from 1), length in Columns and mm; the gap to the next Hole in
   the same row in Columns and mm, or for the last Hole of its row the space to the Tape's end
   (marked as such); and two warnings (Decided 3): `tooShort` when the Hole's length in mm is below
@@ -373,7 +373,7 @@ keys to `en.json` and `de.json` (German: Lochband).
   next Hole, or from the previous Hole in the row, is below the Minimum Gap. Street organ: `start`
   64, `length` 15 → Columns 65–79, 15 Columns, 37,5 mm; a one-Column Hole at Column length 2 mm is
   too short (2 < 2,5); the space to the end is not checked against the Minimum Gap. Spec first.
-- [ ] **V18** Selected Hole section, component. Spec: without a selection the section
+- [x] **V18** Selected Hole section, component. Spec: without a selection the section
   (`data-testid="selected-hole"`) shows the empty sentence; with one it shows "Row 25, F5",
   "Columns 65–79", "15 Columns, 37.5 mm" (German "37,5 mm"), "Gap to the next Hole: 4 Columns,
   10 mm" or, for the last Hole of its row, "To the end of the Tape: …"; one Column in the singular;
