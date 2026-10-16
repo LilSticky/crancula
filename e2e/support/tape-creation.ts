@@ -50,5 +50,5 @@ export async function createTapeFromSong(window: Page, tapeName: string, song: M
   await expect(window.getByTestId('name')).toHaveValue(tapeName);
   await window.getByTestId('create-tape').click();
   await expect(window).toHaveURL(/#?\/tapes\/[0-9a-f-]{36}$/);
-  await expect(window.getByTestId('tape-name')).toHaveText(tapeName);
+  await expect(window.getByTestId('tape-name').getByRole('heading', {level: 1})).toHaveText(tapeName);
 }

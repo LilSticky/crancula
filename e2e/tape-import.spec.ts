@@ -74,7 +74,7 @@ test.describe('Bring a MIDI song onto a tape', () => {
     await expect(checkbox(1)).not.toBeChecked();
     await window.getByTestId('name').fill('Melody only');
     await window.getByTestId('create-tape').click();
-    await expect(window.getByTestId('tape-name')).toHaveText('Melody only');
+    await expect(window.getByTestId('tape-name').getByRole('heading', {level: 1})).toHaveText('Melody only');
 
     const stored = JSON.parse(await readFile(join(userDataDir, 'snapshots', 'tapes.json'), 'utf8')) as {
       tapes: {name: string; selectedParts: number[]; holes: [number, number, number][]}[];
@@ -106,7 +106,7 @@ test.describe('Look at my tape', () => {
     await expect(window.getByTestId('row-label')).toHaveCount(25);
     await expect(window.getByTestId('row-label').first()).toHaveText('C4');
     await expect(window.getByTestId('row-label').last()).toHaveText('C6');
-    const holes = window.locator('svg [data-testid="hole"]');
+    const holes = window.getByTestId('tape-scroll').getByTestId('hole');
     await expect(holes).toHaveCount(25);
     const rows = await holes.evaluateAll((rects) =>
       rects.map((rect) => ({row: Number(rect.getAttribute('data-row')), start: Number(rect.getAttribute('data-start'))})),
@@ -117,7 +117,7 @@ test.describe('Look at my tape', () => {
 
     await window.getByRole('link', {name: 'Tapes'}).click();
     await window.getByTestId('open-tape').click();
-    await expect(window.getByTestId('tape-name')).toHaveText('Scale');
+    await expect(window.getByTestId('tape-name').getByRole('heading', {level: 1})).toHaveText('Scale');
     await expect(holes).toHaveCount(25);
     await expect(window.getByTestId('import-summary')).toHaveCount(0);
   });
@@ -130,8 +130,8 @@ test.describe('Look at my tape', () => {
     await window.getByTestId('tape').filter({hasText: 'Long song'}).getByTestId('open-tape').click();
 
     const started = Date.now();
-    await expect(window.getByTestId('tape-name')).toHaveText('Long song');
-    await expect(window.locator('svg [data-testid="hole"]').first()).toBeVisible({timeout: 2000});
+    await expect(window.getByTestId('tape-name').getByRole('heading', {level: 1})).toHaveText('Long song');
+    await expect(window.getByTestId('tape-scroll').getByTestId('hole').first()).toBeVisible({timeout: 2000});
     expect(Date.now() - started).toBeLessThan(2000);
 
     const scroll = window.getByTestId('tape-scroll');
