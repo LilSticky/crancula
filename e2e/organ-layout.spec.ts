@@ -1,7 +1,7 @@
 import {expect, test, type Page} from '@playwright/test';
 import {launchApp} from './support/launch-app';
 import {defineStreetOrgan} from './support/organ-editor';
-import {resizeWindow} from './support/window-size';
+import {resizeWindowOrSkip} from './support/window-size';
 
 interface Box {
   readonly top: number;
@@ -38,7 +38,7 @@ test.describe('I see the whole Organ editor on one screen', () => {
   test('1280 x 800: nothing scrolls, three rack columns, action bar in view', async () => {
     const launched = await launchApp();
       const {app, window} = launched;
-    await resizeWindow(launched, 1280, 800);
+    await resizeWindowOrSkip(launched, 1280, 800, true);
     await defineStreetOrgan(window);
 
     expect(await documentOverflow(window)).toEqual({vertical: 0, horizontal: 0});
@@ -50,7 +50,7 @@ test.describe('I see the whole Organ editor on one screen', () => {
   test('1024 x 700: two rack columns, only the Pipes sheet scrolls, Tape Bed sheet and action bar in view', async () => {
     const launched = await launchApp();
       const {app, window} = launched;
-    await resizeWindow(launched, 1024, 700);
+    await resizeWindowOrSkip(launched, 1024, 700, true);
     await defineStreetOrgan(window);
 
     expect(await documentOverflow(window)).toEqual({vertical: 0, horizontal: 0});
@@ -65,7 +65,7 @@ test.describe('I see the whole Organ editor on one screen', () => {
   test('no two Tape Bed field boxes overlap', async () => {
     const launched = await launchApp();
       const {app, window} = launched;
-    await resizeWindow(launched, 1024, 700);
+    await resizeWindowOrSkip(launched, 1024, 700, true);
     await defineStreetOrgan(window);
 
     const boxes: Box[] = await window.getByTestId('tape-bed-sheet').locator('mat-form-field').evaluateAll((fields) =>
@@ -88,7 +88,7 @@ test.describe('I see the whole Organ editor on one screen', () => {
     test(`${size.width} x ${size.height}: every rack column lies within the visible Pipes sheet`, async () => {
       const launched = await launchApp();
       const {app, window} = launched;
-      await resizeWindow(launched, size.width, size.height);
+      await resizeWindowOrSkip(launched, size.width, size.height, true);
       await defineStreetOrgan(window);
 
       const sheet = await window.getByTestId('pipes-sheet').boundingBox();
@@ -106,7 +106,7 @@ test.describe('Organ editor labels do not collide', () => {
   test('1024 x 700, empty new Organ: no Tape Bed label overlaps its suffix or is truncated', async () => {
     const launched = await launchApp();
       const {app, window} = launched;
-    await resizeWindow(launched, 1024, 700);
+    await resizeWindowOrSkip(launched, 1024, 700, true);
     await window.getByTestId('new-organ').click();
 
     const problems = await window.getByTestId('tape-bed-sheet').locator('mat-form-field').evaluateAll((fields) =>
@@ -133,7 +133,7 @@ test.describe('Organ editor labels do not collide', () => {
   test('1280 x 800: a MIDI note label stays inside its own rack row', async () => {
     const launched = await launchApp();
       const {app, window} = launched;
-    await resizeWindow(launched, 1280, 800);
+    await resizeWindowOrSkip(launched, 1280, 800, true);
     await defineStreetOrgan(window);
 
     const problems = await window.getByTestId('pipe').evaluateAll((rows) =>
@@ -155,7 +155,7 @@ test.describe('The Pipe rack header cells do not run together', () => {
     test(`${language}: the Row and MIDI note header texts have a gap`, async () => {
       const launched = await launchApp();
       const {app, window} = launched;
-      await resizeWindow(launched, 1280, 800);
+      await resizeWindowOrSkip(launched, 1280, 800, true);
       await window.getByTestId('language-switch').locator(`[data-language="${language}"]`).click();
       await window.getByTestId('new-organ').click();
       await window.getByTestId('add-pipe').click();

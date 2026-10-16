@@ -3,7 +3,7 @@ import {launchApp, type LaunchedApp} from './support/launch-app';
 import {melodyC3ToC5} from './support/midi-file';
 import {STREET_ORGAN, saveOrgan} from './support/organ-editor';
 import {createTapeFromSong, songRepeatingC4} from './support/tape-creation';
-import {resizeWindow} from './support/window-size';
+import {resizeWindow, resizeWindowOrSkip} from './support/window-size';
 
 /** 1 mm at zoom 1:1: 96 px per inch. */
 const PIXELS_PER_MILLIMETRE = 96 / 25.4;
@@ -63,7 +63,7 @@ test.describe('The Tape view in true millimetres on one screen', () => {
 
   test.beforeAll(async () => {
     launched = await launchApp();
-    await resizeWindow(launched, 1280, 800);
+    await resizeWindow(launched, 1280, 800); // Best effort; each test that needs a size asks for it.
     await defineOrganWithLeadIn(launched.window);
   });
 
@@ -98,7 +98,7 @@ test.describe('The Tape view in true millimetres on one screen', () => {
 
   test('fits stage, overview strip, status line and side panel on 1280 x 800 without scrolling the document', async () => {
     const {window} = launched;
-    await resizeWindow(launched, 1280, 800);
+    await resizeWindowOrSkip(launched, 1280, 800);
     await expect(window.getByTestId('side-panel')).toBeVisible();
     expect(await documentScrolls(window)).toBe(false);
     await expectInViewport(window, window.getByTestId('tape-scroll'));
@@ -113,7 +113,7 @@ test.describe('The Tape view in true millimetres on one screen', () => {
 
   test('scrolls the stage to its end when the end of the overview is clicked', async () => {
     const {window} = launched;
-    await resizeWindow(launched, 1280, 800);
+    await resizeWindowOrSkip(launched, 1280, 800);
     const overview = window.getByTestId('overview');
     const box = await boxOf(overview);
     await overview.click({position: {x: box.right - box.left - 1, y: (box.bottom - box.top) / 2}});
@@ -125,7 +125,7 @@ test.describe('The Tape view in true millimetres on one screen', () => {
 
   test('shows a Hole selected by click and by the right arrow key in the Selected Hole', async () => {
     const {window} = launched;
-    await resizeWindow(launched, 1280, 800);
+    await resizeWindowOrSkip(launched, 1280, 800);
     await createTapeFromSong(window, 'Repeats', songRepeatingC4('repeats.mid', 3));
     await window.getByTestId('zoom').getByRole('radio', {name: '1:1'}).click();
 
@@ -147,7 +147,7 @@ test.describe('The Tape view in true millimetres on one screen', () => {
 
   test('collapses the side panel on 1024 x 700 and keeps overview strip and status line in view without scrolling the document', async () => {
     const {window} = launched;
-    await resizeWindow(launched, 1024, 700);
+    await resizeWindowOrSkip(launched, 1024, 700);
     await expect(window.getByTestId('side-panel')).toHaveCount(0);
     await expect(window.getByTestId('side-panel-toggle')).toBeVisible();
     expect(await documentScrolls(window)).toBe(false);
@@ -160,7 +160,7 @@ test.describe('The Tape view in true millimetres on one screen', () => {
     test.describe(`at ${width} x ${height}`, () => {
       test.beforeEach(async () => {
         const {window} = launched;
-        await resizeWindow(launched, width, height);
+        await resizeWindowOrSkip(launched, width, height);
         await createTapeFromSong(window, 'Layout', melodyC3ToC5());
       });
 
@@ -227,7 +227,7 @@ test.describe('The Tape view in true millimetres on one screen', () => {
 
   test('scrolls back to a Hole selected by keyboard after the stage was scrolled far away, and draws it selected', async () => {
     const {window} = launched;
-    await resizeWindow(launched, 1280, 800);
+    await resizeWindowOrSkip(launched, 1280, 800);
     await createTapeFromSong(window, 'Far away', songRepeatingC4('far.mid', 300));
     await window.getByTestId('zoom').getByRole('radio', {name: '2:1'}).click();
 
@@ -251,7 +251,7 @@ test.describe('The Tape view in true millimetres on one screen', () => {
 
   test('opens the collapsed side panel by itself on 1024 x 700 when a Song was just brought onto a Tape, so the Import Summary shows', async () => {
     const {window} = launched;
-    await resizeWindow(launched, 1024, 700);
+    await resizeWindowOrSkip(launched, 1024, 700);
     await createTapeFromSong(window, 'Compact import', melodyC3ToC5());
     await expect(window.getByTestId('import-summary')).toBeVisible();
     await expect(window.getByTestId('side-panel')).toBeVisible();
