@@ -44,6 +44,10 @@ interface RenderOptions {
   readonly leadIn?: number;
   /** A Tape of 12000 Columns (5 minutes) with 9000 Holes instead of the short one. */
   readonly longTape?: boolean;
+  /** A Tape of one Column without Holes. */
+  readonly oneColumn?: boolean;
+  /** The language of the texts; English when not given. */
+  readonly language?: 'en' | 'de';
 }
 
 async function render(options: RenderOptions = {}) {
@@ -69,7 +73,7 @@ async function render(options: RenderOptions = {}) {
         {path: 'tapes', component: TapeListStubComponent},
         {path: 'tapes/:id', component: TapeViewComponent},
       ]),
-      provideTestTranslations(),
+      provideTestTranslations(options.language ?? 'en'),
       {provide: CRANCULA_API, useValue: api},
     ],
   });
@@ -107,7 +111,9 @@ async function render(options: RenderOptions = {}) {
   });
   if (!created.ok) throw new Error(`invalid test Tape: ${JSON.stringify(created.error)}`);
   const shortTape: Tape = created.value.tape;
-  const tape: Tape = options.longTape
+  const tape: Tape = options.oneColumn
+    ? asValidTape({...shortTape, length: 1 as ColumnCount, holes: []})
+    : options.longTape
     ? asValidTape({
         ...shortTape,
         length: 12000 as ColumnCount,
@@ -152,6 +158,10 @@ async function render(options: RenderOptions = {}) {
 }
 
 describe('TapeViewComponent', () => {
+  const all = (view: ParentNode | null, selector: string) => Array.from(view?.querySelectorAll(selector) ?? []);
+  const texts = (view: HTMLElement | null, testId: string) =>
+    all(view, `[data-testid="${testId}"]`).map((element) => element.textContent?.trim());
+
   it('titles the page with the Tape name in a page head', async () => {
     const {tape, open, view} = await render();
 
@@ -212,11 +222,151 @@ describe('TapeViewComponent', () => {
     expect(summaryShown()).toBeNull();
   });
 
+  describe('the page head (V11)', () => {
+    it('names the Organ, the Columns and the Tape length in the subtitle', async () => {
+      const {tape, open, view} = await render();
+
+      await open(`/tapes/${tape.id}`);
+
+      expect(view()?.querySelector('cranc-page-head p')?.textContent?.trim()).toBe(
+        `For the Street organ. ${tape.length} Columns of 2.5 mm, ${tape.length * 2.5} mm of Tape.`,
+      );
+    });
+
+    it('says "1 Column" in the singular', async () => {
+      const {tape, open, view} = await render({oneColumn: true});
+
+      await open(`/tapes/${tape.id}`);
+
+      expect(view()?.querySelector('cranc-page-head p')?.textContent).toContain('1 Column of 2.5 mm, 2.5 mm of Tape.');
+    });
+
+    it('writes the numbers of the subtitle with the decimal comma in German', async () => {
+      const {tape, open, view} = await render({language: 'de'});
+
+      await open(`/tapes/${tape.id}`);
+
+      expect(view()?.querySelector('cranc-page-head p')?.textContent).toContain('2,5 mm');
+    });
+
+    it('puts the zoom in the page head actions', async () => {
+      const {tape, open, view} = await render();
+
+      await open(`/tapes/${tape.id}`);
+
+      expect(view()?.querySelector('[data-testid="page-head-actions"] [data-testid="zoom"]')).not.toBeNull();
+    });
+
+    it('offers Export for the Plotter as a disabled outlined button with a visible later-release note', async () => {
+      const {tape, open, view} = await render();
+
+      await open(`/tapes/${tape.id}`);
+
+      const exportButton = view()?.querySelector<HTMLButtonElement>('[data-testid="page-head-actions"] [data-testid="export"]');
+      expect(exportButton?.disabled).toBe(true);
+      expect(exportButton?.textContent).toContain('content_cut');
+      expect(exportButton?.className).toContain('mat-mdc-outlined-button');
+      expect(view()?.querySelector('[data-testid="export-later"]')?.textContent?.trim()).toBe('Export comes in a later release');
+    });
+  });
+
+  describe('the layout (V12)', () => {
+    it('keeps the stage, the overview strip and the side panel in the page, the panel beside them', async () => {
+      const {tape, open, view} = await render();
+
+      await open(`/tapes/${tape.id}`);
+
+      const panel = view()?.querySelector('[data-testid="side-panel"]');
+      expect(panel).not.toBeNull();
+      expect(panel?.contains(view()?.querySelector('[data-testid="tape-scroll"]') ?? null)).toBe(false);
+      expect(panel?.contains(view()?.querySelector('[data-testid="overview"]') ?? null)).toBe(false);
+    });
+
+    it('lists the Parts in the side panel, not in the page body', async () => {
+      const {tape, open, view} = await render();
+
+      await open(`/tapes/${tape.id}`);
+
+      const parts = all(view(), '[data-testid="selected-part"]');
+      expect(parts).toHaveLength(1);
+      expect(parts.every((part) => part.closest('[data-testid="side-panel"]') !== null)).toBe(true);
+    });
+  });
+
+  describe('the Tape section (V13)', () => {
+    const section = (view: HTMLElement | null) => view?.querySelector('[data-testid="tape-section"]') ?? null;
+    const values = (view: HTMLElement | null) =>
+      all(section(view), 'dd').map((value) => value.textContent?.trim());
+
+    it('lists Organ, Column length, Columns, length, Lead-in and Holes as a definition list in the side panel', async () => {
+      const {tape, organ, open, view} = await render({leadIn: 30});
+
+      await open(`/tapes/${tape.id}`);
+
+      expect(section(view())?.closest('[data-testid="side-panel"]')).not.toBeNull();
+      expect(section(view())?.querySelector('dl')).not.toBeNull();
+      expect(values(view()).slice(0, 6)).toEqual([
+        organ.name,
+        '2.5 mm',
+        `${tape.length}`,
+        `${tape.length * 2.5} mm`,
+        '30 mm',
+        `${tape.holes.length}`,
+      ]);
+    });
+
+    it('links the Organ to the Organ editor', async () => {
+      const {tape, organ, open, view} = await render();
+
+      await open(`/tapes/${tape.id}`);
+
+      expect(section(view())?.querySelector('a')?.getAttribute('href')).toBe(`/organs/${organ.id}`);
+    });
+
+    it('says None for a Lead-in of 0', async () => {
+      const {tape, open, view} = await render({leadIn: 0});
+
+      await open(`/tapes/${tape.id}`);
+
+      expect(values(view())[4]).toBe('None');
+    });
+
+    it('lists the Parts on the Tape inside the section', async () => {
+      const {tape, open, view} = await render();
+
+      await open(`/tapes/${tape.id}`);
+
+      expect(texts(section(view()) as HTMLElement | null, 'selected-part')).toEqual(['Lead']);
+    });
+  });
+
+  describe('the Import Summary in the side panel (V14)', () => {
+    it('is the third section of the side panel and offers a Dismiss button', async () => {
+      const {tape, importSummary, open, view} = await render();
+
+      await open(`/tapes/${tape.id}`, importSummary);
+
+      const panel = view()?.querySelector('[data-testid="side-panel"]');
+      const summary = panel?.querySelector('[data-testid="import-summary"]') ?? null;
+      expect(summary).not.toBeNull();
+      expect(summary?.parentElement).toBe(panel);
+      expect([...(panel?.children ?? [])].indexOf(summary as Element)).toBe(2);
+      expect(summary?.querySelector('button[aria-label="Dismiss"]')).not.toBeNull();
+    });
+
+    it('is removed when Dismiss is pressed', async () => {
+      const {tape, importSummary, open, summaryShown, view, settle} = await render();
+      await open(`/tapes/${tape.id}`, importSummary);
+
+      view()?.querySelector<HTMLButtonElement>('[data-testid="import-summary"] button[aria-label="Dismiss"]')?.click();
+      await settle();
+
+      expect(summaryShown()).toBeNull();
+    });
+  });
+
   describe('drawing the Tape (FR-018)', () => {
-    const texts = (view: HTMLElement | null, testId: string) =>
-      Array.from(view?.querySelectorAll(`[data-testid="${testId}"]`) ?? [], (element) => element.textContent?.trim());
     const numberAttribute = (element: Element, name: string) => Number(element.getAttribute(name));
-    const all = (view: HTMLElement | null, selector: string) => Array.from(view?.querySelectorAll(selector) ?? []);
     const holeRects = (view: HTMLElement | null) => all(view, 'svg:not([data-testid="overview"]) rect[data-testid="hole"]');
 
     it('labels one row per Pipe with its note name, in the Organ row order', async () => {
@@ -628,7 +778,7 @@ describe('TapeViewComponent', () => {
       await open(`/tapes/${tape.id}`);
 
       const controls = all(view(), 'button, input, select, textarea, [contenteditable]').filter(
-        (control) => control.closest('[data-testid="zoom"]') === null,
+        (control) => control.closest('[data-testid="zoom"]') === null && control.getAttribute('data-testid') !== 'export',
       );
       expect(controls).toHaveLength(0);
     });

@@ -1,4 +1,5 @@
-import {ChangeDetectionStrategy, Component, input} from '@angular/core';
+import {ChangeDetectionStrategy, Component, input, output} from '@angular/core';
+import {MatIcon} from '@angular/material/icon';
 import {TranslatePipe} from '@ngx-translate/core';
 import {type ImportSummary, noteName} from '@api/index';
 
@@ -6,16 +7,33 @@ import {type ImportSummary, noteName} from '@api/index';
 @Component({
   selector: 'cranc-import-summary',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslatePipe],
+  imports: [TranslatePipe, MatIcon],
   templateUrl: './import-summary.component.html',
   styles: `
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    h3,
+    dl,
+    dd,
     ul {
-      margin: 0 0 1rem;
+      margin: 0;
+    }
+    dt {
+      font-weight: 600;
+      margin-top: 0.75rem;
+    }
+    ul {
+      padding-left: 1.25rem;
     }
   `,
 })
 export class ImportSummaryComponent {
   readonly importSummary = input.required<ImportSummary>();
+  /** The user closed the summary. */
+  readonly dismissed = output<void>();
 
   protected readonly noteName = noteName;
 

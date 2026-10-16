@@ -1,14 +1,19 @@
 @let summary = importSummary();
-<h3>{{ 'TAPE.SUMMARY.TITLE' | translate }}</h3>
-<p data-testid="transposition" [attr.data-value]="summary.transposition">
+<header>
+  <h3>{{ 'TAPE.SUMMARY.TITLE' | translate }}</h3>
+  <button type="button" [attr.aria-label]="'TAPE.SUMMARY.DISMISS' | translate" (click)="dismissed.emit()">
+    <mat-icon aria-hidden="true">close</mat-icon>
+  </button>
+</header>
+<dl>
+<dt>{{ 'TAPE.SUMMARY.TRANSPOSITION_TERM' | translate }}</dt>
+<dd data-testid="transposition" [attr.data-value]="summary.transposition">
   {{ 'TAPE.SUMMARY.TRANSPOSITION' | translate: {semitones: signed(summary.transposition)} }}
-</p>
-<p data-testid="notes-on-tape" [attr.data-value]="summary.notesOnTape">
-  {{ 'TAPE.SUMMARY.NOTES_ON_TAPE' | translate: {count: summary.notesOnTape} }}
-</p>
+</dd>
 
+<dt>{{ 'TAPE.SUMMARY.MOVED_BY_OCTAVES' | translate }}</dt>
+<dd>
 @if (summary.movedByOctaves.length > 0) {
-  <h4>{{ 'TAPE.SUMMARY.MOVED_BY_OCTAVES' | translate }}</h4>
   <ul>
     @for (moved of summary.movedByOctaves; track $index) {
       <li data-testid="moved-note"
@@ -25,9 +30,11 @@
     }
   </ul>
 }
+</dd>
 
+<dt>{{ 'TAPE.SUMMARY.UNPLAYABLE_NOTES' | translate }}</dt>
+<dd>
 @if (summary.unplayableNotes.length > 0) {
-  <h4>{{ 'TAPE.SUMMARY.UNPLAYABLE_NOTES' | translate }}</h4>
   <ul>
     @for (unplayable of summary.unplayableNotes; track $index) {
       <li data-testid="unplayable-note"
@@ -41,32 +48,34 @@
     }
   </ul>
 }
+</dd>
 
-@if (summary.holeChanges.length > 0) {
-  <h4>{{ 'TAPE.SUMMARY.HOLE_CHANGES' | translate }}</h4>
+<dt>{{ 'TAPE.SUMMARY.HOLES_FIXED' | translate }}</dt>
+<dd>
+@if (summary.holesFixed.length > 0) {
   <ul>
-    @for (change of summary.holeChanges; track $index) {
-      <li data-testid="hole-change"
-          [attr.data-kind]="change.kind"
-          [attr.data-pipe-name]="noteName(change.pipe)"
-          [attr.data-column]="change.column + 1">
-        @switch (change.kind) {
+    @for (fix of summary.holesFixed; track $index) {
+      <li data-testid="hole-fixed"
+          [attr.data-kind]="fix.kind"
+          [attr.data-pipe-name]="noteName(fix.pipe)"
+          [attr.data-column]="fix.column + 1">
+        @switch (fix.kind) {
           @case ('overlap-merged') {
-            {{ 'TAPE.SUMMARY.HOLE_CHANGE.OVERLAP_MERGED' | translate: {pipe: noteName(change.pipe), column: change.column + 1} }}
+            {{ 'TAPE.SUMMARY.HOLE_FIX.OVERLAP_MERGED' | translate: {pipe: noteName(fix.pipe), column: fix.column + 1} }}
           }
           @case ('lengthened') {
-            {{ 'TAPE.SUMMARY.HOLE_CHANGE.LENGTHENED' | translate: {
-              pipe: noteName(change.pipe), column: change.column + 1, from: change.from, to: change.to
+            {{ 'TAPE.SUMMARY.HOLE_FIX.LENGTHENED' | translate: {
+              pipe: noteName(fix.pipe), column: fix.column + 1, from: fix.from, to: fix.to
             } }}
           }
           @case ('shortened') {
-            {{ 'TAPE.SUMMARY.HOLE_CHANGE.SHORTENED' | translate: {
-              pipe: noteName(change.pipe), column: change.column + 1, from: change.from, to: change.to
+            {{ 'TAPE.SUMMARY.HOLE_FIX.SHORTENED' | translate: {
+              pipe: noteName(fix.pipe), column: fix.column + 1, from: fix.from, to: fix.to
             } }}
           }
           @case ('repetition-merged') {
-            {{ 'TAPE.SUMMARY.HOLE_CHANGE.REPETITION_MERGED' | translate: {
-              pipe: noteName(change.pipe), column: change.column + 1, lost: change.lostColumn + 1
+            {{ 'TAPE.SUMMARY.HOLE_FIX.REPETITION_MERGED' | translate: {
+              pipe: noteName(fix.pipe), column: fix.column + 1, lost: fix.lostColumn + 1
             } }}
           }
         }
@@ -74,3 +83,5 @@
     }
   </ul>
 }
+</dd>
+</dl>

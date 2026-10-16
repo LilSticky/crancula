@@ -328,26 +328,26 @@ keys to `en.json` and `de.json` (German: Lochband).
   (`overview-frame`) from V9; scrolling the stage moves the frame; a click sets `tape-scroll`'s
   `scrollLeft` from V9; its `aria-label` says "Whole Tape, the framed part is shown above". Then the
   strip.
-- [ ] **V11** Page head, component. Spec: title the Tape name (`tape-name`); subtitle "For the
+- [x] **V11** Page head, component. Spec: title the Tape name (`tape-name`); subtitle "For the
   Street organ. 192 Columns of 2.5 mm, 480 mm of Tape." (German with commas via `formatNumber` and
   `LanguagePreference`; one Column in the singular); actions: the zoom (V8) and Export for the
   Plotter as a disabled outlined button (`data-testid="export"`, icon `content_cut`) with the
   visible text "Export comes in a later release" beside it (`data-testid="export-later"`). The
   "offers no control that changes the Tape" spec keeps passing. Then the head.
-- [ ] **V12** Layout, component. Spec: stage (ruler, Tape, numbers), overview strip and status line
+- [x] **V12** Layout, component. Spec: stage (ruler, Tape, numbers), overview strip and status line
   sit left, the side panel (`data-testid="side-panel"`) right; the parts list no longer sits in the
   page body. Then a grid (1fr + 300 px, gap 20 px) that fills the content height, with only
   `tape-scroll` scrolling sideways.
-- [ ] **V13** Tape section, component. Spec: the side panel's Tape section
+- [x] **V13** Tape section, component. Spec: the side panel's Tape section
   (`data-testid="tape-section"`) lists Organ (a link to the Organ editor), Column length "2.5 mm",
   Columns "192", length "480 mm", Lead-in "30 mm" (or "None" for 0), Holes "64" and Parts on the
   Tape (`selected-part` entries, names or "Part N" as today). Then the section as a `dl`.
-- [ ] **V14a** "Holes fixed" in code, unit. Rename what names the Import Summary's fixed Holes
+- [x] **V14a** "Holes fixed" in code, unit. Rename what names the Import Summary's fixed Holes
   (Decided 2): `ImportSummary.holeChanges` → `holesFixed`, type `HoleChange` → `HoleFix` (in
   `api/tape/import-summary.ts`, `hole-fixes.ts`, `create-tape.ts`, `api/index.ts`, `tape-i18n.spec.ts`
   and the view's `isImportSummary`); update the specs first (`create-tape.spec.ts`), then the code.
   A pure rename, no change in behaviour. The Import Summary is not stored, so no snapshot change.
-- [ ] **V14** Import Summary in the side panel, component. Spec (import-summary and view specs):
+- [x] **V14** Import Summary in the side panel, component. Spec (import-summary and view specs):
   the summary is the panel's third section, titled "Import Summary" (German from the dictionary),
   with a close button (`aria-label` "Dismiss"); it lists exactly Transposition, Notes moved by
   octaves, Unplayable Notes and Holes fixed (Decided 2): no `notes-on-tape` entry any more, the

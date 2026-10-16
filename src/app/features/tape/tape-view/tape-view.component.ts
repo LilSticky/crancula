@@ -13,7 +13,12 @@ import {toSignal} from '@angular/core/rxjs-interop';
 import {ActivatedRoute, Router} from '@angular/router';
 import {map} from 'rxjs';
 import {noteName, type ImportSummary, type Tape} from '@api/index';
+import {MatButton} from '@angular/material/button';
+import {MatIcon} from '@angular/material/icon';
+import {RouterLink} from '@angular/router';
 import {TranslatePipe} from '@ngx-translate/core';
+import {formatNumber} from '../../shared/format-number';
+import {LanguagePreference} from '../../shared/language-preference';
 import {PageHeadComponent} from '../../shared/components/page-head/page-head.component';
 import {OrganLibrary} from '../../organ/organ-library.store';
 import {ImportSummaryComponent} from '../import-summary/import-summary.component';
@@ -32,7 +37,7 @@ function isImportSummary(value: unknown): value is ImportSummary {
     typeof summary.notesOnTape === 'number' &&
     Array.isArray(summary.movedByOctaves) &&
     Array.isArray(summary.unplayableNotes) &&
-    Array.isArray(summary.holeChanges)
+    Array.isArray(summary.holesFixed)
   );
 }
 
@@ -57,9 +62,51 @@ function windowWidth(element: HTMLElement): number {
 @Component({
   selector: 'cranc-tape-view',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ImportSummaryComponent, TranslatePipe, PageHeadComponent],
+  imports: [ImportSummaryComponent, TranslatePipe, PageHeadComponent, MatButton, MatIcon, RouterLink],
   templateUrl: './tape-view.component.html',
   styles: `
+    :host {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 300px;
+      gap: 20px;
+      flex: 1;
+      min-height: 0;
+    }
+    .stage {
+      min-width: 0;
+    }
+    .side-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      overflow-y: auto;
+    }
+    .side-panel h2,
+    .side-panel h3 {
+      margin: 0 0 0.5rem;
+    }
+    .side-panel dl {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 4px 12px;
+      margin: 0;
+    }
+    .side-panel dd {
+      margin: 0;
+      text-align: right;
+    }
+    .parts {
+      margin: 0;
+      padding-left: 1.25rem;
+    }
+    .export-later {
+      color: var(--mat-sys-on-surface-variant);
+    }
     .drawing {
       display: flex;
     }
@@ -131,6 +178,7 @@ export class TapeViewComponent {
   private readonly library = inject(TapeLibrary);
   private readonly organs = inject(OrganLibrary);
   private readonly router = inject(Router);
+  private readonly language = inject(LanguagePreference).language;
   protected readonly rulerHeight = RULER_HEIGHT;
   protected readonly zooms: readonly {readonly zoom: Zoom; readonly label: string}[] = [
     {zoom: 'whole', label: 'TAPE.VIEW.ZOOM_WHOLE'},
@@ -147,7 +195,7 @@ export class TapeViewComponent {
   private readonly scrollLeft = signal(0);
   private readonly clientWidth = signal(0);
 
-  protected readonly importSummary = importSummaryOf(this.router.currentNavigation()?.extras.state);
+  protected readonly importSummary = signal(importSummaryOf(this.router.currentNavigation()?.extras.state));
   private readonly id = toSignal(inject(ActivatedRoute).paramMap.pipe(map((params) => params.get('id'))), {
     initialValue: null,
   });
@@ -213,9 +261,18 @@ export class TapeViewComponent {
     const slant = Math.min(geometry.leadIn, LEAD_IN_SLANT_MM) * SCALE;
     const firstMm = range.first * tape.columnLength;
     const lastMm = (range.last + 1) * tape.columnLength;
+    const language = this.language();
+    const number = (value: number): string => formatNumber(value, language);
     const names = organ.pipes.map(({note}) => noteName(note));
     return {
       tape,
+      organName: organ.name,
+      lengthText: number(tape.length),
+      columnLengthText: number(tape.columnLength),
+      lengthMmText: number(tape.length * tape.columnLength),
+      leadInMm: geometry.leadIn,
+      leadInText: number(geometry.leadIn),
+      holesText: number(tape.holes.length),
       labels: names.map((name, index) => ({
         name,
         sharp: name.includes('#'),

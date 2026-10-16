@@ -1,18 +1,27 @@
 @if (drawing(); as drawing) {
-  <cranc-page-head data-testid="tape-name" [title]="drawing.tape.name"/>
-  @if (importSummary; as summary) {
-    <cranc-import-summary data-testid="import-summary" [importSummary]="summary" />
-  }
-  <ul class="parts" [attr.aria-label]="'TAPE.VIEW.PARTS' | translate">
-    @for (part of drawing.partNames; track part.index) {
-      <li data-testid="selected-part">{{ part.name ?? ('TAPE.PARTS.UNNAMED' | translate: {number: part.index + 1}) }}</li>
-    }
-  </ul>
-  <div class="zoom" role="group" data-testid="zoom" [attr.aria-label]="'TAPE.VIEW.ZOOM' | translate">
-    @for (option of zooms; track option.zoom) {
-      <button type="button" [attr.aria-pressed]="zoom() === option.zoom" (click)="zoom.set(option.zoom)">{{ option.label | translate }}</button>
-    }
-  </div>
+  <cranc-page-head
+    data-testid="tape-name"
+    [title]="drawing.tape.name"
+    [subtitle]="'TAPE.VIEW.SUBTITLE' | translate: {
+      organ: drawing.organName,
+      columns: (drawing.tape.length === 1 ? 'TAPE.VIEW.COLUMNS_ONE' : 'TAPE.VIEW.COLUMNS_OTHER') | translate: {count: drawing.lengthText},
+      columnLength: drawing.columnLengthText,
+      length: drawing.lengthMmText
+    }"
+  >
+    <div pageHeadActions class="zoom" role="group" data-testid="zoom" [attr.aria-label]="'TAPE.VIEW.ZOOM' | translate">
+      @for (option of zooms; track option.zoom) {
+        <button type="button" [attr.aria-pressed]="zoom() === option.zoom" (click)="zoom.set(option.zoom)">{{ option.label | translate }}</button>
+      }
+    </div>
+    <button pageHeadActions mat-stroked-button type="button" disabled data-testid="export">
+      <mat-icon aria-hidden="true">content_cut</mat-icon>
+      {{ 'TAPE.VIEW.EXPORT' | translate }}
+    </button>
+    <span pageHeadActions class="export-later" data-testid="export-later">{{ 'TAPE.VIEW.EXPORT_LATER' | translate }}</span>
+  </cranc-page-head>
+  <div class="layout">
+  <div class="stage">
   <div class="drawing">
     <ul class="labels" [style.height.px]="drawing.totalHeight">
       @for (label of drawing.labels; track $index) {
@@ -88,4 +97,36 @@
       <rect class="overview-frame" data-testid="overview-frame" [attr.x]="overview.frame.x" y="0" [attr.width]="overview.frame.width" [attr.height]="overview.height" />
     </svg>
   }
+  </div>
+  <aside class="side-panel" data-testid="side-panel" [attr.aria-label]="'TAPE.VIEW.SIDE_PANEL' | translate">
+    <section data-testid="tape-section">
+      <h2>{{ 'TAPE.SECTION.TITLE' | translate }}</h2>
+      <dl>
+        <dt>{{ 'TAPE.SECTION.ORGAN' | translate }}</dt>
+        <dd><a [routerLink]="['/organs', drawing.tape.organId]">{{ drawing.organName }}</a></dd>
+        <dt>{{ 'TAPE.SECTION.COLUMN_LENGTH' | translate }}</dt>
+        <dd>{{ 'TAPE.SECTION.MM' | translate: {value: drawing.columnLengthText} }}</dd>
+        <dt>{{ 'TAPE.SECTION.COLUMNS' | translate }}</dt>
+        <dd>{{ drawing.lengthText }}</dd>
+        <dt>{{ 'TAPE.SECTION.LENGTH' | translate }}</dt>
+        <dd>{{ 'TAPE.SECTION.MM' | translate: {value: drawing.lengthMmText} }}</dd>
+        <dt>{{ 'TAPE.SECTION.LEAD_IN' | translate }}</dt>
+        <dd>{{ drawing.leadInMm === 0 ? ('TAPE.SECTION.LEAD_IN_NONE' | translate) : ('TAPE.SECTION.MM' | translate: {value: drawing.leadInText}) }}</dd>
+        <dt>{{ 'TAPE.SECTION.HOLES' | translate }}</dt>
+        <dd>{{ drawing.holesText }}</dd>
+      </dl>
+      <h3>{{ 'TAPE.SECTION.PARTS' | translate }}</h3>
+      <ul class="parts" [attr.aria-label]="'TAPE.VIEW.PARTS' | translate">
+        @for (part of drawing.partNames; track part.index) {
+          <li data-testid="selected-part">{{ part.name ?? ('TAPE.PARTS.UNNAMED' | translate: {number: part.index + 1}) }}</li>
+        }
+      </ul>
+    </section>
+    <!-- The Selected Hole section (V18) takes this place. -->
+    <section data-testid="selected-hole"></section>
+    @if (importSummary(); as summary) {
+      <cranc-import-summary data-testid="import-summary" [importSummary]="summary" (dismissed)="importSummary.set(null)" />
+    }
+  </aside>
+  </div>
 }

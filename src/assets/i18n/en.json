@@ -25,7 +25,13 @@
       "DRAWING": "Holes of Tape {{name}}",
       "ZOOM": "Zoom",
       "ZOOM_WHOLE": "Whole Tape",
-      "OVERVIEW": "Whole Tape, the framed part is shown above"
+      "OVERVIEW": "Whole Tape, the framed part is shown above",
+      "SUBTITLE": "For the {{organ}}. {{columns}} of {{columnLength}} mm, {{length}} mm of Tape.",
+      "COLUMNS_ONE": "{{count}} Column",
+      "COLUMNS_OTHER": "{{count}} Columns",
+      "EXPORT": "Export for the Plotter",
+      "EXPORT_LATER": "Export comes in a later release",
+      "SIDE_PANEL": "Details"
     },
     "LIST": {
       "TITLE": "Tapes",
@@ -82,20 +88,33 @@
       "NO_NOTE_ON_A_PIPE": "Not a single Note of the chosen Parts fits a Pipe of this Organ, not even moved by octaves."
     },
     "SUMMARY": {
-      "TITLE": "What changed on import",
-      "TRANSPOSITION": "Transposition: {{semitones}} semitones",
-      "NOTES_ON_TAPE": "Notes on the Tape: {{count}}",
+      "TITLE": "Import Summary",
+      "DISMISS": "Dismiss",
+      "TRANSPOSITION_TERM": "Transposition",
+      "TRANSPOSITION": "{{semitones}} semitones",
       "MOVED_BY_OCTAVES": "Notes moved by octaves",
       "MOVED_NOTE": "{{note}} moved by {{octaves}} octaves to Pipe {{pipe}} (Part {{part}}, Column {{column}})",
       "UNPLAYABLE_NOTES": "Unplayable Notes",
       "UNPLAYABLE_NOTE": "{{note}} (Part {{part}}, Column {{column}})",
-      "HOLE_CHANGES": "Changed Holes",
-      "HOLE_CHANGE": {
+      "HOLES_FIXED": "Holes fixed",
+      "HOLE_FIX": {
         "OVERLAP_MERGED": "Overlapping Holes on Pipe {{pipe}} merged at Column {{column}}",
         "LENGTHENED": "Hole on Pipe {{pipe}} at Column {{column}} lengthened from {{from}} to {{to}} Columns",
         "SHORTENED": "Hole on Pipe {{pipe}} at Column {{column}} shortened from {{from}} to {{to}} Columns",
         "REPETITION_MERGED": "Repeated Holes on Pipe {{pipe}} at Column {{column}} merged, Column {{lost}} lost"
       }
+    },
+    "SECTION": {
+      "TITLE": "Tape",
+      "ORGAN": "Organ",
+      "COLUMN_LENGTH": "Column length",
+      "COLUMNS": "Columns",
+      "LENGTH": "Length",
+      "LEAD_IN": "Lead-in",
+      "LEAD_IN_NONE": "None",
+      "HOLES": "Holes",
+      "PARTS": "Parts on the Tape",
+      "MM": "{{value}} mm"
     }
   },
   "ORGAN": {
