@@ -313,17 +313,17 @@ keys to `en.json` and `de.json` (German: Lochband).
   Tape (thousands of Holes): only Holes, `column-mark`, `column-number` and `ruler-number` inside
   that range are in the DOM; the SVG keeps the full width; scrolling `tape-scroll` to the end
   renders the last Holes. Then the windowing (a `scrollLeft` signal, no change to the Tape).
-- [ ] **V7** Sticky note-name gutter, component. Spec: one `row-label` per row from V4, each at its
+- [x] **V7** Sticky note-name gutter, component. Spec: one `row-label` per row from V4, each at its
   row's centre (V1 × scale), naturals bold and sharps with class `sharp`; the gutter stays put while
   `tape-scroll` scrolls sideways. Then the gutter.
-- [ ] **V8** Zoom, component. Spec: a toggle group (`data-testid="zoom"`, `aria-label` "Zoom") with
+- [x] **V8** Zoom, component. Spec: a toggle group (`data-testid="zoom"`, `aria-label` "Zoom") with
   Whole Tape, 1:1 (pressed by default) and 2:1; 2:1 doubles the Tape body's width; Whole Tape makes
   it the stage width (faked `ResizeObserver` width); hole rectangles follow. Then the toggle and a
   `zoom` signal.
-- [ ] **V9** Overview frame, unit. Pure helpers: `overviewFrame(scrollLeft, clientWidth,
+- [x] **V9** Overview frame, unit. Pure helpers: `overviewFrame(scrollLeft, clientWidth,
   scrollWidth, overviewWidth)` → the framed `x` and `width`; `scrollLeftFor(clickX, overviewWidth,
   scrollWidth, clientWidth)` centres the clicked point, clamped to 0 and the end. Spec first.
-- [ ] **V10** Overview strip, component. Spec: an SVG `data-testid="overview"` under the stage at
+- [x] **V10** Overview strip, component. Spec: an SVG `data-testid="overview"` under the stage at
   stage width draws the whole Tape (body and Holes, no ruler) with a brass frame
   (`overview-frame`) from V9; scrolling the stage moves the frame; a click sets `tape-scroll`'s
   `scrollLeft` from V9; its `aria-label` says "Whole Tape, the framed part is shown above". Then the

@@ -22,7 +22,10 @@
     "NAV": "Tapes",
     "VIEW": {
       "PARTS": "Parts on the Tape",
-      "DRAWING": "Holes of Tape {{name}}"
+      "DRAWING": "Holes of Tape {{name}}",
+      "ZOOM": "Zoom",
+      "ZOOM_WHOLE": "Whole Tape",
+      "OVERVIEW": "Whole Tape, the framed part is shown above"
     },
     "LIST": {
       "TITLE": "Tapes",

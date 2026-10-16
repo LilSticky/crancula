@@ -19,6 +19,8 @@ import {provideTestTranslations} from '../../../../testing/test-translations';
 import {OrganLibrary} from '../../organ/organ-library.store';
 import {TapeLibrary} from '../tape-library.store';
 import {asValidTape, type Column, type ColumnCount} from '../../../../../api/tape/tape';
+import {vi} from 'vitest';
+import {overviewFrame, scrollLeftFor} from './overview-frame';
 import {pixelsPerMillimetre} from './pixels-per-millimetre';
 import {columnLines, columnNumbers, rulerNumbers} from './tape-marks';
 import {tapeGeometry} from './tape-geometry';
@@ -215,7 +217,7 @@ describe('TapeViewComponent', () => {
       Array.from(view?.querySelectorAll(`[data-testid="${testId}"]`) ?? [], (element) => element.textContent?.trim());
     const numberAttribute = (element: Element, name: string) => Number(element.getAttribute(name));
     const all = (view: HTMLElement | null, selector: string) => Array.from(view?.querySelectorAll(selector) ?? []);
-    const holeRects = (view: HTMLElement | null) => all(view, 'svg rect[data-testid="hole"]');
+    const holeRects = (view: HTMLElement | null) => all(view, 'svg:not([data-testid="overview"]) rect[data-testid="hole"]');
 
     it('labels one row per Pipe with its note name, in the Organ row order', async () => {
       const {tape, organ, open, view} = await render();
@@ -414,6 +416,204 @@ describe('TapeViewComponent', () => {
       });
     });
 
+    describe('the note-name gutter (V7)', () => {
+      it('puts each label at its row centre, a constant offset from the geometry, naturals plain and sharps marked', async () => {
+        const {tape, organ, open, view} = await render({leadIn: 0});
+        const {rowCentres} = tapeGeometry(tape, organ);
+
+        await open(`/tapes/${tape.id}`);
+
+        const labels = all(view(), '[data-testid="row-label"]') as HTMLElement[];
+        const offsets = labels.map((label, index) => parseFloat(label.style.top) - (rowCentres[index] ?? 0) * SCALE);
+        expect(labels).toHaveLength(organ.pipes.length);
+        offsets.forEach((offset) => expect(offset).toBeCloseTo(offsets[0] ?? 0, 1));
+        labels.forEach((label, index) => {
+          expect(label.classList.contains('sharp')).toBe(noteName(organ.pipes[index]?.note ?? 0).includes('#'));
+        });
+      });
+
+      it('stays outside the scrolling container and keeps its place when the Tape scrolls sideways', async () => {
+        const {tape, open, view, settle} = await render({longTape: true});
+        await open(`/tapes/${tape.id}`);
+        const scroll = view()?.querySelector('[data-testid="tape-scroll"]') as HTMLElement;
+        const before = texts(view(), 'row-label');
+        const tops = (all(view(), '[data-testid="row-label"]') as HTMLElement[]).map((label) => label.style.top);
+
+        Object.defineProperty(scroll, 'scrollLeft', {value: 3000, configurable: true});
+        scroll.dispatchEvent(new Event('scroll'));
+        await settle();
+
+        expect(scroll.querySelector('[data-testid="row-label"]')).toBeNull();
+        expect(texts(view(), 'row-label')).toEqual(before);
+        expect((all(view(), '[data-testid="row-label"]') as HTMLElement[]).map((label) => label.style.top)).toEqual(tops);
+      });
+    });
+
+    describe('the zoom (V8)', () => {
+      const STAGE_PX = 800;
+      let observers: {callback: ResizeObserverCallback; observer: ResizeObserver}[] = [];
+
+      beforeEach(() => {
+        observers = [];
+        vi.stubGlobal(
+          'ResizeObserver',
+          class {
+            constructor(private readonly callback: ResizeObserverCallback) {
+              observers.push({callback, observer: this});
+            }
+            observe(): void {
+              /* the test drives the size */
+            }
+            unobserve(): void {
+              /* nothing */
+            }
+            disconnect(): void {
+              /* nothing */
+            }
+          },
+        );
+      });
+      afterEach(() => vi.unstubAllGlobals());
+
+      const resizeStage = async (settle: () => Promise<void>) => {
+        const entry = {contentRect: {width: STAGE_PX}} as ResizeObserverEntry;
+        observers.forEach(({callback, observer}) => callback([entry], observer));
+        await settle();
+      };
+      const buttons = (view: HTMLElement | null) => all(view, '[data-testid="zoom"] button') as HTMLButtonElement[];
+      const bodyWidth = (view: HTMLElement | null) =>
+        numberAttribute(view?.querySelector('svg .tape') as Element, 'width');
+
+      it('offers Whole Tape, 1:1 and 2:1 in a toggle group named Zoom, 1:1 pressed', async () => {
+        const {tape, open, view} = await render();
+
+        await open(`/tapes/${tape.id}`);
+
+        const group = view()?.querySelector('[data-testid="zoom"]');
+        expect(group?.getAttribute('aria-label')).toBe('Zoom');
+        expect(buttons(view()).map((button) => button.textContent?.trim())).toEqual(['Whole Tape', '1:1', '2:1']);
+        expect(buttons(view()).map((button) => button.getAttribute('aria-pressed'))).toEqual(['false', 'true', 'false']);
+      });
+
+      it('doubles the Tape body and the Holes at 2:1', async () => {
+        const {tape, open, view, settle} = await render({leadIn: 0});
+        await open(`/tapes/${tape.id}`);
+        const before = bodyWidth(view());
+        const holeBefore = numberAttribute(holeRects(view())[0], 'width');
+
+        buttons(view())[2].click();
+        await settle();
+
+        expect(bodyWidth(view())).toBeCloseTo(2 * before, 1);
+        expect(numberAttribute(holeRects(view())[0], 'width')).toBeCloseTo(2 * holeBefore, 1);
+        expect(buttons(view()).map((button) => button.getAttribute('aria-pressed'))).toEqual(['false', 'false', 'true']);
+      });
+
+      it('fits the Tape body to the stage width at Whole Tape', async () => {
+        const {tape, open, view, settle} = await render({leadIn: 0});
+        await open(`/tapes/${tape.id}`);
+        await resizeStage(settle);
+
+        buttons(view())[0].click();
+        await settle();
+
+        expect(bodyWidth(view())).toBeCloseTo(STAGE_PX, 0);
+        const lastHole = holeRects(view()).at(-1) as Element;
+        expect(numberAttribute(lastHole, 'x') + numberAttribute(lastHole, 'width')).toBeLessThanOrEqual(STAGE_PX + 1);
+      });
+    });
+
+    describe('the overview strip (V10)', () => {
+      const STAGE_PX = 800;
+      const CLIENT_PX = 300;
+      const SCROLL_PX = 4000;
+      let observers: {callback: ResizeObserverCallback; observer: ResizeObserver}[] = [];
+
+      beforeEach(() => {
+        observers = [];
+        vi.stubGlobal(
+          'ResizeObserver',
+          class {
+            constructor(private readonly callback: ResizeObserverCallback) {
+              observers.push({callback, observer: this});
+            }
+            observe(): void {
+              /* the test drives the size */
+            }
+            unobserve(): void {
+              /* nothing */
+            }
+            disconnect(): void {
+              /* nothing */
+            }
+          },
+        );
+      });
+      afterEach(() => vi.unstubAllGlobals());
+
+      const prepare = async (options: RenderOptions = {}) => {
+        const rendered = await render(options);
+        await rendered.open(`/tapes/${rendered.tape.id}`);
+        const entry = {contentRect: {width: STAGE_PX}} as ResizeObserverEntry;
+        observers.forEach(({callback, observer}) => callback([entry], observer));
+        let scrollLeft = 0;
+        const scroll = rendered.view()?.querySelector('[data-testid="tape-scroll"]') as HTMLElement;
+        Object.defineProperty(scroll, 'clientWidth', {value: CLIENT_PX, configurable: true});
+        Object.defineProperty(scroll, 'scrollWidth', {value: SCROLL_PX, configurable: true});
+        Object.defineProperty(scroll, 'scrollLeft', {
+          configurable: true,
+          get: () => scrollLeft,
+          set: (value: number) => {
+            scrollLeft = value;
+          },
+        });
+        scroll.dispatchEvent(new Event('scroll'));
+        await rendered.settle();
+        const overview = rendered.view()?.querySelector('[data-testid="overview"]') as SVGSVGElement;
+        return {...rendered, scroll, overview};
+      };
+      const frame = (overview: Element) => overview.querySelector('[data-testid="overview-frame"]') as Element;
+
+      it('draws the whole Tape at stage width: body and Holes, no ruler', async () => {
+        const {tape, organ, overview} = await prepare({leadIn: 0});
+
+        expect(overview).not.toBeNull();
+        expect(overview.getAttribute('aria-label')).toBe('Whole Tape, the framed part is shown above');
+        expect(numberAttribute(overview, 'width')).toBeCloseTo(STAGE_PX, 0);
+        expect(overview.querySelector('.tape')).not.toBeNull();
+        expect(overview.querySelectorAll('[data-testid="hole"]')).toHaveLength(tapeGeometry(tape, organ).slots.length);
+        expect(overview.querySelector('[data-testid="ruler-number"]')).toBeNull();
+      });
+
+      it('frames the visible part of the stage and moves the frame when the stage scrolls', async () => {
+        const {overview, scroll, settle} = await prepare();
+        const initial = overviewFrame(0, CLIENT_PX, SCROLL_PX, STAGE_PX);
+        expect(numberAttribute(frame(overview), 'x')).toBeCloseTo(initial.x, 1);
+        expect(numberAttribute(frame(overview), 'width')).toBeCloseTo(initial.width, 1);
+
+        Object.defineProperty(scroll, 'scrollLeft', {value: 1000, configurable: true});
+        scroll.dispatchEvent(new Event('scroll'));
+        await settle();
+
+        const moved = overviewFrame(1000, CLIENT_PX, SCROLL_PX, STAGE_PX);
+        expect(numberAttribute(frame(overview), 'x')).toBeCloseTo(moved.x, 1);
+        expect(numberAttribute(frame(overview), 'width')).toBeCloseTo(moved.width, 1);
+      });
+
+      it('scrolls the stage to the clicked point, centred', async () => {
+        const {overview, scroll, settle} = await prepare();
+        Object.defineProperty(overview, 'getBoundingClientRect', {
+          value: () => new DOMRect(10, 0, STAGE_PX, 40),
+          configurable: true,
+        });
+
+        overview.dispatchEvent(new MouseEvent('click', {clientX: 10 + 400, bubbles: true}));
+        await settle();
+
+        expect(scroll.scrollLeft).toBeCloseTo(scrollLeftFor(400, STAGE_PX, SCROLL_PX, CLIENT_PX), 0);
+      });
+    });
+
     it('shows the names of the selected Parts only', async () => {
       const {tape, open, view} = await render();
 
@@ -427,7 +627,10 @@ describe('TapeViewComponent', () => {
 
       await open(`/tapes/${tape.id}`);
 
-      expect(view()?.querySelectorAll('button, input, select, textarea, [contenteditable]')).toHaveLength(0);
+      const controls = all(view(), 'button, input, select, textarea, [contenteditable]').filter(
+        (control) => control.closest('[data-testid="zoom"]') === null,
+      );
+      expect(controls).toHaveLength(0);
     });
 
     it('cannot be opened when its Organ is unknown', async () => {

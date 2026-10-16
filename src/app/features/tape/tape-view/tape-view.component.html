@@ -8,6 +8,11 @@
       <li data-testid="selected-part">{{ part.name ?? ('TAPE.PARTS.UNNAMED' | translate: {number: part.index + 1}) }}</li>
     }
   </ul>
+  <div class="zoom" role="group" data-testid="zoom" [attr.aria-label]="'TAPE.VIEW.ZOOM' | translate">
+    @for (option of zooms; track option.zoom) {
+      <button type="button" [attr.aria-pressed]="zoom() === option.zoom" (click)="zoom.set(option.zoom)">{{ option.label | translate }}</button>
+    }
+  </div>
   <div class="drawing">
     <ul class="labels" [style.height.px]="drawing.totalHeight">
       @for (label of drawing.labels; track $index) {
@@ -17,9 +22,9 @@
     <div class="scroll" #scroll data-testid="tape-scroll" (scroll)="onScroll(scroll)">
       <svg role="img" [attr.aria-label]="'TAPE.VIEW.DRAWING' | translate: {name: drawing.tape.name}" [attr.width]="drawing.width" [attr.height]="drawing.totalHeight">
         <defs>
-          <pattern id="ruler-ticks" patternUnits="userSpaceOnUse" [attr.x]="drawing.leadIn" [attr.width]="5 * scale" height="8">
+          <pattern id="ruler-ticks" patternUnits="userSpaceOnUse" [attr.x]="drawing.leadIn" [attr.width]="5 * scale()" height="8">
             @for (tick of rulerTicks; track tick) {
-              <line class="ruler" [attr.x1]="tick * scale" [attr.x2]="tick * scale" y1="8" [attr.y2]="tick === 0 ? 0 : 4" />
+              <line class="ruler" [attr.x1]="tick * scale()" [attr.x2]="tick * scale()" y1="8" [attr.y2]="tick === 0 ? 0 : 4" />
             }
           </pattern>
         </defs>
@@ -62,4 +67,25 @@
       </svg>
     </div>
   </div>
+  @if (overview(); as overview) {
+    <svg
+      #overviewSvg
+      class="overview"
+      data-testid="overview"
+      role="img"
+      [attr.aria-label]="'TAPE.VIEW.OVERVIEW' | translate"
+      [attr.width]="overview.width"
+      [attr.height]="overview.height"
+      (click)="onOverviewClick($event, overviewSvg)"
+    >
+      @if (overview.leadIn > 0) {
+        <path class="lead-in" [attr.d]="overview.leadInPath" />
+      }
+      <rect class="tape" [attr.x]="overview.leadIn" y="0" [attr.width]="overview.bodyWidth" [attr.height]="overview.height" />
+      @for (hole of overview.holes; track $index) {
+        <rect class="hole" data-testid="hole" [attr.x]="hole.x" [attr.y]="hole.y" [attr.width]="hole.width" [attr.height]="hole.height" [attr.rx]="hole.radius" [attr.ry]="hole.radius" />
+      }
+      <rect class="overview-frame" data-testid="overview-frame" [attr.x]="overview.frame.x" y="0" [attr.width]="overview.frame.width" [attr.height]="overview.height" />
+    </svg>
+  }
 }

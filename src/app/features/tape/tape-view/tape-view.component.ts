@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  afterEveryRender,
   effect,
   ElementRef,
   inject,
@@ -17,7 +18,8 @@ import {PageHeadComponent} from '../../shared/components/page-head/page-head.com
 import {OrganLibrary} from '../../organ/organ-library.store';
 import {ImportSummaryComponent} from '../import-summary/import-summary.component';
 import {TapeLibrary} from '../tape-library.store';
-import {pixelsPerMillimetre} from './pixels-per-millimetre';
+import {overviewFrame, scrollLeftFor} from './overview-frame';
+import {pixelsPerMillimetre, type Zoom} from './pixels-per-millimetre';
 import {tapeGeometry} from './tape-geometry';
 import {columnLines, columnNumbers, rulerNumbers} from './tape-marks';
 import {visibleColumns} from './visible-columns';
@@ -45,8 +47,6 @@ const RULER_HEIGHT = 24;
 const NUMBERS_HEIGHT = 20;
 /** The angled start of the Lead-in slants over at most this many mm. */
 const LEAD_IN_SLANT_MM = 10;
-/** The scale of the drawing: 1:1, true size on screen. */
-const SCALE = pixelsPerMillimetre('1:1', 0, 0);
 
 /** The width to render Columns for: the scroll area, but never narrower than the screen (it is 0 before layout). */
 function windowWidth(element: HTMLElement): number {
@@ -81,8 +81,21 @@ function windowWidth(element: HTMLElement): number {
       flex: 1;
       overflow-x: auto;
     }
-    .scroll svg {
+    .scroll svg,
+    .overview {
       display: block;
+    }
+    .zoom {
+      display: flex;
+      gap: 0.25rem;
+    }
+    .overview {
+      cursor: pointer;
+    }
+    .overview-frame {
+      fill: none;
+      stroke: var(--cr-brass);
+      stroke-width: 2;
     }
     .tape,
     .lead-in {
@@ -119,7 +132,15 @@ export class TapeViewComponent {
   private readonly organs = inject(OrganLibrary);
   private readonly router = inject(Router);
   protected readonly rulerHeight = RULER_HEIGHT;
-  protected readonly scale = SCALE;
+  protected readonly zooms: readonly {readonly zoom: Zoom; readonly label: string}[] = [
+    {zoom: 'whole', label: 'TAPE.VIEW.ZOOM_WHOLE'},
+    {zoom: '1:1', label: '1:1'},
+    {zoom: '2:1', label: '2:1'},
+  ];
+  protected readonly zoom = signal<Zoom>('1:1');
+  private readonly stageWidth = signal(0);
+  private readonly stageClientWidth = signal(0);
+  private readonly stageScrollWidth = signal(0);
   protected readonly rulerTicks = [0, 1, 2, 3, 4];
 
   private readonly scrollElement = viewChild<ElementRef<HTMLElement>>('scroll');
@@ -140,12 +161,50 @@ export class TapeViewComponent {
     return this.organs.entities().find((organ) => organ.id === organId);
   });
 
+  private readonly geometry = computed(() => {
+    const tape = this.tape();
+    const organ = this.organ();
+    return tape === undefined || organ === undefined ? undefined : tapeGeometry(tape, organ);
+  });
+
+  protected readonly scale = computed(() => {
+    const geometry = this.geometry();
+    if (geometry === undefined) return pixelsPerMillimetre('1:1', 0, 0);
+    return pixelsPerMillimetre(this.zoom(), this.stageWidth(), geometry.leadIn + geometry.length);
+  });
+
+  /** The whole Tape at stage width, for the overview strip. */
+  protected readonly overview = computed(() => {
+    const geometry = this.geometry();
+    if (geometry === undefined) return undefined;
+    const scale = pixelsPerMillimetre('whole', this.stageWidth(), geometry.leadIn + geometry.length);
+    const leadIn = geometry.leadIn * scale;
+    const height = geometry.width * scale;
+    const slant = Math.min(geometry.leadIn, LEAD_IN_SLANT_MM) * scale;
+    return {
+      width: this.stageWidth(),
+      height,
+      leadIn,
+      leadInPath: `M${slant},0 H${leadIn} V${height} H0 Z`,
+      bodyWidth: geometry.length * scale,
+      frame: overviewFrame(this.scrollLeft(), this.stageClientWidth(), this.stageScrollWidth(), this.stageWidth()),
+      holes: geometry.slots.map((slot) => ({
+        x: leadIn + slot.x * scale,
+        y: slot.y * scale,
+        width: slot.width * scale,
+        height: slot.height * scale,
+        radius: slot.radius * scale,
+      })),
+    };
+  });
+
   /** What the template draws, in px; `undefined` while the Tape or its Organ is not available. */
   protected readonly drawing = computed(() => {
     const tape = this.tape();
     const organ = this.organ();
-    if (tape === undefined || organ === undefined) return undefined;
-    const geometry = tapeGeometry(tape, organ);
+    const geometry = this.geometry();
+    if (tape === undefined || organ === undefined || geometry === undefined) return undefined;
+    const SCALE = this.scale();
     const columnPx = tape.columnLength * SCALE;
     const range = visibleColumns(this.scrollLeft(), this.clientWidth(), SCALE, geometry);
     const inRange = (column: number): boolean => column >= range.first && column <= range.last;
@@ -201,6 +260,19 @@ export class TapeViewComponent {
   protected onScroll(element: HTMLElement): void {
     this.scrollLeft.set(element.scrollLeft);
     this.clientWidth.set(windowWidth(element));
+    this.readStage(element);
+  }
+
+  protected onOverviewClick(event: MouseEvent, overview: Element): void {
+    const element = this.scrollElement()?.nativeElement;
+    if (element === undefined) return;
+    const clickX = event.clientX - overview.getBoundingClientRect().left;
+    element.scrollLeft = scrollLeftFor(clickX, this.stageWidth(), element.scrollWidth, element.clientWidth);
+  }
+
+  private readStage(element: HTMLElement): void {
+    this.stageClientWidth.set(element.clientWidth);
+    this.stageScrollWidth.set(element.scrollWidth);
   }
 
   private partNames(tape: Tape): readonly {readonly index: number; readonly name: string | undefined}[] {
@@ -209,9 +281,21 @@ export class TapeViewComponent {
   }
 
   constructor() {
-    effect(() => {
+    effect((onCleanup) => {
       const element = this.scrollElement()?.nativeElement;
-      if (element !== undefined) this.clientWidth.set(windowWidth(element));
+      if (element === undefined) return;
+      this.clientWidth.set(windowWidth(element));
+      if (typeof ResizeObserver === 'undefined') return;
+      const observer = new ResizeObserver((entries) => {
+        const width = entries[0]?.contentRect.width;
+        if (width !== undefined) this.stageWidth.set(width);
+      });
+      observer.observe(element);
+      onCleanup(() => observer.disconnect());
+    });
+    afterEveryRender(() => {
+      const element = this.scrollElement()?.nativeElement;
+      if (element !== undefined) this.readStage(element);
     });
     effect(() => {
       if (this.library.loaded() && this.drawing() === undefined) void this.router.navigateByUrl('/tapes');

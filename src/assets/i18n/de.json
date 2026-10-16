@@ -22,7 +22,10 @@
     "NAV": "Lochbänder",
     "VIEW": {
       "PARTS": "Stimmen auf dem Lochband",
-      "DRAWING": "Löcher des Lochbandes {{name}}"
+      "DRAWING": "Löcher des Lochbandes {{name}}",
+      "ZOOM": "Zoom",
+      "ZOOM_WHOLE": "Ganzes Lochband",
+      "OVERVIEW": "Ganzes Lochband, der markierte Ausschnitt wird oben gezeigt"
     },
     "LIST": {
       "TITLE": "Lochbänder",
