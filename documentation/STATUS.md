@@ -72,7 +72,14 @@ fits one screen at 1280×800 and 1024×700. ux-review 36/50 (was 31/50; values i
 Gate: lint, i18n (162 keys), 486 node and 447 Angular tests, e2e green locally (e2e: see PR). Follow-up:
 [#76](https://github.com/LilSticky/crancula/issues/76) splits the editor component.
 
-**Next concrete step:** #65 Tape view, then #66 lists and #69 Tape import (sub-issues of
+**Done (pull request pending):** #78 Lead-in (2026-10-16). Every Organ has a Lead-in, the blank Tape
+before Column 1 with an angled start (Vorlauf): mm, 0 is valid, negative is not, new Organs start
+empty and required. Organ snapshot version 3 with `leadIn`; versions 1 and 2 load with 0
+([ADR 20](adr/0020-snapshots-migrated-on-read.md)). The Organ editor shows it after Minimum Gap;
+dictionary (Lead-in) and spec 001 (FR-017) amended. Gate: lint, i18n, 495 node and 457 Angular tests,
+44 e2e green locally. The Tape view draws it in #65.
+
+**Next concrete step:** #65 Tape view (tasks on branch 065-design-tape-view, rebase after #78), then #66 lists and #69 Tape import (sub-issues of
 [#59](https://github.com/LilSticky/crancula/issues/59)). Then
 `/speckit-specify` for "Punch a tape" ([#3](https://github.com/LilSticky/crancula/issues/3)).
 Open issues carry `priority:` and `size:` labels; triage sets them.

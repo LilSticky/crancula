@@ -8,12 +8,17 @@ as its GitHub Release notes.
 
 ## [Unreleased]
 
+### Added
+- Every Organ has a Lead-in (German Vorlauf): the blank Tape before Column 1, with an angled start,
+  in millimetres. Enter it in the Organ editor after Minimum Gap; 0 means none. Your saved Organs get
+  a Lead-in of 0.
+
 ### Changed
 - The Border is no longer entered. Crancula derives it as (tape width - Row Span) / 2, with the rows
   centred across the Tape, and shows it read-only in the Organ editor (6,25 mm for a street organ
   with 31 Pipes, 120 mm tape, 2,5 mm holes, 3,5 mm spacing). A Border of 0 is fine; a negative one
   means the rows don't fit. Your saved Organs keep working.
-- Saved Organs are upgraded to the new file format (version 2) the next time you save. Downgrade
+- Saved Organs are upgraded to the new file format (version 3) the next time you save. Downgrade
   note: older versions of Crancula can't read the upgraded file; they move it aside and start with
   no Organs.
 
