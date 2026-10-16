@@ -192,7 +192,7 @@ describe('createTape, bringing a Song onto a Tape', () => {
     const input = inputOf(songOf([{note: 60, startTick: 0, ticks: TICKS_PER_COLUMN}]), {organ});
     const {tape, importSummary} = created(input);
     expect(tape.holes.map((hole) => hole.length)).toEqual([4]);
-    expect(importSummary.holeChanges).toEqual([{kind: 'lengthened', pipe: 60, column: 0, from: 1, to: 4}]);
+    expect(importSummary.holesFixed).toEqual([{kind: 'lengthened', pipe: 60, column: 0, from: 1, to: 4}]);
   });
 
   it('shortens the first of two repeated Notes to keep the Minimum Gap and lists the change', () => {
@@ -201,7 +201,7 @@ describe('createTape, bringing a Song onto a Tape', () => {
       {start: 0, length: 7},
       {start: 8, length: 8},
     ]);
-    expect(importSummary.holeChanges).toEqual([{kind: 'shortened', pipe: 60, column: 0, from: 8, to: 7}]);
+    expect(importSummary.holesFixed).toEqual([{kind: 'shortened', pipe: 60, column: 0, from: 8, to: 7}]);
   });
 });
 
@@ -213,7 +213,7 @@ describe('createTape, Parts sharing a Pipe row', () => {
     expect(tape.holes.map(({pipe, start, length}) => ({pipe, start, length}))).toEqual([
       {pipe: 60, start: 0, length: 12},
     ]);
-    expect(importSummary.holeChanges).toEqual([expect.objectContaining({kind: 'overlap-merged', pipe: 60})]);
+    expect(importSummary.holesFixed).toEqual([expect.objectContaining({kind: 'overlap-merged', pipe: 60})]);
   });
 });
 

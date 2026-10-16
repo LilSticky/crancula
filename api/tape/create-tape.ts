@@ -167,7 +167,7 @@ export function createTape(input: CreateTapeInput): Result<CreatedTape, readonly
       notesOnTape: holes.length,
       movedByOctaves,
       unplayableNotes,
-      holeChanges: [...merged.changes, ...fixed.changes],
+      holesFixed: [...merged.changes, ...fixed.changes],
     },
   });
 }
