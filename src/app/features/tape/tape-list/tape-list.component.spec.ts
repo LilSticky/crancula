@@ -395,17 +395,17 @@ describe('TapeListComponent', () => {
       expect(element.querySelector('table')).toBeNull();
     });
 
-    it('without an Organ, points to describing one and still offers new-tape', async () => {
+    it('without an Organ, the only filled button is "Describe your Organ" and Bring a Song onto a Tape is absent', async () => {
       const {element} = await render();
 
       const empty = element.querySelector('[data-testid="empty-state"]');
-      expect(collapse(empty?.textContent)).toContain(
-        'No Tapes yet. A Tape is punched for one Organ: describe your Organ first.',
-      );
-      const link = empty?.querySelector('[data-testid="empty-new-organ"]');
-      expect(link?.textContent?.trim()).toBe('describe your Organ');
-      expect(link?.getAttribute('href')).toBe('/organs/new');
-      expect(element.querySelectorAll('[data-testid="new-tape"]')).toHaveLength(1);
+      expect(collapse(empty?.textContent)).toContain('A Tape is punched for one Organ: describe your Organ first.');
+      const button = empty?.querySelector('[data-testid="empty-new-organ"]');
+      expect(button?.textContent?.trim()).toBe('Describe your Organ');
+      expect(button?.getAttribute('href')).toBe('/organs/new');
+      expect(button?.classList.contains('mat-mdc-unelevated-button')).toBe(true);
+      expect(element.querySelectorAll('.mat-mdc-unelevated-button')).toHaveLength(1);
+      expect(element.querySelector('[data-testid="new-tape"]')).toBeNull();
     });
 
     it('filtered without a match, says "No Tapes for the Street organ yet.", with the chip and new-tape', async () => {

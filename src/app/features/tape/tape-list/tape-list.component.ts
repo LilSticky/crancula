@@ -64,15 +64,19 @@ interface TapeRow {
         @if (filterOrgan(); as organ) {
           <p>{{ 'TAPE.LIST.EMPTY_FOR_ORGAN' | translate: {organ: organ.name} }}</p>
         } @else if (organs.entities().length === 0) {
-          <p>{{ 'TAPE.LIST.EMPTY_NO_ORGAN' | translate }}
-            <a routerLink="/organs/new" data-testid="empty-new-organ">{{ 'TAPE.LIST.DESCRIBE_ORGAN' | translate }}</a>{{ 'TAPE.LIST.EMPTY_NO_ORGAN_END' | translate }}</p>
+          <p>{{ 'TAPE.LIST.EMPTY_NO_ORGAN' | translate }}</p>
+          <a matButton="filled" routerLink="/organs/new" data-testid="empty-new-organ">
+            {{ 'TAPE.LIST.DESCRIBE_ORGAN' | translate }}
+          </a>
         } @else {
           <p>{{ 'TAPE.LIST.EMPTY' | translate }}</p>
         }
-        <a matButton="filled" routerLink="/tapes/new" data-testid="new-tape">
-          <mat-icon>add</mat-icon>
-          {{ 'TAPE.LIST.NEW' | translate }}
-        </a>
+        @if (organs.entities().length > 0 || filterOrgan()) {
+          <a matButton="filled" routerLink="/tapes/new" data-testid="new-tape">
+            <mat-icon>add</mat-icon>
+            {{ 'TAPE.LIST.NEW' | translate }}
+          </a>
+        }
       </mat-card>
     } @else {
       <mat-card appearance="outlined">

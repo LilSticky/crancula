@@ -53,6 +53,41 @@ test.describe('The Organ and Tape lists in Electron', () => {
     await app.close();
   });
 
+  test('ledger name and Organ cells use the ink colour, the name in the serif brand face, without underline', async () => {
+    const {app, window} = await launchApp();
+    await defineStreetOrgan(window);
+    await createTapeFromSong(window, 'Scale', melodyC3ToC5());
+    const ink = await window.evaluate(() => {
+      const probe = document.createElement('span');
+      probe.style.color = 'var(--mat-sys-on-surface)';
+      document.body.appendChild(probe);
+      const color = getComputedStyle(probe).color;
+      probe.remove();
+      return color;
+    });
+    const style = (locator: Locator) =>
+      locator.evaluate((element) => {
+        const computed = getComputedStyle(element);
+        return {color: computed.color, decoration: computed.textDecorationLine, family: computed.fontFamily};
+      });
+
+    await window.getByRole('link', {name: 'Organs'}).click();
+    const organ = await style(window.getByTestId('organ'));
+    expect(organ.color).toBe(ink);
+    expect(organ.decoration).toBe('none');
+    expect(organ.family).toMatch(/serif/i);
+
+    await window.getByRole('link', {name: 'Tapes'}).click();
+    const tapeName = await style(window.getByTestId('open-tape'));
+    const tapeOrgan = await style(window.getByTestId('tape-organ'));
+    expect(tapeName.color).toBe(ink);
+    expect(tapeName.decoration).toBe('none');
+    expect(tapeName.family).toMatch(/serif/i);
+    expect(tapeOrgan.color).toBe(ink);
+    expect(tapeOrgan.decoration).toBe('none');
+    await app.close();
+  });
+
   test('in German at 1024 x 700 neither ledger scrolls sideways and no facts line overflows', async () => {
     const launched = await launchApp();
     const {app, window} = launched;

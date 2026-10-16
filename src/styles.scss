@@ -202,3 +202,13 @@ h1, h2, h3 { font-family: var(--mat-sys-headline-small-font); font-weight: 600; 
 .cr-readonly {
   color: var(--mat-sys-on-surface-variant);
 }
+
+// Ledger links read as ink, not link blue; the underline only answers hover and focus.
+.cr-ledger a {
+  color: var(--mat-sys-on-surface);
+  text-decoration: none;
+
+  &:hover, &:focus-visible { text-decoration: underline; }
+
+  &.name { font-family: var(--mat-sys-headline-small-font); }
+}

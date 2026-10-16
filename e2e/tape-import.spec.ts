@@ -21,10 +21,7 @@ test.describe('Bring a MIDI song onto a tape', () => {
     const {window} = launched;
 
     await window.getByRole('link', {name: 'Tapes'}).click();
-    await window.getByTestId('new-tape').click();
-    await expect(window.getByTestId('no-organ-hint')).toBeVisible();
-    await expect(window.getByTestId('import-form')).toHaveCount(0);
-    await window.getByTestId('no-organ-hint').getByRole('link').click();
+    await window.getByTestId('empty-new-organ').click();
     await expect(window.getByTestId('name')).toBeVisible();
 
     await window.getByTestId('name').fill('Octave organ');
