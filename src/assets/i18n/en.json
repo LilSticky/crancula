@@ -22,7 +22,20 @@
     "NAV": "Tapes",
     "VIEW": {
       "PARTS": "Parts on the Tape",
-      "DRAWING": "Holes of Tape {{name}}"
+      "DRAWING": "Tape {{name}}: {{rows}} rows, {{columns}} Columns, {{holes}} Holes",
+      "ZOOM": "Zoom",
+      "ZOOM_WHOLE": "Whole Tape",
+      "OVERVIEW": "Whole Tape, the framed part is shown above",
+      "SUBTITLE": "For the {{organ}}. {{columns}} of {{columnLength}} mm, {{length}} mm of Tape.",
+      "COLUMNS_ONE": "{{count}} Column",
+      "COLUMNS_OTHER": "{{count}} Columns",
+      "EXPORT": "Export for the Plotter",
+      "EXPORT_LATER": "Export comes in a later release",
+      "SIDE_PANEL": "Details",
+      "DETAILS": "Tape details",
+      "STATUS_COLUMN": "Column {{column}} at {{mm}} mm",
+      "STATUS_ROW": "Row {{row}}, {{note}}",
+      "SAVED": "Saved"
     },
     "LIST": {
       "TITLE": "Tapes",
@@ -79,20 +92,44 @@
       "NO_NOTE_ON_A_PIPE": "Not a single Note of the chosen Parts fits a Pipe of this Organ, not even moved by octaves."
     },
     "SUMMARY": {
-      "TITLE": "What changed on import",
-      "TRANSPOSITION": "Transposition: {{semitones}} semitones",
-      "NOTES_ON_TAPE": "Notes on the Tape: {{count}}",
+      "TITLE": "Import Summary",
+      "DISMISS": "Dismiss",
+      "TRANSPOSITION_TERM": "Transposition",
+      "TRANSPOSITION": "{{semitones}} semitones",
       "MOVED_BY_OCTAVES": "Notes moved by octaves",
       "MOVED_NOTE": "{{note}} moved by {{octaves}} octaves to Pipe {{pipe}} (Part {{part}}, Column {{column}})",
       "UNPLAYABLE_NOTES": "Unplayable Notes",
       "UNPLAYABLE_NOTE": "{{note}} (Part {{part}}, Column {{column}})",
-      "HOLE_CHANGES": "Changed Holes",
-      "HOLE_CHANGE": {
+      "HOLES_FIXED": "Holes fixed",
+      "HOLE_FIX": {
         "OVERLAP_MERGED": "Overlapping Holes on Pipe {{pipe}} merged at Column {{column}}",
         "LENGTHENED": "Hole on Pipe {{pipe}} at Column {{column}} lengthened from {{from}} to {{to}} Columns",
         "SHORTENED": "Hole on Pipe {{pipe}} at Column {{column}} shortened from {{from}} to {{to}} Columns",
         "REPETITION_MERGED": "Repeated Holes on Pipe {{pipe}} at Column {{column}} merged, Column {{lost}} lost"
       }
+    },
+    "SECTION": {
+      "TITLE": "Tape",
+      "ORGAN": "Organ",
+      "COLUMN_LENGTH": "Column length",
+      "COLUMNS": "Columns",
+      "LENGTH": "Length",
+      "LEAD_IN": "Lead-in",
+      "LEAD_IN_NONE": "None",
+      "HOLES": "Holes",
+      "PARTS": "Parts on the Tape",
+      "MM": "{{value}} mm"
+    },
+    "HOLE": {
+      "TITLE": "Selected Hole",
+      "EMPTY": "Select a Hole to see where it is and how long it is.",
+      "ROW": "Row {{row}}, {{note}}",
+      "COLUMNS_RANGE": "Columns {{from}}–{{to}}",
+      "LENGTH": "{{columns}}, {{mm}} mm",
+      "GAP_NEXT": "Gap to the next Hole: {{columns}}, {{mm}} mm",
+      "GAP_END": "To the end of the Tape: {{columns}}, {{mm}} mm",
+      "TOO_SHORT": "Shorter than the Minimum Hole Length: {{mm}} mm of {{minimum}} mm",
+      "GAP_TOO_SMALL": "Gap below the Minimum Gap: {{mm}} mm of {{minimum}} mm"
     }
   },
   "ORGAN": {

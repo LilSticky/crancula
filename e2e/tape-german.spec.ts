@@ -37,7 +37,7 @@ test.describe('I can bring a Song onto a Tape in German', () => {
 
     await window.getByTestId('name').fill('Tonleiter');
     await window.getByTestId('create-tape').click();
-    await expect(window.getByTestId('tape-name')).toHaveText('Tonleiter');
+    await expect(window.getByTestId('tape-name').getByRole('heading', {level: 1})).toHaveText('Tonleiter');
     await expect(window.getByTestId('import-summary')).toBeVisible();
     await collect();
 
@@ -46,7 +46,7 @@ test.describe('I can bring a Song onto a Tape in German', () => {
     await collect();
 
     await window.getByTestId('open-tape').click();
-    await expect(window.getByTestId('tape-name')).toHaveText('Tonleiter');
+    await expect(window.getByTestId('tape-name').getByRole('heading', {level: 1})).toHaveText('Tonleiter');
     await collect();
 
     const visible = seen.join('\n') + rejection + violation;

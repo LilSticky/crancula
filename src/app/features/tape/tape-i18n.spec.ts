@@ -1,4 +1,4 @@
-import type {HoleChange, SongRejection, TapeViolationCode} from '@api/index';
+import type {HoleFix, SongRejection, TapeViolationCode} from '@api/index';
 import de from '../../../assets/i18n/de.json';
 import en from '../../../assets/i18n/en.json';
 
@@ -30,7 +30,7 @@ const tapeViolationCodes: Record<TapeViolationCode, true> = {
   'transposition-out-of-range': true,
   'no-note-on-a-pipe': true,
 };
-const holeChangeKinds: Record<HoleChange['kind'], true> = {
+const holeFixKinds: Record<HoleFix['kind'], true> = {
   'overlap-merged': true,
   lengthened: true,
   shortened: true,
@@ -40,7 +40,7 @@ const holeChangeKinds: Record<HoleChange['kind'], true> = {
 const groups: readonly {name: string; prefix: string; kinds: readonly string[]}[] = [
   {name: 'SongRejection', prefix: 'TAPE.SONG_REJECTION', kinds: Object.keys(songRejections)},
   {name: 'TapeViolationCode', prefix: 'TAPE.VIOLATION', kinds: Object.keys(tapeViolationCodes)},
-  {name: 'HoleChange', prefix: 'TAPE.SUMMARY.HOLE_CHANGE', kinds: Object.keys(holeChangeKinds)},
+  {name: 'HoleFix', prefix: 'TAPE.SUMMARY.HOLE_FIX', kinds: Object.keys(holeFixKinds)},
 ];
 
 describe('Tape texts', () => {

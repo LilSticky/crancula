@@ -22,7 +22,20 @@
     "NAV": "Lochbänder",
     "VIEW": {
       "PARTS": "Stimmen auf dem Lochband",
-      "DRAWING": "Löcher des Lochbandes {{name}}"
+      "DRAWING": "Lochband {{name}}: {{rows}} Zeilen, {{columns}} Spalten, {{holes}} Löcher",
+      "ZOOM": "Zoom",
+      "ZOOM_WHOLE": "Ganzes Lochband",
+      "OVERVIEW": "Ganzes Lochband, der markierte Ausschnitt wird oben gezeigt",
+      "SUBTITLE": "Für die {{organ}}. {{columns}} à {{columnLength}} mm, {{length}} mm Lochband.",
+      "COLUMNS_ONE": "{{count}} Spalte",
+      "COLUMNS_OTHER": "{{count}} Spalten",
+      "EXPORT": "Export für den Plotter",
+      "EXPORT_LATER": "Der Export kommt in einer späteren Version",
+      "SIDE_PANEL": "Details",
+      "DETAILS": "Lochbanddetails",
+      "STATUS_COLUMN": "Spalte {{column}} bei {{mm}} mm",
+      "STATUS_ROW": "Zeile {{row}}, {{note}}",
+      "SAVED": "Gespeichert"
     },
     "LIST": {
       "TITLE": "Lochbänder",
@@ -79,20 +92,44 @@
       "NO_NOTE_ON_A_PIPE": "Keine einzige Note der gewählten Stimmen passt auf eine Pfeife dieser Drehorgel, auch nicht um Oktaven verschoben."
     },
     "SUMMARY": {
-      "TITLE": "Was beim Import geändert wurde",
-      "TRANSPOSITION": "Transposition: {{semitones}} Halbtöne",
-      "NOTES_ON_TAPE": "Noten auf dem Lochband: {{count}}",
+      "TITLE": "Importübersicht",
+      "DISMISS": "Schließen",
+      "TRANSPOSITION_TERM": "Transposition",
+      "TRANSPOSITION": "{{semitones}} Halbtöne",
       "MOVED_BY_OCTAVES": "Um Oktaven verschobene Noten",
       "MOVED_NOTE": "{{note}} um {{octaves}} Oktaven auf Pfeife {{pipe}} verschoben (Stimme {{part}}, Spalte {{column}})",
       "UNPLAYABLE_NOTES": "Nicht spielbare Noten",
       "UNPLAYABLE_NOTE": "{{note}} (Stimme {{part}}, Spalte {{column}})",
-      "HOLE_CHANGES": "Geänderte Löcher",
-      "HOLE_CHANGE": {
+      "HOLES_FIXED": "Angepasste Löcher",
+      "HOLE_FIX": {
         "OVERLAP_MERGED": "Überlappende Löcher auf Pfeife {{pipe}} in Spalte {{column}} zusammengeführt",
         "LENGTHENED": "Loch auf Pfeife {{pipe}} in Spalte {{column}} von {{from}} auf {{to}} Spalten verlängert",
         "SHORTENED": "Loch auf Pfeife {{pipe}} in Spalte {{column}} von {{from}} auf {{to}} Spalten verkürzt",
         "REPETITION_MERGED": "Wiederholte Löcher auf Pfeife {{pipe}} in Spalte {{column}} zusammengeführt, Spalte {{lost}} entfällt"
       }
+    },
+    "SECTION": {
+      "TITLE": "Lochband",
+      "ORGAN": "Drehorgel",
+      "COLUMN_LENGTH": "Spaltenlänge",
+      "COLUMNS": "Spalten",
+      "LENGTH": "Länge",
+      "LEAD_IN": "Vorlauf",
+      "LEAD_IN_NONE": "Keiner",
+      "HOLES": "Löcher",
+      "PARTS": "Stimmen auf dem Lochband",
+      "MM": "{{value}} mm"
+    },
+    "HOLE": {
+      "TITLE": "Ausgewähltes Loch",
+      "EMPTY": "Wähle ein Loch, um zu sehen, wo es liegt und wie lang es ist.",
+      "ROW": "Reihe {{row}}, {{note}}",
+      "COLUMNS_RANGE": "Spalten {{from}}–{{to}}",
+      "LENGTH": "{{columns}}, {{mm}} mm",
+      "GAP_NEXT": "Abstand zum nächsten Loch: {{columns}}, {{mm}} mm",
+      "GAP_END": "Bis zum Ende des Lochbands: {{columns}}, {{mm}} mm",
+      "TOO_SHORT": "Kürzer als die Mindestlochlänge: {{mm}} mm von {{minimum}} mm",
+      "GAP_TOO_SMALL": "Abstand unter dem Mindestabstand: {{mm}} mm von {{minimum}} mm"
     }
   },
   "ORGAN": {

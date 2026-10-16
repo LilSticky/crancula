@@ -1,5 +1,5 @@
 import type {MidiNoteNumber} from '../organ/midi-note-number';
-import type {HoleChange} from './import-summary';
+import type {HoleFix} from './import-summary';
 import {columnCount, type ColumnCount, type Hole} from './tape';
 
 /** Tolerance for floating-point error in the division, e.g. 1.1 / 0.1. */
@@ -12,7 +12,7 @@ export interface HoleLimits {
 
 export interface HoleFixResult {
   readonly holes: readonly Hole[];
-  readonly changes: readonly HoleChange[];
+  readonly changes: readonly HoleFix[];
 }
 
 /** The smallest whole number of Columns that covers `millimetres`. */
@@ -51,7 +51,7 @@ function rowsOf(holes: readonly Hole[]): Hole[][] {
 /** Merges overlapping Holes of the same Pipe; touching Holes stay apart. Sorted by Pipe, start. */
 export function mergeOverlaps(holes: readonly Hole[]): HoleFixResult {
   const merged: Hole[] = [];
-  const changes: HoleChange[] = [];
+  const changes: HoleFix[] = [];
   for (const row of rowsOf(holes)) {
     let current: Hole | undefined;
     for (const hole of row) {
@@ -68,7 +68,7 @@ export function mergeOverlaps(holes: readonly Hole[]): HoleFixResult {
   return {holes: merged, changes};
 }
 
-function fixRow(row: readonly Hole[], limits: HoleLimits, changes: HoleChange[]): Hole[] {
+function fixRow(row: readonly Hole[], limits: HoleLimits, changes: HoleFix[]): Hole[] {
   const holes = [...row];
   const {minimumHoleLength, minimumGap} = limits;
   let index = 0;
@@ -121,7 +121,7 @@ function fixRow(row: readonly Hole[], limits: HoleLimits, changes: HoleChange[])
  * start. Expects Holes that no longer overlap.
  */
 export function fixHoles(holes: readonly Hole[], limits: HoleLimits): HoleFixResult {
-  const changes: HoleChange[] = [];
+  const changes: HoleFix[] = [];
   const fixed = rowsOf(holes).flatMap((row) => fixRow(row, limits, changes));
   return {holes: fixed, changes};
 }

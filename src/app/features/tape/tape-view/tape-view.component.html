@@ -1,37 +1,171 @@
 @if (drawing(); as drawing) {
-  <cranc-page-head data-testid="tape-name" [title]="drawing.tape.name"/>
-  @if (importSummary; as summary) {
-    <cranc-import-summary data-testid="import-summary" [importSummary]="summary" />
-  }
-  <ul class="parts" [attr.aria-label]="'TAPE.VIEW.PARTS' | translate">
-    @for (part of drawing.partNames; track part.index) {
-      <li data-testid="selected-part">{{ part.name ?? ('TAPE.PARTS.UNNAMED' | translate: {number: part.index + 1}) }}</li>
-    }
-  </ul>
-  <div class="drawing" [style.--row-height.px]="rowHeight">
-    <ul class="labels">
-      @for (label of drawing.labels; track label.note) {
-        <li data-testid="row-label">{{ label.name }}</li>
+  <cranc-page-head
+    [class.compact]="compact()"
+    data-testid="tape-name"
+    [title]="drawing.tape.name"
+    [subtitle]="'TAPE.VIEW.SUBTITLE' | translate: {
+      organ: drawing.organName,
+      columns: (drawing.tape.length === 1 ? 'TAPE.VIEW.COLUMNS_ONE' : 'TAPE.VIEW.COLUMNS_OTHER') | translate: {count: drawing.lengthText},
+      columnLength: drawing.columnLengthText,
+      length: drawing.lengthMmText
+    }"
+  >
+    <mat-button-toggle-group pageHeadActions class="zoom" hideSingleSelectionIndicator data-testid="zoom" [attr.aria-label]="'TAPE.VIEW.ZOOM' | translate" [value]="zoom()" (change)="zoom.set($event.value)">
+      @for (option of zooms; track option.zoom) {
+        <mat-button-toggle [value]="option.zoom">{{ option.label | translate }}</mat-button-toggle>
+      }
+    </mat-button-toggle-group>
+    @if (compact()) {<button pageHeadActions mat-stroked-button type="button" data-testid="side-panel-toggle" [attr.aria-expanded]="sidePanelOpen()" (click)="toggleSidePanel()">{{ 'TAPE.VIEW.DETAILS' | translate }}</button>}
+    <button pageHeadActions mat-stroked-button type="button" disabled data-testid="export">
+      <mat-icon aria-hidden="true">content_cut</mat-icon>
+      {{ 'TAPE.VIEW.EXPORT' | translate }}
+    </button>
+    <span pageHeadActions class="export-later" data-testid="export-later">{{ 'TAPE.VIEW.EXPORT_LATER' | translate }}</span>
+  </cranc-page-head>
+  <div class="layout" [class.compact]="compact()">
+  <div class="stage" [class.compact]="compact()">
+  <div class="drawing">
+    <ul class="labels" [style.height.px]="drawing.totalHeight">
+      @for (label of drawing.labels; track $index) {
+        <li data-testid="row-label" [class.sharp]="label.sharp" [style.top.px]="label.y">{{ label.name }}</li>
       }
     </ul>
-    <div class="scroll" data-testid="tape-scroll">
-      <svg role="img" [attr.aria-label]="'TAPE.VIEW.DRAWING' | translate: {name: drawing.tape.name}" [attr.width]="drawing.width" [attr.height]="drawing.height">
-        @for (column of drawing.marks; track column) {
-          <line class="mark" data-testid="column-mark" [attr.x1]="column * columnWidth" [attr.x2]="column * columnWidth" y1="0" [attr.y2]="drawing.height" />
+    <div class="scroll" #scroll data-testid="tape-scroll" (scroll)="onScroll(scroll)">
+      <svg #tapeSvg role="application" [attr.aria-label]="'TAPE.VIEW.DRAWING' | translate: drawing.drawingParams" [attr.width]="drawing.width" [attr.height]="drawing.totalHeight" tabindex="0" (keydown)="onKeydown($event)" (pointermove)="onPointerMove($event, tapeSvg)" (pointerleave)="onPointerLeave()">
+        <defs>
+          <pattern id="ruler-ticks" patternUnits="userSpaceOnUse" [attr.x]="drawing.leadIn" [attr.width]="5 * scale()" height="8">
+            @for (tick of rulerTicks; track tick) {
+              <line class="ruler" [attr.x1]="tick * scale()" [attr.x2]="tick * scale()" y1="8" [attr.y2]="tick === 0 ? 0 : 4" />
+            }
+          </pattern>
+        </defs>
+        <rect [attr.x]="drawing.leadIn" [attr.y]="rulerHeight - 8" [attr.width]="drawing.bodyWidth" height="8" fill="url(#ruler-ticks)" />
+        @for (number of drawing.rulerNumbers; track number.mm) {
+          <text class="ruler-number" data-testid="ruler-number" aria-hidden="true" [attr.x]="number.x" [attr.y]="rulerHeight - 12" [attr.dx]="number.x > drawing.width - 12 ? -2 : null" [attr.text-anchor]="number.x > drawing.width - 12 ? 'end' : number.x < 12 ? 'start' : 'middle'">{{ number.mm }}</text>
         }
-        @for (hole of drawing.holes; track $index) {
-          <rect
-            class="hole"
-            data-testid="hole"
-            [attr.data-row]="hole.row"
-            [attr.data-start]="hole.start"
-            [attr.x]="hole.start * columnWidth"
-            [attr.y]="hole.row * rowHeight"
-            [attr.width]="hole.length * columnWidth"
-            [attr.height]="rowHeight"
-          />
-        }
+        <g [attr.transform]="'translate(0 ' + rulerHeight + ')'">
+          @if (drawing.leadIn > 0) {
+            <path class="lead-in" data-testid="lead-in" [attr.d]="drawing.leadInPath" />
+          }
+          <rect class="tape" [attr.x]="drawing.leadIn" y="0" [attr.width]="drawing.bodyWidth" [attr.height]="drawing.height" />
+          @for (border of drawing.borders; track border) {
+            <line class="border-line" data-testid="border-line" [attr.x1]="drawing.leadIn" [attr.x2]="drawing.width" [attr.y1]="border" [attr.y2]="border" />
+          }
+          @for (row of drawing.rows; track row.row) {
+            <line class="guide" [class.natural]="row.natural" [attr.x1]="drawing.leadIn" [attr.x2]="drawing.width" [attr.y1]="row.y" [attr.y2]="row.y" />
+          }
+          @for (mark of drawing.marks; track mark.column) {
+            <line class="mark" [class.strong]="mark.strong" data-testid="column-mark" [attr.x1]="mark.x" [attr.x2]="mark.x" y1="0" [attr.y2]="drawing.height" />
+          }
+          @for (hole of drawing.holes; track hole.row + ':' + hole.start) {
+            <rect
+              class="hole"
+              [class.selected]="hole.selected"
+              [attr.aria-label]="hole.selected && inspection() ? (('TAPE.HOLE.ROW' | translate: {row: inspection()?.rowText, note: inspection()?.noteName}) + '. ' + ('TAPE.HOLE.COLUMNS_RANGE' | translate: {from: inspection()?.fromText, to: inspection()?.toText})) : null"
+              data-testid="hole"
+              (click)="select(hole)"
+              [attr.data-row]="hole.row"
+              [attr.data-start]="hole.start"
+              [attr.x]="hole.x"
+              [attr.y]="hole.y"
+              [attr.width]="hole.width"
+              [attr.height]="hole.height"
+              [attr.rx]="hole.radius"
+              [attr.ry]="hole.radius"
+            />
+          }
+          @for (number of drawing.numbers; track number.column) {
+            <text class="column-number" data-testid="column-number" aria-hidden="true" [attr.x]="number.x" [attr.y]="drawing.numbersY">{{ number.number }}</text>
+          }
+        </g>
       </svg>
     </div>
+  </div>
+  @if (overview(); as overview) {
+    <svg
+      #overviewSvg
+      class="overview"
+      data-testid="overview"
+      role="img"
+      [attr.aria-label]="'TAPE.VIEW.OVERVIEW' | translate"
+      [attr.width]="overview.width"
+      [attr.viewBox]="'0 0 ' + overview.width + ' ' + overview.height"
+      preserveAspectRatio="none"
+      (click)="onOverviewClick($event, overviewSvg)"
+    >
+      @if (overview.leadIn > 0) {
+        <path class="lead-in" [attr.d]="overview.leadInPath" />
+      }
+      <rect class="tape" [attr.x]="overview.leadIn" y="0" [attr.width]="overview.bodyWidth" [attr.height]="overview.height" />
+      <path class="hole" data-testid="overview-holes" [attr.d]="overview.holesPath" />
+      @if (overviewMark(); as frame) {
+        <rect class="overview-frame" data-testid="overview-frame" [attr.x]="frame.x" y="0" [attr.width]="frame.width" [attr.height]="overview.height" />
+      }
+    </svg>
+  }
+  <div class="status-line" data-testid="status-line">
+    @if (pointerText(); as pointer) {
+      <span data-testid="pointer-column">{{ 'TAPE.VIEW.STATUS_COLUMN' | translate: {column: pointer.column, mm: pointer.mm} }}</span>
+      @if (pointer.row !== undefined) {
+        <span data-testid="pointer-row">{{ 'TAPE.VIEW.STATUS_ROW' | translate: {row: pointer.row, note: pointer.note} }}</span>
+      }
+    }
+    <span data-testid="zoom-state">{{ zoom() === 'whole' ? ('TAPE.VIEW.ZOOM_WHOLE' | translate) : zoom() }}</span>
+    <span class="save-state" aria-live="polite" data-testid="save-state">
+      @if (saveProblem(); as problem) {
+        {{ 'TAPE.STORAGE.SAVE_PROBLEM' | translate: {reason: problem.reason} }}
+      } @else {
+        {{ 'TAPE.VIEW.SAVED' | translate }}
+      }
+    </span>
+  </div>
+  </div>
+  @if (!compact() || sidePanelOpen()) {
+  <aside class="side-panel" data-testid="side-panel" (keydown)="onSidePanelKeydown($event)" [attr.aria-label]="'TAPE.VIEW.SIDE_PANEL' | translate">
+    <section data-testid="tape-section">
+      <h2>{{ 'TAPE.SECTION.TITLE' | translate }}</h2>
+      <dl>
+        <dt>{{ 'TAPE.SECTION.ORGAN' | translate }}</dt>
+        <dd><a matButton [routerLink]="['/organs', drawing.tape.organId]">{{ drawing.organName }}</a></dd>
+        <dt>{{ 'TAPE.SECTION.COLUMN_LENGTH' | translate }}</dt>
+        <dd>{{ 'TAPE.SECTION.MM' | translate: {value: drawing.columnLengthText} }}</dd>
+        <dt>{{ 'TAPE.SECTION.COLUMNS' | translate }}</dt>
+        <dd>{{ drawing.lengthText }}</dd>
+        <dt>{{ 'TAPE.SECTION.LENGTH' | translate }}</dt>
+        <dd>{{ 'TAPE.SECTION.MM' | translate: {value: drawing.lengthMmText} }}</dd>
+        <dt>{{ 'TAPE.SECTION.LEAD_IN' | translate }}</dt>
+        <dd>{{ drawing.leadInMm === 0 ? ('TAPE.SECTION.LEAD_IN_NONE' | translate) : ('TAPE.SECTION.MM' | translate: {value: drawing.leadInText}) }}</dd>
+        <dt>{{ 'TAPE.SECTION.HOLES' | translate }}</dt>
+        <dd>{{ drawing.holesText }}</dd>
+      </dl>
+      <h3>{{ 'TAPE.SECTION.PARTS' | translate }}</h3>
+      <ul class="parts" [attr.aria-label]="'TAPE.VIEW.PARTS' | translate">
+        @for (part of drawing.partNames; track part.index) {
+          <li data-testid="selected-part">{{ part.name ?? ('TAPE.PARTS.UNNAMED' | translate: {number: part.index + 1}) }}</li>
+        }
+      </ul>
+    </section>
+    <section data-testid="selected-hole" aria-live="polite">
+      <h2>{{ 'TAPE.HOLE.TITLE' | translate }}</h2>
+      @if (inspection(); as hole) {
+        <p>{{ 'TAPE.HOLE.ROW' | translate: {row: hole.rowText, note: hole.noteName} }}</p>
+        <p>{{ 'TAPE.HOLE.COLUMNS_RANGE' | translate: {from: hole.fromText, to: hole.toText} }}</p>
+        <p>{{ 'TAPE.HOLE.LENGTH' | translate: {columns: (hole.lengthColumns === 1 ? 'TAPE.VIEW.COLUMNS_ONE' : 'TAPE.VIEW.COLUMNS_OTHER') | translate: {count: hole.lengthColumnsText}, mm: hole.lengthMmText} }}</p>
+        <p>{{ (hole.gap.to === 'nextHole' ? 'TAPE.HOLE.GAP_NEXT' : 'TAPE.HOLE.GAP_END') | translate: {columns: (hole.gap.columns === 1 ? 'TAPE.VIEW.COLUMNS_ONE' : 'TAPE.VIEW.COLUMNS_OTHER') | translate: {count: hole.gapColumnsText}, mm: hole.gapMmText} }}</p>
+        @for (warning of hole.warnings; track warning.kind) {
+          <p class="warning" data-testid="hole-warning">
+            <mat-icon aria-hidden="true" fontIcon="warning" />
+            {{ (warning.kind === 'tooShort' ? 'TAPE.HOLE.TOO_SHORT' : 'TAPE.HOLE.GAP_TOO_SMALL') | translate: {mm: warning.mmText, minimum: warning.minimumText} }}
+          </p>
+        }
+      } @else {
+        <p>{{ 'TAPE.HOLE.EMPTY' | translate }}</p>
+      }
+    </section>
+    @if (importSummary(); as summary) {
+      <cranc-import-summary data-testid="import-summary" [importSummary]="summary" (dismissed)="importSummary.set(null)" />
+    }
+  </aside>
+  }
   </div>
 }

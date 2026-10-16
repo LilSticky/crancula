@@ -40,7 +40,7 @@ const SUMMARY: ImportSummary = {
   notesOnTape: 17,
   movedByOctaves: [{part: part(1), noteNumber: note(48), pipe: note(72), octaves: 2, column: col(0)}],
   unplayableNotes: [{part: part(2), noteNumber: note(30), column: col(4)}],
-  holeChanges: [
+  holesFixed: [
     {kind: 'overlap-merged', pipe: note(60), column: col(1)},
     {kind: 'lengthened', pipe: note(62), column: col(2), from: count(1), to: count(3)},
     {kind: 'shortened', pipe: note(64), column: col(3), from: count(4), to: count(2)},
@@ -56,16 +56,39 @@ async function render(summary: ImportSummary) {
   await fixture.whenStable();
   const element = fixture.nativeElement as HTMLElement;
   const all = (testId: string) => [...element.querySelectorAll<HTMLElement>(`[data-testid="${testId}"]`)];
-  return {element, all, one: (testId: string) => all(testId)[0]};
+  return {fixture, element, all, one: (testId: string) => all(testId)[0]};
 }
 
 describe('ImportSummaryComponent', () => {
-  it('shows the Transposition with its sign and the number of Notes on the Tape', async () => {
+  it('lists exactly Transposition, Notes moved by octaves, Unplayable Notes and Holes fixed', async () => {
+    const {element} = await render(SUMMARY);
+
+    expect([...element.querySelectorAll('dt')].map((term) => term.textContent?.trim())).toEqual([
+      'Transposition',
+      'Notes moved by octaves',
+      'Unplayable Notes',
+      'Holes fixed',
+    ]);
+  });
+
+  it('shows the Transposition with its sign and no count of Notes on the Tape', async () => {
     const {one} = await render(SUMMARY);
 
     expect(one('transposition')?.dataset['value']).toBe('12');
     expect(one('transposition')?.textContent).toContain('+12');
-    expect(one('notes-on-tape')?.dataset['value']).toBe('17');
+    expect(one('notes-on-tape')).toBeUndefined();
+  });
+
+  it('is titled Import Summary with a close button named Dismiss that emits dismissed', async () => {
+    const {element, fixture} = await render(SUMMARY);
+    let dismissed = 0;
+    fixture.componentInstance.dismissed.subscribe(() => dismissed++);
+
+    expect(element.querySelector('h2, h3')?.textContent?.trim()).toBe('Import Summary');
+    const close = element.querySelector<HTMLButtonElement>('button[aria-label="Dismiss"]');
+    close?.click();
+    expect(close).not.toBeNull();
+    expect(dismissed).toBe(1);
   });
 
   it('shows every Note moved by octaves with note name, octaves, Part, Pipe and Column plus one', async () => {
@@ -84,15 +107,15 @@ describe('ImportSummaryComponent', () => {
     ]);
   });
 
-  it('shows every Hole change by kind with its Pipe note name and Column plus one', async () => {
+  it('shows every fixed Hole by kind with its Pipe note name and Column plus one', async () => {
     const {all} = await render(SUMMARY);
-    const changes = all('hole-change').map(({dataset}) => ({
+    const fixes = all('hole-fixed').map(({dataset}) => ({
       kind: dataset['kind'],
       pipeName: dataset['pipeName'],
       column: dataset['column'],
     }));
 
-    expect(changes).toEqual([
+    expect(fixes).toEqual([
       {kind: 'overlap-merged', pipeName: 'C4', column: '2'},
       {kind: 'lengthened', pipeName: 'D4', column: '3'},
       {kind: 'shortened', pipeName: 'E4', column: '4'},
@@ -101,10 +124,10 @@ describe('ImportSummaryComponent', () => {
   });
 
   it('shows no list entries for an import that changed nothing', async () => {
-    const {all} = await render({...SUMMARY, movedByOctaves: [], unplayableNotes: [], holeChanges: []});
+    const {all} = await render({...SUMMARY, movedByOctaves: [], unplayableNotes: [], holesFixed: []});
 
     expect(all('moved-note')).toEqual([]);
     expect(all('unplayable-note')).toEqual([]);
-    expect(all('hole-change')).toEqual([]);
+    expect(all('hole-fixed')).toEqual([]);
   });
 });

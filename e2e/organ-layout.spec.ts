@@ -1,6 +1,7 @@
 import {expect, test, type Page} from '@playwright/test';
 import {launchApp} from './support/launch-app';
 import {defineStreetOrgan} from './support/organ-editor';
+import {resizeWindowOrSkip} from './support/window-size';
 
 interface Box {
   readonly top: number;
@@ -17,7 +18,7 @@ const documentOverflow = (window: Page) =>
 
 const inView = async (window: Page, testId: string) => {
   const box = await window.getByTestId(testId).boundingBox();
-  const viewport = window.viewportSize();
+  const viewport = await window.evaluate(() => ({width: window.innerWidth, height: window.innerHeight}));
   if (!box || !viewport) throw new Error(`${testId} has no box`);
   return box.y >= 0 && box.y + box.height <= viewport.height && box.x >= 0 && box.x + box.width <= viewport.width;
 };
@@ -35,8 +36,9 @@ const scrolls = (window: Page, testId: string) =>
 
 test.describe('I see the whole Organ editor on one screen', () => {
   test('1280 x 800: nothing scrolls, three rack columns, action bar in view', async () => {
-    const {app, window} = await launchApp();
-    await window.setViewportSize({width: 1280, height: 800});
+    const launched = await launchApp();
+      const {app, window} = launched;
+    await resizeWindowOrSkip(launched, 1280, 800, true);
     await defineStreetOrgan(window);
 
     expect(await documentOverflow(window)).toEqual({vertical: 0, horizontal: 0});
@@ -46,8 +48,9 @@ test.describe('I see the whole Organ editor on one screen', () => {
   });
 
   test('1024 x 700: two rack columns, only the Pipes sheet scrolls, Tape Bed sheet and action bar in view', async () => {
-    const {app, window} = await launchApp();
-    await window.setViewportSize({width: 1024, height: 700});
+    const launched = await launchApp();
+      const {app, window} = launched;
+    await resizeWindowOrSkip(launched, 1024, 700, true);
     await defineStreetOrgan(window);
 
     expect(await documentOverflow(window)).toEqual({vertical: 0, horizontal: 0});
@@ -60,8 +63,9 @@ test.describe('I see the whole Organ editor on one screen', () => {
   });
 
   test('no two Tape Bed field boxes overlap', async () => {
-    const {app, window} = await launchApp();
-    await window.setViewportSize({width: 1024, height: 700});
+    const launched = await launchApp();
+      const {app, window} = launched;
+    await resizeWindowOrSkip(launched, 1024, 700, true);
     await defineStreetOrgan(window);
 
     const boxes: Box[] = await window.getByTestId('tape-bed-sheet').locator('mat-form-field').evaluateAll((fields) =>
@@ -82,8 +86,9 @@ test.describe('I see the whole Organ editor on one screen', () => {
 
   for (const size of [{width: 1280, height: 800}, {width: 1024, height: 700}]) {
     test(`${size.width} x ${size.height}: every rack column lies within the visible Pipes sheet`, async () => {
-      const {app, window} = await launchApp();
-      await window.setViewportSize(size);
+      const launched = await launchApp();
+      const {app, window} = launched;
+      await resizeWindowOrSkip(launched, size.width, size.height, true);
       await defineStreetOrgan(window);
 
       const sheet = await window.getByTestId('pipes-sheet').boundingBox();
@@ -99,8 +104,9 @@ test.describe('I see the whole Organ editor on one screen', () => {
 
 test.describe('Organ editor labels do not collide', () => {
   test('1024 x 700, empty new Organ: no Tape Bed label overlaps its suffix or is truncated', async () => {
-    const {app, window} = await launchApp();
-    await window.setViewportSize({width: 1024, height: 700});
+    const launched = await launchApp();
+      const {app, window} = launched;
+    await resizeWindowOrSkip(launched, 1024, 700, true);
     await window.getByTestId('new-organ').click();
 
     const problems = await window.getByTestId('tape-bed-sheet').locator('mat-form-field').evaluateAll((fields) =>
@@ -125,8 +131,9 @@ test.describe('Organ editor labels do not collide', () => {
   });
 
   test('1280 x 800: a MIDI note label stays inside its own rack row', async () => {
-    const {app, window} = await launchApp();
-    await window.setViewportSize({width: 1280, height: 800});
+    const launched = await launchApp();
+      const {app, window} = launched;
+    await resizeWindowOrSkip(launched, 1280, 800, true);
     await defineStreetOrgan(window);
 
     const problems = await window.getByTestId('pipe').evaluateAll((rows) =>
@@ -146,8 +153,9 @@ test.describe('Organ editor labels do not collide', () => {
 test.describe('The Pipe rack header cells do not run together', () => {
   for (const language of ['en', 'de'] as const) {
     test(`${language}: the Row and MIDI note header texts have a gap`, async () => {
-      const {app, window} = await launchApp();
-      await window.setViewportSize({width: 1280, height: 800});
+      const launched = await launchApp();
+      const {app, window} = launched;
+      await resizeWindowOrSkip(launched, 1280, 800, true);
       await window.getByTestId('language-switch').locator(`[data-language="${language}"]`).click();
       await window.getByTestId('new-organ').click();
       await window.getByTestId('add-pipe').click();

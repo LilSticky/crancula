@@ -86,6 +86,11 @@ test.describe('UX screens', () => {
     await createTapeFromSong(window, 'Three parts', threePartsWithPercussion());
     await capture(window, '08-tape-view');
 
+    await window.getByTestId('tape-scroll').locator('[data-testid="hole"]').first().click();
+    await expect(window.getByTestId('tape-scroll').locator('[data-testid="hole"][aria-selected="true"]')).toHaveCount(1);
+    await window.mouse.move(640, 400);
+    await capture(window, '08b-tape-view-selected-hole');
+
     await window.getByRole('link', {name: 'Tapes'}).click();
     await capture(window, '09-tape-list');
 
@@ -116,6 +121,18 @@ test.describe('UX screens', () => {
     await expect(window.getByTestId('save-organ')).toBeVisible();
     await window.mouse.move(640, 400);
     await capture(window, '13-organ-editor-compact');
+
+    await window.getByRole('link', {name: 'Tapes'}).click();
+    await window.getByTestId('open-tape').first().click();
+    await expect(window.getByTestId('tape-name')).toBeVisible();
+    await window.mouse.move(640, 400);
+    await capture(window, '14-tape-view-compact');
+
     await resizeWindow(launched, 1280, 800);
+    await window.getByTestId('language-switch').locator('[data-language="de"]').click();
+    await expect(window.getByTestId('tape-name')).toBeVisible();
+    await window.mouse.move(640, 400);
+    await capture(window, '15-tape-view-german');
+    await window.getByTestId('language-switch').locator('[data-language="en"]').click();
   });
 });

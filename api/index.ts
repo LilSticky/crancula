@@ -74,4 +74,4 @@ export {
   type TapeLibrary,
   type TapeLibrarySnapshot,
 } from './tape/tape-library-snapshot';
-export type {HoleChange, ImportSummary} from './tape/import-summary';
+export type {HoleFix, ImportSummary} from './tape/import-summary';

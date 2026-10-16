@@ -3,7 +3,7 @@ import type {PartIndex} from '../song/song';
 import type {Column, ColumnCount, Transposition} from './tape';
 
 /** A change made to a Hole so the Tape can be cut (FR-008, FR-012). Columns count from 0. */
-export type HoleChange =
+export type HoleFix =
   | {readonly kind: 'overlap-merged'; readonly pipe: MidiNoteNumber; readonly column: Column}
   | {
       readonly kind: 'lengthened';
@@ -48,5 +48,5 @@ export interface ImportSummary {
   readonly notesOnTape: number;
   readonly movedByOctaves: readonly NoteMovedByOctaves[];
   readonly unplayableNotes: readonly UnplayableNote[];
-  readonly holeChanges: readonly HoleChange[];
+  readonly holesFixed: readonly HoleFix[];
 }

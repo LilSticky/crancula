@@ -121,6 +121,7 @@
 * What the user sees after a Song is brought onto a Tape
 * Shows the Transposition, the Notes moved by octaves, the Unplayable Notes and the Holes fixed, nothing else
 * "Holes fixed" is its name for the Holes changed to respect the Minimum Hole Length and Minimum Gap (not "Changed Holes")
+* German: Importübersicht; Holes fixed: Angepasste Löcher
 * Shown once; not stored with the Tape
 
 # Minimum Hole Length
