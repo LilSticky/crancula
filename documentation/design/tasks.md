@@ -395,13 +395,13 @@ keys to `en.json` and `de.json` (German: Lochband).
   spec): below 1180 px the side panel is closed behind a "Tape details" toggle button in the page
   head (`aria-expanded`); Escape closes it; above 1180 px it is always shown and the toggle is
   absent. Then the breakpoint signal.
-- [ ] **V23** e2e, existing tests. Update `tape-import.spec.ts` (row labels and `data-row` /
+- [x] **V23** e2e, existing tests. Update `tape-import.spec.ts` (row labels and `data-row` /
   `data-start` stay; the Import Summary is in the side panel; `hole-change` is `hole-fixed`),
   `tape-german`, `tape-restart` and the SC-006 test: the 5-minute Song now opens at 1:1 true mm,
   metres wide; it must still show its first Hole within 2 s and scroll to its end, with the
   test unchanged in its limits. If it is slow, the fix is V6b's windowing (render only the visible
   Columns), never a relaxed test. Run them.
-- [ ] **V24** e2e, true millimetres and one screen. New `tape-layout.spec.ts` with the Street organ
+- [x] **V24** e2e, true millimetres and one screen. New `tape-layout.spec.ts` with the Street organ
   and a short Song: at 1:1 a Hole's box is hole diameter × 3,78 px high (± 1 px) and row 1's Holes
   sit above row 2's; the gaps between the Tape edges and the outermost rows' Holes are equal (rows
   centred, the Border); with a Lead-in of 30 mm the first Column starts 30 × 3,78 px (± 1 px) after

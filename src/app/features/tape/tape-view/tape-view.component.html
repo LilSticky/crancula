@@ -88,7 +88,8 @@
       role="img"
       [attr.aria-label]="'TAPE.VIEW.OVERVIEW' | translate"
       [attr.width]="overview.width"
-      [attr.height]="overview.height"
+      [attr.viewBox]="'0 0 ' + overview.width + ' ' + overview.height"
+      preserveAspectRatio="none"
       (click)="onOverviewClick($event, overviewSvg)"
     >
       @if (overview.leadIn > 0) {

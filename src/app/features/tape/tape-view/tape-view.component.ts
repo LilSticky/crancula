@@ -166,8 +166,12 @@ function windowWidth(element: HTMLElement): number {
     }
     .overview {
       cursor: pointer;
+      flex: none;
+      width: 100%;
+      height: 44px;
     }
     .overview-frame {
+      vector-effect: non-scaling-stroke;
       fill: none;
       stroke: var(--cr-brass);
       stroke-width: 2;
