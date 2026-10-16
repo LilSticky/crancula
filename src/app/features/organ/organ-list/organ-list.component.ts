@@ -65,7 +65,7 @@ interface OrganRow {
       <mat-card appearance="outlined">
         <table mat-table class="cr-ledger" [dataSource]="rows()" [trackBy]="trackRow">
           <ng-container matColumnDef="miniature">
-            <th mat-header-cell *matHeaderCellDef></th>
+            <th mat-header-cell *matHeaderCellDef><span class="cdk-visually-hidden">{{ 'ORGAN.LIST.TAPE_BED_HEADER' | translate }}</span></th>
             <td mat-cell *matCellDef="let row">
               <svg data-testid="organ-miniature" aria-hidden="true" [attr.width]="miniatureWidth" [attr.height]="miniatureHeight"
                    [attr.viewBox]="'0 0 ' + miniatureWidth + ' ' + miniatureHeight">
@@ -98,7 +98,7 @@ interface OrganRow {
             </td>
           </ng-container>
           <ng-container matColumnDef="actions">
-            <th mat-header-cell *matHeaderCellDef></th>
+            <th mat-header-cell *matHeaderCellDef><span class="cdk-visually-hidden">{{ 'ORGAN.LIST.ACTIONS_HEADER' | translate }}</span></th>
             <td mat-cell *matCellDef="let row">
               <button matIconButton type="button" [matMenuTriggerFor]="rowMenu" (click)="$event.stopPropagation()"
                       [attr.aria-label]="'ORGAN.LIST.MORE_ACTIONS' | translate: {name: row.organ.name}"

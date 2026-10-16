@@ -51,6 +51,7 @@
       "COLUMNS": "Columns",
       "LENGTH": "Length",
       "MORE_ACTIONS": "More actions for {{name}}",
+      "ACTIONS_HEADER": "Actions",
       "DELETE": "Delete Tape",
       "ORGAN_NOT_AVAILABLE": "Organ not available",
       "LENGTH_MM": "{{length}} mm"
@@ -154,6 +155,8 @@
       "TAPES_HEADER": "Tapes",
       "TAPES_NONE": "No Tapes",
       "MORE_ACTIONS": "More actions for {{name}}",
+      "TAPE_BED_HEADER": "Tape Bed",
+      "ACTIONS_HEADER": "Actions",
       "NEXT_STEP": "Your Organ is ready. Bring a MIDI Song onto a Tape for it.",
       "DELETE_BLOCKED": "Your Tapes couldn't be loaded, so this Organ can't be deleted for now.",
       "DELETE_TAPES": "This also deletes its Tapes ({{count}}) forever."

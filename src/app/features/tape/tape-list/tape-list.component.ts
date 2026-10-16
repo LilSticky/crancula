@@ -84,11 +84,13 @@ interface TapeRow {
           <ng-container matColumnDef="name">
             <th mat-header-cell *matHeaderCellDef>{{ 'TAPE.LIST.NAME' | translate }}</th>
             <td mat-cell *matCellDef="let row">
-              <a class="name" data-testid="open-tape" (click)="$event.stopPropagation()"
-                 [routerLink]="row.organ === undefined ? null : ['/tapes', row.tape.id]"
-                 [attr.aria-disabled]="row.organ === undefined ? 'true' : null">
-                <span data-testid="tape-name">{{ row.tape.name }}</span>
-              </a>
+              @if (row.organ === undefined) {
+                <span class="name unavailable-name" data-testid="tape-name">{{ row.tape.name }}</span>
+              } @else {
+                <a class="name" data-testid="open-tape" (click)="$event.stopPropagation()" [routerLink]="['/tapes', row.tape.id]">
+                  <span data-testid="tape-name">{{ row.tape.name }}</span>
+                </a>
+              }
             </td>
           </ng-container>
           <ng-container matColumnDef="organ">
@@ -110,7 +112,7 @@ interface TapeRow {
             <td mat-cell *matCellDef="let row"><span data-testid="tape-length-mm">{{ 'TAPE.LIST.LENGTH_MM' | translate: {length: row.lengthInMillimetres} }}</span></td>
           </ng-container>
           <ng-container matColumnDef="actions">
-            <th mat-header-cell *matHeaderCellDef></th>
+            <th mat-header-cell *matHeaderCellDef><span class="cdk-visually-hidden">{{ 'TAPE.LIST.ACTIONS_HEADER' | translate }}</span></th>
             <td mat-cell *matCellDef="let row">
               <button matIconButton type="button" [matMenuTriggerFor]="rowMenu" (click)="$event.stopPropagation()"
                       [attr.aria-label]="'TAPE.LIST.MORE_ACTIONS' | translate: {name: row.tape.name}"
@@ -147,9 +149,8 @@ interface TapeRow {
       font-weight: 600;
     }
 
-    a[aria-disabled='true'] {
+    .unavailable-name {
       color: var(--mat-sys-on-surface-variant);
-      cursor: default;
     }
 
     .filter {

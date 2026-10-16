@@ -132,7 +132,16 @@ describe('TapeListComponent', () => {
       const headers = [...element.querySelectorAll('thead th')]
         .map((th) => th.textContent?.trim() ?? '')
         .filter((header) => header !== '');
-      expect(headers).toEqual(['Name', 'Organ', 'Columns', 'Length']);
+      expect(headers).toEqual(expect.arrayContaining(['Name', 'Organ', 'Columns', 'Length']));
+    });
+
+    it('gives every column header an accessible name, the menu "Actions"', async () => {
+      const {add, element} = await render();
+      await add(testOrgan('Street organ', 3), 'Melody');
+
+      const headers = [...element.querySelectorAll('thead th')].map((th) => th.textContent?.trim() ?? '');
+      expect(headers.every((header) => header !== '')).toBe(true);
+      expect(headers).toEqual(expect.arrayContaining(['Actions']));
     });
 
     it('lists each Tape with its name, its Organ, and its length in Columns and in mm', async () => {
@@ -220,15 +229,17 @@ describe('TapeListComponent', () => {
     });
 
     describe('with an Organ that is not available', () => {
-      it('shows "Organ not available" as plain text and disables the name link', async () => {
+      it('shows "Organ not available" as plain text and the Tape name as plain text without any link', async () => {
         const {add, text, element} = await render();
         await add(testOrgan('Lost organ', 3), 'Melody', false);
 
-        const open = element.querySelector('[data-testid="open-tape"]');
+        const row = element.querySelector('[data-testid="tape"]');
         expect(text('[data-testid="tape-organ"]')).toBe('Organ not available');
         expect(element.querySelector('[data-testid="tape-organ"]')?.closest('a')).toBeNull();
-        expect(open?.getAttribute('aria-disabled')).toBe('true');
-        expect(open?.hasAttribute('href')).toBe(false);
+        expect(row?.querySelector('[data-testid="tape-name"]')?.textContent?.trim()).toBe('Melody');
+        expect(row?.querySelector('[data-testid="tape-name"]')?.closest('a')).toBeNull();
+        expect(row?.querySelector('a')).toBeNull();
+        expect(element.querySelector('[aria-disabled]')).toBeNull();
       });
 
       it('does nothing on a click on the row', async () => {

@@ -51,6 +51,7 @@
       "COLUMNS": "Spalten",
       "LENGTH": "Länge",
       "MORE_ACTIONS": "Weitere Aktionen für {{name}}",
+      "ACTIONS_HEADER": "Aktionen",
       "DELETE": "Lochband löschen",
       "ORGAN_NOT_AVAILABLE": "Drehorgel nicht verfügbar",
       "LENGTH_MM": "{{length}} mm"
@@ -154,6 +155,8 @@
       "TAPES_HEADER": "Lochbänder",
       "TAPES_NONE": "Keine Lochbänder",
       "MORE_ACTIONS": "Weitere Aktionen für {{name}}",
+      "TAPE_BED_HEADER": "Bandbett",
+      "ACTIONS_HEADER": "Aktionen",
       "NEXT_STEP": "Deine Drehorgel ist bereit. Bringe ein MIDI-Lied auf ein Lochband für sie.",
       "DELETE_BLOCKED": "Deine Lochbänder konnten nicht geladen werden, darum kann diese Drehorgel vorerst nicht gelöscht werden.",
       "DELETE_TAPES": "Dabei werden auch ihre Lochbänder ({{count}}) für immer gelöscht."

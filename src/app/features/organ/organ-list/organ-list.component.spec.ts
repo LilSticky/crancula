@@ -142,7 +142,17 @@ describe('OrganListComponent', () => {
       const headers = [...element.querySelectorAll('thead th')]
         .map((th) => th.textContent?.trim() ?? '')
         .filter((header) => header !== '');
-      expect(headers).toEqual(['Name', 'Tapes']);
+      expect(headers).toEqual(expect.arrayContaining(['Name', 'Tapes']));
+    });
+
+    it('gives every column header an accessible name, the miniature "Tape Bed" and the menu "Actions"', async () => {
+      const {fixture, library, element} = await render();
+      await library.put(streetOrgan());
+      await fixture.whenStable();
+
+      const headers = [...element.querySelectorAll('thead th')].map((th) => th.textContent?.trim() ?? '');
+      expect(headers.every((header) => header !== '')).toBe(true);
+      expect(headers).toEqual(expect.arrayContaining(['Tape Bed', 'Actions']));
     });
 
     it('lists the Organs by name', async () => {
