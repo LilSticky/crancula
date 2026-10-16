@@ -271,7 +271,7 @@ Keep the test ids e2e uses: `tape-name`, `row-label`, `hole` with `data-row` / `
 `tape-scroll`, `import-summary`, `selected-part`. Every task that adds or changes UI text adds the
 keys to `en.json` and `de.json` (German: Lochband).
 
-- [ ] **V1** Tape geometry, unit. A pure helper `tape-geometry.ts` next to the view:
+- [x] **V1** Tape geometry, unit. A pure helper `tape-geometry.ts` next to the view:
   `tapeGeometry(tape, organ)` gives, in mm, the Lead-in, the Tape length (from Column 1) and width,
   the Border, the centre of each row and one slot per drawn Hole (`x`, `y`, `width`, `height`,
   `radius` = hole diameter / 2, plus `row`, `start`), with `x` counted from the start of Column 1.
@@ -280,14 +280,14 @@ keys to `en.json` and `de.json` (German: Lochband).
   `start` 64, `length` 15 in row 25 is `x` 160, `width` 37,5, `y` 90,25 (centre 91,5), `height` 2,5; Holes of a
   Pipe no longer on the Organ are left out; a reordered Organ moves the Hole with its Pipe. Uses
   `border` from `api/organ/`. Spec first.
-- [ ] **V2** Zoom scale, unit. `pixelsPerMillimetre(zoom, stageWidth, tapeLength)` in the same
+- [x] **V2** Zoom scale, unit. `pixelsPerMillimetre(zoom, stageWidth, tapeLength)` in the same
   folder: `'1:1'` → 96 / 25,4, `'2:1'` → twice that, `'whole'` → stage width / Tape length. Spec
   first.
-- [ ] **V3** Ruler and Column marks, unit. Pure helpers: `columnLines(length)` (every 8th Column,
+- [x] **V3** Ruler and Column marks, unit. Pure helpers: `columnLines(length)` (every 8th Column,
   `strong` every 32nd, none at or past the end), `columnNumbers(length, columnWidthPx)` (the
   1-based numbers of the design choice above) and `rulerNumbers(lengthMm)` (0, 10, 20, … up to the
   length). Spec first.
-- [ ] **V4** Note-name gutter, unit. `gutterLabels(pipes, rowPitchPx)`: one entry per row with the
+- [x] **V4** Note-name gutter, unit. `gutterLabels(pipes, rowPitchPx)`: one entry per row with the
   note name and `sharp`; below 14 px row pitch sharps keep their entry but no text. Spec first
   (Street organ at 1:1: 3,5 mm ≈ 13,2 px, so F#3 has no text, F3 has).
 - [ ] **V5** Tape at true millimetres, component. Rewrite the "drawing the Tape" specs (drop
