@@ -97,7 +97,7 @@ test.describe('My tapes are still there after a restart', () => {
     await expect(window.getByTestId('tape')).toHaveCount(1);
     await expect(window.getByTestId('tape-name')).toHaveText('Scale');
     await expect(window.getByTestId('tape-organ')).toHaveText('Organ not available');
-    await expect(window.getByTestId('open-tape')).toHaveAttribute('aria-disabled', 'true');
+    await expect(window.getByTestId('open-tape')).toHaveCount(0);
     await app.close();
     expect(await readTapesFile(seeded.userDataDir)).toBe(stored);
   });
