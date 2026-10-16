@@ -702,7 +702,7 @@ is `song-file-name`). Every task that adds or changes UI text adds the keys to `
   attributes stay; before a Song is chosen the sheet shows `fit-empty` "Choose a MIDI file and an
   Organ to see how the Song fits its Pipes."; the sheet has `aria-live="polite"`. Then the sheet
   and the keys (`TAPE.FIT.*` without `{{count}}` in the labels).
-- [ ] **I8a** Fit Notes, domain unit. A pure `fitNotesOf(song, selectedParts, organ,
+- [x] **I8a** Fit Notes, domain unit. A pure `fitNotesOf(song, selectedParts, organ,
   transposition)` in `api/tape/fit.ts`, exported via `@api/index`: the `NoteMovedByOctaves[]` and
   `UnplayableNote[]` (the Import Summary's types) for the selected Parts. Spec first in
   `fit.spec.ts`: a Note moved up an octave gives its Part, transposed note number, Pipe, octaves 1

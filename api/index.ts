@@ -59,7 +59,7 @@ export {
   type Transposition,
 } from './tape/tape';
 export {allowedTranspositions, proposeTransposition} from './tape/transposition';
-export {fitOf, type Fit} from './tape/fit';
+export {fitNotesOf, fitOf, type Fit} from './tape/fit';
 export {
   createTape,
   prefilledColumnLength,
