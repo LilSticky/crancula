@@ -52,7 +52,7 @@
 
 # Part
 * One voice or instrument of a Song, such as melody, bass or drums
-* Has an optional name and its Notes; may be percussion
+* Has an optional name and its Notes; may be percussion (German: Schlagwerk)
 * The user chooses which Parts go onto a Tape
 
 # Scores
