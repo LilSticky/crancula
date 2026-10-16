@@ -8,29 +8,57 @@
       <li data-testid="selected-part">{{ part.name ?? ('TAPE.PARTS.UNNAMED' | translate: {number: part.index + 1}) }}</li>
     }
   </ul>
-  <div class="drawing" [style.--row-height.px]="rowHeight">
-    <ul class="labels">
-      @for (label of drawing.labels; track label.note) {
-        <li data-testid="row-label">{{ label.name }}</li>
+  <div class="drawing">
+    <ul class="labels" [style.height.px]="drawing.totalHeight">
+      @for (label of drawing.labels; track $index) {
+        <li data-testid="row-label" [class.sharp]="label.sharp" [style.top.px]="label.y">{{ label.name }}</li>
       }
     </ul>
-    <div class="scroll" data-testid="tape-scroll">
-      <svg role="img" [attr.aria-label]="'TAPE.VIEW.DRAWING' | translate: {name: drawing.tape.name}" [attr.width]="drawing.width" [attr.height]="drawing.height">
-        @for (column of drawing.marks; track column) {
-          <line class="mark" data-testid="column-mark" [attr.x1]="column * columnWidth" [attr.x2]="column * columnWidth" y1="0" [attr.y2]="drawing.height" />
+    <div class="scroll" #scroll data-testid="tape-scroll" (scroll)="onScroll(scroll)">
+      <svg role="img" [attr.aria-label]="'TAPE.VIEW.DRAWING' | translate: {name: drawing.tape.name}" [attr.width]="drawing.width" [attr.height]="drawing.totalHeight">
+        <defs>
+          <pattern id="ruler-ticks" patternUnits="userSpaceOnUse" [attr.x]="drawing.leadIn" [attr.width]="5 * scale" height="8">
+            @for (tick of rulerTicks; track tick) {
+              <line class="ruler" [attr.x1]="tick * scale" [attr.x2]="tick * scale" y1="8" [attr.y2]="tick === 0 ? 0 : 4" />
+            }
+          </pattern>
+        </defs>
+        <rect [attr.x]="drawing.leadIn" [attr.y]="rulerHeight - 8" [attr.width]="drawing.bodyWidth" height="8" fill="url(#ruler-ticks)" />
+        @for (number of drawing.rulerNumbers; track number.mm) {
+          <text class="ruler-number" data-testid="ruler-number" [attr.x]="number.x" [attr.y]="rulerHeight - 12" text-anchor="middle">{{ number.mm }}</text>
         }
-        @for (hole of drawing.holes; track $index) {
-          <rect
-            class="hole"
-            data-testid="hole"
-            [attr.data-row]="hole.row"
-            [attr.data-start]="hole.start"
-            [attr.x]="hole.start * columnWidth"
-            [attr.y]="hole.row * rowHeight"
-            [attr.width]="hole.length * columnWidth"
-            [attr.height]="rowHeight"
-          />
-        }
+        <g [attr.transform]="'translate(0 ' + rulerHeight + ')'">
+          @if (drawing.leadIn > 0) {
+            <path class="lead-in" data-testid="lead-in" [attr.d]="drawing.leadInPath" />
+          }
+          <rect class="tape" [attr.x]="drawing.leadIn" y="0" [attr.width]="drawing.bodyWidth" [attr.height]="drawing.height" />
+          @for (border of drawing.borders; track border) {
+            <line class="border-line" data-testid="border-line" [attr.x1]="drawing.leadIn" [attr.x2]="drawing.width" [attr.y1]="border" [attr.y2]="border" />
+          }
+          @for (row of drawing.rows; track $index) {
+            <line class="guide" [class.natural]="row.natural" [attr.x1]="drawing.leadIn" [attr.x2]="drawing.width" [attr.y1]="row.y" [attr.y2]="row.y" />
+          }
+          @for (mark of drawing.marks; track mark.column) {
+            <line class="mark" [class.strong]="mark.strong" data-testid="column-mark" [attr.x1]="mark.x" [attr.x2]="mark.x" y1="0" [attr.y2]="drawing.height" />
+          }
+          @for (hole of drawing.holes; track $index) {
+            <rect
+              class="hole"
+              data-testid="hole"
+              [attr.data-row]="hole.row"
+              [attr.data-start]="hole.start"
+              [attr.x]="hole.x"
+              [attr.y]="hole.y"
+              [attr.width]="hole.width"
+              [attr.height]="hole.height"
+              [attr.rx]="hole.radius"
+              [attr.ry]="hole.radius"
+            />
+          }
+          @for (number of drawing.numbers; track number.column) {
+            <text class="column-number" data-testid="column-number" [attr.x]="number.x" [attr.y]="drawing.numbersY">{{ number.number }}</text>
+          }
+        </g>
       </svg>
     </div>
   </div>

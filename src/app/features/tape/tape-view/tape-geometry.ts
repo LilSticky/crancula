@@ -15,6 +15,7 @@ export interface Slot {
 
 export interface TapeGeometry {
   readonly leadIn: number;
+  readonly columnLength: number;
   /** From Column 1, without the Lead-in. */
   readonly length: number;
   readonly width: number;
@@ -49,6 +50,7 @@ export function tapeGeometry(tape: Tape, organ: Organ): TapeGeometry {
 
   return {
     leadIn: organ.leadIn,
+    columnLength: tape.columnLength,
     length: tape.length * tape.columnLength,
     width: tapeWidth,
     border: edge,

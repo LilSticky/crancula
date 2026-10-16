@@ -18,7 +18,14 @@ import {testOrgan} from '../../../../testing/organs';
 import {provideTestTranslations} from '../../../../testing/test-translations';
 import {OrganLibrary} from '../../organ/organ-library.store';
 import {TapeLibrary} from '../tape-library.store';
-import {TAPE_COLUMN_WIDTH, TAPE_ROW_HEIGHT, TapeViewComponent} from './tape-view.component';
+import {asValidTape, type Column, type ColumnCount} from '../../../../../api/tape/tape';
+import {pixelsPerMillimetre} from './pixels-per-millimetre';
+import {columnLines, columnNumbers, rulerNumbers} from './tape-marks';
+import {tapeGeometry} from './tape-geometry';
+import {TapeViewComponent} from './tape-view.component';
+
+/** The scale the Tape opens at: 1:1, true size on screen. */
+const SCALE = pixelsPerMillimetre('1:1', 0, 0);
 
 @Component({template: 'Tapes'})
 class TapeListStubComponent {}
@@ -31,6 +38,10 @@ interface RenderOptions {
   readonly organUnknown?: boolean;
   /** The Organ library holds this Organ (same id as the Tape's Organ) instead of the one the Tape was made for. */
   readonly organNow?: (original: Organ) => Organ;
+  /** The Lead-in of the Organ in mm; the test Organ's default when not given. */
+  readonly leadIn?: number;
+  /** A Tape of 12000 Columns (5 minutes) with 9000 Holes instead of the short one. */
+  readonly longTape?: boolean;
 }
 
 async function render(options: RenderOptions = {}) {
@@ -60,7 +71,7 @@ async function render(options: RenderOptions = {}) {
       {provide: CRANCULA_API, useValue: api},
     ],
   });
-  const organ = testOrgan('Street organ', 3);
+  const organ = testOrgan('Street organ', 3, options.leadIn === undefined ? {} : {leadIn: options.leadIn});
   const organs = TestBed.inject(OrganLibrary);
   await organs.put(organ);
 
@@ -93,7 +104,16 @@ async function render(options: RenderOptions = {}) {
     columnLength: 2.5,
   });
   if (!created.ok) throw new Error(`invalid test Tape: ${JSON.stringify(created.error)}`);
-  const tape: Tape = created.value.tape;
+  const shortTape: Tape = created.value.tape;
+  const tape: Tape = options.longTape
+    ? asValidTape({
+        ...shortTape,
+        length: 12000 as ColumnCount,
+        holes: Array.from({length: 3000}, (_, index) => index * 4).flatMap((start) =>
+          organ.pipes.map(({note}) => ({pipe: note, start: start as Column, length: 2 as ColumnCount})),
+        ),
+      })
+    : shortTape;
   const library = TestBed.inject(TapeLibrary);
   let loading: Promise<void> = Promise.resolve();
   if (options.deferLoad) {
@@ -122,7 +142,11 @@ async function render(options: RenderOptions = {}) {
     await harness.fixture.whenStable();
   };
   const view = () => harness.routeNativeElement;
-  return {tape, organ, importSummary: created.value.importSummary, open, summaryShown, router, finish, view};
+  const settle = async () => {
+    harness.detectChanges();
+    await harness.fixture.whenStable();
+  };
+  return {tape, organ, importSummary: created.value.importSummary, open, summaryShown, router, finish, view, settle};
 }
 
 describe('TapeViewComponent', () => {
@@ -189,12 +213,9 @@ describe('TapeViewComponent', () => {
   describe('drawing the Tape (FR-018)', () => {
     const texts = (view: HTMLElement | null, testId: string) =>
       Array.from(view?.querySelectorAll(`[data-testid="${testId}"]`) ?? [], (element) => element.textContent?.trim());
-    const holeRects = (view: HTMLElement | null) =>
-      Array.from(view?.querySelectorAll('svg rect[data-testid="hole"]') ?? [], (rect) => ({
-        x: Number(rect.getAttribute('x')),
-        y: Number(rect.getAttribute('y')),
-        width: Number(rect.getAttribute('width')),
-      }));
+    const numberAttribute = (element: Element, name: string) => Number(element.getAttribute(name));
+    const all = (view: HTMLElement | null, selector: string) => Array.from(view?.querySelectorAll(selector) ?? []);
+    const holeRects = (view: HTMLElement | null) => all(view, 'svg rect[data-testid="hole"]');
 
     it('labels one row per Pipe with its note name, in the Organ row order', async () => {
       const {tape, organ, open, view} = await render();
@@ -204,19 +225,91 @@ describe('TapeViewComponent', () => {
       expect(texts(view(), 'row-label')).toEqual(organ.pipes.map(({note}) => noteName(note)));
     });
 
-    it('draws one rect per Hole at x = start * w, width = length * w, y = row * h', async () => {
-      const {tape, organ, open, view} = await render();
-      const rows = organ.pipes.map(({note}) => note);
-      expect(tape.holes.length).toBeGreaterThan(0);
+    it('draws the Tape body at true millimetres: Tape length wide, tape width high at 1:1 (no Lead-in)', async () => {
+      const {tape, organ, open, view} = await render({leadIn: 0});
 
       await open(`/tapes/${tape.id}`);
 
-      const expected = tape.holes.map((hole) => ({
-        x: hole.start * TAPE_COLUMN_WIDTH,
-        y: rows.indexOf(hole.pipe) * TAPE_ROW_HEIGHT,
-        width: hole.length * TAPE_COLUMN_WIDTH,
-      }));
-      expect(holeRects(view())).toEqual(expected);
+      const body = view()?.querySelector('svg .tape');
+      expect(body).not.toBeNull();
+      expect(numberAttribute(body as Element, 'width')).toBeCloseTo(tape.length * tape.columnLength * SCALE, 1);
+      expect(numberAttribute(body as Element, 'height')).toBeCloseTo(organ.tapeBed.tapeWidth * SCALE, 1);
+    });
+
+    it('draws each Hole as the slot of the geometry, scaled to pixels, with rounded ends', async () => {
+      const {tape, organ, open, view} = await render({leadIn: 0});
+      const {slots} = tapeGeometry(tape, organ);
+      expect(slots.length).toBeGreaterThan(0);
+
+      await open(`/tapes/${tape.id}`);
+
+      const rects = holeRects(view());
+      expect(rects).toHaveLength(slots.length);
+      slots.forEach((slot, index) => {
+        const rect = rects[index];
+        expect(numberAttribute(rect, 'x')).toBeCloseTo(slot.x * SCALE, 1);
+        expect(numberAttribute(rect, 'y')).toBeCloseTo(slot.y * SCALE, 1);
+        expect(numberAttribute(rect, 'width')).toBeCloseTo(slot.width * SCALE, 1);
+        expect(numberAttribute(rect, 'height')).toBeCloseTo(slot.height * SCALE, 1);
+        expect(numberAttribute(rect, 'rx')).toBeCloseTo((slot.height * SCALE) / 2, 1);
+        expect(numberAttribute(rect, 'ry')).toBeCloseTo((slot.height * SCALE) / 2, 1);
+        expect(numberAttribute(rect, 'data-row')).toBe(slot.row - 1);
+        expect(numberAttribute(rect, 'data-start')).toBe(slot.start);
+      });
+    });
+
+    it('draws two Border lines, at the Border from each edge of the Tape', async () => {
+      const {tape, organ, open, view} = await render({leadIn: 0});
+      const {border, width} = tapeGeometry(tape, organ);
+
+      await open(`/tapes/${tape.id}`);
+
+      const lines = all(view(), 'svg [data-testid="border-line"]');
+      const heights = lines.map((line) => numberAttribute(line, 'y1')).sort((a, b) => a - b);
+      expect(heights).toHaveLength(2);
+      expect(heights[0]).toBeCloseTo(border * SCALE, 1);
+      expect(heights[1]).toBeCloseTo((width - border) * SCALE, 1);
+    });
+
+    it('draws no Lead-in and starts the Tape square at Column 1 when the Lead-in is 0', async () => {
+      const {tape, open, view} = await render({leadIn: 0});
+
+      await open(`/tapes/${tape.id}`);
+
+      expect(view()?.querySelector('[data-testid="lead-in"]')).toBeNull();
+      expect(numberAttribute(view()?.querySelector('svg .tape') as Element, 'x')).toBe(0);
+    });
+
+    it('draws the Lead-in as blank Tape before Column 1 with an angled start', async () => {
+      const {tape, open, view} = await render({leadIn: 30});
+
+      await open(`/tapes/${tape.id}`);
+
+      const leadIn = view()?.querySelector('[data-testid="lead-in"]');
+      expect(leadIn?.tagName.toLowerCase()).toBe('path');
+      // `M slant,0 H end V height H 0 Z`: the top edge runs slant..end, the bottom edge 0..end.
+      const [slant, , end, , start] = (leadIn?.getAttribute('d')?.match(/-?\d+(\.\d+)?/g) ?? []).map(Number);
+      expect(end).toBeCloseTo(30 * SCALE, 0);
+      expect(start).toBe(0);
+      expect(slant).toBeGreaterThan(0);
+      expect((end ?? 0) - (slant ?? 0)).toBeLessThan((end ?? 0) - (start ?? 0));
+      expect(leadIn?.querySelector('[data-testid="hole"]')).toBeNull();
+    });
+
+    it('moves every Hole and Column line right by the Lead-in, none lie in it', async () => {
+      const {tape, organ, open, view} = await render({leadIn: 30});
+      const {slots} = tapeGeometry(tape, organ);
+
+      await open(`/tapes/${tape.id}`);
+
+      const rects = holeRects(view());
+      expect(rects).toHaveLength(slots.length);
+      slots.forEach((slot, index) => {
+        expect(numberAttribute(rects[index], 'x')).toBeCloseTo((30 + slot.x) * SCALE, 1);
+      });
+      const marks = all(view(), 'svg [data-testid="column-mark"]').map((mark) => numberAttribute(mark, 'x1'));
+      expect(marks.length).toBeGreaterThan(0);
+      expect(Math.min(...marks)).toBeCloseTo(30 * SCALE, 1);
     });
 
     it('does not draw Holes of Pipes that are not on the Organ', async () => {
@@ -232,29 +325,93 @@ describe('TapeViewComponent', () => {
       expect(holeRects(view())).toHaveLength(kept.length);
     });
 
-    it('marks every 8th Column', async () => {
-      const {tape, open, view} = await render();
+    it('marks every 8th Column with a line, strong at every 32nd', async () => {
+      const {tape, open, view} = await render({leadIn: 0});
       expect(tape.length).toBeGreaterThan(16);
 
       await open(`/tapes/${tape.id}`);
 
-      const marks = Array.from(view()?.querySelectorAll('svg [data-testid="column-mark"]') ?? [], (mark) =>
-        Number(mark.getAttribute('x') ?? mark.getAttribute('x1')),
-      );
-      const columns = marks.map((x) => x / TAPE_COLUMN_WIDTH);
-      expect(columns).toContain(8);
-      expect(columns).toContain(16);
-      expect(columns.every((column) => column % 8 === 0 && column < tape.length)).toBe(true);
+      const marks = all(view(), 'svg [data-testid="column-mark"]');
+      const expected = columnLines(tape.length);
+      expect(marks).toHaveLength(expected.length);
+      expected.forEach((line, index) => {
+        const mark = marks[index];
+        expect(numberAttribute(mark, 'x1')).toBeCloseTo(line.column * tape.columnLength * SCALE, 1);
+        expect(mark.classList.contains('strong')).toBe(line.strong);
+      });
     });
 
-    it('lets the scroll container cover the whole Tape length', async () => {
+    it('numbers the Columns under the Tape: 1, 9, 17, …', async () => {
       const {tape, open, view} = await render();
+
+      await open(`/tapes/${tape.id}`);
+
+      const expected = columnNumbers(tape.length, tape.columnLength * SCALE).map(({number}) => String(number));
+      expect(expected.slice(0, 3)).toEqual(['1', '9', '17']);
+      expect(texts(view(), 'column-number')).toEqual(expected);
+    });
+
+    it('puts a ruler on top of the Tape with a number every 10 mm from Column 1, 0 at its start', async () => {
+      const {tape, organ, open, view} = await render({leadIn: 30});
+      const lengthMm = tapeGeometry(tape, organ).length;
+
+      await open(`/tapes/${tape.id}`);
+
+      const numbers = all(view(), 'svg [data-testid="ruler-number"]');
+      const expected = rulerNumbers(lengthMm);
+      expect(numbers.map((number) => number.textContent?.trim())).toEqual(expected.map(String));
+      expected.forEach((mm, index) => {
+        expect(numberAttribute(numbers[index], 'x')).toBeCloseTo((30 + mm) * SCALE, 0);
+      });
+    });
+
+    it('lets the scroll container cover the whole Tape length, Lead-in included', async () => {
+      const {tape, open, view} = await render({leadIn: 30});
 
       await open(`/tapes/${tape.id}`);
 
       const drawing = view()?.querySelector('[data-testid="tape-scroll"] svg');
       expect(drawing).not.toBeNull();
-      expect(Number(drawing?.getAttribute('width'))).toBeGreaterThanOrEqual(tape.length * TAPE_COLUMN_WIDTH);
+      expect(numberAttribute(drawing as Element, 'width')).toBeGreaterThanOrEqual(
+        (30 + tape.length * tape.columnLength) * SCALE - 1,
+      );
+    });
+
+    describe('with a 5-minute Tape, rendering only the visible Columns (V6b)', () => {
+      const starts = (view: HTMLElement | null) => holeRects(view).map((rect) => numberAttribute(rect, 'data-start'));
+
+      it('renders the Holes, marks and numbers near the start only, in a drawing of the full width', async () => {
+        const {tape, open, view} = await render({longTape: true});
+
+        await open(`/tapes/${tape.id}`);
+
+        const rendered = starts(view());
+        expect(rendered).toContain(0);
+        expect(Math.max(...rendered)).toBeLessThan(2000);
+        expect(rendered.length).toBeLessThan(tape.holes.length / 5);
+        expect(all(view(), 'svg [data-testid="column-mark"]').length).toBeLessThan(500);
+        expect(all(view(), 'svg [data-testid="column-number"]').length).toBeLessThan(500);
+        expect(all(view(), 'svg [data-testid="ruler-number"]').length).toBeLessThan(500);
+        const drawing = view()?.querySelector('[data-testid="tape-scroll"] svg') as Element;
+        expect(numberAttribute(drawing, 'width')).toBeGreaterThanOrEqual(tape.length * tape.columnLength * SCALE);
+      });
+
+      it('renders the last Holes after scrolling to the end, and no longer the first', async () => {
+        const {tape, open, view, settle} = await render({longTape: true});
+        await open(`/tapes/${tape.id}`);
+        const scroll = view()?.querySelector('[data-testid="tape-scroll"]') as HTMLElement;
+
+        const clientWidth = 1000;
+        const total = (20 + tape.length * tape.columnLength) * SCALE;
+        Object.defineProperty(scroll, 'clientWidth', {value: clientWidth, configurable: true});
+        Object.defineProperty(scroll, 'scrollLeft', {value: total - clientWidth, configurable: true});
+        scroll.dispatchEvent(new Event('scroll'));
+        await settle();
+
+        const rendered = starts(view());
+        expect(rendered).toContain(11996);
+        expect(rendered).not.toContain(0);
+      });
     });
 
     it('shows the names of the selected Parts only', async () => {

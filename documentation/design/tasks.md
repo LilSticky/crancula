@@ -290,7 +290,7 @@ keys to `en.json` and `de.json` (German: Lochband).
 - [x] **V4** Note-name gutter, unit. `gutterLabels(pipes, rowPitchPx)`: one entry per row with the
   note name and `sharp`; below 14 px row pitch sharps keep their entry but no text. Spec first
   (Street organ at 1:1: 3,5 mm ≈ 13,2 px, so F#3 has no text, F3 has).
-- [ ] **V5** Tape at true millimetres, component. Rewrite the "drawing the Tape" specs (drop
+- [x] **V5** Tape at true millimetres, component. Rewrite the "drawing the Tape" specs (drop
   `TAPE_COLUMN_WIDTH` / `TAPE_ROW_HEIGHT`): at 1:1 the Tape body (class `tape`) is Tape length ×
   3,78 px wide and tape width × 3,78 px high (with a Lead-in of 0); each `hole` rect sits at V1's
   slot × scale, with `data-row` and `data-start` as today, `rx` = `ry` = height / 2, so a Hole of
@@ -299,15 +299,15 @@ keys to `en.json` and `de.json` (German: Lochband).
   guides faint, stronger for naturals. Then the template, and the tokens `--cr-manila`,
   `--cr-hole`, `--cr-select`, `--cr-brass` in `styles.scss` (`light-dark()`; manila and Hole the
   same in both schemes).
-- [ ] **V5b** Lead-in, component. Spec: with `organ.leadIn` 30 the body starts 30 × 3,78 px before
+- [x] **V5b** Lead-in, component. Spec: with `organ.leadIn` 30 the body starts 30 × 3,78 px before
   Column 1 with an angled start (`data-testid="lead-in"`, a path whose top edge is shorter than its
   bottom), carries no Holes and no Column lines, and every Hole moves right by the Lead-in; with
   `leadIn` 0 there is no `lead-in` element and the body starts square at Column 1. Then the path.
-- [ ] **V6** Column lines, numbers and ruler, component. Spec: `column-mark` lines from V3 (strong
+- [x] **V6** Column lines, numbers and ruler, component. Spec: `column-mark` lines from V3 (strong
   ones with class `strong`), `column-number` texts under the Tape (1, 9, 17, …), a brass ruler on
   top with `ruler-number` texts every 10 mm from Column 1 (0 at Column 1's start) and a tick
   pattern. Then the template.
-- [ ] **V6b** Visible window, unit then component. A pure helper `visibleColumns(scrollLeft,
+- [x] **V6b** Visible window, unit then component. A pure helper `visibleColumns(scrollLeft,
   clientWidth, scale, geometry)` → the first and last Column to render (the visible window plus one
   window on each side, clamped to the Tape). Spec first. Then a component spec with a 5-minute
   Tape (thousands of Holes): only Holes, `column-mark`, `column-number` and `ruler-number` inside
