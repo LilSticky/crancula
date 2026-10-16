@@ -134,6 +134,17 @@ describe('OrganListComponent', () => {
       expect(element.textContent).not.toContain('No Organs yet.');
     });
 
+    it('has a header row with the column headers Name and Tapes, so screen readers announce the columns', async () => {
+      const {fixture, library, element} = await render();
+      await library.put(streetOrgan());
+      await fixture.whenStable();
+
+      const headers = [...element.querySelectorAll('thead th')]
+        .map((th) => th.textContent?.trim() ?? '')
+        .filter((header) => header !== '');
+      expect(headers).toEqual(['Name', 'Tapes']);
+    });
+
     it('lists the Organs by name', async () => {
       const {fixture, library, element} = await render();
       await library.put(testOrgan('Street organ', 31));

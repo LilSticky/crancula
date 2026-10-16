@@ -1,6 +1,9 @@
-import {TestBed} from '@angular/core/testing';
+import {Component} from '@angular/core';
+import {TestBed, type ComponentFixture} from '@angular/core/testing';
+import {TestbedHarnessEnvironment} from '@angular/cdk/testing/testbed';
 import {MatDialog} from '@angular/material/dialog';
-import {provideRouter} from '@angular/router';
+import {MatMenuHarness} from '@angular/material/menu/testing';
+import {provideRouter, Router} from '@angular/router';
 import {type Observable, of} from 'rxjs';
 import {
   createTape,
@@ -22,7 +25,18 @@ import {TapeListComponent} from './tape-list.component';
 
 const TICKS_PER_QUARTER = 480;
 
-function tapeFor(organ: Organ, name: string) {
+@Component({selector: 'cranc-stub', template: ''})
+class StubComponent {}
+
+const stubRoutes = [
+  {path: 'tapes', component: StubComponent},
+  {path: 'tapes/new', component: StubComponent},
+  {path: 'tapes/:id', component: StubComponent},
+  {path: 'organs/new', component: StubComponent},
+  {path: 'organs/:id', component: StubComponent},
+];
+
+function tapeFor(organ: Organ, name: string, columnLength = 2.5) {
   const bytes = encodeSmf({
     format: 1,
     division: {ticksPerQuarterNote: TICKS_PER_QUARTER},
@@ -45,135 +59,367 @@ function tapeFor(organ: Organ, name: string) {
     organ,
     transposition: proposeTransposition(song, selectedParts, organ),
     name,
-    columnLength: 2.5,
+    columnLength,
   });
   if (!created.ok) throw new Error(`invalid test Tape: ${JSON.stringify(created.error)}`);
   const tape: Tape = created.value.tape;
   return {tape, song};
 }
 
-async function render(dialogConfirms?: boolean) {
+interface RenderOptions {
+  readonly dialogConfirms?: boolean;
+  readonly language?: 'en' | 'de';
+  /** The URL the list is shown at, e.g. `/tapes?organ=<id>`; its `organ` query parameter filters the list. */
+  readonly url?: string;
+}
+
+async function render(options: RenderOptions = {}) {
   const open = vi.fn<(component: unknown, config: unknown) => {afterClosed: () => Observable<boolean>}>(() => ({
-    afterClosed: () => of(dialogConfirms === true),
+    afterClosed: () => of(options.dialogConfirms === true),
   }));
   TestBed.configureTestingModule({
     providers: [
-      provideRouter([]),
-      provideTestTranslations(),
+      provideRouter(stubRoutes),
+      provideTestTranslations(options.language ?? 'en'),
       {provide: CRANCULA_API, useValue: createInMemoryCranculaApi()},
-      ...(dialogConfirms === undefined ? [] : [{provide: MatDialog, useValue: {open}}]),
+      ...(options.dialogConfirms === undefined ? [] : [{provide: MatDialog, useValue: {open}}]),
     ],
   });
   const organs = TestBed.inject(OrganLibrary);
   const tapes = TestBed.inject(TapeLibrary);
+  const router = TestBed.inject(Router);
+  if (options.url !== undefined) await router.navigateByUrl(options.url);
   const fixture = TestBed.createComponent(TapeListComponent);
   fixture.autoDetectChanges();
   await fixture.whenStable();
   const element = fixture.nativeElement as HTMLElement;
-  const add = async (organ: Organ, name: string, known = true) => {
+  const add = async (organ: Organ, name: string, known = true, columnLength = 2.5) => {
     if (known) await organs.put(organ);
-    const {tape, song} = tapeFor(organ, name);
+    const {tape, song} = tapeFor(organ, name, columnLength);
     await tapes.create(tape, song);
     await fixture.whenStable();
     return tape;
   };
   const text = (selector: string) => element.querySelector(selector)?.textContent?.trim() ?? '';
-  return {fixture, element, tapes, add, text, open};
+  return {fixture, element, tapes, organs, router, add, text, open};
+}
+
+const collapse = (text: string | null | undefined) => text?.replace(/\s+/g, ' ').trim();
+
+/** Opens the row menu of the Tape named `name` and clicks the item with `testId`. */
+async function chooseFromRowMenu(fixture: ComponentFixture<TapeListComponent>, name: string, testId: string) {
+  const loader = TestbedHarnessEnvironment.loader(fixture);
+  const menu = await loader.getHarness(MatMenuHarness.with({selector: `[aria-label="More actions for ${name}"]`}));
+  await menu.open();
+  const [item] = await menu.getItems({selector: `[data-testid="${testId}"]`});
+  if (!item) throw new Error(`no ${testId} in the menu of ${name}`);
+  await item.click();
 }
 
 describe('TapeListComponent', () => {
-  it('titles the page in a page head', async () => {
-    const {element} = await render();
+  describe('the ledger', () => {
+    it('is a mat-table with the cr-ledger class inside an outlined card', async () => {
+      const {add, element} = await render();
+      await add(testOrgan('Street organ', 3), 'Melody');
 
-    expect(element.querySelector('cranc-page-head h1')?.textContent?.trim()).toBe('Tapes');
+      expect(element.querySelector('mat-card[appearance="outlined"] table.mat-mdc-table.cr-ledger')).not.toBeNull();
+    });
+
+    it('has a header row with the column headers Name, Organ, Columns and Length', async () => {
+      const {add, element} = await render();
+      await add(testOrgan('Street organ', 3), 'Melody');
+
+      const headers = [...element.querySelectorAll('thead th')]
+        .map((th) => th.textContent?.trim() ?? '')
+        .filter((header) => header !== '');
+      expect(headers).toEqual(['Name', 'Organ', 'Columns', 'Length']);
+    });
+
+    it('lists each Tape with its name, its Organ, and its length in Columns and in mm', async () => {
+      const {add, text, element} = await render();
+      const tape = await add(testOrgan('Street organ', 3), 'Melody');
+
+      expect(element.querySelectorAll('[data-testid="tape"]')).toHaveLength(1);
+      expect(text('[data-testid="tape-name"]')).toBe('Melody');
+      expect(text('[data-testid="tape-organ"]')).toBe('Street organ');
+      expect(text('[data-testid="tape-length-columns"]')).toBe(`${tape.length}`);
+      expect(text('[data-testid="tape-length-mm"]')).toBe(`${tapeLengthInMillimetres(tape)} mm`);
+    });
+
+    it('writes the length in mm with the decimal comma in German', async () => {
+      const {add, text} = await render({language: 'de'});
+      const tape = await add(testOrgan('Street organ', 3), 'Melody', true, 0.25);
+
+      const mm = `${tapeLengthInMillimetres(tape)}`;
+      expect(mm).toContain('.');
+      expect(text('[data-testid="tape-length-mm"]')).toBe(`${mm.replace('.', ',')} mm`);
+    });
+
+    it('holds the name in a link to the Tape view', async () => {
+      const {add, element} = await render();
+      const tape = await add(testOrgan('Street organ', 3), 'Melody');
+
+      const link = element.querySelector('[data-testid="open-tape"]');
+      expect(link?.getAttribute('href')).toBe(`/tapes/${tape.id}`);
+      expect(link?.querySelector('[data-testid="tape-name"]')?.textContent?.trim()).toBe('Melody');
+    });
+
+    it('links the Organ to its editor', async () => {
+      const {add, element} = await render();
+      const organ = testOrgan('Street organ', 3);
+      await add(organ, 'Melody');
+
+      expect(element.querySelector('a[data-testid="tape-organ"]')?.getAttribute('href')).toBe(`/organs/${organ.id}`);
+    });
+
+    it('lists two Tapes with the same name separately', async () => {
+      const {add, element} = await render();
+      const organ = testOrgan('Street organ', 3);
+      const first = await add(organ, 'Melody');
+      const second = await add(organ, 'Melody');
+
+      const names = [...element.querySelectorAll('[data-testid="tape-name"]')].map((node) => node.textContent?.trim());
+      expect(names).toEqual(['Melody', 'Melody']);
+      const hrefs = [...element.querySelectorAll('[data-testid="open-tape"]')].map((node) => node.getAttribute('href'));
+      expect([...hrefs].sort()).toEqual([`/tapes/${first.id}`, `/tapes/${second.id}`].sort());
+    });
+
+    it('orders the Tapes by Organ name, then by Tape name, with unknown Organs last', async () => {
+      const {add, element} = await render();
+      const anton = testOrgan('Anton', 3);
+      await add(testOrgan('Zither', 3), 'Alpha');
+      await add(anton, 'Beta');
+      await add(testOrgan('Lost organ', 3), 'Aaa', false);
+      await add(anton, 'Alpha');
+
+      const rows = [...element.querySelectorAll('[data-testid="tape"]')].map(
+        (row) =>
+          `${collapse(row.querySelector('[data-testid="tape-organ"]')?.textContent)}/${collapse(row.querySelector('[data-testid="tape-name"]')?.textContent)}`,
+      );
+      expect(rows).toEqual(['Anton/Alpha', 'Anton/Beta', 'Zither/Alpha', 'Organ not available/Aaa']);
+    });
+
+    it('opens the Tape view with a click on the row outside the link and the menu', async () => {
+      const {add, element, router, fixture} = await render();
+      const tape = await add(testOrgan('Street organ', 3), 'Melody');
+
+      element.querySelector<HTMLElement>('[data-testid="tape-length-mm"]')?.click();
+      await fixture.whenStable();
+
+      expect(router.url).toBe(`/tapes/${tape.id}`);
+    });
+
+    it('does not open the Tape view when the menu button is clicked', async () => {
+      const {add, element, router, fixture} = await render();
+      await add(testOrgan('Street organ', 3), 'Melody');
+
+      element.querySelector<HTMLElement>('[aria-label="More actions for Melody"]')?.click();
+      await fixture.whenStable();
+
+      expect(router.url).toBe('/');
+    });
+
+    describe('with an Organ that is not available', () => {
+      it('shows "Organ not available" as plain text and disables the name link', async () => {
+        const {add, text, element} = await render();
+        await add(testOrgan('Lost organ', 3), 'Melody', false);
+
+        const open = element.querySelector('[data-testid="open-tape"]');
+        expect(text('[data-testid="tape-organ"]')).toBe('Organ not available');
+        expect(element.querySelector('[data-testid="tape-organ"]')?.closest('a')).toBeNull();
+        expect(open?.getAttribute('aria-disabled')).toBe('true');
+        expect(open?.hasAttribute('href')).toBe(false);
+      });
+
+      it('does nothing on a click on the row', async () => {
+        const {add, element, router, fixture} = await render();
+        await add(testOrgan('Lost organ', 3), 'Melody', false);
+
+        element.querySelector<HTMLElement>('[data-testid="tape-length-mm"]')?.click();
+        await fixture.whenStable();
+
+        expect(router.url).toBe('/');
+      });
+    });
   });
 
-  it('says that there are no Tapes yet', async () => {
-    const {element} = await render();
-
-    expect(element.textContent).toContain('No Tapes yet.');
-  });
-
-  it('lists each Tape with its name, its Organ, and its length in Columns and in mm', async () => {
-    const {add, text, element} = await render();
-    const tape = await add(testOrgan('Street organ', 3), 'Melody');
-
-    expect(element.querySelectorAll('[data-testid="tape"]')).toHaveLength(1);
-    expect(text('[data-testid="tape-name"]')).toBe('Melody');
-    expect(text('[data-testid="tape-organ"]')).toContain('Street organ');
-    expect(text('[data-testid="tape-length-columns"]')).toContain(`${tape.length}`);
-    expect(text('[data-testid="tape-length-mm"]')).toContain(`${tapeLengthInMillimetres(tape)}`);
-    expect(element.textContent).not.toContain('No Tapes yet.');
-  });
-
-  it('lists two Tapes with the same name separately', async () => {
-    const {add, element} = await render();
-    const organ = testOrgan('Street organ', 3);
-    const first = await add(organ, 'Melody');
-    const second = await add(organ, 'Melody');
-
-    const names = [...element.querySelectorAll('[data-testid="tape-name"]')].map((node) => node.textContent?.trim());
-    expect(names).toEqual(['Melody', 'Melody']);
-    const hrefs = [...element.querySelectorAll('[data-testid="open-tape"]')].map((node) => node.getAttribute('href'));
-    expect(hrefs).toEqual([`/tapes/${first.id}`, `/tapes/${second.id}`]);
-  });
-
-  it('links the open action to the Tape', async () => {
-    const {add, element} = await render();
-    const tape = await add(testOrgan('Street organ', 3), 'Melody');
-
-    expect(element.querySelector('[data-testid="open-tape"]')?.getAttribute('href')).toBe(`/tapes/${tape.id}`);
-  });
-
-  it('shows "Organ not available" and disables the open action when the Organ is unknown', async () => {
-    const {add, text, element} = await render();
-    await add(testOrgan('Lost organ', 3), 'Melody', false);
-
-    const open = element.querySelector('[data-testid="open-tape"]');
-    expect(text('[data-testid="tape-organ"]')).toBe('Organ not available');
-    expect(open?.getAttribute('aria-disabled')).toBe('true');
-    expect(open?.hasAttribute('href')).toBe(false);
-  });
-
-  it('offers to bring a song onto a tape', async () => {
-    const {element} = await render();
-    const link = element.querySelector('[data-testid="new-tape"]');
-
-    expect(link?.textContent?.trim()).toContain('Bring a song onto a tape');
-    expect(link?.getAttribute('href')).toBe('/tapes/new');
-  });
-
-  describe('remove', () => {
-    async function renderAndRemove(confirmed: boolean) {
-      const view = await render(confirmed);
-      const tape = await view.add(testOrgan('Street organ', 3), 'Melody');
-      const button = view.element.querySelector<HTMLButtonElement>('[data-testid="remove-tape"]');
-      if (!button) throw new Error('no remove-tape button');
-      button.click();
-      await view.fixture.whenStable();
+  describe('the row menu', () => {
+    async function renderWithMenu(dialogConfirms: boolean) {
+      const view = await render({dialogConfirms});
+      const tape = await view.add(testOrgan('Street organ', 3), 'Kirmes-Walzer');
       return {...view, tape};
     }
 
+    it('is a more_vert button labelled "More actions for Kirmes-Walzer"', async () => {
+      const {element} = await renderWithMenu(false);
+
+      expect(element.querySelector('[aria-label="More actions for Kirmes-Walzer"]')?.textContent?.trim()).toBe('more_vert');
+    });
+
+    it('holds Delete Tape and nothing to rename', async () => {
+      const {fixture} = await renderWithMenu(false);
+      const menu = await TestbedHarnessEnvironment.loader(fixture).getHarness(
+        MatMenuHarness.with({selector: '[aria-label="More actions for Kirmes-Walzer"]'}),
+      );
+
+      await menu.open();
+
+      expect(await menu.getItems()).toHaveLength(1);
+      const [item] = await menu.getItems({selector: '[data-testid="delete-tape"]'});
+      expect((await item?.getText())?.replace('delete', '').trim()).toBe('Delete Tape');
+    });
+
+    it('has no bare delete button in the row', async () => {
+      const {element} = await renderWithMenu(false);
+
+      expect(element.querySelector('button[data-testid="delete-tape"]')).toBeNull();
+      expect(element.querySelector('[data-testid="remove-tape"]')).toBeNull();
+    });
+
     it('opens the confirm dialog for deleting the Tape', async () => {
-      const {open, tape} = await renderAndRemove(false);
+      const {fixture, open, tape} = await renderWithMenu(false);
+      await chooseFromRowMenu(fixture, 'Kirmes-Walzer', 'delete-tape');
+      await fixture.whenStable();
 
       expect(open).toHaveBeenCalledTimes(1);
       expect(open.mock.calls[0]?.[0]).toBe(ConfirmDialogComponent);
       expect(open.mock.calls[0]?.[1]).toMatchObject({
-        data: {action: ConfirmableAction.DELETE, entity: {id: tape.id, name: 'Melody'}},
+        data: {action: ConfirmableAction.DELETE, entity: {id: tape.id, name: 'Kirmes-Walzer'}},
       });
     });
 
     it('changes nothing when the dialog is cancelled', async () => {
-      const {tapes, tape} = await renderAndRemove(false);
+      const {fixture, tapes, tape} = await renderWithMenu(false);
+      await chooseFromRowMenu(fixture, 'Kirmes-Walzer', 'delete-tape');
+      await fixture.whenStable();
 
       expect(tapes.tapeEntities().map(({id}) => id)).toEqual([tape.id]);
     });
 
     it('removes the Tape from the library when the dialog is confirmed', async () => {
-      const {tapes} = await renderAndRemove(true);
+      const {fixture, tapes} = await renderWithMenu(true);
+      await chooseFromRowMenu(fixture, 'Kirmes-Walzer', 'delete-tape');
+      await fixture.whenStable();
 
       expect(tapes.tapeEntities()).toEqual([]);
+    });
+  });
+
+  describe('the Organ filter', () => {
+    /** Street organ with the Tape Melody, Barrel piano with Waltz; the list is at `urlFor(street organ id)`. */
+    async function renderTwoOrgans(urlFor: (streetOrganId: string) => string) {
+      const street = testOrgan('Street organ', 3);
+      const barrel = testOrgan('Barrel piano', 3);
+      const view = await render({url: urlFor(street.id)});
+      await view.add(street, 'Melody');
+      await view.add(barrel, 'Waltz');
+      return view;
+    }
+    const names = (element: HTMLElement) =>
+      [...element.querySelectorAll('[data-testid="tape-name"]')].map((node) => node.textContent?.trim());
+
+    it('lists only the Tapes of the Organ in the `organ` query parameter and shows a chip', async () => {
+      const {element} = await renderTwoOrgans((id) => `/tapes?organ=${id}`);
+
+      expect(names(element)).toEqual(['Melody']);
+      expect(collapse(element.querySelector('[data-testid="organ-filter"]')?.textContent)).toContain('Street organ');
+    });
+
+    it('shows all Tapes and no chip for an unknown Organ id', async () => {
+      const {element} = await renderTwoOrgans(() => '/tapes?organ=unknown-id');
+
+      expect(names(element)).toEqual(['Waltz', 'Melody']);
+      expect(element.querySelector('[data-testid="organ-filter"]')).toBeNull();
+    });
+
+    it('shows all Tapes and no chip without the parameter', async () => {
+      const {element} = await renderTwoOrgans(() => '/tapes');
+
+      expect(names(element)).toHaveLength(2);
+      expect(element.querySelector('[data-testid="organ-filter"]')).toBeNull();
+    });
+
+    it('removes the filter with the chip: navigates to /tapes and lists all Tapes', async () => {
+      const {element, router, fixture} = await renderTwoOrgans((id) => `/tapes?organ=${id}`);
+
+      element.querySelector<HTMLElement>('[data-testid="organ-filter"] [aria-label="Show all Tapes"]')?.click();
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      expect(router.url).toBe('/tapes');
+      expect(names(element)).toEqual(['Waltz', 'Melody']);
+      expect(element.querySelector('[data-testid="organ-filter"]')).toBeNull();
+    });
+  });
+
+  describe('the page head', () => {
+    it('titles the page in a page head', async () => {
+      const {element} = await render();
+
+      expect(element.querySelector('cranc-page-head h1')?.textContent?.trim()).toBe('Tapes');
+    });
+
+    it('has the subtitle', async () => {
+      const {element} = await render();
+
+      expect(element.querySelector('cranc-page-head p')?.textContent?.trim()).toBe(
+        'Each Tape is punched for one Organ and holds a Song as Holes.',
+      );
+    });
+
+    it('holds the only new-tape button while there are Tapes, and there is no empty state', async () => {
+      const {add, element} = await render();
+      await add(testOrgan('Street organ', 3), 'Melody');
+
+      const link = element.querySelector('cranc-page-head [data-testid="new-tape"]');
+      expect(link?.textContent?.trim()).toContain('Bring a Song onto a Tape');
+      expect(link?.getAttribute('href')).toBe('/tapes/new');
+      expect(element.querySelectorAll('[data-testid="new-tape"]')).toHaveLength(1);
+      expect(element.querySelector('[data-testid="empty-state"]')).toBeNull();
+    });
+  });
+
+  describe('without Tapes', () => {
+    it('with an Organ, says "No Tapes yet. Bring a Song onto a Tape." and holds the only filled new-tape button', async () => {
+      const {organs, element, fixture} = await render();
+      await organs.put(testOrgan('Street organ', 3));
+      await fixture.whenStable();
+
+      const empty = element.querySelector('[data-testid="empty-state"]');
+      expect(collapse(empty?.textContent)).toContain('No Tapes yet. Bring a Song onto a Tape.');
+      expect(element.querySelectorAll('[data-testid="new-tape"]')).toHaveLength(1);
+      const button = empty?.querySelector('[data-testid="new-tape"]');
+      expect(button?.getAttribute('href')).toBe('/tapes/new');
+      expect(button?.classList.contains('mat-mdc-unelevated-button')).toBe(true);
+      expect(button?.textContent?.trim()).toContain('Bring a Song onto a Tape');
+      expect(element.querySelector('table')).toBeNull();
+    });
+
+    it('without an Organ, points to describing one and still offers new-tape', async () => {
+      const {element} = await render();
+
+      const empty = element.querySelector('[data-testid="empty-state"]');
+      expect(collapse(empty?.textContent)).toContain(
+        'No Tapes yet. A Tape is punched for one Organ: describe your Organ first.',
+      );
+      const link = empty?.querySelector('[data-testid="empty-new-organ"]');
+      expect(link?.textContent?.trim()).toBe('describe your Organ');
+      expect(link?.getAttribute('href')).toBe('/organs/new');
+      expect(element.querySelectorAll('[data-testid="new-tape"]')).toHaveLength(1);
+    });
+
+    it('filtered without a match, says "No Tapes for the Street organ yet.", with the chip and new-tape', async () => {
+      const street = testOrgan('Street organ', 3);
+      const {organs, element, fixture} = await render({url: `/tapes?organ=${street.id}`});
+      await organs.put(street);
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      expect(collapse(element.querySelector('[data-testid="empty-state"]')?.textContent)).toContain(
+        'No Tapes for the Street organ yet.',
+      );
+      expect(element.querySelector('[data-testid="organ-filter"]')).not.toBeNull();
+      expect(element.querySelectorAll('[data-testid="new-tape"]')).toHaveLength(1);
     });
   });
 });

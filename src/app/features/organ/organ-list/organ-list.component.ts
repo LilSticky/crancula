@@ -3,7 +3,9 @@ import {MatButton, MatIconButton} from '@angular/material/button';
 import {MatCard} from '@angular/material/card';
 import {MatIcon} from '@angular/material/icon';
 import {MatMenu, MatMenuItem, MatMenuTrigger} from '@angular/material/menu';
-import {MatCell, MatCellDef, MatColumnDef, MatRow, MatRowDef, MatTable} from '@angular/material/table';
+import {
+  MatCell, MatCellDef, MatColumnDef, MatHeaderCell, MatHeaderCellDef, MatHeaderRow, MatHeaderRowDef, MatRow, MatRowDef, MatTable,
+} from '@angular/material/table';
 import {MatTooltip} from '@angular/material/tooltip';
 import {Router, RouterLink} from '@angular/router';
 import {TranslatePipe} from '@ngx-translate/core';
@@ -37,7 +39,7 @@ interface OrganRow {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     TranslatePipe, RouterLink, MatButton, MatIconButton, MatIcon, MatCard, MatMenu, MatMenuItem, MatMenuTrigger, MatTooltip,
-    MatTable, MatColumnDef, MatCell, MatCellDef, MatRow, MatRowDef, PageHeadComponent,
+    MatTable, MatColumnDef, MatHeaderCell, MatHeaderCellDef, MatHeaderRow, MatHeaderRowDef, MatCell, MatCellDef, MatRow, MatRowDef, PageHeadComponent,
   ],
   template: `
     <cranc-page-head [title]="'ORGAN.LIST.TITLE' | translate" [subtitle]="'ORGAN.LIST.SUBTITLE' | translate">
@@ -63,6 +65,7 @@ interface OrganRow {
       <mat-card appearance="outlined">
         <table mat-table class="cr-ledger" [dataSource]="rows()" [trackBy]="trackRow">
           <ng-container matColumnDef="miniature">
+            <th mat-header-cell *matHeaderCellDef></th>
             <td mat-cell *matCellDef="let row">
               <svg data-testid="organ-miniature" aria-hidden="true" [attr.width]="miniatureWidth" [attr.height]="miniatureHeight"
                    [attr.viewBox]="'0 0 ' + miniatureWidth + ' ' + miniatureHeight">
@@ -76,12 +79,14 @@ interface OrganRow {
             </td>
           </ng-container>
           <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef>{{ 'ORGAN.LIST.NAME' | translate }}</th>
             <td mat-cell *matCellDef="let row">
               <a class="name" [routerLink]="['/organs', row.organ.id]" data-testid="organ" (click)="$event.stopPropagation()">{{ row.organ.name }}</a>
               <div class="facts" data-testid="organ-facts">{{ (row.range.count === 1 ? 'ORGAN.EDITOR.PIPES_RANGE_ONE' : 'ORGAN.EDITOR.PIPES_RANGE') | translate: row.range }}. {{ 'ORGAN.LIST.TAPE_BED_FACTS' | translate: row.bed }}</div>
             </td>
           </ng-container>
           <ng-container matColumnDef="tapes">
+            <th mat-header-cell *matHeaderCellDef>{{ 'ORGAN.LIST.TAPES_HEADER' | translate }}</th>
             <td mat-cell *matCellDef="let row">
               @if (row.tapeCount === null) {
                 <!-- The Tape library could not be read: no count. -->
@@ -93,6 +98,7 @@ interface OrganRow {
             </td>
           </ng-container>
           <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef></th>
             <td mat-cell *matCellDef="let row">
               <button matIconButton type="button" [matMenuTriggerFor]="rowMenu" (click)="$event.stopPropagation()"
                       [attr.aria-label]="'ORGAN.LIST.MORE_ACTIONS' | translate: {name: row.organ.name}"
@@ -107,6 +113,7 @@ interface OrganRow {
               </mat-menu>
             </td>
           </ng-container>
+          <tr mat-header-row *matHeaderRowDef="columns"></tr>
           <tr mat-row *matRowDef="let row; columns: columns" (click)="open(row.organ.id)"></tr>
         </table>
       </mat-card>

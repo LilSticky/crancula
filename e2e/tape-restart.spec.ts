@@ -42,7 +42,8 @@ test.describe('My tapes are still there after a restart', () => {
     await expect(second.window.getByTestId('tape')).toHaveCount(1);
     await expect(second.window.getByTestId('tape-name')).toHaveText('Scale');
     await expect(second.window.getByTestId('tape-organ')).toHaveText('Octave organ');
-    await second.window.getByTestId('remove-tape').click();
+    await second.window.getByRole('button', {name: 'More actions for Scale'}).click();
+    await second.window.getByTestId('delete-tape').click();
     await second.window.getByRole('button', {name: 'Cancel'}).click();
     await expect(second.window.getByTestId('tape')).toHaveCount(1);
     await second.app.close();
@@ -50,7 +51,8 @@ test.describe('My tapes are still there after a restart', () => {
 
     const third = await launchApp(first.userDataDir);
     await third.window.getByRole('link', {name: 'Tapes'}).click();
-    await third.window.getByTestId('remove-tape').click();
+    await third.window.getByRole('button', {name: 'More actions for Scale'}).click();
+    await third.window.getByTestId('delete-tape').click();
     await third.window.getByRole('button', {name: 'Confirm'}).click();
     await expect(third.window.getByTestId('tape')).toHaveCount(0);
     await third.app.close();

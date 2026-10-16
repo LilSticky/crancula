@@ -534,7 +534,7 @@ menu item), `tape`, `tape-name`, `tape-organ`, `tape-length-columns`, `tape-leng
   `data-testid="next-step"` reads "Your Organ is ready. Bring a MIDI Song onto a Tape for it." with
   an outlined link to `/tapes/new`; absent with no Organ and absent once a Tape exists. Then the
   strip (dashed border, `music_note` icon).
-- [ ] **G8** Tape ledger, component. Rewrite "lists each Tape …" and "links the open action …": a
+- [x] **G8** Tape ledger, component. Rewrite "lists each Tape …" and "links the open action …": a
   `mat-table` (`cr-ledger`) with the headers Name, Organ, Columns, Length; per row (`tape`) the name
   link (`open-tape` holding `tape-name`, to `/tapes/:id`), the Organ as a link to its editor
   (`tape-organ`), the Columns "192" (`tape-length-columns`) and the length "480 mm"
@@ -542,17 +542,17 @@ menu item), `tape`, `tape-name`, `tape-organ`, `tape-length-columns`, `tape-leng
   click opens the Tape view; rows in G1b's order (by Organ name, then Tape name). With an unknown Organ: "Organ not available" as plain text, the name
   link `aria-disabled="true"` without a target, and a row click does nothing (rewrite the existing
   spec). Then the template.
-- [ ] **G9** Tape row menu, component. Rewrite the `remove` specs: a `more_vert` button ("More
+- [x] **G9** Tape row menu, component. Rewrite the `remove` specs: a `more_vert` button ("More
   actions for Kirmes-Walzer") with Delete Tape (`delete-tape`, oxblood) opening the existing confirm
   dialog; cancel changes nothing, confirm removes the Tape; the menu has no Rename (Decided 2).
   Then the menu; the key
   `TAPE.LIST.REMOVE` becomes `TAPE.LIST.DELETE` ("Delete Tape {{name}}").
-- [ ] **G10** Organ filter, component. Spec with a faked `ActivatedRoute` query parameter: `organ`
+- [x] **G10** Organ filter, component. Spec with a faked `ActivatedRoute` query parameter: `organ`
   of the Street organ lists only its Tapes and shows a chip (`data-testid="organ-filter"`) "Street
   organ"; removing the chip (`aria-label` "Show all Tapes") navigates to `/tapes` without the
   parameter and lists all; an unknown id lists all and shows no chip. Then the filter (`toSignal`
   of the query parameter map).
-- [ ] **G11** Tape page head and empty states, component. Spec: the subtitle; with no Tapes and an
+- [x] **G11** Tape page head and empty states, component. Spec: the subtitle; with no Tapes and an
   Organ, `empty-state` says "No Tapes yet. Bring a Song onto a Tape." and holds the only `new-tape`
   (filled); with no Organ the sentence is "No Tapes yet. A Tape is punched for one Organ: describe
   your Organ first." with a link (`data-testid="empty-new-organ"`) to `/organs/new`, and `new-tape`
