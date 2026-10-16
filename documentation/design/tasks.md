@@ -409,7 +409,7 @@ keys to `en.json` and `de.json` (German: Lochband).
   line and side panel are in view; a click at the overview's end scrolls the stage to its end;
   selecting a Hole by click and → updates the inspector; at 1024×700 the document does not scroll,
   the side panel is collapsed and overview strip and status line stay in view. Needs real layout.
-- [ ] **V25** Full `npm run e2e`, `npm run test`, `npm run lint`, `npm run i18n:check`. Then
+- [x] **V25** Full `npm run e2e`, `npm run test`, `npm run lint`, `npm run i18n:check`. Then
   `npm run ux:screens` (08 with a selected Hole and the Import Summary, 11 dark, a new Tape view at
   1024×700), `ux-review`; score into STATUS.
 
