@@ -22,7 +22,7 @@
     "NAV": "Lochbänder",
     "VIEW": {
       "PARTS": "Stimmen auf dem Lochband",
-      "DRAWING": "Löcher des Lochbandes {{name}}",
+      "DRAWING": "Lochband {{name}}: {{rows}} Zeilen, {{columns}} Spalten, {{holes}} Löcher",
       "ZOOM": "Zoom",
       "ZOOM_WHOLE": "Ganzes Lochband",
       "OVERVIEW": "Ganzes Lochband, der markierte Ausschnitt wird oben gezeigt",
@@ -31,7 +31,11 @@
       "COLUMNS_OTHER": "{{count}} Spalten",
       "EXPORT": "Export für den Plotter",
       "EXPORT_LATER": "Der Export kommt in einer späteren Version",
-      "SIDE_PANEL": "Details"
+      "SIDE_PANEL": "Details",
+      "DETAILS": "Lochbanddetails",
+      "STATUS_COLUMN": "Spalte {{column}} bei {{mm}} mm",
+      "STATUS_ROW": "Zeile {{row}}, {{note}}",
+      "SAVED": "Gespeichert"
     },
     "LIST": {
       "TITLE": "Lochbänder",

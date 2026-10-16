@@ -9,6 +9,7 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
+import {BreakpointObserver} from '@angular/cdk/layout';
 import {toSignal} from '@angular/core/rxjs-interop';
 import {ActivatedRoute, Router} from '@angular/router';
 import {map} from 'rxjs';
@@ -26,6 +27,7 @@ import {TapeLibrary} from '../tape-library.store';
 import {nextHole, type Direction, type SelectableHole} from './hole-selection';
 import {inspectHole} from './inspect-hole';
 import {overviewFrame, scrollLeftFor} from './overview-frame';
+import {pointerAt} from './pointer-at';
 import {pixelsPerMillimetre, type Zoom} from './pixels-per-millimetre';
 import {tapeGeometry} from './tape-geometry';
 import {columnLines, columnNumbers, rulerNumbers} from './tape-marks';
@@ -54,6 +56,9 @@ function importSummaryOf(state: unknown): ImportSummary | null {
   if (typeof state !== 'object' || state === null || !('importSummary' in state)) return null;
   return isImportSummary(state.importSummary) ? state.importSummary : null;
 }
+
+/** The shell's query: below this width the side panel gives way to a toggle. */
+const COMPACT_QUERY = '(max-width: 1179.98px)';
 
 /** Space above the Tape for the ruler, in px. */
 const RULER_HEIGHT = 24;
@@ -86,8 +91,22 @@ function windowWidth(element: HTMLElement): number {
       flex: 1;
       min-height: 0;
     }
+    .layout.compact {
+      grid-template-columns: minmax(0, 1fr);
+    }
     .stage {
       min-width: 0;
+    }
+    .status-line {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      overflow: hidden;
+      white-space: nowrap;
+      font-size: 0.875rem;
+    }
+    .status-line .save-state {
+      margin-left: auto;
     }
     .side-panel {
       display: flex;
@@ -209,6 +228,29 @@ export class TapeViewComponent {
   private readonly stageClientWidth = signal(0);
   private readonly stageScrollWidth = signal(0);
   protected readonly rulerTicks = [0, 1, 2, 3, 4];
+
+  private readonly breakpoints = inject(BreakpointObserver);
+  protected readonly compact = toSignal(this.breakpoints.observe(COMPACT_QUERY).pipe(map((state) => state.matches)), {
+    initialValue: this.breakpoints.isMatched(COMPACT_QUERY),
+  });
+  protected readonly sidePanelOpen = signal(false);
+  protected readonly saveProblem = this.library.saveProblem;
+  private readonly pointer = signal<{readonly column: number; readonly mm: number; readonly row: number | undefined} | undefined>(undefined);
+
+  /** The pointer position as text for the status line; `undefined` while the pointer is not over the Tape. */
+  protected readonly pointerText = computed(() => {
+    const pointer = this.pointer();
+    const organ = this.organ();
+    if (pointer === undefined || organ === undefined) return undefined;
+    const language = this.language();
+    const pipe = pointer.row === undefined ? undefined : organ.pipes[pointer.row - 1];
+    return {
+      column: formatNumber(pointer.column, language),
+      mm: formatNumber(pointer.mm, language),
+      row: pointer.row === undefined ? undefined : formatNumber(pointer.row, language),
+      note: pipe === undefined ? '' : noteName(pipe.note),
+    };
+  });
 
   private readonly scrollElement = viewChild<ElementRef<HTMLElement>>('scroll');
   private readonly scrollLeft = signal(0);
@@ -362,6 +404,12 @@ export class TapeViewComponent {
       totalHeight: RULER_HEIGHT + height + NUMBERS_HEIGHT,
       numbersY: height + NUMBERS_HEIGHT - 6,
       partNames: this.partNames(tape),
+      drawingParams: {
+        name: tape.name,
+        rows: number(organ.pipes.length),
+        columns: number(tape.length),
+        holes: number(tape.holes.length),
+      },
     };
   });
 
@@ -385,6 +433,25 @@ export class TapeViewComponent {
     if (target === undefined) return;
     this.selectedHole.set({row: target.row, start: target.start});
     this.scrollToSelection = true;
+  }
+
+  protected onPointerMove(event: PointerEvent, svg: Element): void {
+    const geometry = this.geometry();
+    if (geometry === undefined) return;
+    const box = svg.getBoundingClientRect();
+    this.pointer.set(pointerAt(event.clientX - box.left, event.clientY - box.top - RULER_HEIGHT, this.scale(), geometry));
+  }
+
+  protected onPointerLeave(): void {
+    this.pointer.set(undefined);
+  }
+
+  protected toggleSidePanel(): void {
+    this.sidePanelOpen.update((open) => !open);
+  }
+
+  protected onSidePanelKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Escape' && this.compact()) this.sidePanelOpen.set(false);
   }
 
   protected onScroll(element: HTMLElement): void {

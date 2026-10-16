@@ -1,4 +1,6 @@
+import {BreakpointObserver, type BreakpointState} from '@angular/cdk/layout';
 import {Component} from '@angular/core';
+import {type Observable, of} from 'rxjs';
 import {TestBed} from '@angular/core/testing';
 import {provideRouter, Router} from '@angular/router';
 import {RouterTestingHarness} from '@angular/router/testing';
@@ -55,10 +57,29 @@ interface RenderOptions {
   readonly columnLength?: number;
   /** The language of the texts; English when not given. */
   readonly language?: 'en' | 'de';
+  /** Writing the Tape library fails. */
+  readonly saveFails?: boolean;
+  /** The window width in px the faked BreakpointObserver answers for; the real one when not given. */
+  readonly windowWidth?: number;
+}
+
+/** Evaluates `min-width` and `max-width` queries against a fixed window width. */
+function stubBreakpointObserver(width: number): Pick<BreakpointObserver, 'observe' | 'isMatched'> {
+  const matches = (query: string): boolean => {
+    const max = /max-width:\s*([\d.]+)px/.exec(query);
+    const min = /min-width:\s*([\d.]+)px/.exec(query);
+    return (!max || width <= Number(max[1])) && (!min || width >= Number(min[1]));
+  };
+  const queries = (value: string | readonly string[]): string[] => (typeof value === 'string' ? [value] : [...value]);
+  return {
+    observe: (value: string | readonly string[]): Observable<BreakpointState> =>
+      of({matches: queries(value).some(matches), breakpoints: Object.fromEntries(queries(value).map((q) => [q, matches(q)]))}),
+    isMatched: (value: string | readonly string[]): boolean => queries(value).some(matches),
+  };
 }
 
 async function render(options: RenderOptions = {}) {
-  const inMemory = createInMemoryCranculaApi();
+  const inMemory = createInMemoryCranculaApi(undefined, undefined, options.saveFails ? {tapes: {save: 'failed'}} : {});
   let finishLoad: () => void = () => undefined;
   let deferredSnapshot: ReturnType<typeof toTapeLibrarySnapshot> | null = null;
   const api = options.deferLoad
@@ -82,6 +103,9 @@ async function render(options: RenderOptions = {}) {
       ]),
       provideTestTranslations(options.language ?? 'en'),
       {provide: CRANCULA_API, useValue: api},
+      ...(options.windowWidth === undefined
+        ? []
+        : [{provide: BreakpointObserver, useValue: stubBreakpointObserver(options.windowWidth)}]),
     ],
   });
   const organ = options.holes
@@ -627,6 +651,175 @@ describe('TapeViewComponent', () => {
     });
   });
 
+  describe('the status line (V20)', () => {
+    const holes = [{row: 25, start: 71, length: 3}];
+    /** The ruler above the Tape in the SVG, in px. */
+    const RULER_PX = 24;
+    const line = (view: HTMLElement | null) => view?.querySelector('[data-testid="status-line"]') ?? null;
+    const lineText = (view: HTMLElement | null) => line(view)?.textContent?.replace(/\s+/g, ' ').trim() ?? '';
+    const tapeSvg = (view: HTMLElement | null) => view?.querySelector('[data-testid="tape-scroll"] svg') as SVGSVGElement;
+    /** Moves the pointer to the given Tape position (px from the drawing's left and the Tape's top edge). */
+    const pointAt = async (view: HTMLElement | null, x: number, y: number, settle: () => Promise<void>) => {
+      const svg = tapeSvg(view);
+      Object.defineProperty(svg, 'getBoundingClientRect', {value: () => new DOMRect(0, 0, 4000, 300), configurable: true});
+      svg.dispatchEvent(new MouseEvent('pointermove', {clientX: x, clientY: y + RULER_PX, bubbles: true}));
+      await settle();
+    };
+
+    it('sits under the overview strip, 26 px high', async () => {
+      const {tape, open, view} = await render({holes});
+
+      await open(`/tapes/${tape.id}`);
+
+      const element = line(view()) as HTMLElement | null;
+      expect(element).not.toBeNull();
+      expect(element?.style.height).toBe('26px');
+      const overview = view()?.querySelector('[data-testid="overview"]');
+      expect(overview?.compareDocumentPosition(element as Node) ?? 0).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    });
+
+    it('shows the Column with its mm and the row with its note name while the pointer is over the Tape', async () => {
+      const {tape, organ, open, view, settle} = await render({holes});
+      await open(`/tapes/${tape.id}`);
+      const rowCentre = (tapeGeometry(tape, organ).rowCentres[24] ?? 0) * SCALE;
+
+      await pointAt(view(), 177.5 * SCALE + 1, rowCentre, settle);
+
+      expect(lineText(view())).toContain('Column 72 at 177.5 mm');
+      expect(lineText(view())).toContain('Row 25, F5');
+    });
+
+    it('shows no position without the pointer over the Tape, and again after it leaves', async () => {
+      const {tape, open, view, settle} = await render({holes});
+      await open(`/tapes/${tape.id}`);
+      expect(lineText(view())).not.toMatch(/Column \d+ at/);
+
+      await pointAt(view(), 5, 5, settle);
+      expect(lineText(view())).toMatch(/Column \d+ at/);
+
+      tapeSvg(view()).dispatchEvent(new MouseEvent('pointerleave'));
+      await settle();
+      expect(lineText(view())).not.toMatch(/Column \d+ at/);
+      expect(lineText(view())).not.toContain('Row');
+    });
+
+    it('shows the zoom and the save state', async () => {
+      const {tape, open, view} = await render({holes});
+
+      await open(`/tapes/${tape.id}`);
+
+      expect(lineText(view())).toContain('1:1');
+      expect(lineText(view())).toContain('Saved');
+    });
+
+    it('shows the save problem of the Tape library instead of Saved', async () => {
+      const {tape, open, view} = await render({holes, saveFails: true});
+
+      await open(`/tapes/${tape.id}`);
+
+      expect(lineText(view())).toContain("Your Tapes couldn't be saved: the Tape library could not be written");
+      expect(lineText(view())).not.toContain('Saved');
+    });
+
+    it('announces only the save state politely', async () => {
+      const {tape, open, view, settle} = await render({holes});
+      await open(`/tapes/${tape.id}`);
+      await pointAt(view(), 5, 5, settle);
+
+      const live = all(line(view()), '[aria-live]');
+      expect(live).toHaveLength(1);
+      expect(live[0].getAttribute('aria-live')).toBe('polite');
+      expect(live[0].textContent).toContain('Saved');
+      expect(line(view())?.getAttribute('aria-live')).toBeNull();
+    });
+  });
+
+  describe('the text alternative (V21)', () => {
+    it('labels the Tape drawing with the name, rows, Columns and Holes', async () => {
+      const {tape, organ, open, view} = await render();
+
+      await open(`/tapes/${tape.id}`);
+
+      const svg = view()?.querySelector('[data-testid="tape-scroll"] svg');
+      expect(svg?.getAttribute('aria-label')).toBe(
+        `Tape ${tape.name}: ${organ.pipes.length} rows, ${tape.length} Columns, ${tape.holes.length} Holes`,
+      );
+    });
+
+    it('labels it in German with "Lochband"', async () => {
+      const {tape, open, view} = await render({language: 'de'});
+
+      await open(`/tapes/${tape.id}`);
+
+      expect(view()?.querySelector('[data-testid="tape-scroll"] svg')?.getAttribute('aria-label')).toMatch(
+        new RegExp(`^Lochband ${tape.name}: `),
+      );
+    });
+
+    it('hides the ruler and the Column numbers from assistive technology', async () => {
+      const {tape, open, view} = await render();
+
+      await open(`/tapes/${tape.id}`);
+
+      const hidden = [...all(view(), '[data-testid="ruler-number"]'), ...all(view(), '[data-testid="column-number"]')];
+      expect(hidden.length).toBeGreaterThan(0);
+      expect(hidden.every((element) => element.getAttribute('aria-hidden') === 'true')).toBe(true);
+    });
+  });
+
+  describe('the compact side panel (V22)', () => {
+    const toggle = (view: HTMLElement | null) =>
+      view?.querySelector<HTMLButtonElement>('[data-testid="page-head-actions"] [data-testid="side-panel-toggle"]') ?? null;
+    const panel = (view: HTMLElement | null) => view?.querySelector('[data-testid="side-panel"]') ?? null;
+
+    it('closes the side panel behind a Tape details toggle in the page head below 1180 px', async () => {
+      const {tape, open, view} = await render({windowWidth: 1100});
+
+      await open(`/tapes/${tape.id}`);
+
+      expect(toggle(view())?.textContent?.trim()).toBe('Tape details');
+      expect(toggle(view())?.getAttribute('aria-expanded')).toBe('false');
+      expect(panel(view())).toBeNull();
+    });
+
+    it('opens the side panel with the toggle, and closes it again', async () => {
+      const {tape, open, view, settle} = await render({windowWidth: 1100});
+      await open(`/tapes/${tape.id}`);
+
+      toggle(view())?.click();
+      await settle();
+      expect(toggle(view())?.getAttribute('aria-expanded')).toBe('true');
+      expect(panel(view())).not.toBeNull();
+
+      toggle(view())?.click();
+      await settle();
+      expect(toggle(view())?.getAttribute('aria-expanded')).toBe('false');
+      expect(panel(view())).toBeNull();
+    });
+
+    it('closes the open side panel on Escape', async () => {
+      const {tape, open, view, settle} = await render({windowWidth: 1100});
+      await open(`/tapes/${tape.id}`);
+      toggle(view())?.click();
+      await settle();
+
+      panel(view())?.dispatchEvent(new KeyboardEvent('keydown', {key: 'Escape', bubbles: true}));
+      await settle();
+
+      expect(panel(view())).toBeNull();
+      expect(toggle(view())?.getAttribute('aria-expanded')).toBe('false');
+    });
+
+    it('always shows the side panel from 1180 px, without a toggle', async () => {
+      const {tape, open, view} = await render({windowWidth: 1280});
+
+      await open(`/tapes/${tape.id}`);
+
+      expect(toggle(view())).toBeNull();
+      expect(panel(view())).not.toBeNull();
+    });
+  });
+
   describe('drawing the Tape (FR-018)', () => {
     const numberAttribute = (element: Element, name: string) => Number(element.getAttribute(name));
     const holeRects = (view: HTMLElement | null) => all(view, 'svg:not([data-testid="overview"]) rect[data-testid="hole"]');
@@ -1040,7 +1233,7 @@ describe('TapeViewComponent', () => {
       await open(`/tapes/${tape.id}`);
 
       const controls = all(view(), 'button, input, select, textarea, [contenteditable]').filter(
-        (control) => control.closest('[data-testid="zoom"]') === null && control.getAttribute('data-testid') !== 'export',
+        (control) => control.closest('[data-testid="zoom"]') === null && !['export', 'side-panel-toggle'].includes(control.getAttribute('data-testid') ?? ''),
       );
       expect(controls).toHaveLength(0);
     });

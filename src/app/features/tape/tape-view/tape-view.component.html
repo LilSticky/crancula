@@ -14,13 +14,14 @@
         <button type="button" [attr.aria-pressed]="zoom() === option.zoom" (click)="zoom.set(option.zoom)">{{ option.label | translate }}</button>
       }
     </div>
+    @if (compact()) {<button pageHeadActions mat-stroked-button type="button" data-testid="side-panel-toggle" [attr.aria-expanded]="sidePanelOpen()" (click)="toggleSidePanel()">{{ 'TAPE.VIEW.DETAILS' | translate }}</button>}
     <button pageHeadActions mat-stroked-button type="button" disabled data-testid="export">
       <mat-icon aria-hidden="true">content_cut</mat-icon>
       {{ 'TAPE.VIEW.EXPORT' | translate }}
     </button>
     <span pageHeadActions class="export-later" data-testid="export-later">{{ 'TAPE.VIEW.EXPORT_LATER' | translate }}</span>
   </cranc-page-head>
-  <div class="layout">
+  <div class="layout" [class.compact]="compact()">
   <div class="stage">
   <div class="drawing">
     <ul class="labels" [style.height.px]="drawing.totalHeight">
@@ -29,7 +30,7 @@
       }
     </ul>
     <div class="scroll" #scroll data-testid="tape-scroll" (scroll)="onScroll(scroll)">
-      <svg role="img" [attr.aria-label]="'TAPE.VIEW.DRAWING' | translate: {name: drawing.tape.name}" [attr.width]="drawing.width" [attr.height]="drawing.totalHeight" tabindex="0" (keydown)="onKeydown($event)">
+      <svg #tapeSvg role="img" [attr.aria-label]="'TAPE.VIEW.DRAWING' | translate: drawing.drawingParams" [attr.width]="drawing.width" [attr.height]="drawing.totalHeight" tabindex="0" (keydown)="onKeydown($event)" (pointermove)="onPointerMove($event, tapeSvg)" (pointerleave)="onPointerLeave()">
         <defs>
           <pattern id="ruler-ticks" patternUnits="userSpaceOnUse" [attr.x]="drawing.leadIn" [attr.width]="5 * scale()" height="8">
             @for (tick of rulerTicks; track tick) {
@@ -39,7 +40,7 @@
         </defs>
         <rect [attr.x]="drawing.leadIn" [attr.y]="rulerHeight - 8" [attr.width]="drawing.bodyWidth" height="8" fill="url(#ruler-ticks)" />
         @for (number of drawing.rulerNumbers; track number.mm) {
-          <text class="ruler-number" data-testid="ruler-number" [attr.x]="number.x" [attr.y]="rulerHeight - 12" text-anchor="middle">{{ number.mm }}</text>
+          <text class="ruler-number" data-testid="ruler-number" aria-hidden="true" [attr.x]="number.x" [attr.y]="rulerHeight - 12" text-anchor="middle">{{ number.mm }}</text>
         }
         <g [attr.transform]="'translate(0 ' + rulerHeight + ')'">
           @if (drawing.leadIn > 0) {
@@ -73,7 +74,7 @@
             />
           }
           @for (number of drawing.numbers; track number.column) {
-            <text class="column-number" data-testid="column-number" [attr.x]="number.x" [attr.y]="drawing.numbersY">{{ number.number }}</text>
+            <text class="column-number" data-testid="column-number" aria-hidden="true" [attr.x]="number.x" [attr.y]="drawing.numbersY">{{ number.number }}</text>
           }
         </g>
       </svg>
@@ -100,8 +101,25 @@
       <rect class="overview-frame" data-testid="overview-frame" [attr.x]="overview.frame.x" y="0" [attr.width]="overview.frame.width" [attr.height]="overview.height" />
     </svg>
   }
+  <div class="status-line" data-testid="status-line" style="height: 26px">
+    @if (pointerText(); as pointer) {
+      <span data-testid="pointer-column">{{ 'TAPE.VIEW.STATUS_COLUMN' | translate: {column: pointer.column, mm: pointer.mm} }}</span>
+      @if (pointer.row !== undefined) {
+        <span data-testid="pointer-row">{{ 'TAPE.VIEW.STATUS_ROW' | translate: {row: pointer.row, note: pointer.note} }}</span>
+      }
+    }
+    <span data-testid="zoom-state">{{ zoom() === 'whole' ? ('TAPE.VIEW.ZOOM_WHOLE' | translate) : zoom() }}</span>
+    <span class="save-state" aria-live="polite" data-testid="save-state">
+      @if (saveProblem(); as problem) {
+        {{ 'TAPE.STORAGE.SAVE_PROBLEM' | translate: {reason: problem.reason} }}
+      } @else {
+        {{ 'TAPE.VIEW.SAVED' | translate }}
+      }
+    </span>
   </div>
-  <aside class="side-panel" data-testid="side-panel" [attr.aria-label]="'TAPE.VIEW.SIDE_PANEL' | translate">
+  </div>
+  @if (!compact() || sidePanelOpen()) {
+  <aside class="side-panel" data-testid="side-panel" (keydown)="onSidePanelKeydown($event)" [attr.aria-label]="'TAPE.VIEW.SIDE_PANEL' | translate">
     <section data-testid="tape-section">
       <h2>{{ 'TAPE.SECTION.TITLE' | translate }}</h2>
       <dl>
@@ -146,5 +164,6 @@
       <cranc-import-summary data-testid="import-summary" [importSummary]="summary" (dismissed)="importSummary.set(null)" />
     }
   </aside>
+  }
   </div>
 }

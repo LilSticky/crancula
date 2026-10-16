@@ -22,7 +22,7 @@
     "NAV": "Tapes",
     "VIEW": {
       "PARTS": "Parts on the Tape",
-      "DRAWING": "Holes of Tape {{name}}",
+      "DRAWING": "Tape {{name}}: {{rows}} rows, {{columns}} Columns, {{holes}} Holes",
       "ZOOM": "Zoom",
       "ZOOM_WHOLE": "Whole Tape",
       "OVERVIEW": "Whole Tape, the framed part is shown above",
@@ -31,7 +31,11 @@
       "COLUMNS_OTHER": "{{count}} Columns",
       "EXPORT": "Export for the Plotter",
       "EXPORT_LATER": "Export comes in a later release",
-      "SIDE_PANEL": "Details"
+      "SIDE_PANEL": "Details",
+      "DETAILS": "Tape details",
+      "STATUS_COLUMN": "Column {{column}} at {{mm}} mm",
+      "STATUS_ROW": "Row {{row}}, {{note}}",
+      "SAVED": "Saved"
     },
     "LIST": {
       "TITLE": "Tapes",

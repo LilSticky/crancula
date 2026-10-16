@@ -380,18 +380,18 @@ keys to `en.json` and `de.json` (German: Lochband).
   each warning as oxblood text with an icon that says the numbers ("Shorter than the Minimum Hole
   Length: 2 mm of 2.5 mm", "Gap below the Minimum Gap: 1 mm of 1.5 mm",
   `data-testid="hole-warning"`); no warning element for a Hole within the limits. Then the section.
-- [ ] **V19** Pointer position, unit. `pointerAt(x, y, scale, geometry)` (stage pixels) → the
+- [x] **V19** Pointer position, unit. `pointerAt(x, y, scale, geometry)` (stage pixels) → the
   Column (from 1) and the mm where it starts, and the row (from 1) with its note name when the
   pointer is within half a row spacing of a row centre; nothing outside the Tape or over the
   Lead-in. Spec first.
-- [ ] **V20** Status line, component. Spec: a 26 px line (`data-testid="status-line"`) under the
+- [x] **V20** Status line, component. Spec: a 26 px line (`data-testid="status-line"`) under the
   overview strip shows "Column 72 at 177.5 mm" and "Row 25, F5" while the pointer is over the Tape
   (nothing otherwise), the zoom ("1:1") and the save state ("Saved"; the save problem when the Tape
   library has one); only the save state has `aria-live="polite"`. Then the line.
-- [ ] **V21** Text alternative, component. Spec: the Tape SVG's `aria-label` reads "Tape
+- [x] **V21** Text alternative, component. Spec: the Tape SVG's `aria-label` reads "Tape
   Kirmes-Walzer: 31 rows, 192 Columns, 64 Holes" (German "Lochband …"); ruler and numbers are
   `aria-hidden`. Then the label.
-- [ ] **V22** Compact side panel, component. Spec with a faked `BreakpointObserver` (as the shell
+- [x] **V22** Compact side panel, component. Spec with a faked `BreakpointObserver` (as the shell
   spec): below 1180 px the side panel is closed behind a "Tape details" toggle button in the page
   head (`aria-expanded`); Escape closes it; above 1180 px it is always shown and the toggle is
   absent. Then the breakpoint signal.
