@@ -186,7 +186,8 @@ untranslated.
   - no name;
   - no Pipes;
   - two Pipes with the same MIDI note number;
-  - a measurement (tape width, hole diameter, spacing between rows, Minimum Gap) that is 0 or less. (amended 2026-10-15, #74)
+  - a measurement (tape width, hole diameter, spacing between rows, Minimum Gap) that is 0 or less;
+  - no Lead-in, or a negative one (0 is valid). (amended 2026-10-16, #78)
 - **FR-008**: The Border MUST be derived as `(tape width − Row Span) / 2`, where the Row Span is
   `(number of Pipes − 1) × spacing between rows + hole diameter`. The rows are centred across the
   Tape, row 1 nearest the top edge. A Border of 0 is valid. The system MUST NOT store an Organ whose
@@ -208,6 +209,11 @@ untranslated.
 - **FR-013**: Stored Organs MUST survive an app restart unchanged: all values and the Pipe order.
   Organs stored in snapshot version 1 (with a `border`) MUST still load; the `border` is ignored and
   the next save writes version 2 without it (ADR 20). (amended 2026-10-15, #74)
+- **FR-017**: Every Organ MUST have a Lead-in: the length in millimetres of blank Tape before
+  Column 1, with an angled start (German Vorlauf). 0 means none and is valid; a negative value is
+  not. A new Organ starts with the field empty and required. Organs stored in snapshot version 1 or
+  2 MUST still load with a Lead-in of 0; the next save writes version 3 (ADR 20). (amended
+  2026-10-16, #78)
 - **FR-014**: If stored Organs can't be read at startup, the app MUST start anyway, inform the user,
   and MUST NOT overwrite the unreadable data.
 - **FR-015**: If writing Organs to disk fails, the app MUST inform the user.
@@ -220,6 +226,7 @@ untranslated.
   - a name (not necessarily unique);
   - one Tape Bed;
   - a Minimum Gap (mm); its Minimum Hole Length is the Tape Bed's hole diameter;
+  - a Lead-in (mm, 0 or more): blank Tape before Column 1 (amended 2026-10-16, #78);
   - an ordered, non-empty list of Pipes with unique MIDI note numbers.
 
   It is identified independently of its name, and Tapes will later reference it.

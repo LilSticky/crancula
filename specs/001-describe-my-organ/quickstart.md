@@ -26,7 +26,7 @@ How to prove the slice works end to end. It refers to the [spec](spec.md),
    set `$env:CRANCULA_USER_DATA` to an empty folder before starting.
 2. **Create an Organ.** Enter:
    - name "Street organ";
-   - tape width 120, hole diameter 2.5, row spacing 3.5, Minimum Gap 1.5;
+   - tape width 120, hole diameter 2.5, row spacing 3.5, Minimum Gap 1.5, Lead-in 10 (amended 2026-10-16, #78);
    - 31 Pipes, starting at note 53.
 
    Expected:

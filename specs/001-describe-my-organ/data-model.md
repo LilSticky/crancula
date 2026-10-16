@@ -41,6 +41,7 @@ There is no `border` field: the Border is derived (amended 2026-10-15, #74).
 | `name` | `string` | trimmed, non-empty; not unique |
 | `tapeBed` | `TapeBed` | see above |
 | `minimumGap` | `Millimetres` | > 0 |
+| `leadIn` | `Millimetres` | ≥ 0; 0 means none (FR-017, amended 2026-10-16, #78) |
 | `pipes` | `readonly Pipe[]` | non-empty; unique `note` values |
 
 **Derived values:**
@@ -75,8 +76,9 @@ violation found. It never stops at the first one.
 | `pipe-note-required` | `pipes[i].note` | – | FR-003 |
 | `pipe-note-out-of-range` | `pipes[i].note` | `note` | FR-003 |
 | `duplicate-pipe` | `pipes[i].note` (one violation per affected Pipe) | `noteName` | FR-007 |
-| `value-required` | `tapeBed.*` / `minimumGap` | – | FR-007 |
+| `value-required` | `tapeBed.*` / `minimumGap` / `leadIn` | – | FR-007 |
 | `must-be-positive` | `tapeBed.tapeWidth`, `tapeBed.holeDiameter`, `tapeBed.rowSpacing`, `minimumGap` | – | FR-007 |
+| `must-not-be-negative` | `leadIn` | – | FR-017 |
 | `row-spacing-below-hole-diameter` | `tapeBed.rowSpacing` | `holeDiameter` | FR-009 |
 | `pipes-exceed-tape-width` | `tapeBed.tapeWidth` | `rowSpan`, `tapeWidth` | FR-008 |
 

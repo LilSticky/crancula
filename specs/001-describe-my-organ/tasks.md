@@ -552,5 +552,5 @@ New Organs start with the field empty and required. Snapshot version 3 (ADR 20).
   fields; it counts in `changedFields` and `problemFields` in reading order. en/de parity.
 - [x] **L5** e2e: helpers fill the Lead-in; a version 2 Organ loads with Lead-in 0 after a restart
   and is saved as version 3. Full `npm run e2e`.
-- [ ] **L6** Docs: spec.md (Organ entity, FR for the Lead-in, amended 2026-10-16, #78),
+- [x] **L6** Docs: spec.md (Organ entity, FR for the Lead-in, amended 2026-10-16, #78),
   data-model.md, contracts, CHANGELOG `[Unreleased]` (downgrade note as in #74), STATUS.
