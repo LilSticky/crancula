@@ -63,22 +63,58 @@ const NO_SONG_DRAFT: TapeImportDraft = {name: '', columnLength: null, transposit
   templateUrl: './tape-import.component.html',
   providers: [{provide: ErrorStateMatcher, useClass: ShownViolationMatcher}],
   styles: `
+    :host {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
+    }
+
     .tape-import {
       display: grid;
       grid-template-columns: 1fr 1fr;
+      grid-template-rows: minmax(0, 1fr) auto;
       gap: 20px;
-      align-items: start;
+      flex: 1;
+      min-height: 0;
     }
 
     mat-card {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
       padding: 20px;
+    }
+
+    [data-testid='fit'] {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
+    }
+
+    @media (max-width: 1179px) {
+      mat-card {
+        padding: 12px 16px;
+      }
+
+      .group {
+        margin-bottom: 8px;
+        gap: 4px;
+      }
     }
 
     .group {
       display: flex;
       flex-direction: column;
       gap: 8px;
-      margin-bottom: 20px;
+      margin-bottom: 8px;
+    }
+
+    .name-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
     }
 
     .group-title {
@@ -98,8 +134,14 @@ const NO_SONG_DRAFT: TapeImportDraft = {name: '', columnLength: null, transposit
       list-style: none;
       margin: 0;
       padding: 0;
-      max-height: 15rem;
+      flex: 1 1 auto;
+      min-height: 0;
       overflow-y: auto;
+    }
+
+    .parts-group {
+      flex: 1 1 auto;
+      min-height: 4rem;
     }
 
     .part {
@@ -116,7 +158,6 @@ const NO_SONG_DRAFT: TapeImportDraft = {name: '', columnLength: null, transposit
     }
 
     .part-percussion {
-      flex-basis: 100%;
       color: var(--mat-sys-on-surface-variant);
     }
 
@@ -145,6 +186,9 @@ const NO_SONG_DRAFT: TapeImportDraft = {name: '', columnLength: null, transposit
     }
 
     .fit-rows {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
       list-style: none;
       margin: 0;
       padding: 0;
@@ -182,6 +226,9 @@ const NO_SONG_DRAFT: TapeImportDraft = {name: '', columnLength: null, transposit
     }
 
     .fit-notes {
+      min-height: 0;
+      max-height: 12rem;
+      overflow-y: auto;
       margin: 0 0 8px;
       padding-inline-start: 48px;
     }

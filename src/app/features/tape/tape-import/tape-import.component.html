@@ -51,7 +51,7 @@
         </mat-form-field>
       </section>
 
-      <section class="group">
+      <section class="group parts-group">
         <h2 class="group-title" data-testid="group-title">{{ 'TAPE.PARTS.TITLE' | translate }}</h2>
         @if (song(); as song) {
           <ul class="parts" data-testid="parts">
@@ -108,25 +108,27 @@
         }
       </section>
 
-      <mat-form-field>
-        <mat-label>{{ 'TAPE.IMPORT.NAME' | translate }}</mat-label>
-        <input matInput data-testid="name" [formField]="tape.name"/>
-        <ng-container ngProjectAs="mat-error">
-          @for (message of messagesAt(tape.name); track message.key) {
-            <mat-error data-testid="violation" data-path="name" [attr.data-code]="message.code">{{ message.key | translate: message.params }}</mat-error>
-          }
-        </ng-container>
-      </mat-form-field>
-      <mat-form-field>
-        <mat-label>{{ 'TAPE.IMPORT.COLUMN_LENGTH' | translate }}</mat-label>
-        <input matInput crancDecimalInput data-testid="column-length" [formField]="tape.columnLength"/>
-        <span matTextSuffix>mm</span>
-        <ng-container ngProjectAs="mat-error">
-          @for (message of messagesAt(tape.columnLength); track message.key) {
-            <mat-error data-testid="violation" data-path="columnLength" [attr.data-code]="message.code">{{ message.key | translate: message.params }}</mat-error>
-          }
-        </ng-container>
-      </mat-form-field>
+      <div class="name-row">
+        <mat-form-field>
+          <mat-label>{{ 'TAPE.IMPORT.NAME' | translate }}</mat-label>
+          <input matInput data-testid="name" [formField]="tape.name"/>
+          <ng-container ngProjectAs="mat-error">
+            @for (message of messagesAt(tape.name); track message.key) {
+              <mat-error data-testid="violation" data-path="name" [attr.data-code]="message.code">{{ message.key | translate: message.params }}</mat-error>
+            }
+          </ng-container>
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label>{{ 'TAPE.IMPORT.COLUMN_LENGTH' | translate }}</mat-label>
+          <input matInput crancDecimalInput data-testid="column-length" [formField]="tape.columnLength"/>
+          <span matTextSuffix>mm</span>
+          <ng-container ngProjectAs="mat-error">
+            @for (message of messagesAt(tape.columnLength); track message.key) {
+              <mat-error data-testid="violation" data-path="columnLength" [attr.data-code]="message.code">{{ message.key | translate: message.params }}</mat-error>
+            }
+          </ng-container>
+        </mat-form-field>
+      </div>
     </mat-card>
 
     <mat-card appearance="outlined" data-testid="fit-sheet" aria-live="polite">

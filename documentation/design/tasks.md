@@ -741,7 +741,7 @@ is `song-file-name`). Every task that adds or changes UI text adds the keys to `
   `tape-restart.spec.ts`, `lists.spec.ts`, `e2e/support/tape-creation.ts` and
   `e2e/ux/screens.capture.ts` where they read `song-name`, the Fit texts, the Column length (now a
   decimal text input) or rely on Create Tape's place. Run them.
-- [ ] **I13** e2e, one screen in Electron. New `tape-import-layout.spec.ts`: at exactly 1024×700
+- [x] **I13** e2e, one screen in Electron. New `tape-import-layout.spec.ts`: at exactly 1024×700
   (`resizeWindowOrSkip`), in English and in German, with `threePartsWithPercussion` and then
   `longSongWithSixteenParts`: the document does not scroll (`scrollHeight <= innerHeight`, no
   horizontal scroll), both sheets and the action bar with Create Tape are in view, the 16 Parts
