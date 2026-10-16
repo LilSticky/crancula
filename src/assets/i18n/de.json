@@ -70,11 +70,25 @@
       "CHOOSE_SONG": "MIDI-Datei wählen",
       "NAME": "Name des Lochbandes",
       "COLUMN_LENGTH": "Spaltenlänge (mm)",
-      "TRANSPOSITION": "Transposition (Halbtöne)",
-      "CREATE": "Lochband erstellen"
+      "TRANSPOSITION": "Halbtöne",
+      "CREATE": "Lochband erstellen",
+      "SUBTITLE": "Wähle eine MIDI-Datei, die Drehorgel und die Stimmen. Die Passung zeigt, wie das Lied auf die Pfeifen trifft, bevor das Lochband erstellt wird.",
+      "GROUP_SONG": "Lied",
+      "GROUP_ORGAN": "Drehorgel",
+      "GROUP_TRANSPOSITION": "Transposition",
+      "CHOOSE_OTHER_SONG": "Andere Datei wählen",
+      "PARTS_COUNT": "{{count}} Stimmen",
+      "PARTS_COUNT_ONE": "1 Stimme",
+      "NOTES_COUNT": "{{count}} Noten",
+      "NOTES_COUNT_ONE": "1 Note"
     },
     "TRANSPOSITION": {
-      "USE_PROPOSAL": "Vorschlag verwenden"
+      "USE_PROPOSAL": "Vorschlag verwenden",
+      "UP": "Einen Halbton höher",
+      "DOWN": "Einen Halbton tiefer",
+      "PROPOSAL_CHOSEN": "Das ist der Vorschlag: Er legt die meisten Noten direkt auf eine Pfeife.",
+      "PROPOSAL": "Der Vorschlag ist {{semitones}} Halbtöne: Er legt die meisten Noten direkt auf eine Pfeife.",
+      "PROPOSAL_ONE": "Der Vorschlag ist {{semitones}} Halbton: Er legt die meisten Noten direkt auf eine Pfeife."
     },
     "SONG_REJECTION": {
       "NOT_A_MIDI_FILE": "Diese Datei ist keine MIDI-Datei, sie ist beschädigt oder größer als 16 MiB.",
@@ -85,13 +99,16 @@
     "PARTS": {
       "TITLE": "Stimmen",
       "UNNAMED": "Stimme {{number}}",
-      "NOTES": "Noten"
+      "NOTES": "Noten",
+      "NOTE": "Note",
+      "PERCUSSION": "Schlagwerk: Keine Pfeife spielt sie"
     },
     "FIT": {
       "TITLE": "Passung der gewählten Stimmen",
       "MATCHING_A_PIPE": "Noten, die auf eine Pfeife passen: {{count}}",
       "MOVED_BY_OCTAVES": "Um Oktaven verschobene Noten: {{count}}",
-      "UNPLAYABLE": "Nicht spielbare Noten: {{count}}"
+      "UNPLAYABLE": "Nicht spielbare Noten: {{count}}",
+      "EMPTY": "Wähle eine MIDI-Datei und eine Drehorgel, um zu sehen, wie das Lied auf die Pfeifen passt."
     },
     "VIOLATION": {
       "NAME_REQUIRED": "Bitte gib einen Namen ein.",

@@ -70,11 +70,25 @@
       "CHOOSE_SONG": "Choose a MIDI file",
       "NAME": "Name of the Tape",
       "COLUMN_LENGTH": "Column length (mm)",
-      "TRANSPOSITION": "Transposition (semitones)",
-      "CREATE": "Create Tape"
+      "TRANSPOSITION": "Semitones",
+      "CREATE": "Create Tape",
+      "SUBTITLE": "Choose a MIDI file, the Organ and the Parts. The Fit shows how the Song meets the Pipes before the Tape is created.",
+      "GROUP_SONG": "Song",
+      "GROUP_ORGAN": "Organ",
+      "GROUP_TRANSPOSITION": "Transposition",
+      "CHOOSE_OTHER_SONG": "Choose another file",
+      "PARTS_COUNT": "{{count}} Parts",
+      "PARTS_COUNT_ONE": "1 Part",
+      "NOTES_COUNT": "{{count}} Notes",
+      "NOTES_COUNT_ONE": "1 Note"
     },
     "TRANSPOSITION": {
-      "USE_PROPOSAL": "Use proposal"
+      "USE_PROPOSAL": "Use proposal",
+      "UP": "One semitone up",
+      "DOWN": "One semitone down",
+      "PROPOSAL_CHOSEN": "This is the proposal: it puts the most Notes directly on a Pipe.",
+      "PROPOSAL": "The proposal is {{semitones}} semitones: it puts the most Notes directly on a Pipe.",
+      "PROPOSAL_ONE": "The proposal is {{semitones}} semitone: it puts the most Notes directly on a Pipe."
     },
     "SONG_REJECTION": {
       "NOT_A_MIDI_FILE": "This file is not a MIDI file, or it is damaged or larger than 16 MiB.",
@@ -85,13 +99,16 @@
     "PARTS": {
       "TITLE": "Parts",
       "UNNAMED": "Part {{number}}",
-      "NOTES": "Notes"
+      "NOTES": "Notes",
+      "NOTE": "Note",
+      "PERCUSSION": "Percussion: no Pipe plays it"
     },
     "FIT": {
       "TITLE": "Fit of the selected Parts",
       "MATCHING_A_PIPE": "Notes matching a Pipe: {{count}}",
       "MOVED_BY_OCTAVES": "Notes moved by octaves: {{count}}",
-      "UNPLAYABLE": "Unplayable Notes: {{count}}"
+      "UNPLAYABLE": "Unplayable Notes: {{count}}",
+      "EMPTY": "Choose a MIDI file and an Organ to see how the Song fits its Pipes."
     },
     "VIOLATION": {
       "NAME_REQUIRED": "Please enter a name.",

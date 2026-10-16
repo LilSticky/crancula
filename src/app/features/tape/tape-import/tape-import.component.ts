@@ -1,13 +1,17 @@
 import {ChangeDetectionStrategy, Component, computed, inject, linkedSignal, PendingTasks, signal} from '@angular/core';
 import {type FieldTree, form, FormField} from '@angular/forms/signals';
 import {ErrorStateMatcher} from '@angular/material/core';
-import {MatButton} from '@angular/material/button';
+import {MatButton, MatIconButton} from '@angular/material/button';
+import {MatCard} from '@angular/material/card';
 import {MatCheckbox} from '@angular/material/checkbox';
-import {MatError, MatFormField, MatInput, MatLabel} from '@angular/material/input';
+import {MatChip} from '@angular/material/chips';
+import {MatTooltip} from '@angular/material/tooltip';
+import {MatError, MatFormField, MatHint, MatInput, MatLabel} from '@angular/material/input';
 import {MatIcon} from '@angular/material/icon';
 import {Router, RouterLink} from '@angular/router';
 import {TranslatePipe} from '@ngx-translate/core';
 import {
+  allowedTranspositions,
   defaultSelectedParts,
   type Fit,
   fitOf,
@@ -23,6 +27,7 @@ import {
 } from '@api/index';
 import {PageHeadComponent} from '../../shared/components/page-head/page-head.component';
 import {OrganLibrary} from '../../organ/organ-library.store';
+import {pipeRange} from '../../organ/pipe-range';
 import {TapeLibrary} from '../tape-library.store';
 import {
   type ShownMessage,
@@ -40,14 +45,76 @@ const NO_SONG_DRAFT: TapeImportDraft = {name: '', columnLength: null, transposit
 @Component({
   selector: 'cranc-tape-import',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslatePipe, RouterLink, MatFormField, MatLabel, MatInput, MatError, MatButton, MatCheckbox, MatIcon, FormField, PageHeadComponent],
+  imports: [TranslatePipe, RouterLink, MatFormField, MatLabel, MatInput, MatError, MatButton, MatIconButton, MatCheckbox, MatIcon, MatCard, MatChip, MatHint, MatTooltip, FormField, PageHeadComponent],
   templateUrl: './tape-import.component.html',
   providers: [{provide: ErrorStateMatcher, useClass: ShownViolationMatcher}],
   styles: `
     .tape-import {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    mat-card {
+      padding: 20px;
+    }
+
+    .group {
       display: flex;
       flex-direction: column;
-      max-width: 40rem;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .group-title {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 700;
+    }
+
+    .file {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .parts {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      max-height: 15rem;
+      overflow-y: auto;
+    }
+
+    .part {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 40px;
+      border-bottom: 1px solid var(--mat-sys-outline-variant);
+    }
+
+    .part-note-count {
+      font-variant-numeric: tabular-nums;
+    }
+
+    .part-percussion {
+      flex-basis: 100%;
+      color: var(--mat-sys-on-surface-variant);
+    }
+
+    .stepper {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .proposal {
+      margin: 0;
+      color: var(--mat-sys-on-surface-variant);
     }
 
     .rejection {
@@ -72,6 +139,20 @@ export class TapeImportComponent {
 
   protected readonly song = signal<Song | null>(null);
   protected readonly rejection = signal<SongRejection | null>(null);
+  /** The name of the chosen file, which can differ from the Song's name. */
+  protected readonly fileName = signal('');
+
+  protected readonly organRange = computed(() => {
+    const organ = this.organ();
+    return organ ? pipeRange(organ) : null;
+  });
+
+  protected readonly songFacts = computed(() => {
+    const song = this.song();
+    return song
+      ? {parts: song.parts.length, notes: song.parts.reduce((total, part) => total + part.notes.length, 0)}
+      : null;
+  });
 
   /** The selected Parts; a new Song starts with its default Parts. */
   protected readonly selectedParts = linkedSignal<Song | null, ReadonlySet<PartIndex>>({
@@ -110,6 +191,31 @@ export class TapeImportComponent {
       : null;
   });
 
+  /** The Transposition the form shows now: the chosen one, or the proposal while none is entered. */
+  protected readonly proposal = computed(() => {
+    const context = this.context();
+    return context ? proposeTransposition(context.song, context.selectedParts, context.organ) : null;
+  });
+
+  protected readonly chosenTransposition = computed(() => this.draft().transposition);
+
+  protected readonly allowed = computed(() => {
+    const context = this.context();
+    return context ? allowedTranspositions(context.song, context.selectedParts) : null;
+  });
+
+  protected readonly proposalIsChosen = computed(() => this.proposal() === this.chosenTransposition());
+
+  protected readonly canStepUp = computed(() => {
+    const [allowed, chosen] = [this.allowed(), this.chosenTransposition()];
+    return allowed !== null && chosen !== null && chosen < allowed.highest;
+  });
+
+  protected readonly canStepDown = computed(() => {
+    const [allowed, chosen] = [this.allowed(), this.chosenTransposition()];
+    return allowed !== null && chosen !== null && chosen > allowed.lowest;
+  });
+
   protected readonly canCreate = computed(
     () => this.context() !== null && this.tape().valid() && this.tapes.loadProblem() === null,
   );
@@ -128,6 +234,7 @@ export class TapeImportComponent {
         : readMidiSong(new Uint8Array(await file.arrayBuffer()), file.name);
     if (result.ok) {
       this.rejection.set(null);
+      this.fileName.set(file.name);
       this.song.set(result.value);
     } else {
       this.rejection.set(result.error);
@@ -157,6 +264,16 @@ export class TapeImportComponent {
       ...draft,
       transposition: proposeTransposition(context.song, context.selectedParts, context.organ),
     }));
+  }
+
+  /** Moves the chosen Transposition by whole semitones. */
+  protected step(semitones: number): void {
+    this.draft.update((draft) => ({...draft, transposition: (draft.transposition ?? 0) + semitones}));
+  }
+
+  /** A number with its sign: "+5", "−3" (minus sign) and "0". */
+  protected signed(value: number): string {
+    return value > 0 ? `+${value}` : value < 0 ? `−${-value}` : '0';
   }
 
   protected chooseOrgan(organId: string): void {

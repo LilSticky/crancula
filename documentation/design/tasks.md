@@ -668,28 +668,28 @@ Keep the test ids e2e and specs use: `import-form`, `organ`, `song-file`, `choos
 is `song-file-name`). Every task that adds or changes UI text adds the keys to `en.json` and
 `de.json`.
 
-- [ ] **I1** Two sheets and spacing, component. Spec: the form holds a Song sheet and a Fit sheet
+- [x] **I1** Two sheets and spacing, component. Spec: the form holds a Song sheet and a Fit sheet
   (`data-testid="song-sheet"`, `fit-sheet`, both outlined `mat-card`); the Song sheet has the group
   titles Song, Organ, Parts, Transposition in this order; the page head has the subtitle. Then the
   template and the minimal SCSS (two-column grid, 20 px gaps, group margins).
-- [ ] **I2** File chip, component. Spec: before a file, only `choose-song` "Choose a MIDI file"
+- [x] **I2** File chip, component. Spec: before a file, only `choose-song` "Choose a MIDI file"
   and no `song-file-name`; after `three-parts.mid` the chip `song-file-name` shows that file name
   (also when the Song is named after its first track), `song-facts` "3 Parts, 11 Notes" (singular
   "1 Part, 1 Note"), and `choose-song` reads "Choose another file"; a rejected file shows
   `song-rejection` with an icon and no chip; `song-name` is gone. Then a `fileName` signal set in
   `readSong`, the chip and the keys.
-- [ ] **I3** Organ range hint, component. Spec: with the Street organ chosen, `organ-range` under
+- [x] **I3** Organ range hint, component. Spec: with the Street organ chosen, `organ-range` under
   the select reads "31 Pipes, F3–B5"; none while no Organ is chosen. Then the hint with
   `pipeRange`.
-- [ ] **I4** Parts list, component. Rewrite "shows each Part with its name and its number of
+- [x] **I4** Parts list, component. Rewrite "shows each Part with its name and its number of
   Notes": rows in a list (no `fieldset`), `part-note-count` still the number, followed by "Notes" /
   "Note"; the percussion Part has `part-percussion` "Percussion: no Pipe plays it", the others
   none. Then the template and keys.
-- [ ] **I5** Transposition stepper, component. Spec: "One semitone up" raises the Transposition by
+- [x] **I5** Transposition stepper, component. Spec: "One semitone up" raises the Transposition by
   1 and the Fit follows; "One semitone down" lowers it; both have `aria-label` and tooltip; at the
   highest allowed Transposition (highest selected Note G9) "up" is disabled, at the lowest "down"
   is. Then the buttons (they update the draft as `useProposal` does).
-- [ ] **I6** Proposal sentence, component. Spec: with the proposal chosen, `proposal` reads "This
+- [x] **I6** Proposal sentence, component. Spec: with the proposal chosen, `proposal` reads "This
   is the proposal: it puts the most Notes directly on a Pipe." and there is no `use-proposal`;
   after "up" it reads "The proposal is +12 semitones: …" (signed; "−3" and "0" in two more cases)
   and `use-proposal` restores it (keep "restores the proposal with "use proposal""); German texts.
