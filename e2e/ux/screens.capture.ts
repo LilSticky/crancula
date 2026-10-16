@@ -86,6 +86,7 @@ test.describe('UX screens', () => {
     await window.getByTestId('new-tape').click();
     await window.getByTestId('song-file').setInputFiles(threePartsWithPercussion());
     await expect(window.getByTestId('name')).not.toHaveValue('');
+    await expect(window.getByTestId('song-file-name')).toHaveText('three-parts-percussion.mid');
     await capture(window, '07-tape-import');
 
     await createTapeFromSong(window, 'Three parts', threePartsWithPercussion());

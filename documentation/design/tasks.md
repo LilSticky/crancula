@@ -737,7 +737,7 @@ is `song-file-name`). Every task that adds or changes UI text adds the keys to `
 - [x] **I11** No-Organ empty state, component. Rewrite "shows a hint with a link to the new Organ
   page and no form": `no-organ-hint` is a paper sheet with an icon, the sentence and the filled
   "Describe an Organ" link to `/organs/new`. Then the template.
-- [ ] **I12** e2e, existing tests. Update `tape-import.spec.ts`, `tape-german.spec.ts`,
+- [x] **I12** e2e, existing tests. Update `tape-import.spec.ts`, `tape-german.spec.ts`,
   `tape-restart.spec.ts`, `lists.spec.ts`, `e2e/support/tape-creation.ts` and
   `e2e/ux/screens.capture.ts` where they read `song-name`, the Fit texts, the Column length (now a
   decimal text input) or rely on Create Tape's place. Run them.

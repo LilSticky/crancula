@@ -46,6 +46,8 @@ test.describe('Bring a MIDI song onto a tape', () => {
 
     await window.getByTestId('song-file').setInputFiles(melodyC3ToC5());
     await expect(window.getByTestId('song-rejection')).toHaveCount(0);
+    await expect(window.getByTestId('song-file-name')).toHaveText('melody-c3-c5.mid');
+    await expect(window.getByTestId('fit-matching').getByTestId('fit-count')).toHaveText('25');
     await window.getByTestId('create-tape').click();
 
     await expect(window).toHaveURL(/#?\/tapes\/[0-9a-f-]{36}$/);
@@ -69,6 +71,8 @@ test.describe('Bring a MIDI song onto a tape', () => {
 
     await checkbox(1).uncheck();
     await expect(checkbox(1)).not.toBeChecked();
+    await expect(window.getByTestId('song-file-name')).toHaveText('three-parts-percussion.mid');
+    await expect(window.getByTestId('column-length')).toHaveValue('2.5');
     await window.getByTestId('name').fill('Melody only');
     await window.getByTestId('create-tape').click();
     await expect(window.getByTestId('tape-name').getByRole('heading', {level: 1})).toHaveText('Melody only');

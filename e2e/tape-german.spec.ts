@@ -28,6 +28,8 @@ test.describe('I can bring a Song onto a Tape in German', () => {
     await window.getByTestId('song-file').setInputFiles(melodyC3ToC5());
     await expect(window.getByTestId('song-rejection')).toHaveCount(0);
     await expect(window.getByTestId('name')).not.toHaveValue('');
+    await expect(window.getByTestId('song-file-name')).toHaveText('melody-c3-c5.mid');
+    await expect(window.getByTestId('column-length')).toHaveValue('2,5');
     await window.getByTestId('name').fill('');
     await window.getByTestId('name').blur(); // Create Tape stays disabled; the Violation shows once the field was touched.
     await expect(window.getByTestId('violation').first()).toBeVisible();
