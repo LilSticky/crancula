@@ -81,6 +81,16 @@
           </ng-container>
         </mat-form-field>
         <mat-form-field>
+          <mat-label>{{ 'ORGAN.EDITOR.LEAD_IN' | translate }}</mat-label>
+          <input matInput crancDecimalInput inputmode="decimal" data-testid="lead-in" [formField]="organ.leadIn"/>
+          <span matTextSuffix>mm</span>
+          <ng-container ngProjectAs="mat-error">
+            @for (message of messagesAt(organ.leadIn); track message.key) {
+              <mat-error data-testid="violation" data-path="leadIn">{{ message.key | translate: message.params }}</mat-error>
+            }
+          </ng-container>
+        </mat-form-field>
+        <mat-form-field>
           <mat-label>{{ 'ORGAN.EDITOR.BORDER' | translate }}</mat-label>
           <input matInput readonly class="cr-readonly" data-testid="border" [value]="border()"/>
           <span matTextSuffix>mm</span>

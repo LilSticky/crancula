@@ -23,6 +23,7 @@ test.describe('I can use the Organ editor in German', () => {
     await window.getByTestId('hole-diameter').fill('2.5');
     await window.getByTestId('row-spacing').fill('3.5');
     await window.getByTestId('minimum-gap').fill('1.5');
+    await window.getByTestId('lead-in').fill('20');
     for (const note of ['60', '60', '62', '64', '65']) {
       await window.getByTestId('add-pipe').click();
       await window.getByTestId('pipe-note').last().fill(note);
@@ -50,6 +51,7 @@ test.describe('I can use the Organ editor in German', () => {
     await first.window.getByTestId('tape-width').fill(STREET_ORGAN.tapeWidth);
     await first.window.getByTestId('hole-diameter').fill('2,5');
     await first.window.getByTestId('row-spacing').fill('3,5');
+    await first.window.getByTestId('lead-in').fill(STREET_ORGAN.leadIn);
     await first.window.getByTestId('minimum-gap').fill(STREET_ORGAN.minimumGap);
     for (const note of STREET_ORGAN.notes) {
       await first.window.getByTestId('add-pipe').click();

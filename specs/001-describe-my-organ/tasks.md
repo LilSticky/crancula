@@ -541,13 +541,13 @@ User decisions: every Organ defines a Lead-in, the blank Tape before Column 1 wi
 (German Vorlauf). Its length is in mm, 0 means none and is valid; Organs saved before load with 0.
 New Organs start with the field empty and required. Snapshot version 3 (ADR 20).
 
-- [ ] **L1** Domain (`api/organ/`): unit tests first. `Organ.leadIn: Millimetres` (≥ 0); draft
+- [x] **L1** Domain (`api/organ/`): unit tests first. `Organ.leadIn: Millimetres` (≥ 0); draft
   `leadIn: number | null` (empty in `emptyOrganDraft`); `validateOrgan`: empty → value-required,
   negative → a violation, 0 valid. Export via `api/index.ts`.
-- [ ] **L2** Organ snapshot version 3 with `leadIn`: tests first. Versions 1 and 2 read with
+- [x] **L2** Organ snapshot version 3 with `leadIn`: tests first. Versions 1 and 2 read with
   `leadIn` 0; `toSnapshot` writes version 3; unknown versions rejected as before.
-- [ ] **L3** Fixtures that build Organs get a `leadIn` (api, app, src/testing, e2e support).
-- [ ] **L4** Organ editor: component tests first. A Lead-in field in the Tape Bed sheet (decimal
+- [x] **L3** Fixtures that build Organs get a `leadIn` (api, app, src/testing, e2e support).
+- [x] **L4** Organ editor: component tests first. A Lead-in field in the Tape Bed sheet (decimal
   input, "mm" suffix, German "Vorlauf"), after Minimum Gap; violations shown like the other mm
   fields; it counts in `changedFields` and `problemFields` in reading order. en/de parity.
 - [ ] **L5** e2e: helpers fill the Lead-in; a version 2 Organ loads with Lead-in 0 after a restart
