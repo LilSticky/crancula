@@ -492,18 +492,18 @@ menu item), `tape`, `tape-name`, `tape-organ`, `tape-length-columns`, `tape-leng
 `remove-tape` becomes `delete-tape`. Every task that adds or changes UI text adds the keys to
 `en.json` and `de.json`.
 
-- [ ] **G1** Pipe range, unit. A pure helper `pipe-range.ts` in `src/app/features/organ/`:
+- [x] **G1** Pipe range, unit. A pure helper `pipe-range.ts` in `src/app/features/organ/`:
   `pipeRange(organ)` gives the Pipe count and the lowest and highest note name (by MIDI note, not
   by row): Street organ → 31, F3, B5; one Pipe → 1, C4, C4. Lowest–highest only, no marker for
   skipped notes (Decided 4). Spec first, then the helper; the Organ editor's subtitle (E18) switches
   to it with its specs still green, and the list reuses its keys (`ORGAN.EDITOR.PIPES_RANGE`,
   `PIPES_RANGE_ONE`, moved to a shared key if both use them).
-- [ ] **G1b** Ledger order, unit. A pure helper `ledger-order.ts` in `src/app/features/shared/`:
+- [x] **G1b** Ledger order, unit. A pure helper `ledger-order.ts` in `src/app/features/shared/`:
   `byName(items, language)` sorts with `Intl.Collator(language)`; `tapesByOrgan(rows, language)`
   sorts by Organ name, then Tape name, rows without an Organ last. Spec: "Ärger" sorts with "Anton"
   before "Bach" in German; equal names keep a stable order; "Street organ"'s Tapes "B" and "a" come
   out "a", "B". Spec first.
-- [ ] **G2** Miniature geometry, unit. A pure helper `tape-bed-miniature.ts` next to the Organ list:
+- [x] **G2** Miniature geometry, unit. A pure helper `tape-bed-miniature.ts` next to the Organ list:
   `tapeBedMiniature(organ, widestTapeWidth, heightPx)` → the body height in px and the y of each
   row centre, rows centred with `border(organ)`, row 1 on top. Spec: the Street organ alone at
   56 px → body 56 px, row 1 at (6,25 + 1,25) × 56 / 120 = 3,5 px; next to a 140 mm Organ its body
