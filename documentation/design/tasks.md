@@ -694,10 +694,10 @@ is `song-file-name`). Every task that adds or changes UI text adds the keys to `
   after "up" it reads "The proposal is +12 semitones: …" (signed; "−3" and "0" in two more cases)
   and `use-proposal` restores it (keep "restores the proposal with "use proposal""); German texts.
   Then the sentence and the keys (`TAPE.TRANSPOSITION.*`).
-- [ ] **I7** Column length in mm, component. Spec: the Column length field is a
+- [x] **I7** Column length in mm, component. Spec: the Column length field is a
   `crancDecimalInput` with the suffix "mm" and the label "Column length"; in German it shows "2,5"
   and accepts "3,5"; the "not positive" rule spec still passes. Then the field.
-- [ ] **I8** Fit sheet, component. Rewrite the Fit specs to read the rows `fit-matching`,
+- [x] **I8** Fit sheet, component. Rewrite the Fit specs to read the rows `fit-matching`,
   `fit-moved`, `fit-unplayable`, each with its label, icon and count (`fit-count`); the data
   attributes stay; before a Song is chosen the sheet shows `fit-empty` "Choose a MIDI file and an
   Organ to see how the Song fits its Pipes."; the sheet has `aria-live="polite"`. Then the sheet
@@ -715,7 +715,7 @@ is `song-file-name`). Every task that adds or changes UI text adds the keys to `
   Notes (`octaveMoveTable`, `quantiseNote`, `columnOfTick`) that `createTape` and `fitNotesOf` both
   use, so the rule lives once; `createTape`'s specs stay green unchanged. `fitOf` may count from it
   if that stays as fast (the Fit follows every stepper click).
-- [ ] **I8b** Expandable Fit counts, component. Spec: with 2 Notes moved by octaves and 1
+- [x] **I8b** Expandable Fit counts, component. Spec: with 2 Notes moved by octaves and 1
   Unplayable Note, `fit-moved` and `fit-unplayable` are buttons with `aria-expanded="false"` and
   `aria-controls` naming their list; a click (and Enter, and Space, on the focused button) shows
   `fit-notes` with one `fit-note` per Note in the Import Summary's wording ("F#6 (Part Lead,
@@ -723,18 +723,18 @@ is `song-file-name`). Every task that adds or changes UI text adds the keys to `
   `aria-expanded="true"`; a second press collapses it; a count of 0 and Notes matching a Pipe are
   not buttons; German texts; after a stepper click the open list shows the Notes of the new
   Transposition. Then a `fitNotes` computed from I8a, the disclosure and the shared keys.
-- [ ] **I9** Unplayable warning, component. Spec: with a Song whose Note no Pipe plays, not even
+- [x] **I9** Unplayable warning, component. Spec: with a Song whose Note no Pipe plays, not even
   moved by octaves, at the chosen Transposition, `fit-warning` reads "1 Unplayable Note: …"
   (plural for 3), `fit-unplayable` has the warning class and icon, and Create Tape stays enabled;
   with 0 Unplayable Notes there is no `fit-warning`, also when Notes were moved by octaves. Then
   the warning and keys.
-- [ ] **I10** Action bar, component. Spec: Create Tape is inside `cranc-action-bar`; its
+- [x] **I10** Action bar, component. Spec: Create Tape is inside `cranc-action-bar`; its
   `action-bar-state` reads "Choose a MIDI file" without a Song, "Choose an Organ" between several
   Organs, "Select at least one Part" with none selected, "1 problem prevents creating the Tape"
   with an empty touched name, the load problem sentence while the Tape library could not be read,
   and when ready "N Columns, L mm of Tape" for the melody (`formatNumber`, German decimal comma).
   The existing Create specs keep passing. Then a `readiness` computed and the template.
-- [ ] **I11** No-Organ empty state, component. Rewrite "shows a hint with a link to the new Organ
+- [x] **I11** No-Organ empty state, component. Rewrite "shows a hint with a link to the new Organ
   page and no form": `no-organ-hint` is a paper sheet with an icon, the sentence and the filled
   "Describe an Organ" link to `/organs/new`. Then the template.
 - [ ] **I12** e2e, existing tests. Update `tape-import.spec.ts`, `tape-german.spec.ts`,

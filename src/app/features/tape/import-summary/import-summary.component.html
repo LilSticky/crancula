@@ -22,7 +22,7 @@
           [attr.data-part]="moved.part"
           [attr.data-pipe-name]="noteName(moved.pipe)"
           [attr.data-column]="moved.column + 1">
-        {{ 'TAPE.SUMMARY.MOVED_NOTE' | translate: {
+        {{ (moved.octaves === 1 ? 'TAPE.SUMMARY.MOVED_NOTE_ONE' : 'TAPE.SUMMARY.MOVED_NOTE') | translate: {
           note: noteName(moved.noteNumber), octaves: moved.octaves, pipe: noteName(moved.pipe),
           part: moved.part + 1, column: moved.column + 1
         } }}

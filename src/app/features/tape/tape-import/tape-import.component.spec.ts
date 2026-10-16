@@ -12,7 +12,10 @@ import {
   proposeTransposition,
   readMidiSong,
   type Song,
+  tapeLengthInMillimetres,
 } from '@api/index';
+import {formatNumber} from '../../shared/format-number';
+import {createTapeFromDraft} from './tape-import-form';
 import {encodeSmf, type SmfTimedEvent} from '../../../../../api/song/midi/smf-test-helper';
 import {CRANCULA_API, createInMemoryCranculaApi} from '../../../core/crancula-api.token';
 import {testOrgan} from '../../../../testing/organs';
@@ -203,12 +206,18 @@ describe('TapeImportComponent', () => {
   });
 
   describe('without a stored Organ', () => {
-    it('shows a hint with a link to the new Organ page and no form', async () => {
-      const {query, element} = await render();
+    it('shows an empty state as a sheet with an icon, the sentence and the filled link "Describe an Organ", and no form', async () => {
+      const {query, element, textOf} = await render();
 
       expect(query('import-form')).toBeNull();
-      expect(query('no-organ-hint')).not.toBeNull();
-      expect(element.querySelector('[data-testid="no-organ-hint"] a')?.getAttribute('href')).toBe('/organs/new');
+      const hint = query('no-organ-hint');
+      expect(hint?.tagName.toLowerCase()).toBe('mat-card');
+      expect(hint?.querySelector('mat-icon')).not.toBeNull();
+      expect(textOf('no-organ-hint')).toContain('You need an Organ first: the Tape is punched for its Pipes.');
+      const link = element.querySelector('[data-testid="no-organ-hint"] a');
+      expect(link?.getAttribute('href')).toBe('/organs/new');
+      expect(link?.textContent?.trim()).toBe('Describe an Organ');
+      expect(link?.classList).toContain('mat-mdc-unelevated-button');
     });
   });
 
@@ -777,4 +786,349 @@ describe('TapeImportComponent', () => {
       expect(query('create-tape')?.hasAttribute('disabled')).toBe(true);
     });
   });
+
+  describe('Column length', () => {
+    it('is a decimal text input with the suffix "mm" and the label "Column length"', async () => {
+      const {choose, field} = await render({organs: [testOrgan('Street organ', 3)]});
+      await choose(midiFile(melodyBytes()));
+
+      const input = field('column-length');
+      const formField = input.closest('mat-form-field');
+      expect(input.type).toBe('text');
+      expect(input.inputMode).toBe('decimal');
+      expect(formField?.querySelector('[matTextSuffix]')?.textContent?.trim()).toBe('mm');
+      expect(formField?.querySelector('mat-label')?.textContent?.trim()).toBe('Column length');
+    });
+
+    it('shows the Minimum Hole Length with a decimal comma in German and accepts "3,5"', async () => {
+      const {choose, field, type, create, tapes} = await render({
+        organs: [testOrgan('Street organ', 3)],
+        language: 'de',
+      });
+      await choose(midiFile(melodyBytes()));
+      expect(field('column-length').value).toBe('2,5');
+
+      await type(field('column-length'), '3,5');
+      await create();
+
+      expect(tapes.tapeEntities()[0]?.columnLength).toBe(3.5);
+    });
+  });
+
+  describe('Fit sheet', () => {
+    const row = (element: HTMLElement, testId: string) => {
+      const shown = element.querySelector<HTMLElement>(`[data-testid="${testId}"]`);
+      if (!shown) throw new Error(`no row ${testId}`);
+      return shown;
+    };
+    const part = (shown: HTMLElement, testId: string) =>
+      shown.querySelector(`[data-testid="${testId}"]`)?.textContent?.replace(/\s+/g, ' ').trim();
+
+    it('shows three rows with icon, label and count', async () => {
+      const {choose, element} = await render({organs: [testOrgan('Street organ', 3)]});
+      await choose(midiFile(melodyBytes()));
+
+      const rows = ['fit-matching', 'fit-moved', 'fit-unplayable'].map((id) => row(element, id));
+      expect(rows.map((shown) => shown.querySelector('mat-icon')?.textContent?.trim())).toEqual([
+        'check_circle',
+        'swap_vert',
+        'block',
+      ]);
+      expect(rows.map((shown) => shown.textContent)).toEqual([
+        expect.stringContaining('Notes matching a Pipe'),
+        expect.stringContaining('Notes moved by octaves'),
+        expect.stringContaining('Unplayable Notes'),
+      ]);
+      expect(rows.map((shown) => part(shown, 'fit-count'))).toEqual(['3', '0', '0']);
+    });
+
+    it('keeps the data attributes of the Fit', async () => {
+      const {choose, fit} = await render({organs: [testOrgan('Street organ', 3)]});
+      await choose(midiFile(melodyBytes()));
+
+      expect(fit()).toEqual({matchingAPipe: 3, movedByOctaves: 0, unplayable: 0});
+    });
+
+    it('holds one sentence and no rows before a Song is chosen, and the sheet is a polite live region', async () => {
+      const {query, textOf} = await render({organs: [testOrgan('Street organ', 3)]});
+
+      expect(textOf('fit-empty')).toBe('Choose a MIDI file and an Organ to see how the Song fits its Pipes.');
+      expect(query('fit-matching')).toBeNull();
+      expect(query('fit-sheet')?.getAttribute('aria-live')).toBe('polite');
+    });
+
+    it('drops the sentence once the Fit is shown', async () => {
+      const {choose, query} = await render({organs: [testOrgan('Street organ', 3)]});
+      await choose(midiFile(melodyBytes()));
+
+      expect(query('fit-empty')).toBeNull();
+    });
+  });
+
+  describe('Fit Notes', () => {
+    /**
+     * Lead C3, D3, C#4 and Bass D3 at Transposition 0 on the Pipes C4, D4, E4: three Notes are moved by an octave
+     * (C3 and Bass D3 on Column 1, D3 on Column 9), C#4 on Column 17 has no Pipe.
+     */
+    function mixedBytes(): Uint8Array {
+      return encodeSmf({
+        format: 1,
+        division: {ticksPerQuarterNote: TICKS_PER_QUARTER},
+        tracks: [track(0, [48, 50, 61], 'Lead'), track(1, [50], 'Bass')],
+      });
+    }
+
+    async function openMixed(language?: 'en' | 'de') {
+      const page = await render({organs: [testOrgan('Street organ', 3)], language});
+      await page.choose(midiFile(mixedBytes()));
+      await page.type(page.field('transposition'), '0');
+      return page;
+    }
+
+    const asButton = (element: HTMLElement | null) => {
+      if (!(element instanceof HTMLButtonElement)) throw new Error('not a button');
+      return element;
+    };
+    const notesOf = (page: {element: HTMLElement}, button: HTMLButtonElement) => {
+      const list = page.element.ownerDocument.getElementById(button.getAttribute('aria-controls') ?? '');
+      return [...(list?.querySelectorAll('[data-testid="fit-note"]') ?? [])].map((note) =>
+        note.textContent?.replace(/\s+/g, ' ').trim(),
+      );
+    };
+
+    it('makes the rows with a count above 0 collapsed disclosure buttons naming their list', async () => {
+      const page = await openMixed();
+
+      for (const id of ['fit-moved', 'fit-unplayable']) {
+        const button = asButton(page.query(id));
+        expect(button.type).toBe('button');
+        expect(button.getAttribute('aria-expanded')).toBe('false');
+        expect(button.getAttribute('aria-controls')).toBeTruthy();
+      }
+      expect(page.query('fit-notes')).toBeNull();
+      expect(page.fit()).toEqual({matchingAPipe: 0, movedByOctaves: 3, unplayable: 1});
+    });
+
+    it('shows the moved Notes by Column, then Part, in the wording of the Import Summary, on a click', async () => {
+      const page = await openMixed();
+      const button = asButton(page.query('fit-moved'));
+
+      button.click();
+      await page.fixture.whenStable();
+
+      expect(button.getAttribute('aria-expanded')).toBe('true');
+      expect(notesOf(page, button)).toEqual([
+        'C3 moved by 1 octave to Pipe C4 (Part Lead, Column 1)',
+        'D3 moved by 1 octave to Pipe D4 (Part Bass, Column 1)',
+        'D3 moved by 1 octave to Pipe D4 (Part Lead, Column 9)',
+      ]);
+    });
+
+    it('shows the Unplayable Notes on a click and collapses on a second press', async () => {
+      const page = await openMixed();
+      const button = asButton(page.query('fit-unplayable'));
+
+      button.click();
+      await page.fixture.whenStable();
+      expect(notesOf(page, button)).toEqual(['C#4 (Part Lead, Column 17)']);
+
+      button.click();
+      await page.fixture.whenStable();
+      expect(button.getAttribute('aria-expanded')).toBe('false');
+      expect(page.query('fit-notes')).toBeNull();
+    });
+
+    it('is a native focusable button, so Enter and Space toggle it (the keys themselves are an e2e matter)', async () => {
+      const page = await openMixed();
+
+      for (const id of ['fit-moved', 'fit-unplayable']) {
+        const button = asButton(page.query(id));
+        expect(button.tagName).toBe('BUTTON');
+        expect(button.tabIndex).toBe(0);
+        expect(button.disabled).toBe(false);
+        button.focus();
+        expect(page.element.ownerDocument.activeElement).toBe(button);
+      }
+    });
+
+    it('is no button for a count of 0 and for the Notes matching a Pipe', async () => {
+      const {choose, query} = await render({organs: [testOrgan('Street organ', 3)]});
+      await choose(midiFile(melodyBytes()));
+
+      for (const id of ['fit-matching', 'fit-moved', 'fit-unplayable']) {
+        expect(query(id)?.tagName.toLowerCase()).not.toBe('button');
+        expect(query(id)?.querySelector('button')).toBeNull();
+      }
+    });
+
+    it('lists the Notes of the new Transposition in an open list after a stepper click', async () => {
+      const page = await openMixed();
+      const button = asButton(page.query('fit-unplayable'));
+      button.click();
+      await page.fixture.whenStable();
+
+      await page.step('One semitone up');
+
+      expect(asButton(page.query('fit-unplayable')).getAttribute('aria-expanded')).toBe('true');
+      expect(notesOf(page, asButton(page.query('fit-unplayable')))).toEqual([
+        'C#3 (Part Lead, Column 1)',
+        'D#3 (Part Bass, Column 1)',
+        'D#3 (Part Lead, Column 9)',
+      ]);
+    });
+
+    it('speaks German', async () => {
+      const page = await openMixed('de');
+      const button = asButton(page.query('fit-unplayable'));
+
+      button.click();
+      await page.fixture.whenStable();
+
+      expect(button.textContent).toContain('Nicht spielbare Noten');
+      expect(notesOf(page, button)).toEqual(['C#4 (Stimme Lead, Spalte 17)']);
+    });
+  });
+
+  describe('Unplayable warning', () => {
+    function movedOnlyBytes(): Uint8Array {
+      return encodeSmf({
+        format: 1,
+        division: {ticksPerQuarterNote: TICKS_PER_QUARTER},
+        tracks: [track(0, [48], 'Lead')],
+      });
+    }
+
+    it('warns about one Unplayable Note, marks the row and still allows Create', async () => {
+      const {choose, type, field, query, textOf, create, tapes} = await render({
+        organs: [testOrgan('Street organ', 3)],
+      });
+      await choose(midiFile(unplayableOnceBytes()));
+      await type(field('transposition'), '0');
+
+      expect(textOf('fit-warning')).toMatch(/^1 Unplayable Note: .*left off the Tape\. Another Transposition may fit better\.$/);
+      expect(query('fit-unplayable')?.classList).toContain('warning');
+      expect(query('fit-unplayable')?.querySelector('mat-icon')?.textContent?.trim()).toBe('warning');
+      expect(query('create-tape')?.hasAttribute('disabled')).toBe(false);
+      await create();
+      expect(tapes.tapeEntities()).toHaveLength(1);
+    });
+
+    it('uses the plural for several Unplayable Notes', async () => {
+      const {choose, type, field, textOf} = await render({organs: [testOrgan('Street organ', 3)]});
+      await choose(midiFile(melodyBytes()));
+
+      await type(field('transposition'), '0');
+
+      expect(textOf('fit-warning')).toMatch(/^3 Unplayable Notes: .*left off the Tape\. Another Transposition may fit better\.$/);
+    });
+
+    it('shows no warning without Unplayable Notes, also when Notes were moved by octaves', async () => {
+      const {choose, type, field, query, fit} = await render({organs: [testOrgan('Street organ', 3)]});
+      await choose(midiFile(movedOnlyBytes()));
+
+      await type(field('transposition'), '0');
+
+      expect(fit()).toEqual({matchingAPipe: 0, movedByOctaves: 1, unplayable: 0});
+      expect(query('fit-warning')).toBeNull();
+      expect(query('fit-unplayable')?.classList).not.toContain('warning');
+      expect(query('fit-unplayable')?.querySelector('mat-icon')?.textContent?.trim()).toBe('block');
+    });
+  });
+
+  describe('action bar', () => {
+    const state = (element: HTMLElement) =>
+      element
+        .querySelector<HTMLElement>('cranc-action-bar [data-testid="action-bar-state"]')
+        ?.textContent?.replace(/\s+/g, ' ')
+        .trim();
+
+    it('holds Create Tape, labelled "Create the Tape"', async () => {
+      const {element, query} = await render({organs: [testOrgan('Street organ', 3)]});
+
+      const bar = element.querySelector('cranc-action-bar');
+      expect(bar?.getAttribute('aria-label')).toBe('Create the Tape');
+      expect(bar?.contains(query('create-tape'))).toBe(true);
+    });
+
+    it('asks for a MIDI file without a Song', async () => {
+      const {element} = await render({organs: [testOrgan('Street organ', 3)]});
+
+      expect(state(element)).toBe('Choose a MIDI file');
+    });
+
+    it('asks for an Organ while none is chosen among several', async () => {
+      const {element, choose} = await render({organs: [testOrgan('Street organ', 3), testOrgan('Parlour organ', 2)]});
+      await choose(midiFile(melodyBytes()));
+
+      expect(state(element)).toBe('Choose an Organ');
+    });
+
+    it('asks for a Part while none is selected', async () => {
+      const {element, choose} = await render({organs: [testOrgan('Street organ', 3)]});
+
+      await choose(midiFile(percussionOnlyBytes()));
+
+      expect(state(element)).toBe('Select at least one Part');
+    });
+
+    it('counts the problems that prevent creating the Tape', async () => {
+      const {element, choose, type, field} = await render({organs: [testOrgan('Street organ', 3)]});
+      await choose(midiFile(melodyBytes()));
+
+      await type(field('name'), '');
+
+      expect(state(element)).toBe('1 problem prevents creating the Tape');
+    });
+
+    it('says the load problem while the Tape library could not be read', async () => {
+      const {element, choose} = await render({organs: [testOrgan('Street organ', 3)], unreadableTapes: true});
+      await choose(midiFile(melodyBytes()));
+
+      expect(state(element)).toBe("Your Tapes couldn't be loaded, so no new Tape can be saved for now.");
+    });
+
+    it('names the Columns and the length in mm of the Tape when ready', async () => {
+      const organ = testOrgan('Street organ', 3);
+      const {element, choose} = await render({organs: [organ]});
+      await choose(midiFile(melodyBytes()));
+
+      const tape = createdTape(organ, 2.5);
+      expect(state(element)).toBe(`${tape.length} Columns, ${formatNumber(tapeLengthInMillimetres(tape), 'en')} mm of Tape`);
+    });
+
+    it('writes the length of the Tape with a decimal comma in German', async () => {
+      const organ = testOrgan('Street organ', 3);
+      const {element, choose, type, field} = await render({organs: [organ], language: 'de'});
+      await choose(midiFile(melodyBytes()));
+
+      await type(field('column-length'), '0,3');
+
+      const tape = createdTape(organ, 0.3);
+      const millimetres = formatNumber(tapeLengthInMillimetres(tape), 'de');
+      expect(millimetres).toContain(',');
+      expect(state(element)).toContain(millimetres);
+      expect(state(element)).toContain(`${tape.length}`);
+    });
+  });
 });
+
+/** The Tape the melody makes on `organ` at its proposed Transposition and the given Column length. */
+function createdTape(organ: Organ, columnLength: number) {
+  const song = songOf(melodyBytes(), 'melody.mid');
+  const selectedParts = defaultSelectedParts(song);
+  const result = createTapeFromDraft(
+    {song, organ, selectedParts},
+    {name: song.name, columnLength, transposition: proposeTransposition(song, selectedParts, organ)},
+  );
+  if (!result.ok) throw new Error('invalid test Tape');
+  return result.value.tape;
+}
+
+/** One Lead Note, 61, that no Pipe of `testOrgan` plays at Transposition 0 (C#4), next to one that matches. */
+function unplayableOnceBytes(): Uint8Array {
+  return encodeSmf({
+    format: 1,
+    division: {ticksPerQuarterNote: TICKS_PER_QUARTER},
+    tracks: [track(0, [60, 61], 'Lead')],
+  });
+}

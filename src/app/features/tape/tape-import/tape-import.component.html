@@ -1,10 +1,11 @@
 <cranc-page-head [title]="'TAPE.IMPORT.TITLE' | translate" [subtitle]="'TAPE.IMPORT.SUBTITLE' | translate"/>
 
 @if (organList().length === 0) {
-  <p data-testid="no-organ-hint">
-    {{ 'TAPE.IMPORT.NO_ORGAN' | translate }}
+  <mat-card appearance="outlined" class="empty-state" data-testid="no-organ-hint">
+    <mat-icon aria-hidden="true">piano</mat-icon>
+    <p>{{ 'TAPE.IMPORT.NO_ORGAN' | translate }}</p>
     <a matButton="filled" routerLink="/organs/new">{{ 'TAPE.IMPORT.NEW_ORGAN' | translate }}</a>
-  </p>
+  </mat-card>
 } @else {
   <form class="tape-import" data-testid="import-form" (submit)="$event.preventDefault()">
     <mat-card appearance="outlined" data-testid="song-sheet">
@@ -118,7 +119,8 @@
       </mat-form-field>
       <mat-form-field>
         <mat-label>{{ 'TAPE.IMPORT.COLUMN_LENGTH' | translate }}</mat-label>
-        <input matInput type="number" data-testid="column-length" [formField]="tape.columnLength"/>
+        <input matInput crancDecimalInput data-testid="column-length" [formField]="tape.columnLength"/>
+        <span matTextSuffix>mm</span>
         <ng-container ngProjectAs="mat-error">
           @for (message of messagesAt(tape.columnLength); track message.key) {
             <mat-error data-testid="violation" data-path="columnLength" [attr.data-code]="message.code">{{ message.key | translate: message.params }}</mat-error>
@@ -131,25 +133,79 @@
       <div data-testid="fit" [attr.data-matching-a-pipe]="fit()?.matchingAPipe" [attr.data-moved-by-octaves]="fit()?.movedByOctaves" [attr.data-unplayable]="fit()?.unplayable">
         @if (fit(); as fit) {
           <h2 class="group-title">{{ 'TAPE.FIT.TITLE' | translate }}</h2>
-          <ul>
-            <li>{{ 'TAPE.FIT.MATCHING_A_PIPE' | translate: {count: fit.matchingAPipe} }}</li>
-            <li>{{ 'TAPE.FIT.MOVED_BY_OCTAVES' | translate: {count: fit.movedByOctaves} }}</li>
-            <li>{{ 'TAPE.FIT.UNPLAYABLE' | translate: {count: fit.unplayable} }}</li>
+          <ul class="fit-rows">
+            <li>
+              <div class="fit-row" data-testid="fit-matching">
+                <ng-container *ngTemplateOutlet="rowBody; context: {icon: 'check_circle', label: 'TAPE.FIT.MATCHING_A_PIPE', count: fit.matchingAPipe}"/>
+              </div>
+            </li>
+            <li>
+              @if (fit.movedByOctaves > 0) {
+                <button type="button" class="fit-row" data-testid="fit-moved" aria-controls="fit-moved-notes" [attr.aria-expanded]="movedOpen()" (click)="movedOpen.set(!movedOpen())">
+                  <ng-container *ngTemplateOutlet="rowBody; context: {icon: 'swap_vert', label: 'TAPE.FIT.MOVED_BY_OCTAVES', count: fit.movedByOctaves}"/>
+                  <mat-icon aria-hidden="true">{{ movedOpen() ? 'expand_less' : 'expand_more' }}</mat-icon>
+                </button>
+                @if (movedOpen()) {
+                  <ul class="fit-notes" id="fit-moved-notes" data-testid="fit-notes">
+                    @for (moved of fitNotes().movedByOctaves; track $index) {
+                      <li data-testid="fit-note">{{ (moved.octaves === 1 ? 'TAPE.SUMMARY.MOVED_NOTE_ONE' : 'TAPE.SUMMARY.MOVED_NOTE') | translate: {
+                        note: noteName(moved.noteNumber), octaves: moved.octaves, pipe: noteName(moved.pipe),
+                        part: partLabel(moved.part), column: moved.column + 1
+                      } }}</li>
+                    }
+                  </ul>
+                }
+              } @else {
+                <div class="fit-row" data-testid="fit-moved">
+                  <ng-container *ngTemplateOutlet="rowBody; context: {icon: 'swap_vert', label: 'TAPE.FIT.MOVED_BY_OCTAVES', count: fit.movedByOctaves}"/>
+                </div>
+              }
+            </li>
+            <li>
+              @if (fit.unplayable > 0) {
+                <button type="button" class="fit-row warning" data-testid="fit-unplayable" aria-controls="fit-unplayable-notes" [attr.aria-expanded]="unplayableOpen()" (click)="unplayableOpen.set(!unplayableOpen())">
+                  <ng-container *ngTemplateOutlet="rowBody; context: {icon: 'warning', label: 'TAPE.FIT.UNPLAYABLE', count: fit.unplayable}"/>
+                  <mat-icon aria-hidden="true">{{ unplayableOpen() ? 'expand_less' : 'expand_more' }}</mat-icon>
+                </button>
+                @if (unplayableOpen()) {
+                  <ul class="fit-notes" id="fit-unplayable-notes" data-testid="fit-notes">
+                    @for (unplayable of fitNotes().unplayableNotes; track $index) {
+                      <li data-testid="fit-note">{{ 'TAPE.SUMMARY.UNPLAYABLE_NOTE' | translate: {
+                        note: noteName(unplayable.noteNumber), part: partLabel(unplayable.part), column: unplayable.column + 1
+                      } }}</li>
+                    }
+                  </ul>
+                }
+              } @else {
+                <div class="fit-row" data-testid="fit-unplayable">
+                  <ng-container *ngTemplateOutlet="rowBody; context: {icon: 'block', label: 'TAPE.FIT.UNPLAYABLE', count: fit.unplayable}"/>
+                </div>
+              }
+            </li>
           </ul>
+          @if (fit.unplayable > 0) {
+            <p class="fit-warning" data-testid="fit-warning">{{ (fit.unplayable === 1 ? 'TAPE.FIT.UNPLAYABLE_WARNING_ONE' : 'TAPE.FIT.UNPLAYABLE_WARNING') | translate: {count: fit.unplayable} }}</p>
+          }
         } @else {
-          <p>{{ 'TAPE.FIT.EMPTY' | translate }}</p>
+          <p data-testid="fit-empty">{{ 'TAPE.FIT.EMPTY' | translate }}</p>
         }
       </div>
+      <ng-template #rowBody let-icon="icon" let-label="label" let-count="count">
+        <mat-icon aria-hidden="true">{{ icon }}</mat-icon>
+        <span class="fit-label">{{ label | translate }}</span>
+        <span class="fit-count" data-testid="fit-count">{{ count }}</span>
+      </ng-template>
     </mat-card>
 
     @if (tapes.loadProblem()) {
       <p class="rejection" data-testid="tape-load-problem">{{ 'TAPE.IMPORT.LOAD_PROBLEM' | translate }}</p>
     }
-    <div>
+    <cranc-action-bar [label]="'TAPE.IMPORT.ACTION_BAR' | translate">
+      <span actionBarState>{{ readiness().key | translate: readiness().params }}</span>
       <button matButton="filled" type="button" data-testid="create-tape" [disabled]="!canCreate()" (click)="create()">
         <mat-icon>add</mat-icon>
         {{ 'TAPE.IMPORT.CREATE' | translate }}
       </button>
-    </div>
+    </cranc-action-bar>
   </form>
 }

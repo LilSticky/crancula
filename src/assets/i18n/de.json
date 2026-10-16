@@ -69,7 +69,7 @@
       "CHOOSE_ORGAN": "Drehorgel wählen",
       "CHOOSE_SONG": "MIDI-Datei wählen",
       "NAME": "Name des Lochbandes",
-      "COLUMN_LENGTH": "Spaltenlänge (mm)",
+      "COLUMN_LENGTH": "Spaltenlänge",
       "TRANSPOSITION": "Halbtöne",
       "CREATE": "Lochband erstellen",
       "SUBTITLE": "Wähle eine MIDI-Datei, die Drehorgel und die Stimmen. Die Passung zeigt, wie das Lied auf die Pfeifen trifft, bevor das Lochband erstellt wird.",
@@ -80,7 +80,13 @@
       "PARTS_COUNT": "{{count}} Stimmen",
       "PARTS_COUNT_ONE": "1 Stimme",
       "NOTES_COUNT": "{{count}} Noten",
-      "NOTES_COUNT_ONE": "1 Note"
+      "NOTES_COUNT_ONE": "1 Note",
+      "ACTION_BAR": "Lochband erstellen",
+      "STATE_NO_PART": "Wähle mindestens eine Stimme",
+      "STATE_PROBLEMS": "{{count}} Probleme verhindern das Erstellen des Lochbandes",
+      "STATE_PROBLEM_ONE": "1 Problem verhindert das Erstellen des Lochbandes",
+      "STATE_READY": "{{columns}} Spalten, {{length}} mm Lochband",
+      "STATE_READY_ONE": "1 Spalte, {{length}} mm Lochband"
     },
     "TRANSPOSITION": {
       "USE_PROPOSAL": "Vorschlag verwenden",
@@ -105,10 +111,12 @@
     },
     "FIT": {
       "TITLE": "Passung der gewählten Stimmen",
-      "MATCHING_A_PIPE": "Noten, die auf eine Pfeife passen: {{count}}",
-      "MOVED_BY_OCTAVES": "Um Oktaven verschobene Noten: {{count}}",
-      "UNPLAYABLE": "Nicht spielbare Noten: {{count}}",
-      "EMPTY": "Wähle eine MIDI-Datei und eine Drehorgel, um zu sehen, wie das Lied auf die Pfeifen passt."
+      "MATCHING_A_PIPE": "Noten, die auf eine Pfeife passen",
+      "MOVED_BY_OCTAVES": "Um Oktaven verschobene Noten",
+      "UNPLAYABLE": "Nicht spielbare Noten",
+      "EMPTY": "Wähle eine MIDI-Datei und eine Drehorgel, um zu sehen, wie das Lied auf die Pfeifen passt.",
+      "UNPLAYABLE_WARNING": "{{count}} unspielbare Noten: Keine Pfeife spielt sie, auch nicht um Oktaven verschoben, sie bleiben vom Lochband weg. Eine andere Transposition passt vielleicht besser.",
+      "UNPLAYABLE_WARNING_ONE": "1 unspielbare Note: Keine Pfeife spielt sie, auch nicht um Oktaven verschoben, sie bleibt vom Lochband weg. Eine andere Transposition passt vielleicht besser."
     },
     "VIOLATION": {
       "NAME_REQUIRED": "Bitte gib einen Namen ein.",
@@ -132,7 +140,8 @@
         "LENGTHENED": "Loch auf Pfeife {{pipe}} in Spalte {{column}} von {{from}} auf {{to}} Spalten verlängert",
         "SHORTENED": "Loch auf Pfeife {{pipe}} in Spalte {{column}} von {{from}} auf {{to}} Spalten verkürzt",
         "REPETITION_MERGED": "Wiederholte Löcher auf Pfeife {{pipe}} in Spalte {{column}} zusammengeführt, Spalte {{lost}} entfällt"
-      }
+      },
+      "MOVED_NOTE_ONE": "{{note}} um 1 Oktave auf Pfeife {{pipe}} verschoben (Stimme {{part}}, Spalte {{column}})"
     },
     "SECTION": {
       "TITLE": "Lochband",
