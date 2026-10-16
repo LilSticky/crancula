@@ -87,6 +87,7 @@ Crancula uses the same words everywhere: in the app, in the code and here.
 | **Tape** | A punched strip that holds one song for one Organ. Rows are Pipes, columns are time |
 | **Hole** | One note: a slot in a Pipe's row. The longer the slot, the longer the note |
 | **Tape Bed** | The surface the Tape runs over: tape width, hole diameter and row spacing; the Border is derived |
+| **Lead-in** | The blank Tape before the first Column, with an angled start; 0 if your Organ needs none |
 | **Minimum Hole Length / Minimum Gap** | The shortest Hole, and the smallest space between two Holes, that your Organ can tell apart |
 | **Crank** | You turn it to draw the Tape through the Organ. Its speed sets the tempo |
 | **Plotter** | The machine that cuts the Holes, such as a vinyl cutter |

@@ -66,6 +66,7 @@ test.describe('UX screens', () => {
     await capture(window, '04-organ-editor-filled');
 
     await window.getByTestId('minimum-gap').fill('2');
+    await window.getByTestId('lead-in').fill('20');
     await expect(window.getByTestId('unsaved-dot')).toBeVisible();
     await capture(window, '04b-organ-editor-unsaved');
     await window.getByTestId('discard-changes').click();

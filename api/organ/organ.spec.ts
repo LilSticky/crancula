@@ -63,6 +63,7 @@ describe('border', () => {
       name: 'Test organ',
       tapeBed: bed,
       minimumGap: mm(1.5),
+      leadIn: mm(20),
       pipes: Array.from({length: pipeCount}, (_, row) => ({note: midiNoteNumber(53 + row) as MidiNoteNumber})),
     });
   }

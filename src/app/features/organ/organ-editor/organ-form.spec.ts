@@ -95,6 +95,10 @@ describe('changedFields', () => {
     expect(changedFields(saved, draft)).toEqual(['name', 'tapeBed.tapeWidth', 'tapeBed.rowSpacing', 'minimumGap']);
   });
 
+  it('names the Lead-in after the Minimum Gap', () => {
+    expect(changedFields(saved, {...saved, leadIn: 5, minimumGap: 9})).toEqual(['minimumGap', 'leadIn']);
+  });
+
   it('names the hole diameter alone when only it changed', () => {
     expect(changedFields(saved, {...saved, tapeBed: {...saved.tapeBed, holeDiameter: 3.3}})).toEqual(['tapeBed.holeDiameter']);
   });
@@ -130,7 +134,7 @@ describe('problemFields', () => {
   });
 
   it('labels each field with its fixed label', () => {
-    const paths = ['name', 'tapeBed.tapeWidth', 'tapeBed.holeDiameter', 'tapeBed.rowSpacing', 'minimumGap', 'pipes'];
+    const paths = ['name', 'tapeBed.tapeWidth', 'tapeBed.holeDiameter', 'tapeBed.rowSpacing', 'minimumGap', 'leadIn', 'pipes'];
 
     expect(problemFields(paths.map((path) => problem(path)))).toEqual([
       {path: 'name', label: {key: 'ORGAN.EDITOR.NAME', params: {}}},
@@ -138,6 +142,7 @@ describe('problemFields', () => {
       {path: 'tapeBed.holeDiameter', label: {key: 'ORGAN.EDITOR.HOLE_DIAMETER', params: {}}},
       {path: 'tapeBed.rowSpacing', label: {key: 'ORGAN.EDITOR.ROW_SPACING', params: {}}},
       {path: 'minimumGap', label: {key: 'ORGAN.EDITOR.MINIMUM_GAP', params: {}}},
+      {path: 'leadIn', label: {key: 'ORGAN.EDITOR.LEAD_IN', params: {}}},
       {path: 'pipes', label: {key: 'ORGAN.EDITOR.PIPES', params: {}}},
     ]);
   });
@@ -155,9 +160,9 @@ describe('problemFields', () => {
   });
 
   it('puts the fields in reading order whatever the order of the problems', () => {
-    const fields = problemFields([problem('pipes.2.note'), problem('pipes.0.note'), problem('minimumGap'), problem('name'), problem('tapeBed.holeDiameter')]);
+    const fields = problemFields([problem('pipes.2.note'), problem('pipes.0.note'), problem('leadIn'), problem('minimumGap'), problem('name'), problem('tapeBed.holeDiameter')]);
 
-    expect(fields.map(({path}) => path)).toEqual(['name', 'tapeBed.holeDiameter', 'minimumGap', 'pipes.0.note', 'pipes.2.note']);
+    expect(fields.map(({path}) => path)).toEqual(['name', 'tapeBed.holeDiameter', 'minimumGap', 'leadIn', 'pipes.0.note', 'pipes.2.note']);
   });
 
   it('orders rows numerically, not as text', () => {

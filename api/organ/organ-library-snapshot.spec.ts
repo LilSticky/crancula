@@ -6,7 +6,13 @@ import type {Organ} from './organ';
 const ID_A = '3f2b8c1e-9d4a-4f6b-8e2c-1a2b3c4d5e6f';
 const ID_B = '7c1d2e3f-4a5b-4c6d-8e9f-0a1b2c3d4e5f';
 
+/** An Organ as stored in version 3, with a Lead-in. */
 function organSnapshot(id: string, name = 'Street organ') {
+  return {...organSnapshotV2(id, name), leadIn: 20};
+}
+
+/** An Organ as stored in versions 1 and 2, without a Lead-in. */
+function organSnapshotV2(id: string, name = 'Street organ') {
   return {
     id,
     name,
@@ -17,33 +23,38 @@ function organSnapshot(id: string, name = 'Street organ') {
 }
 
 describe('parseOrganLibrarySnapshot', () => {
-  it('reads version 2 and keeps the Pipe order', () => {
-    const result = parseOrganLibrarySnapshot({version: 2, organs: [organSnapshot(ID_A), organSnapshot(ID_B, 'Second')]});
+  it('reads version 3 and keeps the Pipe order', () => {
+    const result = parseOrganLibrarySnapshot({version: 3, organs: [organSnapshot(ID_A), organSnapshot(ID_B, 'Second')]});
 
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.value.map((organ) => organ.name)).toEqual(['Street organ', 'Second']);
     expect(result.value[0].id).toBe(ID_A);
+    expect(result.value[0].leadIn).toBe(20);
     expect(result.value[0].pipes.map((pipe) => pipe.note)).toEqual([64, 60, 62]);
   });
 
   it('reads an empty library', () => {
-    expect(parseOrganLibrarySnapshot({version: 2, organs: []})).toEqual({ok: true, value: []});
+    expect(parseOrganLibrarySnapshot({version: 3, organs: []})).toEqual({ok: true, value: []});
   });
 
   it.each([
     ['not an object', 'oops'],
     ['null', null],
     ['a missing version', {organs: []}],
-    ['an unknown version', {version: 3, organs: []}],
-    ['organs that are not a list', {version: 2, organs: {}}],
-    ['an Organ that is not an object', {version: 2, organs: [42]}],
-    ['an invalid id', {version: 2, organs: [organSnapshot('organ-1')]}],
-    ['a duplicate id', {version: 2, organs: [organSnapshot(ID_A), organSnapshot(ID_A)]}],
-    ['a wrongly typed field', {version: 2, organs: [{...organSnapshot(ID_A), minimumGap: '1.5'}]}],
-    ['a missing Tape Bed', {version: 2, organs: [{...organSnapshot(ID_A), tapeBed: undefined}]}],
-    ['Pipes that are not a list', {version: 2, organs: [{...organSnapshot(ID_A), pipes: 'C4'}]}],
-    ['an Organ that breaks a rule', {version: 2, organs: [{...organSnapshot(ID_A), pipes: [{note: 60}, {note: 60}]}]}],
+    ['an unknown version', {version: 4, organs: []}],
+    ['version 0', {version: 0, organs: []}],
+    ['organs that are not a list', {version: 3, organs: {}}],
+    ['an Organ that is not an object', {version: 3, organs: [42]}],
+    ['an invalid id', {version: 3, organs: [organSnapshot('organ-1')]}],
+    ['a duplicate id', {version: 3, organs: [organSnapshot(ID_A), organSnapshot(ID_A)]}],
+    ['a wrongly typed field', {version: 3, organs: [{...organSnapshot(ID_A), minimumGap: '1.5'}]}],
+    ['a missing Tape Bed', {version: 3, organs: [{...organSnapshot(ID_A), tapeBed: undefined}]}],
+    ['Pipes that are not a list', {version: 3, organs: [{...organSnapshot(ID_A), pipes: 'C4'}]}],
+    ['a version 3 Organ without a Lead-in', {version: 3, organs: [organSnapshotV2(ID_A)]}],
+    ['a wrongly typed Lead-in', {version: 3, organs: [{...organSnapshot(ID_A), leadIn: '20'}]}],
+    ['a negative Lead-in', {version: 3, organs: [{...organSnapshot(ID_A), leadIn: -1}]}],
+    ['an Organ that breaks a rule', {version: 3, organs: [{...organSnapshot(ID_A), pipes: [{note: 60}, {note: 60}]}]}],
   ])('rejects %s', (_, input) => {
     const result = parseOrganLibrarySnapshot(input);
     expect(result.ok).toBe(false);
@@ -53,9 +64,9 @@ describe('parseOrganLibrarySnapshot', () => {
 
 describe('version 1 migration', () => {
   it.each([[6], [0], [9]])('reads a version 1 snapshot with a stored border of %s and drops it', (border) => {
-    const v1 = organSnapshot(ID_A);
+    const v1 = organSnapshotV2(ID_A);
     const result = parseOrganLibrarySnapshot({version: 1, organs: [{...v1, tapeBed: {...v1.tapeBed, border}}]});
-    const expected = parseOrganLibrarySnapshot({version: 2, organs: [v1]});
+    const expected = parseOrganLibrarySnapshot({version: 3, organs: [{...v1, leadIn: 0}]});
 
     expect(result.ok).toBe(true);
     expect(result).toEqual(expected);
@@ -63,30 +74,37 @@ describe('version 1 migration', () => {
   });
 
   it('reads a version 1 snapshot without a border', () => {
-    expect(parseOrganLibrarySnapshot({version: 1, organs: [organSnapshot(ID_A)]}).ok).toBe(true);
+    expect(parseOrganLibrarySnapshot({version: 1, organs: [organSnapshotV2(ID_A)]}).ok).toBe(true);
   });
 
   it('reads a version 2 snapshot that carries no border', () => {
-    expect(parseOrganLibrarySnapshot({version: 2, organs: [organSnapshot(ID_A)]}).ok).toBe(true);
+    expect(parseOrganLibrarySnapshot({version: 2, organs: [organSnapshotV2(ID_A)]}).ok).toBe(true);
+  });
+
+  it.each([1, 2])('reads a version %i snapshot with a Lead-in of 0', (version) => {
+    const result = parseOrganLibrarySnapshot({version, organs: [organSnapshotV2(ID_A)]});
+
+    expect(result.ok).toBe(true);
+    expect(result.ok && result.value[0].leadIn).toBe(0);
   });
 });
 
 describe('toSnapshot', () => {
-  it('writes version 2 and no border', () => {
+  it('writes version 3 and no border', () => {
     const parsed = parseOrganLibrarySnapshot({version: 1, organs: [{...organSnapshot(ID_A), tapeBed: {tapeWidth: 120, holeDiameter: 2.5, rowSpacing: 3.5, border: 6}}]});
     const snapshot = toSnapshot(parsed.ok ? parsed.value : []);
 
-    expect(snapshot.version).toBe(2);
+    expect(snapshot.version).toBe(3);
     expect(JSON.stringify(snapshot)).not.toContain('border');
   });
 
   it('round-trips through the parser', () => {
-    const parsed = parseOrganLibrarySnapshot({version: 2, organs: [organSnapshot(ID_A)]});
+    const parsed = parseOrganLibrarySnapshot({version: 3, organs: [organSnapshot(ID_A)]});
     const organs: readonly Organ[] = parsed.ok ? parsed.value : [];
 
     const snapshot = toSnapshot(organs);
 
-    expect(snapshot).toEqual({version: 2, organs: [organSnapshot(ID_A)]});
+    expect(snapshot).toEqual({version: 3, organs: [organSnapshot(ID_A)]});
     expect(parseOrganLibrarySnapshot(JSON.parse(JSON.stringify(snapshot)))).toEqual(parsed);
   });
 
@@ -95,6 +113,7 @@ describe('toSnapshot', () => {
       name: 'New',
       tapeBed: {tapeWidth: 50, holeDiameter: 2, rowSpacing: 3},
       minimumGap: 1,
+      leadIn: 15,
       pipes: [{note: 60}],
     });
     expect(result.ok).toBe(true);
@@ -104,6 +123,7 @@ describe('toSnapshot', () => {
       name: 'New',
       tapeBed: {tapeWidth: 50, holeDiameter: 2, rowSpacing: 3},
       minimumGap: 1,
+      leadIn: 15,
       pipes: [{note: 60}],
     });
   });

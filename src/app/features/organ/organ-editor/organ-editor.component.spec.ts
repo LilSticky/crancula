@@ -135,6 +135,7 @@ async function open(id?: string) {
     await type(field('hole-diameter'), '2.5');
     await type(field('row-spacing'), '3.5');
     await type(field('minimum-gap'), '1.5');
+    await type(field('lead-in'), '20');
     await click('add-pipe');
     await type(field('pipe-note'), '60');
   }
@@ -170,11 +171,11 @@ describe('OrganEditorComponent', () => {
   });
 
   describe('a new Organ', () => {
-    it('has empty fields for name, Tape Bed and Minimum Gap', async () => {
+    it('has empty fields for name, Tape Bed, Minimum Gap and Lead-in', async () => {
       const {open: openEditor} = render();
       const {field} = await openEditor();
 
-      for (const testId of ['name', 'tape-width', 'hole-diameter', 'row-spacing', 'minimum-gap']) {
+      for (const testId of ['name', 'tape-width', 'hole-diameter', 'row-spacing', 'minimum-gap', 'lead-in']) {
         expect(field(testId).value).toBe('');
       }
     });
@@ -656,8 +657,9 @@ describe('OrganEditorComponent', () => {
       expect(violationAt('tapeBed.holeDiameter')).toEqual(['Please enter a value.']);
       expect(violationAt('tapeBed.rowSpacing')).toEqual(['Please enter a value.']);
       expect(violationAt('minimumGap')).toEqual(['Please enter a value.']);
+      expect(violationAt('leadIn')).toEqual(['Please enter a value.']);
       expect(violationAt('pipes')).toEqual(['Add at least one Pipe.']);
-      expect(entries(element)).toEqual(['Name', 'Tape width', 'Hole diameter', 'Spacing between rows', 'Minimum Gap', 'Pipes']);
+      expect(entries(element)).toEqual(['Name', 'Tape width', 'Hole diameter', 'Spacing between rows', 'Minimum Gap', 'Lead-in', 'Pipes']);
     });
 
     it('lets an entry focus its field', async () => {
@@ -1701,7 +1703,7 @@ describe('OrganEditorComponent', () => {
   });
 
   describe('the mm fields', () => {
-    const mmFields = ['tape-width', 'hole-diameter', 'row-spacing', 'minimum-gap'];
+    const mmFields = ['tape-width', 'hole-diameter', 'row-spacing', 'minimum-gap', 'lead-in'];
 
     it.each(mmFields)('%s is a text input for decimals', async (testId) => {
       const {open: openEditor} = render();
@@ -1725,6 +1727,7 @@ describe('OrganEditorComponent', () => {
       const organ = testOrgan('Street organ', 2, {
         tapeBed: {tapeWidth: 120, holeDiameter: 2.5, rowSpacing: 2.5},
         minimumGap: 2.5,
+        leadIn: 2.5,
       });
       await library.put(organ);
       const {field} = await openEditor(organ.id);
@@ -1738,6 +1741,7 @@ describe('OrganEditorComponent', () => {
       const organ = testOrgan('Street organ', 2, {
         tapeBed: {tapeWidth: 120, holeDiameter: 2.5, rowSpacing: 2.5},
         minimumGap: 2.5,
+        leadIn: 2.5,
       });
       await TestBed.inject(OrganLibrary).put(organ);
       const {field} = await open(organ.id);
@@ -1795,11 +1799,11 @@ describe('OrganEditorComponent', () => {
       expect(tapeBed.querySelector('.sheet-title')?.textContent?.trim()).toBe('Tape Bed');
     });
 
-    it('orders Name, Tape width, Hole diameter, Spacing between rows, Minimum Gap, Border, Minimum Hole Length in the Tape Bed sheet', async () => {
+    it('orders Name, Tape width, Hole diameter, Spacing between rows, Minimum Gap, Lead-in, Border, Minimum Hole Length in the Tape Bed sheet', async () => {
       const {open: openEditor} = render();
       const {element} = await openEditor();
 
-      const wanted = ['name', 'tape-width', 'hole-diameter', 'row-spacing', 'minimum-gap', 'border', 'minimum-hole-length'];
+      const wanted = ['name', 'tape-width', 'hole-diameter', 'row-spacing', 'minimum-gap', 'lead-in', 'border', 'minimum-hole-length'];
       expect(testIdsIn(sheet(element, 'tape-bed-sheet')).filter((id) => wanted.includes(id ?? ''))).toEqual(wanted);
     });
 
@@ -2114,6 +2118,55 @@ describe('OrganEditorComponent', () => {
       await type(field('minimum-gap'), '0');
 
       expect(violationAt('minimumGap')).toEqual(['Must be greater than 0.']);
+    });
+
+    it('shows a stored Lead-in of 12.5 as 12,5 in German', async () => {
+      TestBed.configureTestingModule({providers: [provideRouter([]), provideTestTranslations('de')]});
+      vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+      const organ = testOrgan('Street organ', 2, {leadIn: 12.5});
+      await TestBed.inject(OrganLibrary).put(organ);
+      const {field, element} = await open(organ.id);
+
+      expect(field('lead-in').value).toBe('12,5');
+      expect(field('lead-in').closest('mat-form-field')?.querySelector('mat-label')?.textContent?.trim()).toBe('Vorlauf');
+      expect(element).toBeTruthy();
+    });
+
+    it('labels the Lead-in field "Lead-in"', async () => {
+      const {open: openEditor} = render();
+      const {field} = await openEditor();
+
+      expect(field('lead-in').closest('mat-form-field')?.querySelector('mat-label')?.textContent?.trim()).toBe('Lead-in');
+    });
+
+    it('refuses a negative Lead-in', async () => {
+      const {open: openEditor} = render();
+      const {field, type, violationAt} = await openEditor();
+
+      await type(field('lead-in'), '-1');
+
+      expect(violationAt('leadIn')).toEqual(['Must not be negative.']);
+    });
+
+    it('accepts a Lead-in of 0', async () => {
+      const {open: openEditor} = render();
+      const {field, type, violationAt} = await openEditor();
+
+      await type(field('lead-in'), '0');
+
+      expect(violationAt('leadIn')).toEqual([]);
+    });
+
+    it('names a changed Lead-in in the action bar', async () => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 2);
+      await library.put(organ);
+      const {element, field, type} = await openEditor(organ.id);
+
+      await type(field('lead-in'), '25');
+
+      const state = element.querySelector('[data-testid="action-bar-state"]')?.textContent?.replace(/\s+/g, ' ').trim();
+      expect(state).toBe('Unsaved changes: Lead-in');
     });
 
     it('requires a row spacing of at least the hole diameter', async () => {

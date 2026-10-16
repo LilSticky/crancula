@@ -56,6 +56,7 @@ function anOrgan(pipeNotes: readonly number[]): Organ {
     name: 'Organ',
     tapeBed: {tapeWidth: one, holeDiameter: one, rowSpacing: one},
     minimumGap: one,
+    leadIn: one,
     pipes: pipeNotes.map((each) => ({note: defined(midiNoteNumber(each), 'pipe')})),
   });
 }

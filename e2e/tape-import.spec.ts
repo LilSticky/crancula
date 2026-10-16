@@ -32,6 +32,7 @@ test.describe('Bring a MIDI song onto a tape', () => {
     await window.getByTestId('hole-diameter').fill('2.5');
     await window.getByTestId('row-spacing').fill('3.5');
     await window.getByTestId('minimum-gap').fill('1.5');
+    await window.getByTestId('lead-in').fill('20');
     // Pipes C4 to C6 (MIDI 60 to 84).
     for (const [row, note] of Array.from({length: 25}, (_, index) => String(60 + index)).entries()) {
       await window.getByTestId('add-pipe').click();

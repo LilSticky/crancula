@@ -50,6 +50,8 @@ function fieldAt(organ: ReadonlyFieldTree<OrganDraft>, path: string): ReadonlyFi
       return organ.name;
     case 'minimumGap':
       return organ.minimumGap;
+    case 'leadIn':
+      return organ.leadIn;
     case 'tapeBed': {
       const field = TAPE_BED_FIELDS.find((candidate) => candidate === rest[0]);
       return field ? organ.tapeBed[field] : organ;
@@ -128,6 +130,7 @@ export const FIELD_LABEL_KEYS: Readonly<Record<string, string>> = {
   'tapeBed.holeDiameter': 'ORGAN.EDITOR.HOLE_DIAMETER',
   'tapeBed.rowSpacing': 'ORGAN.EDITOR.ROW_SPACING',
   minimumGap: 'ORGAN.EDITOR.MINIMUM_GAP',
+  leadIn: 'ORGAN.EDITOR.LEAD_IN',
   pipes: 'ORGAN.EDITOR.PIPES',
 };
 
@@ -170,6 +173,7 @@ function pathOf(organ: ReadonlyFieldTree<OrganDraft>, field: ReadonlyFieldTree<u
     'name',
     ...TAPE_BED_FIELDS.map((tapeBedField) => `tapeBed.${tapeBedField}`),
     'minimumGap',
+    'leadIn',
     ...Array.from({length: organ.pipes.length}, (_, row) => `pipes.${row}.note`),
   ];
   return paths.find((path) => fieldAt(organ, path) === field);
@@ -195,7 +199,7 @@ export class ShownViolationMatcher extends ErrorStateMatcher {
 }
 
 /** The input fields of the Organ whose change the editor reports; every Pipe change counts as `pipes`. */
-export type ChangedField = 'name' | `tapeBed.${TapeBedField}` | 'minimumGap' | 'pipes';
+export type ChangedField = 'name' | `tapeBed.${TapeBedField}` | 'minimumGap' | 'leadIn' | 'pipes';
 
 /** The fields of `draft` that differ from the `saved` draft, in reading order; `pipes` once for any Pipe change. */
 export function changedFields(saved: OrganDraft, draft: OrganDraft): readonly ChangedField[] {
@@ -205,6 +209,7 @@ export function changedFields(saved: OrganDraft, draft: OrganDraft): readonly Ch
     if (saved.tapeBed[field] !== draft.tapeBed[field]) changed.push(`tapeBed.${field}`);
   }
   if (saved.minimumGap !== draft.minimumGap) changed.push('minimumGap');
+  if (saved.leadIn !== draft.leadIn) changed.push('leadIn');
   const pipesChanged =
     saved.pipes.length !== draft.pipes.length || saved.pipes.some((pipe, row) => pipe.note !== draft.pipes[row]?.note);
   if (pipesChanged) changed.push('pipes');

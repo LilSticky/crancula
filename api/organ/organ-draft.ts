@@ -16,6 +16,7 @@ export interface OrganDraft {
     readonly rowSpacing: number | null;
   };
   readonly minimumGap: number | null;
+  readonly leadIn: number | null;
   readonly pipes: readonly PipeDraft[];
 }
 
@@ -24,6 +25,7 @@ export function emptyOrganDraft(): OrganDraft {
     name: '',
     tapeBed: {tapeWidth: null, holeDiameter: null, rowSpacing: null},
     minimumGap: null,
+    leadIn: null,
     pipes: [],
   };
 }
@@ -34,6 +36,7 @@ export function toDraft(organ: Organ): OrganDraft {
     name: organ.name,
     tapeBed: {...organ.tapeBed},
     minimumGap: organ.minimumGap,
+    leadIn: organ.leadIn,
     pipes: organ.pipes.map((pipe) => ({note: pipe.note})),
   };
 }

@@ -33,6 +33,7 @@ function anOrgan(
     name: 'Organ',
     tapeBed: {tapeWidth: mm(100), holeDiameter: mm(options.holeDiameter ?? 1), rowSpacing: mm(2)},
     minimumGap: mm(options.minimumGap ?? 1),
+    leadIn: mm(0),
     pipes: (options.pipes ?? PIPES_WITHOUT_F_SHARP).map((each) => ({note: defined(midiNoteNumber(each), 'pipe')})),
   });
 }

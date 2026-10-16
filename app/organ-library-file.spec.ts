@@ -8,15 +8,16 @@ import {createOrganLibraryFile, type FileSystem} from './organ-library-file';
 
 const ID = '3f2b8c1e-9d4a-4f6b-8e2c-1a2b3c4d5e6f';
 
-function snapshot(name: string): OrganLibrarySnapshot {
+function snapshot(name: string, leadIn = 20): OrganLibrarySnapshot {
   return {
-    version: 2,
+    version: 3,
     organs: [
       {
         id: ID,
         name,
         tapeBed: {tapeWidth: 120, holeDiameter: 2.5, rowSpacing: 3.5},
         minimumGap: 1.5,
+        leadIn,
         pipes: [{note: 60}, {note: 62}],
       },
     ],
@@ -66,15 +67,15 @@ describe('load', () => {
 
     const result = await createOrganLibraryFile(dir).load();
 
-    expect(result).toEqual({status: 'loaded', snapshot: snapshot('Street organ')});
+    expect(result).toEqual({status: 'loaded', snapshot: snapshot('Street organ', 0)});
     expect(await readFile(organsFile(), 'utf8')).toBe(legacy);
     expect(await readdir(dir)).toEqual(['organs.json']);
   });
 
   it.each([
     ['broken JSON', '{oops'],
-    ['an unknown version', JSON.stringify({version: 3, organs: []})],
-    ['an invalid Organ', JSON.stringify({version: 2, organs: [{id: ID}]})],
+    ['an unknown version', JSON.stringify({version: 4, organs: []})],
+    ['an invalid Organ', JSON.stringify({version: 3, organs: [{id: ID}]})],
   ])('moves a snapshot with %s aside untouched', async (_, content) => {
     await writeFile(organsFile(), content);
     const now = () => new Date('2026-10-14T12:34:56.789Z');
@@ -105,7 +106,7 @@ describe('save', () => {
   });
 
   it('rejects an invalid payload without writing', async () => {
-    const result = await createOrganLibraryFile(dir, {debounceMs: 5}).save({version: 2, organs: [{id: 'x'}]});
+    const result = await createOrganLibraryFile(dir, {debounceMs: 5}).save({version: 3, organs: [{id: 'x'}]});
 
     expect(result).toEqual({status: 'rejected', reason: expect.any(String)});
     expect(await readdir(dir)).toEqual([]);

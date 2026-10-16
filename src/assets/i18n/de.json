@@ -117,6 +117,7 @@
       "HOLE_DIAMETER": "Lochdurchmesser",
       "ROW_SPACING": "Reihenabstand",
       "MINIMUM_GAP": "Mindestabstand",
+      "LEAD_IN": "Vorlauf",
       "MINIMUM_HOLE_LENGTH": "Mindestlochlänge",
       "MINIMUM_HOLE_LENGTH_HINT": "Entspricht dem Lochdurchmesser",
       "PIPE_COUNT": "{{count}} Pfeifen",
@@ -171,6 +172,7 @@
       "DUPLICATE_PIPE": "Eine andere Pfeife spielt bereits {{noteName}}.",
       "VALUE_REQUIRED": "Bitte gib einen Wert ein.",
       "MUST_BE_POSITIVE": "Muss größer als 0 sein.",
+      "MUST_NOT_BE_NEGATIVE": "Darf nicht negativ sein.",
       "ROW_SPACING_BELOW_HOLE_DIAMETER": "Muss mindestens so groß wie der Lochdurchmesser ({{holeDiameter}} mm) sein, sonst überlappen benachbarte Löcher.",
       "PIPES_EXCEED_TAPE_WIDTH": "Die Pfeifen brauchen {{requiredWidth}} mm, das Lochband ist aber nur {{availableWidth}} mm breit."
     },

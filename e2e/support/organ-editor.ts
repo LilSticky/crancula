@@ -7,6 +7,7 @@ export const STREET_ORGAN = {
   holeDiameter: '2.5',
   rowSpacing: '3.5',
   minimumGap: '1.5',
+  leadIn: '20',
   /** 31 Pipes starting at F3 (53). */
   notes: Array.from({length: 31}, (_, row) => String(53 + row)),
 } as const;
@@ -21,6 +22,7 @@ export async function defineStreetOrgan(window: Page): Promise<void> {
   await window.getByTestId('hole-diameter').fill(STREET_ORGAN.holeDiameter);
   await window.getByTestId('row-spacing').fill(STREET_ORGAN.rowSpacing);
   await window.getByTestId('minimum-gap').fill(STREET_ORGAN.minimumGap);
+  await window.getByTestId('lead-in').fill(STREET_ORGAN.leadIn);
   for (const [row, note] of STREET_ORGAN.notes.entries()) {
     await window.getByTestId('add-pipe').click();
     await window.getByTestId('pipe-note').nth(row).fill(note);

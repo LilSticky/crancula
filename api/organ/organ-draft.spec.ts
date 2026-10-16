@@ -15,6 +15,7 @@ describe('emptyOrganDraft', () => {
       name: '',
       tapeBed: {tapeWidth: null, holeDiameter: null, rowSpacing: null},
       minimumGap: null,
+      leadIn: null,
       pipes: [],
     });
   });
@@ -29,6 +30,7 @@ describe('toDraft', () => {
       name: 'Street organ',
       tapeBed: {tapeWidth: mm(120), holeDiameter: mm(2.5), rowSpacing: mm(3.5)},
       minimumGap: mm(1.5),
+      leadIn: mm(20),
       pipes: [{note: midiNoteNumber(60) as MidiNoteNumber}],
     });
 
@@ -37,6 +39,7 @@ describe('toDraft', () => {
       name: 'Street organ',
       tapeBed: {tapeWidth: 120, holeDiameter: 2.5, rowSpacing: 3.5},
       minimumGap: 1.5,
+      leadIn: 20,
       pipes: [{note: 60}],
     });
   });
