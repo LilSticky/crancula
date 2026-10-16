@@ -825,6 +825,16 @@ describe('TapeViewComponent', () => {
       expect(toggle(view())?.getAttribute('aria-expanded')).toBe('false');
     });
 
+    it('opens the side panel by itself below 1180 px when the Tape view shows an Import Summary', async () => {
+      const {tape, importSummary, open, view, summaryShown} = await render({windowWidth: 1100});
+
+      await open(`/tapes/${tape.id}`, importSummary);
+
+      expect(panel(view())).not.toBeNull();
+      expect(toggle(view())?.getAttribute('aria-expanded')).toBe('true');
+      expect(summaryShown()).not.toBeNull();
+    });
+
     it('always shows the side panel from 1180 px, without a toggle', async () => {
       const {tape, open, view} = await render({windowWidth: 1280});
 

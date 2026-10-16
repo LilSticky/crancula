@@ -1,5 +1,6 @@
 @if (drawing(); as drawing) {
   <cranc-page-head
+    [class.compact]="compact()"
     data-testid="tape-name"
     [title]="drawing.tape.name"
     [subtitle]="'TAPE.VIEW.SUBTITLE' | translate: {
@@ -22,7 +23,7 @@
     <span pageHeadActions class="export-later" data-testid="export-later">{{ 'TAPE.VIEW.EXPORT_LATER' | translate }}</span>
   </cranc-page-head>
   <div class="layout" [class.compact]="compact()">
-  <div class="stage">
+  <div class="stage" [class.compact]="compact()">
   <div class="drawing">
     <ul class="labels" [style.height.px]="drawing.totalHeight">
       @for (label of drawing.labels; track $index) {

@@ -3,6 +3,7 @@ import {launchApp, type LaunchedApp} from './support/launch-app';
 import {melodyC3ToC5} from './support/midi-file';
 import {STREET_ORGAN, saveOrgan} from './support/organ-editor';
 import {createTapeFromSong, songRepeatingC4} from './support/tape-creation';
+import {resizeWindow} from './support/window-size';
 
 /** 1 mm at zoom 1:1: 96 px per inch. */
 const PIXELS_PER_MILLIMETRE = 96 / 25.4;
@@ -21,10 +22,6 @@ const boxOf = (locator: Locator): Promise<Box> =>
     const {left, top, right, bottom} = element.getBoundingClientRect();
     return {left, top, right, bottom};
   });
-
-async function resizeWindow({app}: LaunchedApp, width: number, height: number): Promise<void> {
-  await app.evaluate(({BrowserWindow}, size) => BrowserWindow.getAllWindows()[0]?.setContentSize(size.width, size.height), {width, height});
-}
 
 const documentScrolls = (window: Page): Promise<boolean> =>
   window.evaluate(() => {
@@ -250,5 +247,13 @@ test.describe('The Tape view in true millimetres on one screen', () => {
     const view = await boxOf(stage);
     expect(hole.left).toBeGreaterThanOrEqual(view.left - 0.5);
     expect(hole.right).toBeLessThanOrEqual(view.right + 0.5);
+  });
+
+  test('opens the collapsed side panel by itself on 1024 x 700 when a Song was just brought onto a Tape, so the Import Summary shows', async () => {
+    const {window} = launched;
+    await resizeWindow(launched, 1024, 700);
+    await createTapeFromSong(window, 'Compact import', melodyC3ToC5());
+    await expect(window.getByTestId('import-summary')).toBeVisible();
+    await expect(window.getByTestId('side-panel')).toBeVisible();
   });
 });

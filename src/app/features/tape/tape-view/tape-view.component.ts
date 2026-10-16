@@ -361,6 +361,7 @@ export class TapeViewComponent {
   }
 
   constructor() {
+    this.sidePanelOpen.set(this.compact() && this.importSummary() !== null);
     effect((onCleanup) => {
       const element = this.scrollElement()?.nativeElement;
       if (element === undefined) return;
