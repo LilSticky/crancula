@@ -15,6 +15,7 @@ import {ActivatedRoute, Router} from '@angular/router';
 import {map} from 'rxjs';
 import {noteName, type ImportSummary, type Tape} from '@api/index';
 import {MatButton} from '@angular/material/button';
+import {MatButtonToggle, MatButtonToggleGroup} from '@angular/material/button-toggle';
 import {MatIcon} from '@angular/material/icon';
 import {RouterLink} from '@angular/router';
 import {TranslatePipe} from '@ngx-translate/core';
@@ -76,7 +77,7 @@ function windowWidth(element: HTMLElement): number {
 @Component({
   selector: 'cranc-tape-view',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ImportSummaryComponent, TranslatePipe, PageHeadComponent, MatButton, MatIcon, RouterLink],
+  imports: [ImportSummaryComponent, TranslatePipe, PageHeadComponent, MatButton, MatButtonToggle, MatButtonToggleGroup, MatIcon, RouterLink],
   templateUrl: './tape-view.component.html',
   styles: `
     :host {
@@ -133,6 +134,8 @@ function windowWidth(element: HTMLElement): number {
       padding-left: 1.25rem;
     }
     .export-later {
+      line-height: 40px;
+      white-space: nowrap;
       color: var(--mat-sys-on-surface-variant);
     }
     .drawing {
@@ -141,6 +144,7 @@ function windowWidth(element: HTMLElement): number {
     .labels {
       flex: none;
       position: relative;
+      width: 3rem;
       margin: 0;
       padding: 0;
       list-style: none;
@@ -149,6 +153,7 @@ function windowWidth(element: HTMLElement): number {
       position: absolute;
       right: 0;
       padding-right: 0.5rem;
+      text-align: right;
       transform: translateY(-50%);
       white-space: nowrap;
     }
@@ -160,9 +165,13 @@ function windowWidth(element: HTMLElement): number {
     .overview {
       display: block;
     }
-    .zoom {
-      display: flex;
-      gap: 0.25rem;
+    .zoom,
+    [data-testid='export'],
+    [data-testid='side-panel-toggle'] {
+      --mat-button-toggle-height: 40px;
+      --mat-button-outlined-container-height: 40px;
+      height: 40px;
+      box-sizing: border-box;
     }
     .overview {
       cursor: pointer;

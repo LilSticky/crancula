@@ -304,6 +304,25 @@ describe('TapeViewComponent', () => {
       expect(view()?.querySelector('[data-testid="page-head-actions"] [data-testid="zoom"]')).not.toBeNull();
     });
 
+    it('makes the zoom a Material button toggle group', async () => {
+      const {tape, open, view} = await render();
+
+      await open(`/tapes/${tape.id}`);
+
+      const zoom = view()?.querySelector('[data-testid="zoom"]');
+      expect(zoom?.classList).toContain('mat-button-toggle-group');
+      expect(zoom?.querySelectorAll('.mat-button-toggle')).toHaveLength(3);
+    });
+
+    it('styles the Organ link of the Tape section like the other in-app links, as a Material text button', async () => {
+      const {tape, open, view} = await render();
+
+      await open(`/tapes/${tape.id}`);
+
+      const link = view()?.querySelector('[data-testid="tape-section"] a');
+      expect(link?.classList).toContain('mat-mdc-button');
+    });
+
     it('offers Export for the Plotter as a disabled outlined button with a visible later-release note', async () => {
       const {tape, open, view} = await render();
 
@@ -1097,7 +1116,7 @@ describe('TapeViewComponent', () => {
         const group = view()?.querySelector('[data-testid="zoom"]');
         expect(group?.getAttribute('aria-label')).toBe('Zoom');
         expect(buttons(view()).map((button) => button.textContent?.trim())).toEqual(['Whole Tape', '1:1', '2:1']);
-        expect(buttons(view()).map((button) => button.getAttribute('aria-pressed'))).toEqual(['false', 'true', 'false']);
+        expect(buttons(view()).map((button) => button.getAttribute('aria-checked'))).toEqual(['false', 'true', 'false']);
       });
 
       it('doubles the Tape body and the Holes at 2:1', async () => {
@@ -1111,7 +1130,7 @@ describe('TapeViewComponent', () => {
 
         expect(bodyWidth(view())).toBeCloseTo(2 * before, 1);
         expect(numberAttribute(holeRects(view())[0], 'width')).toBeCloseTo(2 * holeBefore, 1);
-        expect(buttons(view()).map((button) => button.getAttribute('aria-pressed'))).toEqual(['false', 'false', 'true']);
+        expect(buttons(view()).map((button) => button.getAttribute('aria-checked'))).toEqual(['false', 'false', 'true']);
       });
 
       it('fits the Tape body to the stage width at Whole Tape', async () => {

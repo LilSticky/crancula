@@ -9,11 +9,11 @@
       length: drawing.lengthMmText
     }"
   >
-    <div pageHeadActions class="zoom" role="group" data-testid="zoom" [attr.aria-label]="'TAPE.VIEW.ZOOM' | translate">
+    <mat-button-toggle-group pageHeadActions class="zoom" hideSingleSelectionIndicator data-testid="zoom" [attr.aria-label]="'TAPE.VIEW.ZOOM' | translate" [value]="zoom()" (change)="zoom.set($event.value)">
       @for (option of zooms; track option.zoom) {
-        <button type="button" [attr.aria-pressed]="zoom() === option.zoom" (click)="zoom.set(option.zoom)">{{ option.label | translate }}</button>
+        <mat-button-toggle [value]="option.zoom">{{ option.label | translate }}</mat-button-toggle>
       }
-    </div>
+    </mat-button-toggle-group>
     @if (compact()) {<button pageHeadActions mat-stroked-button type="button" data-testid="side-panel-toggle" [attr.aria-expanded]="sidePanelOpen()" (click)="toggleSidePanel()">{{ 'TAPE.VIEW.DETAILS' | translate }}</button>}
     <button pageHeadActions mat-stroked-button type="button" disabled data-testid="export">
       <mat-icon aria-hidden="true">content_cut</mat-icon>
@@ -40,7 +40,7 @@
         </defs>
         <rect [attr.x]="drawing.leadIn" [attr.y]="rulerHeight - 8" [attr.width]="drawing.bodyWidth" height="8" fill="url(#ruler-ticks)" />
         @for (number of drawing.rulerNumbers; track number.mm) {
-          <text class="ruler-number" data-testid="ruler-number" aria-hidden="true" [attr.x]="number.x" [attr.y]="rulerHeight - 12" text-anchor="middle">{{ number.mm }}</text>
+          <text class="ruler-number" data-testid="ruler-number" aria-hidden="true" [attr.x]="number.x" [attr.y]="rulerHeight - 12" [attr.dx]="number.x > drawing.width - 12 ? -2 : null" [attr.text-anchor]="number.x > drawing.width - 12 ? 'end' : number.x < 12 ? 'start' : 'middle'">{{ number.mm }}</text>
         }
         <g [attr.transform]="'translate(0 ' + rulerHeight + ')'">
           @if (drawing.leadIn > 0) {
@@ -125,7 +125,7 @@
       <h2>{{ 'TAPE.SECTION.TITLE' | translate }}</h2>
       <dl>
         <dt>{{ 'TAPE.SECTION.ORGAN' | translate }}</dt>
-        <dd><a [routerLink]="['/organs', drawing.tape.organId]">{{ drawing.organName }}</a></dd>
+        <dd><a matButton [routerLink]="['/organs', drawing.tape.organId]">{{ drawing.organName }}</a></dd>
         <dt>{{ 'TAPE.SECTION.COLUMN_LENGTH' | translate }}</dt>
         <dd>{{ 'TAPE.SECTION.MM' | translate: {value: drawing.columnLengthText} }}</dd>
         <dt>{{ 'TAPE.SECTION.COLUMNS' | translate }}</dt>

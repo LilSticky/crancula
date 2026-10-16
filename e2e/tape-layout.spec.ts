@@ -77,7 +77,7 @@ test.describe('The Tape view in true millimetres on one screen', () => {
   test('draws Holes, rows, Border and Lead-in at 1 mm = 96 / 25,4 px', async () => {
     const {window} = launched;
     await createTapeFromSong(window, 'Scale', melodyC3ToC5());
-    await window.getByTestId('zoom').getByRole('button', {name: '1:1'}).click();
+    await window.getByTestId('zoom').getByRole('radio', {name: '1:1'}).click();
 
     const holes = window.getByTestId('tape-scroll').getByTestId('hole');
     const first = holes.and(window.locator('[data-row="0"]')).first();
@@ -130,7 +130,7 @@ test.describe('The Tape view in true millimetres on one screen', () => {
     const {window} = launched;
     await resizeWindow(launched, 1280, 800);
     await createTapeFromSong(window, 'Repeats', songRepeatingC4('repeats.mid', 3));
-    await window.getByTestId('zoom').getByRole('button', {name: '1:1'}).click();
+    await window.getByTestId('zoom').getByRole('radio', {name: '1:1'}).click();
 
     const rowOne = window.getByTestId('tape-scroll').locator('[data-testid="hole"][data-row="0"]');
     await expect(rowOne).toHaveCount(3);
@@ -158,4 +158,73 @@ test.describe('The Tape view in true millimetres on one screen', () => {
     await expectInViewport(window, window.getByTestId('overview'));
     await expectInViewport(window, window.getByTestId('status-line'));
   });
+
+  for (const [width, height] of [[1280, 800], [1024, 700]] as const) {
+    test.describe(`at ${width} x ${height}`, () => {
+      test.beforeEach(async () => {
+        const {window} = launched;
+        await resizeWindow(launched, width, height);
+        await createTapeFromSong(window, 'Layout', melodyC3ToC5());
+      });
+
+      test('Whole Tape makes the drawing fill the stage, with the last ruler number inside the drawing', async () => {
+        const {window} = launched;
+        await window.getByTestId('zoom').getByRole('radio', {name: 'Whole Tape'}).click();
+        const stage = window.getByTestId('tape-scroll');
+        const svg = stage.locator('svg[role="img"]');
+
+        await expect
+          .poll(async () => {
+            const box = await boxOf(svg);
+            const clientWidth = await stage.evaluate((element) => element.clientWidth);
+            return Math.abs(box.right - box.left - clientWidth);
+          })
+          .toBeLessThanOrEqual(4);
+        const scrolls = await stage.evaluate((element) => element.scrollWidth > element.clientWidth + 1);
+        expect(scrolls).toBe(false);
+
+        const svgBox = await boxOf(svg);
+        const lastNumber = await boxOf(stage.getByTestId('ruler-number').last());
+        expect(lastNumber.right).toBeLessThanOrEqual(svgBox.right + 0.5);
+        expect(lastNumber.left).toBeGreaterThanOrEqual(svgBox.left - 0.5);
+      });
+
+      test('does not clip the row labels in their gutter', async () => {
+        const {window} = launched;
+        const gutter = await boxOf(window.locator('ul.labels'));
+        const labels = window.getByTestId('row-label');
+        const count = await labels.count();
+        expect(count).toBeGreaterThan(0);
+        for (let index = 0; index < count; index++) {
+          const label = labels.nth(index);
+          const box = await boxOf(label);
+          const text = await label.innerText();
+          expect(box.left, text).toBeGreaterThanOrEqual(gutter.left - 0.5);
+          expect(box.right, text).toBeLessThanOrEqual(gutter.right + 0.5);
+          const clipped = await label.evaluate((element) => element.scrollWidth > element.clientWidth + 1);
+          expect(clipped, text).toBe(false);
+        }
+      });
+
+      test('keeps the page head actions on one row', async () => {
+        const {window} = launched;
+        const actions = window.getByTestId('page-head-actions').locator('> *');
+        const count = await actions.count();
+        expect(count).toBeGreaterThan(1);
+        const tops: number[] = [];
+        for (let index = 0; index < count; index++) {
+          const element = actions.nth(index);
+          if (await element.isVisible()) tops.push((await boxOf(element)).top);
+        }
+        expect(Math.max(...tops) - Math.min(...tops), JSON.stringify(tops)).toBeLessThanOrEqual(2);
+        const buttonTexts = await window.getByTestId('page-head-actions').getByRole('button').evaluateAll((buttons) =>
+          buttons.map((button) => {
+            const {height} = button.getBoundingClientRect();
+            return {text: button.textContent?.trim(), height};
+          }),
+        );
+        for (const {text, height} of buttonTexts) expect(height, text).toBeLessThanOrEqual(48);
+      });
+    });
+  }
 });
