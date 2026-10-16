@@ -10,6 +10,7 @@ function validDraft(overrides: Partial<OrganDraft> = {}): OrganDraft {
     name: 'Street organ',
     tapeBed: {tapeWidth: 120, holeDiameter: 2.5, rowSpacing: 3.5},
     minimumGap: 1.5,
+    leadIn: 20,
     pipes: Array.from({length: 31}, (_, row) => ({note: 53 + row})),
     ...overrides,
   };
@@ -30,6 +31,7 @@ describe('validateOrgan', () => {
       expect(result.value.name).toBe('Street organ');
       expect(result.value.tapeBed).toEqual({tapeWidth: 120, holeDiameter: 2.5, rowSpacing: 3.5});
       expect(result.value.minimumGap).toBe(1.5);
+      expect(result.value.leadIn).toBe(20);
       expect(result.value.pipes.map((pipe) => pipe.note)).toEqual(Array.from({length: 31}, (_, row) => 53 + row));
     });
 
@@ -89,13 +91,28 @@ describe('validateOrgan', () => {
       const draft = validDraft({
         tapeBed: {tapeWidth: null, holeDiameter: null, rowSpacing: null},
         minimumGap: null,
+        leadIn: null,
       });
       expect(violationsOf(draft)).toEqual([
         {code: 'value-required', path: 'tapeBed.tapeWidth'},
         {code: 'value-required', path: 'tapeBed.holeDiameter'},
         {code: 'value-required', path: 'tapeBed.rowSpacing'},
         {code: 'value-required', path: 'minimumGap'},
+        {code: 'value-required', path: 'leadIn'},
       ]);
+    });
+
+    it('requires a Lead-in', () => {
+      expect(violationsOf(validDraft({leadIn: null}))).toEqual([{code: 'value-required', path: 'leadIn'}]);
+    });
+
+    it('rejects a negative Lead-in', () => {
+      expect(violationsOf(validDraft({leadIn: -0.5}))).toEqual([{code: 'must-not-be-negative', path: 'leadIn'}]);
+    });
+
+    it('accepts a Lead-in of 0 (none)', () => {
+      const result = validateOrgan(validDraft({leadIn: 0}));
+      expect(result.ok && result.value.leadIn).toBe(0);
     });
 
     it('treats a number that is not finite as missing', () => {
@@ -138,6 +155,7 @@ describe('validateOrgan', () => {
       expect(codes).toEqual([
         'name-required',
         'pipe-note-required',
+        'value-required',
         'value-required',
         'value-required',
         'value-required',

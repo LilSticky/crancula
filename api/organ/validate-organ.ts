@@ -11,6 +11,7 @@ export type OrganViolationCode =
   | 'duplicate-pipe'
   | 'value-required'
   | 'must-be-positive'
+  | 'must-not-be-negative'
   | 'row-spacing-below-hole-diameter'
   | 'pipes-exceed-tape-width';
 
@@ -41,6 +42,7 @@ export function validateOrgan(draft: OrganDraft): Result<Organ, OrganViolation[]
   const notes = validateNotes(draft, add);
   const tapeBed = validateTapeBed(draft, add);
   const minimumGap = measurement(draft.minimumGap, 'minimumGap', add);
+  const leadIn = measurement(draft.leadIn, 'leadIn', add, true);
 
   if (tapeBed && draft.pipes.length > 0) {
     const required = rowSpan(tapeBed, draft.pipes.length);
@@ -53,13 +55,14 @@ export function validateOrgan(draft: OrganDraft): Result<Organ, OrganViolation[]
     }
   }
 
-  if (violations.length > 0 || !notes || !tapeBed || minimumGap === undefined) return err(violations);
+  if (violations.length > 0 || !notes || !tapeBed || minimumGap === undefined || leadIn === undefined) return err(violations);
   return ok(
     asValidOrgan({
       id: draft.id ?? newOrganId(),
       name,
       tapeBed,
       minimumGap,
+      leadIn,
       pipes: notes.map((note) => ({note})),
     }),
   );
@@ -115,13 +118,14 @@ function measurement(
   value: number | null,
   path: string,
   add: AddViolation,
+  allowZero = false,
 ): Millimetres | undefined {
   if (value === null || !Number.isFinite(value)) {
     add({code: 'value-required', path});
     return undefined;
   }
-  if (value <= 0) {
-    add({code: 'must-be-positive', path});
+  if (allowZero ? value < 0 : value <= 0) {
+    add({code: allowZero ? 'must-not-be-negative' : 'must-be-positive', path});
     return undefined;
   }
   return millimetres(value);

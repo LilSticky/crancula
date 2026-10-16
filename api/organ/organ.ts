@@ -29,6 +29,8 @@ export interface Organ {
   readonly name: string;
   readonly tapeBed: TapeBed;
   readonly minimumGap: Millimetres;
+  /** Blank Tape before Column 1, with an angled start; 0 means none. */
+  readonly leadIn: Millimetres;
   readonly pipes: readonly Pipe[];
   readonly [validOrganBrand]: true;
 }

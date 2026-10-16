@@ -12,23 +12,25 @@ export interface OrganSnapshot {
     readonly rowSpacing: number;
   };
   readonly minimumGap: number;
+  readonly leadIn: number;
   readonly pipes: readonly {readonly note: number}[];
 }
 
-/** Snapshot file format, version 2, stored at `<userData>/snapshots/organs.json` (ADR 8, ADR 20). */
+/** Snapshot file format, version 3, stored at `<userData>/snapshots/organs.json` (ADR 8, ADR 20). */
 export interface OrganLibrarySnapshot {
-  readonly version: 2;
+  readonly version: 3;
   readonly organs: readonly OrganSnapshot[];
 }
 
 export function toSnapshot(organs: readonly Organ[]): OrganLibrarySnapshot {
   return {
-    version: 2,
+    version: 3,
     organs: organs.map((organ) => ({
       id: organ.id,
       name: organ.name,
       tapeBed: {...organ.tapeBed},
       minimumGap: organ.minimumGap,
+      leadIn: organ.leadIn,
       pipes: organ.pipes.map((pipe) => ({note: pipe.note})),
     })),
   };
@@ -41,13 +43,15 @@ export function toSnapshot(organs: readonly Organ[]): OrganLibrarySnapshot {
 export function parseOrganLibrarySnapshot(input: unknown): Result<Organ[], string> {
   if (!isRecord(input)) return err('snapshot is not an object');
   // Version 1 stored a Border, which is derived now; its value is ignored (ADR 20).
-  if (input['version'] !== 1 && input['version'] !== 2) return err(`unsupported snapshot version ${String(input['version'])}`);
+  // Versions 1 and 2 stored no Lead-in; they read with a Lead-in of 0 (ADR 20).
+  const version = input['version'];
+  if (version !== 1 && version !== 2 && version !== 3) return err(`unsupported snapshot version ${String(version)}`);
   const organs = input['organs'];
   if (!Array.isArray(organs)) return err('organs is not a list');
 
   const parsed: Organ[] = [];
   for (const [index, entry] of organs.entries()) {
-    const organ = parseOrgan(entry);
+    const organ = parseOrgan(entry, version === 3);
     if (!organ.ok) return err(`Organ ${index}: ${organ.error}`);
     if (parsed.some((other) => other.id === organ.value.id)) return err(`Organ ${index}: duplicate id ${organ.value.id}`);
     parsed.push(organ.value);
@@ -55,14 +59,15 @@ export function parseOrganLibrarySnapshot(input: unknown): Result<Organ[], strin
   return ok(parsed);
 }
 
-function parseOrgan(input: unknown): Result<Organ, string> {
+function parseOrgan(input: unknown, hasLeadIn: boolean): Result<Organ, string> {
   if (!isRecord(input)) return err('not an object');
   const {id, name, tapeBed, minimumGap, pipes} = input;
+  const leadIn = hasLeadIn ? input['leadIn'] : 0;
   if (typeof id !== 'string' || organId(id) === undefined) return err('id is not a UUID');
   if (typeof name !== 'string') return err('name is not a string');
   if (!isRecord(tapeBed)) return err('tapeBed is not an object');
   const {tapeWidth, holeDiameter, rowSpacing} = tapeBed;
-  if (!isNumber(tapeWidth) || !isNumber(holeDiameter) || !isNumber(rowSpacing) || !isNumber(minimumGap)) {
+  if (!isNumber(tapeWidth) || !isNumber(holeDiameter) || !isNumber(rowSpacing) || !isNumber(minimumGap) || !isNumber(leadIn)) {
     return err('a measurement is not a number');
   }
   if (!Array.isArray(pipes)) return err('pipes is not a list');
@@ -77,6 +82,7 @@ function parseOrgan(input: unknown): Result<Organ, string> {
     name,
     tapeBed: {tapeWidth, holeDiameter, rowSpacing},
     minimumGap,
+    leadIn,
     pipes: notes.map((note) => ({note})),
   });
   return result.ok ? result : err(result.error.map((violation) => `${violation.path}: ${violation.code}`).join(', '));
