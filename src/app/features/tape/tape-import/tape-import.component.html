@@ -37,7 +37,7 @@
 
       <section class="group">
         <h2 class="group-title" data-testid="group-title">{{ 'TAPE.IMPORT.GROUP_ORGAN' | translate }}</h2>
-        <mat-form-field>
+        <mat-form-field subscriptSizing="dynamic">
           <mat-label>{{ 'TAPE.IMPORT.ORGAN' | translate }}</mat-label>
           <select matNativeControl #organSelect data-testid="organ" [value]="organId()" (change)="chooseOrgan(organSelect.value)">
             <option value="" [selected]="organId() === ''">{{ 'TAPE.IMPORT.CHOOSE_ORGAN' | translate }}</option>
@@ -76,7 +76,7 @@
           <button matIconButton type="button" [attr.aria-label]="'TAPE.TRANSPOSITION.DOWN' | translate" [matTooltip]="'TAPE.TRANSPOSITION.DOWN' | translate" [disabled]="!canStepDown()" (click)="step(-1)">
             <mat-icon>remove</mat-icon>
           </button>
-          <mat-form-field>
+          <mat-form-field subscriptSizing="dynamic">
             <mat-label>{{ 'TAPE.IMPORT.TRANSPOSITION' | translate }}</mat-label>
             <input matInput type="number" data-testid="transposition" [formField]="tape.transposition"/>
             <ng-container ngProjectAs="mat-error">
@@ -109,7 +109,7 @@
       </section>
 
       <div class="name-row">
-        <mat-form-field>
+        <mat-form-field subscriptSizing="dynamic">
           <mat-label>{{ 'TAPE.IMPORT.NAME' | translate }}</mat-label>
           <input matInput data-testid="name" [formField]="tape.name"/>
           <ng-container ngProjectAs="mat-error">
@@ -118,7 +118,7 @@
             }
           </ng-container>
         </mat-form-field>
-        <mat-form-field>
+        <mat-form-field subscriptSizing="dynamic">
           <mat-label>{{ 'TAPE.IMPORT.COLUMN_LENGTH' | translate }}</mat-label>
           <input matInput crancDecimalInput data-testid="column-length" [formField]="tape.columnLength"/>
           <span matTextSuffix>mm</span>

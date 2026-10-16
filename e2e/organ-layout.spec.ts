@@ -18,7 +18,7 @@ const documentOverflow = (window: Page) =>
 
 const inView = async (window: Page, testId: string) => {
   const box = await window.getByTestId(testId).boundingBox();
-  const viewport = await window.evaluate(() => ({width: window.innerWidth, height: window.innerHeight}));
+  const viewport = await window.evaluate(() => ({width: globalThis.innerWidth, height: globalThis.innerHeight}));
   if (!box || !viewport) throw new Error(`${testId} has no box`);
   return box.y >= 0 && box.y + box.height <= viewport.height && box.x >= 0 && box.x + box.width <= viewport.width;
 };

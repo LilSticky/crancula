@@ -751,7 +751,7 @@ is `song-file-name`). Every task that adds or changes UI text adds the keys to `
   `e2e/support/midi-file.ts` with Notes no Pipe plays), the list scrolls inside the Fit sheet and
   the document still does not scroll. At 1280×800 the same, and 3 Parts need no inner scroll.
   Needs real layout.
-- [ ] **I14** Full `npm run e2e`, `npm run test`, `npm run lint`, `npm run i18n:check`. Then
+- [x] **I14** Full `npm run e2e`, `npm run test`, `npm run lint`, `npm run i18n:check`. Then
   `npm run ux:screens` (07 with the chip, the proposal sentence and the Fit sheet; a new 07b with
   the Unplayable warning and its Notes expanded after a Transposition away from the proposal; 07c in German at
   1024×700), `ux-review`; score into STATUS.

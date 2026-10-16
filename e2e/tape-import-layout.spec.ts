@@ -18,8 +18,8 @@ const boxOf = (locator: Locator): Promise<Box> =>
     return {left, top, right, bottom};
   });
 
-const documentScrolls = (window: Page): Promise<{vertical: boolean; horizontal: boolean}> =>
-  window.evaluate(() => {
+const documentScrolls = (page: Page): Promise<{vertical: boolean; horizontal: boolean}> =>
+  page.evaluate(() => {
     const root = document.documentElement;
     return {vertical: root.scrollHeight > window.innerHeight, horizontal: root.scrollWidth > window.innerWidth};
   });
@@ -142,6 +142,46 @@ for (const {width, height} of SIZES) {
     });
   });
 }
+
+test.describe('The Parts list in German at 1024 x 700', () => {
+  /** The rows of the Parts list that lie completely inside the visible area of the list. */
+  const fullyVisibleRows = (partsList: Locator): Promise<number> =>
+    partsList.evaluate((list) => {
+      const area = list.getBoundingClientRect();
+      return [...list.querySelectorAll('[data-testid="part"]')].filter((row) => {
+        const box = row.getBoundingClientRect();
+        return box.top >= area.top - 0.5 && box.bottom <= area.bottom + 0.5;
+      }).length;
+    });
+
+  for (const [label, song, minimum] of [
+    ['three Parts', threePartsWithPercussion(), 3],
+    ['sixteen Parts', longSongWithSixteenParts(), 4],
+  ] as const) {
+    test(`${label}: at least ${minimum} rows are fully visible without scrolling`, async () => {
+      const launched = await launchApp();
+      const {app, window} = launched;
+      try {
+        await resizeWindowOrSkip(launched, 1024, 700, true);
+        await defineOctaveOrgan(window, 'Layout organ');
+        await openImport(launched, song, 'de');
+        const partsList = window.getByTestId('parts');
+        const visible = await fullyVisibleRows(partsList);
+        const measured = await partsList.evaluate((list) => ({
+          clientHeight: list.clientHeight,
+          scrollHeight: list.scrollHeight,
+          rowHeight: list.querySelector('[data-testid="part"]')?.getBoundingClientRect().height,
+        }));
+        expect(visible, JSON.stringify(measured)).toBeGreaterThanOrEqual(minimum);
+        if (minimum === 3) {
+          expect(await scrollsInside(partsList), '3 Parts need no inner scroll').toBe(false);
+        }
+      } finally {
+        await app.close();
+      }
+    });
+  }
+});
 
 test.describe('The Fit disclosures with the real keyboard', () => {
   async function openWithUnplayableNotes(): Promise<LaunchedApp> {

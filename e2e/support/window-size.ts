@@ -8,7 +8,7 @@ import type {LaunchedApp} from './launch-app';
 export async function resizeWindow({app, window}: LaunchedApp, width: number, height: number): Promise<boolean> {
   const setContentSize = (size: {width: number; height: number}) =>
     app.evaluate(({BrowserWindow}, wanted) => BrowserWindow.getAllWindows()[0]?.setContentSize(wanted.width, wanted.height), size);
-  const viewport = () => window.evaluate(() => ({width: window.innerWidth, height: window.innerHeight}));
+  const viewport = () => window.evaluate(() => ({width: globalThis.innerWidth, height: globalThis.innerHeight}));
   await setContentSize({width, height});
   for (let attempt = 0; attempt < 6; attempt++) {
     await window.waitForTimeout(100); // The viewport follows the window asynchronously.

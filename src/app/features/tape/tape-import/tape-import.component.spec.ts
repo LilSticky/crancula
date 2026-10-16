@@ -977,6 +977,42 @@ describe('TapeImportComponent', () => {
       ]);
     });
 
+    describe('for a Part without a name', () => {
+      /** Lead C3, D3, C#4 on Part 1, and an unnamed second Part with D3 on Column 1. */
+      function unnamedSecondPartBytes(): Uint8Array {
+        const unnamed = track(1, [50], 'ignored');
+        return encodeSmf({
+          format: 1,
+          division: {ticksPerQuarterNote: TICKS_PER_QUARTER},
+          tracks: [track(0, [48, 50, 61], 'Lead'), {events: unnamed.events.slice(1)}],
+        });
+      }
+
+      async function openUnnamed(language?: 'en' | 'de') {
+        const page = await render({organs: [testOrgan('Street organ', 3)], language});
+        await page.choose(midiFile(unnamedSecondPartBytes()));
+        await page.type(page.field('transposition'), '0');
+        const button = asButton(page.query('fit-moved'));
+        button.click();
+        await page.fixture.whenStable();
+        return notesOf(page, button);
+      }
+
+      it('names it by its number once, "(Part 2, Column 1)", and a named Part by its name', async () => {
+        expect(await openUnnamed()).toEqual([
+          'C3 moved by 1 octave to Pipe C4 (Part Lead, Column 1)',
+          'D3 moved by 1 octave to Pipe D4 (Part 2, Column 1)',
+          'D3 moved by 1 octave to Pipe D4 (Part Lead, Column 9)',
+        ]);
+      });
+
+      it('speaks German: "(Stimme 2, Spalte 1)"', async () => {
+        expect(await openUnnamed('de')).toContain(
+          'D3 um 1 Oktave auf Pfeife D4 verschoben (Stimme 2, Spalte 1)',
+        );
+      });
+    });
+
     it('speaks German', async () => {
       const page = await openMixed('de');
       const button = asButton(page.query('fit-unplayable'));

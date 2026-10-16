@@ -1,8 +1,8 @@
 import {expect, test, type Page} from '@playwright/test';
 import {join} from 'node:path';
 import {launchApp, type LaunchedApp} from '../support/launch-app';
-import {threePartsWithPercussion} from '../support/midi-file';
-import {defineStreetOrgan} from '../support/organ-editor';
+import {longSongWithSixteenParts, threePartsWithPercussion} from '../support/midi-file';
+import {defineStreetOrgan, saveOrgan} from '../support/organ-editor';
 import {createTapeFromSong} from '../support/tape-creation';
 
 /** Where the `ux-review` skill expects the screens of the running app. */
@@ -155,6 +155,47 @@ test.describe('UX screens', () => {
     await expect(window.getByTestId('tape').first()).toBeVisible();
     await window.mouse.move(640, 400);
     await capture(window, '17-tape-list-german-compact');
+    // Last, so the extra Organ does not show in the other screens: an Organ with the white keys C4 to B4 only.
+    await window.getByTestId('language-switch').locator('[data-language="en"]').click();
+    await resizeWindow(launched, 1280, 800);
+    await window.getByRole('link', {name: 'Organs'}).click();
+    await window.getByTestId('new-organ').click();
+    await window.getByTestId('name').fill('White keys');
+    await window.getByTestId('tape-width').fill('120');
+    await window.getByTestId('hole-diameter').fill('2.5');
+    await window.getByTestId('row-spacing').fill('3.5');
+    await window.getByTestId('minimum-gap').fill('1.5');
+    await window.getByTestId('lead-in').fill('20');
+    for (const [row, note] of [60, 62, 64, 65, 67, 69, 71].entries()) {
+      await window.getByTestId('add-pipe').click();
+      await window.getByTestId('pipe-note').nth(row).fill(String(note));
+    }
+    await saveOrgan(window);
+    await expect(window).toHaveURL(/\/organs\/[0-9a-f-]{36}$/);
+    await expect(window.getByTestId('unsaved-dot')).toBeHidden();
+
+    const song = longSongWithSixteenParts();
+    const importWithWhiteKeys = async (): Promise<void> => {
+      await window.getByRole('link', {name: 'Tapes'}).click();
+      await expect(window.getByRole('dialog')).toBeHidden();
+      await expect(window).toHaveURL(/\/tapes$/);
+      await window.getByTestId('new-tape').click();
+      await window.getByTestId('song-file').setInputFiles(song);
+      await expect(window.getByTestId('song-file-name')).toHaveText(song.name);
+      await window.getByTestId('organ').selectOption({label: 'White keys'});
+      await window.getByTestId('transposition').fill('12');
+      await expect(window.locator('button[data-testid="fit-unplayable"]')).toBeVisible();
+    };
+    await importWithWhiteKeys();
+    await window.getByTestId('fit-unplayable').click();
+    await expect(window.getByTestId('fit-unplayable')).toHaveAttribute('aria-expanded', 'true');
+    await window.mouse.move(640, 400);
+    await capture(window, '07b-tape-import-unplayable');
+
+    await resizeWindow(launched, 1024, 700);
+    await window.getByTestId('language-switch').locator('[data-language="de"]').click();
+    await window.mouse.move(640, 400);
+    await capture(window, '07c-tape-import-german-compact');
     await window.getByTestId('language-switch').locator('[data-language="en"]').click();
   });
 });

@@ -141,7 +141,7 @@ const NO_SONG_DRAFT: TapeImportDraft = {name: '', columnLength: null, transposit
 
     .parts-group {
       flex: 1 1 auto;
-      min-height: 4rem;
+      min-height: 13rem;
     }
 
     .part {
