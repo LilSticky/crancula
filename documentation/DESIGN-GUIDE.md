@@ -95,7 +95,7 @@ Roboto goes once nothing uses it. Add each licence text next to the font files.
   only, no invented Holes) and "3 Tapes" as a link to the Tape list filtered by this Organ.
   Primary: New Organ. A dashed next-step strip points to "Bring a Song onto a Tape".
 - **Organ editor:** left the Tape Bed sheet (name; tape width, hole diameter, spacing
-  between rows, Minimum Gap in two columns of ~170 px; Minimum Hole Length read-only with a dashed
+  between rows, Minimum Gap, Lead-in in two columns of ~170 px; Minimum Hole Length read-only with a dashed
   outline and "Equals the hole diameter") with a Tape Bed drawing from the values. Right the Pipe
   rack: 3 columns of 11 rows (row, note, handle, menu), read down then across. Under the drawing
   the **fit check**: the Row Span is (Pipes − 1) × spacing + hole diameter, and the Border is
