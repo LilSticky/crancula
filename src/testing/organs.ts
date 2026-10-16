@@ -6,6 +6,7 @@ export function testOrgan(name: string, pipeCount = 2, overrides: Partial<OrganD
     name,
     tapeBed: {tapeWidth: 120, holeDiameter: 2.5, rowSpacing: 3.5},
     minimumGap: 1.5,
+    leadIn: 20,
     pipes: Array.from({length: pipeCount}, (_, row) => ({note: 60 + 2 * row})),
     ...overrides,
   });
