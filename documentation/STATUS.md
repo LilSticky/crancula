@@ -133,8 +133,9 @@ Open issues carry `priority:` and `size:` labels; triage sets them.
 
 - Fixed (#58, 2026-10-18): saving a snapshot failed for good on Windows when another process held the file open
   during the atomic rename (EPERM/EBUSY/EACCES); the rename is now retried up to 10 times, 40 ms apart.
-- `e2e/fonts.spec.ts` "requests no font from an external origin" failed intermittently twice locally
-  (`ERR_FILE_NOT_FOUND` on reload). Not reproducible yet.
+- Fixed (#57, 2026-10-18): View > Reload showed a file-not-found page after any navigation (path URLs under
+  `file://`; it also made `e2e/fonts.spec.ts` flaky). The router uses hash location and the build sets the base
+  href to `./index.html`, so every URL stays on `index.html`.
 
 ## Open questions
 

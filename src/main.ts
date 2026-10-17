@@ -1,7 +1,7 @@
 import {enableProdMode, importProvidersFrom, provideZoneChangeDetection} from '@angular/core';
 import {bootstrapApplication} from '@angular/platform-browser';
 import {provideHttpClient, withInterceptorsFromDi, withXhr} from '@angular/common/http';
-import {provideRouter, withComponentInputBinding} from '@angular/router';
+import {provideRouter, withComponentInputBinding, withHashLocation} from '@angular/router';
 
 import {AppComponent} from './app/app.component';
 import {APP_CONFIG} from './environments/environment';
@@ -30,7 +30,7 @@ bootstrapApplication(AppComponent, {
       fallbackLang: 'en',
       lang: 'en'
     }),
-    provideRouter(routes, withComponentInputBinding()),
+    provideRouter(routes, withComponentInputBinding(), withHashLocation()),
     provideOrganLibrary(),
     provideTapeLibrary(),
     provideFormFieldDefaults(),
