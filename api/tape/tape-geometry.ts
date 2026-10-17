@@ -52,7 +52,7 @@ export function tapeGeometry(tape: Tape, organ: Organ): TapeGeometry {
   const rowTop = (index: number): number => edge + index * rowSpacing;
   const rowOf = new Map(organ.pipes.map((pipe, index) => [pipe.note, index]));
 
-  const slots = tape.holes.flatMap((hole): readonly Slot[] => {
+  const drawn = tape.holes.flatMap((hole): readonly Slot[] => {
     const index = rowOf.get(hole.pipe);
     if (index === undefined) return [];
     return [
@@ -68,7 +68,10 @@ export function tapeGeometry(tape: Tape, organ: Organ): TapeGeometry {
     ];
   });
 
-  const length = tape.length * tape.columnLength;
+  /** Cut order: along the Tape, then by row. */
+  const slots = [...drawn].sort((a, b) => a.start - b.start || a.row - b.row);
+
+  const length = tape.length *tape.columnLength;
   const endGap = organ.minimumGap;
   const totalLength = organ.leadIn + length + endGap;
 

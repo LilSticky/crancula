@@ -4,7 +4,7 @@ import {join} from 'node:path';
 import {expect, test} from '@playwright/test';
 import {launchApp, type LaunchedApp} from './support/launch-app';
 import {encodeSmf} from '../api/song/midi/smf-test-helper';
-import {melodyC3ToC5, type MidiFilePayload} from './support/midi-file';
+import {melodyC3ToC5, melodyC5ToC3, type MidiFilePayload} from './support/midi-file';
 import {saveOrgan} from './support/organ-editor';
 import {createTapeFromSong, defineOctaveOrgan} from './support/tape-creation';
 import {stubSaveDialog, type SaveDialogStub} from './support/save-dialog';
@@ -73,6 +73,36 @@ test.describe('Export a Tape that can not be cut (part 2)', () => {
       expect(await dialog.calls()).toHaveLength(0);
       expect(await readdir(folder)).toEqual([]);
       expect(await readTapesFile(launched.userDataDir)).toBe(tapesBefore);
+    } finally {
+      await launched.app.close();
+    }
+  });
+});
+
+test.describe('Export a Tape in cut order', () => {
+  test('writes the Hole paths with x never decreasing, although the Holes are stored by Pipe, and the Outline last', async () => {
+    const launched = await launchApp();
+    try {
+      const dialog = await stubSaveDialog(launched.app);
+      const folder = await mkdtemp(join(tmpdir(), 'crancula-cut-order-'));
+      const target = join(folder, 'Descent.svg');
+      await dialog.answerWith(target);
+      await defineOctaveOrgan(launched.window, 'Octave organ');
+      await createTapeFromSong(launched.window, 'Descent', melodyC5ToC3());
+
+      await launched.window.getByTestId('export').click();
+
+      await expect.poll(async () => (await readdir(folder)).includes('Descent.svg')).toBe(true);
+      const svg = await readFile(target, 'utf8');
+      const paths = svg.match(/<path d="[^"]*"/g) ?? [];
+      const holePaths = paths.slice(0, -1);
+      expect(holePaths.length).toBeGreaterThan(1);
+      const xs = holePaths.map((path) => Number(/^<path d="M([\d.]+),/.exec(path)?.[1]));
+      xs.forEach((x, index) => {
+        if (index > 0) expect(x).toBeGreaterThanOrEqual(xs[index - 1] ?? Infinity);
+      });
+      expect(paths.at(-1)).toMatch(/^<path d="M0,0 H/);
+      expect(paths.at(-1)).not.toContain('A');
     } finally {
       await launched.app.close();
     }

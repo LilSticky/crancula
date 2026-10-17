@@ -105,6 +105,35 @@ describe('tapeGeometry', () => {
     expect(slots[0]?.y).toBeCloseTo(111.25);
   });
 
+  describe('cut order of the Slots (FR-012)', () => {
+    it('sorts the Slots by start although the Holes are stored by Pipe, then start', () => {
+      // Rows 1, 2, 3 are notes 60, 62, 64; stored by Pipe: row 1, row 2, row 3.
+      const holes = [hole(60, 8, 2), hole(62, 2, 2), hole(64, 5, 2)];
+
+      const {slots} = tapeGeometry(tapeWith(streetOrgan, holes), streetOrgan);
+
+      expect(slots.map((slot) => slot.start)).toEqual([2, 5, 8]);
+      expect(slots.map((slot) => slot.row)).toEqual([2, 3, 1]);
+    });
+
+    it('cuts row 1 first when two Holes start in the same Column', () => {
+      const reordered = validateOrgan({
+        name: 'Reordered',
+        tapeBed: streetOrgan.tapeBed,
+        minimumGap: streetOrgan.minimumGap,
+        leadIn: streetOrgan.leadIn,
+        pipes: [...streetOrgan.pipes].reverse().map((pipe) => ({note: pipe.note})),
+      });
+      if (!reordered.ok) throw new Error('invalid test Organ');
+      // Note 60 is row 31 and note 62 is row 30, so the stored order is the reverse of the row order.
+      const holes = [hole(60, 4, 2), hole(62, 4, 2)];
+
+      const {slots} = tapeGeometry(tapeWith(reordered.value, holes), reordered.value);
+
+      expect(slots.map((slot) => slot.row)).toEqual([30, 31]);
+    });
+  });
+
   describe('on the reference Organ (Lead-in 50, Minimum Gap 2, 100 mm wide, hole 3, 4 rows at 12 mm)', () => {
     function reference(leadIn: number, minimumGap: number, border0 = false): Organ {
       const result = validateOrgan({

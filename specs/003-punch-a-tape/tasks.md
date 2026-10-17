@@ -447,7 +447,7 @@ their start along the Tape, then the Tape Outline.
 
 ### Implementation for User Story 3
 
-- [ ] T041 [US3] Sort the Slots in cut order in `api/tape/tape-geometry.ts` until T038, T039 and
+- [x] T041 [US3] Sort the Slots in cut order in `api/tape/tape-geometry.ts` until T038, T039 and
   T040 are green; the Tape view iterates the same list and every view test stays green.
   Depends on T038–T040.
 

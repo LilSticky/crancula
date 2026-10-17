@@ -110,6 +110,43 @@ describe('plotterSvg', () => {
     expect(starts).toEqual(['51.5,10', '81.5,20', '66.5,5', '0,0']);
   });
 
+  it('cuts the Holes of a Tape by start from the Lead-in, row 1 first at the same start, then the Outline', () => {
+    const organ = validateOrgan({
+      name: 'Street organ',
+      tapeBed: {tapeWidth: 120, holeDiameter: 2.5, rowSpacing: 3.5},
+      minimumGap: 1.5,
+      leadIn: 20,
+      pipes: [{note: 60}, {note: 62}, {note: 64}],
+    });
+    if (!organ.ok) throw new Error('invalid test Organ');
+    const hole = (pipe: number, start: number): Hole => {
+      const note = midiNoteNumber(pipe);
+      if (note === undefined) throw new Error('not a note');
+      return {pipe: note, start: start as Column, length: 3 as ColumnCount};
+    };
+    // Stored by Pipe (row 1, 2, 3), then start.
+    const tape = asValidTape({
+      id: '00000000-0000-4000-8000-000000000003' as Tape['id'],
+      name: 'Rows',
+      organId: organ.value.id,
+      songId: undefined,
+      selectedParts: undefined,
+      transposition: 0 as Tape['transposition'],
+      columnLength: 2.5 as Millimetres,
+      length: 100 as ColumnCount,
+      holes: [hole(60, 10), hole(62, 0), hole(62, 10), hole(64, 5)],
+    });
+
+    const svg = plotterSvg(tapeGeometry(tape, organ.value));
+
+    // x = 20 + start × 2.5, + 1.25 radius; y = 6.25-ish border + (row − 1) × 3.5.
+    const starts = paths(svg).map((line) => /d="M([\d.]+),([\d.]+)/.exec(line)?.slice(1, 3).map(Number));
+    expect(starts.map((point) => point?.[0])).toEqual([21.25, 33.75, 46.25, 46.25, 0]);
+    const rowOneY = starts[2]?.[1] ?? 0;
+    const rowTwoY = starts[3]?.[1] ?? 0;
+    expect(rowOneY).toBeLessThan(rowTwoY);
+  });
+
   it('writes only the Outline for a Tape without Holes', () => {
     const svg = plotterSvg(geometryOf([]));
 
