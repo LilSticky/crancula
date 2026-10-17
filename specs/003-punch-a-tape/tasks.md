@@ -465,18 +465,18 @@ check that no text is shown untranslated.
 
 ### Tests for User Story 4 ⚠️ (write first, must fail)
 
-- [ ] T042 [P] [US4] Extend `src/app/features/tape/tape-i18n.spec.ts`: every `ExportProblemCode`
+- [x] T042 [P] [US4] Extend `src/app/features/tape/tape-i18n.spec.ts`: every `ExportProblemCode`
   has a key `TAPE.EXPORT.PROBLEM.<CODE>` ("the code upper-cased, `-` as `_`") in `en.json` and
   `de.json`; every `TAPE.EXPORT.*` key has a German text that differs from the English one;
   `TAPE.VIEW.EXPORT_LATER` exists in neither file.
-- [ ] T043 [P] [US4] Extend `e2e/tape-export.spec.ts` (or `e2e/tape-german.spec.ts`) (Story 4.1,
+- [x] T043 [P] [US4] Extend `e2e/tape-export.spec.ts` (or `e2e/tape-german.spec.ts`) (Story 4.1,
   SC-007): with the app set to German, the replaced save dialog receives the German title and
   filter name, the saved and the failed snackbars and the problems dialog are German, no visible
   text matches a `TAPE.` key pattern, and the suggested file name is still `<Tape name>.svg`.
 
 ### Implementation for User Story 4
 
-- [ ] T044 [US4] Fill every missing or untranslated `TAPE.EXPORT.*` text in
+- [x] T044 [US4] Fill every missing or untranslated `TAPE.EXPORT.*` text in
   `src/assets/i18n/de.json` (and `en.json`) until T042 and T043 are green.
 
 **Checkpoint**: all user stories green.
