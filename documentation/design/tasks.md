@@ -583,3 +583,187 @@ menu item), `tape`, `tape-name`, `tape-organ`, `tape-length-columns`, `tape-leng
    Organs by name; Tapes grouped by Organ (Organ name), then by Tape name (G1b, G3, G8).
 4. **Pipe range** shows lowest–highest only ("31 Pipes, F3–B5"), with the editor's subtitle logic
    and keys and no marker for skipped notes (G1).
+
+## #69 Tape import
+
+Guide sections "Screens → Bring a Song onto a Tape", "Principles" (4, one screen; 5, check before
+you cut), "Layout and navigation" (page head, action bar, 1024×700), "Component usage"
+(`mat-chip` for the file, `mat-checkbox` with Note count, Transposition as −/+ around the value,
+`mat-card appearance="outlined"` sheets, one filled primary), "States" (Empty, Error) and
+"Accessibility commitments"; reference mockup `variants/a-workshop/mockup.html` (screen
+`tape-import`: Song sheet with the file, Organ, Parts, Transposition stepper with the proposal
+sentence, name and Column length; a Fit sheet beside it; Create Tape in the action bar; where it
+differs, the guide wins). Fixes ux-review finding 7 (after #66; finding 9 after #62): the chosen
+file is not shown as a file (the Song name beside the button reads like one), "Use proposal" is
+unexplained, the Fit is a plain bullet list without a warning, the Parts fieldset touches the next
+field. Uses the shared `cranc-page-head`, `cranc-action-bar`, `formatNumber`, `crancDecimalInput`,
+`LanguagePreference` and `pipeRange` (G1). No new domain rule and no new term: the page shows only
+what the domain already computes (`fitOf`, `proposeTransposition`, `allowedTranspositions`,
+`createTapeFromDraft`, `tapeLengthInMillimetres`), plus the Notes behind two Fit counts, taken out
+of `createTape`'s own loop (I8a; Decided 2). The guide's live Tape preview is a separate issue,
+[#84](https://github.com/LilSticky/crancula/issues/84) (Decided 1).
+
+Design choices made here (not domain):
+- **Two sheets:** left the Song sheet (outlined `mat-card`) with the group titles Song, Organ,
+  Parts, Transposition, then name and Column length side by side (~170 px for the Column length);
+  right the Fit sheet. Groups are 20 px apart, so none touches the next. Below 1180 px the sheets
+  stay side by side (two columns of ~430 px at 1024 px).
+- **File as a chip:** before a file is chosen the Song group holds only the tonal button "Choose a
+  MIDI file". Afterwards a `mat-chip` (icon `music_note`) shows the file name as chosen
+  ("three-parts.mid", not the Song name, which can come from the first track), the facts "3 Parts,
+  116 Notes" beside it, and the button becomes the text button "Choose another file" (same test id
+  `choose-song`). A rejected file shows the rejection (oxblood, `error` icon, a plain sentence)
+  and no chip; the previous Song and its chip go, as the Song does today.
+- **Organ:** the native select stays (its options stay the Organ names; e2e selects by them);
+  under it a `mat-hint` with the chosen Organ's range, "31 Pipes, F3–B5" (G1's keys).
+- **Parts** as a ruled list, not a fieldset: one 40 px row per Part, checkbox with the name, the
+  Note count right-aligned with `tabular-nums` ("24 Notes", "1 Note"); a percussion Part has a
+  second line in Ink 2, "Percussion: no Pipe plays it" (mockup wording). Over 6 Parts the list
+  scrolls inside the sheet (max height 6 rows), so 16 Parts never push the page.
+- **Transposition stepper:** the number field (`transposition`) between a `mat-icon-button` "One
+  semitone down" (`remove`) and "One semitone up" (`add`), both with `aria-label` and
+  `matTooltip`, each disabled at its bound of `allowedTranspositions`; suffix "semitones".
+- **Proposal explained** (`data-testid="proposal"`, beside the stepper, Ink 2): while the chosen
+  Transposition is the proposal, "This is the proposal: it puts the most Notes directly on a
+  Pipe." (the rule of `proposeTransposition`) and no button; otherwise "The proposal is +5
+  semitones: it puts the most Notes directly on a Pipe." and the outlined button "Use proposal"
+  (`use-proposal`). Signed numbers: "+5", "−3", "0".
+- **Column length** uses `crancDecimalInput` with the suffix "mm" (label "Column length", no
+  "(mm)"): "2,5" in German.
+- **Fit sheet** (`data-testid="fit"`, keeps `data-matching-a-pipe`, `data-moved-by-octaves`,
+  `data-unplayable`): sheet title "Fit of the selected Parts"; three ruled rows of icon, label and
+  a bold right-aligned count: `check_circle` Notes matching a Pipe, `swap_vert` Notes moved by
+  octaves, `block` Unplayable Notes. Before Song and Organ are chosen, or while the Transposition
+  is not a valid one, the sheet holds one sentence instead: "Choose a MIDI file and an Organ to see
+  how the Song fits its Pipes." The sheet has `aria-live="polite"`.
+- **Expandable counts:** the rows Notes moved by octaves and Unplayable Notes are disclosures
+  while their count is above 0: the whole row is a `button` with `aria-expanded` and
+  `aria-controls`, an `expand_more` / `expand_less` icon, Enter and Space toggle it; expanded, a
+  list of its Notes follows the row, each "F#6 (Part Lead, Column 65)" or "G2 moved by 1 octaves to
+  Pipe G3 (Part Bass, Column 9)", in the Import Summary's wording and keys (`MOVED_NOTE`,
+  `UNPLAYABLE_NOTE`, moved to a shared key if both use them), Columns from 1, ordered by Column,
+  then Part. A count of 0 is plain text, not a button; Notes matching a Pipe does not expand. Both
+  start collapsed; a long list scrolls inside the Fit sheet (max height ~8 rows), never the page.
+- **Warning** when Unplayable Notes > 0 (`data-testid="fit-warning"`): the Unplayable row turns
+  oxblood with the `warning` icon, and under the rows: "3 Unplayable Notes: no Pipe plays them, not
+  even moved by octaves, so they are left off the Tape. Another Transposition may fit better."
+  (singular for one). Oxblood because it asks for care; it does not block Create Tape (today's
+  behaviour stays). No warning for Notes moved by octaves.
+- **Action bar** (`cranc-action-bar`, label "Create the Tape"): Create Tape (filled,
+  `create-tape`), the only primary, on the right; on the left the state, so the button is never
+  silently disabled: "Choose a MIDI file", "Choose an Organ", "Select at least one Part", "1
+  problem prevents creating the Tape" / "2 problems …" (the messages stay at their fields), the
+  load problem sentence, or when ready "192 Columns, 480 mm of Tape" (from `createTapeFromDraft`
+  and `tapeLengthInMillimetres`, decimals per language). No Cancel: the mockup's Cancel is left
+  out, the rail leads away and the import has no unsaved state to protect.
+- **Page head subtitle:** "Choose a MIDI file, the Organ and the Parts. The Fit shows how the Song
+  meets the Pipes before the Tape is created."
+- **No Organ:** the hint becomes an empty state like #66's (paper sheet, icon, sentence, the
+  filled "Describe an Organ" link), keeping `no-organ-hint`.
+
+Keep the test ids e2e and specs use: `import-form`, `organ`, `song-file`, `choose-song`,
+`song-rejection` (with `data-code`), `parts`, `part` (with `data-index`), `part-name`,
+`part-note-count` (the number only), `name`, `column-length`, `transposition`, `use-proposal`,
+`fit`, `tape-load-problem`, `create-tape`, `no-organ-hint`, `violation`; `song-name` goes (the chip
+is `song-file-name`). Every task that adds or changes UI text adds the keys to `en.json` and
+`de.json`.
+
+- [x] **I1** Two sheets and spacing, component. Spec: the form holds a Song sheet and a Fit sheet
+  (`data-testid="song-sheet"`, `fit-sheet`, both outlined `mat-card`); the Song sheet has the group
+  titles Song, Organ, Parts, Transposition in this order; the page head has the subtitle. Then the
+  template and the minimal SCSS (two-column grid, 20 px gaps, group margins).
+- [x] **I2** File chip, component. Spec: before a file, only `choose-song` "Choose a MIDI file"
+  and no `song-file-name`; after `three-parts.mid` the chip `song-file-name` shows that file name
+  (also when the Song is named after its first track), `song-facts` "3 Parts, 11 Notes" (singular
+  "1 Part, 1 Note"), and `choose-song` reads "Choose another file"; a rejected file shows
+  `song-rejection` with an icon and no chip; `song-name` is gone. Then a `fileName` signal set in
+  `readSong`, the chip and the keys.
+- [x] **I3** Organ range hint, component. Spec: with the Street organ chosen, `organ-range` under
+  the select reads "31 Pipes, F3–B5"; none while no Organ is chosen. Then the hint with
+  `pipeRange`.
+- [x] **I4** Parts list, component. Rewrite "shows each Part with its name and its number of
+  Notes": rows in a list (no `fieldset`), `part-note-count` still the number, followed by "Notes" /
+  "Note"; the percussion Part has `part-percussion` "Percussion: no Pipe plays it", the others
+  none. Then the template and keys.
+- [x] **I5** Transposition stepper, component. Spec: "One semitone up" raises the Transposition by
+  1 and the Fit follows; "One semitone down" lowers it; both have `aria-label` and tooltip; at the
+  highest allowed Transposition (highest selected Note G9) "up" is disabled, at the lowest "down"
+  is. Then the buttons (they update the draft as `useProposal` does).
+- [x] **I6** Proposal sentence, component. Spec: with the proposal chosen, `proposal` reads "This
+  is the proposal: it puts the most Notes directly on a Pipe." and there is no `use-proposal`;
+  after "up" it reads "The proposal is +12 semitones: …" (signed; "−3" and "0" in two more cases)
+  and `use-proposal` restores it (keep "restores the proposal with "use proposal""); German texts.
+  Then the sentence and the keys (`TAPE.TRANSPOSITION.*`).
+- [x] **I7** Column length in mm, component. Spec: the Column length field is a
+  `crancDecimalInput` with the suffix "mm" and the label "Column length"; in German it shows "2,5"
+  and accepts "3,5"; the "not positive" rule spec still passes. Then the field.
+- [x] **I8** Fit sheet, component. Rewrite the Fit specs to read the rows `fit-matching`,
+  `fit-moved`, `fit-unplayable`, each with its label, icon and count (`fit-count`); the data
+  attributes stay; before a Song is chosen the sheet shows `fit-empty` "Choose a MIDI file and an
+  Organ to see how the Song fits its Pipes."; the sheet has `aria-live="polite"`. Then the sheet
+  and the keys (`TAPE.FIT.*` without `{{count}}` in the labels).
+- [x] **I8a** Fit Notes, domain unit. A pure `fitNotesOf(song, selectedParts, organ,
+  transposition)` in `api/tape/fit.ts`, exported via `@api/index`: the `NoteMovedByOctaves[]` and
+  `UnplayableNote[]` (the Import Summary's types) for the selected Parts. Spec first in
+  `fit.spec.ts`: a Note moved up an octave gives its Part, transposed note number, Pipe, octaves 1
+  and Column; an unplayable Note gives Part, note number and Column; the Columns are those after
+  Quantisation, counted from the first selected Note's Column, as `createTape` gives them (a Column
+  is a 1/32 note, so the Column length does not change them; it only matters for the Hole fixes,
+  which are not part of the Fit); unselected Parts give nothing; for every Song in the spec the
+  list lengths equal `fitOf`'s `movedByOctaves` and `unplayable`, and equal `createTape`'s
+  `importSummary.movedByOctaves` and `unplayableNotes`. Then one shared walk over the selected
+  Notes (`octaveMoveTable`, `quantiseNote`, `columnOfTick`) that `createTape` and `fitNotesOf` both
+  use, so the rule lives once; `createTape`'s specs stay green unchanged. `fitOf` may count from it
+  if that stays as fast (the Fit follows every stepper click).
+- [x] **I8b** Expandable Fit counts, component. Spec: with 2 Notes moved by octaves and 1
+  Unplayable Note, `fit-moved` and `fit-unplayable` are buttons with `aria-expanded="false"` and
+  `aria-controls` naming their list; a click (and Enter, and Space, on the focused button) shows
+  `fit-notes` with one `fit-note` per Note in the Import Summary's wording ("F#6 (Part Lead,
+  Column 65)", Columns from 1, the Part's name or "Part 2"), ordered by Column, then Part, and sets
+  `aria-expanded="true"`; a second press collapses it; a count of 0 and Notes matching a Pipe are
+  not buttons; German texts; after a stepper click the open list shows the Notes of the new
+  Transposition. Then a `fitNotes` computed from I8a, the disclosure and the shared keys.
+- [x] **I9** Unplayable warning, component. Spec: with a Song whose Note no Pipe plays, not even
+  moved by octaves, at the chosen Transposition, `fit-warning` reads "1 Unplayable Note: …"
+  (plural for 3), `fit-unplayable` has the warning class and icon, and Create Tape stays enabled;
+  with 0 Unplayable Notes there is no `fit-warning`, also when Notes were moved by octaves. Then
+  the warning and keys.
+- [x] **I10** Action bar, component. Spec: Create Tape is inside `cranc-action-bar`; its
+  `action-bar-state` reads "Choose a MIDI file" without a Song, "Choose an Organ" between several
+  Organs, "Select at least one Part" with none selected, "1 problem prevents creating the Tape"
+  with an empty touched name, the load problem sentence while the Tape library could not be read,
+  and when ready "N Columns, L mm of Tape" for the melody (`formatNumber`, German decimal comma).
+  The existing Create specs keep passing. Then a `readiness` computed and the template.
+- [x] **I11** No-Organ empty state, component. Rewrite "shows a hint with a link to the new Organ
+  page and no form": `no-organ-hint` is a paper sheet with an icon, the sentence and the filled
+  "Describe an Organ" link to `/organs/new`. Then the template.
+- [x] **I12** e2e, existing tests. Update `tape-import.spec.ts`, `tape-german.spec.ts`,
+  `tape-restart.spec.ts`, `lists.spec.ts`, `e2e/support/tape-creation.ts` and
+  `e2e/ux/screens.capture.ts` where they read `song-name`, the Fit texts, the Column length (now a
+  decimal text input) or rely on Create Tape's place. Run them.
+- [x] **I13** e2e, one screen in Electron. New `tape-import-layout.spec.ts`: at exactly 1024×700
+  (`resizeWindowOrSkip`), in English and in German, with `threePartsWithPercussion` and then
+  `longSongWithSixteenParts`: the document does not scroll (`scrollHeight <= innerHeight`, no
+  horizontal scroll), both sheets and the action bar with Create Tape are in view, the 16 Parts
+  scroll inside their list, the chip shows the file name, and no group's box overlaps the next
+  (Parts and Transposition at least 16 px apart); with the Unplayable Notes of
+  `longSongWithSixteenParts` expanded (a Transposition away from the proposal, or a Song helper in
+  `e2e/support/midi-file.ts` with Notes no Pipe plays), the list scrolls inside the Fit sheet and
+  the document still does not scroll. At 1280×800 the same, and 3 Parts need no inner scroll.
+  Needs real layout.
+- [x] **I14** Full `npm run e2e`, `npm run test`, `npm run lint`, `npm run i18n:check`. Then
+  `npm run ux:screens` (07 with the chip, the proposal sentence and the Fit sheet; a new 07b with
+  the Unplayable warning and its Notes expanded after a Transposition away from the proposal; 07c in German at
+  1024×700), `ux-review`; score into STATUS.
+
+### Decided (2026-10-17)
+
+1. **Live Tape preview** (the guide's "a live Tape preview", the mockup's first 72 Columns under
+   the Fit) is a separate issue, [#84](https://github.com/LilSticky/crancula/issues/84); not in
+   #69.
+2. **Expandable Fit counts:** Notes moved by octaves and Unplayable Notes each expand to their
+   Notes (Part, note name, Column) before Create. A pure domain function next to `fitOf` returns
+   them, with the Columns `createTape` would give, from the same quantisation and octave-move
+   logic, not a copy of it (I8a); the page shows them as keyboard-accessible disclosures (I8b).
+3. **Wording:** "it puts the most Notes directly on a Pipe" for the proposal and "left off the
+   Tape" for Unplayable Notes, as proposed. No new dictionary term for the proposed Transposition.

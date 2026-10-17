@@ -1,4 +1,5 @@
 import {ChangeDetectionStrategy, Component, input, output} from '@angular/core';
+import {MatIconButton} from '@angular/material/button';
 import {MatIcon} from '@angular/material/icon';
 import {TranslatePipe} from '@ngx-translate/core';
 import {type ImportSummary, noteName} from '@api/index';
@@ -7,7 +8,7 @@ import {type ImportSummary, noteName} from '@api/index';
 @Component({
   selector: 'cranc-import-summary',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslatePipe, MatIcon],
+  imports: [TranslatePipe, MatIcon, MatIconButton],
   templateUrl: './import-summary.component.html',
   styles: `
     header {
@@ -15,7 +16,7 @@ import {type ImportSummary, noteName} from '@api/index';
       align-items: center;
       justify-content: space-between;
     }
-    h3,
+    h2,
     dl,
     dd,
     ul {

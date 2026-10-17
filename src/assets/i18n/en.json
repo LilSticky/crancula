@@ -69,12 +69,32 @@
       "CHOOSE_ORGAN": "Choose an Organ",
       "CHOOSE_SONG": "Choose a MIDI file",
       "NAME": "Name of the Tape",
-      "COLUMN_LENGTH": "Column length (mm)",
-      "TRANSPOSITION": "Transposition (semitones)",
-      "CREATE": "Create Tape"
+      "COLUMN_LENGTH": "Column length",
+      "TRANSPOSITION": "Semitones",
+      "CREATE": "Create Tape",
+      "SUBTITLE": "Choose a MIDI file, the Organ and the Parts. The Fit shows how the Song meets the Pipes before the Tape is created.",
+      "GROUP_SONG": "Song",
+      "GROUP_ORGAN": "Organ",
+      "GROUP_TRANSPOSITION": "Transposition",
+      "CHOOSE_OTHER_SONG": "Choose another file",
+      "PARTS_COUNT": "{{count}} Parts",
+      "PARTS_COUNT_ONE": "1 Part",
+      "NOTES_COUNT": "{{count}} Notes",
+      "NOTES_COUNT_ONE": "1 Note",
+      "ACTION_BAR": "Create the Tape",
+      "STATE_NO_PART": "Select at least one Part",
+      "STATE_PROBLEMS": "{{count}} problems prevent creating the Tape",
+      "STATE_PROBLEM_ONE": "1 problem prevents creating the Tape",
+      "STATE_READY": "{{columns}} Columns, {{length}} mm of Tape",
+      "STATE_READY_ONE": "1 Column, {{length}} mm of Tape"
     },
     "TRANSPOSITION": {
-      "USE_PROPOSAL": "Use proposal"
+      "USE_PROPOSAL": "Use proposal",
+      "UP": "One semitone up",
+      "DOWN": "One semitone down",
+      "PROPOSAL_CHOSEN": "This is the proposal: it puts the most Notes directly on a Pipe.",
+      "PROPOSAL": "The proposal is {{semitones}} semitones: it puts the most Notes directly on a Pipe.",
+      "PROPOSAL_ONE": "The proposal is {{semitones}} semitone: it puts the most Notes directly on a Pipe."
     },
     "SONG_REJECTION": {
       "NOT_A_MIDI_FILE": "This file is not a MIDI file, or it is damaged or larger than 16 MiB.",
@@ -85,13 +105,18 @@
     "PARTS": {
       "TITLE": "Parts",
       "UNNAMED": "Part {{number}}",
-      "NOTES": "Notes"
+      "NOTES": "Notes",
+      "NOTE": "Note",
+      "PERCUSSION": "Percussion: no Pipe plays it"
     },
     "FIT": {
       "TITLE": "Fit of the selected Parts",
-      "MATCHING_A_PIPE": "Notes matching a Pipe: {{count}}",
-      "MOVED_BY_OCTAVES": "Notes moved by octaves: {{count}}",
-      "UNPLAYABLE": "Unplayable Notes: {{count}}"
+      "MATCHING_A_PIPE": "Notes matching a Pipe",
+      "MOVED_BY_OCTAVES": "Notes moved by octaves",
+      "UNPLAYABLE": "Unplayable Notes",
+      "EMPTY": "Choose a MIDI file and an Organ to see how the Song fits its Pipes.",
+      "UNPLAYABLE_WARNING": "{{count}} Unplayable Notes: no Pipe plays them, not even moved by octaves, so they are left off the Tape. Another Transposition may fit better.",
+      "UNPLAYABLE_WARNING_ONE": "1 Unplayable Note: no Pipe plays it, not even moved by octaves, so it is left off the Tape. Another Transposition may fit better."
     },
     "VIOLATION": {
       "NAME_REQUIRED": "Please enter a name.",
@@ -103,6 +128,7 @@
     "SUMMARY": {
       "TITLE": "Import Summary",
       "DISMISS": "Dismiss",
+      "NONE": "None",
       "TRANSPOSITION_TERM": "Transposition",
       "TRANSPOSITION": "{{semitones}} semitones",
       "MOVED_BY_OCTAVES": "Notes moved by octaves",
@@ -115,7 +141,8 @@
         "LENGTHENED": "Hole on Pipe {{pipe}} at Column {{column}} lengthened from {{from}} to {{to}} Columns",
         "SHORTENED": "Hole on Pipe {{pipe}} at Column {{column}} shortened from {{from}} to {{to}} Columns",
         "REPETITION_MERGED": "Repeated Holes on Pipe {{pipe}} at Column {{column}} merged, Column {{lost}} lost"
-      }
+      },
+      "MOVED_NOTE_ONE": "{{note}} moved by 1 octave to Pipe {{pipe}} (Part {{part}}, Column {{column}})"
     },
     "SECTION": {
       "TITLE": "Tape",

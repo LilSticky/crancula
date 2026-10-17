@@ -92,7 +92,7 @@ Gate: lint, i18n (197 keys), 495 node and 585 Angular tests, 56 e2e green locall
 21 layout e2e tests skip because the runner's screen is too small; they run on Windows and Linux.
 Follow-up: [#80](https://github.com/LilSticky/crancula/issues/80) splits the Tape view.
 
-**Done (pull request pending):** #66 Organ and Tape lists (2026-10-16). Ledgers (mat-table with column
+**Done:** #66 Organ and Tape lists (2026-10-16, PR #83 merged 2026-10-17). Ledgers (mat-table with column
 headers) sorted by name per language. Organ rows show the Pipe range, Tape Bed facts, a Tape Bed
 miniature and a Tapes link that filters the Tape list; row menus with Delete. The Tape list is grouped
 by Organ with an Organ filter chip. Empty states lead to the next step (describe an Organ first; bring a
@@ -100,12 +100,24 @@ Song onto a Tape); next-step strip. User decisions 2026-10-16: no created date, 
 lowest–highest only, Rename a Tape split to [#82](https://github.com/LilSticky/crancula/issues/82).
 ux-review 38/50. Gate: lint, i18n (213 keys), 495 node and 640 Angular tests, 60 e2e green locally.
 
-**Next concrete step:** #69 Tape import (last sub-issue of
-[#59](https://github.com/LilSticky/crancula/issues/59)). Then
-`/speckit-specify` for "Punch a tape" ([#3](https://github.com/LilSticky/crancula/issues/3)).
-Follow-ups: [#76](https://github.com/LilSticky/crancula/issues/76) and
+**Done (pull request pending):** #69 Tape import (2026-10-17). Import screen in two sheets: Song with a
+file chip; Organ with the Pipe range, Parts list, Transposition stepper with the proposal explained; Fit
+as a result card. Each Fit count expands to its Notes before Create, via a new domain function
+`fitNotesOf` that `createTape` shares. Warning when Unplayable Notes are above 0 (Create stays possible).
+Column length in mm in the language's notation. The action bar says why Create is disabled. Empty state
+without an Organ. Fits one screen at 1024×700; long Parts and Note lists scroll inside. Import Summary
+shows "None" for empty items. User decisions 2026-10-17: live Tape preview split to
+[#84](https://github.com/LilSticky/crancula/issues/84); Note lists expandable; German percussion is
+Schlagwerk (dictionary). ux-review 39/50. Gate: lint, i18n (242 keys), 512 node and 696 Angular tests,
+76 e2e green locally. With #69, all sub-issues of [#59](https://github.com/LilSticky/crancula/issues/59)
+(apply the design guide) are done; #59 closes with this pull request.
+
+**Next concrete step:** `/speckit-specify` for "Punch a tape"
+([#3](https://github.com/LilSticky/crancula/issues/3)). Follow-ups:
+[#76](https://github.com/LilSticky/crancula/issues/76) and
 [#80](https://github.com/LilSticky/crancula/issues/80) (component splits),
-[#82](https://github.com/LilSticky/crancula/issues/82) (Rename a Tape).
+[#82](https://github.com/LilSticky/crancula/issues/82) (Rename a Tape),
+[#84](https://github.com/LilSticky/crancula/issues/84) (live Tape preview).
 Open issues carry `priority:` and `size:` labels; triage sets them.
 
 ## Known broken / WIP

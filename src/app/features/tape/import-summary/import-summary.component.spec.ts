@@ -91,6 +91,67 @@ describe('ImportSummaryComponent', () => {
     expect(dismissed).toBe(1);
   });
 
+  it('titles itself with an h2 without class, like the Tape and Selected Hole section headings', async () => {
+    const {element} = await render(SUMMARY);
+
+    const heading = element.querySelector('h1, h2, h3, h4');
+    expect(heading?.tagName).toBe('H2');
+    expect(heading?.className).toBe('');
+  });
+
+  it('dismisses with a Material icon button showing the close icon', async () => {
+    const {element} = await render(SUMMARY);
+
+    const close = element.querySelector<HTMLButtonElement>('button[aria-label="Dismiss"]');
+    expect(close?.classList.contains('mat-mdc-icon-button')).toBe(true);
+    expect(close?.textContent?.trim()).toBe('close');
+  });
+
+  it('names the Dismiss button Schließen in German', async () => {
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({providers: [provideTestTranslations('de')]});
+    const fixture = TestBed.createComponent(ImportSummaryComponent);
+    fixture.componentRef.setInput('importSummary', SUMMARY);
+    fixture.autoDetectChanges();
+    await fixture.whenStable();
+
+    const element = fixture.nativeElement as HTMLElement;
+    expect(element.querySelector('button[aria-label="Schließen"]')).not.toBeNull();
+  });
+
+  it('shows None for each empty list so no item reads as missing data', async () => {
+    const {one} = await render({...SUMMARY, movedByOctaves: [], unplayableNotes: [], holesFixed: []});
+
+    expect(one('moved-value')?.textContent?.trim()).toBe('None');
+    expect(one('unplayable-value')?.textContent?.trim()).toBe('None');
+    expect(one('holes-fixed-value')?.textContent?.trim()).toBe('None');
+  });
+
+  it('shows Keine for each empty list in German', async () => {
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({providers: [provideTestTranslations('de')]});
+    const fixture = TestBed.createComponent(ImportSummaryComponent);
+    fixture.componentRef.setInput('importSummary', {...SUMMARY, movedByOctaves: [], unplayableNotes: [], holesFixed: []});
+    fixture.autoDetectChanges();
+    await fixture.whenStable();
+
+    const element = fixture.nativeElement as HTMLElement;
+    const values = ['moved-value', 'unplayable-value', 'holes-fixed-value'].map(
+      (id) => element.querySelector(`[data-testid="${id}"]`)?.textContent?.trim(),
+    );
+    expect(values).toEqual(['Keine', 'Keine', 'Keine']);
+  });
+
+  it('shows the count followed by the list for non-empty lists', async () => {
+    const {one} = await render(SUMMARY);
+
+    expect(one('moved-value')?.textContent?.trim()).toMatch(/^1\b/);
+    expect(one('moved-value')?.querySelectorAll('[data-testid="moved-note"]').length).toBe(1);
+    expect(one('unplayable-value')?.textContent?.trim()).toMatch(/^1\b/);
+    expect(one('holes-fixed-value')?.textContent?.trim()).toMatch(/^4\b/);
+    expect(one('holes-fixed-value')?.querySelectorAll('[data-testid="hole-fixed"]').length).toBe(4);
+  });
+
   it('shows every Note moved by octaves with note name, octaves, Part, Pipe and Column plus one', async () => {
     const {all} = await render(SUMMARY);
 
