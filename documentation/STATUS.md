@@ -100,7 +100,7 @@ Song onto a Tape); next-step strip. User decisions 2026-10-16: no created date, 
 lowest–highest only, Rename a Tape split to [#82](https://github.com/LilSticky/crancula/issues/82).
 ux-review 38/50. Gate: lint, i18n (213 keys), 495 node and 640 Angular tests, 60 e2e green locally.
 
-**Done (pull request pending):** #69 Tape import (2026-10-17). Import screen in two sheets: Song with a
+**Done:** #69 Tape import (2026-10-17, PR #86 merged 2026-10-17). Import screen in two sheets: Song with a
 file chip; Organ with the Pipe range, Parts list, Transposition stepper with the proposal explained; Fit
 as a result card. Each Fit count expands to its Notes before Create, via a new domain function
 `fitNotesOf` that `createTape` shares. Warning when Unplayable Notes are above 0 (Create stays possible).
@@ -112,14 +112,14 @@ Schlagwerk (dictionary). ux-review 39/50. Gate: lint, i18n (242 keys), 512 node 
 76 e2e green locally. With #69, all sub-issues of [#59](https://github.com/LilSticky/crancula/issues/59)
 (apply the design guide) are done; #59 closes with this pull request.
 
-**Done (pull request pending):** Punch a tape ([#3](https://github.com/LilSticky/crancula/issues/3), 2026-10-17).
+**Done:** Punch a tape ([#3](https://github.com/LilSticky/crancula/issues/3), PR #87 merged 2026-10-17).
 Export for the Plotter saves the Tape as one 1:1 SVG: Holes as Slots in cut order by start from the
 Lead-in, row 1 first, then the Tape Outline with the Lead-in's diagonal and the end cut one Minimum Gap
 after the last Column. A Tape that can't be cut opens a dialog naming every problem Hole (no Pipe, too
 short, too close); nothing is written. Selected Hole warnings follow the same Column rules. Below 1180 px
 Export is an icon button. German texts. ux-review 40/50 (see [design/screens/current/ux-review.md](design/screens/current/ux-review.md)).
 Gate: lint, i18n (251 keys), 640 node and 746 Angular tests, 84 e2e green locally. Tasks in
-[tasks](../specs/003-punch-a-tape/tasks.md). **Next step:** open the pull request for #3 and merge it.
+[tasks](../specs/003-punch-a-tape/tasks.md). **Next step:** all v0.1 slices are done; triage open issues and decide on the v0.1 release or the next slice (user decision).
 
 Follow-ups:
 [#76](https://github.com/LilSticky/crancula/issues/76), [#80](https://github.com/LilSticky/crancula/issues/80) and
