@@ -75,7 +75,7 @@ describe('tapeGeometry', () => {
     const [slot] = slots;
     expect(slot?.row).toBe(25);
     expect(slot?.start).toBe(64);
-    expect(slot?.x).toBeCloseTo(160);
+    expect(slot?.x).toBeCloseTo(180);
     expect(slot?.width).toBeCloseTo(37.5);
     expect(slot?.y).toBeCloseTo(90.25);
     expect(slot?.height).toBeCloseTo(2.5);
@@ -103,5 +103,93 @@ describe('tapeGeometry', () => {
 
     expect(slots[0]?.row).toBe(31);
     expect(slots[0]?.y).toBeCloseTo(111.25);
+  });
+
+  describe('on the reference Organ (Lead-in 50, Minimum Gap 2, 100 mm wide, hole 3, 4 rows at 12 mm)', () => {
+    function reference(leadIn: number, minimumGap: number, border0 = false): Organ {
+      const result = validateOrgan({
+        name: 'Reference',
+        tapeBed: border0
+          ? {tapeWidth: 100, holeDiameter: 3, rowSpacing: 97 / 3}
+          : {tapeWidth: 100, holeDiameter: 3, rowSpacing: 12},
+        minimumGap,
+        leadIn,
+        pipes: Array.from({length: 4}, (_, row) => ({note: 60 + 2 * row})),
+      });
+      if (!result.ok) throw new Error(`invalid test Organ: ${JSON.stringify(result.error)}`);
+      return result.value;
+    }
+
+    function tape(organ: Organ, holes: readonly Hole[], length: number): Tape {
+      return {...tapeWith(organ, holes), columnLength: 3 as Millimetres, length: length as ColumnCount};
+    }
+
+    it('puts the first Hole of row 1 at the Lead-in, measured from the tip', () => {
+      const organ = reference(50, 2);
+      const [slot] = tapeGeometry(tape(organ, [hole(60, 0, 4)], 200), organ).slots;
+
+      expect(slot?.x).toBeCloseTo(50);
+      expect(slot?.width).toBeCloseTo(12);
+      expect(slot?.y).toBeCloseTo(30.5);
+      expect((slot?.y ?? 0) + (slot?.radius ?? 0)).toBeCloseTo(32);
+    });
+
+    it('measures the document: Lead-in, Columns and one Minimum Gap', () => {
+      const organ = reference(50, 2);
+      const geometry = tapeGeometry(tape(organ, [], 200), organ);
+
+      expect(geometry.length).toBe(600);
+      expect(geometry.endGap).toBe(2);
+      expect(geometry.totalLength).toBe(652);
+      expect(geometry.width).toBe(100);
+    });
+
+    it('starts Column 1 at x = 0 without a Lead-in', () => {
+      const organ = reference(0, 2);
+      const [slot] = tapeGeometry(tape(organ, [hole(60, 5, 4)], 200), organ).slots;
+
+      expect(slot?.x).toBeCloseTo(15);
+    });
+
+    it('lets empty Columns at the end count in the length', () => {
+      const organ = reference(50, 2);
+
+      expect(tapeGeometry(tape(organ, [hole(60, 0, 4)], 200), organ).length).toBe(600);
+    });
+
+    it('puts Slots on the long edges when the Border is 0', () => {
+      const organ = reference(50, 2, true);
+      const geometry = tapeGeometry(tape(organ, [hole(60, 0, 4), hole(66, 0, 4)], 200), organ);
+
+      expect(geometry.border).toBeCloseTo(0);
+      expect(geometry.slots[0]?.y).toBeCloseTo(0);
+    });
+
+    describe('outline', () => {
+      it('cuts from the tip on the top edge, to the end cut, and back along the Lead-in diagonal', () => {
+        const organ = reference(50, 2);
+        const {outline} = tapeGeometry(tape(organ, [], 200), organ);
+
+        expect(outline.tip).toEqual({x: 0, y: 0});
+        expect(outline.topEnd).toEqual({x: 652, y: 0});
+        expect(outline.bottomEnd).toEqual({x: 652, y: 100});
+        expect(outline.columnOneBottom).toEqual({x: 50, y: 100});
+      });
+
+      it('cuts square at Column 1 without a Lead-in', () => {
+        const organ = reference(0, 2);
+        const {outline} = tapeGeometry(tape(organ, [], 200), organ);
+
+        expect(outline.columnOneBottom).toEqual({x: 0, y: 100});
+      });
+
+      it('is the same for a Tape with and without Holes', () => {
+        const organ = reference(50, 2);
+
+        expect(tapeGeometry(tape(organ, [hole(60, 0, 4)], 200), organ).outline).toEqual(
+          tapeGeometry(tape(organ, [], 200), organ).outline,
+        );
+      });
+    });
   });
 });

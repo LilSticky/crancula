@@ -197,7 +197,7 @@ export class TapeViewComponent {
       bodyWidth: geometry.length * scale,
       holesPath: geometry.slots
         .map((slot) => {
-          const x = leadIn + slot.x * scale;
+          const x = slot.x * scale;
           return `M${x},${slot.y * scale}h${slot.width * scale}v${slot.height * scale}h${-slot.width * scale}z`;
         })
         .join(''),
@@ -252,7 +252,7 @@ export class TapeViewComponent {
           row: slot.row - 1,
           selected: slot.row === this.selectedHole()?.row && slot.start === this.selectedHole()?.start,
           start: slot.start,
-          x: leadIn + slot.x * scale,
+          x: slot.x * scale,
           y: slot.y * scale,
           width: slot.width * scale,
           height: slot.height * scale,
@@ -391,7 +391,7 @@ export class TapeViewComponent {
       const rendered = this.drawing()?.holes.some((hole) => hole.row === slot.row - 1 && hole.start === slot.start);
       if (rendered) return; // Its rect is drawn on the next render.
       this.scrollToSelection = false;
-      element.scrollLeft = (geometry.leadIn + slot.x) * this.scale();
+      element.scrollLeft = slot.x * this.scale();
     });
     effect(() => {
       if (this.library.loaded() && this.drawing() === undefined) void this.router.navigateByUrl('/tapes');

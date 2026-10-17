@@ -937,7 +937,7 @@ describe('TapeViewComponent', () => {
       const rects = holeRects(view());
       expect(rects).toHaveLength(slots.length);
       slots.forEach((slot, index) => {
-        expect(numberAttribute(rects[index], 'x')).toBeCloseTo((30 + slot.x) * SCALE, 1);
+        expect(numberAttribute(rects[index], 'x')).toBeCloseTo(slot.x * SCALE, 1);
       });
       const marks = all(view(), 'svg [data-testid="column-mark"]').map((mark) => numberAttribute(mark, 'x1'));
       expect(marks.length).toBeGreaterThan(0);

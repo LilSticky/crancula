@@ -9,7 +9,10 @@ const geometry: TapeGeometry = {
   width: 40,
   border: 5,
   rowCentres: [10, 20, 30],
+  endGap: 2,
+  totalLength: 272,
   slots: [],
+  outline: {tip: {x: 0, y: 0}, topEnd: {x: 272, y: 0}, bottomEnd: {x: 272, y: 40}, columnOneBottom: {x: 20, y: 40}},
 };
 const SCALE = 2;
 

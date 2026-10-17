@@ -88,7 +88,7 @@ hole limits shared by `createTape` and the export check (research R4). Every sto
 
 ### Tip frame and end gap
 
-- [ ] T003 Write the failing tests in `api/tape/tape-geometry.spec.ts` for the tip frame and the
+- [x] T003 Write the failing tests in `api/tape/tape-geometry.spec.ts` for the tip frame and the
   end gap (data-model.md "TapeGeometry", "Slot"):
   - `leadIn`: "`organ.leadIn`; also the x of Column 1".
   - `length`: "the Columns only: `tape.length × columnLength` (unchanged meaning)".
@@ -113,7 +113,7 @@ hole limits shared by `createTape` and the export check (research R4). Every sto
     `src/app/features/tape/tape-view/tape-view.component.spec.ts` replace
     `(geometry.leadIn + slot.x) * SCALE` by `slot.x * SCALE` (the pixel expectations stay the same).
     Depends on T002.
-- [ ] T004 Implement the tip frame, `endGap` and `totalLength` in `api/tape/tape-geometry.ts` until
+- [x] T004 Implement the tip frame, `endGap` and `totalLength` in `api/tape/tape-geometry.ts` until
   T003 is green, and make the view follow without moving anything on screen: drop the added
   `leadIn` from Slot positions in `tape-view.component.ts` (`drawing.holes`, `overview.holesPath`);
   `pointer-at.ts` and `visible-columns.ts` keep counting Columns from Column 1 (subtract
@@ -122,7 +122,7 @@ hole limits shared by `createTape` and the export check (research R4). Every sto
 
 ### Tape Outline
 
-- [ ] T005 Write the failing tests in `api/tape/tape-geometry.spec.ts` for `outline: TapeOutline`
+- [x] T005 Write the failing tests in `api/tape/tape-geometry.spec.ts` for `outline: TapeOutline`
   (data-model.md "TapeOutline", FR-010):
   - `tip`: "`(0, 0)`: the Lead-in's tip on the top edge"; `topEnd`: "`(totalLength, 0)`";
     `bottomEnd`: "`(totalLength, width)`"; `columnOneBottom`: "`(leadIn, width)`: where the
@@ -132,7 +132,7 @@ hole limits shared by `createTape` and the export check (research R4). Every sto
   - "a Tape without Holes has no Slots and the same Outline".
   - `type TapeOutline` and `type Point` are exported from `api/index.ts`.
   Depends on T004.
-- [ ] T006 Implement `outline` (and the `TapeOutline` and `Point` types) in
+- [x] T006 Implement `outline` (and the `TapeOutline` and `Point` types) in
   `api/tape/tape-geometry.ts` and export them from `api/index.ts` until T005 is green.
   Depends on T005.
 
