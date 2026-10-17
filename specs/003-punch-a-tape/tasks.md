@@ -57,7 +57,7 @@ on its own. Stories follow the spec's priority order (US1, US2 P1; US3 P2; US4 P
 
 **Purpose**: A green baseline, so that the geometry move in Phase 2 is a refactor under green.
 
-- [ ] T001 On `003-punch-a-tape`, run `npm run test`, `npm run lint`, `npm run i18n:check` and
+- [x] T001 On `003-punch-a-tape`, run `npm run test`, `npm run lint`, `npm run i18n:check` and
   `npm run build`; all green before any change. No file changes. If anything is red, record it in
   `documentation/STATUS.md` and fix it first.
 
@@ -75,7 +75,7 @@ hole limits shared by `createTape` and the export check (research R4). Every sto
 
 ### Move the geometry (refactor under green)
 
-- [ ] T002 Move `src/app/features/tape/tape-view/tape-geometry.ts` to `api/tape/tape-geometry.ts`
+- [x] T002 Move `src/app/features/tape/tape-view/tape-geometry.ts` to `api/tape/tape-geometry.ts`
   and `src/app/features/tape/tape-view/tape-geometry.spec.ts` to `api/tape/tape-geometry.spec.ts`
   **without changing behaviour** (research R1, contracts/domain-api.md). In the moved spec replace
   `testOrgan` from `src/testing/organs` with a local Organ builder over `validateOrgan` (the Street

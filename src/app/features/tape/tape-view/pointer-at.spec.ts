@@ -1,4 +1,4 @@
-import type {TapeGeometry} from './tape-geometry';
+import type {TapeGeometry} from '@api/index';
 import {pointerAt} from './pointer-at';
 
 // Lead-in 20 mm, then 100 Columns of 2.5 mm; a Tape 40 mm wide with three rows 10 mm apart. Scale 2 px per mm.

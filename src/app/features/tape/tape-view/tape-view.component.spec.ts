@@ -13,6 +13,7 @@ import {
   type Organ,
   type Tape,
   toTapeLibrarySnapshot,
+  tapeGeometry,
 } from '@api/index';
 import {encodeSmf} from '../../../../../api/song/midi/smf-test-helper';
 import {CRANCULA_API, createInMemoryCranculaApi} from '../../../core/crancula-api.token';
@@ -25,7 +26,6 @@ import {vi} from 'vitest';
 import {overviewFrame, scrollLeftFor} from './overview-frame';
 import {pixelsPerMillimetre} from './pixels-per-millimetre';
 import {columnLines, columnNumbers, rulerNumbers} from './tape-marks';
-import {tapeGeometry} from './tape-geometry';
 import {TapeViewComponent} from './tape-view.component';
 
 /** The scale the Tape opens at: 1:1, true size on screen. */

@@ -1,4 +1,5 @@
-import {border, type Organ, type Tape} from '@api/index';
+import {border, type Organ} from '../organ/organ';
+import type {Tape} from './tape';
 
 /** A drawn Hole, in mm from the start of Column 1 (x) and the top edge of the Tape (y). */
 export interface Slot {

@@ -1,10 +1,25 @@
-import {type Hole, type Millimetres, type Organ, type Tape, midiNoteNumber, validateOrgan} from '@api/index';
-import {asValidTape, type ColumnCount, type Column} from '../../../../../api/tape/tape';
-import {testOrgan} from '../../../../testing/organs';
+import {describe, expect, it} from 'vitest';
+import {midiNoteNumber} from '../organ/midi-note-number';
+import type {Millimetres, Organ} from '../organ/organ';
+import {validateOrgan} from '../organ/validate-organ';
+import {asValidTape, type Column, type ColumnCount, type Hole, type Tape} from './tape';
 import {tapeGeometry} from './tape-geometry';
 
+/** A valid Organ: 120 mm wide, 3.5 mm rows, 2.5 mm holes, notes 60, 62, … */
+function testOrgan(name: string, pipeCount: number, leadIn: number): Organ {
+  const result = validateOrgan({
+    name,
+    tapeBed: {tapeWidth: 120, holeDiameter: 2.5, rowSpacing: 3.5},
+    minimumGap: 1.5,
+    leadIn,
+    pipes: Array.from({length: pipeCount}, (_, row) => ({note: 60 + 2 * row})),
+  });
+  if (!result.ok) throw new Error(`invalid test Organ: ${JSON.stringify(result.error)}`);
+  return result.value;
+}
+
 // Street organ: 120 mm wide, 31 rows at 3,5 mm, hole 2,5 mm, Column 2,5 mm. The Pipe of row r (from 1) is note 58 + 2r.
-const streetOrgan = testOrgan('Street organ', 31, {leadIn: 20});
+const streetOrgan = testOrgan('Street organ', 31, 20);
 
 function hole(pipe: number, start: number, length: number): Hole {
   const note = midiNoteNumber(pipe);
@@ -37,7 +52,7 @@ describe('tapeGeometry', () => {
   });
 
   it('has a Lead-in of 0 for an Organ without one', () => {
-    const organ = testOrgan('Plain', 31, {leadIn: 0});
+    const organ = testOrgan('Plain', 31, 0);
 
     expect(tapeGeometry(tapeWith(organ, []), organ).leadIn).toBe(0);
   });

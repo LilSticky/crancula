@@ -13,7 +13,7 @@ import {BreakpointObserver} from '@angular/cdk/layout';
 import {toSignal} from '@angular/core/rxjs-interop';
 import {ActivatedRoute, Router} from '@angular/router';
 import {map} from 'rxjs';
-import {noteName, type ImportSummary, type Tape} from '@api/index';
+import {noteName, type ImportSummary, type Tape, tapeGeometry} from '@api/index';
 import {MatButton} from '@angular/material/button';
 import {MatButtonToggle, MatButtonToggleGroup} from '@angular/material/button-toggle';
 import {MatIcon} from '@angular/material/icon';
@@ -30,7 +30,6 @@ import {inspectHole} from './inspect-hole';
 import {overviewFrame, scrollLeftFor} from './overview-frame';
 import {pointerAt} from './pointer-at';
 import {pixelsPerMillimetre, type Zoom} from './pixels-per-millimetre';
-import {tapeGeometry} from './tape-geometry';
 import {columnLines, columnNumbers, rulerNumbers} from './tape-marks';
 import {visibleColumns} from './visible-columns';
 

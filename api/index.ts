@@ -75,3 +75,4 @@ export {
   type TapeLibrarySnapshot,
 } from './tape/tape-library-snapshot';
 export type {HoleFix, ImportSummary} from './tape/import-summary';
+export {tapeGeometry, type Slot, type TapeGeometry} from './tape/tape-geometry';
