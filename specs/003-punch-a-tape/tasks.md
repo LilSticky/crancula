@@ -342,7 +342,7 @@ written.
 
 ### Tests for User Story 2 ⚠️ (write first, must fail)
 
-- [ ] T028 [P] [US2] Write the failing test `api/tape/export-problems.spec.ts` for
+- [x] T028 [P] [US2] Write the failing test `api/tape/export-problems.spec.ts` for
   `exportProblems(tape: Tape, organ: Organ): readonly ExportProblem[]` ("empty means exportable";
   data-model.md "Export check", research R4):
   - the union, verbatim: `{readonly code: 'no-pipe'; readonly pipe: MidiNoteNumber; readonly
@@ -366,12 +366,12 @@ written.
     then by code in the order of the table";
   - a Tape without Holes gives `[]`; a Tape just made by `createTape` (from SMF bytes built with
     `api/song/midi/smf-test-helper.ts`) gives `[]`.
-- [ ] T029 [P] [US2] Extend `src/app/features/tape/tape-view/inspect-hole.spec.ts`: the warnings
+- [x] T029 [P] [US2] Extend `src/app/features/tape/tape-view/inspect-hole.spec.ts`: the warnings
   follow the export check's Column-based rules (research R4 "Reuse"): a Hole of 3 Columns of
   1.1 mm against a Minimum Hole Length of 3.3 mm gives no `tooShort` warning; a Hole the check
   reports as `too-short` gives `tooShort`; a Hole reported as `too-close`, and the next Hole of its
   row, give `gapTooSmall`; `HoleWarning` and the "gap to the Tape's end" stay as they are.
-- [ ] T030 [P] [US2] Write the failing component test
+- [x] T030 [P] [US2] Write the failing component test
   `src/app/features/tape/tape-view/export-problems-dialog/export-problems-dialog.component.spec.ts`
   (FR-003, research R8): given a list of `ExportProblem`s as dialog data it shows the title
   `TAPE.EXPORT.PROBLEMS_TITLE` ("This Tape can't be cut yet") and one entry per problem, each with
@@ -381,15 +381,15 @@ written.
   gap and the next Hole's Column `nextStart + 1`), the mm values "in the language's notation"
   (`3,3` in German); every problem is listed (Story 2.4); the list scrolls inside
   `mat-dialog-content`; one close button.
-- [ ] T031 [P] [US2] Extend `src/app/features/tape/tape-view/plotter-export.spec.ts`: when
+- [x] T031 [P] [US2] Extend `src/app/features/tape/tape-view/plotter-export.spec.ts`: when
   `exportProblems(tape, organ)` is not empty, `PlotterExport` opens the problems dialog with
   exactly those problems, never calls `plotter.saveSvg`, shows no snackbar, and leaves the Tape
   library unchanged (FR-003, Story 2.5, SC-004).
-- [ ] T032 [P] [US2] Extend `src/app/features/tape/tape-view/tape-view.component.spec.ts`: for a
+- [x] T032 [P] [US2] Extend `src/app/features/tape/tape-view/tape-view.component.spec.ts`: for a
   Tape that can't be cut (its Organ's hole diameter raised after the Tape was made), "Export for
   the Plotter" stays enabled and choosing it opens the problems dialog (FR-001, spec Session
   2026-10-17).
-- [ ] T033 [P] [US2] Extend `e2e/tape-export.spec.ts`, part 2 (quickstart scenario 7): after
+- [x] T033 [P] [US2] Extend `e2e/tape-export.spec.ts`, part 2 (quickstart scenario 7): after
   creating the Tape, raise the Organ's hole diameter in the Organ editor so that a Hole is shorter
   than the Minimum Hole Length, open the Tape and export: the problems dialog names the Hole's note
   and start Column and the Minimum Hole Length; the replaced save dialog was never called; no file
@@ -397,20 +397,22 @@ written.
 
 ### Implementation for User Story 2
 
-- [ ] T034 [US2] Implement `api/tape/export-problems.ts` on `holeLimitsOf` from
+- [x] T034 [US2] Implement `api/tape/export-problems.ts` on `holeLimitsOf` from
   `api/tape/hole-fixes.ts` and export `exportProblems`, `ExportProblem` and `ExportProblemCode`
   from `api/index.ts` until T028 is green. Depends on T010, T028.
-- [ ] T035 [US2] Derive the warnings in `src/app/features/tape/tape-view/inspect-hole.ts` from
+- [x] T035 [US2] Derive the warnings in `src/app/features/tape/tape-view/inspect-hole.ts` from
   `exportProblems(tape, organ)` (this Hole's `too-short` and `too-close`, and the previous Hole of
   its row's `too-close`) until T029 is green; every existing `inspect-hole.spec.ts` and Tape view
   test stays green. Depends on T029, T034.
-- [ ] T036 [US2] Implement
+- [x] T036 [US2] Implement
   `src/app/features/tape/tape-view/export-problems-dialog/export-problems-dialog.component.ts`
   (and `.html`, minimal `.scss` for the scrolling list), add `TAPE.EXPORT.PROBLEMS_TITLE`,
   `TAPE.EXPORT.PROBLEM.NO_PIPE`, `TAPE.EXPORT.PROBLEM.TOO_SHORT`, `TAPE.EXPORT.PROBLEM.TOO_CLOSE`
   and `TAPE.EXPORT.CLOSE` to `en.json` and `de.json`, and add `'TAPE.EXPORT.PROBLEM.'` to
   `DYNAMIC_PREFIXES` in `scripts/check-i18n.mjs`, until T030 is green. Depends on T030, T034.
-- [ ] T037 [US2] Run `exportProblems` first in `src/app/features/tape/tape-view/plotter-export.ts`
+  *Done with flat keys* (`TAPE.EXPORT.PROBLEM_NO_PIPE`, `…_TOO_SHORT`, `…_TOO_CLOSE`,
+  `TAPE.EXPORT.PROBLEMS_CLOSE`), each named literally in code, so no `DYNAMIC_PREFIXES` entry.
+- [x] T037 [US2] Run `exportProblems` first in `src/app/features/tape/tape-view/plotter-export.ts`
   and open the problems dialog instead of saving, until T031, T032 and T033 are green.
   Depends on T031–T033, T036.
 
