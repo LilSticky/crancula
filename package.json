@@ -15,7 +15,7 @@
     "ng": "ng",
     "start": "npm-run-all -p electron:serve ng:serve",
     "ng:serve": "ng serve -c dev -o",
-    "build": "npm run electron:bundle && ng build --base-href ./",
+    "build": "npm run electron:bundle && ng build --base-href ./index.html",
     "web:dev": "npm run build",
     "web:prod": "npm run build -- -c production",
     "electron": "electron",
