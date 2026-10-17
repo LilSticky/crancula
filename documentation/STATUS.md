@@ -112,10 +112,19 @@ Schlagwerk (dictionary). ux-review 39/50. Gate: lint, i18n (242 keys), 512 node 
 76 e2e green locally. With #69, all sub-issues of [#59](https://github.com/LilSticky/crancula/issues/59)
 (apply the design guide) are done; #59 closes with this pull request.
 
-**Next concrete step:** `/speckit-specify` for "Punch a tape"
-([#3](https://github.com/LilSticky/crancula/issues/3)). Follow-ups:
-[#76](https://github.com/LilSticky/crancula/issues/76) and
-[#80](https://github.com/LilSticky/crancula/issues/80) (component splits),
+**In progress (paused 2026-10-17):** "Punch a tape" ([#3](https://github.com/LilSticky/crancula/issues/3))
+on branch `003-punch-a-tape` (pushed, no pull request yet). Done: domain decisions (8 questions and
+4 clarifications, all in the spec's Clarifications), dictionary (Tape Outline / Bandumriss, the
+Lead-in's diagonal cut, 1:1 geometry for the Plotter, exportable Tapes, end cut one Minimum Gap after
+the last Column), `specs/003-punch-a-tape/spec.md` and its quality checklist. To resume, in this order:
+1. Check that the last spec commit ("integrate clarifications, WIP") is complete: the Story 1 worked
+   geometry example includes the Minimum Gap before the end cut, no FR/SC still says the end cut is
+   right after the last Column, and `checklists/requirements.md` is re-validated.
+2. `/speckit-plan`, then `/speckit-tasks`, then the TDD loop (`/speckit-implement`).
+
+Follow-ups:
+[#76](https://github.com/LilSticky/crancula/issues/76), [#80](https://github.com/LilSticky/crancula/issues/80) and
+[#85](https://github.com/LilSticky/crancula/issues/85) (component splits),
 [#82](https://github.com/LilSticky/crancula/issues/82) (Rename a Tape),
 [#84](https://github.com/LilSticky/crancula/issues/84) (live Tape preview).
 Open issues carry `priority:` and `size:` labels; triage sets them.
