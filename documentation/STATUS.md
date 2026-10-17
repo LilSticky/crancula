@@ -112,14 +112,15 @@ Schlagwerk (dictionary). ux-review 39/50. Gate: lint, i18n (242 keys), 512 node 
 76 e2e green locally. With #69, all sub-issues of [#59](https://github.com/LilSticky/crancula/issues/59)
 (apply the design guide) are done; #59 closes with this pull request.
 
-**Done (pull request pending):** Punch a tape ([#3](https://github.com/LilSticky/crancula/issues/3), 2026-10-17).
+**Done:** Punch a tape ([#3](https://github.com/LilSticky/crancula/issues/3), PR #87 merged 2026-10-17).
 Export for the Plotter saves the Tape as one 1:1 SVG: Holes as Slots in cut order by start from the
 Lead-in, row 1 first, then the Tape Outline with the Lead-in's diagonal and the end cut one Minimum Gap
 after the last Column. A Tape that can't be cut opens a dialog naming every problem Hole (no Pipe, too
 short, too close); nothing is written. Selected Hole warnings follow the same Column rules. Below 1180 px
 Export is an icon button. German texts. ux-review 40/50 (see [design/screens/current/ux-review.md](design/screens/current/ux-review.md)).
 Gate: lint, i18n (251 keys), 640 node and 746 Angular tests, 84 e2e green locally. Tasks in
-[tasks](../specs/003-punch-a-tape/tasks.md). **Next step:** open the pull request for #3 and merge it.
+[tasks](../specs/003-punch-a-tape/tasks.md). **Next step:** take the next triaged `priority: high` issue from the
+[ROADMAP](ROADMAP.md); none is open yet, so triage first or pick the next slice ("Edit a tape" is next under Later).
 
 Follow-ups:
 [#76](https://github.com/LilSticky/crancula/issues/76), [#80](https://github.com/LilSticky/crancula/issues/80) and
