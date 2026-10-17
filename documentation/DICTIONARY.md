@@ -24,6 +24,7 @@
 * May be created from a Song (referenced by id) or composed from scratch
 * Defines the physical length of one Column in mm
 * Always editable in Crancula; the tool does not track whether it has been punched
+* Can be exported for the Plotter only when every Hole has a Pipe on its Organ and respects the Minimum Hole Length and Minimum Gap; exporting does not change the Tape
 * Holds no tempo: playing speed is set by the Crank
 * German: Lochband (plural Lochbänder); compounds keep "Band": Bandbett, Bandbreite
 * Effectively a table
@@ -134,8 +135,13 @@
 # Lead-in
 * The blank Tape before Column 1 that threads the Tape into the Organ; carries no Holes
 * Its length in mm is set per Organ; 0 means no Lead-in (Organs saved before it existed load with 0)
-* Starts with an angled cut
+* Starts with an angled cut: a straight diagonal over its whole length, from the full tape width at Column 1 to a point on the Tape's top edge
 * German: Vorlauf
+
+# Tape Outline
+* The cut around a Tape: both long edges, the Lead-in's diagonal and a square end cut after the last Column (no blank tail)
+* The Tape is cut out of a wider sheet or roll; the Plotter cuts the Tape Outline after all Holes
+* German: Bandumriss
 
 # Minimum Gap
 * Shortest space in mm between two Holes in the same row the Organ can separate; a hard physical limit
@@ -152,6 +158,7 @@
 # Plotter
 * Machine that punches a Tape from an exported file (SVG first; DXF and HPGL later)
 * First target: a vinyl cutter that cuts long sheets
+* Crancula exports exact 1:1 geometry in mm; blade offset, kerf and working area are left to the cutter's own software
 
 # Barrel
 * Physical cylinder the Tape is rolled up on; no rules in Crancula
