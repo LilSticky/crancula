@@ -145,6 +145,10 @@ Open issues carry `priority:` and `size:` labels; triage sets them.
 
 ## Process changes
 
+- 2026-10-17: sessions wrap up before the plan limit cuts them off. The project status line
+  (`.claude/hooks/usage-guard.mjs`) records the 5-hour and 7-day usage; at 95% used
+  (`CRANCULA_USAGE_WRAP_UP` changes it) a PostToolUse hook tells the session once to commit the work in progress,
+  update STATUS with the next step, push and stop. Only Pro/Max sessions get the usage data.
 - 2026-10-15: a machine that last pulled before the 2026-10-14 rewrite has a local `main` with no merge
   base; reset it to `origin/main` after checking that every local commit subject exists there.
 - 2026-10-15: after every merge the `housekeeper` cleans up the local Git state (pruned remote
