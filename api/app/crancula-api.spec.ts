@@ -4,6 +4,8 @@ import type {
   OrganLibraryLoadResult,
   OrganLibrarySaveResult,
   SetLanguageResult,
+  SvgSaveRequest,
+  SvgSaveResult,
   TapeLibraryLoadResult,
   TapeLibrarySaveResult,
 } from './crancula-api';
@@ -38,6 +40,21 @@ describe('CranculaApi', () => {
   it('describes every Tape library save outcome', () => {
     expectTypeOf<TapeLibrarySaveResult>().toEqualTypeOf<
       | {readonly status: 'saved'}
+      | {readonly status: 'rejected'; readonly reason: string}
+      | {readonly status: 'failed'; readonly reason: string}
+    >();
+  });
+
+  it('saves the Plotter file', () => {
+    expectTypeOf<CranculaApi['plotter']['saveSvg']>().toEqualTypeOf<
+      (request: SvgSaveRequest) => Promise<SvgSaveResult>
+    >();
+  });
+
+  it('describes every Plotter file save outcome', () => {
+    expectTypeOf<SvgSaveResult>().toEqualTypeOf<
+      | {readonly status: 'saved'; readonly filePath: string}
+      | {readonly status: 'cancelled'}
       | {readonly status: 'rejected'; readonly reason: string}
       | {readonly status: 'failed'; readonly reason: string}
     >();

@@ -1,4 +1,4 @@
-import type {TapeGeometry} from './tape-geometry';
+import type {TapeGeometry} from '@api/index';
 
 /** What lies under the pointer on the Tape. */
 export interface PointerPosition {

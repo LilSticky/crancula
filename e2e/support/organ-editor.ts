@@ -35,6 +35,8 @@ export async function defineStreetOrgan(window: Page): Promise<void> {
 export async function saveOrgan(window: Page): Promise<void> {
   await window.getByTestId('save-organ').click();
   await expect(window.getByTestId('save-organ')).toBeDisabled();
+  // Save is disabled while writing too; Discard changes only goes once the write has finished.
+  await expect(window.getByTestId('discard-changes')).toHaveCount(0);
 }
 
 /** Opens the row menu of the Pipe at `row` (0-based) and picks one of its items. */

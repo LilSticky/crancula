@@ -1,7 +1,8 @@
 import {BreakpointObserver, type BreakpointState} from '@angular/cdk/layout';
-import {Component} from '@angular/core';
+import {Component, signal} from '@angular/core';
 import {type Observable, of} from 'rxjs';
 import {TestBed} from '@angular/core/testing';
+import {MatDialog} from '@angular/material/dialog';
 import {provideRouter, Router} from '@angular/router';
 import {RouterTestingHarness} from '@angular/router/testing';
 import {
@@ -13,6 +14,7 @@ import {
   type Organ,
   type Tape,
   toTapeLibrarySnapshot,
+  tapeGeometry,
 } from '@api/index';
 import {encodeSmf} from '../../../../../api/song/midi/smf-test-helper';
 import {CRANCULA_API, createInMemoryCranculaApi} from '../../../core/crancula-api.token';
@@ -24,12 +26,31 @@ import {asValidTape, type Column, type ColumnCount} from '../../../../../api/tap
 import {vi} from 'vitest';
 import {overviewFrame, scrollLeftFor} from './overview-frame';
 import {pixelsPerMillimetre} from './pixels-per-millimetre';
+import {ExportProblemsDialogComponent} from './export-problems-dialog/export-problems-dialog.component';
+import {PlotterExport} from './plotter-export';
 import {columnLines, columnNumbers, rulerNumbers} from './tape-marks';
-import {tapeGeometry} from './tape-geometry';
 import {TapeViewComponent} from './tape-view.component';
 
 /** The scale the Tape opens at: 1:1, true size on screen. */
 const SCALE = pixelsPerMillimetre('1:1', 0, 0);
+
+/** The corners of a path made of absolute M, L, H, V and Z commands. */
+function pathCorners(d: string): {readonly x: number; readonly y: number}[] {
+  const corners: {x: number; y: number}[] = [];
+  let x = 0;
+  let y = 0;
+  for (const [, command, args] of d.matchAll(/([MLHVZ])([^MLHVZ]*)/g)) {
+    const numbers = (args.match(/-?\d+(?:\.\d+)?(?:e-?\d+)?/g) ?? []).map(Number);
+    if (command === 'H') x = numbers[0] ?? x;
+    else if (command === 'V') y = numbers[0] ?? y;
+    else if (command !== 'Z') {
+      x = numbers[0] ?? x;
+      y = numbers[1] ?? y;
+    }
+    if (command !== 'Z') corners.push({x, y});
+  }
+  return corners;
+}
 
 @Component({template: 'Tapes'})
 class TapeListStubComponent {}
@@ -59,6 +80,8 @@ interface RenderOptions {
   readonly language?: 'en' | 'de';
   /** Writing the Tape library fails. */
   readonly saveFails?: boolean;
+  /** Uses the real PlotterExport (and the real problems dialog) instead of a stub. */
+  readonly realExport?: boolean;
   /** The window width in px the faked BreakpointObserver answers for; the real one when not given. */
   readonly windowWidth?: number;
 }
@@ -95,8 +118,10 @@ async function render(options: RenderOptions = {}) {
         },
       }
     : inMemory;
+  const plotterExport = {export: vi.fn((): Promise<void> => Promise.resolve()), saving: signal(false)};
   TestBed.configureTestingModule({
     providers: [
+      ...(options.realExport ? [] : [{provide: PlotterExport, useValue: plotterExport}]),
       provideRouter([
         {path: 'tapes', component: TapeListStubComponent},
         {path: 'tapes/:id', component: TapeViewComponent},
@@ -201,7 +226,7 @@ async function render(options: RenderOptions = {}) {
     harness.detectChanges();
     await harness.fixture.whenStable();
   };
-  return {tape, organ, importSummary: created.value.importSummary, open, summaryShown, router, finish, view, settle};
+  return {tape, organ, plotterExport, importSummary: created.value.importSummary, open, summaryShown, router, finish, view, settle};
 }
 
 describe('TapeViewComponent', () => {
@@ -323,16 +348,68 @@ describe('TapeViewComponent', () => {
       expect(link?.classList).toContain('mat-mdc-button');
     });
 
-    it('offers Export for the Plotter as a disabled outlined button with a visible later-release note', async () => {
+    it('offers Export for the Plotter as an enabled outlined button without a later-release note', async () => {
       const {tape, open, view} = await render();
 
       await open(`/tapes/${tape.id}`);
 
       const exportButton = view()?.querySelector<HTMLButtonElement>('[data-testid="page-head-actions"] [data-testid="export"]');
-      expect(exportButton?.disabled).toBe(true);
+      expect(exportButton?.disabled).toBe(false);
       expect(exportButton?.textContent).toContain('content_cut');
+      expect(exportButton?.textContent).toContain('Export for the Plotter');
       expect(exportButton?.className).toContain('mat-mdc-outlined-button');
-      expect(view()?.querySelector('[data-testid="export-later"]')?.textContent?.trim()).toBe('Export comes in a later release');
+      expect(view()?.querySelector('[data-testid="export-later"]')).toBeNull();
+    });
+
+    it('exports the shown Tape with its Organ when Export for the Plotter is pressed', async () => {
+      const {tape, organ, open, view, settle, plotterExport} = await render();
+      await open(`/tapes/${tape.id}`);
+
+      view()?.querySelector<HTMLButtonElement>('[data-testid="export"]')?.click();
+      await settle();
+
+      expect(plotterExport.export).toHaveBeenCalledTimes(1);
+      expect(plotterExport.export).toHaveBeenCalledWith(tape, organ);
+    });
+
+    describe('for a Tape that can not be cut', () => {
+      // Its Organ's holes were made so wide after the Tape was made that its Holes are shorter than the Minimum Hole Length.
+      const widerOrgan = (original: Organ): Organ => ({
+        ...testOrgan(original.name, 3, {tapeBed: {tapeWidth: 120, holeDiameter: 30, rowSpacing: 30}}),
+        id: original.id,
+      });
+
+      afterEach(() => TestBed.inject(MatDialog).closeAll());
+
+      it('keeps Export for the Plotter enabled', async () => {
+        const {tape, open, view} = await render({realExport: true, organNow: widerOrgan});
+
+        await open(`/tapes/${tape.id}`);
+
+        expect(view()?.querySelector<HTMLButtonElement>('[data-testid="export"]')?.disabled).toBe(false);
+      });
+
+      it('opens the problems dialog when Export for the Plotter is pressed', async () => {
+        const {tape, open, view, settle} = await render({realExport: true, organNow: widerOrgan});
+        await open(`/tapes/${tape.id}`);
+        const dialogOpen = vi.spyOn(TestBed.inject(MatDialog), 'open');
+
+        view()?.querySelector<HTMLButtonElement>('[data-testid="export"]')?.click();
+        await settle();
+
+        expect(dialogOpen).toHaveBeenCalledTimes(1);
+        expect(dialogOpen.mock.calls[0]?.[0]).toBe(ExportProblemsDialogComponent);
+      });
+    });
+
+    it('disables Export for the Plotter while a save is running', async () => {
+      const {tape, open, view, settle, plotterExport} = await render();
+      await open(`/tapes/${tape.id}`);
+
+      plotterExport.saving.set(true);
+      await settle();
+
+      expect(view()?.querySelector<HTMLButtonElement>('[data-testid="export"]')?.disabled).toBe(true);
     });
   });
 
@@ -835,6 +912,39 @@ describe('TapeViewComponent', () => {
       expect(summaryShown()).not.toBeNull();
     });
 
+    describe('the Export for the Plotter button', () => {
+      const exportButton = (view: HTMLElement | null) =>
+        view?.querySelector<HTMLButtonElement>('[data-testid="page-head-actions"] [data-testid="export"]') ?? null;
+
+      it('is an icon button with the scissors icon and an aria-label below 1180 px', async () => {
+        const {tape, open, view} = await render({windowWidth: 1100});
+
+        await open(`/tapes/${tape.id}`);
+
+        expect(exportButton(view())?.getAttribute('aria-label')).toBe('Export for the Plotter');
+        expect(exportButton(view())?.querySelector('mat-icon')?.textContent?.trim()).toBe('content_cut');
+        expect(exportButton(view())?.textContent?.trim()).toBe('content_cut');
+      });
+
+      it('shows the label as a tooltip below 1180 px', async () => {
+        const {tape, open, view, settle} = await render({windowWidth: 1100});
+        await open(`/tapes/${tape.id}`);
+
+        exportButton(view())?.dispatchEvent(new MouseEvent('mouseenter'));
+        await settle();
+
+        expect(document.body.querySelector('.mat-mdc-tooltip')?.textContent?.trim()).toBe('Export for the Plotter');
+      });
+
+      it('keeps the text label from 1180 px', async () => {
+        const {tape, open, view} = await render({windowWidth: 1280});
+
+        await open(`/tapes/${tape.id}`);
+
+        expect(exportButton(view())?.textContent).toContain('Export for the Plotter');
+      });
+    });
+
     it('always shows the side panel from 1180 px, without a toggle', async () => {
       const {tape, open, view} = await render({windowWidth: 1280});
 
@@ -857,14 +967,16 @@ describe('TapeViewComponent', () => {
       expect(texts(view(), 'row-label')).toEqual(organ.pipes.map(({note}) => noteName(note)));
     });
 
-    it('draws the Tape body at true millimetres: Tape length wide, tape width high at 1:1 (no Lead-in)', async () => {
+    it('draws the Tape body at true millimetres: Tape length plus the end gap wide, tape width high at 1:1 (no Lead-in)', async () => {
       const {tape, organ, open, view} = await render({leadIn: 0});
+      const {totalLength} = tapeGeometry(tape, organ);
+      expect(totalLength).toBeCloseTo(tape.length * tape.columnLength + organ.minimumGap, 5);
 
       await open(`/tapes/${tape.id}`);
 
       const body = view()?.querySelector('svg .tape');
       expect(body).not.toBeNull();
-      expect(numberAttribute(body as Element, 'width')).toBeCloseTo(tape.length * tape.columnLength * SCALE, 1);
+      expect(numberAttribute(body as Element, 'width')).toBeCloseTo(totalLength * SCALE, 1);
       expect(numberAttribute(body as Element, 'height')).toBeCloseTo(organ.tapeBed.tapeWidth * SCALE, 1);
     });
 
@@ -912,20 +1024,36 @@ describe('TapeViewComponent', () => {
       expect(numberAttribute(view()?.querySelector('svg .tape') as Element, 'x')).toBe(0);
     });
 
-    it('draws the Lead-in as blank Tape before Column 1 with an angled start', async () => {
-      const {tape, open, view} = await render({leadIn: 30});
+    it('draws the Lead-in as the Tape before Column 1 behind one straight diagonal from the tip to Column 1 at the bottom edge', async () => {
+      const {tape, organ, open, view} = await render({leadIn: 30});
+      const {outline} = tapeGeometry(tape, organ);
+      expect(outline.columnOneBottom.x).toBe(30);
 
       await open(`/tapes/${tape.id}`);
 
       const leadIn = view()?.querySelector('[data-testid="lead-in"]');
       expect(leadIn?.tagName.toLowerCase()).toBe('path');
-      // `M slant,0 H end V height H 0 Z`: the top edge runs slant..end, the bottom edge 0..end.
-      const [slant, , end, , start] = (leadIn?.getAttribute('d')?.match(/-?\d+(\.\d+)?/g) ?? []).map(Number);
-      expect(end).toBeCloseTo(30 * SCALE, 0);
-      expect(start).toBe(0);
-      expect(slant).toBeGreaterThan(0);
-      expect((end ?? 0) - (slant ?? 0)).toBeLessThan((end ?? 0) - (start ?? 0));
+      const corners = pathCorners(leadIn?.getAttribute('d') ?? '');
+      const corner = (point: {readonly x: number; readonly y: number}) => ({x: point.x * SCALE, y: point.y * SCALE});
+      const near = (a: {readonly x: number; readonly y: number}, b: {readonly x: number; readonly y: number}) =>
+        Math.abs(a.x - b.x) < 0.5 && Math.abs(a.y - b.y) < 0.5;
+      // One straight diagonal over the whole Lead-in: the tip and Column 1 at the bottom edge are corners, the bottom edge before Column 1 is not.
+      expect(corners.some((point) => near(point, corner(outline.tip)))).toBe(true);
+      expect(corners.some((point) => near(point, corner(outline.columnOneBottom)))).toBe(true);
+      expect(corners.some((point) => near(point, {x: 0, y: outline.columnOneBottom.y * SCALE}))).toBe(false);
       expect(leadIn?.querySelector('[data-testid="hole"]')).toBeNull();
+    });
+
+    it('ends the Tape body one Minimum Gap after the last Column, behind the Lead-in', async () => {
+      const {tape, organ, open, view} = await render({leadIn: 30});
+      const {totalLength, length, leadIn} = tapeGeometry(tape, organ);
+      expect(totalLength).toBeCloseTo(leadIn + length + organ.minimumGap, 5);
+
+      await open(`/tapes/${tape.id}`);
+
+      const body = view()?.querySelector('svg:not([data-testid="overview"]) .tape') as Element;
+      expect(numberAttribute(body, 'x')).toBeCloseTo(leadIn * SCALE, 1);
+      expect(numberAttribute(body, 'x') + numberAttribute(body, 'width')).toBeCloseTo(totalLength * SCALE, 1);
     });
 
     it('moves every Hole and Column line right by the Lead-in, none lie in it', async () => {
@@ -937,7 +1065,7 @@ describe('TapeViewComponent', () => {
       const rects = holeRects(view());
       expect(rects).toHaveLength(slots.length);
       slots.forEach((slot, index) => {
-        expect(numberAttribute(rects[index], 'x')).toBeCloseTo((30 + slot.x) * SCALE, 1);
+        expect(numberAttribute(rects[index], 'x')).toBeCloseTo(slot.x * SCALE, 1);
       });
       const marks = all(view(), 'svg [data-testid="column-mark"]').map((mark) => numberAttribute(mark, 'x1'));
       expect(marks.length).toBeGreaterThan(0);
@@ -997,16 +1125,15 @@ describe('TapeViewComponent', () => {
       });
     });
 
-    it('lets the scroll container cover the whole Tape length, Lead-in included', async () => {
-      const {tape, open, view} = await render({leadIn: 30});
+    it('lets the scroll container cover the whole Tape length, Lead-in and end gap included', async () => {
+      const {tape, organ, open, view} = await render({leadIn: 30});
+      const {totalLength} = tapeGeometry(tape, organ);
 
       await open(`/tapes/${tape.id}`);
 
       const drawing = view()?.querySelector('[data-testid="tape-scroll"] svg');
       expect(drawing).not.toBeNull();
-      expect(numberAttribute(drawing as Element, 'width')).toBeGreaterThanOrEqual(
-        (30 + tape.length * tape.columnLength) * SCALE - 1,
-      );
+      expect(numberAttribute(drawing as Element, 'width')).toBeGreaterThanOrEqual(totalLength * SCALE - 1);
     });
 
     describe('with a 5-minute Tape, rendering only the visible Columns (V6b)', () => {
@@ -1150,6 +1277,60 @@ describe('TapeViewComponent', () => {
         expect(bodyWidth(view())).toBeCloseTo(STAGE_PX, 0);
         const lastHole = holeRects(view()).at(-1) as Element;
         expect(numberAttribute(lastHole, 'x') + numberAttribute(lastHole, 'width')).toBeLessThanOrEqual(STAGE_PX + 1);
+      });
+    });
+
+    describe('the zoom to the whole Tape with a Lead-in', () => {
+      const STAGE_PX = 800;
+      let observers: {callback: ResizeObserverCallback; observer: ResizeObserver}[] = [];
+
+      beforeEach(() => {
+        observers = [];
+        vi.stubGlobal(
+          'ResizeObserver',
+          class {
+            constructor(private readonly callback: ResizeObserverCallback) {
+              observers.push({callback, observer: this});
+            }
+            observe(): void {
+              /* the test drives the size */
+            }
+            unobserve(): void {
+              /* nothing */
+            }
+            disconnect(): void {
+              /* nothing */
+            }
+          },
+        );
+      });
+      afterEach(() => vi.unstubAllGlobals());
+
+      it('fits the Tape from the tip to the end cut to the stage width, the end gap included', async () => {
+        const {tape, open, view, settle} = await render({leadIn: 30});
+        await open(`/tapes/${tape.id}`);
+        const entry = {contentRect: {width: STAGE_PX}} as ResizeObserverEntry;
+        observers.forEach(({callback, observer}) => callback([entry], observer));
+        await settle();
+
+        (view()?.querySelector('[data-testid="zoom"] button') as HTMLButtonElement).click();
+        await settle();
+
+        const body = view()?.querySelector('svg:not([data-testid="overview"]) .tape') as Element;
+        expect(numberAttribute(body, 'x') + numberAttribute(body, 'width')).toBeCloseTo(STAGE_PX, 0);
+      });
+
+      it('ends the Tape in the overview strip at the end cut, one Minimum Gap after the last Column', async () => {
+        const {tape, organ, open, view, settle} = await render({leadIn: 30});
+        await open(`/tapes/${tape.id}`);
+        const entry = {contentRect: {width: STAGE_PX}} as ResizeObserverEntry;
+        observers.forEach(({callback, observer}) => callback([entry], observer));
+        await settle();
+        const {totalLength, leadIn} = tapeGeometry(tape, organ);
+
+        const body = view()?.querySelector('[data-testid="overview"] .tape') as Element;
+        expect(numberAttribute(body, 'x')).toBeCloseTo((leadIn * STAGE_PX) / totalLength, 0);
+        expect(numberAttribute(body, 'x') + numberAttribute(body, 'width')).toBeCloseTo(STAGE_PX, 0);
       });
     });
 

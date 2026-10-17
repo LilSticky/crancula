@@ -16,11 +16,19 @@
       }
     </mat-button-toggle-group>
     @if (compact()) {<button pageHeadActions mat-stroked-button type="button" data-testid="side-panel-toggle" [attr.aria-expanded]="sidePanelOpen()" (click)="toggleSidePanel()">{{ 'TAPE.VIEW.DETAILS' | translate }}</button>}
-    <button pageHeadActions mat-stroked-button type="button" disabled data-testid="export">
-      <mat-icon aria-hidden="true">content_cut</mat-icon>
-      {{ 'TAPE.VIEW.EXPORT' | translate }}
-    </button>
-    <span pageHeadActions class="export-later" data-testid="export-later">{{ 'TAPE.VIEW.EXPORT_LATER' | translate }}</span>
+    <ng-container ngProjectAs="[pageHeadActions]">
+      @if (compact()) {
+        <button mat-icon-button type="button" data-testid="export" [attr.aria-label]="'TAPE.VIEW.EXPORT' | translate" [matTooltip]="'TAPE.VIEW.EXPORT' | translate" [disabled]="plotterExport.saving()" (click)="exportTape()">
+          <mat-icon aria-hidden="true">content_cut</mat-icon>
+        </button>
+      }
+      @if (!compact()) {
+        <button mat-stroked-button type="button" data-testid="export" [disabled]="plotterExport.saving()" (click)="exportTape()">
+          <mat-icon aria-hidden="true">content_cut</mat-icon>
+          {{ 'TAPE.VIEW.EXPORT' | translate }}
+        </button>
+      }
+    </ng-container>
   </cranc-page-head>
   <div class="layout" [class.compact]="compact()">
   <div class="stage" [class.compact]="compact()">

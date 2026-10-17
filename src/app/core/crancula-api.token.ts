@@ -1,8 +1,11 @@
 import {InjectionToken} from '@angular/core';
 import {
+  parseSvgSaveRequest,
   parseTapeLibrarySnapshot,
   type CranculaApi,
   type OrganLibrarySnapshot,
+  type SvgSaveRequest,
+  type SvgSaveResult,
   type TapeLibraryLoadResult,
   type TapeLibrarySaveResult,
   type TapeLibrarySnapshot,
@@ -16,20 +19,29 @@ export const CRANCULA_API = new InjectionToken<CranculaApi>('CranculaApi', {
 
 /** Failures the in-memory API answers on request, so tests can reach the error paths. */
 export interface InMemoryCranculaApiFailures {
+  readonly plotter?: {
+    readonly saveSvg?: 'cancelled' | 'failed';
+  };
   readonly tapes?: {
     readonly load?: 'unreadable';
     readonly save?: 'failed';
   };
 }
 
+/** The in-memory API, which also reveals what the Plotter was last asked to save. */
+export type InMemoryCranculaApi = CranculaApi & {
+  readonly plotter: CranculaApi['plotter'] & {readonly lastSaveSvgRequest: SvgSaveRequest | undefined};
+};
+
 /** Keeps the snapshots in memory; nothing survives a reload. */
 export function createInMemoryCranculaApi(
   initial?: OrganLibrarySnapshot,
   initialTapes?: TapeLibrarySnapshot,
   failures: InMemoryCranculaApiFailures = {},
-): CranculaApi {
+): InMemoryCranculaApi {
   let stored = initial;
   let storedTapes = initialTapes;
+  let lastSaveSvgRequest: SvgSaveRequest | undefined;
   return {
     organs: {
       load: () => Promise.resolve(stored ? {status: 'loaded', snapshot: stored} : {status: 'empty'}),
@@ -57,6 +69,21 @@ export function createInMemoryCranculaApi(
         if (!parsed.ok) return Promise.resolve({status: 'rejected', reason: parsed.error});
         storedTapes = snapshot;
         return Promise.resolve({status: 'saved'});
+      },
+    },
+    plotter: {
+      get lastSaveSvgRequest(): SvgSaveRequest | undefined {
+        return lastSaveSvgRequest;
+      },
+      saveSvg: (request): Promise<SvgSaveResult> => {
+        const parsed = parseSvgSaveRequest(request);
+        if (!parsed.ok) return Promise.resolve({status: 'rejected', reason: parsed.error});
+        lastSaveSvgRequest = parsed.value;
+        if (failures.plotter?.saveSvg === 'cancelled') return Promise.resolve({status: 'cancelled'});
+        if (failures.plotter?.saveSvg === 'failed') {
+          return Promise.resolve({status: 'failed', reason: 'the Plotter file could not be written'});
+        }
+        return Promise.resolve({status: 'saved', filePath: `in-memory/${parsed.value.suggestedFileName}`});
       },
     },
     app: {

@@ -39,6 +39,12 @@ export function melodyC3ToC5(): MidiFilePayload {
   return smf('melody-c3-c5.mid', [{events: noteEvents(0, notes, 'Melody')}]);
 }
 
+/** A single melody that falls from C5 to C3 (MIDI 72 to 48), one Part: the Holes' Pipe order is the reverse of their start order. */
+export function melodyC5ToC3(): MidiFilePayload {
+  const notes = Array.from({length: C5 - C3 + 1}, (_, index) => C5 - index);
+  return smf('melody-c5-c3.mid', [{events: noteEvents(0, notes, 'Descent')}]);
+}
+
 /** Three Parts: two melodic voices and one percussion Part on channel 10. */
 export function threePartsWithPercussion(): MidiFilePayload {
   return smf('three-parts-percussion.mid', [

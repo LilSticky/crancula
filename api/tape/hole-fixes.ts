@@ -1,4 +1,5 @@
 import type {MidiNoteNumber} from '../organ/midi-note-number';
+import {minimumHoleLength, type Millimetres, type Organ} from '../organ/organ';
 import type {HoleFix} from './import-summary';
 import {columnCount, type ColumnCount, type Hole} from './tape';
 
@@ -24,6 +25,18 @@ function validCount(value: number): ColumnCount {
   const result = columnCount(value);
   if (result === undefined) throw new Error(`invalid Column count ${value}`);
   return result;
+}
+
+function atLeastOneColumn(value: number): ColumnCount {
+  return validCount(Math.max(value, 1));
+}
+
+/** The Minimum Hole Length and Minimum Gap of the Organ in whole Columns, at least one each. */
+export function holeLimitsOf(organ: Organ, columnLength: Millimetres): HoleLimits {
+  return {
+    minimumHoleLength: atLeastOneColumn(columnsFor(minimumHoleLength(organ.tapeBed), columnLength)),
+    minimumGap: atLeastOneColumn(columnsFor(organ.minimumGap, columnLength)),
+  };
 }
 
 function endOf(hole: Hole): number {

@@ -1,4 +1,4 @@
-import type {TapeGeometry} from './tape-geometry';
+import type {TapeGeometry} from '@api/index';
 import {pointerAt} from './pointer-at';
 
 // Lead-in 20 mm, then 100 Columns of 2.5 mm; a Tape 40 mm wide with three rows 10 mm apart. Scale 2 px per mm.
@@ -9,7 +9,10 @@ const geometry: TapeGeometry = {
   width: 40,
   border: 5,
   rowCentres: [10, 20, 30],
+  endGap: 2,
+  totalLength: 272,
   slots: [],
+  outline: {tip: {x: 0, y: 0}, topEnd: {x: 272, y: 0}, bottomEnd: {x: 272, y: 40}, columnOneBottom: {x: 20, y: 40}},
 };
 const SCALE = 2;
 

@@ -1,4 +1,4 @@
-import type {TapeGeometry} from './tape-geometry';
+import type {TapeGeometry} from '@api/index';
 
 export interface ColumnRange {
   readonly first: number;

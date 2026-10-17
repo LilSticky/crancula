@@ -34,10 +34,36 @@ test.describe('Electron boundary', () => {
     expect(result).toEqual({status: 'empty'});
   });
 
-  test('exposes no members beyond organs, tapes and app', async () => {
+  test('exposes no members beyond app, organs, plotter and tapes', async () => {
     const keys = await launched.window.evaluate(() =>
       Object.keys((window as {crancula?: object}).crancula ?? {}).sort(),
     );
-    expect(keys).toEqual(['app', 'organs', 'tapes']);
+    expect(keys).toEqual(['app', 'organs', 'plotter', 'tapes']);
+  });
+
+  test('exposes saveSvg and rejects a forged request without opening a dialog', async () => {
+    await launched.app.evaluate(({dialog}) => {
+      const counter = globalThis as {dialogCalls?: number};
+      counter.dialogCalls = 0;
+      dialog.showSaveDialog = () => {
+        counter.dialogCalls = (counter.dialogCalls ?? 0) + 1;
+        return Promise.resolve({canceled: true, filePath: ''});
+      };
+    });
+
+    const result = await launched.window.evaluate(async () => {
+      const plotter = (window as {crancula?: {plotter?: {saveSvg?: unknown}}}).crancula?.plotter;
+      if (typeof plotter?.saveSvg !== 'function') return 'missing';
+      return (plotter.saveSvg as (request: unknown) => Promise<unknown>)({
+        suggestedFileName: '../evil.svg',
+        svg: '<?xml version="1.0"?><svg ></svg>',
+        dialogTitle: 'Export',
+        filterName: 'SVG file',
+      });
+    });
+
+    expect(result).toEqual({status: 'rejected', reason: expect.any(String)});
+    const calls = await launched.app.evaluate(() => (globalThis as {dialogCalls?: number}).dialogCalls);
+    expect(calls).toBe(0);
   });
 });

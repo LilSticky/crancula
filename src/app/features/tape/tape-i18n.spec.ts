@@ -1,4 +1,4 @@
-import type {HoleFix, SongRejection, TapeViolationCode} from '@api/index';
+import type {ExportProblemCode, HoleFix, SongRejection, TapeViolationCode} from '@api/index';
 import de from '../../../assets/i18n/de.json';
 import en from '../../../assets/i18n/en.json';
 
@@ -42,6 +42,51 @@ const groups: readonly {name: string; prefix: string; kinds: readonly string[]}[
   {name: 'TapeViolationCode', prefix: 'TAPE.VIOLATION', kinds: Object.keys(tapeViolationCodes)},
   {name: 'HoleFix', prefix: 'TAPE.SUMMARY.HOLE_FIX', kinds: Object.keys(holeFixKinds)},
 ];
+
+const exportProblemCodes: Record<ExportProblemCode, true> = {
+  'no-pipe': true,
+  'too-short': true,
+  'too-close': true,
+};
+
+function keysUnder(tree: TranslationTree, path: string): readonly string[] {
+  let node: string | TranslationTree | undefined = tree;
+  for (const segment of path.split('.')) {
+    node = typeof node === 'string' || node === undefined ? undefined : node[segment];
+  }
+  return typeof node === 'object' ? Object.keys(node) : [];
+}
+
+describe('Tape export texts', () => {
+  for (const code of Object.keys(exportProblemCodes)) {
+    const key = `TAPE.EXPORT.PROBLEM_${keyOf(code)}`;
+
+    it(`${code} has an English and a German text at ${key}`, () => {
+      expect(textAt(en as TranslationTree, key)).toBeTruthy();
+      expect(textAt(de, key)).toBeTruthy();
+    });
+  }
+
+  for (const name of keysUnder(en, 'TAPE.EXPORT')) {
+    const key = `TAPE.EXPORT.${name}`;
+
+    it(`${key} has a German text that differs from the English one`, () => {
+      const german = textAt(de, key);
+      expect(german).toBeTruthy();
+      expect(german).not.toBe(textAt(en as TranslationTree, key));
+    });
+  }
+
+  it('has no TAPE.EXPORT key in German that English lacks', () => {
+    expect([...keysUnder(de, 'TAPE.EXPORT')].sort()).toEqual([...keysUnder(en as TranslationTree, 'TAPE.EXPORT')].sort());
+  });
+
+  for (const [language, tree] of [['English', en], ['German', de]] as const) {
+    it(`has no TAPE.VIEW.EXPORT_LATER in ${language}`, () => {
+      expect(textAt(tree as TranslationTree, 'TAPE.VIEW.EXPORT_LATER')).toBeUndefined();
+    });
+  }
+});
 
 describe('Tape texts', () => {
   for (const {name, prefix, kinds} of groups) {

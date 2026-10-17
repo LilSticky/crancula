@@ -13,10 +13,11 @@ import {BreakpointObserver} from '@angular/cdk/layout';
 import {toSignal} from '@angular/core/rxjs-interop';
 import {ActivatedRoute, Router} from '@angular/router';
 import {map} from 'rxjs';
-import {noteName, type ImportSummary, type Tape} from '@api/index';
-import {MatButton} from '@angular/material/button';
+import {noteName, type ImportSummary, type Tape, tapeGeometry} from '@api/index';
+import {MatButton, MatIconButton} from '@angular/material/button';
 import {MatButtonToggle, MatButtonToggleGroup} from '@angular/material/button-toggle';
 import {MatIcon} from '@angular/material/icon';
+import {MatTooltip} from '@angular/material/tooltip';
 import {RouterLink} from '@angular/router';
 import {TranslatePipe} from '@ngx-translate/core';
 import {formatNumber} from '../../shared/format-number';
@@ -28,9 +29,9 @@ import {TapeLibrary} from '../tape-library.store';
 import {nextHole, type Direction, type SelectableHole} from './hole-selection';
 import {inspectHole} from './inspect-hole';
 import {overviewFrame, scrollLeftFor} from './overview-frame';
+import {PlotterExport} from './plotter-export';
 import {pointerAt} from './pointer-at';
 import {pixelsPerMillimetre, type Zoom} from './pixels-per-millimetre';
-import {tapeGeometry} from './tape-geometry';
 import {columnLines, columnNumbers, rulerNumbers} from './tape-marks';
 import {visibleColumns} from './visible-columns';
 
@@ -65,8 +66,6 @@ const COMPACT_QUERY = '(max-width: 1179.98px)';
 const RULER_HEIGHT = 24;
 /** Space below the Tape for the Column numbers, in px. */
 const NUMBERS_HEIGHT = 20;
-/** The angled start of the Lead-in slants over at most this many mm. */
-const LEAD_IN_SLANT_MM = 10;
 
 /** The width to render Columns for: the scroll area, but never narrower than the screen (it is 0 before layout). */
 function windowWidth(element: HTMLElement): number {
@@ -77,7 +76,7 @@ function windowWidth(element: HTMLElement): number {
 @Component({
   selector: 'cranc-tape-view',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ImportSummaryComponent, TranslatePipe, PageHeadComponent, MatButton, MatButtonToggle, MatButtonToggleGroup, MatIcon, RouterLink],
+  imports: [ImportSummaryComponent, TranslatePipe, PageHeadComponent, MatButton, MatIconButton, MatTooltip, MatButtonToggle, MatButtonToggleGroup, MatIcon, RouterLink],
   templateUrl: './tape-view.component.html',
   styleUrl: './tape-view.component.scss',
 })
@@ -85,6 +84,7 @@ export class TapeViewComponent {
   private readonly library = inject(TapeLibrary);
   private readonly organs = inject(OrganLibrary);
   private readonly router = inject(Router);
+  protected readonly plotterExport = inject(PlotterExport);
   private readonly language = inject(LanguagePreference).language;
   protected readonly rulerHeight = RULER_HEIGHT;
   protected readonly zooms: readonly {readonly zoom: Zoom; readonly label: string}[] = [
@@ -150,7 +150,7 @@ export class TapeViewComponent {
   protected readonly scale = computed(() => {
     const geometry = this.geometry();
     if (geometry === undefined) return pixelsPerMillimetre('1:1', 0, 0);
-    return pixelsPerMillimetre(this.zoom(), this.stageWidth(), geometry.leadIn + geometry.length);
+    return pixelsPerMillimetre(this.zoom(), this.stageWidth(), geometry.totalLength);
   });
 
   /** The Hole the Selected Hole section tells about. */
@@ -186,19 +186,19 @@ export class TapeViewComponent {
   protected readonly overview = computed(() => {
     const geometry = this.geometry();
     if (geometry === undefined) return undefined;
-    const scale = pixelsPerMillimetre('whole', this.stageWidth(), geometry.leadIn + geometry.length);
+    const scale = pixelsPerMillimetre('whole', this.stageWidth(), geometry.totalLength);
     const leadIn = geometry.leadIn * scale;
     const height = geometry.width * scale;
-    const slant = Math.min(geometry.leadIn, LEAD_IN_SLANT_MM) * scale;
+    const {outline} = geometry;
     return {
       width: this.stageWidth(),
       height,
       leadIn,
-      leadInPath: `M${slant},0 H${leadIn} V${height} H0 Z`,
-      bodyWidth: geometry.length * scale,
+      leadInPath: `M${outline.tip.x * scale},${outline.tip.y * scale} H${leadIn} V${outline.columnOneBottom.y * scale} Z`,
+      bodyWidth: (geometry.totalLength - geometry.leadIn) * scale,
       holesPath: geometry.slots
         .map((slot) => {
-          const x = leadIn + slot.x * scale;
+          const x = slot.x * scale;
           return `M${x},${slot.y * scale}h${slot.width * scale}v${slot.height * scale}h${-slot.width * scale}z`;
         })
         .join(''),
@@ -222,7 +222,7 @@ export class TapeViewComponent {
     const inRange = (column: number): boolean => column >= range.first && column <= range.last;
     const leadIn = geometry.leadIn * scale;
     const height = geometry.width * scale;
-    const slant = Math.min(geometry.leadIn, LEAD_IN_SLANT_MM) * scale;
+    const {outline} = geometry;
     const firstMm = range.first * tape.columnLength;
     const lastMm = (range.last + 1) * tape.columnLength;
     const language = this.language();
@@ -253,7 +253,7 @@ export class TapeViewComponent {
           row: slot.row - 1,
           selected: slot.row === this.selectedHole()?.row && slot.start === this.selectedHole()?.start,
           start: slot.start,
-          x: leadIn + slot.x * scale,
+          x: slot.x * scale,
           y: slot.y * scale,
           width: slot.width * scale,
           height: slot.height * scale,
@@ -269,10 +269,10 @@ export class TapeViewComponent {
         .filter((mm) => mm >= firstMm && mm <= lastMm)
         .map((mm) => ({mm, x: leadIn + mm * scale})),
       leadIn,
-      leadInPath: `M${slant},0 H${leadIn} V${height} H0 Z`,
-      bodyWidth: geometry.length * scale,
+      leadInPath: `M${outline.tip.x * scale},${outline.tip.y * scale} H${leadIn} V${outline.columnOneBottom.y * scale} Z`,
+      bodyWidth: (geometry.totalLength - geometry.leadIn) * scale,
       borders: [geometry.border * scale, (geometry.width - geometry.border) * scale],
-      width: leadIn + geometry.length * scale,
+      width: geometry.totalLength * scale,
       height,
       totalHeight: RULER_HEIGHT + height + NUMBERS_HEIGHT,
       numbersY: height + NUMBERS_HEIGHT - 6,
@@ -285,6 +285,12 @@ export class TapeViewComponent {
       },
     };
   });
+
+  protected exportTape(): void {
+    const tape = this.tape();
+    const organ = this.organ();
+    if (tape !== undefined && organ !== undefined) void this.plotterExport.export(tape, organ);
+  }
 
   protected select(hole: {readonly row: number; readonly start: number}): void {
     this.selectedHole.set({row: hole.row + 1, start: hole.start});
@@ -392,7 +398,7 @@ export class TapeViewComponent {
       const rendered = this.drawing()?.holes.some((hole) => hole.row === slot.row - 1 && hole.start === slot.start);
       if (rendered) return; // Its rect is drawn on the next render.
       this.scrollToSelection = false;
-      element.scrollLeft = (geometry.leadIn + slot.x) * this.scale();
+      element.scrollLeft = slot.x * this.scale();
     });
     effect(() => {
       if (this.library.loaded() && this.drawing() === undefined) void this.router.navigateByUrl('/tapes');

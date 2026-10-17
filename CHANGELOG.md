@@ -12,6 +12,10 @@ as its GitHub Release notes.
 - Every Organ has a Lead-in (German Vorlauf): the blank Tape before Column 1, with an angled start,
   in millimetres. Enter it in the Organ editor after Minimum Gap; 0 means none. Your saved Organs get
   a Lead-in of 0.
+- Export a Tape for the Plotter as an SVG at true size (1:1 mm): the Holes in cutting order, row 1
+  first, inside the Tape outline with its angled Lead-in.
+- A Tape that can't be cut is not exported. Crancula lists every Hole that is the problem (no Pipe,
+  too short, too close) in a dialog and writes no file.
 
 ### Changed
 - The Border is no longer entered. Crancula derives it as (tape width - Row Span) / 2, with the rows

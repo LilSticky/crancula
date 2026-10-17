@@ -1,7 +1,6 @@
-import {type Millimetres, type Tape} from '@api/index';
+import {type Millimetres, type Tape, tapeGeometry} from '@api/index';
 import {asValidTape, type ColumnCount} from '../../../../../api/tape/tape';
 import {testOrgan} from '../../../../testing/organs';
-import {tapeGeometry} from './tape-geometry';
 import {visibleColumns} from './visible-columns';
 
 // 100 Columns of 2,5 mm (250 mm) behind a Lead-in of 20 mm. At a scale of 1 px per mm a Column is 2,5 px wide

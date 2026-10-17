@@ -1,8 +1,10 @@
 import {expect, test, type Page} from '@playwright/test';
 import {join} from 'node:path';
+import {encodeSmf} from '../../api/song/midi/smf-test-helper';
 import {launchApp, type LaunchedApp} from '../support/launch-app';
 import {longSongWithSixteenParts, threePartsWithPercussion} from '../support/midi-file';
 import {defineStreetOrgan, saveOrgan} from '../support/organ-editor';
+import {stubSaveDialog} from '../support/save-dialog';
 import {createTapeFromSong} from '../support/tape-creation';
 
 /** Where the `ux-review` skill expects the screens of the running app. */
@@ -197,5 +199,51 @@ test.describe('UX screens', () => {
     await window.mouse.move(640, 400);
     await capture(window, '07c-tape-import-german-compact');
     await window.getByTestId('language-switch').locator('[data-language="en"]').click();
+
+    // Very last, as it changes the Organ: a Tape whose Hole became too short for the raised hole diameter.
+    // Export never opens a save dialog here, because the problems dialog stops it first; stub it anyway.
+    await stubSaveDialog(launched.app);
+    await resizeWindow(launched, 1280, 800);
+    const blip = encodeSmf({
+      format: 1,
+      division: {ticksPerQuarterNote: 480},
+      tracks: [
+        {
+          events: [
+            {delta: 0, event: {type: 'trackName', text: 'Blip'}},
+            {delta: 0, event: {type: 'noteOn', channel: 0, note: 60, velocity: 80}},
+            {delta: 60, event: {type: 'noteOff', channel: 0, note: 60, velocity: 0}},
+          ],
+        },
+      ],
+    });
+    await window.getByRole('link', {name: 'Tapes'}).click();
+    await expect(window.getByRole('dialog')).toBeHidden();
+    await expect(window).toHaveURL(/\/tapes$/);
+    await window.getByTestId('new-tape').click();
+    await window.getByTestId('song-file').setInputFiles({name: 'blip.mid', mimeType: 'audio/midi', buffer: Buffer.from(blip)});
+    await expect(window.getByTestId('song-file-name')).toHaveText('blip.mid');
+    await window.getByTestId('organ').selectOption({label: 'White keys'});
+    await window.getByTestId('name').fill('Blip');
+    await window.getByTestId('create-tape').click();
+    await expect(window).toHaveURL(/\/tapes\/[0-9a-f-]{36}$/);
+
+    await window.getByRole('link', {name: 'Organs'}).click();
+    await window.getByTestId('organ').filter({hasText: 'White keys'}).click();
+    await window.getByTestId('hole-diameter').fill('4');
+    await window.getByTestId('row-spacing').fill('4');
+    await saveOrgan(window);
+    await window.getByRole('link', {name: 'Tapes'}).click();
+    await window.getByTestId('tape').filter({hasText: 'Blip'}).click();
+    await expect(window.getByTestId('export')).toBeEnabled();
+    await window.getByTestId('export').click();
+    await expect(window.getByTestId('export-problem')).toHaveCount(1);
+    // The dialog fades and scales in; settle it before the screenshot.
+    await window.waitForFunction(() => {
+      const panel = document.querySelector('.mat-mdc-dialog-surface');
+      return panel !== null && getComputedStyle(panel).opacity === '1';
+    });
+    await window.mouse.move(640, 400);
+    await capture(window, '08c-tape-view-export-problems');
   });
 });

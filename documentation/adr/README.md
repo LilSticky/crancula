@@ -26,3 +26,4 @@ with a new one and update both statuses here.
 | 18 | [Tape snapshot of its own, written before the Organs](0018-tape-snapshot-and-cascade-order.md) | Accepted |
 | 19 | [Releases from the changelog, tagged by the agent](0019-releases-from-the-changelog.md) | Accepted |
 | 20 | [Snapshots are migrated on read and written in the newest version](0020-snapshots-migrated-on-read.md) | Accepted |
+| 21 | [Plotter export built in the domain, saved by the main process](0021-plotter-export-built-in-the-domain.md) | Accepted |
