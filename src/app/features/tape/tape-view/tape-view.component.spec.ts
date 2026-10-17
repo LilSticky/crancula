@@ -2,6 +2,7 @@ import {BreakpointObserver, type BreakpointState} from '@angular/cdk/layout';
 import {Component, signal} from '@angular/core';
 import {type Observable, of} from 'rxjs';
 import {TestBed} from '@angular/core/testing';
+import {MatDialog} from '@angular/material/dialog';
 import {provideRouter, Router} from '@angular/router';
 import {RouterTestingHarness} from '@angular/router/testing';
 import {
@@ -25,6 +26,7 @@ import {asValidTape, type Column, type ColumnCount} from '../../../../../api/tap
 import {vi} from 'vitest';
 import {overviewFrame, scrollLeftFor} from './overview-frame';
 import {pixelsPerMillimetre} from './pixels-per-millimetre';
+import {ExportProblemsDialogComponent} from './export-problems-dialog/export-problems-dialog.component';
 import {PlotterExport} from './plotter-export';
 import {columnLines, columnNumbers, rulerNumbers} from './tape-marks';
 import {TapeViewComponent} from './tape-view.component';
@@ -78,6 +80,8 @@ interface RenderOptions {
   readonly language?: 'en' | 'de';
   /** Writing the Tape library fails. */
   readonly saveFails?: boolean;
+  /** Uses the real PlotterExport (and the real problems dialog) instead of a stub. */
+  readonly realExport?: boolean;
   /** The window width in px the faked BreakpointObserver answers for; the real one when not given. */
   readonly windowWidth?: number;
 }
@@ -117,7 +121,7 @@ async function render(options: RenderOptions = {}) {
   const plotterExport = {export: vi.fn((): Promise<void> => Promise.resolve()), saving: signal(false)};
   TestBed.configureTestingModule({
     providers: [
-      {provide: PlotterExport, useValue: plotterExport},
+      ...(options.realExport ? [] : [{provide: PlotterExport, useValue: plotterExport}]),
       provideRouter([
         {path: 'tapes', component: TapeListStubComponent},
         {path: 'tapes/:id', component: TapeViewComponent},
@@ -366,6 +370,36 @@ describe('TapeViewComponent', () => {
 
       expect(plotterExport.export).toHaveBeenCalledTimes(1);
       expect(plotterExport.export).toHaveBeenCalledWith(tape, organ);
+    });
+
+    describe('for a Tape that can not be cut', () => {
+      // Its Organ's holes were made so wide after the Tape was made that its Holes are shorter than the Minimum Hole Length.
+      const widerOrgan = (original: Organ): Organ => ({
+        ...testOrgan(original.name, 3, {tapeBed: {tapeWidth: 120, holeDiameter: 30, rowSpacing: 30}}),
+        id: original.id,
+      });
+
+      afterEach(() => TestBed.inject(MatDialog).closeAll());
+
+      it('keeps Export for the Plotter enabled', async () => {
+        const {tape, open, view} = await render({realExport: true, organNow: widerOrgan});
+
+        await open(`/tapes/${tape.id}`);
+
+        expect(view()?.querySelector<HTMLButtonElement>('[data-testid="export"]')?.disabled).toBe(false);
+      });
+
+      it('opens the problems dialog when Export for the Plotter is pressed', async () => {
+        const {tape, open, view, settle} = await render({realExport: true, organNow: widerOrgan});
+        await open(`/tapes/${tape.id}`);
+        const dialogOpen = vi.spyOn(TestBed.inject(MatDialog), 'open');
+
+        view()?.querySelector<HTMLButtonElement>('[data-testid="export"]')?.click();
+        await settle();
+
+        expect(dialogOpen).toHaveBeenCalledTimes(1);
+        expect(dialogOpen.mock.calls[0]?.[0]).toBe(ExportProblemsDialogComponent);
+      });
     });
 
     it('disables Export for the Plotter while a save is running', async () => {

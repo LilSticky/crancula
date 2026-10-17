@@ -1,9 +1,11 @@
 import {TestBed} from '@angular/core/testing';
+import {MatDialog} from '@angular/material/dialog';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {TranslateService} from '@ngx-translate/core';
 import {
   createTape,
   defaultSelectedParts,
+  exportProblems,
   plotterFileName,
   plotterSvg,
   proposeTransposition,
@@ -24,6 +26,7 @@ import {
 import {testOrgan} from '../../../../testing/organs';
 import {provideTestTranslations} from '../../../../testing/test-translations';
 import {TapeLibrary} from '../tape-library.store';
+import {ExportProblemsDialogComponent} from './export-problems-dialog/export-problems-dialog.component';
 import {PlotterExport} from './plotter-export';
 
 const TICKS_PER_QUARTER = 480;
@@ -142,6 +145,53 @@ describe('PlotterExport', () => {
     finish();
     await first;
     expect(plotterExport.saving()).toBe(false);
+  });
+
+  describe('for a Tape that can not be cut', () => {
+    // The Organ's holes were made so wide after the Tape was made that its Holes are shorter than the Minimum Hole Length.
+    const widerOrgan = (organ: Organ): Organ =>
+      testOrgan(organ.name, 3, {tapeBed: {tapeWidth: 120, holeDiameter: 30, rowSpacing: 30}});
+
+    afterEach(() => TestBed.inject(MatDialog).closeAll());
+
+    /** Starts the export; the dialog may or may not be awaited by the implementation. */
+    async function exportRefused() {
+      const setup = await setUp();
+      const organ = widerOrgan(setup.organ);
+      const open = vi.spyOn(TestBed.inject(MatDialog), 'open');
+      const saveSvg = vi.spyOn(setup.api.plotter, 'saveSvg');
+      const problems = exportProblems(setup.tape, organ);
+      const before = structuredClone(setup.library.tapeEntities());
+      const pending = setup.plotterExport.export(setup.tape, organ);
+      await Promise.race([pending, new Promise((resolve) => setTimeout(resolve, 0))]);
+      return {...setup, open, saveSvg, problems, before};
+    }
+
+    it('opens the problems dialog with exactly the problems of the export check', async () => {
+      const {open, problems} = await exportRefused();
+
+      expect(problems.length).toBeGreaterThan(0);
+      expect(open).toHaveBeenCalledTimes(1);
+      expect(open.mock.calls[0]?.[0]).toBe(ExportProblemsDialogComponent);
+      expect(open.mock.calls[0]?.[1]?.data).toEqual(problems);
+    });
+
+    it('never asks the Plotter to save, shows no snackbar and leaves the Tape library unchanged', async () => {
+      const {saveSvg, snackBar, library, before} = await exportRefused();
+
+      expect(saveSvg).not.toHaveBeenCalled();
+      expect(snackBar).not.toHaveBeenCalled();
+      expect(library.tapeEntities()).toEqual(before);
+    });
+
+    it('opens no problems dialog for a Tape that can be cut', async () => {
+      const {organ, tape, plotterExport} = await setUp();
+      const open = vi.spyOn(TestBed.inject(MatDialog), 'open');
+
+      await plotterExport.export(tape, organ);
+
+      expect(open).not.toHaveBeenCalled();
+    });
   });
 
   it('leaves the Tape library unchanged and exports twice', async () => {

@@ -3,7 +3,9 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {expect, test} from '@playwright/test';
 import {launchApp, type LaunchedApp} from './support/launch-app';
-import {melodyC3ToC5} from './support/midi-file';
+import {encodeSmf} from '../api/song/midi/smf-test-helper';
+import {melodyC3ToC5, type MidiFilePayload} from './support/midi-file';
+import {saveOrgan} from './support/organ-editor';
 import {createTapeFromSong, defineOctaveOrgan} from './support/tape-creation';
 import {stubSaveDialog, type SaveDialogStub} from './support/save-dialog';
 
@@ -20,6 +22,62 @@ async function englishText(key: string): Promise<string> {
   };
   return en.TAPE.EXPORT?.[key] ?? '';
 }
+
+/** A Song of one Part with a single note of one Column (60 of 480 ticks per quarter): a Hole of 1 Column. */
+function shortNoteSong(): MidiFilePayload {
+  const bytes = encodeSmf({
+    format: 1,
+    division: {ticksPerQuarterNote: 480},
+    tracks: [
+      {
+        events: [
+          {delta: 0, event: {type: 'trackName', text: 'Blip'}},
+          {delta: 0, event: {type: 'noteOn', channel: 0, note: 60, velocity: 80}},
+          {delta: 60, event: {type: 'noteOff', channel: 0, note: 60, velocity: 0}},
+        ],
+      },
+    ],
+  });
+  return {name: 'blip.mid', mimeType: 'audio/midi', buffer: Buffer.from(bytes)};
+}
+
+test.describe('Export a Tape that can not be cut (part 2)', () => {
+  test('explains the Hole in a dialog, never opens the save dialog, writes no file and leaves the Tapes alone', async () => {
+    const launched = await launchApp();
+    try {
+      const dialog = await stubSaveDialog(launched.app);
+      const folder = await mkdtemp(join(tmpdir(), 'crancula-refused-'));
+      await dialog.answerWith(join(folder, 'Blip.svg'));
+      await defineOctaveOrgan(launched.window, 'Octave organ');
+      await createTapeFromSong(launched.window, 'Blip', shortNoteSong());
+      const tapesBefore = await readTapesFile(launched.userDataDir);
+
+      // Raise the hole diameter: the Minimum Hole Length becomes 4 mm, 2 Columns, and the Hole has 1.
+      await launched.window.getByRole('link', {name: 'Organs'}).click();
+      await launched.window.getByTestId('organ').click();
+      await launched.window.getByTestId('hole-diameter').fill('4');
+      await launched.window.getByTestId('row-spacing').fill('4');
+      await saveOrgan(launched.window);
+      await launched.window.getByRole('link', {name: 'Tapes'}).click();
+      await launched.window.getByTestId('tape').click();
+      await expect(launched.window.getByTestId('export')).toBeEnabled();
+
+      await launched.window.getByTestId('export').click();
+
+      const problems = launched.window.getByRole('dialog');
+      await expect(problems).toContainText(await englishText('PROBLEMS_TITLE'));
+      await expect(problems.getByTestId('export-problem')).toHaveCount(1);
+      await expect(problems.getByTestId('export-problem')).toContainText('C4');
+      await expect(problems.getByTestId('export-problem')).toContainText(/\b1\b/); // The start Column, counted from 1.
+      await expect(problems.getByTestId('export-problem')).toContainText('4 mm');
+      expect(await dialog.calls()).toHaveLength(0);
+      expect(await readdir(folder)).toEqual([]);
+      expect(await readTapesFile(launched.userDataDir)).toBe(tapesBefore);
+    } finally {
+      await launched.app.close();
+    }
+  });
+});
 
 test.describe('Export a Tape for the Plotter', () => {
   test.describe.configure({mode: 'serial'});

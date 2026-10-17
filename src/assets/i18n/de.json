@@ -24,7 +24,12 @@
       "FILTER_NAME": "SVG-Datei",
       "SAVED": "Gespeichert: {{name}}",
       "FAILED": "Speichern fehlgeschlagen: {{reason}}",
-      "RETRY": "Erneut versuchen"
+      "RETRY": "Erneut versuchen",
+      "PROBLEMS_TITLE": "Dieses Lochband kann noch nicht geschnitten werden",
+      "PROBLEMS_CLOSE": "Schließen",
+      "PROBLEM_NO_PIPE": "{{note}} in Spalte {{column}}: Die Orgel hat keine Pfeife für diesen Ton.",
+      "PROBLEM_TOO_SHORT": "{{note}} in Spalte {{column}}: Das Loch ist {{length}} mm lang, die Mindestlochlänge beträgt {{minimum}} mm.",
+      "PROBLEM_TOO_CLOSE": "{{note}} in Spalte {{column}}: Der Abstand zum nächsten Loch in Spalte {{next}} beträgt {{gap}} mm, der Mindestabstand beträgt {{minimum}} mm."
     },
     "NAV": "Lochbänder",
     "VIEW": {

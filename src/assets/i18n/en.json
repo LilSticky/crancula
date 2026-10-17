@@ -24,7 +24,12 @@
       "FILTER_NAME": "SVG file",
       "SAVED": "Saved: {{name}}",
       "FAILED": "Saving failed: {{reason}}",
-      "RETRY": "Retry"
+      "RETRY": "Retry",
+      "PROBLEMS_TITLE": "This Tape can't be cut yet",
+      "PROBLEMS_CLOSE": "Close",
+      "PROBLEM_NO_PIPE": "{{note}} at Column {{column}}: the Organ has no Pipe for this note.",
+      "PROBLEM_TOO_SHORT": "{{note}} at Column {{column}}: the Hole is {{length}} mm long, the Minimum Hole Length is {{minimum}} mm.",
+      "PROBLEM_TOO_CLOSE": "{{note}} at Column {{column}}: the gap to the next Hole at Column {{next}} is {{gap}} mm, the Minimum Gap is {{minimum}} mm."
     },
     "NAV": "Tapes",
     "VIEW": {
