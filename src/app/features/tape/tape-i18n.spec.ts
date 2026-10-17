@@ -67,7 +67,7 @@ describe('Tape export texts', () => {
     });
   }
 
-  for (const name of keysUnder(en as TranslationTree, 'TAPE.EXPORT')) {
+  for (const name of keysUnder(en, 'TAPE.EXPORT')) {
     const key = `TAPE.EXPORT.${name}`;
 
     it(`${key} has a German text that differs from the English one`, () => {
