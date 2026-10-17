@@ -128,6 +128,7 @@
     "SUMMARY": {
       "TITLE": "Importübersicht",
       "DISMISS": "Schließen",
+      "NONE": "Keine",
       "TRANSPOSITION_TERM": "Transposition",
       "TRANSPOSITION": "{{semitones}} Halbtöne",
       "MOVED_BY_OCTAVES": "Um Oktaven verschobene Noten",

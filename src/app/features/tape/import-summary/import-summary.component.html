@@ -1,7 +1,7 @@
 @let summary = importSummary();
 <header>
-  <h3>{{ 'TAPE.SUMMARY.TITLE' | translate }}</h3>
-  <button type="button" [attr.aria-label]="'TAPE.SUMMARY.DISMISS' | translate" (click)="dismissed.emit()">
+  <h2>{{ 'TAPE.SUMMARY.TITLE' | translate }}</h2>
+  <button matIconButton type="button" [attr.aria-label]="'TAPE.SUMMARY.DISMISS' | translate" (click)="dismissed.emit()">
     <mat-icon aria-hidden="true">close</mat-icon>
   </button>
 </header>
@@ -12,8 +12,9 @@
 </dd>
 
 <dt>{{ 'TAPE.SUMMARY.MOVED_BY_OCTAVES' | translate }}</dt>
-<dd>
+<dd data-testid="moved-value">
 @if (summary.movedByOctaves.length > 0) {
+  {{ summary.movedByOctaves.length }}
   <ul>
     @for (moved of summary.movedByOctaves; track $index) {
       <li data-testid="moved-note"
@@ -29,12 +30,15 @@
       </li>
     }
   </ul>
+} @else {
+  {{ 'TAPE.SUMMARY.NONE' | translate }}
 }
 </dd>
 
 <dt>{{ 'TAPE.SUMMARY.UNPLAYABLE_NOTES' | translate }}</dt>
-<dd>
+<dd data-testid="unplayable-value">
 @if (summary.unplayableNotes.length > 0) {
+  {{ summary.unplayableNotes.length }}
   <ul>
     @for (unplayable of summary.unplayableNotes; track $index) {
       <li data-testid="unplayable-note"
@@ -47,12 +51,15 @@
       </li>
     }
   </ul>
+} @else {
+  {{ 'TAPE.SUMMARY.NONE' | translate }}
 }
 </dd>
 
 <dt>{{ 'TAPE.SUMMARY.HOLES_FIXED' | translate }}</dt>
-<dd>
+<dd data-testid="holes-fixed-value">
 @if (summary.holesFixed.length > 0) {
+  {{ summary.holesFixed.length }}
   <ul>
     @for (fix of summary.holesFixed; track $index) {
       <li data-testid="hole-fixed"
@@ -82,6 +89,8 @@
       </li>
     }
   </ul>
+} @else {
+  {{ 'TAPE.SUMMARY.NONE' | translate }}
 }
 </dd>
 </dl>

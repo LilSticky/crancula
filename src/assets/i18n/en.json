@@ -128,6 +128,7 @@
     "SUMMARY": {
       "TITLE": "Import Summary",
       "DISMISS": "Dismiss",
+      "NONE": "None",
       "TRANSPOSITION_TERM": "Transposition",
       "TRANSPOSITION": "{{semitones}} semitones",
       "MOVED_BY_OCTAVES": "Notes moved by octaves",
