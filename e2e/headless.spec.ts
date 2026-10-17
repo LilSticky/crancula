@@ -22,6 +22,7 @@ test.describe('Headless run', () => {
   });
 
   // Playwright waits for animation frames before every click; at one frame per second each click takes 2 s.
+  // Throttled means about 1 frame in 0.5 s; slow shared CI runners still manage 9, so more than 3 tells them apart (#48).
   test('renders frames at full speed, so that clicks are not slowed down', async () => {
     const framesInHalfASecond = await launched.window.evaluate(
       () =>
@@ -36,6 +37,6 @@ test.describe('Headless run', () => {
           requestAnimationFrame(count);
         }),
     );
-    expect(framesInHalfASecond).toBeGreaterThan(10);
+    expect(framesInHalfASecond).toBeGreaterThan(3);
   });
 });
