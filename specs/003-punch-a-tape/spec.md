@@ -23,8 +23,8 @@ file format."
   Tape view (what you see is what gets cut): every Hole and the Tape Outline, nothing else.
 - Q: What does the Tape Outline consist of? → A: Both long edges, the Lead-in's straight diagonal
   over its whole length from the full tape width at Column 1 to a point on the top edge, and a
-  square end cut after the last Column. There is no blank tail. The Tape is cut out of a wider sheet
-  or roll.
+  square end cut (where: see Session 2026-10-17). There is no blank tail. The Tape is cut out of a
+  wider sheet or roll.
 - Q: How does the Tape lie in the file? → A: As in the Tape view: horizontal, Lead-in on the left,
   row 1 at the top.
 - Q: Is a long Tape split into several files? → A: No. Always one file, whatever the length.
@@ -35,6 +35,17 @@ file format."
   Length or the Minimum Gap. The user is told which Holes and why.
 - Q: What does exporting do to the Tape? → A: Nothing. Crancula does not track punching.
 - Q: Which file format? → A: SVG first, opened by the cutter's software. DXF and HPGL come later.
+
+### Session 2026-10-17
+
+- Q: With a Lead-in of 0, how does the Tape Outline start? → A: A square cut at Column 1, with no
+  diagonal (FR-010).
+- Q: Can a Tape without Holes be exported? → A: Yes, the file holds only the Tape Outline.
+- Q: Where is the end cut? → A: A square end cut one Minimum Gap after the end of the last Column,
+  so no Hole touches it. This is not a blank tail; the dictionary's Tape Outline entry says so
+  (FR-006, FR-010).
+- Q: How does Export behave when a Tape can't be cut? → A: The button stays enabled. Choosing it
+  shows which Holes and why, instead of the save dialog (FR-001, FR-003).
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -62,14 +73,15 @@ the document size in mm.
    "<Tape name>.svg" suggested. **When** I save, **Then** one SVG file is written there and I'm
    told where it was saved.
 3. **Given** an Organ with tape width 100 mm, hole diameter 3 mm, spacing between rows 4 mm,
-   10 Pipes and a Lead-in of 50 mm, and a Tape on it with a Column length of 3 mm, **When** I
+   10 Pipes, a Minimum Gap of 2 mm and a Lead-in of 50 mm, and a Tape on it with a Column length of 3 mm, **When** I
    export a Hole of row 1 that starts at Column 1 and is 4 Columns long, **Then** the file has a
    slot 12 mm long and 3 mm wide with half-circle ends, from 50 mm to 62 mm from the Tape's left
    end, its centre line 32 mm below the top edge (Border 30.5 mm plus half the hole diameter).
 4. **Given** the same Tape is 200 Columns long, **Then** the Tape Outline runs along the top edge
-   from the Lead-in's tip (0 mm) to 650 mm, along the bottom edge from 50 mm to 650 mm, the
+   from the Lead-in's tip (0 mm) to 652 mm, along the bottom edge from 50 mm to 652 mm, the
    Lead-in's diagonal from the tip on the top edge to the bottom edge at 50 mm, and a square end
-   cut at 650 mm; the document is 650 mm × 100 mm.
+   cut at 652 mm (the last Column ends at 650 mm, plus the Minimum Gap of 2 mm); the document is
+   652 mm × 100 mm.
 5. **Given** I exported a Tape, **When** I look at it in Crancula, **Then** nothing about the Tape
    has changed, and I can export it again.
 6. **Given** I open the exported file in the cutter's software, **Then** it shows the Tape at its
@@ -157,10 +169,10 @@ can't be cut, and check that no text is shown untranslated.
   holds only the Tape Outline.
 - **Border 0**: the Holes of the outermost rows touch the long edges. This is valid (dictionary,
   Border) and the file is written as is.
-- **A Hole in the last Column**: since there is no blank tail, its half-circle end touches the
-  square end cut. This is accepted, like Holes touching the edge with a Border of 0.
+- **A Hole in the last Column**: the end cut is one Minimum Gap after the last Column, so the Hole
+  doesn't touch it.
 - **Empty Columns at the end** (Holes removed with their Pipe): the Tape keeps its length in
-  Columns, and the end cut is after its last Column, not after its last Hole.
+  Columns, and the end cut is one Minimum Gap after its last Column, not after its last Hole.
 - **Very long Tape** (for example a 10-minute Song, several metres): still exactly one file, at full
   length; Crancula does not check whether it fits the Plotter's working area.
 - **Cancelling the save dialog**: nothing is written, no message is shown, and the Tape view stays
@@ -183,8 +195,8 @@ can't be cut, and check that no text is shown untranslated.
 
 ### Functional Requirements
 
-- **FR-001**: The Tape view's "Export for the Plotter" command MUST be available for every opened
-  Tape. (It was shown disabled until now.)
+- **FR-001**: The Tape view's "Export for the Plotter" command MUST be enabled for every opened
+  Tape, also for one that can't be cut (FR-003). (It was shown disabled until now.)
 - **FR-002**: Before writing, the system MUST check every Hole of the Tape against the Organ: the
   Hole's Pipe is on the Organ, the Hole is at least the Minimum Hole Length long, and it keeps at
   least the Minimum Gap to the next Hole in its row. Lengths and gaps in mm follow spec 002 FR-011
@@ -200,8 +212,8 @@ can't be cut, and check that no text is shown untranslated.
   length, and MUST tell the user where it was saved. If the user cancels, nothing MUST be written
   and nothing else MUST change.
 - **FR-006**: The file MUST describe the Tape in true size, 1:1 in millimetres: its document size
-  MUST be the Tape's length (Lead-in plus its length in Columns times the Column length) by its
-  tape width, and cutter software MUST be able to open it at that size without scaling.
+  MUST be the Tape's length (Lead-in, plus its length in Columns times the Column length, plus the
+  Minimum Gap before the end cut) by its tape width, and cutter software MUST be able to open it at that size without scaling.
 - **FR-007**: The Tape MUST lie in the file as in the Tape view: horizontal, the Lead-in's tip at
   the left end, Column 1 starting at the Lead-in's length from the left end, row 1 nearest the top
   edge, rows centred across the Tape (dictionary, Tape Bed and Border).
@@ -211,10 +223,12 @@ can't be cut, and check that no text is shown untranslated.
   end of its last Column, one hole diameter wide, with half-circle ends inside that length, centred
   on its Pipe's row.
 - **FR-010**: The Tape Outline MUST be one closed cut made of: the top edge from the Lead-in's tip
-  to the end of the last Column; the square end cut across the tape width after the last Column;
+  to the end cut; the square end cut across the tape width one Minimum Gap after the end of the last
+  Column, so that no Hole touches it;
   the bottom edge from the end back to Column 1; and the Lead-in's straight diagonal from the bottom
   edge at Column 1 to the tip on the top edge. With a Lead-in of 0 the diagonal MUST be replaced by
-  a square cut at Column 1. There MUST be no blank tail after the last Column.
+  a square cut at Column 1. There MUST be no blank tail beyond the Minimum Gap after the last
+  Column.
 - **FR-011**: The file MUST contain only cuts: every Hole and the Tape Outline. It MUST NOT contain
   anything else that cutter software could cut or draw, such as rows, Borders, Column numbers,
   rulers, labels or fills.
@@ -237,8 +251,9 @@ can't be cut, and check that no text is shown untranslated.
   with half-circle ends.
 - **Organ**: supplies the Tape Bed (tape width, hole diameter, spacing between rows), its Pipes and
   their order, the Lead-in, the Minimum Hole Length and the Minimum Gap at the time of export.
-- **Tape Outline**: the cut around the Tape: both long edges, the Lead-in's diagonal and the square
-  end cut. Cut last.
+- **Tape Outline**: the cut around the Tape: both long edges, the Lead-in's diagonal (a square cut at
+  Column 1 when the Lead-in is 0) and the square end cut one Minimum Gap after the last Column. Cut
+  last.
 - **Exported file**: one SVG file in true size (mm) that holds the cuts for the Plotter: the Holes
   in order, then the Tape Outline. Not stored by Crancula.
 
@@ -268,16 +283,18 @@ can't be cut, and check that no text is shown untranslated.
   an implementation choice. DXF and HPGL are later formats (dictionary, Plotter).
 - **Where the command lives:** only in the Tape view in this slice, where the Tape is checked by
   eye before it is cut. Exporting from the Tape list can come later.
-- **When the check runs:** at the moment of export. The command stays available for every Tape;
-  a Tape that can't be cut is explained when the user chooses it, instead of a save dialog.
-- **Lead-in 0:** the Tape Outline starts with a square cut at Column 1; there is no diagonal.
-- **Tape without Holes:** exportable; the file holds only the Tape Outline. The user may want it to
-  test the cutter.
-- **Touching cuts:** Holes in the last Column touch the end cut, and with a Border of 0 the
-  outermost rows touch the long edges. Both are accepted as they follow from the user's decisions
-  (no blank tail; Border 0 is valid).
-- **The Organ as it is now:** the file, like the Tape view, uses the Organ's current Tape Bed and
-  Lead-in. Tapes are not re-checked when the Organ changes (spec 002), so FR-002 is where a
+- **When the check runs:** at the moment of export (decided 2026-10-17). The command stays enabled
+  for every Tape; a Tape that can't be cut is explained when the user chooses it, instead of a save
+  dialog.
+- **Lead-in 0:** the Tape Outline starts with a square cut at Column 1; there is no diagonal
+  (decided 2026-10-17).
+- **Tape without Holes:** exportable (decided 2026-10-17); the file holds only the Tape Outline. The
+  user may want it to test the cutter.
+- **Touching cuts:** only with a Border of 0 do Holes touch a cut (the long edges); that is valid
+  (dictionary, Border). The end cut keeps one Minimum Gap from the last Column, so no Hole touches
+  it (decided 2026-10-17).
+- **The Organ as it is now:** the file, like the Tape view, uses the Organ's current Tape Bed,
+  Lead-in and Minimum Gap (for the end cut). Tapes are not re-checked when the Organ changes (spec 002), so FR-002 is where a
   changed Organ is caught.
 - **Cut order of a Hole and of the Outline:** each Hole is cut as one closed path; the Tape Outline
   is one closed path. Where on that path the blade starts is left to the cutter's software.
@@ -289,6 +306,6 @@ can't be cut, and check that no text is shown untranslated.
   can't be exported either.
 - **Single user:** one computer, one user; the file is written where the user chooses.
 - **Out of scope:** DXF and HPGL export, describing the Plotter (blade offset, kerf, working area),
-  splitting a Tape into several files, a blank tail, tracking whether a Tape was punched, exporting
+  splitting a Tape into several files, a blank tail beyond the Minimum Gap, tracking whether a Tape was punched, exporting
   several Tapes at once, printing, and editing a Tape before export ("Edit a tape").
 - **Prototype code:** existing code is a quarry; this slice may replace it.
