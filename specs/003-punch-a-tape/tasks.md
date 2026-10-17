@@ -431,17 +431,17 @@ their start along the Tape, then the Tape Outline.
 
 ### Tests for User Story 3 ⚠️ (write first, must fail)
 
-- [ ] T038 [P] [US3] Extend `api/tape/tape-geometry.spec.ts` (data-model.md "Slot", research R5):
+- [x] T038 [P] [US3] Extend `api/tape/tape-geometry.spec.ts` (data-model.md "Slot", research R5):
   `slots` holds "one per Hole whose Pipe is on the Organ, **in cut order**": "Order: by `start`,
   then by `row` (FR-012)". A Tape whose Holes are stored by Pipe, then start (rows 3, 1, 2 at
   mixed starts) gives Slots sorted by start; two Holes with the same start in rows 2 and 1 give
   row 1 first (Story 3.2); the row is the Pipe's position on the Organ, not its note number (a
   reordered Organ).
-- [ ] T039 [P] [US3] Extend `api/tape/plotter-svg.spec.ts` (Story 3.1, 3.2): for
+- [x] T039 [P] [US3] Extend `api/tape/plotter-svg.spec.ts` (Story 3.1, 3.2): for
   `plotterSvg(tapeGeometry(tape, organ))` of a Tape with Holes in several rows, the Hole paths
   appear by start from the Lead-in towards the end, row 1 first at the same start, and the
   Outline's path comes after the last Hole.
-- [ ] T040 [P] [US3] Extend `e2e/tape-export.spec.ts`: in the written file of a Tape with several
+- [x] T040 [P] [US3] Extend `e2e/tape-export.spec.ts`: in the written file of a Tape with several
   rows, the Hole paths' x positions never decrease and the last path is the Outline
   (quickstart scenario 12).
 
