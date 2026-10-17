@@ -221,7 +221,7 @@ the document size in mm.
   - a Tape without Holes gives only the Outline's path; one path per Slot, in `slots` order;
   - SC-005: `tapeGeometry` plus `plotterSvg` for a generated 10-minute Tape (about 20 000 Columns,
     a few thousand Holes) finishes in under 5 s (expected well under 1 s) and gives one string.
-- [ ] T013 [P] [US1] Write the failing test `api/app/svg-save-request.spec.ts` for
+- [x] T013 [P] [US1] Write the failing test `api/app/svg-save-request.spec.ts` for
   `parseSvgSaveRequest(input: unknown): Result<SvgSaveRequest, string>`
   (contracts/plotter-ipc.md "Validation"; the reason names the field). It rejects:
   - the payload unless "a plain object with exactly these four string fields"
@@ -233,7 +233,7 @@ the document size in mm.
   - `dialogTitle`, `filterName` unless "1–200 characters, no control character".
   It accepts every `plotterFileName` result of T011's cases and every `plotterSvg` result of
   T012's cases.
-- [ ] T014 [P] [US1] Write the failing test `app/plotter-ipc.spec.ts` for
+- [x] T014 [P] [US1] Write the failing test `app/plotter-ipc.spec.ts` for
   `registerPlotterHandlers(ipcMain, effects: PlotterEffects)` with a fake `ipcMain`, a fake
   `showSaveDialog` that records its options, and a real temporary folder for `writeFile`
   (contracts/plotter-ipc.md "Behaviour"):
@@ -248,17 +248,17 @@ the document size in mm.
     → `saved` with `filePath`, and the next dialog's `defaultPath` starts in that file's folder;
   - a write into a missing folder → `failed` with the error's message; "`lastFolder` unchanged";
   - "Nothing in `userData` is read or written; no snapshot changes (FR-014)".
-- [ ] T015 [P] [US1] Extend `api/app/crancula-api.spec.ts` with `expectTypeOf` checks:
+- [x] T015 [P] [US1] Extend `api/app/crancula-api.spec.ts` with `expectTypeOf` checks:
   `CranculaApi.plotter` has `saveSvg(request: SvgSaveRequest): Promise<SvgSaveResult>`, with
   `SvgSaveResult` = "`{status: 'saved'; filePath: string}` | `{status: 'cancelled'}` |
   `{status: 'rejected'; reason: string}` | `{status: 'failed'; reason: string}`", re-exported by
   `api/app/crancula-api.ts` (contracts/domain-api.md).
-- [ ] T016 [P] [US1] Extend `src/app/core/crancula-api.token.spec.ts`: the `plotter` part of
+- [x] T016 [P] [US1] Extend `src/app/core/crancula-api.token.spec.ts`: the `plotter` part of
   `createInMemoryCranculaApi` "validates with `parseSvgSaveRequest`, records the last request, and
   answers `saved` with `filePath: 'in-memory/<suggestedFileName>'`"; a forged request gives
   `rejected`; "The existing `failures` option gains `plotter?: {saveSvg?: 'cancelled' | 'failed'}`"
   (contracts/plotter-ipc.md "In-memory stand-in").
-- [ ] T017 [P] [US1] Extend the e2e test `e2e/boundary.spec.ts`: `window.crancula` has exactly the
+- [x] T017 [P] [US1] Extend the e2e test `e2e/boundary.spec.ts`: `window.crancula` has exactly the
   keys `app`, `organs`, `plotter`, `tapes`; `window.crancula.plotter.saveSvg` is a function; a
   forged request (`suggestedFileName: '../evil.svg'`) answers `{status: 'rejected', …}` and no
   dialog opens.
@@ -301,13 +301,13 @@ the document size in mm.
   `api/index.ts` until T011 is green.
 - [x] T022 [US1] Implement `api/tape/plotter-svg.ts` and export `plotterSvg` from `api/index.ts`
   until T012 is green. String output only; rounding once, in the writer. Depends on T006, T012.
-- [ ] T023 [US1] Implement `api/app/svg-save-request.ts` (`SvgSaveRequest`, `SvgSaveResult`,
+- [x] T023 [US1] Implement `api/app/svg-save-request.ts` (`SvgSaveRequest`, `SvgSaveResult`,
   `parseSvgSaveRequest`) and export them from `api/index.ts` until T013 is green. Depends on T013,
   T021, T022.
-- [ ] T024 [US1] Implement `app/plotter-ipc.ts` (`PLOTTER_CHANNELS`, `PlotterEffects`,
+- [x] T024 [US1] Implement `app/plotter-ipc.ts` (`PLOTTER_CHANNELS`, `PlotterEffects`,
   `registerPlotterHandlers`, the remembered folder in memory only) until T014 is green.
   Depends on T014, T023.
-- [ ] T025 [US1] Add `plotter.saveSvg` to `CranculaApi` in `api/app/crancula-api.ts` (re-exporting
+- [x] T025 [US1] Add `plotter.saveSvg` to `CranculaApi` in `api/app/crancula-api.ts` (re-exporting
   `SvgSaveRequest`, `SvgSaveResult`), the `plotter` part of the stand-in in
   `src/app/core/crancula-api.token.ts`, `window.crancula.plotter` in `app/preload.ts` (through
   `ipcRenderer.invoke(PLOTTER_CHANNELS.saveSvg, …)`, type-only imports), and the wiring in

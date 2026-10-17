@@ -84,6 +84,7 @@ function apiSaving(result: TapeLibrarySaveResult, initialTapes?: TapeLibrarySnap
   return {
     organs: inMemory.organs,
     tapes: {load: () => inMemory.tapes.load(), save: () => Promise.resolve(result)},
+    plotter: inMemory.plotter,
     app: inMemory.app,
   };
 }
@@ -217,6 +218,7 @@ describe('TapeLibrary', () => {
           load: () => inMemory.tapes.load(),
           save: (snapshot) => (next.status === 'saved' ? inMemory.tapes.save(snapshot) : Promise.resolve(next)),
         },
+        plotter: inMemory.plotter,
         app: inMemory.app,
       });
       const content = library({tape: 1, song: 1}, {tape: 2, song: 2});
@@ -344,6 +346,7 @@ describe('TapeLibrary', () => {
             return inMemory.tapes.save(snapshot);
           },
         },
+        plotter: inMemory.plotter,
         app: inMemory.app,
       });
       await store.load();

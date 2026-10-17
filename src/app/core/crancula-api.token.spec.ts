@@ -1,5 +1,5 @@
 import {TestBed} from '@angular/core/testing';
-import type {CranculaApi, OrganLibrarySnapshot, TapeLibrarySnapshot} from '@api/index';
+import type {CranculaApi, OrganLibrarySnapshot, SvgSaveRequest, TapeLibrarySnapshot} from '@api/index';
 import {CRANCULA_API, createInMemoryCranculaApi} from './crancula-api.token';
 
 const snapshot: OrganLibrarySnapshot = {
@@ -75,6 +75,43 @@ describe('createInMemoryCranculaApi', () => {
 
   it('accepts a language without effect', async () => {
     await expect(createInMemoryCranculaApi().app.setLanguage('de')).resolves.toEqual({status: 'set'});
+  });
+
+  describe('plotter', () => {
+    const request: SvgSaveRequest = {
+      suggestedFileName: 'Waltz.svg',
+      svg: '<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg"></svg>\n',
+      dialogTitle: 'Export for the Plotter',
+      filterName: 'SVG file',
+    };
+
+    it('records the request and answers saved with an in-memory path', async () => {
+      const api = createInMemoryCranculaApi();
+
+      expect(await api.plotter.saveSvg(request)).toEqual({status: 'saved', filePath: 'in-memory/Waltz.svg'});
+      expect(api.plotter.lastSaveSvgRequest).toEqual(request);
+    });
+
+    it('rejects a forged request and records nothing', async () => {
+      const api = createInMemoryCranculaApi();
+
+      const reply = await api.plotter.saveSvg({...request, suggestedFileName: '../evil.svg'});
+
+      expect(reply).toEqual({status: 'rejected', reason: expect.any(String)});
+      expect(api.plotter.lastSaveSvgRequest).toBeUndefined();
+    });
+
+    it('answers cancelled when told to', async () => {
+      const api = createInMemoryCranculaApi(undefined, undefined, {plotter: {saveSvg: 'cancelled'}});
+
+      expect(await api.plotter.saveSvg(request)).toEqual({status: 'cancelled'});
+    });
+
+    it('answers failed when told to', async () => {
+      const api = createInMemoryCranculaApi(undefined, undefined, {plotter: {saveSvg: 'failed'}});
+
+      expect(await api.plotter.saveSvg(request)).toEqual({status: 'failed', reason: expect.any(String)});
+    });
   });
 
   describe('tapes', () => {

@@ -30,9 +30,12 @@ export type {
   SetLanguageResult,
   SnapshotLoadResult,
   SnapshotSaveResult,
+  SvgSaveRequest,
+  SvgSaveResult,
   TapeLibraryLoadResult,
   TapeLibrarySaveResult,
 } from './app/crancula-api';
+export {parseSvgSaveRequest} from './app/svg-save-request';
 export {isLanguage, type Language} from './app/language';
 export {
   defaultSelectedParts,

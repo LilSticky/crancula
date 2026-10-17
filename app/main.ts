@@ -1,4 +1,4 @@
-import {app, BrowserWindow, ipcMain, Menu, screen} from 'electron';
+import {app, BrowserWindow, dialog, ipcMain, Menu, screen, type WebContents} from 'electron';
 import * as fs from 'fs';
 import * as path from 'path';
 import type {Language} from '../api';
@@ -6,6 +6,7 @@ import {registerAppHandlers} from './app-ipc';
 import {menuTemplate, SOURCE_I18N_DIRECTORY} from './application-menu';
 import {createOrganLibraryFile} from './organ-library-file';
 import {registerOrganLibraryHandlers} from './organ-library-ipc';
+import {registerPlotterHandlers} from './plotter-ipc';
 import {createTapeLibraryFile} from './tape-library-file';
 import {registerTapeLibraryHandlers} from './tape-library-ipc';
 import {windowOptions} from './window-options';
@@ -23,6 +24,20 @@ const organLibraryFile = createOrganLibraryFile(path.join(app.getPath('userData'
 registerOrganLibraryHandlers(ipcMain, organLibraryFile);
 const tapeLibraryFile = createTapeLibraryFile(path.join(app.getPath('userData'), 'snapshots'));
 registerTapeLibraryHandlers(ipcMain, tapeLibraryFile);
+registerPlotterHandlers(
+  ipcMain,
+  {
+    // Looked up at call time, so e2e tests can replace dialog.showSaveDialog.
+    showSaveDialog: (window, options) =>
+      window ? dialog.showSaveDialog(window, options) : dialog.showSaveDialog(options),
+    writeFile: (filePath, text) => fs.promises.writeFile(filePath, text, 'utf8'),
+    documentsFolder: () => app.getPath('documents'),
+  },
+  (event) => {
+    const sender = (event as {sender?: WebContents}).sender;
+    return sender ? BrowserWindow.fromWebContents(sender) : null;
+  },
+);
 
 /** The folder the renderer's translation files are loaded from: the sources when serving, else the built assets. */
 function i18nDirectory(): string {

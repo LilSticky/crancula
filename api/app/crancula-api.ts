@@ -1,4 +1,5 @@
 import type {Language} from './language';
+import type {SvgSaveRequest, SvgSaveResult} from './svg-save-request';
 import type {OrganLibrarySnapshot} from '../organ/organ-library-snapshot';
 import type {TapeLibrarySnapshot} from '../tape/tape-library-snapshot';
 
@@ -27,6 +28,8 @@ export type SetLanguageResult =
   /** The payload is not a supported language; the menu is unchanged. */
   | {readonly status: 'rejected'; readonly reason: string};
 
+export type {SvgSaveRequest, SvgSaveResult};
+
 /** What the preload script exposes as `window.crancula` (ADR 4). */
 export interface CranculaApi {
   readonly organs: {
@@ -36,6 +39,10 @@ export interface CranculaApi {
   readonly tapes: {
     load(): Promise<TapeLibraryLoadResult>;
     save(snapshot: TapeLibrarySnapshot): Promise<TapeLibrarySaveResult>;
+  };
+  readonly plotter: {
+    /** Shows the save dialog and writes `request.svg` where the user chooses. */
+    saveSvg(request: SvgSaveRequest): Promise<SvgSaveResult>;
   };
   readonly app: {
     /** Tells the main process the language, so it can translate the application menu. */
