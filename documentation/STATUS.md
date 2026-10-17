@@ -100,7 +100,7 @@ Song onto a Tape); next-step strip. User decisions 2026-10-16: no created date, 
 lowest–highest only, Rename a Tape split to [#82](https://github.com/LilSticky/crancula/issues/82).
 ux-review 38/50. Gate: lint, i18n (213 keys), 495 node and 640 Angular tests, 60 e2e green locally.
 
-**Done (pull request pending):** #69 Tape import (2026-10-17). Import screen in two sheets: Song with a
+**Done:** #69 Tape import (2026-10-17, PR #86 merged 2026-10-17). Import screen in two sheets: Song with a
 file chip; Organ with the Pipe range, Parts list, Transposition stepper with the proposal explained; Fit
 as a result card. Each Fit count expands to its Notes before Create, via a new domain function
 `fitNotesOf` that `createTape` shares. Warning when Unplayable Notes are above 0 (Create stays possible).
@@ -119,8 +119,7 @@ after the last Column. A Tape that can't be cut opens a dialog naming every prob
 short, too close); nothing is written. Selected Hole warnings follow the same Column rules. Below 1180 px
 Export is an icon button. German texts. ux-review 40/50 (see [design/screens/current/ux-review.md](design/screens/current/ux-review.md)).
 Gate: lint, i18n (251 keys), 640 node and 746 Angular tests, 84 e2e green locally. Tasks in
-[tasks](../specs/003-punch-a-tape/tasks.md). **Next step:** take the next triaged `priority: high` issue from the
-[ROADMAP](ROADMAP.md); none is open yet, so triage first or pick the next slice ("Edit a tape" is next under Later).
+[tasks](../specs/003-punch-a-tape/tasks.md). **Next step:** all v0.1 slices are done; triage open issues and decide on the v0.1 release or the next slice (user decision).
 
 Follow-ups:
 [#76](https://github.com/LilSticky/crancula/issues/76), [#80](https://github.com/LilSticky/crancula/issues/80) and
