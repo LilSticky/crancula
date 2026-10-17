@@ -491,13 +491,13 @@ check that no text is shown untranslated.
   unused (`npm run i18n:check` warnings).
 - [x] T046 [P] Update `specs/003-punch-a-tape/data-model.md`, `quickstart.md` and the contracts
   where the implementation settled a detail (final i18n key names, the Tape view's drawn elements).
-- [ ] T047 Run `npm run ux:screens` and the `ux-review` skill on the Tape view (Lead-in diagonal,
+- [x] T047 Run `npm run ux:screens` and the `ux-review` skill on the Tape view (Lead-in diagonal,
   end cut, enabled Export) and the problems dialog; turn every finding into a test+implementation
   task pair appended to this file.
 - [x] T048 Run `npm run lint`, `npm run i18n:check`, `npm run test` and `npm run build`; all green.
 - [x] T049 Run `npm run e2e`; the whole suite, including the 001 and 002 tests and
   `e2e/tape-layout.spec.ts`, is green.
-- [ ] T050 Run the `spec-auditor` agent on the slice against `spec.md` and this file; fix every gap
+- [x] T050 Run the `spec-auditor` agent on the slice against `spec.md` and this file; fix every gap
   through a new test+implementation task pair appended to this file.
 - [ ] T051 Through the `housekeeper` agent: update `documentation/STATUS.md` (slice done, next
   step), set "Punch a tape" to `done` in `documentation/ROADMAP.md`, and add the export under
