@@ -131,7 +131,7 @@
       </div>
     </mat-card>
 
-    <mat-card appearance="outlined" data-testid="fit-sheet" aria-live="polite">
+    <mat-card appearance="outlined" data-testid="fit-sheet">
       <div data-testid="fit" [attr.data-matching-a-pipe]="fit()?.matchingAPipe" [attr.data-moved-by-octaves]="fit()?.movedByOctaves" [attr.data-unplayable]="fit()?.unplayable">
         @if (fit(); as fit) {
           <h2 class="group-title">{{ 'TAPE.FIT.TITLE' | translate }}</h2>
@@ -143,11 +143,11 @@
             </li>
             <li>
               @if (fit.movedByOctaves > 0) {
-                <button type="button" class="fit-row" data-testid="fit-moved" aria-controls="fit-moved-notes" [attr.aria-expanded]="movedOpen()" (click)="movedOpen.set(!movedOpen())">
+                <button type="button" class="fit-row" data-testid="fit-moved" [attr.aria-controls]="movedOpen() ? 'fit-moved-notes' : null" [attr.aria-expanded]="movedOpen()" (click)="toggleMoved()">
                   <ng-container *ngTemplateOutlet="rowBody; context: {icon: 'swap_vert', label: 'TAPE.FIT.MOVED_BY_OCTAVES', count: fit.movedByOctaves}"/>
                   <mat-icon aria-hidden="true">{{ movedOpen() ? 'expand_less' : 'expand_more' }}</mat-icon>
                 </button>
-                @if (movedOpen()) {
+                @if (movedOpen() && listsShown()) {
                   <ul class="fit-notes" id="fit-moved-notes" data-testid="fit-notes">
                     @for (moved of fitNotes().movedByOctaves; track $index) {
                       <li data-testid="fit-note">{{ (moved.octaves === 1 ? 'TAPE.SUMMARY.MOVED_NOTE_ONE' : 'TAPE.SUMMARY.MOVED_NOTE') | translate: {
@@ -165,11 +165,11 @@
             </li>
             <li>
               @if (fit.unplayable > 0) {
-                <button type="button" class="fit-row warning" data-testid="fit-unplayable" aria-controls="fit-unplayable-notes" [attr.aria-expanded]="unplayableOpen()" (click)="unplayableOpen.set(!unplayableOpen())">
+                <button type="button" class="fit-row warning" data-testid="fit-unplayable" [attr.aria-controls]="unplayableOpen() ? 'fit-unplayable-notes' : null" [attr.aria-expanded]="unplayableOpen()" (click)="toggleUnplayable()">
                   <ng-container *ngTemplateOutlet="rowBody; context: {icon: 'warning', label: 'TAPE.FIT.UNPLAYABLE', count: fit.unplayable}"/>
                   <mat-icon aria-hidden="true">{{ unplayableOpen() ? 'expand_less' : 'expand_more' }}</mat-icon>
                 </button>
-                @if (unplayableOpen()) {
+                @if (unplayableOpen() && listsShown()) {
                   <ul class="fit-notes" id="fit-unplayable-notes" data-testid="fit-notes">
                     @for (unplayable of fitNotes().unplayableNotes; track $index) {
                       <li data-testid="fit-note">{{ 'TAPE.SUMMARY.UNPLAYABLE_NOTE' | translate: {
@@ -186,7 +186,7 @@
             </li>
           </ul>
           @if (fit.unplayable > 0) {
-            <p class="fit-warning" data-testid="fit-warning">{{ (fit.unplayable === 1 ? 'TAPE.FIT.UNPLAYABLE_WARNING_ONE' : 'TAPE.FIT.UNPLAYABLE_WARNING') | translate: {count: fit.unplayable} }}</p>
+            <p class="fit-warning" data-testid="fit-warning" aria-live="polite">{{ (fit.unplayable === 1 ? 'TAPE.FIT.UNPLAYABLE_WARNING_ONE' : 'TAPE.FIT.UNPLAYABLE_WARNING') | translate: {count: fit.unplayable} }}</p>
           }
         } @else {
           <p data-testid="fit-empty">{{ 'TAPE.FIT.EMPTY' | translate }}</p>
@@ -200,7 +200,7 @@
     </mat-card>
 
     @if (tapes.loadProblem()) {
-      <p class="rejection" data-testid="tape-load-problem">{{ 'TAPE.IMPORT.LOAD_PROBLEM' | translate }}</p>
+      <p class="rejection" role="alert" data-testid="tape-load-problem">{{ 'TAPE.IMPORT.LOAD_PROBLEM' | translate }}</p>
     }
     <cranc-action-bar [label]="'TAPE.IMPORT.ACTION_BAR' | translate">
       <span actionBarState>{{ readiness().key | translate: readiness().params }}</span>

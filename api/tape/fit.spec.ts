@@ -247,6 +247,15 @@ describe('fitNotesOf', () => {
     });
   });
 
+  it('lists a Note whose transposed number falls outside 0 to 127 as unplayable instead of throwing', () => {
+    const song = aSong(aPartStartingAt([[127, 0]]));
+    const shift = defined(transposition(12), 'transposition');
+    const notes = fitNotesOf(song, parts(0), organ, shift);
+    expect(notes.unplayableNotes).toHaveLength(1);
+    expect(notes.unplayableNotes).toHaveLength(fitOf(song, parts(0), organ, shift).unplayable);
+    expect(notes.movedByOctaves).toEqual([]);
+  });
+
   describe('against fitOf and createTape', () => {
     const song = aSong(
       aPartStartingAt([

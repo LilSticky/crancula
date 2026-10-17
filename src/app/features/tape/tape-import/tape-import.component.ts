@@ -319,8 +319,28 @@ export class TapeImportComponent {
     };
   });
 
-  protected readonly movedOpen = signal(false);
-  protected readonly unplayableOpen = signal(false);
+  /** The Fit Note lists show only for a Transposition the form accepts. */
+  protected readonly listsShown = computed(() => this.tape.transposition().valid());
+
+  /** What a list was opened for: a new Song or another choice of Parts closes it. */
+  private readonly disclosureKey = computed(() => ({song: this.song(), parts: this.selectedParts()}));
+  private readonly movedOpenedFor = signal<object | null>(null);
+  private readonly unplayableOpenedFor = signal<object | null>(null);
+
+  protected readonly movedOpen = computed(
+    () => (this.fit()?.movedByOctaves ?? 0) > 0 && this.movedOpenedFor() === this.disclosureKey(),
+  );
+  protected readonly unplayableOpen = computed(
+    () => (this.fit()?.unplayable ?? 0) > 0 && this.unplayableOpenedFor() === this.disclosureKey(),
+  );
+
+  protected toggleMoved(): void {
+    this.movedOpenedFor.set(this.movedOpen() ? null : this.disclosureKey());
+  }
+
+  protected toggleUnplayable(): void {
+    this.unplayableOpenedFor.set(this.unplayableOpen() ? null : this.disclosureKey());
+  }
 
   /** The Transposition the form shows now: the chosen one, or the proposal while none is entered. */
   protected readonly proposal = computed(() => {

@@ -774,6 +774,7 @@ describe('TapeImportComponent', () => {
       await page.choose(midiFile(melodyBytes()));
 
       expect(page.query('tape-load-problem')).not.toBeNull();
+      expect(page.query('tape-load-problem')?.getAttribute('role')).toBe('alert');
       expect(page.query('create-tape')?.hasAttribute('disabled')).toBe(true);
       await page.create();
       expect(page.navigate).not.toHaveBeenCalled();
@@ -849,12 +850,12 @@ describe('TapeImportComponent', () => {
       expect(fit()).toEqual({matchingAPipe: 3, movedByOctaves: 0, unplayable: 0});
     });
 
-    it('holds one sentence and no rows before a Song is chosen, and the sheet is a polite live region', async () => {
+    it('holds one sentence and no rows before a Song is chosen, and the sheet is no live region itself', async () => {
       const {query, textOf} = await render({organs: [testOrgan('Street organ', 3)]});
 
       expect(textOf('fit-empty')).toBe('Choose a MIDI file and an Organ to see how the Song fits its Pipes.');
       expect(query('fit-matching')).toBeNull();
-      expect(query('fit-sheet')?.getAttribute('aria-live')).toBe('polite');
+      expect(query('fit-sheet')?.hasAttribute('aria-live')).toBe(false);
     });
 
     it('drops the sentence once the Fit is shown', async () => {
@@ -903,7 +904,7 @@ describe('TapeImportComponent', () => {
         const button = asButton(page.query(id));
         expect(button.type).toBe('button');
         expect(button.getAttribute('aria-expanded')).toBe('false');
-        expect(button.getAttribute('aria-controls')).toBeTruthy();
+        expect(button.hasAttribute('aria-controls')).toBe(false);
       }
       expect(page.query('fit-notes')).toBeNull();
       expect(page.fit()).toEqual({matchingAPipe: 0, movedByOctaves: 3, unplayable: 1});
@@ -936,6 +937,77 @@ describe('TapeImportComponent', () => {
       await page.fixture.whenStable();
       expect(button.getAttribute('aria-expanded')).toBe('false');
       expect(page.query('fit-notes')).toBeNull();
+    });
+
+    it('names its list in aria-controls only while the list is open', async () => {
+      const page = await openMixed();
+      const button = asButton(page.query('fit-moved'));
+
+      button.click();
+      await page.fixture.whenStable();
+      expect(button.getAttribute('aria-controls')).toBeTruthy();
+      expect(page.element.ownerDocument.getElementById(button.getAttribute('aria-controls') ?? '')).not.toBeNull();
+
+      button.click();
+      await page.fixture.whenStable();
+      expect(button.hasAttribute('aria-controls')).toBe(false);
+    });
+
+    it('starts closed again after another Song is chosen', async () => {
+      const page = await openMixed();
+      for (const id of ['fit-moved', 'fit-unplayable']) {
+        asButton(page.query(id)).click();
+        await page.fixture.whenStable();
+      }
+
+      await page.choose(midiFile(mixedBytes(), 'other.mid'));
+      await page.type(page.field('transposition'), '0');
+
+      for (const id of ['fit-moved', 'fit-unplayable']) {
+        expect(asButton(page.query(id)).getAttribute('aria-expanded')).toBe('false');
+      }
+      expect(page.query('fit-notes')).toBeNull();
+    });
+
+    it('starts closed again when the count drops to 0 and rises again', async () => {
+      const page = await openMixed();
+      asButton(page.query('fit-unplayable')).click();
+      await page.fixture.whenStable();
+
+      // Part 0 (Lead) holds the only Unplayable Note
+      await page.toggle(0);
+      expect(page.query('fit-unplayable')?.tagName).not.toBe('BUTTON');
+      await page.toggle(0);
+      await page.type(page.field('transposition'), '0');
+
+      const button = asButton(page.query('fit-unplayable'));
+      expect(button.getAttribute('aria-expanded')).toBe('false');
+      expect(page.query('fit-notes')).toBeNull();
+    });
+
+    it('is no live region as a whole sheet; a small summary or the warning is the polite one', async () => {
+      const page = await openMixed();
+      const sheet = page.query('fit-sheet');
+
+      expect(sheet?.hasAttribute('aria-live')).toBe(false);
+      const live = sheet?.querySelector('[data-testid="fit-summary"], [data-testid="fit-warning"]');
+      expect(live?.getAttribute('aria-live')).toBe('polite');
+    });
+
+    it('shows no Fit Notes and throws no error when a Transposition pushes a Note outside 0 to 127', async () => {
+      const page = await render({organs: [testOrgan('Street organ', 3)]});
+      await page.choose(midiFile(highestNoteBytes()));
+      await page.type(page.field('transposition'), '0');
+      const button = asButton(page.query('fit-unplayable'));
+      button.click();
+      await page.fixture.whenStable();
+      expect(page.query('fit-notes')).not.toBeNull();
+
+      await page.type(page.field('transposition'), '100');
+
+      expect(page.violationsAt('transposition')).toEqual(['transposition-out-of-range']);
+      expect(page.query('fit-notes')).toBeNull();
+      expect(page.query('fit-note')).toBeNull();
     });
 
     it('is a native focusable button, so Enter and Space toggle it (the keys themselves are an e2e matter)', async () => {

@@ -52,7 +52,8 @@ export function placedNotesOf(
       const quantised = quantiseNote(each, perQuarter);
       return {
         part,
-        noteNumber: valid(midiNoteNumber(each.noteNumber + transposition), 'transposed note number'),
+        // outside 0..127 the Note has no Pipe (unplayable) and keeps its own number
+        noteNumber: midiNoteNumber(each.noteNumber + transposition) ?? each.noteNumber,
         pipe: table[each.noteNumber + transposition],
         start: valid(column(quantised.start - origin), 'Column'),
         length: quantised.length,
