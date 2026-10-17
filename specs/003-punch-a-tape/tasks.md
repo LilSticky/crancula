@@ -485,11 +485,11 @@ check that no text is shown untranslated.
 
 ## Phase 7: Polish & Cross-Cutting Concerns
 
-- [ ] T045 [P] Check the changed files: `api/tape/tape-geometry.ts`, `export-problems.ts`,
+- [x] T045 [P] Check the changed files: `api/tape/tape-geometry.ts`, `export-problems.ts`,
   `plotter-svg.ts`, `plotter-file-name.ts` and `api/app/svg-save-request.ts` import nothing from
   Angular, Electron or Node; no `any`, no non-null assertions, no `console.*`; no i18n key is left
   unused (`npm run i18n:check` warnings).
-- [ ] T046 [P] Update `specs/003-punch-a-tape/data-model.md`, `quickstart.md` and the contracts
+- [x] T046 [P] Update `specs/003-punch-a-tape/data-model.md`, `quickstart.md` and the contracts
   where the implementation settled a detail (final i18n key names, the Tape view's drawn elements).
 - [ ] T047 Run `npm run ux:screens` and the `ux-review` skill on the Tape view (Lead-in diagonal,
   end cut, enabled Export) and the problems dialog; turn every finding into a test+implementation

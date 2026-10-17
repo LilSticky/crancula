@@ -17,7 +17,7 @@ How to prove the slice works end to end. It refers to the [spec](spec.md),
 | Command | Expected |
 |---------|----------|
 | `npm run lint` | no errors |
-| `npm run i18n:check` | every new `TAPE.EXPORT.*` key in `en.json` and `de.json`; `TAPE.VIEW.EXPORT_LATER` gone; `TAPE.EXPORT.PROBLEM.*` listed in `DYNAMIC_PREFIXES` in `scripts/check-i18n.mjs` |
+| `npm run i18n:check` | every new `TAPE.EXPORT.*` key in `en.json` and `de.json`; `TAPE.VIEW.EXPORT_LATER` gone; the `TAPE.EXPORT.PROBLEM_*` keys (flat, quoted in the dialog) are used by code, so no `DYNAMIC_PREFIXES` entry is needed |
 | `npm run test` | Node tests (`api/tape`, `api/app`, `app/`) and Angular tests (`src/`) green, including the 001 and 002 tests |
 | `npm run build` | build succeeds (bundles the new `app/plotter-ipc.ts`) |
 | `npm run e2e` | Electron flows green, including `e2e/tape-export.spec.ts` |

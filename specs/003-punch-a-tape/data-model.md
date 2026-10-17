@@ -99,8 +99,10 @@ Rules:
 - Order: by `start`, then by row (Holes without a Pipe after those with one at the same start),
   then by code in the order of the table.
 - The UI shows `noteName(pipe)` and `start + 1` (counted from 1, as in the Import Summary, FR-003)
-  and the mm values in the language's notation. i18n keys `TAPE.EXPORT.PROBLEM.<CODE>` (the code
-  upper-cased, `-` as `_`), as for `TAPE.VIOLATION.*`.
+  and the mm values in the language's notation. i18n keys are flat, one per code, under `TAPE.EXPORT`:
+  `TAPE.EXPORT.PROBLEM_NO_PIPE`, `TAPE.EXPORT.PROBLEM_TOO_SHORT`, `TAPE.EXPORT.PROBLEM_TOO_CLOSE`
+  (the code upper-cased, `-` as `_`). The dialog (`export-problems-dialog`) names them as quoted
+  literals, so they need no `DYNAMIC_PREFIXES` entry.
 - `HoleLimits` and the function that computes them for an Organ and a Column length
   (`holeLimitsOf`, today private in `create-tape.ts`) move to `hole-fixes.ts`, so `createTape`
   and `exportProblems` share them.
