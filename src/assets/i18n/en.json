@@ -19,6 +19,13 @@
     "SAVED_HERE": "Saved on this computer"
   },
   "TAPE": {
+    "EXPORT": {
+      "DIALOG_TITLE": "Export for the Plotter",
+      "FILTER_NAME": "SVG file",
+      "SAVED": "Saved: {{name}}",
+      "FAILED": "Saving failed: {{reason}}",
+      "RETRY": "Retry"
+    },
     "NAV": "Tapes",
     "VIEW": {
       "PARTS": "Parts on the Tape",
@@ -30,7 +37,6 @@
       "COLUMNS_ONE": "{{count}} Column",
       "COLUMNS_OTHER": "{{count}} Columns",
       "EXPORT": "Export for the Plotter",
-      "EXPORT_LATER": "Export comes in a later release",
       "SIDE_PANEL": "Details",
       "DETAILS": "Tape details",
       "STATUS_COLUMN": "Column {{column}} at {{mm}} mm",

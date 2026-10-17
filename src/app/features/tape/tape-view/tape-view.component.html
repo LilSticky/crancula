@@ -16,11 +16,10 @@
       }
     </mat-button-toggle-group>
     @if (compact()) {<button pageHeadActions mat-stroked-button type="button" data-testid="side-panel-toggle" [attr.aria-expanded]="sidePanelOpen()" (click)="toggleSidePanel()">{{ 'TAPE.VIEW.DETAILS' | translate }}</button>}
-    <button pageHeadActions mat-stroked-button type="button" disabled data-testid="export">
+    <button pageHeadActions mat-stroked-button type="button" data-testid="export" [disabled]="plotterExport.saving()" (click)="exportTape()">
       <mat-icon aria-hidden="true">content_cut</mat-icon>
       {{ 'TAPE.VIEW.EXPORT' | translate }}
     </button>
-    <span pageHeadActions class="export-later" data-testid="export-later">{{ 'TAPE.VIEW.EXPORT_LATER' | translate }}</span>
   </cranc-page-head>
   <div class="layout" [class.compact]="compact()">
   <div class="stage" [class.compact]="compact()">

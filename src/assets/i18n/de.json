@@ -19,6 +19,13 @@
     "SAVED_HERE": "Auf diesem Computer gespeichert"
   },
   "TAPE": {
+    "EXPORT": {
+      "DIALOG_TITLE": "Für den Plotter exportieren",
+      "FILTER_NAME": "SVG-Datei",
+      "SAVED": "Gespeichert: {{name}}",
+      "FAILED": "Speichern fehlgeschlagen: {{reason}}",
+      "RETRY": "Erneut versuchen"
+    },
     "NAV": "Lochbänder",
     "VIEW": {
       "PARTS": "Stimmen auf dem Lochband",
@@ -30,7 +37,6 @@
       "COLUMNS_ONE": "{{count}} Spalte",
       "COLUMNS_OTHER": "{{count}} Spalten",
       "EXPORT": "Export für den Plotter",
-      "EXPORT_LATER": "Der Export kommt in einer späteren Version",
       "SIDE_PANEL": "Details",
       "DETAILS": "Lochbanddetails",
       "STATUS_COLUMN": "Spalte {{column}} bei {{mm}} mm",

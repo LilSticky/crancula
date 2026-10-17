@@ -1,7 +1,7 @@
 import {mkdtemp, readFile, rm, stat, writeFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {dirname, join} from 'node:path';
-import type {SaveDialogOptions, SaveDialogReturnValue} from 'electron';
+import type {BrowserWindow, SaveDialogOptions, SaveDialogReturnValue} from 'electron';
 import {afterEach, beforeEach, describe, expect, it} from 'vitest';
 import type {IpcHandlerRegistry} from './organ-library-ipc';
 import {PLOTTER_CHANNELS, registerPlotterHandlers, type PlotterEffects} from './plotter-ipc';
@@ -20,6 +20,8 @@ let documents: string;
 let dialogAnswers: SaveDialogReturnValue[];
 let dialogCalls: SaveDialogOptions[];
 let handlers: Map<string, Handler>;
+let senderWindow: BrowserWindow | null;
+const window = {} as BrowserWindow;
 
 const effects: PlotterEffects = {
   showSaveDialog: (_window, options) => {
@@ -40,8 +42,9 @@ beforeEach(async () => {
   dialogAnswers = [];
   dialogCalls = [];
   handlers = new Map<string, Handler>();
+  senderWindow = window;
   const ipcMain: IpcHandlerRegistry = {handle: (channel, handler) => void handlers.set(channel, handler)};
-  registerPlotterHandlers(ipcMain, effects);
+  registerPlotterHandlers(ipcMain, effects, () => senderWindow);
 });
 
 afterEach(async () => {
@@ -59,6 +62,31 @@ describe('registerPlotterHandlers', () => {
 
     expect(reply).toEqual({status: 'rejected', reason: expect.stringContaining('suggestedFileName')});
     expect(dialogCalls).toEqual([]);
+  });
+
+  it('rejects the request without a dialog when the sender has no window', async () => {
+    senderWindow = null;
+
+    const reply = await saveSvg(request);
+
+    expect(reply).toEqual({status: 'rejected', reason: expect.any(String)});
+    expect(dialogCalls).toEqual([]);
+  });
+
+  it('shows the dialog modal to the window of the sender', async () => {
+    let shownFor: BrowserWindow | null = null;
+    const original = effects.showSaveDialog;
+    effects.showSaveDialog = (parent, options) => {
+      shownFor = parent;
+      return original(parent, options);
+    };
+    try {
+      await saveSvg(request);
+    } finally {
+      effects.showSaveDialog = original;
+    }
+
+    expect(shownFor).toBe(window);
   });
 
   it('shows the dialog with title, default path in the Documents folder, SVG filter and properties', async () => {
@@ -115,12 +143,12 @@ describe('registerPlotterHandlers', () => {
     expect(dialogCalls[1]?.defaultPath).toBe(join(dirname(chosen), 'Waltz.svg'));
   });
 
-  it('answers failed with the error message when the folder is missing, and keeps the last folder', async () => {
+  it('answers failed with the error code only, without the path, when the folder is missing, and keeps the last folder', async () => {
     dialogAnswers.push({canceled: false, filePath: join(dir, 'missing', 'out.svg')});
 
     const reply = await saveSvg(request);
 
-    expect(reply).toEqual({status: 'failed', reason: expect.stringContaining('ENOENT')});
+    expect(reply).toEqual({status: 'failed', reason: 'ENOENT'});
     await saveSvg(request);
     expect(dialogCalls[1]?.defaultPath).toBe(join(documents, 'Waltz.svg'));
   });

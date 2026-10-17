@@ -262,7 +262,7 @@ the document size in mm.
   keys `app`, `organs`, `plotter`, `tapes`; `window.crancula.plotter.saveSvg` is a function; a
   forged request (`suggestedFileName: '../evil.svg'`) answers `{status: 'rejected', …}` and no
   dialog opens.
-- [ ] T018 [P] [US1] Write the failing test
+- [x] T018 [P] [US1] Write the failing test
   `src/app/features/tape/tape-view/plotter-export.spec.ts` for the injectable `PlotterExport`
   (research R8, data-model.md "State"), with the in-memory stand-in:
   - the request is "`suggestedFileName: plotterFileName(tape.name)`", "`svg:
@@ -276,11 +276,11 @@ the document size in mm.
     second dialog": a second call while saving does nothing;
   - the Tape library's Tapes are unchanged and nothing is saved to `tapes.json` (FR-014, SC-006);
     exporting twice works (scenario 1.5).
-- [ ] T019 [P] [US1] Extend `src/app/features/tape/tape-view/tape-view.component.spec.ts`
+- [x] T019 [P] [US1] Extend `src/app/features/tape/tape-view/tape-view.component.spec.ts`
   (FR-001, scenario 1.1): "Export for the Plotter" (`TAPE.VIEW.EXPORT`) is enabled for every
   opened Tape; there is no `data-testid="export-later"` text; clicking it calls `PlotterExport`
   with the shown Tape and its Organ; the button is disabled while `saving` is true.
-- [ ] T020 [P] [US1] Write `e2e/support/save-dialog.ts` and the failing e2e test
+- [x] T020 [P] [US1] Write `e2e/support/save-dialog.ts` and the failing e2e test
   `e2e/tape-export.spec.ts`, part 1 (research R9). The helper replaces `dialog.showSaveDialog` in
   the main process through `electronApp.evaluate(({dialog}) => …)`, answers a given path or
   `canceled`, and records every call's options. The test creates the reference Organ and a Tape
@@ -315,11 +315,11 @@ the document size in mm.
   "`writeFile` is `fs.promises.writeFile(path, text, 'utf8')`", "`documentsFolder` is
   `app.getPath('documents')`"; until T015, T016 and T017 are green. One commit, since the type,
   the preload and the stand-in must change together. Depends on T015–T017, T024.
-- [ ] T026 [US1] Implement `src/app/features/tape/tape-view/plotter-export.ts` (injectable,
+- [x] T026 [US1] Implement `src/app/features/tape/tape-view/plotter-export.ts` (injectable,
   `MatSnackBar`, `TranslateService`, the `saving` signal) and add `TAPE.EXPORT.DIALOG_TITLE`,
   `TAPE.EXPORT.FILTER_NAME` ("SVG file"), `TAPE.EXPORT.SAVED` and `TAPE.EXPORT.FAILED` to
   `src/assets/i18n/en.json` and `de.json`, until T018 is green. Depends on T018, T025.
-- [ ] T027 [US1] Enable "Export for the Plotter" in
+- [x] T027 [US1] Enable "Export for the Plotter" in
   `src/app/features/tape/tape-view/tape-view.component.ts` and `.html`: call `PlotterExport`,
   disable while saving, remove the `export-later` span and its styles, and remove
   `TAPE.VIEW.EXPORT_LATER` from `en.json` and `de.json`; until T019 and T020 are green.

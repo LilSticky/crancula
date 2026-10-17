@@ -1,4 +1,4 @@
-import {app, BrowserWindow, dialog, ipcMain, Menu, screen, type WebContents} from 'electron';
+import {app, BrowserWindow, dialog, ipcMain, Menu, screen} from 'electron';
 import * as fs from 'fs';
 import * as path from 'path';
 import type {Language} from '../api';
@@ -28,15 +28,11 @@ registerPlotterHandlers(
   ipcMain,
   {
     // Looked up at call time, so e2e tests can replace dialog.showSaveDialog.
-    showSaveDialog: (window, options) =>
-      window ? dialog.showSaveDialog(window, options) : dialog.showSaveDialog(options),
+    showSaveDialog: (window, options) => dialog.showSaveDialog(window, options),
     writeFile: (filePath, text) => fs.promises.writeFile(filePath, text, 'utf8'),
     documentsFolder: () => app.getPath('documents'),
   },
-  (event) => {
-    const sender = (event as {sender?: WebContents}).sender;
-    return sender ? BrowserWindow.fromWebContents(sender) : null;
-  },
+  (event) => BrowserWindow.fromWebContents(event.sender),
 );
 
 /** The folder the renderer's translation files are loaded from: the sources when serving, else the built assets. */

@@ -1,5 +1,5 @@
 import {basename, dirname, join} from 'node:path';
-import type {BrowserWindow, SaveDialogOptions, SaveDialogReturnValue} from 'electron';
+import type {BrowserWindow, IpcMainInvokeEvent, SaveDialogOptions, SaveDialogReturnValue} from 'electron';
 import {parseSvgSaveRequest, type SvgSaveResult} from '../api/app/svg-save-request';
 import type {IpcHandlerRegistry} from './organ-library-ipc';
 
@@ -8,15 +8,21 @@ export const PLOTTER_CHANNELS = {saveSvg: 'plotter:save-svg'} as const;
 
 /** The side effects of saving the Plotter file; Electron and Node in `main.ts`, fakes in tests. */
 export interface PlotterEffects {
-  showSaveDialog(window: BrowserWindow | null, options: SaveDialogOptions): Promise<SaveDialogReturnValue>;
+  showSaveDialog(window: BrowserWindow, options: SaveDialogOptions): Promise<SaveDialogReturnValue>;
   writeFile(filePath: string, text: string): Promise<void>;
   documentsFolder(): string;
+}
+
+/** The OS error code such as ENOENT or EACCES; it tells the reason without naming the path. */
+function errorCode(error: unknown): string {
+  if (typeof error === 'object' && error !== null && 'code' in error && typeof error.code === 'string') return error.code;
+  return 'UNKNOWN';
 }
 
 export function registerPlotterHandlers(
   ipcMain: IpcHandlerRegistry,
   effects: PlotterEffects,
-  windowOf: (event: unknown) => BrowserWindow | null = () => null,
+  windowOf: (event: IpcMainInvokeEvent) => BrowserWindow | null,
 ): void {
   let lastFolder: string | undefined;
 
@@ -24,8 +30,10 @@ export function registerPlotterHandlers(
     const parsed = parseSvgSaveRequest(payload);
     if (!parsed.ok) return {status: 'rejected', reason: parsed.error};
     const request = parsed.value;
+    const window = windowOf(event as IpcMainInvokeEvent);
+    if (!window) return {status: 'rejected', reason: 'no window to show the save dialog for'};
 
-    const answer = await effects.showSaveDialog(windowOf(event), {
+    const answer = await effects.showSaveDialog(window, {
       title: request.dialogTitle,
       defaultPath: join(lastFolder ?? effects.documentsFolder(), basename(request.suggestedFileName)),
       filters: [{name: request.filterName, extensions: ['svg']}],
@@ -36,7 +44,8 @@ export function registerPlotterHandlers(
     try {
       await effects.writeFile(answer.filePath, request.svg);
     } catch (error: unknown) {
-      return {status: 'failed', reason: error instanceof Error ? error.message : String(error)};
+      console.error('Could not write the Plotter file', error);
+      return {status: 'failed', reason: errorCode(error)};
     }
     lastFolder = dirname(answer.filePath);
     return {status: 'saved', filePath: answer.filePath};

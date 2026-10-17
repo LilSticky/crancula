@@ -1,5 +1,5 @@
 import {BreakpointObserver, type BreakpointState} from '@angular/cdk/layout';
-import {Component} from '@angular/core';
+import {Component, signal} from '@angular/core';
 import {type Observable, of} from 'rxjs';
 import {TestBed} from '@angular/core/testing';
 import {provideRouter, Router} from '@angular/router';
@@ -25,6 +25,7 @@ import {asValidTape, type Column, type ColumnCount} from '../../../../../api/tap
 import {vi} from 'vitest';
 import {overviewFrame, scrollLeftFor} from './overview-frame';
 import {pixelsPerMillimetre} from './pixels-per-millimetre';
+import {PlotterExport} from './plotter-export';
 import {columnLines, columnNumbers, rulerNumbers} from './tape-marks';
 import {TapeViewComponent} from './tape-view.component';
 
@@ -113,8 +114,10 @@ async function render(options: RenderOptions = {}) {
         },
       }
     : inMemory;
+  const plotterExport = {export: vi.fn((): Promise<void> => Promise.resolve()), saving: signal(false)};
   TestBed.configureTestingModule({
     providers: [
+      {provide: PlotterExport, useValue: plotterExport},
       provideRouter([
         {path: 'tapes', component: TapeListStubComponent},
         {path: 'tapes/:id', component: TapeViewComponent},
@@ -219,7 +222,7 @@ async function render(options: RenderOptions = {}) {
     harness.detectChanges();
     await harness.fixture.whenStable();
   };
-  return {tape, organ, importSummary: created.value.importSummary, open, summaryShown, router, finish, view, settle};
+  return {tape, organ, plotterExport, importSummary: created.value.importSummary, open, summaryShown, router, finish, view, settle};
 }
 
 describe('TapeViewComponent', () => {
@@ -341,16 +344,38 @@ describe('TapeViewComponent', () => {
       expect(link?.classList).toContain('mat-mdc-button');
     });
 
-    it('offers Export for the Plotter as a disabled outlined button with a visible later-release note', async () => {
+    it('offers Export for the Plotter as an enabled outlined button without a later-release note', async () => {
       const {tape, open, view} = await render();
 
       await open(`/tapes/${tape.id}`);
 
       const exportButton = view()?.querySelector<HTMLButtonElement>('[data-testid="page-head-actions"] [data-testid="export"]');
-      expect(exportButton?.disabled).toBe(true);
+      expect(exportButton?.disabled).toBe(false);
       expect(exportButton?.textContent).toContain('content_cut');
+      expect(exportButton?.textContent).toContain('Export for the Plotter');
       expect(exportButton?.className).toContain('mat-mdc-outlined-button');
-      expect(view()?.querySelector('[data-testid="export-later"]')?.textContent?.trim()).toBe('Export comes in a later release');
+      expect(view()?.querySelector('[data-testid="export-later"]')).toBeNull();
+    });
+
+    it('exports the shown Tape with its Organ when Export for the Plotter is pressed', async () => {
+      const {tape, organ, open, view, settle, plotterExport} = await render();
+      await open(`/tapes/${tape.id}`);
+
+      view()?.querySelector<HTMLButtonElement>('[data-testid="export"]')?.click();
+      await settle();
+
+      expect(plotterExport.export).toHaveBeenCalledTimes(1);
+      expect(plotterExport.export).toHaveBeenCalledWith(tape, organ);
+    });
+
+    it('disables Export for the Plotter while a save is running', async () => {
+      const {tape, open, view, settle, plotterExport} = await render();
+      await open(`/tapes/${tape.id}`);
+
+      plotterExport.saving.set(true);
+      await settle();
+
+      expect(view()?.querySelector<HTMLButtonElement>('[data-testid="export"]')?.disabled).toBe(true);
     });
   });
 

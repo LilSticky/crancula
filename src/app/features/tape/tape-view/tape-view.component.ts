@@ -28,6 +28,7 @@ import {TapeLibrary} from '../tape-library.store';
 import {nextHole, type Direction, type SelectableHole} from './hole-selection';
 import {inspectHole} from './inspect-hole';
 import {overviewFrame, scrollLeftFor} from './overview-frame';
+import {PlotterExport} from './plotter-export';
 import {pointerAt} from './pointer-at';
 import {pixelsPerMillimetre, type Zoom} from './pixels-per-millimetre';
 import {columnLines, columnNumbers, rulerNumbers} from './tape-marks';
@@ -82,6 +83,7 @@ export class TapeViewComponent {
   private readonly library = inject(TapeLibrary);
   private readonly organs = inject(OrganLibrary);
   private readonly router = inject(Router);
+  protected readonly plotterExport = inject(PlotterExport);
   private readonly language = inject(LanguagePreference).language;
   protected readonly rulerHeight = RULER_HEIGHT;
   protected readonly zooms: readonly {readonly zoom: Zoom; readonly label: string}[] = [
@@ -282,6 +284,12 @@ export class TapeViewComponent {
       },
     };
   });
+
+  protected exportTape(): void {
+    const tape = this.tape();
+    const organ = this.organ();
+    if (tape !== undefined && organ !== undefined) void this.plotterExport.export(tape, organ);
+  }
 
   protected select(hole: {readonly row: number; readonly start: number}): void {
     this.selectedHole.set({row: hole.row + 1, start: hole.start});
