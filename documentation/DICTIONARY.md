@@ -139,7 +139,7 @@
 * German: Vorlauf
 
 # Tape Outline
-* The cut around a Tape: both long edges, the Lead-in's diagonal and a square end cut after the last Column (no blank tail)
+* The cut around a Tape: both long edges, the Lead-in's diagonal (a square cut at Column 1 when the Lead-in is 0) and a square end cut one Minimum Gap after the last Column, so no Hole touches it (no blank tail beyond that)
 * The Tape is cut out of a wider sheet or roll; the Plotter cuts the Tape Outline after all Holes
 * German: Bandumriss
 
