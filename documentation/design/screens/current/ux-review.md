@@ -6,6 +6,8 @@ Previous: 38/50 (after #66), 36/50 (after #65), 36/50 (after #64), 33/50 (after 
 |----|----|----|----|----|----|----|----|----|-----|-------|
 | 4  | 5  | 4  | 4  | 4  | 3  | 3  | 3  | 4  | 5   | 39/50 |
 
+After 003 US1-US3 (Tape view with the Lead-in diagonal, the Lead-in row in Tape details, enabled "Export for the Plotter"; re-run 2026-10-17): score unchanged at 39/50. The diagonal Lead-in reads well in 08, 14 and 15 and Lead-in 20 mm appears in the details; the Plotter export is a clear secondary-style head button. No screenshot exists for the export problems dialog, so it is not scored. New findings 11 to 13 below.
+
 After #69 (import screen in two sheets: file chip, Organ range, Parts list, Transposition stepper with a proposal sentence and Use proposal, Fit as a result card with expandable Note lists and an Unplayable warning; fits one screen). H2 gains one: the import reads top to bottom and the Fit warns and offers the way back. New screens: 07b (Unplayable warning, Notes expanded) and 07c (German at 1024x700). Capture quirks seen: in 07 the Column length label overlaps its value mid-animation; the Organ saved snackbar lingers on 07/07b/07c (finding 4).
 
 After #66 (Organ and Tape lists as ledgers: Tape Bed miniature and facts line, Tapes count link, row menu, next-step strip, Organ filter chip, guiding empty states, both lists fit German at 1024x700). H2 gains one: the empty states give a first step (02, 06, 06b) and the Organ list says what comes next (05). H4 gains one: both ledgers share one structure, and the filter and "Show all Tapes" are consistent. H7 stays: names and Organ cells are default-blue underlined links. New screens: 06b (Tape list without an Organ), 09b (filtered by Organ), 16 and 17 (German at 1024x700). The capture script's selected-Hole check (08b) had a stale selector and is fixed.
@@ -21,6 +23,9 @@ After #66 (Organ and Tape lists as ledgers: Tape Bed miniature and facts line, T
 8. **[sev 2] H4 - 03, 04, 13** - Floating labels of the MIDI note fields are cut and the Pipe rack header runs together in German (10). Tag: new (follow-up to #64).
 9. **[sev 2] H8 - 12, 13, 14** - The compact rail has icon-only nav and stacked toggles without visible labels; disabled Save and the "Saved on this computer" note are low contrast. Tag: new.
 10. **[sev 1] H3 - 13** - At 1024x700 the second Pipe rack column is clipped at the right edge. Tag: new.
+11. **[sev 2] H6 - 08, 14, 15** - The drawing shows no end cut: the Tape ends in a plain straight edge after Column 24, and the Lead-in diagonal has no label in the drawing. Fix: draw the end cut (and a "Lead-in 20 mm" label) so the drawing matches what the Plotter cuts. Tag: new (003).
+12. **[sev 2] H2 - screens script** - No screenshot of the export problems dialog (nor of a Tape with export problems), so it cannot be reviewed. Fix: add the dialog to `ux:screens` as 08c. Tag: new (003).
+13. **[sev 2] H7 - 15** - In the German UI the Organ name "Street organ" and the part names are English sample data, fine, but the "Export for the Plotter" button wraps at 1024 px (14) next to "Tape details". Fix: shorten or icon-plus-tooltip below 1180 px. Tag: new (003, relates to finding 2).
 
 ## Strengths
 - The editor fits one screen: Tape Bed (fields in a two-column grid, fit sentence, drawing) left, scrolling Pipe rack right, action bar always in view (H3).
