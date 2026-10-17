@@ -514,10 +514,10 @@ check that no text is shown untranslated.
   `TAPE.VIEW.EXPORT`; the page head's actions stay on one line at 1024×700 and no zoom button is
   clipped (finding 13).
 - [x] T054 Implement T053 in the Tape view (same breakpoint as the rail) until it is green.
-- [ ] T055 Add a screenshot `08c-tape-view-export-problems.png` of the export problems dialog to
+- [x] T055 Add a screenshot `08c-tape-view-export-problems.png` of the export problems dialog to
   `npm run ux:screens` (a Tape whose Organ's hole diameter was raised after the Tape was made)
   (finding 12).
-- [ ] T056 Re-run `npm run ux:screens` and the `ux-review` skill on 08c and 14; record the score.
+- [x] T056 Re-run `npm run ux:screens` and the `ux-review` skill on 08c and 14; record the score.
 
 Not taken into the slice: a "Lead-in 20 mm" label in the drawing (finding 11, new scope). The
 straight end edge is the end cut by spec, so that part of finding 11 is not a defect.
