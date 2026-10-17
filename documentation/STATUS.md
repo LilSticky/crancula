@@ -131,6 +131,8 @@ Open issues carry `priority:` and `size:` labels; triage sets them.
 
 ## Known broken / WIP
 
+- Fixed (#58, 2026-10-18): saving a snapshot failed for good on Windows when another process held the file open
+  during the atomic rename (EPERM/EBUSY/EACCES); the rename is now retried up to 10 times, 40 ms apart.
 - `e2e/fonts.spec.ts` "requests no font from an external origin" failed intermittently twice locally
   (`ERR_FILE_NOT_FOUND` on reload). Not reproducible yet.
 
