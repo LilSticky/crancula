@@ -188,7 +188,7 @@ the document size in mm.
 
 ### Tests for User Story 1 ⚠️ (write first, must fail)
 
-- [ ] T011 [P] [US1] Write the failing test `api/tape/plotter-file-name.spec.ts` for
+- [x] T011 [P] [US1] Write the failing test `api/tape/plotter-file-name.spec.ts` for
   `plotterFileName(tapeName: string): string` (research R7, data-model.md: "`<safe name>.svg`
   (research R7); never empty, never a path"):
   - "`< > : " / \ | ? *` and control characters (U+0000–U+001F, U+007F) become `_`";
@@ -198,7 +198,7 @@ the document size in mm.
   - "cut to 200 UTF-16 code units before `.svg`, without splitting a surrogate pair";
   - "a name with nothing left becomes `Tape.svg`";
   - `Test: 1/2` → `Test_ 1_2.svg` (quickstart); `Waltz` → `Waltz.svg`; the input is not changed.
-- [ ] T012 [P] [US1] Write the failing test `api/tape/plotter-svg.spec.ts` for
+- [x] T012 [P] [US1] Write the failing test `api/tape/plotter-svg.spec.ts` for
   `plotterSvg(geometry: TapeGeometry): string` (research R3, data-model.md "Plotter file": "root
   size and `viewBox` in mm from `totalLength` × `width`; one closed `path` per Slot in `slots`
   order; the Outline's `path` last"):
@@ -297,9 +297,9 @@ the document size in mm.
 
 ### Implementation for User Story 1
 
-- [ ] T021 [P] [US1] Implement `api/tape/plotter-file-name.ts` and export `plotterFileName` from
+- [x] T021 [P] [US1] Implement `api/tape/plotter-file-name.ts` and export `plotterFileName` from
   `api/index.ts` until T011 is green.
-- [ ] T022 [US1] Implement `api/tape/plotter-svg.ts` and export `plotterSvg` from `api/index.ts`
+- [x] T022 [US1] Implement `api/tape/plotter-svg.ts` and export `plotterSvg` from `api/index.ts`
   until T012 is green. String output only; rounding once, in the writer. Depends on T006, T012.
 - [ ] T023 [US1] Implement `api/app/svg-save-request.ts` (`SvgSaveRequest`, `SvgSaveResult`,
   `parseSvgSaveRequest`) and export them from `api/index.ts` until T013 is green. Depends on T013,
