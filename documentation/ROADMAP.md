@@ -14,7 +14,7 @@ States: `planned` · `in progress` · `done`
 | Describe my organ | define an Organ: Pipes (MIDI note numbers), Tape Bed, Minimum Hole Length, Minimum Gap | Organ | Angular form, snapshot persistence over IPC | done |
 | Bring a song onto a tape | import a MIDI Song Source onto a Tape for an Organ, with automatic Transposition to fit the Pipes | Tape, Song | MIDI import, snapshot persistence | done |
 | Apply the design guide (not a slice) | use the existing screens in the workshop design: theme, shell, Organ editor, Tape view, lists | – | Angular Material theme, components | done (pull request pending, [#59](https://github.com/LilSticky/crancula/issues/59)) |
-| Punch a tape | export a Tape as an SVG in mm for a vinyl cutter | Tape | SVG export | planned |
+| Punch a tape | export a Tape as an SVG in mm for a vinyl cutter | Tape | SVG export | done |
 
 Release v0.1 as cross-platform GitHub Releases built in CI, once all of the above are done.
 

@@ -499,7 +499,7 @@ check that no text is shown untranslated.
   `e2e/tape-layout.spec.ts`, is green.
 - [x] T050 Run the `spec-auditor` agent on the slice against `spec.md` and this file; fix every gap
   through a new test+implementation task pair appended to this file.
-- [ ] T051 Through the `housekeeper` agent: update `documentation/STATUS.md` (slice done, next
+- [x] T051 Through the `housekeeper` agent: update `documentation/STATUS.md` (slice done, next
   step), set "Punch a tape" to `done` in `documentation/ROADMAP.md`, and add the export under
   `[Unreleased]` in `CHANGELOG.md`.
 - [ ] T052 Open a pull request (ADR 10) with `gh pr create`; the body has `Closes #3` and refs for

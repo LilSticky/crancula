@@ -112,19 +112,21 @@ Schlagwerk (dictionary). ux-review 39/50. Gate: lint, i18n (242 keys), 512 node 
 76 e2e green locally. With #69, all sub-issues of [#59](https://github.com/LilSticky/crancula/issues/59)
 (apply the design guide) are done; #59 closes with this pull request.
 
-**In progress (2026-10-17):** "Punch a tape" ([#3](https://github.com/LilSticky/crancula/issues/3))
-on branch `003-punch-a-tape` (pushed, no pull request yet). Spec, plan and
-[tasks](../specs/003-punch-a-tape/tasks.md) done; the progress lives in the ticked tasks there.
-Done: User Stories 1–3 (T001–T041), the P1 MVP: a Tape that can be cut is saved as one 1:1 SVG;
-one that can't opens a dialog naming every problem Hole, and nothing is written. Unit tests and the
-export e2e green locally. The e2e helper `saveOrgan` now waits until the write has finished (it raced
-the leave guard). **Next step:** User Story 4 (T042–T044) and the polish phase (T045–T052).
+**Done (pull request pending):** Punch a tape ([#3](https://github.com/LilSticky/crancula/issues/3), 2026-10-17).
+Export for the Plotter saves the Tape as one 1:1 SVG: Holes as Slots in cut order by start from the
+Lead-in, row 1 first, then the Tape Outline with the Lead-in's diagonal and the end cut one Minimum Gap
+after the last Column. A Tape that can't be cut opens a dialog naming every problem Hole (no Pipe, too
+short, too close); nothing is written. Selected Hole warnings follow the same Column rules. Below 1180 px
+Export is an icon button. German texts. ux-review 40/50 (see [design/screens/current/ux-review.md](design/screens/current/ux-review.md)).
+Gate: lint, i18n (251 keys), 640 node and 746 Angular tests, 84 e2e green locally. Tasks in
+[tasks](../specs/003-punch-a-tape/tasks.md). **Next step:** open the pull request for #3 and merge it.
 
 Follow-ups:
 [#76](https://github.com/LilSticky/crancula/issues/76), [#80](https://github.com/LilSticky/crancula/issues/80) and
 [#85](https://github.com/LilSticky/crancula/issues/85) (component splits),
 [#82](https://github.com/LilSticky/crancula/issues/82) (Rename a Tape),
-[#84](https://github.com/LilSticky/crancula/issues/84) (live Tape preview).
+[#84](https://github.com/LilSticky/crancula/issues/84) (live Tape preview),
+Lead-in label in the Tape drawing (ux-review finding 11, not filed).
 Open issues carry `priority:` and `size:` labels; triage sets them.
 
 ## Known broken / WIP
