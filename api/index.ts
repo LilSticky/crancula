@@ -78,6 +78,7 @@ export {
   type TapeLibrarySnapshot,
 } from './tape/tape-library-snapshot';
 export type {HoleFix, ImportSummary} from './tape/import-summary';
+export {exportProblems, type ExportProblem, type ExportProblemCode} from './tape/export-problems';
 export {plotterFileName} from './tape/plotter-file-name';
 export {plotterSvg} from './tape/plotter-svg';
 export {tapeGeometry, type Point, type Slot, type TapeGeometry, type TapeOutline} from './tape/tape-geometry';
