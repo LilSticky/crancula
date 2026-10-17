@@ -5,9 +5,13 @@ import type {Result, SnapshotLoadResult, SnapshotSaveResult} from '../api';
 /** The file operations the store needs; replaceable in tests. */
 export type FileSystem = Pick<typeof nodeFs, 'mkdir' | 'readFile' | 'rename' | 'writeFile'>;
 
+const RENAME_ATTEMPTS = 10;
+
 export interface SnapshotFileOptions {
   /** Trailing debounce for coalescing quick saves (ADR 8). */
   readonly debounceMs?: number;
+  /** Delay between attempts when the final rename is blocked (EPERM, EBUSY, EACCES). */
+  readonly renameRetryDelayMs?: number;
   readonly fs?: FileSystem;
   readonly now?: () => Date;
 }
@@ -42,7 +46,7 @@ export function createSnapshotFile<S, V>(
 ): SnapshotFile<S> {
   const {fileName, parse, normalise} = config;
   const baseName = fileName.replace(/\.json$/, '');
-  const {debounceMs = 250, fs = nodeFs, now = () => new Date()} = options;
+  const {debounceMs = 250, renameRetryDelayMs = 40, fs = nodeFs, now = () => new Date()} = options;
   const filePath = join(dir, fileName);
 
   let pending: PendingSave<S> | undefined;
@@ -116,10 +120,23 @@ export function createSnapshotFile<S, V>(
     try {
       await fs.mkdir(dir, {recursive: true});
       await fs.writeFile(tempPath, JSON.stringify(snapshot, null, 2), 'utf8');
-      await fs.rename(tempPath, filePath);
+      await renameWithRetry(tempPath);
       return {status: 'saved'};
     } catch (error) {
       return {status: 'failed', reason: messageOf(error)};
+    }
+  }
+
+  /** Windows briefly locks the target (antivirus, indexer), so a blocked final rename is retried a few times. */
+  async function renameWithRetry(tempPath: string): Promise<void> {
+    for (let attempt = 1; ; attempt++) {
+      try {
+        await fs.rename(tempPath, filePath);
+        return;
+      } catch (error) {
+        if (attempt >= RENAME_ATTEMPTS || !isBlockedRename(error)) throw error;
+        await new Promise((resolve) => setTimeout(resolve, renameRetryDelayMs));
+      }
     }
   }
 
@@ -132,6 +149,10 @@ function parseJson(content: string): {ok: true; value: unknown} | {ok: false; er
   } catch (error) {
     return {ok: false, error: `not valid JSON: ${messageOf(error)}`};
   }
+}
+
+function isBlockedRename(error: unknown): boolean {
+  return error instanceof Error && 'code' in error && ['EPERM', 'EBUSY', 'EACCES'].includes(String(error.code));
 }
 
 function isMissingFile(error: unknown): boolean {

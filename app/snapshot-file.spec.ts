@@ -194,6 +194,51 @@ describe('save', () => {
   });
 });
 
+/** Bug #58: on Windows another process (poll, antivirus, indexer) can briefly hold the target open. */
+describe('save when the final rename is blocked', () => {
+  const retryDelayMs = 1;
+  const failingRename = (code: string, failures: number): FileSystem => {
+    let remaining = failures;
+    return {
+      ...nodeFs,
+      rename: vi.fn((from: PathLike, to: PathLike) =>
+        remaining-- > 0 ? Promise.reject(fsError(code)) : nodeFs.rename(from, to)),
+    };
+  };
+
+  it.each(['EPERM', 'EBUSY', 'EACCES'])('retries after %s and then saves', async (code) => {
+    const fs = failingRename(code, 2);
+
+    const result = await create(dir, {debounceMs: 5, fs, renameRetryDelayMs: retryDelayMs}).save(snapshot('new'));
+
+    expect(result).toEqual({status: 'saved'});
+    expect(fs.rename).toHaveBeenCalledTimes(3);
+    expect(await readSnapshot()).toEqual(snapshot('new'));
+  });
+
+  it('fails after a bounded number of attempts when the rename stays blocked', async () => {
+    await writeFile(toysFile(), JSON.stringify(snapshot('old')));
+    const fs = failingRename('EPERM', Number.POSITIVE_INFINITY);
+
+    const result = await create(dir, {debounceMs: 5, fs, renameRetryDelayMs: retryDelayMs}).save(snapshot('new'));
+
+    expect(result).toEqual({status: 'failed', reason: expect.stringContaining('EPERM')});
+    const attempts = vi.mocked(fs.rename).mock.calls.length;
+    expect(attempts).toBeGreaterThan(2);
+    expect(attempts).toBeLessThanOrEqual(50);
+    expect(await readSnapshot()).toEqual(snapshot('old'));
+  });
+
+  it('fails at once on another error code, without retry', async () => {
+    const fs = failingRename('ENOSPC', 1);
+
+    const result = await create(dir, {debounceMs: 5, fs, renameRetryDelayMs: retryDelayMs}).save(snapshot('new'));
+
+    expect(result).toEqual({status: 'failed', reason: expect.stringContaining('ENOSPC')});
+    expect(fs.rename).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe('flush', () => {
   it('writes a pending snapshot right away', async () => {
     const file = create(dir, {debounceMs: 60_000});
