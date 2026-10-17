@@ -2,14 +2,13 @@ import {minimumHoleLength, millimetres, type Millimetres, type Organ} from '../o
 import {err, ok, type Result} from '../result';
 import type {PartIndex, Song} from '../song/song';
 import type {ImportSummary} from './import-summary';
-import {columnsFor, fixHoles, mergeOverlaps, type HoleLimits} from './hole-fixes';
+import {fixHoles, holeLimitsOf, mergeOverlaps} from './hole-fixes';
 import {fitNotesOf, fitOf, placedNotesOf} from './fit';
 import {allowedTranspositions} from './transposition';
 import {
   asValidTape,
   columnCount,
   newTapeId,
-  type ColumnCount,
   type Hole,
   type Tape,
   type Transposition,
@@ -46,10 +45,6 @@ function valid<T>(value: T | undefined, what: string): T {
   return value;
 }
 
-function atLeastOneColumn(value: number): ColumnCount {
-  return valid(columnCount(Math.max(value, 1)), 'Column count');
-}
-
 function validPartIndices(song: Song, selectedParts: ReadonlySet<PartIndex>): ReadonlySet<PartIndex> {
   return new Set([...selectedParts].filter((index) => index < song.parts.length));
 }
@@ -72,13 +67,6 @@ function violationsOf(input: CreateTapeInput, selectedParts: ReadonlySet<PartInd
     }
   }
   return codes.map((code) => ({code}));
-}
-
-function holeLimitsOf(organ: Organ, columnLength: Millimetres): HoleLimits {
-  return {
-    minimumHoleLength: atLeastOneColumn(columnsFor(minimumHoleLength(organ.tapeBed), columnLength)),
-    minimumGap: atLeastOneColumn(columnsFor(organ.minimumGap, columnLength)),
-  };
 }
 
 /**

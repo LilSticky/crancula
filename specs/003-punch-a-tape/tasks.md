@@ -138,7 +138,7 @@ hole limits shared by `createTape` and the export check (research R4). Every sto
 
 ### The Tape view draws the Tape Outline (FR-008)
 
-- [ ] T007 Write the failing tests in `src/app/features/tape/tape-view/tape-view.component.spec.ts`
+- [x] T007 Write the failing tests in `src/app/features/tape/tape-view/tape-view.component.spec.ts`
   for drawing the Tape Outline from the shared geometry (research R1 "Consequence for the Tape
   view", quickstart scenario 20):
   - The Lead-in (`data-testid="lead-in"`) is the straight diagonal over the **whole** Lead-in: from
@@ -153,7 +153,7 @@ hole limits shared by `createTape` and the export check (research R4). Every sto
     Column 1; the Selected Hole inspector's "gap to the Tape's end" stays in Columns up to the end
     of the last Column (research R1).
   Depends on T006.
-- [ ] T008 Draw the Tape Outline from `geometry.outline` and `geometry.totalLength` in
+- [x] T008 Draw the Tape Outline from `geometry.outline` and `geometry.totalLength` in
   `src/app/features/tape/tape-view/tape-view.component.ts` (and `.html`, `.scss` only if needed);
   remove `LEAD_IN_SLANT_MM`; until T007 is green. `e2e/tape-layout.spec.ts` (its Lead-in box is
   still the Lead-in's length wide) must stay green under `npm run e2e`; adjust it only if the drawn
@@ -161,13 +161,13 @@ hole limits shared by `createTape` and the export check (research R4). Every sto
 
 ### Shared hole limits
 
-- [ ] T009 [P] Write the failing test in `api/tape/hole-fixes.spec.ts` for `holeLimitsOf(organ,
+- [x] T009 [P] Write the failing test in `api/tape/hole-fixes.spec.ts` for `holeLimitsOf(organ,
   columnLength): HoleLimits`, now exported from `api/tape/hole-fixes.ts` (internal, **not** in
   `api/index.ts`; contracts/domain-api.md "Changed"): `minimumHoleLength` and `minimumGap` are
   `columnsFor` of the Organ's Minimum Hole Length and Minimum Gap, at least one Column each, as in
   `createTape` today; 1.1 mm Columns against a Minimum Hole Length of 3.3 mm give 3 (no
   floating-point error). Depends on T001.
-- [ ] T010 Move `holeLimitsOf` (and its helper `atLeastOneColumn`) from `api/tape/create-tape.ts`
+- [x] T010 Move `holeLimitsOf` (and its helper `atLeastOneColumn`) from `api/tape/create-tape.ts`
   to `api/tape/hole-fixes.ts` until T009 is green; `createTape` imports it from there;
   `api/tape/create-tape.spec.ts` stays green **unchanged**. Depends on T009.
 

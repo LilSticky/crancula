@@ -64,8 +64,6 @@ const COMPACT_QUERY = '(max-width: 1179.98px)';
 const RULER_HEIGHT = 24;
 /** Space below the Tape for the Column numbers, in px. */
 const NUMBERS_HEIGHT = 20;
-/** The angled start of the Lead-in slants over at most this many mm. */
-const LEAD_IN_SLANT_MM = 10;
 
 /** The width to render Columns for: the scroll area, but never narrower than the screen (it is 0 before layout). */
 function windowWidth(element: HTMLElement): number {
@@ -149,7 +147,7 @@ export class TapeViewComponent {
   protected readonly scale = computed(() => {
     const geometry = this.geometry();
     if (geometry === undefined) return pixelsPerMillimetre('1:1', 0, 0);
-    return pixelsPerMillimetre(this.zoom(), this.stageWidth(), geometry.leadIn + geometry.length);
+    return pixelsPerMillimetre(this.zoom(), this.stageWidth(), geometry.totalLength);
   });
 
   /** The Hole the Selected Hole section tells about. */
@@ -185,16 +183,16 @@ export class TapeViewComponent {
   protected readonly overview = computed(() => {
     const geometry = this.geometry();
     if (geometry === undefined) return undefined;
-    const scale = pixelsPerMillimetre('whole', this.stageWidth(), geometry.leadIn + geometry.length);
+    const scale = pixelsPerMillimetre('whole', this.stageWidth(), geometry.totalLength);
     const leadIn = geometry.leadIn * scale;
     const height = geometry.width * scale;
-    const slant = Math.min(geometry.leadIn, LEAD_IN_SLANT_MM) * scale;
+    const {outline} = geometry;
     return {
       width: this.stageWidth(),
       height,
       leadIn,
-      leadInPath: `M${slant},0 H${leadIn} V${height} H0 Z`,
-      bodyWidth: geometry.length * scale,
+      leadInPath: `M${outline.tip.x * scale},${outline.tip.y * scale} H${leadIn} V${outline.columnOneBottom.y * scale} Z`,
+      bodyWidth: (geometry.totalLength - geometry.leadIn) * scale,
       holesPath: geometry.slots
         .map((slot) => {
           const x = slot.x * scale;
@@ -221,7 +219,7 @@ export class TapeViewComponent {
     const inRange = (column: number): boolean => column >= range.first && column <= range.last;
     const leadIn = geometry.leadIn * scale;
     const height = geometry.width * scale;
-    const slant = Math.min(geometry.leadIn, LEAD_IN_SLANT_MM) * scale;
+    const {outline} = geometry;
     const firstMm = range.first * tape.columnLength;
     const lastMm = (range.last + 1) * tape.columnLength;
     const language = this.language();
@@ -268,10 +266,10 @@ export class TapeViewComponent {
         .filter((mm) => mm >= firstMm && mm <= lastMm)
         .map((mm) => ({mm, x: leadIn + mm * scale})),
       leadIn,
-      leadInPath: `M${slant},0 H${leadIn} V${height} H0 Z`,
-      bodyWidth: geometry.length * scale,
+      leadInPath: `M${outline.tip.x * scale},${outline.tip.y * scale} H${leadIn} V${outline.columnOneBottom.y * scale} Z`,
+      bodyWidth: (geometry.totalLength - geometry.leadIn) * scale,
       borders: [geometry.border * scale, (geometry.width - geometry.border) * scale],
-      width: leadIn + geometry.length * scale,
+      width: geometry.totalLength * scale,
       height,
       totalHeight: RULER_HEIGHT + height + NUMBERS_HEIGHT,
       numbersY: height + NUMBERS_HEIGHT - 6,

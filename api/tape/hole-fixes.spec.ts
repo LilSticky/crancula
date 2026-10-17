@@ -1,7 +1,25 @@
 import {describe, expect, it} from 'vitest';
 import {midiNoteNumber, type MidiNoteNumber} from '../organ/midi-note-number';
 import {column, columnCount, type Column, type ColumnCount, type Hole} from './tape';
-import {columnsFor, fixHoles, mergeOverlaps} from './hole-fixes';
+import {millimetres, type Millimetres, type Organ} from '../organ/organ';
+import {validateOrgan} from '../organ/validate-organ';
+import {columnsFor, fixHoles, holeLimitsOf, mergeOverlaps} from './hole-fixes';
+
+function mm(value: number): Millimetres {
+  return defined(millimetres(value), 'millimetres');
+}
+
+function organWith(holeDiameter: number, minimumGap: number): Organ {
+  const result = validateOrgan({
+    name: 'Street organ',
+    tapeBed: {tapeWidth: 120, holeDiameter, rowSpacing: holeDiameter + 1},
+    minimumGap,
+    leadIn: 20,
+    pipes: [{note: 60}, {note: 62}],
+  });
+  if (!result.ok) throw new Error(`invalid test Organ: ${JSON.stringify(result.error)}`);
+  return result.value;
+}
 
 function defined<T>(value: T | undefined, what: string): T {
   if (value === undefined) throw new Error(`invalid test value: ${what}`);
@@ -143,5 +161,19 @@ describe('fixHoles (Minimum Hole Length 2, Minimum Gap 2 Columns)', () => {
       if (before === undefined) throw new Error('missing hole');
       expect(after.start - (before.start + before.length)).toBeGreaterThanOrEqual(2);
     });
+  });
+});
+
+describe('holeLimitsOf', () => {
+  it('is the Minimum Hole Length and the Minimum Gap of the Organ in Columns', () => {
+    expect(holeLimitsOf(organWith(3, 1.5), mm(1))).toEqual(limits(3, 2));
+  });
+
+  it('is not thrown off by floating-point error: 3.3 mm in Columns of 1.1 mm is 3', () => {
+    expect(holeLimitsOf(organWith(3.3, 2.2), mm(1.1))).toEqual(limits(3, 2));
+  });
+
+  it('is at least one Column each, however long the Columns are', () => {
+    expect(holeLimitsOf(organWith(2.5, 1.5), mm(10))).toEqual(limits(1, 1));
   });
 });
