@@ -494,8 +494,8 @@ check that no text is shown untranslated.
 - [ ] T047 Run `npm run ux:screens` and the `ux-review` skill on the Tape view (Lead-in diagonal,
   end cut, enabled Export) and the problems dialog; turn every finding into a test+implementation
   task pair appended to this file.
-- [ ] T048 Run `npm run lint`, `npm run i18n:check`, `npm run test` and `npm run build`; all green.
-- [ ] T049 Run `npm run e2e`; the whole suite, including the 001 and 002 tests and
+- [x] T048 Run `npm run lint`, `npm run i18n:check`, `npm run test` and `npm run build`; all green.
+- [x] T049 Run `npm run e2e`; the whole suite, including the 001 and 002 tests and
   `e2e/tape-layout.spec.ts`, is green.
 - [ ] T050 Run the `spec-auditor` agent on the slice against `spec.md` and this file; fix every gap
   through a new test+implementation task pair appended to this file.
