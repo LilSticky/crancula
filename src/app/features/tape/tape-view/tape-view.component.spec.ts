@@ -912,6 +912,39 @@ describe('TapeViewComponent', () => {
       expect(summaryShown()).not.toBeNull();
     });
 
+    describe('the Export for the Plotter button', () => {
+      const exportButton = (view: HTMLElement | null) =>
+        view?.querySelector<HTMLButtonElement>('[data-testid="page-head-actions"] [data-testid="export"]') ?? null;
+
+      it('is an icon button with the scissors icon and an aria-label below 1180 px', async () => {
+        const {tape, open, view} = await render({windowWidth: 1100});
+
+        await open(`/tapes/${tape.id}`);
+
+        expect(exportButton(view())?.getAttribute('aria-label')).toBe('Export for the Plotter');
+        expect(exportButton(view())?.querySelector('mat-icon')?.textContent?.trim()).toBe('content_cut');
+        expect(exportButton(view())?.textContent?.trim()).toBe('content_cut');
+      });
+
+      it('shows the label as a tooltip below 1180 px', async () => {
+        const {tape, open, view, settle} = await render({windowWidth: 1100});
+        await open(`/tapes/${tape.id}`);
+
+        exportButton(view())?.dispatchEvent(new MouseEvent('mouseenter'));
+        await settle();
+
+        expect(document.body.querySelector('.mat-mdc-tooltip')?.textContent?.trim()).toBe('Export for the Plotter');
+      });
+
+      it('keeps the text label from 1180 px', async () => {
+        const {tape, open, view} = await render({windowWidth: 1280});
+
+        await open(`/tapes/${tape.id}`);
+
+        expect(exportButton(view())?.textContent).toContain('Export for the Plotter');
+      });
+    });
+
     it('always shows the side panel from 1180 px, without a toggle', async () => {
       const {tape, open, view} = await render({windowWidth: 1280});
 

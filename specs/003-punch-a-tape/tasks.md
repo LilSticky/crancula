@@ -508,12 +508,12 @@ check that no text is shown untranslated.
 
 ### Findings from T047 (ux-review 39/50, findings 11–13 in `documentation/design/screens/current/ux-review.md`)
 
-- [ ] T053 [P] Extend `src/app/features/tape/tape-view/tape-view.component.spec.ts` (and
+- [x] T053 [P] Extend `src/app/features/tape/tape-view/tape-view.component.spec.ts` (and
   `e2e/tape-layout.spec.ts` if the layout is only provable there): below 1180 px "Export for the
   Plotter" is an icon button with the scissors icon, a tooltip and an `aria-label` of
   `TAPE.VIEW.EXPORT`; the page head's actions stay on one line at 1024×700 and no zoom button is
   clipped (finding 13).
-- [ ] T054 Implement T053 in the Tape view (same breakpoint as the rail) until it is green.
+- [x] T054 Implement T053 in the Tape view (same breakpoint as the rail) until it is green.
 - [ ] T055 Add a screenshot `08c-tape-view-export-problems.png` of the export problems dialog to
   `npm run ux:screens` (a Tape whose Organ's hole diameter was raised after the Tape was made)
   (finding 12).
