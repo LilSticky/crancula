@@ -118,6 +118,38 @@ describe('inspectHole', () => {
     expect(inspection.warnings).toEqual([]);
   });
 
+  describe('with the Column-based rules of the export check', () => {
+    // 0.7 mm Columns against 2.1 mm: 3 * 0.7 is 2.0999999999999996 in floating point, but exactly 3 Columns.
+    const precise: Organ = testOrgan('Precise organ', 31, {
+      pipes: Array.from({length: 31}, (_, row) => ({note: 58 + 2 * (row + 1)})),
+      tapeBed: {tapeWidth: 120, holeDiameter: 2.1, rowSpacing: 3.5},
+      minimumGap: 2.1,
+    });
+
+    it('warns of no tooShort for a Hole of 3 Columns of 0.7 mm against a Minimum Hole Length of 2.1 mm', () => {
+      const selected = hole(25, 64, 3);
+
+      expect(inspectHole(tapeWith([selected], 0.7), precise, selected).warnings).toEqual([]);
+    });
+
+    it('warns of no gapTooSmall for a gap of 3 Columns of 0.7 mm against a Minimum Gap of 2.1 mm', () => {
+      const selected = hole(25, 64, 3);
+      const next = hole(25, 70, 3);
+
+      expect(inspectHole(tapeWith([selected, next], 0.7), precise, selected).warnings).toEqual([]);
+      expect(inspectHole(tapeWith([selected, next], 0.7), precise, next).warnings).toEqual([]);
+    });
+
+    it('warns gapTooSmall on a Hole and on the next Hole of its row when they are too close', () => {
+      const selected = hole(25, 64, 3);
+      const next = hole(25, 69, 3); // 2 Columns apart = 1.4 mm < 2.1 mm
+      const tape = tapeWith([selected, next], 0.7);
+
+      expect(inspectHole(tape, precise, selected).warnings).toEqual([{kind: 'gapTooSmall', mm: expect.closeTo(1.4), minimumMm: 2.1}]);
+      expect(inspectHole(tape, precise, next).warnings).toEqual([{kind: 'gapTooSmall', mm: expect.closeTo(1.4), minimumMm: 2.1}]);
+    });
+  });
+
   it('reports both warnings for a short Hole with a small gap', () => {
     const selected = hole(25, 64, 1);
     const next = hole(25, 66, 5);
