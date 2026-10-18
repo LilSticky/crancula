@@ -33,6 +33,15 @@ From [the discovery](../../documentation/discovery/edit-a-tape.md):
 - Dictionary (approved 2026-10-19): Cutting Problem (Schnittproblem); a Hole is moved, lengthened
   or shortened at either end.
 
+### Session 2026-10-19
+
+- Q: Should Holes be edited directly in the Tape view, or only after switching on an edit mode? → A:
+  Directly; undo catches mistakes.
+- Q: How long does the undo history last? → A: Until the Tape view is left (another screen or
+  another Tape).
+- Q: How does the user find Holes with a Cutting Problem? → A: A count, plus a list of every such
+  Hole in the side panel; choosing an entry selects that Hole (FR-011).
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Change and remove holes (Priority: P1)
@@ -117,8 +126,9 @@ that the selected Hole says why; lengthen it again and check that the mark is go
    Minimum Gap, **Then** both are marked as too close.
 3. **Given** a marked Hole, **When** an edit removes its Cutting Problem, **Then** its mark is gone
    at once.
-4. **Given** a Tape with Cutting Problems, **Then** I see how many Holes have one without looking
-   at each Hole.
+4. **Given** a Tape with Cutting Problems, **Then** I see how many Holes have one, and a list of
+   them in the side panel (Pipe, start Column, Cutting Problem); **When** I choose an entry,
+   **Then** that Hole is selected and scrolled into view.
 5. **Given** a Tape with Cutting Problems, **When** I choose "Export for the Plotter", **Then** it
    is refused as in spec 003.
 
@@ -228,7 +238,9 @@ add a Hole, undo and redo; switch to German and check every new text.
 - **FR-010**: Every Hole with a Cutting Problem MUST be marked in the Tape view, and the marks MUST
   follow every edit at once. The selected Hole MUST name its Cutting Problems with the values in
   mm, as it does today.
-- **FR-011**: The Tape view MUST show how many Holes of the Tape have a Cutting Problem.
+- **FR-011**: The Tape view MUST show how many Holes of the Tape have a Cutting Problem and list
+  them in the side panel with their Pipe, start Column and Cutting Problem; choosing an entry MUST
+  select that Hole and scroll it into view. The list follows every edit.
 - **FR-012**: The Cutting Problems shown while editing MUST be the same ones that make "Export for
   the Plotter" refuse the Tape (spec 003), worked out against the Organ as it is now.
 - **FR-013**: Every applied edit MUST be saved like other Tape changes, so it survives a restart.
@@ -272,8 +284,8 @@ add a Hole, undo and redo; switch to German and check every new text.
 
 ## Assumptions
 
-- Edits are made directly in the Tape view; there is no separate edit mode. Undo makes mistakes
-  cheap.
+- Edits are made directly in the Tape view; there is no separate edit mode (clarified). Undo makes
+  mistakes cheap.
 - The pointer gestures (drag a Hole, drag its ends, add on an empty spot) and the keyboard
   shortcuts are chosen in the plan following the design guide; this spec only requires that both
   exist.
