@@ -27,9 +27,13 @@ out as a Tape that fits your Pipes. You then export the Tape as an SVG that a vi
 other Plotter can punch. Feed the Tape into your Organ, turn the Crank, and it plays.
 
 > [!NOTE]
-> **Early days.** Crancula is a hobby project working towards its first version, v0.1. You can
-> describe your Organ today. Making a Tape from a song and exporting it come next. There's no
-> download yet; see [Try it](#try-it) to run it from source.
+> **v0.1 is out.** Describe your Organ, bring a MIDI Song onto a Tape and export it for your
+> Plotter: the whole way from music to a cuttable Tape works. Crancula is a hobby project, so
+> expect rough edges. [Download it](#download) for Windows, macOS or Linux.
+
+<p align="center">
+  <img src="documentation/images/screenshots/tape.png" alt="A Tape for a 31-Pipe street organ: rows labelled F3 to B5, Holes as dark slots along a ruler in millimetres, the angled Lead-in on the left, and the Tape's facts beside it" width="100%">
+</p>
 
 ## How it works
 
@@ -53,13 +57,36 @@ flowchart LR
 2. **Bring a Song onto a Tape.** Import a MIDI file. Crancula shifts it up or down
    (Transposition) so that it fits the Pipes your Organ has.
 3. **Punch the Tape.** Export the Tape as a true-to-scale SVG and cut it with your Plotter.
+   A Tape that can't be cut (a Hole too short, or too close to the next) is not exported;
+   Crancula names every problem Hole instead.
 
-## Roadmap to v0.1
+## Screenshots
+
+<table>
+  <tr>
+    <td width="50%"><img src="documentation/images/screenshots/organ-editor.png" alt="The Organ editor: the Tape Bed with tape width, hole diameter, spacing, Minimum Gap, Lead-in and the derived Border, next to a rack of 31 Pipes from F3 to B5"></td>
+    <td width="50%"><img src="documentation/images/screenshots/bring-a-song-onto-a-tape.png" alt="Bringing a Song onto a Tape: a MIDI file with two Parts, the chosen Organ, the Transposition and the Fit, where all 44 Notes match a Pipe"></td>
+  </tr>
+  <tr>
+    <td><b>Describe your Organ.</b> Its Tape Bed and its Pipes; Crancula derives the Border.</td>
+    <td><b>Bring a Song onto a Tape.</b> Pick the Parts; the Fit shows how the Song meets your Pipes.</td>
+  </tr>
+  <tr>
+    <td colspan="2"><img src="documentation/images/screenshots/tape-dark-german.png" alt="The Tape view in the dark scheme with German texts: Lochband, Drehorgeln, Export für den Plotter"></td>
+  </tr>
+  <tr>
+    <td colspan="2"><b>Look at the Tape</b> at 1:1 or 2:1 and export it for the Plotter. Light or dark, English or German.</td>
+  </tr>
+</table>
+
+## What's in v0.1
 
 - [x] **Describe my organ**: create, edit, reorder and delete Organs, kept across restarts, in English and German
-- [ ] **Bring a song onto a tape**: import a MIDI file onto a Tape, with automatic Transposition ([#2](https://github.com/LilSticky/crancula/issues/2))
-- [ ] **Punch a tape**: export the Tape as an SVG for a vinyl cutter ([#3](https://github.com/LilSticky/crancula/issues/3))
-- [ ] Downloadable releases for Windows, macOS and Linux ([#11](https://github.com/LilSticky/crancula/issues/11))
+- [x] **Bring a song onto a tape**: import a MIDI file onto a Tape, with automatic Transposition ([#2](https://github.com/LilSticky/crancula/issues/2))
+- [x] **Punch a tape**: export the Tape as an SVG for a vinyl cutter ([#3](https://github.com/LilSticky/crancula/issues/3))
+- [x] Downloadable releases for Windows, macOS and Linux ([#11](https://github.com/LilSticky/crancula/issues/11))
+
+What changed in each version is in the [changelog](CHANGELOG.md).
 
 <details>
 <summary><b>Ideas for later</b></summary>
@@ -94,9 +121,23 @@ Crancula uses the same words everywhere: in the app, in the code and here.
 
 All terms, with their German names, are in the [dictionary](documentation/DICTIONARY.md).
 
-## Try it
+## Download
 
-Until the first release is out, you need [Node.js](https://nodejs.org/) 22 and Git:
+Get the [latest release](https://github.com/LilSticky/crancula/releases/latest):
+
+| System | File |
+|--------|------|
+| Windows | portable `.exe`, no installation |
+| macOS (Apple silicon) | `.dmg` |
+| Linux | `.AppImage` |
+
+The builds are not code-signed. On Windows, SmartScreen asks for confirmation: choose
+*More info → Run anyway*. On macOS, if Gatekeeper reports the app as damaged, run
+`xattr -cr /Applications/crancula.app`.
+
+### Run it from source
+
+You need [Node.js](https://nodejs.org/) 24 and Git:
 
 ```bash
 git clone https://github.com/LilSticky/crancula.git
