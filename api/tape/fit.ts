@@ -62,16 +62,17 @@ export function placedNotesOf(
   );
 }
 
-/** The Notes of the selected Parts the Import Summary reports: moved by octaves or unplayable. */
-export function fitNotesOf(
-  song: Song,
-  selectedParts: ReadonlySet<PartIndex>,
-  organ: Organ,
-  transposition: Transposition,
-): {readonly movedByOctaves: readonly NoteMovedByOctaves[]; readonly unplayableNotes: readonly UnplayableNote[]} {
+/** The Fit Notes: the Notes the Import Summary reports, moved by octaves or unplayable. */
+export interface FitNotes {
+  readonly movedByOctaves: readonly NoteMovedByOctaves[];
+  readonly unplayableNotes: readonly UnplayableNote[];
+}
+
+/** The Fit Notes of already placed Notes. */
+export function fitNotesOfPlaced(placed: readonly PlacedNote[]): FitNotes {
   const movedByOctaves: NoteMovedByOctaves[] = [];
   const unplayableNotes: UnplayableNote[] = [];
-  for (const {part, noteNumber, pipe, start} of placedNotesOf(song, selectedParts, organ, transposition)) {
+  for (const {part, noteNumber, pipe, start} of placed) {
     if (pipe === undefined) unplayableNotes.push({part, noteNumber, column: start});
     else if (pipe !== noteNumber) {
       movedByOctaves.push({part, noteNumber, pipe, octaves: (pipe - noteNumber) / OCTAVE, column: start});
@@ -80,25 +81,45 @@ export function fitNotesOf(
   return {movedByOctaves, unplayableNotes};
 }
 
+/** The Notes of the selected Parts the Import Summary reports: moved by octaves or unplayable. */
+export function fitNotesOf(
+  song: Song,
+  selectedParts: ReadonlySet<PartIndex>,
+  organ: Organ,
+  transposition: Transposition,
+): FitNotes {
+  return fitNotesOfPlaced(placedNotesOf(song, selectedParts, organ, transposition));
+}
+
+/** The Fit of already placed Notes. */
+export function fitOfPlaced(placed: readonly PlacedNote[]): Fit {
+  let matchingAPipe = 0;
+  let movedByOctaves = 0;
+  let unplayable = 0;
+  for (const {noteNumber, pipe} of placed) {
+    if (pipe === undefined) unplayable++;
+    else if (pipe === noteNumber) matchingAPipe++;
+    else movedByOctaves++;
+  }
+  return {matchingAPipe, movedByOctaves, unplayable};
+}
+
+/** The Fit and the Fit Notes from one placement of the Notes. */
+export function fitAndNotesOf(
+  song: Song,
+  selectedParts: ReadonlySet<PartIndex>,
+  organ: Organ,
+  transposition: Transposition,
+): FitNotes & {readonly fit: Fit} {
+  const placed = placedNotesOf(song, selectedParts, organ, transposition);
+  return {fit: fitOfPlaced(placed), ...fitNotesOfPlaced(placed)};
+}
+
 export function fitOf(
   song: Song,
   selectedParts: ReadonlySet<PartIndex>,
   organ: Organ,
   transposition: Transposition,
 ): Fit {
-  const table = octaveMoveTable(organ);
-  let matchingAPipe = 0;
-  let movedByOctaves = 0;
-  let unplayable = 0;
-  song.parts.forEach((each, index) => {
-    if (!selectedParts.has(index as PartIndex)) return;
-    for (const note of each.notes) {
-      const shifted = note.noteNumber + transposition;
-      const pipe = table[shifted];
-      if (pipe === undefined) unplayable++;
-      else if (pipe === shifted) matchingAPipe++;
-      else movedByOctaves++;
-    }
-  });
-  return {matchingAPipe, movedByOctaves, unplayable};
+  return fitOfPlaced(placedNotesOf(song, selectedParts, organ, transposition));
 }
