@@ -19,6 +19,13 @@
     "SAVED_HERE": "Auf diesem Computer gespeichert"
   },
   "TAPE": {
+    "RENAME": {
+      "TITLE": "Lochband umbenennen",
+      "NAME": "Name",
+      "CANCEL": "Abbrechen",
+      "CONFIRM": "Umbenennen",
+      "NAME_REQUIRED": "Gib dem Lochband einen Namen."
+    },
     "EXPORT": {
       "DIALOG_TITLE": "Für den Plotter exportieren",
       "FILTER_NAME": "SVG-Datei",
@@ -63,6 +70,7 @@
       "LENGTH": "Länge",
       "MORE_ACTIONS": "Weitere Aktionen für {{name}}",
       "ACTIONS_HEADER": "Aktionen",
+      "RENAME": "Umbenennen",
       "DELETE": "Lochband löschen",
       "ORGAN_NOT_AVAILABLE": "Drehorgel nicht verfügbar",
       "LENGTH_MM": "{{length}} mm"
