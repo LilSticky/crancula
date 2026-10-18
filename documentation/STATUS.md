@@ -128,6 +128,8 @@ Follow-ups:
 [#84](https://github.com/LilSticky/crancula/issues/84) (live Tape preview),
 Lead-in label in the Tape drawing (ux-review finding 11, not filed).
 Open issues carry `priority:` and `size:` labels; triage sets them.
+Fixed 2026-10-19: flaky cut-order export e2e ([#99](https://github.com/LilSticky/crancula/issues/99)); it read
+the SVG as soon as the file existed, before `writeFile` finished, and now waits for the success snackbar.
 
 ## Known broken / WIP
 
