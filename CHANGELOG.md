@@ -8,6 +8,9 @@ as its GitHub Release notes.
 
 ## [Unreleased]
 
+### Added
+- Rename a Tape: choose Rename in the Tape's menu in the Tape list.
+
 ## [0.1.0] - 2026-10-18
 
 ### Added
