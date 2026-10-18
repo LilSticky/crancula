@@ -119,7 +119,7 @@ after the last Column. A Tape that can't be cut opens a dialog naming every prob
 short, too close); nothing is written. Selected Hole warnings follow the same Column rules. Below 1180 px
 Export is an icon button. German texts. ux-review 40/50 (see [design/screens/current/ux-review.md](design/screens/current/ux-review.md)).
 Gate: lint, i18n (251 keys), 640 node and 746 Angular tests, 84 e2e green locally. Tasks in
-[tasks](../specs/003-punch-a-tape/tasks.md). **Next step:** all v0.1 slices are done; triage open issues and decide on the v0.1 release or the next slice (user decision).
+[tasks](../specs/003-punch-a-tape/tasks.md). **Released:** v0.1.0 (2026-10-18). **Next step:** triage open issues and choose the next slice from the ROADMAP's "Later" list (user decision).
 
 Follow-ups:
 [#76](https://github.com/LilSticky/crancula/issues/76), [#80](https://github.com/LilSticky/crancula/issues/80) and
@@ -144,8 +144,8 @@ Open issues carry `priority:` and `size:` labels; triage sets them.
 - Release workflow ([#11](https://github.com/LilSticky/crancula/issues/11)): `.github/workflows/release.yml`
   packages on Linux, Windows and macOS. A pushed tag `v*` also creates a draft GitHub Release; a
   manual run, or a pull request that changes the workflow or `electron-builder.json`, only builds
-  artifacts. Builds are unsigned. v0.0.1 (2026-10-14) is the first release from a tag; v0.1 follows
-  when all v0.1 slices are done. Release with `/release` (ADR 19); notes come from `CHANGELOG.md`.
+  artifacts. Builds are unsigned. v0.0.1 (2026-10-14) is the first release from a tag; v0.1.0
+  (2026-10-18) completes v0.1. Release with `/release` (ADR 19); notes come from `CHANGELOG.md`.
 
 ## Process changes
 
