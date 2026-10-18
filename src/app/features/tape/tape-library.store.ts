@@ -6,6 +6,7 @@ import {
   type OrganId,
   parseTapeLibrarySnapshot,
   removeHolesOfPipes,
+  renameTape,
   type Song,
   type Tape,
   type TapeId,
@@ -98,6 +99,17 @@ export const TapeLibrary = signalStore(
       async remove(id: TapeId): Promise<boolean> {
         if (store.loadProblem() !== null) return false;
         return removeTapes(store.tapeEntities().filter((tape) => tape.id === id));
+      },
+
+      /** Renames the Tape and saves. Resolves `false` without change for a blank name or unknown id. */
+      async rename(id: TapeId, name: string): Promise<boolean> {
+        if (store.loadProblem() !== null) return false;
+        const tape = store.tapeEntities().find((candidate) => candidate.id === id);
+        if (tape === undefined) return false;
+        const renamed = renameTape(tape, name);
+        if (!renamed.ok) return false;
+        patchState(store, upsertEntity(renamed.value, tapeConfig));
+        return save();
       },
 
       tapesOf,

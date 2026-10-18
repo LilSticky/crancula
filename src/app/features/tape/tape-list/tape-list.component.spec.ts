@@ -267,7 +267,7 @@ describe('TapeListComponent', () => {
       expect(element.querySelector('[aria-label="More actions for Kirmes-Walzer"]')?.textContent?.trim()).toBe('more_vert');
     });
 
-    it('holds Delete Tape and nothing to rename', async () => {
+    it('holds Rename (edit icon) before Delete Tape', async () => {
       const {fixture} = await renderWithMenu(false);
       const menu = await TestbedHarnessEnvironment.loader(fixture).getHarness(
         MatMenuHarness.with({selector: '[aria-label="More actions for Kirmes-Walzer"]'}),
@@ -275,9 +275,14 @@ describe('TapeListComponent', () => {
 
       await menu.open();
 
-      expect(await menu.getItems()).toHaveLength(1);
-      const [item] = await menu.getItems({selector: '[data-testid="delete-tape"]'});
-      expect((await item?.getText())?.replace('delete', '').trim()).toBe('Delete Tape');
+      const items = await menu.getItems();
+      expect(items).toHaveLength(2);
+      const [rename] = await menu.getItems({selector: '[data-testid="rename-tape"]'});
+      expect((await rename?.getText())?.replace('edit', '').trim()).toBe('Rename');
+      expect(await items[0]?.getText()).toContain('edit');
+      const [remove] = await menu.getItems({selector: '[data-testid="delete-tape"]'});
+      expect((await remove?.getText())?.replace('delete', '').trim()).toBe('Delete Tape');
+      expect(await items[1]?.getText()).toContain('Delete Tape');
     });
 
     it('has no bare delete button in the row', async () => {
@@ -313,6 +318,96 @@ describe('TapeListComponent', () => {
       await fixture.whenStable();
 
       expect(tapes.tapeEntities()).toEqual([]);
+    });
+  });
+
+  describe('renaming a Tape', () => {
+    const field = () => document.querySelector<HTMLInputElement>('[data-testid="tape-name-field"]');
+    const button = (testId: string) => document.querySelector<HTMLButtonElement>(`[data-testid="${testId}"]`);
+    const cancelButton = () =>
+      [...document.querySelectorAll<HTMLButtonElement>('mat-dialog-actions button')].find(
+        (candidate) => candidate.textContent?.trim() === 'Cancel',
+      );
+
+    async function openRenameDialog() {
+      const view = await render();
+      const tape = await view.add(testOrgan('Street organ', 3), 'Kirmes-Walzer');
+      await chooseFromRowMenu(view.fixture, 'Kirmes-Walzer', 'rename-tape');
+      await view.fixture.whenStable();
+      return {...view, tape};
+    }
+
+    async function typeName(fixture: ComponentFixture<TapeListComponent>, name: string) {
+      const input = field();
+      if (!input) throw new Error('no tape-name-field');
+      input.value = name;
+      input.dispatchEvent(new Event('input'));
+      fixture.detectChanges();
+      await fixture.whenStable();
+    }
+
+    async function press(fixture: ComponentFixture<TapeListComponent>, element: HTMLElement | null | undefined) {
+      if (!element) throw new Error('no such button');
+      element.click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+    }
+
+    afterEach(() => {
+      TestBed.inject(MatDialog).closeAll();
+    });
+
+    it('opens a dialog with the name field prefilled with the current name', async () => {
+      await openRenameDialog();
+
+      expect(field()?.value).toBe('Kirmes-Walzer');
+      expect(button('rename-tape-confirm')?.textContent?.trim()).toBe('Rename');
+      expect(cancelButton()).toBeDefined();
+    });
+
+    it('renames the Tape in the library and shows the new name when Rename is chosen', async () => {
+      const {fixture, tapes, tape, text} = await openRenameDialog();
+      await typeName(fixture, 'Jahrmarkt');
+
+      await press(fixture, button('rename-tape-confirm'));
+
+      expect(tapes.tapeEntities().map(({id, name}) => ({id, name}))).toEqual([{id: tape.id, name: 'Jahrmarkt'}]);
+      expect(text('[data-testid="tape-name"]')).toBe('Jahrmarkt');
+      expect(field()).toBeNull();
+    });
+
+    it('renames the Tape when Enter is pressed in the name field', async () => {
+      const {fixture, tapes, tape} = await openRenameDialog();
+      await typeName(fixture, 'Jahrmarkt');
+
+      field()?.dispatchEvent(new KeyboardEvent('keydown', {key: 'Enter', bubbles: true}));
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(tapes.tapeEntities().map(({id, name}) => ({id, name}))).toEqual([{id: tape.id, name: 'Jahrmarkt'}]);
+      expect(field()).toBeNull();
+    });
+
+    it('changes nothing and closes when Cancel is chosen', async () => {
+      const {fixture, tapes, text} = await openRenameDialog();
+      await typeName(fixture, 'Jahrmarkt');
+
+      await press(fixture, cancelButton());
+
+      expect(tapes.tapeEntities().map(({name}) => name)).toEqual(['Kirmes-Walzer']);
+      expect(text('[data-testid="tape-name"]')).toBe('Kirmes-Walzer');
+      expect(field()).toBeNull();
+    });
+
+    it('shows an error and neither saves nor closes for a blank name', async () => {
+      const {fixture, tapes} = await openRenameDialog();
+      await typeName(fixture, '   ');
+
+      await press(fixture, button('rename-tape-confirm'));
+
+      expect(document.querySelector('mat-dialog-container')?.textContent).toContain('Give the Tape a name.');
+      expect(field()).not.toBeNull();
+      expect(tapes.tapeEntities().map(({name}) => name)).toEqual(['Kirmes-Walzer']);
     });
   });
 

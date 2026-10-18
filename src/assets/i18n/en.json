@@ -19,6 +19,13 @@
     "SAVED_HERE": "Saved on this computer"
   },
   "TAPE": {
+    "RENAME": {
+      "TITLE": "Rename Tape",
+      "NAME": "Name",
+      "CANCEL": "Cancel",
+      "CONFIRM": "Rename",
+      "NAME_REQUIRED": "Give the Tape a name."
+    },
     "EXPORT": {
       "DIALOG_TITLE": "Export for the Plotter",
       "FILTER_NAME": "SVG file",
@@ -63,6 +70,7 @@
       "LENGTH": "Length",
       "MORE_ACTIONS": "More actions for {{name}}",
       "ACTIONS_HEADER": "Actions",
+      "RENAME": "Rename",
       "DELETE": "Delete Tape",
       "ORGAN_NOT_AVAILABLE": "Organ not available",
       "LENGTH_MM": "{{length}} mm"

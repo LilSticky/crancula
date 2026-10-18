@@ -20,6 +20,7 @@ import {LanguagePreference} from '../../shared/language-preference';
 import {tapesByOrgan} from '../../shared/ledger-order';
 import {OrganLibrary} from '../../organ/organ-library.store';
 import {TapeLibrary} from '../tape-library.store';
+import {RenameTapeDialogComponent} from './rename-tape-dialog/rename-tape-dialog.component';
 
 interface TapeRow {
   readonly tape: Tape;
@@ -120,6 +121,10 @@ interface TapeRow {
                 <mat-icon>more_vert</mat-icon>
               </button>
               <mat-menu #rowMenu="matMenu">
+                <button mat-menu-item type="button" data-testid="rename-tape" (click)="rename(row.tape)">
+                  <mat-icon>edit</mat-icon>
+                  <span>{{ 'TAPE.LIST.RENAME' | translate }}</span>
+                </button>
                 <button mat-menu-item type="button" class="destructive" data-testid="delete-tape" (click)="remove(row.tape)">
                   <mat-icon>delete</mat-icon>
                   <span>{{ 'TAPE.LIST.DELETE' | translate }}</span>
@@ -222,6 +227,15 @@ export class TapeListComponent {
 
   protected showAll(): void {
     void this.router.navigate(['/tapes']);
+  }
+
+  protected rename(tape: Tape): void {
+    this.dialog
+      .open(RenameTapeDialogComponent, {data: {name: tape.name}})
+      .afterClosed()
+      .subscribe((name: unknown) => {
+        if (typeof name === 'string') void this.tapes.rename(tape.id, name);
+      });
   }
 
   protected remove(tape: Tape): void {

@@ -257,6 +257,67 @@ describe('TapeLibrary', () => {
     });
   });
 
+  describe('rename', () => {
+    it('renames the Tape in memory, saves the library and leaves the Song and the other Tapes alone', async () => {
+      const stored = library({tape: 1, song: 1}, {tape: 2, song: 1});
+      const {api, store} = setup(createInMemoryCranculaApi(undefined, snapshotOf(stored)));
+      await store.load();
+
+      expect(await store.rename(stored.tapes[0].id, '  Kirmes-Walzer ')).toBe(true);
+
+      const renamed = {...stored.tapes[0], name: 'Kirmes-Walzer'};
+      expect(store.tapeEntities()).toEqual([renamed, stored.tapes[1]]);
+      expect(store.songEntities()).toEqual(stored.songs);
+      expect(await storedTapes(api)).toEqual(snapshotOf({tapes: [renamed, stored.tapes[1]], songs: stored.songs}));
+    });
+
+    it('resolves false and changes nothing for a blank name', async () => {
+      const stored = library({tape: 1, song: 1});
+      const {api, store} = setup(createInMemoryCranculaApi(undefined, snapshotOf(stored)));
+      await store.load();
+
+      expect(await store.rename(stored.tapes[0].id, '   ')).toBe(false);
+
+      expect(store.tapeEntities()).toEqual(stored.tapes);
+      expect(await storedTapes(api)).toEqual(snapshotOf(stored));
+    });
+
+    it('resolves false and changes nothing for an unknown id', async () => {
+      const stored = library({tape: 1, song: 1});
+      const {api, store} = setup(createInMemoryCranculaApi(undefined, snapshotOf(stored)));
+      await store.load();
+      const unknown = library({tape: 9, song: 9}).tapes[0].id;
+
+      expect(await store.rename(unknown, 'Kirmes-Walzer')).toBe(false);
+
+      expect(store.tapeEntities()).toEqual(stored.tapes);
+      expect(await storedTapes(api)).toEqual(snapshotOf(stored));
+    });
+
+    it('resolves false and never writes while the stored Tapes could not be read', async () => {
+      const inMemory = createInMemoryCranculaApi(undefined, undefined, {tapes: {load: 'unreadable'}});
+      let saves = 0;
+      const {store} = setup({
+        organs: inMemory.organs,
+        tapes: {
+          load: () => inMemory.tapes.load(),
+          save: (snapshot) => {
+            saves += 1;
+            return inMemory.tapes.save(snapshot);
+          },
+        },
+        plotter: inMemory.plotter,
+        app: inMemory.app,
+      });
+      await store.load();
+      const content = library({tape: 1, song: 1});
+
+      expect(await store.rename(content.tapes[0].id, 'Kirmes-Walzer')).toBe(false);
+
+      expect(saves).toBe(0);
+    });
+  });
+
   describe('Tapes of an Organ', () => {
     it('tapesOf lists only the Tapes of that Organ, in order', async () => {
       const stored = library(
