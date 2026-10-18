@@ -8,6 +8,8 @@ as its GitHub Release notes.
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-10-18
+
 ### Added
 - Every Organ has a Lead-in (German Vorlauf): the blank Tape before Column 1, with an angled start,
   in millimetres. Enter it in the Organ editor after Minimum Gap; 0 means none. Your saved Organs get
@@ -18,6 +20,8 @@ as its GitHub Release notes.
   too short, too close) in a dialog and writes no file.
 
 ### Changed
+- A new look, the organ builder's workshop: new theme and fonts, navigation, Organ editor,
+  Tape view, Organ and Tape lists, and import screen. The Tape is drawn horizontally, row 1 on top.
 - The Border is no longer entered. Crancula derives it as (tape width - Row Span) / 2, with the rows
   centred across the Tape, and shows it read-only in the Organ editor (6,25 mm for a street organ
   with 31 Pipes, 120 mm tape, 2,5 mm holes, 3,5 mm spacing). A Border of 0 is fine; a negative one
@@ -25,6 +29,11 @@ as its GitHub Release notes.
 - Saved Organs are upgraded to the new file format (version 3) the next time you save. Downgrade
   note: older versions of Crancula can't read the upgraded file; they move it aside and start with
   no Organs.
+
+### Fixed
+- View > Reload keeps the current page instead of showing a file-not-found page.
+- Saving no longer fails on Windows when another program (antivirus, the indexer) briefly holds the
+  saved file open.
 
 ## [0.0.1] - 2026-10-14
 
@@ -41,5 +50,6 @@ as its GitHub Release notes.
   application menu.
 - Downloads for Windows (portable `.exe`), macOS (`.dmg`, Apple silicon) and Linux (`.AppImage`).
 
-[Unreleased]: https://github.com/LilSticky/crancula/compare/v0.0.1...HEAD
+[Unreleased]: https://github.com/LilSticky/crancula/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/LilSticky/crancula/releases/tag/v0.1.0
 [0.0.1]: https://github.com/LilSticky/crancula/releases/tag/v0.0.1
