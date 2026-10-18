@@ -16,7 +16,7 @@ States: `planned` · `in progress` · `done`
 | Apply the design guide (not a slice) | use the existing screens in the workshop design: theme, shell, Organ editor, Tape view, lists | – | Angular Material theme, components | done (PR #86 merged 2026-10-17, [#59](https://github.com/LilSticky/crancula/issues/59)) |
 | Punch a tape | export a Tape as an SVG in mm for a vinyl cutter | Tape | SVG export | done |
 
-Release v0.1 as cross-platform GitHub Releases built in CI, once all of the above are done.
+Released as v0.1.0 on 2026-10-18: cross-platform GitHub Releases built in CI.
 
 ## Project infrastructure (not slices)
 
@@ -24,7 +24,7 @@ Release v0.1 as cross-platform GitHub Releases built in CI, once all of the abov
   Tasks, bugs and open questions are Issues; CI runs lint, test and build on every push to `main`
   and every pull request. Progress is tracked on the [Project board](https://github.com/users/LilSticky/projects/1).
   A release workflow (`.github/workflows/release.yml`) packages unsigned builds for all three
-  platforms on a `v*` tag and creates a draft GitHub Release; publishing is untested until the first tag
+  platforms on a `v*` tag and creates a draft GitHub Release; v0.1.0 was published from a tag on 2026-10-18
   ([#11](https://github.com/LilSticky/crancula/issues/11)).
 - **Design guide**: done 2026-10-15 ([DESIGN-GUIDE.md](DESIGN-GUIDE.md), #12); applying it to the
   app ([#59](https://github.com/LilSticky/crancula/issues/59), sub-issues #62–#66 and #69) is done with PR #86, before "Punch a tape".
