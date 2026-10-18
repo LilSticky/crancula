@@ -62,7 +62,7 @@ export {
   type Transposition,
 } from './tape/tape';
 export {allowedTranspositions, proposeTransposition} from './tape/transposition';
-export {fitNotesOf, fitOf, type Fit} from './tape/fit';
+export {fitAndNotesOf, fitNotesOf, fitOf, type Fit, type FitNotes} from './tape/fit';
 export {
   createTape,
   prefilledColumnLength,

@@ -1,4 +1,3 @@
-import {NgTemplateOutlet} from '@angular/common';
 import {ChangeDetectionStrategy, Component, computed, inject, linkedSignal, PendingTasks, signal} from '@angular/core';
 import {type FieldTree, form, FormField} from '@angular/forms/signals';
 import {ErrorStateMatcher} from '@angular/material/core';
@@ -14,15 +13,13 @@ import {TranslatePipe} from '@ngx-translate/core';
 import {
   allowedTranspositions,
   defaultSelectedParts,
-  type Fit,
-  fitNotesOf,
-  fitOf,
+  fitAndNotesOf,
+  type FitNotes,
   MAXIMUM_MIDI_FILE_SIZE,
   type Organ,
   type PartIndex,
   prefilledColumnLength,
   proposeTransposition,
-  noteName,
   readMidiSong,
   tapeLengthInMillimetres,
   transposition,
@@ -46,6 +43,7 @@ import {
   createTapeFromDraft,
   tapeImportSchema,
 } from './tape-import-form';
+import {TapeFitCardComponent} from './tape-fit-card/tape-fit-card.component';
 
 /** A translation key and its parameters. */
 interface Readiness {
@@ -59,180 +57,10 @@ const NO_SONG_DRAFT: TapeImportDraft = {name: '', columnLength: null, transposit
 @Component({
   selector: 'cranc-tape-import',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslatePipe, RouterLink, MatFormField, MatLabel, MatInput, MatError, MatButton, MatIconButton, MatCheckbox, MatIcon, MatCard, MatChip, MatTooltip, MatSuffix, NgTemplateOutlet, FormField, DecimalInputDirective, PageHeadComponent, ActionBarComponent],
+  imports: [TranslatePipe, RouterLink, MatFormField, MatLabel, MatInput, MatError, MatButton, MatIconButton, MatCheckbox, MatIcon, MatCard, MatChip, MatTooltip, MatSuffix, FormField, DecimalInputDirective, PageHeadComponent, ActionBarComponent, TapeFitCardComponent],
   templateUrl: './tape-import.component.html',
   providers: [{provide: ErrorStateMatcher, useClass: ShownViolationMatcher}],
-  styles: `
-    :host {
-      display: flex;
-      flex-direction: column;
-      flex: 1;
-      min-height: 0;
-    }
-
-    .tape-import {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      grid-template-rows: minmax(0, 1fr) auto;
-      gap: 20px;
-      flex: 1;
-      min-height: 0;
-    }
-
-    mat-card {
-      display: flex;
-      flex-direction: column;
-      min-height: 0;
-      padding: 20px;
-    }
-
-    [data-testid='fit'] {
-      display: flex;
-      flex-direction: column;
-      flex: 1;
-      min-height: 0;
-    }
-
-    @media (max-width: 1179px) {
-      mat-card {
-        padding: 12px 16px;
-      }
-
-      .group {
-        margin-bottom: 8px;
-        gap: 4px;
-      }
-    }
-
-    .group {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin-bottom: 8px;
-    }
-
-    .name-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
-
-    .group-title {
-      margin: 0;
-      font-size: 1rem;
-      font-weight: 700;
-    }
-
-    .file {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .parts {
-      list-style: none;
-      margin: 0;
-      padding: 0;
-      flex: 1 1 auto;
-      min-height: 0;
-      overflow-y: auto;
-    }
-
-    .parts-group {
-      flex: 1 1 auto;
-      min-height: 13rem;
-    }
-
-    .part {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
-      min-height: 40px;
-      border-bottom: 1px solid var(--mat-sys-outline-variant);
-    }
-
-    .part-note-count {
-      font-variant-numeric: tabular-nums;
-    }
-
-    .part-percussion {
-      color: var(--mat-sys-on-surface-variant);
-    }
-
-    .stepper {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .proposal {
-      margin: 0;
-      color: var(--mat-sys-on-surface-variant);
-    }
-
-    .rejection {
-      color: var(--mat-sys-error);
-    }
-
-    cranc-action-bar {
-      grid-column: 1 / -1;
-    }
-
-    .empty-state {
-      align-items: flex-start;
-      gap: 12px;
-    }
-
-    .fit-rows {
-      display: flex;
-      flex-direction: column;
-      min-height: 0;
-      list-style: none;
-      margin: 0;
-      padding: 0;
-    }
-
-    .fit-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      width: 100%;
-      min-height: 40px;
-      padding: 0 8px;
-      border: 0;
-      background: none;
-      font: inherit;
-      color: inherit;
-      text-align: start;
-    }
-
-    button.fit-row {
-      cursor: pointer;
-    }
-
-    .fit-label {
-      flex: 1;
-    }
-
-    .fit-count {
-      font-variant-numeric: tabular-nums;
-    }
-
-    .fit-row.warning,
-    .fit-warning {
-      color: var(--mat-sys-error);
-    }
-
-    .fit-notes {
-      min-height: 0;
-      max-height: 12rem;
-      overflow-y: auto;
-      margin: 0 0 8px;
-      padding-inline-start: 48px;
-    }
-  `,
+  styleUrl: './tape-import.component.scss',
 })
 export class TapeImportComponent {
   private readonly organs = inject(OrganLibrary);
@@ -240,7 +68,6 @@ export class TapeImportComponent {
   private readonly router = inject(Router);
   private readonly pendingTasks = inject(PendingTasks);
   private readonly language = inject(LanguagePreference).language;
-  protected readonly noteName = noteName;
 
   protected readonly organList = this.organs.entities;
 
@@ -296,51 +123,37 @@ export class TapeImportComponent {
 
   protected readonly tape: FieldTree<TapeImportDraft> = form(this.draft, tapeImportSchema(this.context));
 
-  /** How the selected Parts meet the Pipes at the Transposition now in the form; absent while it isn't a valid one. */
-  protected readonly fit = computed<Fit | null>(() => {
+  /** How the selected Parts meet the Pipes at the Transposition now in the form (one placement); absent while it isn't a valid one. */
+  protected readonly fitAndNotes = computed(() => {
     const context = this.context();
     const semitones = transposition(this.draft().transposition ?? Number.NaN);
     return context && semitones !== undefined
-      ? fitOf(context.song, context.selectedParts, context.organ, semitones)
+      ? fitAndNotesOf(context.song, context.selectedParts, context.organ, semitones)
       : null;
   });
 
   /** The Notes behind the Fit counts, ordered by Column, then Part. */
-  protected readonly fitNotes = computed(() => {
-    const context = this.context();
-    const semitones = transposition(this.draft().transposition ?? Number.NaN);
-    if (context === null || semitones === undefined) return {movedByOctaves: [], unplayableNotes: []};
-    const {movedByOctaves, unplayableNotes} = fitNotesOf(context.song, context.selectedParts, context.organ, semitones);
+  protected readonly fitNotes = computed<FitNotes>(() => {
+    const notes = this.fitAndNotes();
+    if (notes === null) return {movedByOctaves: [], unplayableNotes: []};
     const byColumnThenPart = (a: {column: number; part: number}, b: {column: number; part: number}) =>
       a.column - b.column || a.part - b.part;
     return {
-      movedByOctaves: [...movedByOctaves].sort(byColumnThenPart),
-      unplayableNotes: [...unplayableNotes].sort(byColumnThenPart),
+      movedByOctaves: [...notes.movedByOctaves].sort(byColumnThenPart),
+      unplayableNotes: [...notes.unplayableNotes].sort(byColumnThenPart),
     };
   });
 
   /** The Fit Note lists show only for a Transposition the form accepts. */
   protected readonly listsShown = computed(() => this.tape.transposition().valid());
 
-  /** What a list was opened for: a new Song or another choice of Parts closes it. */
-  private readonly disclosureKey = computed(() => ({song: this.song(), parts: this.selectedParts()}));
-  private readonly movedOpenedFor = signal<object | null>(null);
-  private readonly unplayableOpenedFor = signal<object | null>(null);
+  /** What a Fit Note list was opened for: a new Song or another choice of Parts closes it. */
+  protected readonly disclosureKey = computed(() => ({song: this.song(), parts: this.selectedParts()}));
 
-  protected readonly movedOpen = computed(
-    () => (this.fit()?.movedByOctaves ?? 0) > 0 && this.movedOpenedFor() === this.disclosureKey(),
+  /** The label of each Part as the Import Summary names it: its name, or its number counted from 1. */
+  protected readonly partLabels = computed(
+    () => this.song()?.parts.map((part, index) => part.name ?? `${index + 1}`) ?? [],
   );
-  protected readonly unplayableOpen = computed(
-    () => (this.fit()?.unplayable ?? 0) > 0 && this.unplayableOpenedFor() === this.disclosureKey(),
-  );
-
-  protected toggleMoved(): void {
-    this.movedOpenedFor.set(this.movedOpen() ? null : this.disclosureKey());
-  }
-
-  protected toggleUnplayable(): void {
-    this.unplayableOpenedFor.set(this.unplayableOpen() ? null : this.disclosureKey());
-  }
 
   /** The Transposition the form shows now: the chosen one, or the proposal while none is entered. */
   protected readonly proposal = computed(() => {
@@ -387,11 +200,6 @@ export class TapeImportComponent {
     const length = formatNumber(tapeLengthInMillimetres(tape), this.language());
     return {key: tape.length === 1 ? 'TAPE.IMPORT.STATE_READY_ONE' : 'TAPE.IMPORT.STATE_READY', params: {columns: tape.length, length}};
   });
-
-  /** The Part as the Import Summary names it: its name, or its number counted from 1. */
-  protected partLabel(part: number): string {
-    return this.song()?.parts[part]?.name ?? `${part + 1}`;
-  }
 
   /** Reads the chosen file into the Song, or into the reason it was rejected. */
   protected chooseSong(input: HTMLInputElement): void {

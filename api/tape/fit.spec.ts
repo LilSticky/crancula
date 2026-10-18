@@ -14,7 +14,7 @@ import {
   type Song,
 } from '../song/song';
 import {createTape, type CreatedTape} from './create-tape';
-import {fitNotesOf, fitOf} from './fit';
+import {fitAndNotesOf, fitNotesOf, fitOf} from './fit';
 import {column, transposition, type Column, type Transposition} from './tape';
 
 function defined<T>(value: T | undefined, what: string): T {
@@ -291,5 +291,29 @@ describe('fitNotesOf', () => {
         expect(notes.movedByOctaves).toEqual(importSummary.movedByOctaves);
       },
     );
+  });
+});
+
+describe('fitAndNotesOf', () => {
+  const organ = anOrgan(range(60, 84).filter((pipe) => pipe % 12 !== 6));
+
+  it('gives the Fit and the Fit Notes that fitOf and fitNotesOf give, from one placement', () => {
+    // 60 matches a Pipe, 48 is moved up an octave, 66 is Unplayable (no Pipe on F#), at Transposition 0
+    const song = aSong(aPart([60, 48, 66, 62]), aPart([95]));
+    const selected = parts(0, 1);
+
+    const {fit, movedByOctaves, unplayableNotes} = fitAndNotesOf(song, selected, organ, noShift);
+
+    expect(fit).toEqual(fitOf(song, selected, organ, noShift));
+    expect({movedByOctaves, unplayableNotes}).toEqual(fitNotesOf(song, selected, organ, noShift));
+    expect(fit).toEqual({matchingAPipe: 2, movedByOctaves: 2, unplayable: 1});
+  });
+
+  it('gives an empty Fit and no Fit Notes without selected Parts', () => {
+    expect(fitAndNotesOf(aSong(aPart([60])), parts(), organ, noShift)).toEqual({
+      fit: {matchingAPipe: 0, movedByOctaves: 0, unplayable: 0},
+      movedByOctaves: [],
+      unplayableNotes: [],
+    });
   });
 });

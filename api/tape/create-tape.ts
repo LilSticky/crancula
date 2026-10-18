@@ -3,7 +3,7 @@ import {err, ok, type Result} from '../result';
 import type {PartIndex, Song} from '../song/song';
 import type {ImportSummary} from './import-summary';
 import {fixHoles, holeLimitsOf, mergeOverlaps} from './hole-fixes';
-import {fitNotesOf, fitOf, placedNotesOf} from './fit';
+import {fitNotesOfPlaced, fitOf, placedNotesOf} from './fit';
 import {allowedTranspositions} from './transposition';
 import {
   asValidTape,
@@ -79,10 +79,11 @@ export function createTape(input: CreateTapeInput): Result<CreatedTape, readonly
   if (violations.length > 0) return err(violations);
 
   const {song, organ, transposition} = input;
-  const holes: Hole[] = placedNotesOf(song, selectedParts, organ, transposition).flatMap(
+  const placed = placedNotesOf(song, selectedParts, organ, transposition);
+  const holes: Hole[] = placed.flatMap(
     ({pipe, start, length}) => (pipe === undefined ? [] : [{pipe, start, length}]),
   );
-  const {movedByOctaves, unplayableNotes} = fitNotesOf(song, selectedParts, organ, transposition);
+  const {movedByOctaves, unplayableNotes} = fitNotesOfPlaced(placed);
 
   const columnLength = valid(millimetres(input.columnLength), 'Column length');
   const merged = mergeOverlaps(holes);
