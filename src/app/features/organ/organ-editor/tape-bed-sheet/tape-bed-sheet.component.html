@@ -1,0 +1,99 @@
+<mat-card appearance="outlined" data-testid="tape-bed-sheet">
+  <h2 class="sheet-title">{{ 'ORGAN.EDITOR.TAPE_BED' | translate }}</h2>
+  <div class="fields">
+    <mat-form-field class="full-width">
+      <mat-label>{{ 'ORGAN.EDITOR.NAME' | translate }}</mat-label>
+      <input matInput data-testid="name" [formField]="organ().name"/>
+      <ng-container ngProjectAs="mat-error">
+        @for (message of messagesAt(organ().name); track message.key) {
+          <mat-error data-testid="violation" data-path="name">{{ message.key | translate: message.params }}</mat-error>
+        }
+      </ng-container>
+    </mat-form-field>
+
+    <mat-form-field>
+      <mat-label>{{ 'ORGAN.EDITOR.TAPE_WIDTH' | translate }}</mat-label>
+      <input matInput crancDecimalInput data-testid="tape-width" [formField]="organ().tapeBed.tapeWidth"/>
+      <span matTextSuffix>mm</span>
+      <ng-container ngProjectAs="mat-error">
+        @for (message of messagesAt(organ().tapeBed.tapeWidth); track message.key) {
+          <mat-error data-testid="violation" data-path="tapeBed.tapeWidth">{{ message.key | translate: message.params }}</mat-error>
+        }
+      </ng-container>
+    </mat-form-field>
+    <mat-form-field>
+      <mat-label>{{ 'ORGAN.EDITOR.HOLE_DIAMETER' | translate }}</mat-label>
+      <input matInput crancDecimalInput data-testid="hole-diameter" [formField]="organ().tapeBed.holeDiameter"/>
+      <span matTextSuffix>mm</span>
+      <ng-container ngProjectAs="mat-error">
+        @for (message of messagesAt(organ().tapeBed.holeDiameter); track message.key) {
+          <mat-error data-testid="violation" data-path="tapeBed.holeDiameter">{{ message.key | translate: message.params }}</mat-error>
+        }
+      </ng-container>
+    </mat-form-field>
+    <mat-form-field>
+      <mat-label>{{ 'ORGAN.EDITOR.ROW_SPACING' | translate }}</mat-label>
+      <input matInput crancDecimalInput data-testid="row-spacing" [formField]="organ().tapeBed.rowSpacing"/>
+      <span matTextSuffix>mm</span>
+      <ng-container ngProjectAs="mat-error">
+        @for (message of messagesAt(organ().tapeBed.rowSpacing); track message.key) {
+          <mat-error data-testid="violation" data-path="tapeBed.rowSpacing">{{ message.key | translate: message.params }}</mat-error>
+        }
+      </ng-container>
+    </mat-form-field>
+    <mat-form-field>
+      <mat-label>{{ 'ORGAN.EDITOR.MINIMUM_GAP' | translate }}</mat-label>
+      <input matInput crancDecimalInput data-testid="minimum-gap" [formField]="organ().minimumGap"/>
+      <span matTextSuffix>mm</span>
+      <ng-container ngProjectAs="mat-error">
+        @for (message of messagesAt(organ().minimumGap); track message.key) {
+          <mat-error data-testid="violation" data-path="minimumGap">{{ message.key | translate: message.params }}</mat-error>
+        }
+      </ng-container>
+    </mat-form-field>
+    <mat-form-field>
+      <mat-label>{{ 'ORGAN.EDITOR.LEAD_IN' | translate }}</mat-label>
+      <input matInput crancDecimalInput inputmode="decimal" data-testid="lead-in" [formField]="organ().leadIn"/>
+      <span matTextSuffix>mm</span>
+      <ng-container ngProjectAs="mat-error">
+        @for (message of messagesAt(organ().leadIn); track message.key) {
+          <mat-error data-testid="violation" data-path="leadIn">{{ message.key | translate: message.params }}</mat-error>
+        }
+      </ng-container>
+    </mat-form-field>
+    <mat-form-field>
+      <mat-label>{{ 'ORGAN.EDITOR.BORDER' | translate }}</mat-label>
+      <input matInput readonly class="cr-readonly" data-testid="border" [value]="border()"/>
+      <span matTextSuffix>mm</span>
+      <mat-hint>{{ 'ORGAN.EDITOR.BORDER_HINT' | translate }}</mat-hint>
+    </mat-form-field>
+    <mat-form-field>
+      <mat-label>{{ 'ORGAN.EDITOR.MINIMUM_HOLE_LENGTH' | translate }}</mat-label>
+      <input matInput readonly class="cr-readonly" data-testid="minimum-hole-length" [value]="minimumHoleLength()"/>
+      <span matTextSuffix>mm</span>
+      <mat-hint>{{ 'ORGAN.EDITOR.MINIMUM_HOLE_LENGTH_HINT' | translate }}</mat-hint>
+    </mat-form-field>
+  </div>
+  @if (fit(); as fit) {
+    <p class="fit-check" data-testid="fit-check" aria-live="polite" [class.error]="fit.tooWide">
+      @if (fit.tooWide) {
+        <mat-icon>error</mat-icon>
+        <span>{{ fit.fitKey | translate: fit }}</span>
+      } @else {
+        <span>{{ fit.fitKey | translate: fit }}</span>
+      }
+    </p>
+    @if (drawing(); as bed) {
+      <svg class="tape-bed-drawing" data-testid="tape-bed-drawing" role="img" [attr.viewBox]="'0 0 ' + bed.length + ' ' + bed.tapeWidth"
+           [attr.aria-label]="fit.drawingKey | translate: fit">
+        <rect data-testid="tape-bed-tape" x="0" y="0" [attr.width]="bed.length" [attr.height]="bed.tapeWidth"
+              fill="var(--cr-tape)" stroke="var(--cr-tape-edge)" stroke-width="0.5"/>
+        <rect data-testid="tape-bed-border" x="0" y="0" [attr.width]="bed.length" [attr.height]="bed.border" fill="var(--cr-tape-guide)"/>
+        <rect data-testid="tape-bed-border" x="0" [attr.y]="bed.bottomBorderTop" [attr.width]="bed.length" [attr.height]="bed.border" fill="var(--cr-tape-guide)"/>
+        @for (y of bed.rows; track $index) {
+          <line data-testid="tape-bed-row" x1="0" [attr.x2]="bed.length" [attr.y1]="y" [attr.y2]="y" stroke="var(--cr-tape-guide-strong)" stroke-width="0.3"/>
+        }
+      </svg>
+    }
+  }
+</mat-card>

@@ -1,26 +1,19 @@
-import {afterNextRender, ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, Injector, input, linkedSignal, signal, untracked, viewChild, viewChildren} from '@angular/core';
+import {afterNextRender, ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, Injector, input, linkedSignal, signal, untracked, viewChild} from '@angular/core';
 import {BreakpointObserver} from '@angular/cdk/layout';
 import {toSignal} from '@angular/core/rxjs-interop';
-import {CdkDrag, CdkDragDrop, CdkDragHandle, CdkDropList, CdkDropListGroup} from '@angular/cdk/drag-drop';
-import {type FieldTree, form, FormField} from '@angular/forms/signals';
+import {type FieldTree, form} from '@angular/forms/signals';
 import {ErrorStateMatcher} from '@angular/material/core';
-import {MatButton, MatIconButton} from '@angular/material/button';
-import {MatError, MatFormField, MatHint, MatInput, MatLabel, MatSuffix} from '@angular/material/input';
-import {MatCard} from '@angular/material/card';
+import {MatButton} from '@angular/material/button';
 import {MatDialog} from '@angular/material/dialog';
 import {MatIcon} from '@angular/material/icon';
-import {MatMenu, MatMenuItem, MatMenuTrigger} from '@angular/material/menu';
-import {MatTooltip} from '@angular/material/tooltip';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {Router} from '@angular/router';
 import {TranslatePipe, TranslateService} from '@ngx-translate/core';
 import {
   addPipe,
   emptyOrganDraft,
-  midiNoteNumber,
   movePipe,
   newOrganId,
-  noteName,
   type Organ,
   type OrganDraft,
   removePipe,
@@ -29,7 +22,6 @@ import {
   validateOrgan,
 } from '@api/index';
 import {firstValueFrom, map} from 'rxjs';
-import {DecimalInputDirective} from '../../shared/decimal-input.directive';
 import {formatNumber} from '../../shared/format-number';
 import {LanguagePreference} from '../../shared/language-preference';
 import {ConfirmableAction, ConfirmDialogComponent} from '../../shared/components/confirm-dialog/confirm-dialog.component';
@@ -40,8 +32,9 @@ import {TapeLibrary} from '../../tape/tape-library.store';
 import {OrganDeletion} from '../organ-deletion';
 import {OrganLibrary} from '../organ-library.store';
 import {pipeRange} from '../pipe-range';
-import {rackColumns} from './pipe-rack';
-import {changedFields, FIELD_LABEL_KEYS, type FieldProblem, organFormSchema, organProblems, problemFields, SaveAttempt, shownMessages, ShownViolationMatcher} from './organ-form';
+import {changedFields, FIELD_LABEL_KEYS, type FieldProblem, organFormSchema, organProblems, problemFields, SaveAttempt, ShownViolationMatcher} from './organ-form';
+import {PipeRackComponent} from './pipe-rack/pipe-rack.component';
+import {TapeBedSheetComponent} from './tape-bed-sheet/tape-bed-sheet.component';
 
 /** Below this width the Pipe rack has 2 columns of compact rows (the same threshold as the shell). */
 const COMPACT_QUERY = '(max-width: 1179.98px)';
@@ -54,13 +47,12 @@ const FIELD_TEST_IDS: Readonly<Record<string, string>> = {
   'tapeBed.rowSpacing': 'row-spacing',
   minimumGap: 'minimum-gap',
   leadIn: 'lead-in',
-  pipes: 'add-pipe',
 };
 
 @Component({
   selector: 'cranc-organ-editor',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslatePipe, MatFormField, MatLabel, MatInput, MatHint, MatError, MatSuffix, MatButton, MatIconButton, MatIcon, MatMenu, MatMenuItem, MatMenuTrigger, MatTooltip, MatCard, FormField, DecimalInputDirective, CdkDropList, CdkDropListGroup, CdkDrag, CdkDragHandle, PageHeadComponent, ActionBarComponent],
+  imports: [TranslatePipe, MatButton, MatIcon, PageHeadComponent, ActionBarComponent, TapeBedSheetComponent, PipeRackComponent],
   templateUrl: './organ-editor.component.html',
   providers: [SaveAttempt, {provide: ErrorStateMatcher, useClass: ShownViolationMatcher}],
   styles: `
@@ -109,76 +101,6 @@ const FIELD_TEST_IDS: Readonly<Record<string, string>> = {
       }
     }
 
-    mat-card {
-      display: flex;
-      flex-direction: column;
-      min-height: 0;
-      padding: 20px;
-    }
-
-    .rack-scroller {
-      flex: 1 1 auto;
-      min-height: 0;
-      overflow-y: auto;
-    }
-
-    .sheet-title {
-      margin: 0;
-      font-size: 1.25rem;
-    }
-
-    .fields {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      column-gap: 16px;
-      row-gap: 20px;
-      margin-top: 16px;
-    }
-
-    @media (max-width: 1180px) {
-      .fields {
-        grid-template-columns: minmax(0, 1fr);
-        row-gap: 12px;
-      }
-    }
-
-    .full-width {
-      grid-column: 1 / -1;
-    }
-
-    .fit-check {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin: 16px 0 0;
-    }
-
-    .fit-check.error {
-      color: var(--mat-sys-error);
-    }
-
-    .tape-bed-drawing {
-      display: block;
-      width: 100%;
-      max-height: 160px;
-      margin-top: 16px;
-    }
-
-    .sheet-head {
-      display: flex;
-      align-items: baseline;
-      gap: 12px;
-      margin-bottom: 12px;
-
-      button {
-        margin-left: auto;
-      }
-    }
-
-    .violation {
-      color: var(--mat-sys-error);
-    }
-
     .error-summary {
       display: flex;
       gap: 12px;
@@ -204,75 +126,6 @@ const FIELD_TEST_IDS: Readonly<Record<string, string>> = {
         text-decoration: underline;
       }
     }
-
-    .rack {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 0 18px;
-    }
-
-    .rack.compact {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .rack-column {
-      min-width: 0;
-    }
-
-    .note-field {
-      flex: 1 1 0;
-      min-width: 0;
-      width: 100%;
-    }
-
-    .rack.compact .pipe {
-      min-height: 30px;
-    }
-
-    .rack-head {
-      position: sticky;
-      top: 0;
-      z-index: 1;
-      display: flex;
-      gap: 4px;
-      padding-bottom: 4px;
-      font-size: 0.75rem;
-      color: var(--mat-sys-on-surface-variant);
-      background: var(--mat-card-outlined-container-color, var(--mat-sys-surface));
-      border-bottom: 1px solid var(--cr-paper-edge);
-
-      span:first-child {
-        margin-left: 24px;
-      }
-    }
-
-    .pipe {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      min-height: 34px;
-      border-bottom: 1px solid var(--cr-paper-edge);
-    }
-
-    .row-cell {
-      flex: none;
-      width: 34px;
-      text-align: right;
-      color: var(--mat-sys-on-surface-variant);
-      font-size: 0.75rem;
-    }
-
-    .note-name {
-      font-weight: 600;
-    }
-
-    .note-name.sharp {
-      font-weight: 400;
-    }
-
-    .drag-handle {
-      cursor: grab;
-    }
   `,
 })
 export class OrganEditorComponent implements UnsavedChangesCheck {
@@ -288,7 +141,7 @@ export class OrganEditorComponent implements UnsavedChangesCheck {
   private readonly snackBar = inject(MatSnackBar);
   private readonly translate = inject(TranslateService);
   private readonly injector = inject(Injector);
-  private readonly noteInputs = viewChildren<ElementRef<HTMLInputElement>>('noteInput');
+  private readonly pipeRack = viewChild(PipeRackComponent);
   private deleted = false;
 
   /** The Organ as it was when opened: the stored one, or a new one with its id already assigned. */
@@ -382,9 +235,6 @@ export class OrganEditorComponent implements UnsavedChangesCheck {
     return {tapeWidth: fit.tapeWidth, length: 2 * fit.tapeWidth, border: fit.border, bottomBorderTop: fit.tapeWidth - fit.border, rows};
   });
 
-  /** The Pipes sheet head's count text key: separate texts for one and many. */
-  protected readonly pipeCountKey = computed(() => (this.draft().pipes.length === 1 ? 'ORGAN.EDITOR.PIPE_COUNT_ONE' : 'ORGAN.EDITOR.PIPE_COUNT'));
-
   protected readonly minimumHoleLength = computed(() => {
     const diameter = this.organ.tapeBed.holeDiameter().value();
     return typeof diameter === 'number' ? formatNumber(diameter, this.language()) : '';
@@ -464,48 +314,25 @@ export class OrganEditorComponent implements UnsavedChangesCheck {
     return confirmed === true && (await this.tapes.removeHolesOfPipes(organ.id, removed));
   }
 
-  /** The messages to show at a field now. */
-  protected messagesAt(field: FieldTree<unknown>): readonly TranslatableText[] {
-    return shownMessages(field, this.organ, this.saveAttempt());
-  }
-
   /** Moves the focus to the field of an error summary entry. */
   protected focusField(path: string): void {
     const row = /^pipes\.(\d+)\./.exec(path)?.[1];
     if (row !== undefined) {
-      this.noteInputs()[Number(row)]?.nativeElement.focus();
+      this.pipeRack()?.focusNote(Number(row));
+      return;
+    }
+    if (path === 'pipes') {
+      this.pipeRack()?.focusAddPipe();
       return;
     }
     const testId = FIELD_TEST_IDS[path];
     if (testId) this.host.nativeElement.querySelector<HTMLElement>(`[data-testid="${testId}"]`)?.focus();
   }
 
-  /** The name of the note a Pipe plays, or nothing while its note is missing or out of range. */
-  protected noteNameOf(note: number | null): string {
-    const valid = note === null ? undefined : midiNoteNumber(note);
-    return valid === undefined ? '' : noteName(valid);
-  }
-
   /** Whether the window is narrow: the Pipe rack then has 2 compact columns instead of 3. */
   protected readonly compact = toSignal(this.breakpoints.observe(COMPACT_QUERY).pipe(map((state) => state.matches)), {
     initialValue: this.breakpoints.isMatched(COMPACT_QUERY),
   });
-
-  /** The Pipe rack's columns (2 when compact, else 3): where each starts in the Pipe order and its Pipe fields. */
-  protected readonly rack = computed(() => {
-    const pipes = [...this.organ.pipes];
-    let start = 0;
-    return rackColumns(pipes.length, this.compact() ? 2 : 3).map((rows) => {
-      const column = {start, pipes: pipes.slice(start, start + rows)};
-      start += rows;
-      return column;
-    });
-  });
-
-  /** Whether a Pipe's note is a sharp, for the regular weight of its name. */
-  protected isSharp(note: number | null): boolean {
-    return this.noteNameOf(note).includes('#');
-  }
 
   protected addPipe(): void {
     this.draft.update(addPipe);
@@ -515,33 +342,8 @@ export class OrganEditorComponent implements UnsavedChangesCheck {
     this.draft.update((draft) => movePipe(draft, fromRow, toRow));
   }
 
-  /** Alt+ArrowUp/Down: moves the Pipe one row and keeps the focus on its note input. */
-  protected moveByKeyboard(event: Event, row: number, step: -1 | 1): void {
-    event.preventDefault();
-    const target = row + step;
-    if (target < 0 || target >= this.draft().pipes.length) return;
-    this.movePipe(row, target);
-    afterNextRender(() => this.noteInputs()[target]?.nativeElement.focus(), {injector: this.injector});
-  }
-
-  /** Removes a Pipe; the focus moves to the note input now at its row (the last row if it was last), else to Add Pipe. */
-  protected removePipe(row: number, menu: MatMenuTrigger): void {
-    menu.restoreFocus = false; // The menu's trigger is gone or not wanted: the focus goes to the row now at this position.
+  protected removePipe(row: number): void {
     this.draft.update((draft) => removePipe(draft, row));
-    const remaining = this.draft().pipes.length;
-    const focus = () => {
-      if (remaining === 0) this.host.nativeElement.querySelector<HTMLElement>('[data-testid="add-pipe"]')?.focus();
-      else this.noteInputs()[Math.min(row, remaining - 1)]?.nativeElement.focus();
-    };
-    afterNextRender(focus, {injector: this.injector});
-  }
-
-  /** A drop in the column starting at `columnStart`; the indices are within the column, and a drop from another column shifts the rows after the removed Pipe. */
-  protected dropPipe(event: CdkDragDrop<number>, columnStart: number): void {
-    const sameColumn = event.previousContainer === event.container;
-    const fromStart = sameColumn ? columnStart : event.previousContainer.data;
-    const shift = fromStart < columnStart ? 1 : 0;
-    this.movePipe(fromStart + event.previousIndex, columnStart + event.currentIndex - shift);
   }
 
   protected async deleteOrgan(): Promise<void> {

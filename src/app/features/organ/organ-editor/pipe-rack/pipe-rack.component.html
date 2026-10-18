@@ -1,0 +1,64 @@
+<mat-card appearance="outlined" data-testid="pipes-sheet">
+  <div class="sheet-head">
+    <h2 class="sheet-title">{{ 'ORGAN.EDITOR.PIPES' | translate }}</h2>
+    <span data-testid="pipe-count">{{ pipeCountKey() | translate: {count: organ().pipes.length} }}</span>
+    <button matButton type="button" data-testid="add-pipe" (click)="pipeAdded.emit()">
+      <mat-icon>add</mat-icon>
+      {{ 'ORGAN.EDITOR.ADD_PIPE' | translate }}
+    </button>
+  </div>
+  @for (message of messagesAt(organ().pipes); track message.key) {
+    <p class="violation" data-testid="violation" data-path="pipes">{{ message.key | translate: message.params }}</p>
+  }
+  <div class="rack-scroller">
+    <div class="rack" [class.compact]="compact()" cdkDropListGroup>
+      @for (column of rack(); track column.start) {
+        <div class="rack-column" data-testid="rack-column">
+          <div class="rack-head">
+            <span class="row-cell" data-testid="rack-header-cell">{{ 'ORGAN.EDITOR.RACK_ROW' | translate }}</span>
+            <span data-testid="rack-header-cell">{{ 'ORGAN.EDITOR.PIPE_NOTE' | translate }}</span>
+          </div>
+          <div cdkDropList [cdkDropListData]="column.start" (cdkDropListDropped)="dropPipe($event, column.start)">
+            @for (pipe of column.pipes; track $index; let index = $index) {
+              @let row = column.start + index;
+              <div class="pipe" data-testid="pipe" cdkDrag>
+                <mat-icon cdkDragHandle class="drag-handle" role="img" [attr.aria-label]="'ORGAN.EDITOR.DRAG_PIPE' | translate">drag_indicator</mat-icon>
+                <span class="row-cell" data-testid="pipe-row-number">{{ row + 1 }}</span>
+                <mat-form-field class="note-field" subscriptSizing="dynamic">
+                  <input matInput type="number" inputmode="numeric" data-testid="pipe-note" [formField]="pipe.note" #noteInput
+                         [attr.aria-label]="'ORGAN.EDITOR.PIPE_NOTE_IN_ROW' | translate: {row: row + 1}"
+                         (keydown.alt.arrowup)="moveByKeyboard($event, row, -1)" (keydown.alt.arrowdown)="moveByKeyboard($event, row, 1)"/>
+                  <ng-container ngProjectAs="mat-error">
+                    @for (message of messagesAt(pipe.note); track message.key) {
+                      <mat-error data-testid="violation" [attr.data-path]="'pipes.' + row + '.note'">{{ message.key | translate: message.params }}</mat-error>
+                    }
+                  </ng-container>
+                </mat-form-field>
+                <span class="note-name" data-testid="pipe-note-name" [class.sharp]="isSharp(pipe.note().value())">{{ noteNameOf(pipe.note().value()) }}</span>
+                <button matIconButton type="button" data-testid="pipe-menu" [matMenuTriggerFor]="pipeMenu" #menuTrigger="matMenuTrigger" (menuOpened)="menuTrigger.restoreFocus = true"
+                        [attr.aria-label]="'ORGAN.EDITOR.PIPE_MENU' | translate: {row: row + 1}"
+                        [matTooltip]="'ORGAN.EDITOR.PIPE_MENU' | translate: {row: row + 1}">
+                  <mat-icon>more_vert</mat-icon>
+                </button>
+                <mat-menu #pipeMenu="matMenu">
+                  <button mat-menu-item type="button" data-testid="move-up" [disabled]="row === 0" (click)="movePipe(row, row - 1)">
+                    <mat-icon>arrow_upward</mat-icon>
+                    <span>{{ 'ORGAN.EDITOR.MOVE_UP' | translate }}</span>
+                  </button>
+                  <button mat-menu-item type="button" data-testid="move-down" [disabled]="row === organ().pipes.length - 1" (click)="movePipe(row, row + 1)">
+                    <mat-icon>arrow_downward</mat-icon>
+                    <span>{{ 'ORGAN.EDITOR.MOVE_DOWN' | translate }}</span>
+                  </button>
+                  <button mat-menu-item type="button" data-testid="remove-pipe" (click)="removePipe(row, menuTrigger)">
+                    <mat-icon>delete</mat-icon>
+                    <span>{{ 'ORGAN.EDITOR.REMOVE_PIPE' | translate }}</span>
+                  </button>
+                </mat-menu>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</mat-card>
