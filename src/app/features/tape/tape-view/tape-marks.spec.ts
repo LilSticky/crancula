@@ -44,11 +44,33 @@ describe('columnNumbers', () => {
 });
 
 describe('rulerNumbers', () => {
-  it('numbers every 10 mm from 0 up to the length', () => {
-    expect(rulerNumbers(35)).toEqual([0, 10, 20, 30]);
+  it('numbers every 10 mm from 0 up to the length when 10 mm are at least 40 px', () => {
+    expect(rulerNumbers(35, 4)).toEqual([0, 10, 20, 30]);
   });
 
-  it('includes the length when it is a multiple of 10', () => {
-    expect(rulerNumbers(30)).toEqual([0, 10, 20, 30]);
+  it('includes the length when it is a multiple of the step', () => {
+    expect(rulerNumbers(30, 4)).toEqual([0, 10, 20, 30]);
+  });
+
+  it('numbers every 50 mm for a 635 mm Tape at 1.6 px per mm', () => {
+    expect(rulerNumbers(635, 1.6)).toEqual([0, 50, 100, 150, 200, 250, 300, 350, 400, 450, 500, 550, 600]);
+  });
+
+  it('continues with 1, 2 and 5 times 10^n mm beyond 500 mm', () => {
+    expect(rulerNumbers(3000, 0.05)).toEqual([0, 1000, 2000, 3000]);
+    expect(rulerNumbers(10000, 0.01)).toEqual([0, 5000, 10000]);
+    expect(rulerNumbers(6000, 0.03)).toEqual([0, 2000, 4000, 6000]);
+  });
+
+  it('returns just 0 when there are no pixels per mm yet', () => {
+    expect(rulerNumbers(635, 0)).toEqual([0]);
+  }, 1000);
+
+  it('takes the smallest step whose spacing is at least 40 px', () => {
+    expect(rulerNumbers(100, 2)).toEqual([0, 20, 40, 60, 80, 100]);
+    expect(rulerNumbers(100, 1.99)).toEqual([0, 50, 100]);
+    expect(rulerNumbers(1000, 0.5)).toEqual([0, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000]);
+    expect(rulerNumbers(1000, 0.2)).toEqual([0, 200, 400, 600, 800, 1000]);
+    expect(rulerNumbers(1000, 0.1)).toEqual([0, 500, 1000]);
   });
 });

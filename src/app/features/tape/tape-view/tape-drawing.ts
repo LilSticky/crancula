@@ -9,6 +9,12 @@ import type {TapeSectionView} from './tape-section/tape-section.component';
 export const RULER_HEIGHT = 24;
 /** Space below the Tape for the Column numbers, in px. */
 const NUMBERS_HEIGHT = 20;
+/** A ruler number closer than this to the Tape's end is right-aligned. */
+const RULER_END_EDGE_PX = 12;
+/** Least distance from the right-aligned last ruler number to the one before it, in px. */
+const RULER_END_GAP_PX = 50;
+/** Row labels stay at least this far apart, in px; crowded rows are labelled every k-th. */
+const MINIMUM_LABEL_PITCH_PX = 12;
 
 /** What the Tape section of the side panel tells. */
 export function sectionView(
@@ -43,15 +49,19 @@ export function drawingParams(tape: Tape, organ: Organ, language: string) {
   };
 }
 
-/** The row labels left of the Tape and the guide line of every row, in px. */
+/** The row labels left of the Tape and the guide line of every row, in px. Crowded rows get a label only at every k-th row from row 1. */
 export function rowLabels(organ: Organ, geometry: TapeGeometry, scale: number) {
   const names = organ.pipes.map(({note}) => noteName(note));
+  const [first, second] = geometry.rowCentres;
+  // Rounded so a pitch of exactly 12 px is not pushed to the next stride by float noise.
+  const pitch = first === undefined || second === undefined ? 0 : Math.round((second - first) * scale * 1e6) / 1e6;
+  const every = pitch <= 0 ? 1 : Math.ceil(MINIMUM_LABEL_PITCH_PX / pitch);
   return {
-    labels: names.map((name, index) => ({
-      name,
-      sharp: name.includes('#'),
-      y: (geometry.rowCentres[index] ?? 0) * scale + RULER_HEIGHT,
-    })),
+    labels: names.flatMap((name, index) =>
+      index % every === 0
+        ? [{name, sharp: name.includes('#'), y: (geometry.rowCentres[index] ?? 0) * scale + RULER_HEIGHT}]
+        : [],
+    ),
     rows: names.map((name, index) => ({
       row: index + 1,
       y: (geometry.rowCentres[index] ?? 0) * scale,
@@ -86,6 +96,16 @@ export function holeRects(
     }));
 }
 
+/**
+ * The last ruler number sits right-aligned at the Tape's end (see the template), so it reaches further left
+ * than a centred one. The number before it is dropped when they would touch.
+ */
+function withoutCrowdedBeforeEnd<T extends {readonly x: number}>(numbers: readonly T[], width: number): readonly T[] {
+  const last = numbers[numbers.length - 1];
+  if (last === undefined || last.x <= width - RULER_END_EDGE_PX) return numbers;
+  return numbers.filter((entry, index) => index !== numbers.length - 2 || last.x - entry.x >= RULER_END_GAP_PX);
+}
+
 /** The Column marks, Column numbers and ruler numbers inside `range`, in px. */
 export function columnMarks(tape: Tape, geometry: TapeGeometry, scale: number, range: ColumnRange) {
   const columnPx = tape.columnLength * scale;
@@ -100,9 +120,10 @@ export function columnMarks(tape: Tape, geometry: TapeGeometry, scale: number, r
     numbers: columnNumbers(tape.length, columnPx)
       .filter((entry) => inRange(entry.column))
       .map((entry) => ({...entry, x: leadIn + entry.column * columnPx})),
-    rulerNumbers: rulerNumbers(geometry.length)
-      .filter((mm) => mm >= firstMm && mm <= lastMm)
-      .map((mm) => ({mm, x: leadIn + mm * scale})),
+    rulerNumbers: withoutCrowdedBeforeEnd(
+      rulerNumbers(geometry.length, scale).map((mm) => ({mm, x: leadIn + mm * scale})),
+      geometry.totalLength * scale,
+    ).filter(({mm}) => mm >= firstMm && mm <= lastMm),
   };
 }
 

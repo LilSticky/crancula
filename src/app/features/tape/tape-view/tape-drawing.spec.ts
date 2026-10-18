@@ -40,14 +40,40 @@ describe('sectionView', () => {
 
 describe('rowLabels', () => {
   it('names every row, marks sharps and offsets the labels by the ruler', () => {
-    const {labels, rows} = rowLabels(organ, geometry, 2);
+    const scale = 12.5 / ((geometry.rowCentres[1] ?? 0) - (geometry.rowCentres[0] ?? 0));
+    const {labels, rows} = rowLabels(organ, geometry, scale);
 
     expect(labels).toHaveLength(31);
     expect(rows.map((row) => row.row).slice(0, 2)).toEqual([1, 2]);
-    expect(labels[0]?.y).toBe((geometry.rowCentres[0] ?? 0) * 2 + RULER_HEIGHT);
-    expect(rows[0]?.y).toBe((geometry.rowCentres[0] ?? 0) * 2);
+    expect(labels[0]?.y).toBe((geometry.rowCentres[0] ?? 0) * scale + RULER_HEIGHT);
+    expect(rows[0]?.y).toBe((geometry.rowCentres[0] ?? 0) * scale);
     expect(labels.every((label) => label.sharp === label.name.includes('#'))).toBe(true);
     expect(rows.every((row, index) => row.natural === !(labels[index]?.name ?? '').includes('#'))).toBe(true);
+  });
+});
+
+describe('rowLabels when rows are crowded', () => {
+  const pitch = (geometry.rowCentres[1] ?? 0) - (geometry.rowCentres[0] ?? 0);
+
+  it('keeps every label when the row pitch is at least 12 px', () => {
+    expect(rowLabels(organ, geometry, 12.5 / pitch).labels).toHaveLength(31);
+  });
+
+  it('labels every 2nd row, starting at row 1, when the pitch is 6 px', () => {
+    const scale = 6 / pitch;
+    const {labels, rows} = rowLabels(organ, geometry, scale);
+    const all = rowLabels(organ, geometry, 12.5 / pitch).labels;
+
+    expect(labels.map((label) => label.name)).toEqual(all.filter((_, index) => index % 2 === 0).map((label) => label.name));
+    expect(labels[1]?.y).toBeCloseTo((geometry.rowCentres[2] ?? 0) * scale + RULER_HEIGHT);
+    expect(rows).toHaveLength(31);
+  });
+
+  it('labels every 3rd row when the pitch is 5 px', () => {
+    const {labels, rows} = rowLabels(organ, geometry, 5 / pitch);
+
+    expect(labels).toHaveLength(11);
+    expect(rows).toHaveLength(31);
   });
 });
 
