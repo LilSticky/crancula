@@ -1118,7 +1118,7 @@ describe('TapeViewComponent', () => {
       await open(`/tapes/${tape.id}`);
 
       const numbers = all(view(), 'svg [data-testid="ruler-number"]');
-      const expected = rulerNumbers(lengthMm);
+      const expected = rulerNumbers(lengthMm, SCALE);
       expect(numbers.map((number) => number.textContent?.trim())).toEqual(expected.map(String));
       expected.forEach((mm, index) => {
         expect(numberAttribute(numbers[index], 'x')).toBeCloseTo((30 + mm) * SCALE, 0);

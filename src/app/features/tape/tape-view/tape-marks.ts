@@ -1,7 +1,7 @@
 const LINE_EVERY = 8;
 const STRONG_EVERY = 32;
 const MINIMUM_NUMBER_SPACING_PX = 40;
-const RULER_EVERY_MM = 10;
+const RULER_STEP_FACTORS = [1, 2, 5];
 
 export interface ColumnLine {
   /** The Column the line is at the start of. */
@@ -32,9 +32,20 @@ export function columnNumbers(length: number, columnWidthPx: number): readonly C
     .map((line) => ({column: line.column, number: line.column + 1}));
 }
 
-/** 0, 10, 20, … up to the length in mm. */
-export function rulerNumbers(lengthMm: number): readonly number[] {
+/** The smallest step of 1, 2 or 5 times 10^n mm, from 10 mm up, that is at least 40 px apart. */
+function rulerStep(pixelsPerMm: number): number {
+  for (let decade = 10; ; decade *= 10) {
+    for (const factor of RULER_STEP_FACTORS) {
+      if (factor * decade * pixelsPerMm >= MINIMUM_NUMBER_SPACING_PX) return factor * decade;
+    }
+  }
+}
+
+/** Multiples of the ruler step (10, 20, 50, 100, … mm; see `rulerStep`) from 0 up to the length in mm. */
+export function rulerNumbers(lengthMm: number, pixelsPerMm: number): readonly number[] {
+  if (!Number.isFinite(pixelsPerMm) || pixelsPerMm <= 0) return [0];
+  const step = rulerStep(pixelsPerMm);
   const numbers: number[] = [];
-  for (let mm = 0; mm <= lengthMm; mm += RULER_EVERY_MM) numbers.push(mm);
+  for (let mm = 0; mm <= lengthMm; mm += step) numbers.push(mm);
   return numbers;
 }
