@@ -124,12 +124,14 @@ Gate: lint, i18n (251 keys), 640 node and 746 Angular tests, 84 e2e green locall
 Follow-ups:
 [#76](https://github.com/LilSticky/crancula/issues/76), [#80](https://github.com/LilSticky/crancula/issues/80) and
 [#85](https://github.com/LilSticky/crancula/issues/85) (component splits),
-[#82](https://github.com/LilSticky/crancula/issues/82) (Rename a Tape),
 [#84](https://github.com/LilSticky/crancula/issues/84) (live Tape preview),
 Lead-in label in the Tape drawing (ux-review finding 11, not filed).
 Open issues carry `priority:` and `size:` labels; triage sets them.
 Fixed 2026-10-19: flaky cut-order export e2e ([#99](https://github.com/LilSticky/crancula/issues/99)); it read
 the SVG as soon as the file existed, before `writeFile` finished, and now waits for the success snackbar.
+Done 2026-10-19: Rename a Tape ([#82](https://github.com/LilSticky/crancula/issues/82)) from the Tape list's
+row menu, in a dialog with the name field; a blank name is refused (`renameTape`, `TapeLibrary.rename`).
+Not in the Tape view's page head (left out while Edit a tape works there).
 
 ## Known broken / WIP
 
