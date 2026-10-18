@@ -92,7 +92,8 @@ test.describe('Export a Tape in cut order', () => {
 
       await launched.window.getByTestId('export').click();
 
-      await expect.poll(async () => (await readdir(folder)).includes('Descent.svg')).toBe(true);
+      // The file exists before writeFile has finished; the snackbar appears only once it has.
+      await expect(launched.window.locator('.mat-mdc-snack-bar-container').filter({hasText: target})).toBeVisible();
       const svg = await readFile(target, 'utf8');
       const paths = svg.match(/<path d="[^"]*"/g) ?? [];
       const holePaths = paths.slice(0, -1);
