@@ -21,7 +21,7 @@ Cutting Problems as they happen): Holes with Cutting Problems get a dashed oxblo
 Cutting Problems section under the Selected Hole counts and lists them; choosing selects and scrolls; marks follow
 the drag preview. T046 timing green at once (median 1.17 ms); T051 not needed. `angular-reviewer` pass done and fixed.
 Still open: edge auto-scroll (T061); branch not yet rebased onto main (#119, import screen only).
-Unit tests (709 node, 935 Angular), lint and i18n green; 95 e2e green.
+Unit tests (709 node, 935 Angular), lint and i18n green; 97 e2e green; CI green on all three OSes (2026-10-19) after a fix: below 1180 px the opened side panel covered the Tape drawing, it now sits beside it.
 **Next step:** Phase 6, User Story 4 (undo and redo) from T052 in
 [tasks](../specs/004-place-holes-by-hand/tasks.md). Run `npm run e2e` (it rebuilds) rather than bare Playwright,
 or `npm run electron:bundle` plus a fresh web build before e2e (ESM main process).
