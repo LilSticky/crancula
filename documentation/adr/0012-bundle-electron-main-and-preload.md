@@ -4,7 +4,7 @@ Date: 2026-10-14
 
 ## Status
 
-Accepted
+Superseded by [23. ESM main process, CommonJS preload](0023-esm-main-process-commonjs-preload.md)
 
 ## Context
 

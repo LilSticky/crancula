@@ -34,7 +34,7 @@ type MenuKey = keyof typeof ENGLISH_LABELS;
 export type MenuLabels = Readonly<Record<MenuKey, string>>;
 
 /** Where the translation files live when running from the sources (tests, `--serve`). */
-export const SOURCE_I18N_DIRECTORY = join(__dirname, '../src/assets/i18n');
+export const SOURCE_I18N_DIRECTORY = join(import.meta.dirname, '../src/assets/i18n');
 
 function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);

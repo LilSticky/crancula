@@ -5,7 +5,7 @@
     "name": "Lil Sticky"
   },
   "version": "0.1.0",
-  "main": "main.js",
+  "main": "main.mjs",
   "private": true,
   "include": [
     "../api/index.ts"

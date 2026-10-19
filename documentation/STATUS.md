@@ -132,6 +132,10 @@ the SVG as soon as the file existed, before `writeFile` finished, and now waits 
 Done 2026-10-19: Rename a Tape ([#82](https://github.com/LilSticky/crancula/issues/82)) from the Tape list's
 row menu, in a dialog with the name field; a blank name is refused (`renameTape`, `TapeLibrary.rename`).
 Not in the Tape view's page head (left out while Edit a tape works there).
+Done 2026-10-19: ESM main process ([#47](https://github.com/LilSticky/crancula/issues/47),
+[ADR 23](adr/0023-esm-main-process-commonjs-preload.md), supersedes ADR 12): `app/main.mjs` in ESM,
+the sandboxed preload stays CommonJS; electron-reloader 2.0.0, its Dependabot hold removed. Gate: lint,
+802 tests, 91 e2e, a packaged launch and a `--serve` reload checked locally.
 
 ## Known broken / WIP
 

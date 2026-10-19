@@ -8,8 +8,10 @@
 /release
 /test-results
 main.js
+main.mjs
 src/**/*.js
 *.js.map
+*.mjs.map
 
 # dependencies
 node_modules
@@ -53,6 +55,7 @@ testem.log
 Thumbs.db
 /api/**/*.js
 /app/**/*.js
+/app/**/*.mjs
 
 # Spec Kit extension catalog cache
 /.specify/extensions/.cache
