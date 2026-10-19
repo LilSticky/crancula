@@ -99,13 +99,13 @@ cranc-page-head.compact {
 }
 .cutting-problem {
   fill: none;
-  stroke: #7a2a24; /* oxblood on manila, as for a refused Hole */
+  stroke: var(--cr-problem);
   stroke-width: 2;
   stroke-dasharray: 4 3;
   pointer-events: none;
 }
 .hole.refused {
-  stroke: #7a2a24;
+  stroke: var(--cr-problem);
   stroke-width: 2;
 }
 .scroll svg {
