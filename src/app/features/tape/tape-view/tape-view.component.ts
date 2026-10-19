@@ -76,7 +76,8 @@ function importSummaryOf(state: unknown): ImportSummary | null {
 }
 
 function shortcutsOf(platform: Platform): {readonly undo: string; readonly redo: string} {
-  return platform === 'darwin' ? {undo: '⌘Z', redo: '⇧⌘Z'} : {undo: 'Ctrl+Z', redo: 'Ctrl+Y'};
+  if (platform === 'darwin') return {undo: '⌘Z', redo: '⇧⌘Z'};
+  return {undo: 'Ctrl+Z', redo: platform === 'linux' ? 'Ctrl+Shift+Z' : 'Ctrl+Y'};
 }
 
 /** How long the snackbar that explains a refused edit stays, in ms. */
@@ -102,7 +103,7 @@ export class TapeViewComponent {
   protected readonly editor = inject(TapeEditor);
   private readonly platform = inject(PLATFORM);
   /** The shortcuts of Undo and Redo as the tooltips name them. */
-  protected readonly shortcuts = signal(shortcutsOf(this.platform)).asReadonly();
+  protected readonly shortcuts = shortcutsOf(this.platform);
   private readonly snackBar = inject(MatSnackBar);
   private readonly translate = inject(TranslateService);
   private readonly holeDrag = new HoleDragSession();
@@ -282,11 +283,13 @@ export class TapeViewComponent {
   }
 
   protected undo(): void {
+    if (!this.editor.canUndo()) return;
     void this.editor.undo();
     this.restoreSelection(); // The editor moves its history before it saves.
   }
 
   protected redo(): void {
+    if (!this.editor.canRedo()) return;
     void this.editor.redo();
     this.restoreSelection(); // The editor moves its history before it saves.
   }

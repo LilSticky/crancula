@@ -2291,6 +2291,16 @@ describe('TapeViewComponent', () => {
         expect(storedHoles(tape.id)).toEqual(done);
       });
 
+      it('keep the selected Hole when there is nothing to undo or redo', async () => {
+        const {view, settle} = await setup({holes, platform: 'win32'});
+        await select(view(), 24, 10, settle);
+
+        await press(tapeSvg(view()), {key: 'z', ctrlKey: true}, settle);
+        expect(selected(view())).toEqual(['24:10']);
+        await press(tapeSvg(view()), {key: 'y', ctrlKey: true}, settle);
+        expect(selected(view())).toEqual(['24:10']);
+      });
+
       it('ignore Cmd+Z on Windows', async () => {
         const {tape, view, settle} = await edited('win32');
         const done = storedHoles(tape.id);
