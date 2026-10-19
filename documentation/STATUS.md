@@ -16,9 +16,13 @@ TapeEditor) and Phase 3 User Story 1 (T017–T035: move, resize and remove Holes
 `e2e/tape-edit.spec.ts`) and Phase 4 User Story 2 (T036–T042, 2026-10-19: `addHole`, `firstFreeColumnAfter`, the
 "Add a Hole" side-panel form, double-click add). `angular-reviewer` passes over Story 1 and Story 2 done and fixed;
 still open from the Story 1 review: a refused drop shows the original Hole outlined instead of a ghost at the
-pointer (contract "Pointer"), to settle in Phase 9 polish. Edge auto-scroll is T061, undo keys T052–T056.
-Unit tests (708 node, 911 Angular), lint, i18n and 93 e2e green; branch not yet rebased onto #119 (import screen only).
-**Next step:** Phase 5, User Story 3 (see Cutting Problems as they happen) from T043 in
+pointer (contract "Pointer"), to settle in Phase 9 polish. Done 2026-10-19: Phase 5 User Story 3 (T043–T051,
+Cutting Problems as they happen): Holes with Cutting Problems get a dashed oxblood ring (`--cr-problem`); a
+Cutting Problems section under the Selected Hole counts and lists them; choosing selects and scrolls; marks follow
+the drag preview. T046 timing green at once (median 1.17 ms); T051 not needed. `angular-reviewer` pass done and fixed.
+Still open: edge auto-scroll (T061); branch not yet rebased onto main (#119, import screen only).
+Unit tests (709 node, 935 Angular), lint and i18n green; 95 e2e green.
+**Next step:** Phase 6, User Story 4 (undo and redo) from T052 in
 [tasks](../specs/004-place-holes-by-hand/tasks.md). Run `npm run e2e` (it rebuilds) rather than bare Playwright,
 or `npm run electron:bundle` plus a fresh web build before e2e (ESM main process).
 
