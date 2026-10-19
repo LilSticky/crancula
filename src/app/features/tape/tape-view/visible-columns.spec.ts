@@ -1,12 +1,13 @@
 import {type Millimetres, type Tape, tapeGeometry} from '@api/index';
-import {asValidTape, type ColumnCount} from '../../../../../api/tape/tape';
+import {type ColumnCount} from '../../../../../api/tape/tape';
+import {tapeOf} from '../../../../../api/tape/tape-fixture';
 import {testOrgan} from '../../../../testing/organs';
 import {visibleColumns} from './visible-columns';
 
 // 100 Columns of 2,5 mm (250 mm) behind a Lead-in of 20 mm. At a scale of 1 px per mm a Column is 2,5 px wide
 // and Column 1 starts 20 px into the drawing.
 const organ = testOrgan('Street organ', 3, {leadIn: 20});
-const tape: Tape = asValidTape({
+const tape: Tape = tapeOf({
   id: '00000000-0000-4000-8000-000000000001' as Tape['id'],
   name: 'Melody',
   organId: organ.id,

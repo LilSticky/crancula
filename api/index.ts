@@ -54,11 +54,15 @@ export {
   tapeId,
   tapeLengthInMillimetres,
   transposition,
+  validTape,
   type Column,
   type ColumnCount,
   type Hole,
   type Tape,
+  type TapeFields,
   type TapeId,
+  type TapeRuleViolation,
+  type TapeRuleViolationCode,
   type Transposition,
 } from './tape/tape';
 export {allowedTranspositions, proposeTransposition} from './tape/transposition';

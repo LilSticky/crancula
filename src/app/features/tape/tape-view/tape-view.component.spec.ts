@@ -22,7 +22,8 @@ import {testOrgan} from '../../../../testing/organs';
 import {provideTestTranslations} from '../../../../testing/test-translations';
 import {OrganLibrary} from '../../organ/organ-library.store';
 import {TapeLibrary} from '../tape-library.store';
-import {asValidTape, type Column, type ColumnCount} from '../../../../../api/tape/tape';
+import {type Column, type ColumnCount} from '../../../../../api/tape/tape';
+import {tapeOf} from '../../../../../api/tape/tape-fixture';
 import {vi} from 'vitest';
 import {overviewFrame, scrollLeftFor} from './overview-frame';
 import {pixelsPerMillimetre} from './pixels-per-millimetre';
@@ -173,9 +174,9 @@ async function render(options: RenderOptions = {}) {
   if (!created.ok) throw new Error(`invalid test Tape: ${JSON.stringify(created.error)}`);
   const shortTape: Tape = created.value.tape;
   const tape: Tape = options.oneColumn
-    ? asValidTape({...shortTape, length: 1 as ColumnCount, holes: []})
+    ? tapeOf({...shortTape, length: 1 as ColumnCount, holes: []})
     : options.holes
-    ? asValidTape({
+    ? tapeOf({
         ...shortTape,
         length: 100 as ColumnCount,
         columnLength: (options.columnLength ?? 2.5) as Tape['columnLength'],
@@ -186,7 +187,7 @@ async function render(options: RenderOptions = {}) {
         })),
       })
     : options.longTape
-    ? asValidTape({
+    ? tapeOf({
         ...shortTape,
         length: 12000 as ColumnCount,
         holes: Array.from({length: 3000}, (_, index) => index * 4).flatMap((start) =>

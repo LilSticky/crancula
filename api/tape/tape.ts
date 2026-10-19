@@ -1,6 +1,7 @@
 import type {MidiNoteNumber} from '../organ/midi-note-number';
 import type {Millimetres, OrganId} from '../organ/organ';
 import type {PartIndex, SongId} from '../song/song';
+import {err, ok, type Result} from '../result';
 
 declare const tapeIdBrand: unique symbol;
 declare const columnBrand: unique symbol;
@@ -82,13 +83,53 @@ export function tapeLengthInMillimetres(tape: Tape): Millimetres {
 
 /** The Tape without the Holes of the given Pipes; its length stays. */
 export function removeHolesOfPipes(tape: Tape, pipes: ReadonlySet<MidiNoteNumber>): Tape {
-  return {...tape, holes: tape.holes.filter((hole) => !pipes.has(hole.pipe))};
+  const result = validTape({...tape, holes: tape.holes.filter((hole) => !pipes.has(hole.pipe))});
+  if (!result.ok) throw new Error(`removing Holes broke a Tape rule: ${result.error.code}`);
+  return result.value;
+}
+
+export type TapeRuleViolationCode =
+  | 'name-blank'
+  | 'song-reference-incomplete'
+  | 'selected-parts-invalid'
+  | 'hole-beyond-end'
+  | 'holes-not-sorted'
+  | 'holes-overlap';
+
+/** The first Tape rule that fields break; `hole` is set for `hole-beyond-end`. */
+export interface TapeRuleViolation {
+  readonly code: TapeRuleViolationCode;
+  readonly hole?: Hole;
 }
 
 /**
- * Marks fields as a valid Tape. Only for `createTape` and the snapshot parser, which check
- * every rule first; not exported from `api/index.ts`.
+ * The one way to a {@link Tape}: checks every rule that holds on the Tape alone.
+ * @returns the Tape (name trimmed), or the first rule the fields break
  */
-export function asValidTape(fields: TapeFields): Tape {
-  return fields as Tape;
+export function validTape(fields: TapeFields): Result<Tape, TapeRuleViolation> {
+  const name = fields.name.trim();
+  if (name === '') return err({code: 'name-blank'});
+  if ((fields.songId === undefined) !== (fields.selectedParts === undefined)) {
+    return err({code: 'song-reference-incomplete'});
+  }
+  if (fields.selectedParts && !isSortedUniqueNonEmpty(fields.selectedParts)) {
+    return err({code: 'selected-parts-invalid'});
+  }
+  const beyondEnd = fields.holes.find((hole) => hole.start + hole.length > fields.length);
+  if (beyondEnd) return err({code: 'hole-beyond-end', hole: beyondEnd});
+  for (let index = 1; index < fields.holes.length; index++) {
+    const previous = fields.holes[index - 1];
+    const hole = fields.holes[index];
+    if (hole.pipe < previous.pipe || (hole.pipe === previous.pipe && hole.start < previous.start)) {
+      return err({code: 'holes-not-sorted'});
+    }
+    if (hole.pipe === previous.pipe && hole.start < previous.start + previous.length) {
+      return err({code: 'holes-overlap'});
+    }
+  }
+  return ok({...fields, name} as Tape);
+}
+
+function isSortedUniqueNonEmpty(parts: readonly number[]): boolean {
+  return parts.length > 0 && parts.every((part, index) => index === 0 || part > parts[index - 1]);
 }

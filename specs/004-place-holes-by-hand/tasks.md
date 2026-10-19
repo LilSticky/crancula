@@ -76,7 +76,7 @@ texts.
 **Purpose**: A green baseline, so that the factory and the rename in Phase 2 are refactors under
 green.
 
-- [ ] T001 On `004-place-holes-by-hand`, run `npm run test`, `npm run lint`, `npm run i18n:check`
+- [x] T001 On `004-place-holes-by-hand`, run `npm run test`, `npm run lint`, `npm run i18n:check`
   and `npm run build`; all green before any change. No file changes. If anything is red, record it
   in `documentation/STATUS.md` and fix it first.
 
@@ -94,7 +94,7 @@ every edit goes through (R8, R9). Every story needs them.
 
 ### One validating Tape factory (R1)
 
-- [ ] T002 Write the failing tests in `api/tape/tape.spec.ts` for
+- [x] T002 Write the failing tests in `api/tape/tape.spec.ts` for
   `validTape(fields: TapeFields): Result<Tape, TapeRuleViolation>` (data-model.md "Tape",
   contracts/domain-api.md), one test per rule, each naming the code:
   - "`name.trim()` is not empty (stored trimmed)" → `name-blank`; a valid name comes back trimmed;
@@ -108,17 +108,17 @@ every edit goes through (R8, R9). Every story needs them.
   - a Tape without Holes and a Tape with valid Holes give `ok` with every field carried over;
   - `TapeRuleViolationCode` is exactly the six codes above; `TapeRuleViolation = {code; hole?}`.
   Depends on T001.
-- [ ] T003 Implement `validTape`, `TapeRuleViolation` and `TapeRuleViolationCode` in
+- [x] T003 Implement `validTape`, `TapeRuleViolation` and `TapeRuleViolationCode` in
   `api/tape/tape.ts` (the `validTapeBrand` stays) and export them from `api/index.ts` until T002 is
   green. Depends on T002.
-- [ ] T004 Refactor under green: `parseTapeLibrarySnapshot` in `api/tape/tape-library-snapshot.ts`
+- [x] T004 Refactor under green: `parseTapeLibrarySnapshot` in `api/tape/tape-library-snapshot.ts`
   builds `TapeFields` and calls `validTape`; it maps a `TapeRuleViolation` to its existing English
   reasons (`'a Hole ends beyond the end of the Tape'`, `'Holes are not sorted by pipe then start,
   or overlap within a row'`, `'name is blank'`); `parseHoles` loses its own sort/overlap/end checks
   but keeps parsing raw JSON (types, UUIDs, ranges). `api/tape/tape-library-snapshot.spec.ts`
   stays green **unchanged**. Commit as `refactor(tape): parse stored Tapes through validTape`.
   Depends on T003.
-- [ ] T005 Refactor under green: `createTape` (`api/tape/create-tape.ts`, throws on an impossible
+- [x] T005 Refactor under green: `createTape` (`api/tape/create-tape.ts`, throws on an impossible
   `err` as its `valid()` does today), `renameTape` (`api/tape/rename-tape.ts`, maps `name-blank`
   to its existing `'name-required'`) and `removeHolesOfPipes` (`api/tape/tape.ts`, throws on an
   impossible `err`) build their Tapes through `validTape`; delete `asValidTape` and switch its

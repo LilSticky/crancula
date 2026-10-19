@@ -8,7 +8,8 @@ import {defaultSelectedParts} from '../song/song';
 import {createTape} from './create-tape';
 import {proposeTransposition} from './transposition';
 import {exportProblems} from './export-problems';
-import {asValidTape, column, columnCount, type Hole, type Tape, type TapeId} from './tape';
+import {column, columnCount, type Hole, type Tape, type TapeFields, type TapeId} from './tape';
+import {tapeOf as validTapeOf} from './tape-fixture';
 
 function defined<T>(value: T | undefined, what: string): T {
   if (value === undefined) throw new Error(`invalid test value: ${what}`);
@@ -42,7 +43,16 @@ function hole(pipe: MidiNoteNumber, start: number, end: number): Hole {
 }
 
 function tapeOf(organ: Organ, columnLength: number, holes: readonly Hole[]): Tape {
-  return asValidTape({
+  return validTapeOf(tapeFields(organ, columnLength, [...holes].sort((a, b) => a.pipe - b.pipe || a.start - b.start)));
+}
+
+/** Overlapping Holes are no valid Tape any more; the old overlap case still has to be judged. */
+function overlappingTapeOf(organ: Organ, columnLength: number, holes: readonly Hole[]): Tape {
+  return tapeFields(organ, columnLength, holes) as Tape;
+}
+
+function tapeFields(organ: Organ, columnLength: number, holes: readonly Hole[]): TapeFields {
+  return {
     id: '00000000-0000-4000-8000-000000000001' as TapeId,
     name: 'Melody',
     organId: organ.id,
@@ -52,7 +62,7 @@ function tapeOf(organ: Organ, columnLength: number, holes: readonly Hole[]): Tap
     columnLength: mm(columnLength),
     length: defined(columnCount(100), 'length'),
     holes,
-  });
+  };
 }
 
 describe('exportProblems', () => {
@@ -138,7 +148,7 @@ describe('exportProblems', () => {
 
   it('gives a negative gap when the two Holes of a Pipe overlap', () => {
     const organ = organWith(2.5, 5);
-    const tape = tapeOf(organ, 2.5, [hole(first, 0, 3), hole(first, 2, 6)]);
+    const tape = overlappingTapeOf(organ, 2.5, [hole(first, 0, 3), hole(first, 2, 6)]);
 
     expect(exportProblems(tape, organ)).toEqual([
       {code: 'too-close', pipe: first, start: 0, nextStart: 2, gapMm: -2.5, minimumGapMm: 5},

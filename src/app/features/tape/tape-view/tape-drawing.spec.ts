@@ -1,5 +1,6 @@
 import {type Millimetres, type Organ, type Tape, midiNoteNumber, tapeGeometry} from '@api/index';
-import {asValidTape, type Column, type ColumnCount} from '../../../../../api/tape/tape';
+import {type Column, type ColumnCount} from '../../../../../api/tape/tape';
+import {tapeOf} from '../../../../../api/tape/tape-fixture';
 import {testOrgan} from '../../../../testing/organs';
 import {columnMarks, holeRects, outline, rowLabels, sectionView, RULER_HEIGHT} from './tape-drawing';
 
@@ -8,7 +9,7 @@ const organ: Organ = testOrgan('Street organ', 31, {pipes: Array.from({length: 3
 function tapeWith(holeStarts: readonly number[], length = 100): Tape {
   const note = midiNoteNumber(60);
   if (note === undefined) throw new Error('not a note');
-  return asValidTape({
+  return tapeOf({
     id: '00000000-0000-4000-8000-000000000001' as Tape['id'],
     name: 'Melody',
     organId: organ.id,
