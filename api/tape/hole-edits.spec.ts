@@ -322,6 +322,50 @@ describe('addHole', () => {
   });
 });
 
+describe('growth of the Tape (FR-008)', () => {
+  it('grows to Column 104 when a Hole end is changed to Column 104', () => {
+    const tape = aTape([hole(c4, 90, 95)]);
+
+    const edit = unwrap(changeHoleLength(tape, ref(c4, 90), {start: col(89), length: defined(columnCount(15), 'length')}));
+
+    expect(edit.tape.length).toBe(104);
+  });
+
+  it('grows to Column 110 when a Hole is added there', () => {
+    const edit = unwrap(addHole(aTape([]), wideHoleOrgan, c4, col(107)));
+
+    expect(edit.tape.length).toBe(110);
+  });
+
+  it('grows to Column 110 when a Hole is moved to end there', () => {
+    const tape = aTape([hole(c4, 10, 13)]);
+
+    const edit = unwrap(moveHole(tape, organ, ref(c4, 10), {pipe: c4, start: col(106)}));
+
+    expect(edit.tape.length).toBe(110);
+  });
+
+  it('keeps the grown length when the Hole is shortened, moved back or removed', () => {
+    const grown = unwrap(changeHoleLength(aTape([hole(c4, 90, 95)]), ref(c4, 90), {start: col(89), length: defined(columnCount(15), 'length')})).tape;
+
+    const shorter = unwrap(changeHoleLength(grown, ref(c4, 90), {start: col(89), length: defined(columnCount(2), 'length')}));
+    const moved = unwrap(moveHole(grown, organ, ref(c4, 90), {pipe: c4, start: col(10)}));
+    const removed = unwrap(removeHole(grown, ref(c4, 90)));
+
+    expect(shorter.tape.length).toBe(104);
+    expect(moved.tape.length).toBe(104);
+    expect(removed.length).toBe(104);
+  });
+
+  it('keeps the length for an edit inside the Tape', () => {
+    const tape = aTape([hole(c4, 10, 13)]);
+
+    const edit = unwrap(moveHole(tape, organ, ref(c4, 10), {pipe: c4, start: col(96)}));
+
+    expect(edit.tape.length).toBe(100);
+  });
+});
+
 describe('firstFreeColumnAfter', () => {
   it('is Column 0 when no Hole is selected', () => {
     expect(firstFreeColumnAfter(aTape([hole(c4, 1, 4)]), undefined)).toBe(0);

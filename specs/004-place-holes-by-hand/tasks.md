@@ -496,7 +496,7 @@ Tape is 104 Columns long, then remove the Hole and check it stays 104 Columns lo
 
 ### Tests for User Story 5 ⚠️ (write first, must fail)
 
-- [ ] T057 [US5] Extend `api/tape/hole-edits.spec.ts` (data-model.md "Growth (FR-008): `length' =
+- [x] T057 [US5] Extend `api/tape/hole-edits.spec.ts` (data-model.md "Growth (FR-008): `length' =
   max(length, hole.start + hole.length)` for add, move and change; remove keeps `length`"): 5.1
   change the end to Column 104 (`start + length` 104) on a 100-Column Tape → `length` 104; 5.2 add
   and move to end at Column 110 → `length` 110; 5.3 then remove or shorten → `length` stays; an edit inside the Tape
@@ -513,7 +513,7 @@ Tape is 104 Columns long, then remove the Hole and check it stays 104 Columns lo
 
 ### Implementation for User Story 5
 
-- [ ] T060 [US5] Implement growth in `addHole`, `moveHole` and `changeHoleLength` in
+- [x] T060 [US5] (already green: `withHoles` grows the Tape since T040) Implement growth in `addHole`, `moveHole` and `changeHoleLength` in
   `api/tape/hole-edits.ts` until T057 is green. Depends on T057.
 - [ ] T061 [US5] Implement auto-scroll during a drag and whatever else the view needs in
   `src/app/features/tape/tape-view/tape-view.component.ts` until T058 and T059 are green.
