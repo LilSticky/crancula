@@ -18,7 +18,8 @@ Versioning rules: [references/versioning.md](references/versioning.md).
 | Piece | Role |
 |-------|------|
 | `CHANGELOG.md` | Source of the release notes. `## [Unreleased]` collects entries; a release turns it into `## [X.Y.Z] - YYYY-MM-DD`. |
-| `package.json`, `app/package.json` (+ lockfiles), README badge | Carry the version; the build names its files after `app/package.json`. |
+| `package.json`, `app/package.json` (+ lockfiles) | Carry the version; the build names its files after `app/package.json`. |
+| `README.md` | The front page for organ owners: version badge, the announcement note, the "What's in" list, screenshots and the **Releases** list (one row per version, newest first). |
 | `.github/workflows/release.yml` | On a pushed tag `vX.Y.Z`: lint and test, package on three OSes, create a **draft** GitHub Release whose notes are the changelog section plus the install note. Fails if the section is missing. |
 | Issue [#11](https://github.com/LilSticky/crancula/issues/11) | Tracks the v0.1 release; comment there for each release. |
 
@@ -42,14 +43,27 @@ Steps 1–3 only read. Use `gh` and `git`; repo `LilSticky/crancula`.
 5. **Branch** `release/vX.Y.Z` from `origin/main` (in this session's tree, or a worktree if
    another session uses it). Then:
    - `npm version X.Y.Z --no-git-tag-version` in the root and in `app/`;
-   - README badge: `version-X.Y.Z-b08fd8" alt="Version X.Y.Z"`;
+   - `README.md`, so that it describes the released app:
+     - badge: `version-X.Y.Z-b08fd8" alt="Version X.Y.Z"`;
+     - **Releases** table: a new top row
+       `| [X.Y.Z](https://github.com/LilSticky/crancula/releases/tag/vX.Y.Z) | <date> | <highlights> |`,
+       the date as in the changelog heading and highlights as one line of the two to four entries an
+       organ owner notices most, in dictionary terms;
+     - the `[!NOTE]` announcement, the "What's in" heading and checklist, and "Ideas for later":
+       name the new version, tick what shipped, move shipped ideas into the list; leave them
+       if nothing they say changed;
+     - "How it works", "A few words" and "Download", where the release changes a step, a term
+       or the downloaded files;
+     - screenshots in `documentation/images/screenshots/`: if a pictured screen changed visibly,
+       retake them (`$env:README_SHOTS='1'; npm run ux:screens`, see
+       `e2e/ux/readme.capture.ts`) and update the `alt` texts;
    - `CHANGELOG.md`: move the entries under a new `## [X.Y.Z] - <today, UTC>` below an empty
      `## [Unreleased]`; update the link lines at the bottom
      (`[Unreleased]: …/compare/vX.Y.Z...HEAD`, `[X.Y.Z]: …/releases/tag/vX.Y.Z`);
    - `documentation/STATUS.md`: one line that vX.Y.Z is released (and ROADMAP if it is a
      milestone such as 0.1.0).
-   Commit as `chore(release): version X.Y.Z` (version files and changelog) and
-   `docs(status): release vX.Y.Z` separately.
+   Commit as `chore(release): version X.Y.Z` (version files and changelog),
+   `docs(readme): describe vX.Y.Z` and `docs(status): release vX.Y.Z` separately.
 6. **Pull request.** `gh pr create --title "chore(release): version X.Y.Z" --body-file <file>`
    with `Refs #11` (or `Closes #11` for 0.1.0), the changelog section, and "Tag `vX.Y.Z` on the
    squash commit after merging". Wait for CI (`gh pr checks --watch`), then
