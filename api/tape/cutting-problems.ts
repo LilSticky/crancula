@@ -79,3 +79,52 @@ export function cuttingProblems(tape: Tape, organ: Organ): readonly CuttingProbl
     (a, b) => a.start - b.start || row(a) - row(b) || CODE_ORDER.indexOf(a.code) - CODE_ORDER.indexOf(b.code),
   );
 }
+
+/** A Hole by its Pipe and start Column. */
+type HoleRef = Pick<Hole, 'pipe' | 'start'>;
+
+/** A Cutting Problem seen from one Hole: a too-close pair marks both Holes. */
+export type HoleProblem =
+  | CuttingProblem
+  | {
+      readonly code: 'too-close-previous';
+      readonly pipe: MidiNoteNumber;
+      readonly start: Column;
+      readonly previousStart: Column;
+      readonly gapMm: number;
+      readonly minimumGapMm: Millimetres;
+    };
+
+/** A Hole with at least one Cutting Problem. */
+export interface HoleCuttingProblems {
+  readonly hole: HoleRef;
+  readonly problems: readonly HoleProblem[];
+}
+
+/** One entry per Hole that has a Cutting Problem, in the order of the problems; its length is the count shown. */
+export function holesWithCuttingProblems(problems: readonly CuttingProblem[]): readonly HoleCuttingProblems[] {
+  const entries = new Map<string, {hole: HoleRef; problems: HoleProblem[]}>();
+  const add = (hole: HoleRef, problem: HoleProblem): void => {
+    const key = `${hole.pipe}:${hole.start}`;
+    const entry = entries.get(key) ?? {hole, problems: []};
+    entry.problems.push(problem);
+    entries.set(key, entry);
+  };
+  for (const problem of problems) {
+    add({pipe: problem.pipe, start: problem.start}, problem);
+    if (problem.code === 'too-close') {
+      add(
+        {pipe: problem.pipe, start: problem.nextStart},
+        {
+          code: 'too-close-previous',
+          pipe: problem.pipe,
+          start: problem.nextStart,
+          previousStart: problem.start,
+          gapMm: problem.gapMm,
+          minimumGapMm: problem.minimumGapMm,
+        },
+      );
+    }
+  }
+  return [...entries.values()];
+}

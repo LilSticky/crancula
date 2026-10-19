@@ -7,7 +7,7 @@ import {readMidiSong} from '../song/midi/read-midi-song';
 import {defaultSelectedParts} from '../song/song';
 import {createTape} from './create-tape';
 import {proposeTransposition} from './transposition';
-import {cuttingProblems} from './cutting-problems';
+import {cuttingProblems, holesWithCuttingProblems} from './cutting-problems';
 import {column, columnCount, type Hole, type Tape, type TapeFields, type TapeId} from './tape';
 import {tapeOf as validTapeOf} from './tape-fixture';
 
@@ -176,5 +176,55 @@ describe('cuttingProblems', () => {
       ['no-pipe', unknown, 0],
       ['too-short', first, 8],
     ]);
+  });
+});
+
+describe('holesWithCuttingProblems', () => {
+  it('is empty without problems', () => {
+    expect(holesWithCuttingProblems([])).toEqual([]);
+  });
+
+  it('gives a no-pipe Hole one entry with only that problem', () => {
+    const organ = organWith(2.5, 1.5);
+    const tape = tapeOf(organ, 2.5, [hole(unknown, 4, 5)]);
+
+    expect(holesWithCuttingProblems(cuttingProblems(tape, organ))).toEqual([
+      {hole: {pipe: unknown, start: 4}, problems: [{code: 'no-pipe', pipe: unknown, start: 4}]},
+    ]);
+  });
+
+  it('marks both Holes of a too-close pair: too-close on the earlier, too-close-previous on the later', () => {
+    const organ = organWith(2.5, 5);
+    const tape = tapeOf(organ, 2.5, [hole(first, 0, 3), hole(first, 4, 7)]);
+
+    expect(holesWithCuttingProblems(cuttingProblems(tape, organ))).toEqual([
+      {
+        hole: {pipe: first, start: 0},
+        problems: [{code: 'too-close', pipe: first, start: 0, nextStart: 4, gapMm: 2.5, minimumGapMm: 5}],
+      },
+      {
+        hole: {pipe: first, start: 4},
+        problems: [{code: 'too-close-previous', pipe: first, start: 4, previousStart: 0, gapMm: 2.5, minimumGapMm: 5}],
+      },
+    ]);
+  });
+
+  it('gives a Hole that is too short and too close one entry with both problems', () => {
+    const organ = organWith(5, 5);
+    const tape = tapeOf(organ, 2.5, [hole(first, 0, 1), hole(first, 2, 6)]);
+
+    const entries = holesWithCuttingProblems(cuttingProblems(tape, organ));
+
+    expect(entries.map((entry) => [entry.hole.start, entry.problems.map((problem) => problem.code)])).toEqual([
+      [0, ['too-short', 'too-close']],
+      [2, ['too-close-previous']],
+    ]);
+  });
+
+  it('has one entry per Hole, which is the count shown', () => {
+    const organ = organWith(5, 5);
+    const tape = tapeOf(organ, 2.5, [hole(first, 0, 1), hole(first, 2, 6), hole(second, 20, 21)]);
+
+    expect(holesWithCuttingProblems(cuttingProblems(tape, organ))).toHaveLength(3);
   });
 });

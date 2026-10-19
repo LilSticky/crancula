@@ -82,7 +82,14 @@ export {
   type TapeLibrarySnapshot,
 } from './tape/tape-library-snapshot';
 export type {HoleFix, ImportSummary} from './tape/import-summary';
-export {cuttingProblems, type CuttingProblem, type CuttingProblemCode} from './tape/cutting-problems';
+export {
+  cuttingProblems,
+  holesWithCuttingProblems,
+  type CuttingProblem,
+  type CuttingProblemCode,
+  type HoleCuttingProblems,
+  type HoleProblem,
+} from './tape/cutting-problems';
 export {renameTape} from './tape/rename-tape';
 export {plotterFileName} from './tape/plotter-file-name';
 export {plotterSvg} from './tape/plotter-svg';
