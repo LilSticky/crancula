@@ -194,4 +194,27 @@ test.describe('Editing a Tape by hand', () => {
       await launched.app.close();
     }
   });
+
+  for (const [width, height] of [[1024, 768], [1200, 700]] as const) {
+    test(`keeps the side panel clear of the Tape drawing in a ${width}x${height} window and selects a Hole at the left`, async () => {
+      const launched = await launchApp();
+      const {window} = launched;
+      try {
+        await resizeWindowOrSkip(launched, width, height);
+        await defineOctaveOrgan(window, 'Octave organ');
+        await createTapeFromSong(window, 'Scale', songRepeatingC4('c4s.mid', 4), {columnLength: '1.25'});
+        const scroll = await window.getByTestId('tape-scroll').boundingBox();
+        const panel = await window.getByTestId('side-panel').boundingBox();
+        if (!scroll || !panel) throw new Error('the Tape drawing or the side panel is not shown');
+        expect(scroll.x + scroll.width).toBeLessThanOrEqual(panel.x);
+
+        const [first] = [...(await drawnHoles(window))].sort(byPlace);
+        if (!first) throw new Error('expected Holes');
+        await holeAt(window, first.row, first.start).click({timeout: 3000});
+        await expect(holeAt(window, first.row, first.start)).toHaveClass(/selected/);
+      } finally {
+        await launched.app.close();
+      }
+    });
+  }
 });

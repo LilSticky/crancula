@@ -11,7 +11,7 @@
   flex: 1;
   min-height: 0;
 }
-.layout.compact {
+.layout.compact:not(.panel-open) {
   grid-template-columns: minmax(0, 1fr);
 }
 .stage {

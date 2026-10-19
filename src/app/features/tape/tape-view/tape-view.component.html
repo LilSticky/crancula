@@ -30,7 +30,7 @@
       }
     </ng-container>
   </cranc-page-head>
-  <div class="layout" [class.compact]="compact()">
+  <div class="layout" [class.compact]="compact()" [class.panel-open]="sidePanelOpen()">
   <div class="stage" [class.compact]="compact()">
   <div class="drawing">
     <ul class="labels" [style.height.px]="drawing.totalHeight">
