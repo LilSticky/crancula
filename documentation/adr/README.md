@@ -17,7 +17,7 @@ with a new one and update both statuses here.
 | 9 | [Angular specs run in jsdom](0009-angular-specs-in-jsdom.md) | Accepted |
 | 10 | [Merge through pull requests that reference issues](0010-merge-through-pull-requests.md) | Accepted |
 | 11 | [UI preferences in localStorage](0011-ui-preferences-in-local-storage.md) | Accepted |
-| 12 | [Bundle the Electron main process and preload](0012-bundle-electron-main-and-preload.md) | Accepted |
+| 12 | [Bundle the Electron main process and preload](0012-bundle-electron-main-and-preload.md) | Superseded by 23 |
 | 13 | [End-to-end tests in CI replace the manual walkthrough](0013-e2e-in-ci-replaces-manual-walkthrough.md) | Accepted |
 | 14 | [Stay on current major versions with Dependabot](0014-current-major-versions-with-dependabot.md) | Accepted |
 | 15 | [Issue triage with the Claude GitHub Action](0015-issue-triage-with-claude-action.md) | Accepted |
@@ -27,3 +27,4 @@ with a new one and update both statuses here.
 | 19 | [Releases from the changelog, tagged by the agent](0019-releases-from-the-changelog.md) | Accepted |
 | 20 | [Snapshots are migrated on read and written in the newest version](0020-snapshots-migrated-on-read.md) | Accepted |
 | 21 | [Plotter export built in the domain, saved by the main process](0021-plotter-export-built-in-the-domain.md) | Accepted |
+| 23 | [ESM main process, CommonJS preload](0023-esm-main-process-commonjs-preload.md) | Accepted |
