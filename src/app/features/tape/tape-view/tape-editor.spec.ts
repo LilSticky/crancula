@@ -33,12 +33,14 @@ function named(tape: Tape, name: string): Tape {
 async function setup() {
   const inMemory = createInMemoryCranculaApi();
   let saves = 0;
+  let failing = false;
   const api: CranculaApi = {
     ...inMemory,
     tapes: {
       load: () => inMemory.tapes.load(),
       save: (snapshot) => {
         saves += 1;
+        if (failing) return Promise.resolve({status: 'failed', reason: 'disk full'});
         return inMemory.tapes.save(snapshot);
       },
     },
@@ -50,7 +52,7 @@ async function setup() {
   saves = 0;
   const editor = TestBed.inject(TapeEditor);
   editor.open(tape);
-  return {editor, library, tape, saves: () => saves};
+  return {editor, library, tape, saves: () => saves, failSaves: () => { failing = true; }};
 }
 
 describe('TapeEditor', () => {
@@ -136,5 +138,36 @@ describe('TapeEditor', () => {
 
     expect(editor.tape()).toBe(elsewhere);
     expect(editor.canUndo()).toBe(false);
+  });
+
+  it('shows the TapeLibrary Tape when it was changed elsewhere and undo has nothing to move', async () => {
+    const {editor, library, tape} = await setup();
+    const elsewhere = named(tape, 'Changed elsewhere');
+    await library.update(elsewhere);
+
+    expect(await editor.undo()).toBe(false);
+
+    expect(editor.tape()).toBe(elsewhere);
+  });
+
+  it('shows the TapeLibrary Tape when it was changed elsewhere and redo has nothing to move', async () => {
+    const {editor, library, tape} = await setup();
+    const elsewhere = named(tape, 'Changed elsewhere');
+    await library.update(elsewhere);
+
+    expect(await editor.redo()).toBe(false);
+
+    expect(editor.tape()).toBe(elsewhere);
+  });
+
+  it('keeps the edit in the view and resolves false when saving fails', async () => {
+    const {editor, tape, failSaves} = await setup();
+    const edited = named(tape, 'Edited');
+    failSaves();
+
+    expect(await editor.apply({tape: edited, selection: undefined})).toBe(false);
+
+    expect(editor.tape()).toBe(edited);
+    expect(editor.canUndo()).toBe(true);
   });
 });

@@ -10,7 +10,7 @@ interface ProblemEntry {
   readonly params: Readonly<Record<string, string>>;
 }
 
-/** Lists why a Tape can not be cut yet, one entry per export problem. */
+/** Lists why a Tape can not be cut yet, one entry per Cutting Problem. */
 @Component({
   selector: 'cranc-cutting-problems-dialog',
   imports: [MatButton, MatDialogActions, MatDialogContent, MatDialogTitle, TranslatePipe],
