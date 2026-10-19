@@ -242,11 +242,11 @@ its start, remove a third, reopen the Tape after restarting Crancula and check t
   start +2 → 10–16 (`{start: 9, length: 7}`), then 12–16 (`{start: 11, length: 5}`) (end moved: `s' = s`; start moved: `s' + l' = s + l`); 1.7
   lengthening C4 10–13 to Column 16 or beyond → `err overlaps` naming C4 16–19; shortening to 1 Column is
   allowed (FR-009); unknown ref → `no-such-hole`; FR-017, FR-019. Depends on T018.
-- [ ] T020 [P] [US1] Write the failing test `src/app/features/tape/tape-view/grid-at.spec.ts` for
+- [x] T020 [P] [US1] Write the failing test `src/app/features/tape/tape-view/grid-at.spec.ts` for
   the pure `gridAt(x, y, scale, geometry)` (research R6): px → Column "floor, ≥ 0, not clamped at
   the Tape's end" and "the nearest row (clamped to the Organ's rows)"; x inside the Lead-in gives
   Column 0. Depends on T016.
-- [ ] T021 [P] [US1] Write the failing test `src/app/features/tape/tape-view/hole-drag.spec.ts`
+- [x] T021 [P] [US1] Write the failing test `src/app/features/tape/tape-view/hole-drag.spec.ts`
   for the pure `HoleDrag` (`part: 'body' | 'start' | 'end'`, `hole`, `from: {column, row}`), the
   hit part of a press (handles only on the selected Hole, each "`min(8 px, width / 3)` wide inside
   the Hole"; else body), the 4 px drag threshold, and `dragTarget(drag, now)` (data-model.md
@@ -254,13 +254,13 @@ its start, remove a third, reopen the Tape after restarting Crancula and check t
   length: max(1, length + Δcolumn)}`"; start "`start' = clamp(start + Δcolumn, 0, end − 1)`,
   `length = end − start'`"; "Rows are clamped to the Organ's rows". Spec 1.4 (a 1-Column Hole stays
   1 Column) and 1.8 (stays at Column 1). Depends on T016.
-- [ ] T022 [P] [US1] Write the failing test `src/app/features/tape/tape-view/edit-keys.spec.ts`
+- [x] T022 [P] [US1] Write the failing test `src/app/features/tape/tape-view/edit-keys.spec.ts`
   for the pure key map `editIntent(event)` (research R7, contracts/tape-view-ui.md "Keyboard"):
   Alt+←/→ → move one Column earlier/later; Alt+↑/↓ → row above/below; Shift+←/→ → end one Column;
   Alt+Shift+←/→ → start one Column; Delete and Backspace → remove; plain arrows, Enter, Space,
   Escape → no edit intent (selection as today); Ctrl/Meta combinations → no edit intent.
   Depends on T016.
-- [ ] T023 [P] [US1] Extend `src/app/features/tape/tape-view/tape-drawing.spec.ts`: `holeRects`
+- [x] T023 [P] [US1] Extend `src/app/features/tape/tape-view/tape-drawing.spec.ts`: `holeRects`
   gives handles (`start`, `end`) only for the selected Hole, each "`min(8 px, width / 3)` wide
   inside the Hole" (research R6). Depends on T016.
 - [ ] T024 [US1] Extend `src/app/features/tape/tape-view/tape-view.component.spec.ts` with keyboard
@@ -298,13 +298,13 @@ its start, remove a third, reopen the Tape after restarting Crancula and check t
   `validTape`) and export it until T018 is green. Depends on T018, T027.
 - [x] T029 [US1] Implement `changeHoleLength` in `api/tape/hole-edits.ts` and export it until T019
   is green. Depends on T019, T028.
-- [ ] T030 [P] [US1] Implement `src/app/features/tape/tape-view/grid-at.ts` until T020 is green.
+- [x] T030 [P] [US1] Implement `src/app/features/tape/tape-view/grid-at.ts` until T020 is green.
   Depends on T020.
-- [ ] T031 [P] [US1] Implement `src/app/features/tape/tape-view/hole-drag.ts` until T021 is green.
+- [x] T031 [P] [US1] Implement `src/app/features/tape/tape-view/hole-drag.ts` until T021 is green.
   Depends on T021.
-- [ ] T032 [P] [US1] Implement `src/app/features/tape/tape-view/edit-keys.ts` until T022 is green.
+- [x] T032 [P] [US1] Implement `src/app/features/tape/tape-view/edit-keys.ts` until T022 is green.
   Depends on T022.
-- [ ] T033 [P] [US1] Add the handles of the selected Hole to `holeRects` in
+- [x] T033 [P] [US1] Add the handles of the selected Hole to `holeRects` in
   `src/app/features/tape/tape-view/tape-drawing.ts` until T023 is green. Depends on T023.
 - [ ] T034 [US1] Wire keyboard edits in `src/app/features/tape/tape-view/tape-view.component.ts`
   (and `.html`): `editIntent` → the command (`moveHole`/`changeHoleLength`/`removeHole`) →

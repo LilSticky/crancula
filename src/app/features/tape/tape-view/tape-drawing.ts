@@ -16,6 +16,9 @@ const RULER_END_GAP_PX = 50;
 /** Row labels stay at least this far apart, in px; crowded rows are labelled every k-th. */
 const MINIMUM_LABEL_PITCH_PX = 12;
 
+/** Widest a resize handle of the selected Hole gets, in px. */
+const HANDLE_PX = 8;
+
 /** What the Tape section of the side panel tells. */
 export function sectionView(
   tape: Tape,
@@ -84,16 +87,25 @@ export function holeRects(
         (slot.start >= range.first && slot.start <= range.last) ||
         (slot.start < range.first && slot.start + slot.width / tape.columnLength > range.first),
     )
-    .map((slot) => ({
-      row: slot.row - 1,
-      selected: slot.row === selected?.row && slot.start === selected?.start,
-      start: slot.start,
-      x: slot.x * scale,
-      y: slot.y * scale,
-      width: slot.width * scale,
-      height: slot.height * scale,
-      radius: slot.radius * scale,
-    }));
+    .map((slot) => {
+      const isSelected = slot.row === selected?.row && slot.start === selected?.start;
+      const x = slot.x * scale;
+      const width = slot.width * scale;
+      const handleWidth = Math.min(HANDLE_PX, width / 3);
+      return {
+        row: slot.row - 1,
+        selected: isSelected,
+        start: slot.start,
+        x,
+        y: slot.y * scale,
+        width,
+        height: slot.height * scale,
+        radius: slot.radius * scale,
+        handles: isSelected
+          ? {start: {x, width: handleWidth}, end: {x: x + width - handleWidth, width: handleWidth}}
+          : undefined,
+      };
+    });
 }
 
 /**

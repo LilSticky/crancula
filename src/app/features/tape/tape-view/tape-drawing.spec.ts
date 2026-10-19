@@ -100,6 +100,36 @@ describe('holeRects', () => {
 
     expect(rects[0]?.selected).toBe(true);
   });
+
+  it('gives handles at both ends of the selected Hole only', () => {
+    const slot = geometry.slots[0];
+    const rects = holeRects(tape, geometry, 2, {first: 0, last: 60}, slot && {row: slot.row, start: slot.start});
+
+    expect(rects[1]?.handles).toBeUndefined();
+    expect(rects[0]?.handles).toBeDefined();
+  });
+
+  it('makes each handle 8 px wide inside the Hole', () => {
+    const slot = geometry.slots[0];
+    const [rect] = holeRects(tape, geometry, 20, {first: 0, last: 10}, slot && {row: slot.row, start: slot.start});
+
+    expect(rect?.width).toBeGreaterThan(24);
+    expect(rect?.handles).toEqual({
+      start: {x: rect?.x, width: 8},
+      end: {x: (rect?.x ?? 0) + (rect?.width ?? 0) - 8, width: 8},
+    });
+  });
+
+  it('makes each handle a third of the Hole wide when the Hole is narrow', () => {
+    const slot = geometry.slots[0];
+    const [rect] = holeRects(tape, geometry, 2, {first: 0, last: 10}, slot && {row: slot.row, start: slot.start});
+    const width = (rect?.width ?? 0) / 3;
+
+    expect(width).toBeLessThan(8);
+    expect(rect?.handles?.start.width).toBeCloseTo(width);
+    expect(rect?.handles?.end.width).toBeCloseTo(width);
+    expect(rect?.handles?.end.x).toBeCloseTo((rect?.x ?? 0) + (rect?.width ?? 0) - width);
+  });
 });
 
 describe('columnMarks', () => {
