@@ -1,0 +1,26 @@
+@let drawing = this.drawing();
+<svg
+  data-testid="tape-preview"
+  role="img"
+  [attr.aria-label]="'TAPE.IMPORT.PREVIEW_LABEL' | translate"
+  [attr.width]="widthPx()"
+  [attr.height]="drawing.shape.height"
+  [attr.viewBox]="'0 0 ' + widthPx() + ' ' + drawing.shape.height"
+>
+  @if (drawing.shape.leadIn > 0) {
+    <path class="lead-in" data-testid="preview-lead-in" [attr.d]="drawing.shape.leadInPath" />
+  }
+  <rect class="tape" [attr.x]="drawing.shape.leadIn" y="0" [attr.width]="drawing.shape.bodyWidth" [attr.height]="drawing.shape.height" />
+  @for (hole of drawing.holes; track hole.key) {
+    <rect
+      class="hole"
+      data-testid="preview-hole"
+      [attr.x]="hole.x"
+      [attr.y]="hole.y"
+      [attr.width]="hole.width"
+      [attr.height]="hole.height"
+      [attr.rx]="hole.radius"
+      [attr.ry]="hole.radius"
+    />
+  }
+</svg>

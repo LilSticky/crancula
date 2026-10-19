@@ -1240,3 +1240,63 @@ function unplayableOnceBytes(): Uint8Array {
     tracks: [track(0, [60, 61], 'Lead')],
   });
 }
+
+describe('TapeImportComponent live Tape preview', () => {
+  const UP = 'One semitone up';
+  const previewHoles = (element: HTMLElement) =>
+    element.querySelectorAll('[data-testid="tape-preview"] [data-testid="preview-hole"]').length;
+
+  it('shows no preview before a Song is chosen', async () => {
+    const {query} = await render({organs: [testOrgan('Street organ', 3)]});
+
+    expect(query('tape-preview')).toBeNull();
+  });
+
+  it('shows no preview when the draft cannot make a Tape', async () => {
+    const {query, choose} = await render({organs: [testOrgan('Street organ', 3)]});
+
+    await choose(midiFile(percussionOnlyBytes()));
+
+    expect(query('tape-preview')).toBeNull();
+  });
+
+  it('shows the preview of the Tape about to be created once the draft is ready', async () => {
+    const {query, choose, element} = await render({organs: [testOrgan('Street organ', 3)]});
+
+    await choose(midiFile(threePartBytes()));
+
+    expect(query('tape-preview')?.getAttribute('role')).toBe('img');
+    expect(previewHoles(element)).toBeGreaterThan(0);
+  });
+
+  it('shows fewer Holes when a Part is deselected', async () => {
+    const {choose, toggle, element} = await render({organs: [testOrgan('Street organ', 3)]});
+    await choose(midiFile(threePartBytes()));
+    const both = previewHoles(element);
+
+    await toggle(1);
+
+    expect(previewHoles(element)).toBeLessThan(both);
+    expect(previewHoles(element)).toBeGreaterThan(0);
+  });
+
+  it('shows other Holes when the Transposition changes', async () => {
+    const {choose, step, element} = await render({organs: [testOrgan('Street organ', 3)]});
+    await choose(midiFile(threePartBytes()));
+    const proposed = previewHoles(element);
+
+    await step(UP);
+
+    expect(previewHoles(element)).toBeLessThan(proposed);
+  });
+
+  it('stores nothing by showing the preview', async () => {
+    const {choose, tapes, navigate, query} = await render({organs: [testOrgan('Street organ', 3)]});
+
+    await choose(midiFile(threePartBytes()));
+
+    expect(query('tape-preview')).not.toBeNull();
+    expect(tapes.tapeEntities()).toEqual([]);
+    expect(navigate).not.toHaveBeenCalled();
+  });
+});

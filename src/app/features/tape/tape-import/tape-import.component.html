@@ -131,8 +131,13 @@
       </div>
     </mat-card>
 
-    <mat-card appearance="outlined" data-testid="fit-sheet">
+    <mat-card appearance="outlined" class="fit-sheet" data-testid="fit-sheet">
       <cranc-tape-fit-card [fit]="fitAndNotes()?.fit ?? null" [fitNotes]="fitNotes()" [partLabels]="partLabels()" [notesShown]="listsShown()" [disclosureKey]="disclosureKey()"/>
+      @if (preview(); as shown) {
+        <div #previewHost class="preview">
+          <cranc-tape-preview [tape]="shown.tape" [organ]="shown.organ" [widthPx]="previewWidth()"/>
+        </div>
+      }
     </mat-card>
 
     @if (tapes.loadProblem()) {
