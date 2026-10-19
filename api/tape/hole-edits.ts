@@ -95,3 +95,14 @@ export function addHole(
   const length = next === undefined ? minimum : (columnCount(Math.min(minimum, next.start - start)) ?? minimum);
   return replaceHole(tape, undefined, {pipe, start, length});
 }
+
+/** The first Column after the selected Hole that no Hole of its Pipe covers; Column 0 without a selected Hole. */
+export function firstFreeColumnAfter(tape: Tape, selected: HoleRef | undefined): Column {
+  const hole = selected && find(tape, selected);
+  if (hole === undefined) return 0 as Column;
+  let free = hole.start + hole.length;
+  const covering = (): Hole | undefined =>
+    tape.holes.find((other) => other.pipe === hole.pipe && other.start <= free && free < other.start + other.length);
+  for (let next = covering(); next !== undefined; next = covering()) free = next.start + next.length;
+  return free as Column;
+}

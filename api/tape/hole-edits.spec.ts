@@ -4,7 +4,7 @@ import {millimetres, organId, type Organ} from '../organ/organ';
 import {validateOrgan} from '../organ/validate-organ';
 import {partIndex, songId} from '../song/song';
 import {cuttingProblems} from './cutting-problems';
-import {addHole, changeHoleLength, moveHole, removeHole, type HoleRef} from './hole-edits';
+import {addHole, changeHoleLength, firstFreeColumnAfter, moveHole, removeHole, type HoleRef} from './hole-edits';
 import {tapeOf} from './tape-fixture';
 import {column, columnCount, tapeId, transposition, type Column, type Hole, type Tape} from './tape';
 
@@ -318,5 +318,31 @@ describe('addHole', () => {
       ok: false,
       error: {code: 'not-on-the-organ', pipe: notOnOrgan},
     });
+  });
+});
+
+describe('firstFreeColumnAfter', () => {
+  it('is Column 0 when no Hole is selected', () => {
+    expect(firstFreeColumnAfter(aTape([hole(c4, 1, 4)]), undefined)).toBe(0);
+  });
+
+  it('is Column 0 when the Tape has no Holes', () => {
+    expect(firstFreeColumnAfter(aTape([]), ref(c4, 3))).toBe(0);
+  });
+
+  it('is the Column right after the end of the selected Hole', () => {
+    expect(firstFreeColumnAfter(aTape([hole(c4, 3, 4)]), ref(c4, 3))).toBe(col(4));
+  });
+
+  it('skips Holes of the same Pipe that follow directly', () => {
+    const tape = aTape([hole(c4, 3, 4), hole(c4, 5, 6), hole(c4, 7, 7)]);
+
+    expect(firstFreeColumnAfter(tape, ref(c4, 3))).toBe(col(7));
+  });
+
+  it('ignores Holes of other Pipes', () => {
+    const tape = aTape([hole(c4, 3, 4), hole(d4, 5, 8)]);
+
+    expect(firstFreeColumnAfter(tape, ref(c4, 3))).toBe(col(4));
   });
 });

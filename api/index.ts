@@ -52,6 +52,7 @@ export {MAXIMUM_MIDI_FILE_SIZE, readMidiSong, type SongRejection} from './song/m
 export {
   addHole,
   changeHoleLength,
+  firstFreeColumnAfter,
   moveHole,
   removeHole,
   type HoleEdit,
