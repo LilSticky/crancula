@@ -181,6 +181,14 @@
       "PARTS": "Stimmen auf dem Lochband",
       "MM": "{{value}} mm"
     },
+    "ADD_HOLE": {
+      "TITLE": "Loch hinzufügen",
+      "PIPE": "Pfeife",
+      "COLUMN": "Spalte",
+      "SUBMIT": "Hinzufügen",
+      "COVERED": "Ein Loch der Pfeife {{note}} deckt Spalte {{column}} bereits ab.",
+      "COLUMN_INVALID": "Gib eine ganze Spaltennummer ab 1 ein."
+    },
     "HOLE": {
       "TITLE": "Ausgewähltes Loch",
       "EMPTY": "Wähle ein Loch, um zu sehen, wo es liegt und wie lang es ist.",

@@ -181,6 +181,14 @@
       "PARTS": "Parts on the Tape",
       "MM": "{{value}} mm"
     },
+    "ADD_HOLE": {
+      "TITLE": "Add a Hole",
+      "PIPE": "Pipe",
+      "COLUMN": "Column",
+      "SUBMIT": "Add",
+      "COVERED": "A Hole of {{note}} already covers Column {{column}}.",
+      "COLUMN_INVALID": "Enter a whole Column number from 1."
+    },
     "HOLE": {
       "TITLE": "Selected Hole",
       "EMPTY": "Select a Hole to see where it is and how long it is.",

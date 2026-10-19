@@ -333,7 +333,7 @@ Pipe, start, length and that it is saved.
 
 ### Tests for User Story 2 ⚠️ (write first, must fail)
 
-- [ ] T036 [US2] Extend `api/tape/hole-edits.spec.ts` for `addHole(tape, organ, pipe, start:
+- [x] T036 [US2] Extend `api/tape/hole-edits.spec.ts` for `addHole(tape, organ, pipe, start:
   Column): Result<HoleEdit, HoleEditRefusal>` (data-model.md "Added Hole's length": "`min(L,
   next.start − start)` where `L` is the Minimum Hole Length in whole Columns
   (`holeLimitsOf(organ, tape.columnLength).minimumHoleLength`, ≥ 1) and `next` the next Hole of
@@ -342,7 +342,7 @@ Pipe, start, length and that it is saved.
   touching it, and `cuttingProblems` reports it `too-close`; 2.3 a covered Column →
   `err({code: 'overlaps', other})`; a Pipe not on the Organ → `err not-on-the-organ`; a Tape
   without Holes; `HoleEdit.hole` is the new Hole (2.4); FR-017, FR-019. Depends on T029.
-- [ ] T037 [P] [US2] Write the failing component test
+- [x] T037 [P] [US2] Write the failing component test
   `src/app/features/tape/tape-view/add-hole/add-hole.component.spec.ts` (contracts/tape-view-ui.md
   "Controls", research R7): section `data-testid="add-hole"` titled `TAPE.ADD_HOLE.TITLE`; a Pipe
   select `add-hole-pipe` with the Organ's Pipes by note name in rack order; a Column field
@@ -364,7 +364,7 @@ Pipe, start, length and that it is saved.
 
 - [x] T040 [US2] Implement `addHole` in `api/tape/hole-edits.ts` and export it from `api/index.ts`
   until T036 is green. Depends on T036.
-- [ ] T041 [US2] Implement `src/app/features/tape/tape-view/add-hole/add-hole.component.ts` (signal
+- [x] T041 [US2] Implement `src/app/features/tape/tape-view/add-hole/add-hole.component.ts` (signal
   form, `MatSelect`, `MatFormField`, minimal SCSS) and add `TAPE.ADD_HOLE.TITLE`, `PIPE`, `COLUMN`,
   `SUBMIT`, `COVERED`, `COLUMN_INVALID` to `en.json` and `de.json` until T037 is green.
   Depends on T037.
