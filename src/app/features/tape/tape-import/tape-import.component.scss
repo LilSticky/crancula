@@ -112,3 +112,18 @@ cranc-action-bar {
   align-items: flex-start;
   gap: 12px;
 }
+
+.preview {
+  flex: none;
+  margin-top: 12px;
+  overflow: hidden;
+}
+
+/* The sheet scrolls when the Fit and the preview don't both fit, instead of squashing the Fit. */
+.fit-sheet {
+  overflow-y: auto;
+}
+
+.fit-sheet cranc-tape-fit-card {
+  flex: none;
+}

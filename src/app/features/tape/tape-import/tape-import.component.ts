@@ -1,4 +1,4 @@
-import {ChangeDetectionStrategy, Component, computed, inject, linkedSignal, PendingTasks, signal} from '@angular/core';
+import {ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, linkedSignal, PendingTasks, signal, viewChild} from '@angular/core';
 import {type FieldTree, form, FormField} from '@angular/forms/signals';
 import {ErrorStateMatcher} from '@angular/material/core';
 import {MatButton, MatIconButton} from '@angular/material/button';
@@ -44,6 +44,7 @@ import {
   tapeImportSchema,
 } from './tape-import-form';
 import {TapeFitCardComponent} from './tape-fit-card/tape-fit-card.component';
+import {TapePreviewComponent} from './tape-preview/tape-preview.component';
 
 /** A translation key and its parameters. */
 interface Readiness {
@@ -51,13 +52,16 @@ interface Readiness {
   readonly params: Readonly<Record<string, number | string>>;
 }
 
+/** The preview width until the card has been measured. */
+const DEFAULT_PREVIEW_WIDTH = 400;
+
 const NO_SONG_DRAFT: TapeImportDraft = {name: '', columnLength: null, transposition: null};
 
 /** Brings a MIDI Song onto a Tape: choose an Organ and a file, check the proposal, create. */
 @Component({
   selector: 'cranc-tape-import',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslatePipe, RouterLink, MatFormField, MatLabel, MatInput, MatError, MatButton, MatIconButton, MatCheckbox, MatIcon, MatCard, MatChip, MatTooltip, MatSuffix, FormField, DecimalInputDirective, PageHeadComponent, ActionBarComponent, TapeFitCardComponent],
+  imports: [TranslatePipe, RouterLink, MatFormField, MatLabel, MatInput, MatError, MatButton, MatIconButton, MatCheckbox, MatIcon, MatCard, MatChip, MatTooltip, MatSuffix, FormField, DecimalInputDirective, PageHeadComponent, ActionBarComponent, TapeFitCardComponent, TapePreviewComponent],
   templateUrl: './tape-import.component.html',
   providers: [{provide: ErrorStateMatcher, useClass: ShownViolationMatcher}],
   styleUrl: './tape-import.component.scss',
@@ -184,6 +188,34 @@ export class TapeImportComponent {
     () => this.context() !== null && this.tape().valid() && this.tapes.loadProblem() === null,
   );
 
+  /** What creating the Tape from the draft would give; absent while no Song and Organ are chosen. */
+  private readonly creation = computed(() => {
+    const context = this.context();
+    return context ? createTapeFromDraft(context, this.draft()) : null;
+  });
+
+  /** The Tape the draft makes now, if it makes one, and its Organ, for the preview. */
+  protected readonly preview = computed(() => {
+    const [result, organ] = [this.creation(), this.organ()];
+    return result?.ok && organ ? {tape: result.value.tape, organ} : null;
+  });
+
+  private readonly previewHost = viewChild<ElementRef<HTMLElement>>('previewHost');
+  protected readonly previewWidth = signal(DEFAULT_PREVIEW_WIDTH);
+
+  constructor() {
+    effect((onCleanup) => {
+      const host = this.previewHost()?.nativeElement;
+      if (host === undefined || typeof ResizeObserver === 'undefined') return;
+      const observer = new ResizeObserver(([entry]) => {
+        const width = Math.floor(entry?.contentRect.width ?? 0);
+        if (width > 0) this.previewWidth.set(width);
+      });
+      observer.observe(host);
+      onCleanup(() => observer.disconnect());
+    });
+  }
+
   /** What the action bar says: the first thing that keeps the Tape from being created, or how long it will be. */
   protected readonly readiness = computed((): Readiness => {
     const context = this.context();
@@ -191,7 +223,8 @@ export class TapeImportComponent {
     if (context === null) return {key: 'TAPE.IMPORT.CHOOSE_ORGAN', params: {}};
     if (context.selectedParts.size === 0) return {key: 'TAPE.IMPORT.STATE_NO_PART', params: {}};
     if (this.tapes.loadProblem() !== null) return {key: 'TAPE.IMPORT.LOAD_PROBLEM', params: {}};
-    const result = createTapeFromDraft(context, this.draft());
+    const result = this.creation();
+    if (result === null) return {key: 'TAPE.IMPORT.CHOOSE_ORGAN', params: {}};
     if (!result.ok) {
       const count = result.error.length;
       return {key: count === 1 ? 'TAPE.IMPORT.STATE_PROBLEM_ONE' : 'TAPE.IMPORT.STATE_PROBLEMS', params: {count}};
