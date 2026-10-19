@@ -1,6 +1,6 @@
 import {type EnvironmentProviders, inject, provideAppInitializer} from '@angular/core';
 import {patchState, signalStore, withMethods, withState} from '@ngrx/signals';
-import {addEntity, entityConfig, removeEntities, setAllEntities, setEntities, upsertEntity, withEntities} from '@ngrx/signals/entities';
+import {addEntity, entityConfig, removeEntities, setAllEntities, setEntities, setEntity, upsertEntity, withEntities} from '@ngrx/signals/entities';
 import {
   type MidiNoteNumber,
   type OrganId,
@@ -116,7 +116,7 @@ export const TapeLibrary = signalStore(
       async update(tape: Tape): Promise<boolean> {
         if (store.loadProblem() !== null) return false;
         if (store.tapeEntityMap()[tape.id] === undefined) return false;
-        patchState(store, upsertEntity(tape, tapeConfig));
+        patchState(store, setEntity(tape, tapeConfig));
         return save();
       },
 

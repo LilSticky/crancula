@@ -35,6 +35,6 @@ export function undo<T>(history: EditHistory<T>): EditHistory<T> {
 /** Moves one entry forward; the same history when there is nothing to redo. */
 export function redo<T>(history: EditHistory<T>): EditHistory<T> {
   if (!canRedo(history)) return history;
-  const [next, ...rest] = history.future as [T, ...T[]]; // `canRedo` guarantees an entry.
+  const [next, ...rest] = history.future; // `canRedo` guarantees an entry.
   return {past: [...history.past, history.present], present: next, future: rest};
 }

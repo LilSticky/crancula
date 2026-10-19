@@ -30,6 +30,7 @@ import {inspectHole} from './inspect-hole';
 import {SelectedHoleComponent} from './selected-hole/selected-hole.component';
 import {selectedHoleView} from './selected-hole/selected-hole-view';
 import {stageMetrics} from './stage-metrics';
+import {TapeEditor} from './tape-editor';
 import {columnMarks, drawingParams, holeRects, outline, overviewOf, rowLabels, RULER_HEIGHT, sectionView} from './tape-drawing';
 import {TapeSectionComponent} from './tape-section/tape-section.component';
 import {TapeStatusLineComponent, type PointerText} from './tape-status-line/tape-status-line.component';
@@ -70,6 +71,7 @@ const COMPACT_QUERY = '(max-width: 1179.98px)';
 @Component({
   selector: 'cranc-tape-view',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  providers: [TapeEditor],
   imports: [ImportSummaryComponent, TranslatePipe, PageHeadComponent, MatButton, MatIconButton, MatTooltip, MatButtonToggle, MatButtonToggleGroup, MatIcon, SelectedHoleComponent, TapeSectionComponent, TapeStatusLineComponent],
   templateUrl: './tape-view.component.html',
   styleUrl: './tape-view.component.scss',

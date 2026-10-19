@@ -193,7 +193,7 @@ every edit goes through (R8, R9). Every story needs them.
   `rename` and `removeHolesOfPipes` keep their behaviour. Depends on T005.
 - [x] T014 Implement `update` in `src/app/features/tape/tape-library.store.ts` until T013 is green.
   Depends on T013.
-- [ ] T015 Write the failing test `src/app/features/tape/tape-view/tape-editor.spec.ts` for the
+- [x] T015 Write the failing test `src/app/features/tape/tape-view/tape-editor.spec.ts` for the
   `TapeEditor` service (research R8, data-model.md "TapeEditor entry"), with the in-memory
   `TapeLibrary`: an entry is `{tape: Tape; selection: SelectableHole | undefined}`; the history
   starts with the Tape as opened; `apply(entry)` pushes, clears redo and calls
@@ -201,7 +201,7 @@ every edit goes through (R8, R9). Every story needs them.
   selection and call `update` once each; `canUndo`/`canRedo` are signals; if the Tape in the
   `TapeLibrary` is no longer the history's present, the history resets to it; it is
   `@Injectable()` without `providedIn` (provided by the view). Depends on T012, T014.
-- [ ] T016 Implement `src/app/features/tape/tape-view/tape-editor.ts` and add it to the
+- [x] T016 Implement `src/app/features/tape/tape-view/tape-editor.ts` and add it to the
   `providers` of `TapeViewComponent` (`tape-view.component.ts`) until T015 is green; every existing
   Tape view test stays green. Depends on T015.
 
