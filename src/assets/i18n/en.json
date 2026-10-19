@@ -29,7 +29,14 @@
       "CONFIRM": "Rename",
       "NAME_REQUIRED": "Give the Tape a name."
     },
+    "CUTTING_PROBLEMS": {
+      "TITLE": "Cutting Problems",
+      "COUNT": "{{count}} Holes can't be cut",
+      "COUNT_ONE": "{{count}} Hole can't be cut",
+      "NONE": "None"
+    },
     "CUTTING_PROBLEM": {
+      "TOO_CLOSE_PREVIOUS": "{{note}} at Column {{column}}: the gap to the previous Hole at Column {{previous}} is {{gap}} mm, the Minimum Gap is {{minimum}} mm.",
       "NO_PIPE": "{{note}} at Column {{column}}: the Organ has no Pipe for this note.",
       "TOO_SHORT": "{{note}} at Column {{column}}: the Hole is {{length}} mm long, the Minimum Hole Length is {{minimum}} mm.",
       "TOO_CLOSE": "{{note}} at Column {{column}}: the gap to the next Hole at Column {{next}} is {{gap}} mm, the Minimum Gap is {{minimum}} mm."

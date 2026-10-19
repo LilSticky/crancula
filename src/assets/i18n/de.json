@@ -29,7 +29,14 @@
       "CONFIRM": "Umbenennen",
       "NAME_REQUIRED": "Gib dem Lochband einen Namen."
     },
+    "CUTTING_PROBLEMS": {
+      "TITLE": "Schnittprobleme",
+      "COUNT": "{{count}} Löcher können nicht geschnitten werden",
+      "COUNT_ONE": "{{count}} Loch kann nicht geschnitten werden",
+      "NONE": "Keine"
+    },
     "CUTTING_PROBLEM": {
+      "TOO_CLOSE_PREVIOUS": "{{note}} in Spalte {{column}}: Der Abstand zum vorherigen Loch in Spalte {{previous}} beträgt {{gap}} mm, der Mindestabstand beträgt {{minimum}} mm.",
       "NO_PIPE": "{{note}} in Spalte {{column}}: Die Orgel hat keine Pfeife für diesen Ton.",
       "TOO_SHORT": "{{note}} in Spalte {{column}}: Das Loch ist {{length}} mm lang, die Mindestlochlänge beträgt {{minimum}} mm.",
       "TOO_CLOSE": "{{note}} in Spalte {{column}}: Der Abstand zum nächsten Loch in Spalte {{next}} beträgt {{gap}} mm, der Mindestabstand beträgt {{minimum}} mm."

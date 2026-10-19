@@ -387,11 +387,11 @@ that the selected Hole says why; lengthen it again and check that the mark is go
 
 ### Tests for User Story 3 ⚠️ (write first, must fail)
 
-- [ ] T043 [P] [US3] Extend `src/app/features/tape/tape-view/tape-drawing.spec.ts`: every Hole of
+- [x] T043 [P] [US3] Extend `src/app/features/tape/tape-view/tape-drawing.spec.ts`: every Hole of
   `holesWithCuttingProblems` in the visible range gets a mark ring (class `cutting-problem`,
   `data-testid="hole-mark"`) "2 px outside its slot"; the Hole itself stays ink; marks are looked
   up by a `Set` of `"pipe:start"` keys (research R10, R11). Depends on T010.
-- [ ] T044 [P] [US3] Write the failing component test
+- [x] T044 [P] [US3] Write the failing component test
   `src/app/features/tape/tape-view/cutting-problems/cutting-problems.component.spec.ts`
   (contracts/tape-view-ui.md "Controls", research R11): section `data-testid="cutting-problems"`
   titled `TAPE.CUTTING_PROBLEMS.TITLE`; count `cutting-problems-count` with
@@ -425,7 +425,7 @@ that the selected Hole says why; lengthen it again and check that the mark is go
 - [x] T048 [US3] Draw the marks in `src/app/features/tape/tape-view/tape-drawing.ts` and
   `tape-view.component.scss` (dashed oxblood ring, selection ring stays solid blue) until T043 is
   green. Depends on T043.
-- [ ] T049 [US3] Implement
+- [x] T049 [US3] Implement
   `src/app/features/tape/tape-view/cutting-problems/cutting-problems.component.ts` and add
   `TAPE.CUTTING_PROBLEMS.TITLE`, `COUNT`, `COUNT_ONE`, `NONE` and
   `TAPE.CUTTING_PROBLEM.TOO_CLOSE_PREVIOUS` to `en.json` and `de.json` until T044 is green.
