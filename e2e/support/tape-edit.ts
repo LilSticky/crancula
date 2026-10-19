@@ -37,7 +37,9 @@ export async function columnWidth(window: Page): Promise<number> {
   return (second - first) / 8;
 }
 
+/** The centre of the element in the viewport, after scrolling it into view (a small CI screen hides the later Holes). */
 async function centreOf(locator: Locator): Promise<{x: number; y: number}> {
+  await locator.scrollIntoViewIfNeeded();
   const box = await locator.boundingBox();
   if (box === null) throw new Error('the element is not shown');
   return {x: box.x + box.width / 2, y: box.y + box.height / 2};
