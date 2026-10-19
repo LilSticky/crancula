@@ -21,8 +21,13 @@ Cutting Problems as they happen): Holes with Cutting Problems get a dashed oxblo
 Cutting Problems section under the Selected Hole counts and lists them; choosing selects and scrolls; marks follow
 the drag preview. T046 timing green at once (median 1.17 ms); T051 not needed. `angular-reviewer` pass done and fixed.
 Still open: edge auto-scroll (T061); branch not yet rebased onto main (#119, import screen only).
-Unit tests (709 node, 935 Angular), lint and i18n green; 97 e2e green; CI green on all three OSes (2026-10-19) after a fix: below 1180 px the opened side panel covered the Tape drawing, it now sits beside it.
-**Next step:** Phase 6, User Story 4 (undo and redo) from T052 in
+Done 2026-10-19: Phase 6 User Story 4 (T052–T056, undo and redo): Undo and Redo icon buttons in the page head
+with shortcut tooltips; Ctrl+Z, Ctrl+Y and Ctrl+Shift+Z (⌘Z and ⇧⌘Z on macOS) anywhere in the Tape view except
+text fields, via `historyIntent` and a `PLATFORM` token; the Electron Edit menu's accelerators don't interfere;
+undo restores the earlier selection; undo is saved. `angular-reviewer` pass done and fixed.
+Unit tests (709 node, 957 Angular), lint and i18n green; `e2e/tape-edit.spec.ts` 7/7 green locally; full e2e and CI pending on push.
+Earlier: CI green on all three OSes (2026-10-19) after a fix: below 1180 px the opened side panel covered the Tape drawing, it now sits beside it.
+**Next step:** Phase 7, User Story 5 (the Tape grows) from T057 in
 [tasks](../specs/004-place-holes-by-hand/tasks.md). Run `npm run e2e` (it rebuilds) rather than bare Playwright,
 or `npm run electron:bundle` plus a fresh web build before e2e (ESM main process).
 
