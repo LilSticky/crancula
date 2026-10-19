@@ -10,6 +10,8 @@ as its GitHub Release notes.
 
 ### Added
 - Rename a Tape: choose Rename in the Tape's menu in the Tape list.
+- Bringing a Song onto a Tape shows a live preview of the Tape's first Columns under the Fit. It
+  follows the Parts, the Transposition and the Column length before you create the Tape.
 
 ## [0.1.0] - 2026-10-18
 
