@@ -25,7 +25,7 @@ Done 2026-10-19: Phase 6 User Story 4 (T052–T056, undo and redo): Undo and Red
 with shortcut tooltips; Ctrl+Z, Ctrl+Y and Ctrl+Shift+Z (⌘Z and ⇧⌘Z on macOS) anywhere in the Tape view except
 text fields, via `historyIntent` and a `PLATFORM` token; the Electron Edit menu's accelerators don't interfere;
 undo restores the earlier selection; undo is saved. `angular-reviewer` pass done and fixed.
-Unit tests (709 node, 957 Angular), lint and i18n green; `e2e/tape-edit.spec.ts` 7/7 green locally; full e2e and CI pending on push.
+Unit tests (709 node, 957 Angular), lint and i18n green; 98 e2e green; CI green on all three OSes (2026-10-20) after a fix: the Undo/Redo icon buttons were 8 px shorter than the other page-head actions.
 Earlier: CI green on all three OSes (2026-10-19) after a fix: below 1180 px the opened side panel covered the Tape drawing, it now sits beside it.
 **Next step:** Phase 7, User Story 5 (the Tape grows) from T057 in
 [tasks](../specs/004-place-holes-by-hand/tasks.md). Run `npm run e2e` (it rebuilds) rather than bare Playwright,
