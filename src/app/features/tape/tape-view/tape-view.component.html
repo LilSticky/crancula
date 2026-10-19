@@ -126,10 +126,10 @@
   <aside class="side-panel" data-testid="side-panel" (keydown)="onSidePanelKeydown($event)" [attr.aria-label]="'TAPE.VIEW.SIDE_PANEL' | translate">
     <cranc-tape-section [view]="drawing.section" />
     <cranc-selected-hole [inspection]="inspection()" />
+    <cranc-cutting-problems [holes]="holesWithProblems()" (chosen)="chooseProblem($event)" />
     @if (importSummary(); as summary) {
       <cranc-import-summary data-testid="import-summary" [importSummary]="summary" (dismissed)="importSummary.set(null)" />
     }
-    <cranc-cutting-problems [holes]="holesWithProblems()" (chosen)="chooseProblem($event)" />
     @if (tape(); as tape) {
       @if (organ(); as organ) {
         <cranc-add-hole [organ]="organ" [tape]="tape" [selected]="selectedHoleRef()" (added)="addFromForm($event)" />

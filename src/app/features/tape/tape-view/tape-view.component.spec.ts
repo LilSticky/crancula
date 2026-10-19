@@ -486,7 +486,7 @@ describe('TapeViewComponent', () => {
   });
 
   describe('the Import Summary in the side panel (V14)', () => {
-    it('is the third section of the side panel and offers a Dismiss button', async () => {
+    it('is the fourth section of the side panel and offers a Dismiss button', async () => {
       const {tape, importSummary, open, view} = await render();
 
       await open(`/tapes/${tape.id}`, importSummary);
@@ -495,7 +495,7 @@ describe('TapeViewComponent', () => {
       const summary = panel?.querySelector('[data-testid="import-summary"]') ?? null;
       expect(summary).not.toBeNull();
       expect(summary?.parentElement).toBe(panel);
-      expect([...(panel?.children ?? [])].indexOf(summary as Element)).toBe(2);
+      expect([...(panel?.children ?? [])].indexOf(summary as Element)).toBe(3);
       expect(summary?.querySelector('button[aria-label="Dismiss"]')).not.toBeNull();
     });
 
