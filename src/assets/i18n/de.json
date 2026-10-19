@@ -80,6 +80,7 @@
       "SAVE_PROBLEM": "Deine Lochbänder konnten nicht gespeichert werden: {{reason}}"
     },
     "IMPORT": {
+      "PREVIEW_LABEL": "Vorschau der ersten Spalten des Lochbands",
       "TITLE": "Ein Lied auf ein Lochband bringen",
       "LOAD_PROBLEM": "Deine Lochbänder konnten nicht geladen werden, darum kann vorerst kein neues Lochband gespeichert werden.",
       "NO_ORGAN": "Du brauchst zuerst eine Drehorgel: Das Lochband wird für ihre Pfeifen gestanzt.",
