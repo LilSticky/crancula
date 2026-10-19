@@ -20,14 +20,17 @@ pointer (contract "Pointer"), to settle in Phase 9 polish. Done 2026-10-19: Phas
 Cutting Problems as they happen): Holes with Cutting Problems get a dashed oxblood ring (`--cr-problem`); a
 Cutting Problems section under the Selected Hole counts and lists them; choosing selects and scrolls; marks follow
 the drag preview. T046 timing green at once (median 1.17 ms); T051 not needed. `angular-reviewer` pass done and fixed.
-Still open: edge auto-scroll (T061); branch not yet rebased onto main (#119, import screen only).
 Done 2026-10-19: Phase 6 User Story 4 (T052–T056, undo and redo): Undo and Redo icon buttons in the page head
 with shortcut tooltips; Ctrl+Z, Ctrl+Y and Ctrl+Shift+Z (⌘Z and ⇧⌘Z on macOS) anywhere in the Tape view except
 text fields, via `historyIntent` and a `PLATFORM` token; the Electron Edit menu's accelerators don't interfere;
 undo restores the earlier selection; undo is saved. `angular-reviewer` pass done and fixed.
-Unit tests (709 node, 957 Angular), lint and i18n green; 98 e2e green; CI green on all three OSes (2026-10-20) after a fix: the Undo/Redo icon buttons were 8 px shorter than the other page-head actions.
+Done 2026-10-20: main merged in (#119, #120); Phase 7 User Story 5 (T057–T061, the Tape grows): growth was
+already in `withHoles`, now pinned by tests; the stage auto-scrolls while a Hole is dragged within 24 px of its
+edge (rAF loop outside the zone, `src/main.ts` still uses zone change detection), and a release past the end grows
+the Tape. `angular-reviewer` pass done and fixed.
+Unit tests (714 node, 967 Angular), lint and i18n green; 101 e2e green locally. Earlier: CI green on all three OSes (2026-10-20) after a fix: the Undo/Redo icon buttons were 8 px shorter than the other page-head actions.
 Earlier: CI green on all three OSes (2026-10-19) after a fix: below 1180 px the opened side panel covered the Tape drawing, it now sits beside it.
-**Next step:** Phase 7, User Story 5 (the Tape grows) from T057 in
+**Next step:** Phase 8, User Story 6 (keyboard, German and English) from T062 in
 [tasks](../specs/004-place-holes-by-hand/tasks.md). Run `npm run e2e` (it rebuilds) rather than bare Playwright,
 or `npm run electron:bundle` plus a fresh web build before e2e (ESM main process).
 
