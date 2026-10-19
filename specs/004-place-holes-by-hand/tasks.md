@@ -453,7 +453,7 @@ before the edits; redo once and check the first edit is back.
 
 ### Tests for User Story 4 ⚠️ (write first, must fail)
 
-- [ ] T052 [P] [US4] Extend `src/app/features/tape/tape-view/edit-keys.spec.ts` with
+- [x] T052 [P] [US4] Extend `src/app/features/tape/tape-view/edit-keys.spec.ts` with
   `historyIntent(event, platform)` (research R7): Ctrl+Z → undo, Ctrl+Y and Ctrl+Shift+Z → redo on
   Windows/Linux; ⌘Z → undo, ⌘⇧Z → redo on macOS (`metaKey`); the other modifier does nothing;
   events from `input`/`textarea` give no intent. Depends on T032.
@@ -475,7 +475,7 @@ before the edits; redo once and check the first edit is back.
 
 ### Implementation for User Story 4
 
-- [ ] T055 [US4] Implement `historyIntent` in `src/app/features/tape/tape-view/edit-keys.ts` until
+- [x] T055 [US4] Implement `historyIntent` in `src/app/features/tape/tape-view/edit-keys.ts` until
   T052 is green. Depends on T052.
 - [ ] T056 [US4] Add the Undo/Redo buttons and the host `keydown` handling in
   `src/app/features/tape/tape-view/tape-view.component.ts` and `.html` (through `TapeEditor`), and
