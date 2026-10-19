@@ -164,6 +164,8 @@ Done 2026-10-19: live Tape preview on the import screen ([#84](https://github.co
 `cranc-tape-preview` draws the first Columns from `tapeGeometry`, 160 px tall at any Tape width (user decision:
 a fixed-height strip, not 1:1, which made the Fit card scroll). The Fit sheet scrolls in short windows. It
 uses `outline` from the Tape view but not `holeRects`, which slice 004 changes.
+Fixed 2026-10-19: the import screen's Song sheet spilled under the action bar in short windows
+([#118](https://github.com/LilSticky/crancula/issues/118)); it now scrolls inside itself, and only the Parts list shrinks.
 
 ## Known broken / WIP
 
@@ -187,6 +189,7 @@ uses `outline` from the Tape view but not `holeRects`, which slice 004 changes.
   manual run, or a pull request that changes the workflow or `electron-builder.json`, only builds
   artifacts. Builds are unsigned. v0.0.1 (2026-10-14) is the first release from a tag; v0.1.0
   (2026-10-18) completes v0.1. Release with `/release` (ADR 19); notes come from `CHANGELOG.md`.
+  `/release` also brings the README up to date, including its **Releases** list (one row per version).
 
 ## Process changes
 

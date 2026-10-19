@@ -86,7 +86,7 @@ flowchart LR
 - [x] **Punch a tape**: export the Tape as an SVG for a vinyl cutter ([#3](https://github.com/LilSticky/crancula/issues/3))
 - [x] Downloadable releases for Windows, macOS and Linux ([#11](https://github.com/LilSticky/crancula/issues/11))
 
-What changed in each version is in the [changelog](CHANGELOG.md).
+What changed in each version is under [Releases](#releases).
 
 <details>
 <summary><b>Ideas for later</b></summary>
@@ -120,6 +120,15 @@ Crancula uses the same words everywhere: in the app, in the code and here.
 | **Plotter** | The machine that cuts the Holes, such as a vinyl cutter |
 
 All terms, with their German names, are in the [dictionary](documentation/DICTIONARY.md).
+
+## Releases
+
+| Version | Date | Highlights |
+|---------|------|------------|
+| [0.1.0](https://github.com/LilSticky/crancula/releases/tag/v0.1.0) | 2026-10-18 | Export a Tape for the Plotter as SVG; Lead-in; derived Border; a new look |
+| [0.0.1](https://github.com/LilSticky/crancula/releases/tag/v0.0.1) | 2026-10-14 | Describe your Organ; bring a MIDI Song onto a Tape; English and German |
+
+Every change per version is in the [changelog](CHANGELOG.md).
 
 ## Download
 

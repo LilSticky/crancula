@@ -69,7 +69,13 @@ mat-card {
 
 .parts-group {
   flex: 1 1 auto;
-  min-height: 13rem;
+  min-height: 9rem;
+}
+
+@media (max-width: 1179px) {
+  .parts-group {
+    min-height: 13rem;
+  }
 }
 
 .part {
@@ -126,4 +132,17 @@ cranc-action-bar {
 
 .fit-sheet cranc-tape-fit-card {
   flex: none;
+}
+
+/* The sheet scrolls when its groups don't fit, instead of squeezing them; only the Parts list shrinks. */
+.song-sheet {
+  overflow-y: auto;
+}
+
+.song-sheet > * {
+  flex-shrink: 0;
+}
+
+.song-sheet > .parts-group {
+  flex-shrink: 1;
 }
