@@ -141,7 +141,7 @@ every edit goes through (R8, R9). Every story needs them.
   ("negative never happens on a valid Tape; 0 when touching", data-model.md). No behaviour change;
   `npm run test` and `npm run lint` green before and after. Commit as
   `refactor(tape): rename export problems to Cutting Problems`. Depends on T005.
-- [ ] T007 Write the failing tests for the UI rename (contracts/tape-view-ui.md "Messages"):
+- [x] T007 Write the failing tests for the UI rename (contracts/tape-view-ui.md "Messages"):
   - extend `src/app/features/tape/tape-i18n.spec.ts`: every `CuttingProblemCode` has a key
     `TAPE.CUTTING_PROBLEM.<CODE>` ("the code upper-cased, `-` as `_`": `NO_PIPE`, `TOO_SHORT`,
     `TOO_CLOSE`) in `en.json` and `de.json` with the texts of today's `TAPE.EXPORT.PROBLEM_*`; no
@@ -151,14 +151,14 @@ every edit goes through (R8, R9). Every story needs them.
     and make it expect `CuttingProblemsDialogComponent` and the `TAPE.CUTTING_PROBLEM.*` keys
     (title and close button stay `TAPE.EXPORT.PROBLEMS_TITLE`, `TAPE.EXPORT.PROBLEMS_CLOSE`).
   Depends on T006.
-- [ ] T008 `git mv` `src/app/features/tape/tape-view/export-problems-dialog/` →
+- [x] T008 `git mv` `src/app/features/tape/tape-view/export-problems-dialog/` →
   `cutting-problems-dialog/`, rename the component to `CuttingProblemsDialogComponent`, move
   `TAPE.EXPORT.PROBLEM_NO_PIPE|_TOO_SHORT|_TOO_CLOSE` to `TAPE.CUTTING_PROBLEM.NO_PIPE|TOO_SHORT|TOO_CLOSE`
   in `src/assets/i18n/en.json` and `de.json` (same texts), and update
   `src/app/features/tape/tape-view/plotter-export.ts`, `e2e/tape-export.spec.ts`,
   `e2e/tape-german.spec.ts` and `e2e/ux/screens.capture.ts`, until T007 is green and
   `npm run i18n:check` passes. Depends on T007.
-- [ ] T009 [P] Write the failing tests in `api/tape/cutting-problems.spec.ts` for
+- [x] T009 [P] Write the failing tests in `api/tape/cutting-problems.spec.ts` for
   `holesWithCuttingProblems(problems): readonly HoleCuttingProblems[]` (data-model.md
   "HoleCuttingProblems", contracts/domain-api.md):
   - "one entry per Hole that has at least one Cutting Problem, in the order of the problems";
@@ -169,29 +169,29 @@ every edit goes through (R8, R9). Every story needs them.
   - a Hole with `too-short` and `too-close` has one entry with both; a `no-pipe` Hole has one entry
     with only that; no problems → `[]`; the count of entries is the count shown (FR-011).
   Depends on T006.
-- [ ] T010 Implement `holesWithCuttingProblems`, `HoleProblem` and `HoleCuttingProblems` in
+- [x] T010 Implement `holesWithCuttingProblems`, `HoleProblem` and `HoleCuttingProblems` in
   `api/tape/cutting-problems.ts` (`HoleRef` as a local `Pick<Hole, 'pipe' | 'start'>` until
   `hole-edits.ts` exists, then imported from there) and export them from `api/index.ts` until T009
   is green. Depends on T009.
 
 ### Undo history, store update, editor (R8, R9)
 
-- [ ] T011 [P] Write the failing test `src/app/features/tape/tape-view/edit-history.spec.ts` for
+- [x] T011 [P] Write the failing test `src/app/features/tape/tape-view/edit-history.spec.ts` for
   the pure, generic `EditHistory<T>` (data-model.md "EditHistory"): `past` "entries before the
   present, oldest first", `present` "what is shown and stored", `future` "undone entries, next redo
   first"; "`apply(next)` → past + present, future cleared"; "`undo()` / `redo()` move one entry";
   "`canUndo = past.length > 0`, `canRedo = future.length > 0`"; "Immutable: each call returns a
   new history"; undo/redo at the ends return the same history; spec 4.2, 4.3; SC-006: n applies
   followed by n undos give the opening `present`. Depends on T001.
-- [ ] T012 Implement `src/app/features/tape/tape-view/edit-history.ts` until T011 is green.
+- [x] T012 Implement `src/app/features/tape/tape-view/edit-history.ts` until T011 is green.
   Depends on T011.
-- [ ] T013 [P] Write the failing tests in `src/app/features/tape/tape-library.store.spec.ts` for
+- [x] T013 [P] Write the failing tests in `src/app/features/tape/tape-library.store.spec.ts` for
   `update(tape: Tape): Promise<boolean>` (data-model.md "TapeLibrary", research R9): "`false`
   without change while `loadProblem` is set or for an unknown id; else replace the Tape and save
   the whole library (ADR 8)" through `tapes:save` once per call; a failed save sets `saveProblem`
   and keeps the new Tape in memory, the next successful save clears it (FR-013, quickstart 28);
   `rename` and `removeHolesOfPipes` keep their behaviour. Depends on T005.
-- [ ] T014 Implement `update` in `src/app/features/tape/tape-library.store.ts` until T013 is green.
+- [x] T014 Implement `update` in `src/app/features/tape/tape-library.store.ts` until T013 is green.
   Depends on T013.
 - [ ] T015 Write the failing test `src/app/features/tape/tape-view/tape-editor.spec.ts` for the
   `TapeEditor` service (research R8, data-model.md "TapeEditor entry"), with the in-memory

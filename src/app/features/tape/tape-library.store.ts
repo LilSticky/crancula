@@ -112,6 +112,14 @@ export const TapeLibrary = signalStore(
         return save();
       },
 
+      /** Replaces the Tape (matched by id) and saves. Resolves `false` without change for an unknown id. */
+      async update(tape: Tape): Promise<boolean> {
+        if (store.loadProblem() !== null) return false;
+        if (store.tapeEntityMap()[tape.id] === undefined) return false;
+        patchState(store, upsertEntity(tape, tapeConfig));
+        return save();
+      },
+
       tapesOf,
 
       async removeTapesOf(organId: OrganId): Promise<boolean> {
