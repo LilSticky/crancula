@@ -209,10 +209,19 @@ test.describe('The Tape view in true millimetres on one screen', () => {
         const count = await actions.count();
         expect(count).toBeGreaterThan(1);
         const tops: number[] = [];
+        const heights: number[] = [];
         for (let index = 0; index < count; index++) {
           const element = actions.nth(index);
-          if (await element.isVisible()) tops.push((await boxOf(element)).top);
+          if (await element.isVisible()) {
+            const box = await boxOf(element);
+            tops.push(box.top);
+            heights.push(box.bottom - box.top);
+          }
         }
+        for (const testId of ['undo', 'redo']) {
+          await expect(window.getByTestId('page-head-actions').getByTestId(testId)).toBeVisible();
+        }
+        expect(Math.max(...heights) - Math.min(...heights), `heights ${JSON.stringify(heights)}`).toBeLessThanOrEqual(1);
         expect(Math.max(...tops) - Math.min(...tops), JSON.stringify(tops)).toBeLessThanOrEqual(2);
         const buttonTexts = await window.getByTestId('page-head-actions').getByRole('button').evaluateAll((buttons) =>
           buttons.map((button) => {
