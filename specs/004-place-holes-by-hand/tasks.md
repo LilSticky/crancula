@@ -457,7 +457,7 @@ before the edits; redo once and check the first edit is back.
   `historyIntent(event, platform)` (research R7): Ctrl+Z → undo, Ctrl+Y and Ctrl+Shift+Z → redo on
   Windows/Linux; ⌘Z → undo, ⌘⇧Z → redo on macOS (`metaKey`); the other modifier does nothing;
   events from `input`/`textarea` give no intent. Depends on T032.
-- [ ] T053 [US4] Extend `src/app/features/tape/tape-view/tape-view.component.spec.ts` (quickstart
+- [x] T053 [US4] Extend `src/app/features/tape/tape-view/tape-view.component.spec.ts` (quickstart
   18–22, 25, 29): Undo (`data-testid="undo"`, icon `undo`) and Redo (`redo`) `mat-icon-button`s
   in the page head with `aria-label` and tooltip `TAPE.EDIT.UNDO_TOOLTIP` / `REDO_TOOLTIP`
   ("Undo ({{shortcut}})"), disabled when there is nothing to undo/redo (4.4, FR-015); undo brings
@@ -468,7 +468,7 @@ before the edits; redo once and check the first edit is back.
   faked platform; three edits then three undos give the opened Tape (SC-006, real commands);
   leaving the view and opening the Tape again starts with nothing to undo (FR-014).
   Depends on T050.
-- [ ] T054 [P] [US4] Extend `e2e/tape-edit.spec.ts`, part 4: three edits, `ControlOrMeta+Z` three
+- [x] T054 [P] [US4] Extend `e2e/tape-edit.spec.ts`, part 4: three edits, `ControlOrMeta+Z` three
   times → the Holes are as opened; `ControlOrMeta+Shift+Z` → the first edit is back; the undo
   button is disabled after undoing everything; after a relaunch the Tape is as last undone/redone
   (undo is saved, FR-014). Depends on T047.
@@ -477,7 +477,7 @@ before the edits; redo once and check the first edit is back.
 
 - [x] T055 [US4] Implement `historyIntent` in `src/app/features/tape/tape-view/edit-keys.ts` until
   T052 is green. Depends on T052.
-- [ ] T056 [US4] Add the Undo/Redo buttons and the host `keydown` handling in
+- [x] T056 [US4] Add the Undo/Redo buttons and the host `keydown` handling in
   `src/app/features/tape/tape-view/tape-view.component.ts` and `.html` (through `TapeEditor`), and
   add `TAPE.EDIT.UNDO`, `REDO`, `UNDO_TOOLTIP`, `REDO_TOOLTIP` to `en.json` and `de.json` ("Undo
   (Ctrl+Z)" / "Rückgängig (Strg+Z)"), until T053 and T054 are green. Depends on T053–T055.

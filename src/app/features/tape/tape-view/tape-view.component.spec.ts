@@ -31,6 +31,8 @@ import {pixelsPerMillimetre} from './pixels-per-millimetre';
 import {CuttingProblemsDialogComponent} from './cutting-problems-dialog/cutting-problems-dialog.component';
 import {PlotterExport} from './plotter-export';
 import {columnLines, columnNumbers, rulerNumbers} from './tape-marks';
+import {type Platform} from './edit-keys';
+import {PLATFORM} from './platform.token';
 import {TapeViewComponent} from './tape-view.component';
 
 /** The scale the Tape opens at: 1:1, true size on screen. */
@@ -86,6 +88,8 @@ interface RenderOptions {
   readonly realExport?: boolean;
   /** The window width in px the faked BreakpointObserver answers for; the real one when not given. */
   readonly windowWidth?: number;
+  /** The platform the shortcuts are read for; faked through the PLATFORM token. */
+  readonly platform?: Platform;
 }
 
 /** Evaluates `min-width` and `max-width` queries against a fixed window width. */
@@ -130,6 +134,7 @@ async function render(options: RenderOptions = {}) {
       ]),
       provideTestTranslations(options.language ?? 'en'),
       {provide: CRANCULA_API, useValue: api},
+      ...(options.platform === undefined ? [] : [{provide: PLATFORM, useValue: options.platform}]),
       ...(options.windowWidth === undefined
         ? []
         : [{provide: BreakpointObserver, useValue: stubBreakpointObserver(options.windowWidth)}]),
@@ -1587,7 +1592,7 @@ describe('TapeViewComponent', () => {
       await open(`/tapes/${tape.id}`);
 
       const controls = all(view(), 'button, input, select, textarea, [contenteditable]').filter(
-        (control) => control.closest('[data-testid="zoom"], [data-testid="add-hole"]') === null && !['export', 'side-panel-toggle'].includes(control.getAttribute('data-testid') ?? ''),
+        (control) => control.closest('[data-testid="zoom"], [data-testid="add-hole"]') === null && !['export', 'side-panel-toggle', 'undo', 'redo'].includes(control.getAttribute('data-testid') ?? ''),
       );
       expect(controls).toHaveLength(0);
     });
@@ -2076,6 +2081,235 @@ describe('TapeViewComponent', () => {
       expect(update).not.toHaveBeenCalled();
       expect(view()?.querySelector('[data-testid="add-hole"]')?.textContent).toContain('already covers');
       expect(document.activeElement).not.toBe(view()?.querySelector('[data-testid="tape-scroll"] svg'));
+    });
+  });
+
+  describe('undo and redo (US4)', () => {
+    // The Pipe of row r is note 52 + r. Row 24 is E5, row 25 F5. Starts count from 0.
+    const holes = [
+      {row: 22, start: 0, length: 2},
+      {row: 24, start: 10, length: 3},
+      {row: 25, start: 20, length: 1},
+      {row: 25, start: 30, length: 2},
+    ];
+    const rectAt = (view: HTMLElement | null, row: number, start: number) =>
+      view?.querySelector(`[data-testid="tape-scroll"] rect[data-testid="hole"][data-row="${row - 1}"][data-start="${start}"]`) ?? null;
+    const selected = (view: HTMLElement | null) =>
+      all(view, '[data-testid="tape-scroll"] rect[data-testid="hole"].selected').map(
+        (rect) => `${Number(rect.getAttribute('data-row')) + 1}:${rect.getAttribute('data-start')}`,
+      );
+    const storedHoles = (tapeId: string) =>
+      (TestBed.inject(TapeLibrary).tapeEntities().find((candidate) => candidate.id === tapeId)?.holes ?? []).map(
+        (hole) => `${hole.pipe - 52}:${hole.start}+${hole.length}`,
+      );
+    const button = (view: HTMLElement | null, testId: 'undo' | 'redo') =>
+      view?.querySelector<HTMLButtonElement>(`[data-testid="page-head-actions"] [data-testid="${testId}"]`) ?? null;
+    const tapeSvg = (view: HTMLElement | null) => view?.querySelector('[data-testid="tape-scroll"] svg') as SVGSVGElement;
+    const press = async (target: Element, init: KeyboardEventInit, settle: () => Promise<void>) => {
+      const event = new KeyboardEvent('keydown', {...init, bubbles: true, cancelable: true});
+      target.dispatchEvent(event);
+      await settle();
+      return event;
+    };
+    const select = async (view: HTMLElement | null, row: number, start: number, settle: () => Promise<void>) => {
+      rectAt(view, row, start)?.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+      await settle();
+    };
+    const setup = async (options: RenderOptions = {holes}) => {
+      const rendered = await render(options);
+      await rendered.open(`/tapes/${rendered.tape.id}`);
+      const update = vi.spyOn(TestBed.inject(TapeLibrary), 'update');
+      return {...rendered, update, opened: storedHoles(rendered.tape.id)};
+    };
+
+    describe('the buttons in the page head', () => {
+      it('are Material icon buttons with the undo and redo icons', async () => {
+        const {view} = await setup();
+
+        for (const [testId, icon] of [['undo', 'undo'], ['redo', 'redo']] as const) {
+          const element = button(view(), testId);
+          expect(element?.classList).toContain('mat-mdc-icon-button');
+          expect(element?.querySelector('mat-icon')?.textContent?.trim()).toBe(icon);
+        }
+      });
+
+      it('are disabled while there is nothing to undo or redo', async () => {
+        const {view} = await setup();
+
+        expect(button(view(), 'undo')?.disabled).toBe(true);
+        expect(button(view(), 'redo')?.disabled).toBe(true);
+      });
+
+      it('name the action and its shortcut in the aria-label and the tooltip on Windows', async () => {
+        const {view, settle} = await setup({holes, platform: 'win32'});
+
+        expect(button(view(), 'undo')?.getAttribute('aria-label')).toBe('Undo (Ctrl+Z)');
+        expect(button(view(), 'redo')?.getAttribute('aria-label')).toContain('Redo (');
+        button(view(), 'undo')?.dispatchEvent(new MouseEvent('mouseenter'));
+        await settle();
+        expect(document.body.querySelector('.mat-mdc-tooltip')?.textContent?.trim()).toBe('Undo (Ctrl+Z)');
+      });
+
+      it('name the Cmd shortcut on macOS', async () => {
+        const {view} = await setup({holes, platform: 'darwin'});
+
+        expect(button(view(), 'undo')?.getAttribute('aria-label')).toBe('Undo (⌘Z)');
+      });
+    });
+
+    it('undoes an edit with the button: the Tape and the earlier selection are back, saved once (4.1)', async () => {
+      const {tape, view, settle, update, opened} = await setup();
+      await select(view(), 24, 10, settle);
+      await press(tapeSvg(view()), {key: 'ArrowRight', altKey: true}, settle);
+      expect(selected(view())).toEqual(['24:11']);
+      update.mockClear();
+
+      button(view(), 'undo')?.click();
+      await settle();
+
+      expect(storedHoles(tape.id)).toEqual(opened);
+      expect(selected(view())).toEqual(['24:10']);
+      expect(update).toHaveBeenCalledTimes(1);
+      expect(button(view(), 'undo')?.disabled).toBe(true);
+      expect(button(view(), 'redo')?.disabled).toBe(false);
+    });
+
+    it('redoes the undone edit with the button (4.2)', async () => {
+      const {tape, view, settle, update} = await setup();
+      await select(view(), 24, 10, settle);
+      await press(tapeSvg(view()), {key: 'ArrowRight', altKey: true}, settle);
+      const edited = storedHoles(tape.id);
+      button(view(), 'undo')?.click();
+      await settle();
+      update.mockClear();
+
+      button(view(), 'redo')?.click();
+      await settle();
+
+      expect(storedHoles(tape.id)).toEqual(edited);
+      expect(selected(view())).toEqual(['24:11']);
+      expect(update).toHaveBeenCalledTimes(1);
+      expect(button(view(), 'redo')?.disabled).toBe(true);
+    });
+
+    it('disables Redo after a new edit following an undo (4.3)', async () => {
+      const {view, settle} = await setup();
+      await select(view(), 24, 10, settle);
+      await press(tapeSvg(view()), {key: 'ArrowRight', altKey: true}, settle);
+      button(view(), 'undo')?.click();
+      await settle();
+      expect(button(view(), 'redo')?.disabled).toBe(false);
+
+      await press(tapeSvg(view()), {key: 'ArrowDown', altKey: true}, settle);
+
+      expect(button(view(), 'redo')?.disabled).toBe(true);
+    });
+
+    it('adds no undo step for a refused edit (4.5)', async () => {
+      const {view, settle} = await setup();
+      await select(view(), 25, 20, settle);
+
+      await press(tapeSvg(view()), {key: 'ArrowLeft', shiftKey: true}, settle); // A Hole of 1 Column can not be shortened.
+
+      expect(button(view(), 'undo')?.disabled).toBe(true);
+    });
+
+    it('undoes three edits one by one back to the opened Tape (SC-006)', async () => {
+      const {tape, view, settle, update, opened} = await setup();
+      await select(view(), 24, 10, settle);
+      await press(tapeSvg(view()), {key: 'ArrowRight', altKey: true}, settle);
+      await press(tapeSvg(view()), {key: 'ArrowRight', shiftKey: true}, settle);
+      await press(tapeSvg(view()), {key: 'Delete'}, settle);
+      expect(storedHoles(tape.id)).toHaveLength(opened.length - 1);
+      update.mockClear();
+
+      for (let times = 0; times < 3; times++) {
+        button(view(), 'undo')?.click();
+        await settle();
+      }
+
+      expect(storedHoles(tape.id)).toEqual(opened);
+      expect(update).toHaveBeenCalledTimes(3);
+      expect(button(view(), 'undo')?.disabled).toBe(true);
+    });
+
+    it('starts with nothing to undo when the Tape view is left and the Tape opened again (FR-014)', async () => {
+      const {tape, view, open, settle} = await setup();
+      await select(view(), 24, 10, settle);
+      await press(tapeSvg(view()), {key: 'ArrowRight', altKey: true}, settle);
+      expect(button(view(), 'undo')?.disabled).toBe(false);
+
+      await open('/tapes');
+      await open(`/tapes/${tape.id}`);
+
+      expect(button(view(), 'undo')?.disabled).toBe(true);
+      expect(button(view(), 'redo')?.disabled).toBe(true);
+    });
+
+    describe('the shortcuts', () => {
+      const edited = async (platform: Platform) => {
+        const rendered = await setup({holes, platform});
+        await select(rendered.view(), 24, 10, rendered.settle);
+        await press(tapeSvg(rendered.view()), {key: 'ArrowRight', altKey: true}, rendered.settle);
+        return rendered;
+      };
+
+      it('undo with Ctrl+Z wherever the focus is in the Tape view, and prevent the default', async () => {
+        const {tape, view, settle, opened} = await edited('win32');
+
+        const event = await press(view()?.querySelector('[data-testid="export"]') as Element, {key: 'z', ctrlKey: true}, settle);
+
+        expect(event.defaultPrevented).toBe(true);
+        expect(storedHoles(tape.id)).toEqual(opened);
+      });
+
+      it('redo with Ctrl+Y and with Ctrl+Shift+Z on Windows', async () => {
+        const {tape, view, settle} = await edited('win32');
+        const done = storedHoles(tape.id);
+        for (const init of [{key: 'y', ctrlKey: true}, {key: 'Z', ctrlKey: true, shiftKey: true}]) {
+          button(view(), 'undo')?.click();
+          await settle();
+
+          const event = await press(tapeSvg(view()), init, settle);
+
+          expect(event.defaultPrevented).toBe(true);
+          expect(storedHoles(tape.id)).toEqual(done);
+        }
+      });
+
+      it('undo with Cmd+Z and redo with Cmd+Shift+Z on macOS, and ignore Ctrl+Z there', async () => {
+        const {tape, view, settle, opened} = await edited('darwin');
+        const done = storedHoles(tape.id);
+
+        const ctrl = await press(tapeSvg(view()), {key: 'z', ctrlKey: true}, settle);
+        expect(ctrl.defaultPrevented).toBe(false);
+        expect(storedHoles(tape.id)).toEqual(done);
+
+        await press(tapeSvg(view()), {key: 'z', metaKey: true}, settle);
+        expect(storedHoles(tape.id)).toEqual(opened);
+        await press(tapeSvg(view()), {key: 'Z', metaKey: true, shiftKey: true}, settle);
+        expect(storedHoles(tape.id)).toEqual(done);
+      });
+
+      it('ignore Cmd+Z on Windows', async () => {
+        const {tape, view, settle} = await edited('win32');
+        const done = storedHoles(tape.id);
+
+        await press(tapeSvg(view()), {key: 'z', metaKey: true}, settle);
+
+        expect(storedHoles(tape.id)).toEqual(done);
+      });
+
+      it('leave a text field its own undo: Ctrl+Z in the Add a Hole Column field changes nothing', async () => {
+        const {tape, view, settle} = await edited('win32');
+        const done = storedHoles(tape.id);
+        const field = view()?.querySelector('[data-testid="add-hole-column"]') as Element;
+
+        const event = await press(field, {key: 'z', ctrlKey: true}, settle);
+
+        expect(event.defaultPrevented).toBe(false);
+        expect(storedHoles(tape.id)).toEqual(done);
+      });
     });
   });
 

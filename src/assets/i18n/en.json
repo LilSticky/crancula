@@ -20,7 +20,9 @@
   },
   "TAPE": {
     "EDIT": {
-      "REFUSED_OVERLAP": "The Hole would overlap the Hole of {{note}} at Column {{column}}."
+      "REFUSED_OVERLAP": "The Hole would overlap the Hole of {{note}} at Column {{column}}.",
+      "UNDO_TOOLTIP": "Undo ({{shortcut}})",
+      "REDO_TOOLTIP": "Redo ({{shortcut}})"
     },
     "RENAME": {
       "TITLE": "Rename Tape",

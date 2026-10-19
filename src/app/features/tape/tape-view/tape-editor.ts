@@ -32,6 +32,11 @@ export class TapeEditor {
     this.state.set(editHistory({tape, selection: undefined}));
   }
 
+  /** Remembers the selected Hole with the present entry, so that undoing back to it restores the selection. */
+  remember(selection: SelectableHole | undefined): void {
+    this.state.update((state) => (state === undefined ? state : {...state, present: {...state.present, selection}}));
+  }
+
   apply(next: TapeEdit): Promise<boolean> {
     return this.step((current) => edits.apply(current, next));
   }

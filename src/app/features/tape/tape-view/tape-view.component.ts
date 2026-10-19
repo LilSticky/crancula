@@ -28,7 +28,8 @@ import {PageHeadComponent} from '../../shared/components/page-head/page-head.com
 import {OrganLibrary} from '../../organ/organ-library.store';
 import {ImportSummaryComponent} from '../import-summary/import-summary.component';
 import {TapeLibrary} from '../tape-library.store';
-import {editIntent} from './edit-keys';
+import {editIntent, historyIntent, type Platform} from './edit-keys';
+import {PLATFORM} from './platform.token';
 import {gridAt} from './grid-at';
 import {type HolePart} from './hole-drag';
 import {HoleDragSession} from './hole-drag-session';
@@ -74,6 +75,10 @@ function importSummaryOf(state: unknown): ImportSummary | null {
   return isImportSummary(state.importSummary) ? state.importSummary : null;
 }
 
+function shortcutsOf(platform: Platform): {readonly undo: string; readonly redo: string} {
+  return platform === 'darwin' ? {undo: '⌘Z', redo: '⇧⌘Z'} : {undo: 'Ctrl+Z', redo: 'Ctrl+Y'};
+}
+
 /** How long the snackbar that explains a refused edit stays, in ms. */
 const REFUSAL_DURATION = 3000;
 
@@ -88,12 +93,16 @@ const COMPACT_QUERY = '(max-width: 1179.98px)';
   imports: [ImportSummaryComponent, TranslatePipe, PageHeadComponent, MatButton, MatIconButton, MatTooltip, MatButtonToggle, MatButtonToggleGroup, MatIcon, AddHoleComponent, CuttingProblemsComponent, SelectedHoleComponent, TapeSectionComponent, TapeStatusLineComponent],
   templateUrl: './tape-view.component.html',
   styleUrl: './tape-view.component.scss',
+  host: {'(keydown)': 'onViewKeydown($event)'},
 })
 export class TapeViewComponent {
   private readonly library = inject(TapeLibrary);
   private readonly organs = inject(OrganLibrary);
   private readonly router = inject(Router);
-  private readonly editor = inject(TapeEditor);
+  protected readonly editor = inject(TapeEditor);
+  private readonly platform = inject(PLATFORM);
+  /** The shortcuts of Undo and Redo as the tooltips name them. */
+  protected readonly shortcuts = signal(shortcutsOf(this.platform)).asReadonly();
   private readonly snackBar = inject(MatSnackBar);
   private readonly translate = inject(TranslateService);
   private readonly holeDrag = new HoleDragSession();
@@ -272,6 +281,32 @@ export class TapeViewComponent {
     this.scrollToSelection = true;
   }
 
+  protected undo(): void {
+    void this.editor.undo();
+    this.restoreSelection(); // The editor moves its history before it saves.
+  }
+
+  protected redo(): void {
+    void this.editor.redo();
+    this.restoreSelection(); // The editor moves its history before it saves.
+  }
+
+  private restoreSelection(): void {
+    this.selectedHole.set(this.editor.selection());
+    this.scrollToSelection = true;
+  }
+
+  /** Undo and redo shortcuts work wherever the focus is in the Tape view; text fields keep their own history. */
+  protected onViewKeydown(event: KeyboardEvent): void {
+    const {key, altKey, shiftKey, ctrlKey, metaKey} = event;
+    const target = event.target instanceof Element ? event.target : null;
+    const intent = historyIntent({key, altKey, shiftKey, ctrlKey, metaKey, target}, this.platform);
+    if (intent === undefined) return;
+    event.preventDefault();
+    if (intent.kind === 'undo') this.undo();
+    else this.redo();
+  }
+
   protected onKeydown(event: KeyboardEvent): void {
     if (event.key === 'Escape') {
       if (this.holeDrag.dragging()) this.holeDrag.cancel();
@@ -372,6 +407,7 @@ export class TapeViewComponent {
       });
       this.snackBar.open(String(text), undefined, {duration: REFUSAL_DURATION});
     } else if (outcome.kind === 'applied') {
+      this.editor.remember(this.selectedHole());
       void this.editor.apply({tape: outcome.tape, selection: outcome.selection});
       this.selectedHole.set(outcome.selection);
       this.scrollToSelection = true;

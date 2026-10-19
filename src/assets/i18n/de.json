@@ -20,7 +20,9 @@
   },
   "TAPE": {
     "EDIT": {
-      "REFUSED_OVERLAP": "Das Loch würde das Loch von {{note}} in Spalte {{column}} überlappen."
+      "REFUSED_OVERLAP": "Das Loch würde das Loch von {{note}} in Spalte {{column}} überlappen.",
+      "UNDO_TOOLTIP": "Rückgängig ({{shortcut}})",
+      "REDO_TOOLTIP": "Wiederholen ({{shortcut}})"
     },
     "RENAME": {
       "TITLE": "Lochband umbenennen",

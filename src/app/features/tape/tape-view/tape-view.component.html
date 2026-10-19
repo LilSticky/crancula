@@ -17,6 +17,12 @@
     </mat-button-toggle-group>
     @if (compact()) {<button pageHeadActions mat-stroked-button type="button" data-testid="side-panel-toggle" [attr.aria-expanded]="sidePanelOpen()" (click)="toggleSidePanel()">{{ 'TAPE.VIEW.DETAILS' | translate }}</button>}
     <ng-container ngProjectAs="[pageHeadActions]">
+      <button mat-icon-button type="button" data-testid="undo" [attr.aria-label]="'TAPE.EDIT.UNDO_TOOLTIP' | translate: {shortcut: shortcuts().undo}" [matTooltip]="'TAPE.EDIT.UNDO_TOOLTIP' | translate: {shortcut: shortcuts().undo}" [disabled]="!editor.canUndo()" (click)="undo()">
+        <mat-icon aria-hidden="true">undo</mat-icon>
+      </button>
+      <button mat-icon-button type="button" data-testid="redo" [attr.aria-label]="'TAPE.EDIT.REDO_TOOLTIP' | translate: {shortcut: shortcuts().redo}" [matTooltip]="'TAPE.EDIT.REDO_TOOLTIP' | translate: {shortcut: shortcuts().redo}" [disabled]="!editor.canRedo()" (click)="redo()">
+        <mat-icon aria-hidden="true">redo</mat-icon>
+      </button>
       @if (compact()) {
         <button mat-icon-button type="button" data-testid="export" [attr.aria-label]="'TAPE.VIEW.EXPORT' | translate" [matTooltip]="'TAPE.VIEW.EXPORT' | translate" [disabled]="plotterExport.saving()" (click)="exportTape()">
           <mat-icon aria-hidden="true">content_cut</mat-icon>

@@ -195,6 +195,49 @@ test.describe('Editing a Tape by hand', () => {
     }
   });
 
+  test('undoes three edits with the shortcut, redoes the first, and keeps the undone state after a restart', async () => {
+    const first = await launchApp();
+    const {window} = first;
+    await resizeWindowOrSkip(first, 1280, 800);
+    await defineOctaveOrgan(window, 'Octave organ');
+    await createTapeFromSong(window, 'Scale', songRepeatingC4('c4s.mid', 4));
+    const original = [...(await drawnHoles(window))].sort(byPlace);
+    const c4Row = original.filter((hole) => original.filter((other) => other.row === hole.row).length === 4);
+    const [firstC4, secondC4] = c4Row;
+    if (!firstC4 || !secondC4) throw new Error('expected four C4 Holes');
+    const undo = window.getByTestId('undo');
+    await expect(undo).toBeDisabled();
+
+    // Three edits: move a Hole one Column later, lengthen it at the end, remove another Hole.
+    await holeAt(window, firstC4.row, firstC4.start).click();
+    await pressOnDrawing(window, 'Alt+ArrowRight');
+    await expect(holeAt(window, firstC4.row, firstC4.start + 1)).toHaveCount(1);
+    const afterFirstEdit = [...(await drawnHoles(window))].sort(byPlace);
+    await pressOnDrawing(window, 'Shift+ArrowRight');
+    await holeAt(window, secondC4.row, secondC4.start).click();
+    await pressOnDrawing(window, 'Delete');
+    await expect(holeAt(window, secondC4.row, secondC4.start)).toHaveCount(0);
+    await expect(undo).toBeEnabled();
+
+    // The real Electron window: the application menu's Undo accelerator must not swallow the Tape view's shortcut.
+    for (let times = 0; times < 3; times++) await pressOnDrawing(window, 'ControlOrMeta+Z');
+    expect([...(await drawnHoles(window))].sort(byPlace)).toEqual(original);
+    await expect(undo).toBeDisabled();
+    await expect(window.getByTestId('redo')).toBeEnabled();
+
+    await pressOnDrawing(window, 'ControlOrMeta+Shift+Z');
+    expect([...(await drawnHoles(window))].sort(byPlace)).toEqual(afterFirstEdit);
+    await expect(undo).toBeEnabled();
+
+    await first.app.close();
+
+    const second = await launchApp(first.userDataDir);
+    await openOnlyTape(second.window);
+    expect([...(await drawnHoles(second.window))].sort(byPlace)).toEqual(afterFirstEdit);
+    await expect(second.window.getByTestId('undo')).toBeDisabled();
+    await second.app.close();
+  });
+
   for (const [width, height] of [[1024, 768], [1200, 700]] as const) {
     test(`keeps the side panel clear of the Tape drawing in a ${width}x${height} window and selects a Hole at the left`, async () => {
       const launched = await launchApp();
