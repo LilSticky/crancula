@@ -2627,20 +2627,54 @@ describe('TapeViewComponent', () => {
           },
         });
         Object.defineProperty(scroll, 'getBoundingClientRect', {value: () => new DOMRect(0, 0, STAGE_PX, 300), configurable: true});
+        // As in a browser, the drawing moves left by what the stage is scrolled.
+        Object.defineProperty(setUp.svg, 'getBoundingClientRect', {value: () => new DOMRect(-scrollLeft, 0, 4000, 300), configurable: true});
         scroll.dispatchEvent(new Event('scroll'));
         await setUp.settle();
         return {...setUp, scroll};
       };
-      const drag = async (setUp: Awaited<ReturnType<typeof prepare>>, clientX: number) => {
+      // A manual frame queue: the test decides when a frame runs, so nothing depends on real timing.
+      const queued = new Map<number, FrameRequestCallback>();
+      let nextFrame = 1;
+      const flushFrames = async (setUp: Awaited<ReturnType<typeof prepare>>, count: number) => {
+        for (let index = 0; index < count; index++) {
+          const callbacks = Array.from(queued.values());
+          queued.clear();
+          callbacks.forEach((callback) => callback(0));
+          await setUp.settle();
+        }
+      };
+      beforeEach(() => {
+        queued.clear();
+        vi.spyOn(window, 'requestAnimationFrame').mockImplementation((callback) => {
+          const id = nextFrame++;
+          queued.set(id, callback);
+          return id;
+        });
+        vi.spyOn(window, 'cancelAnimationFrame').mockImplementation((id) => {
+          queued.delete(id);
+        });
+      });
+      afterEach(() => vi.restoreAllMocks());
+      const pointerEvent = (type: string, position: {clientX: number; clientY: number}) =>
+        new PointerEvent(type, {...position, pointerId: 1, button: 0, bubbles: true, cancelable: true});
+      const grab = async (setUp: Awaited<ReturnType<typeof prepare>>, clientX: number) => {
         const start = setUp.at(11, 24);
         await setUp.down(rectAt(setUp.view(), 24, 10) as Element, start);
-        await setUp.move({clientX: 60, clientY: start.clientY});
-        await setUp.move({clientX, clientY: start.clientY});
-        await frame();
-        await frame();
-        await frame();
-        await setUp.settle();
+        for (const x of [60, clientX]) {
+          setUp.svg.dispatchEvent(pointerEvent('pointermove', {clientX: x, clientY: start.clientY}));
+          await flushFrames(setUp, 1);
+        }
+        return {clientX, clientY: start.clientY};
       };
+      const drag = async (setUp: Awaited<ReturnType<typeof prepare>>, clientX: number) => {
+        await grab(setUp, clientX);
+        await flushFrames(setUp, 3);
+      };
+      const draggedStart = (view: HTMLElement | null) =>
+        Array.from(view?.querySelectorAll('[data-testid="tape-scroll"] rect[data-testid="hole"][data-row="23"]') ?? [])
+          .map((rect) => Number(rect.getAttribute('data-start')))
+          .filter((start) => start !== 97);
 
       it('scrolls the stage right while the pointer is within 24 px of its right edge', async () => {
         const setUp = await prepare();
@@ -2669,6 +2703,46 @@ describe('TapeViewComponent', () => {
         await drag(setUp, STAGE_PX / 2);
 
         expect(setUp.scroll.scrollLeft).toBe(0);
+      });
+
+      it('moves the preview of the dragged Hole to later Columns while the stage scrolls under the resting pointer', async () => {
+        const setUp = await prepare();
+        await grab(setUp, STAGE_PX - 10);
+        const before = draggedStart(setUp.view());
+        const scrolledBefore = setUp.scroll.scrollLeft;
+
+        await flushFrames(setUp, 3);
+
+        expect(setUp.scroll.scrollLeft).toBeGreaterThan(scrolledBefore);
+        expect(draggedStart(setUp.view())[0]).toBeGreaterThan(before[0] ?? Infinity);
+      });
+
+      it('stops scrolling the stage after the pointer is released', async () => {
+        const setUp = await prepare();
+        const position = await grab(setUp, STAGE_PX - 10);
+        await flushFrames(setUp, 2);
+        expect(setUp.scroll.scrollLeft).toBeGreaterThan(0);
+
+        setUp.svg.dispatchEvent(pointerEvent('pointerup', position));
+        await setUp.settle();
+        const resting = setUp.scroll.scrollLeft;
+        await flushFrames(setUp, 4);
+
+        expect(setUp.scroll.scrollLeft).toBe(resting);
+      });
+
+      it('stops scrolling the stage after the drag is cancelled', async () => {
+        const setUp = await prepare();
+        await grab(setUp, STAGE_PX - 10);
+        await flushFrames(setUp, 2);
+        expect(setUp.scroll.scrollLeft).toBeGreaterThan(0);
+
+        setUp.svg.dispatchEvent(pointerEvent('pointercancel', {clientX: 0, clientY: 0}));
+        await setUp.settle();
+        const resting = setUp.scroll.scrollLeft;
+        await flushFrames(setUp, 4);
+
+        expect(setUp.scroll.scrollLeft).toBe(resting);
       });
     });
   });
