@@ -6,6 +6,13 @@ Issues: [GitHub](https://github.com/LilSticky/crancula/issues)
 
 ## Current slice
 
+**In progress:** [Place holes by hand](../specs/004-place-holes-by-hand/spec.md)
+([#105](https://github.com/LilSticky/crancula/issues/105), part of Edit a tape
+[#103](https://github.com/LilSticky/crancula/issues/103), branch `004-place-holes-by-hand`). Spec, clarify,
+plan ([ADR 22](adr/0022-tape-edits-as-domain-commands.md)) and 76 tasks are done; decisions in
+[discovery/edit-a-tape.md](discovery/edit-a-tape.md). **Next step:** implement
+[tasks](../specs/004-place-holes-by-hand/tasks.md) from T001 (foundational phase first).
+
 **Done:** [Bring a song onto a tape](../specs/002-bring-a-song-onto-a-tape/spec.md)
 ([#2](https://github.com/LilSticky/crancula/issues/2), PR #51, 2026-10-14): all 78 tasks. MIDI Song
 import, Tape domain (Quantisation, Transposition, Fit, Hole fixes), Tape library snapshot, IPC and
@@ -119,7 +126,7 @@ after the last Column. A Tape that can't be cut opens a dialog naming every prob
 short, too close); nothing is written. Selected Hole warnings follow the same Column rules. Below 1180 px
 Export is an icon button. German texts. ux-review 40/50 (see [design/screens/current/ux-review.md](design/screens/current/ux-review.md)).
 Gate: lint, i18n (251 keys), 640 node and 746 Angular tests, 84 e2e green locally. Tasks in
-[tasks](../specs/003-punch-a-tape/tasks.md). **Released:** v0.1.0 (2026-10-18). **Next step:** triage open issues and choose the next slice from the ROADMAP's "Later" list (user decision). README shows v0.1 with screenshots (`e2e/ux/readme.capture.ts`, `README_SHOTS=1`); open UI bugs from the captures fixed (#96, #97).
+[tasks](../specs/003-punch-a-tape/tasks.md). **Released:** v0.1.0 (2026-10-18). README shows v0.1 with screenshots (`e2e/ux/readme.capture.ts`, `README_SHOTS=1`); open UI bugs from the captures fixed (#96, #97).
 
 Follow-ups:
 [#76](https://github.com/LilSticky/crancula/issues/76), [#80](https://github.com/LilSticky/crancula/issues/80) and
