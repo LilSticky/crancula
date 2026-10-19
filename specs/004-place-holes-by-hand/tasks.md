@@ -551,7 +551,7 @@ add a Hole, undo and redo; switch to German and check every new text.
 
 ### Implementation for User Story 6
 
-- [ ] T066 [US6] Add the key help line to
+- [x] T066 [US6] Add the key help line to
   `src/app/features/tape/tape-view/selected-hole/selected-hole.component.ts` and `TAPE.EDIT.KEYS`
   to `en.json` and `de.json` until T062 is green. Depends on T062.
 - [ ] T067 [US6] Fill every missing or untranslated text in `src/assets/i18n/de.json` (and

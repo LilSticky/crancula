@@ -38,6 +38,7 @@ export type SelectedHoleView = Omit<HoleInspection, 'warnings'> & {
             {{ (warning.kind === 'tooShort' ? 'TAPE.HOLE.TOO_SHORT' : 'TAPE.HOLE.GAP_TOO_SMALL') | translate: {mm: warning.mmText, minimum: warning.minimumText} }}
           </p>
         }
+        <p class="keys" data-testid="hole-keys">{{ 'TAPE.EDIT.KEYS' | translate }}</p>
       } @else {
         <p>{{ 'TAPE.HOLE.EMPTY' | translate }}</p>
       }
@@ -49,6 +50,10 @@ export type SelectedHoleView = Omit<HoleInspection, 'warnings'> & {
     }
     h2 {
       margin: 0 0 0.5rem;
+    }
+    .keys {
+      color: var(--mat-sys-on-surface-variant);
+      font: var(--mat-sys-body-small);
     }
     .warning {
       display: flex;

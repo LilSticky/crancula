@@ -22,7 +22,8 @@
     "EDIT": {
       "REFUSED_OVERLAP": "Das Loch würde das Loch von {{note}} in Spalte {{column}} überlappen.",
       "UNDO_TOOLTIP": "Rückgängig ({{shortcut}})",
-      "REDO_TOOLTIP": "Wiederholen ({{shortcut}})"
+      "REDO_TOOLTIP": "Wiederholen ({{shortcut}})",
+      "KEYS": "Alt+Pfeiltasten verschieben es, Umschalt+Pfeiltasten verschieben sein Ende, Alt+Umschalt+Pfeiltasten seinen Anfang, Entf löscht es."
     },
     "RENAME": {
       "TITLE": "Lochband umbenennen",

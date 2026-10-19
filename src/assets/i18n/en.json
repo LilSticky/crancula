@@ -22,7 +22,8 @@
     "EDIT": {
       "REFUSED_OVERLAP": "The Hole would overlap the Hole of {{note}} at Column {{column}}.",
       "UNDO_TOOLTIP": "Undo ({{shortcut}})",
-      "REDO_TOOLTIP": "Redo ({{shortcut}})"
+      "REDO_TOOLTIP": "Redo ({{shortcut}})",
+      "KEYS": "Alt+arrows move it, Shift+arrows move its end, Alt+Shift+arrows its start, Delete removes it."
     },
     "RENAME": {
       "TITLE": "Rename Tape",
