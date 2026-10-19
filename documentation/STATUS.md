@@ -13,11 +13,14 @@ plan ([ADR 22](adr/0022-tape-edits-as-domain-commands.md)) and 76 tasks are done
 [discovery/edit-a-tape.md](discovery/edit-a-tape.md). Done (2026-10-19, draft PR #108): Phase 2 foundational
 (T001–T016: `validTape`, Cutting Problems rename, `holesWithCuttingProblems`, EditHistory, `TapeLibrary.update`,
 TapeEditor) and Phase 3 User Story 1 (T017–T035: move, resize and remove Holes by pointer and keyboard,
-`e2e/tape-edit.spec.ts`). Unit tests (697 node, 891 Angular) and lint green after rebasing onto main with #84.
-**Next step:** an `angular-reviewer` pass over the Story 1 Tape view wiring (commits "grid position…" and
-"move, resize and remove Holes…"; the first try was cut off by the usage limit), then Phase 4, User Story 2
-(add a Hole) from T036 in [tasks](../specs/004-place-holes-by-hand/tasks.md). Run `npm run electron:bundle`
-before e2e (ESM main process).
+`e2e/tape-edit.spec.ts`) and Phase 4 User Story 2 (T036–T042, 2026-10-19: `addHole`, `firstFreeColumnAfter`, the
+"Add a Hole" side-panel form, double-click add). `angular-reviewer` passes over Story 1 and Story 2 done and fixed;
+still open from the Story 1 review: a refused drop shows the original Hole outlined instead of a ghost at the
+pointer (contract "Pointer"), to settle in Phase 9 polish. Edge auto-scroll is T061, undo keys T052–T056.
+Unit tests (708 node, 911 Angular), lint, i18n and 93 e2e green; branch not yet rebased onto #119 (import screen only).
+**Next step:** Phase 5, User Story 3 (see Cutting Problems as they happen) from T043 in
+[tasks](../specs/004-place-holes-by-hand/tasks.md). Run `npm run e2e` (it rebuilds) rather than bare Playwright,
+or `npm run electron:bundle` plus a fresh web build before e2e (ESM main process).
 
 **Done:** [Bring a song onto a tape](../specs/002-bring-a-song-onto-a-tape/spec.md)
 ([#2](https://github.com/LilSticky/crancula/issues/2), PR #51, 2026-10-14): all 78 tasks. MIDI Song
