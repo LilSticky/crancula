@@ -410,7 +410,7 @@ that the selected Hole says why; lengthen it again and check that the mark is go
   for the Plotter" then opens the cutting problems dialog (3.5, SC-004); a Hole whose Pipe is not
   on the Organ is counted and listed as text and stays unchanged by edits (FR-019). Marks and list
   follow the drag preview. Depends on T042, T043, T044.
-- [ ] T046 [P] [US3] Extend `api/tape/hole-edits.spec.ts` with the timing test (SC-002, research
+- [x] T046 [P] [US3] Extend `api/tape/hole-edits.spec.ts` with the timing test (SC-002, research
   R10): on a 2,000-Column Tape with 31 rows and 6,000 Holes, command + `cuttingProblems` +
   `holesWithCuttingProblems` + `tapeGeometry` take a median of 20 runs < 20 ms. If it is green at
   once, record that in the commit; no implementation task needed. Depends on T040.
@@ -434,7 +434,7 @@ that the selected Hole says why; lengthen it again and check that the mark is go
   `src/app/features/tape/tape-view/tape-view.component.ts` and `.html` (`computed` from
   `cuttingProblems(tape, organ)` of the editor's present Tape or the drag preview; choosing selects
   and scrolls into view) until T045 and T047 are green. Depends on T045, T047, T048, T049.
-- [ ] T051 [US3] Only if T046 is red: make the domain path faster without a second rule path (no
+- [x] T051 [US3] (not needed: T046 green at once, median 1.17 ms) Only if T046 is red: make the domain path faster without a second rule path (no
   incremental per-row check, research R10) until it is green. Depends on T046.
 
 **Checkpoint**: The P1 stories are complete. This is the MVP of the slice: Holes can be changed,

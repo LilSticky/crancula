@@ -3,8 +3,9 @@ import {midiNoteNumber, type MidiNoteNumber} from '../organ/midi-note-number';
 import {millimetres, organId, type Organ} from '../organ/organ';
 import {validateOrgan} from '../organ/validate-organ';
 import {partIndex, songId} from '../song/song';
-import {cuttingProblems} from './cutting-problems';
+import {cuttingProblems, holesWithCuttingProblems} from './cutting-problems';
 import {addHole, changeHoleLength, firstFreeColumnAfter, moveHole, removeHole, type HoleRef} from './hole-edits';
+import {tapeGeometry} from './tape-geometry';
 import {tapeOf} from './tape-fixture';
 import {column, columnCount, tapeId, transposition, type Column, type Hole, type Tape} from './tape';
 
@@ -344,5 +345,53 @@ describe('firstFreeColumnAfter', () => {
     const tape = aTape([hole(c4, 3, 4), hole(d4, 5, 8)]);
 
     expect(firstFreeColumnAfter(tape, ref(c4, 3))).toBe(col(4));
+  });
+});
+
+describe('performance on a 2,000-Column Tape (SC-002, research R10)', () => {
+  it('edits, finds Cutting Problems and builds the geometry in a median under 20 ms', () => {
+    const notes = Array.from({length: 31}, (_, row) => 40 + row);
+    const organResult = validateOrgan({
+      name: 'Big organ',
+      tapeBed: {tapeWidth: 160, holeDiameter: 3, rowSpacing: 4},
+      minimumGap: 1,
+      leadIn: 20,
+      pipes: notes.map((note) => ({note})),
+    });
+    if (!organResult.ok) throw new Error('invalid test Organ');
+    const bigOrgan = organResult.value;
+    const holes: Hole[] = notes
+      .flatMap((note) => Array.from({length: 194}, (_, k) => hole(pipeOf(note), k * 10 + 1, k * 10 + 4)))
+      .slice(0, 6000);
+    const tape = tapeOf({
+      id: defined(tapeId('00000000-0000-4000-8000-000000000001'), 'tape id'),
+      name: 'Big',
+      organId: defined(organId('00000000-0000-4000-8000-000000000002'), 'organ id'),
+      songId: defined(songId('00000000-0000-4000-8000-000000000003'), 'song id'),
+      selectedParts: [defined(partIndex(1, 3), 'part')],
+      transposition: defined(transposition(0), 'transposition'),
+      columnLength: defined(millimetres(2.5), 'column length'),
+      length: defined(columnCount(2000), 'length'),
+      holes,
+    });
+    const target = defined(holes[0], 'first hole');
+
+    function oneEdit(): void {
+      const edit = unwrap(moveHole(tape, bigOrgan, target, {pipe: target.pipe, start: col(5)}));
+      holesWithCuttingProblems(cuttingProblems(edit.tape, bigOrgan));
+      tapeGeometry(edit.tape, bigOrgan);
+    }
+
+    oneEdit();
+    const durations: number[] = [];
+    for (let run = 0; run < 20; run++) {
+      const begin = performance.now();
+      oneEdit();
+      durations.push(performance.now() - begin);
+    }
+    durations.sort((a, b) => a - b);
+    const median = ((durations[9] ?? Infinity) + (durations[10] ?? Infinity)) / 2;
+
+    expect(median).toBeLessThan(20);
   });
 });
