@@ -1,6 +1,7 @@
 import type {MidiNoteNumber} from '../organ/midi-note-number';
 import {minimumHoleLength, type Millimetres, type Organ} from '../organ/organ';
 import {holeLimitsOf} from './hole-fixes';
+import type {HoleRef} from './hole-edits';
 import type {Column, Hole, Tape} from './tape';
 
 export type CuttingProblemCode = 'no-pipe' | 'too-short' | 'too-close';
@@ -81,7 +82,6 @@ export function cuttingProblems(tape: Tape, organ: Organ): readonly CuttingProbl
 }
 
 /** A Hole by its Pipe and start Column. */
-type HoleRef = Pick<Hole, 'pipe' | 'start'>;
 
 /** A Cutting Problem seen from one Hole: a too-close pair marks both Holes. */
 export type HoleProblem =

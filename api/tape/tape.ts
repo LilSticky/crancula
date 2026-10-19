@@ -96,11 +96,10 @@ export type TapeRuleViolationCode =
   | 'holes-not-sorted'
   | 'holes-overlap';
 
-/** The first Tape rule that fields break; `hole` is set for `hole-beyond-end`. */
-export interface TapeRuleViolation {
-  readonly code: TapeRuleViolationCode;
-  readonly hole?: Hole;
-}
+/** The first Tape rule that fields break; only `hole-beyond-end` names the Hole. */
+export type TapeRuleViolation =
+  | {readonly code: Exclude<TapeRuleViolationCode, 'hole-beyond-end'>}
+  | {readonly code: 'hole-beyond-end'; readonly hole: Hole};
 
 /**
  * The one way to a {@link Tape}: checks every rule that holds on the Tape alone.

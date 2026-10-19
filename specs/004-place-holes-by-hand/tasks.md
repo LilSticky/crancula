@@ -221,13 +221,13 @@ its start, remove a third, reopen the Tape after restarting Crancula and check t
 
 ### Tests for User Story 1 ⚠️ (write first, must fail)
 
-- [ ] T017 [US1] Write the failing tests in the new `api/tape/hole-edits.spec.ts` for
+- [x] T017 [US1] Write the failing tests in the new `api/tape/hole-edits.spec.ts` for
   `removeHole(tape, hole: HoleRef): Result<Tape, HoleEditRefusal>` (contracts/domain-api.md):
   scenario 1.5 "Hole gone; `length` unchanged"; an unknown `HoleRef` → `err({code:
   'no-such-hole'})`; the input Tape is unchanged; FR-017 (`songId`, `selectedParts`, `organId`,
   `transposition`, `columnLength`, `name`, `id` unchanged) and FR-019 (other Holes, including Holes
   whose Pipe is not on the Organ, unchanged). Depends on T016.
-- [ ] T018 [US1] Extend `api/tape/hole-edits.spec.ts` for `moveHole(tape, organ, hole, to:
+- [x] T018 [US1] Extend `api/tape/hole-edits.spec.ts` for `moveHole(tape, organ, hole, to:
   {pipe, start: Column}): Result<HoleEdit, HoleEditRefusal>`: 1.1 C4 10–13 → `start` 11 → C4
   12–15; 1.2 C4 10–13 → D4 → D4 10–13, no C4 Hole at `start` 9; both in one call; 1.7 moving C4 10–13
   so it covers Column 16 → `err({code: 'overlaps', other: C4 16–19})`, input unchanged; a target Pipe
@@ -237,7 +237,7 @@ its start, remove a third, reopen the Tape after restarting Crancula and check t
   → `no-such-hole`; `HoleEdit.hole` is the moved Hole; Holes come back sorted by Pipe, then start;
   Cutting Problems are not refused (FR-009) and Hole fixes are not applied; FR-017, FR-019.
   Depends on T017.
-- [ ] T019 [US1] Extend `api/tape/hole-edits.spec.ts` for `changeHoleLength(tape, hole, to:
+- [x] T019 [US1] Extend `api/tape/hole-edits.spec.ts` for `changeHoleLength(tape, hole, to:
   {start: Column, length: ColumnCount}): Result<HoleEdit, HoleEditRefusal>`: 1.3 end +3 then
   start +2 → 10–16 (`{start: 9, length: 7}`), then 12–16 (`{start: 11, length: 5}`) (end moved: `s' = s`; start moved: `s' + l' = s + l`); 1.7
   lengthening C4 10–13 to Column 16 or beyond → `err overlaps` naming C4 16–19; shortening to 1 Column is
@@ -290,13 +290,13 @@ its start, remove a third, reopen the Tape after restarting Crancula and check t
 
 ### Implementation for User Story 1
 
-- [ ] T027 [US1] Implement `removeHole`, `HoleRef`, `HoleEdit` and `HoleEditRefusal` in
+- [x] T027 [US1] Implement `removeHole`, `HoleRef`, `HoleEdit` and `HoleEditRefusal` in
   `api/tape/hole-edits.ts` (through `validTape`), export them and `column`, `columnCount` from
   `api/index.ts`, and import `HoleRef` from here in `api/tape/cutting-problems.ts`; until T017 is
   green. Depends on T017.
-- [ ] T028 [US1] Implement `moveHole` in `api/tape/hole-edits.ts` (replace, sort by Pipe then start,
+- [x] T028 [US1] Implement `moveHole` in `api/tape/hole-edits.ts` (replace, sort by Pipe then start,
   `validTape`) and export it until T018 is green. Depends on T018, T027.
-- [ ] T029 [US1] Implement `changeHoleLength` in `api/tape/hole-edits.ts` and export it until T019
+- [x] T029 [US1] Implement `changeHoleLength` in `api/tape/hole-edits.ts` and export it until T019
   is green. Depends on T019, T028.
 - [ ] T030 [P] [US1] Implement `src/app/features/tape/tape-view/grid-at.ts` until T020 is green.
   Depends on T020.

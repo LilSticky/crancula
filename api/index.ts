@@ -50,6 +50,16 @@ export {
 } from './song/song';
 export {MAXIMUM_MIDI_FILE_SIZE, readMidiSong, type SongRejection} from './song/midi/read-midi-song';
 export {
+  changeHoleLength,
+  moveHole,
+  removeHole,
+  type HoleEdit,
+  type HoleEditRefusal,
+  type HoleRef,
+} from './tape/hole-edits';
+export {
+  column,
+  columnCount,
   removeHolesOfPipes,
   tapeId,
   tapeLengthInMillimetres,
