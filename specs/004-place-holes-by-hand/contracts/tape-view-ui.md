@@ -67,6 +67,9 @@ doesn't also run. In `input`/`textarea` the field keeps its own undo.
 | `TAPE.CUTTING_PROBLEM.NO_PIPE` / `TOO_SHORT` / `TOO_CLOSE` | moved from `TAPE.EXPORT.PROBLEM_*`, same texts |
 | `TAPE.CUTTING_PROBLEM.TOO_CLOSE_PREVIOUS` | {{note}} at Column {{column}}: the gap to the previous Hole at Column {{previous}} is {{gap}} mm, the Minimum Gap is {{minimum}} mm. |
 
+`{{column}}`, `{{previous}}` and the Add a Hole Column field count from 1 (`start + 1`, as the
+Tape view shows Columns); the domain `start` is 0-based.
+
 German follows the dictionary (Loch, Pfeife, Spalte, Schnittproblem, Mindestlochlänge,
 Mindestabstand). `npm run i18n:check` proves parity.
 

@@ -9,7 +9,8 @@ How to prove the slice works end to end. It refers to the [spec](spec.md),
 - Node 24 (`.node-version`), then `npm ci`.
 - No fixture files: the Node tests build reference Tapes in code (an Organ with C4, D4, E4 and
   Minimum Hole Length/Minimum Gap chosen per scenario; a 100-Column Tape with C4 Holes at Columns
-  10–13 and 16–19). The e2e tests create Organ and Tape through the UI with the helpers in
+  10–13 and 16–19, i.e. `start` 9 and 15, 4 Columns each). Column numbers here are the spec's: as
+  the Tape view shows them, from 1; the domain `start` is one less. The e2e tests create Organ and Tape through the UI with the helpers in
   `e2e/support/` (`organ-editor.ts`, `tape-creation.ts`, `midi-file.ts`).
 
 ## Automated checks (the Definition of Done gate)
@@ -37,7 +38,7 @@ The e2e suite in CI on Linux, Windows and macOS is the proof that the slice runs
 | 4 | Shorten a 1-Column Hole (1.4) | stays 1 Column | Angular (key does nothing), Node (`hole-drag` clamp) |
 | 5 | Remove (1.5) | gone; length unchanged | Node, Angular (Delete), e2e |
 | 6 | Restart (1.6, SC-003) | edits still there | e2e (`tape-edit.spec.ts`, relaunch as in `tape-restart.spec.ts`) |
-| 7 | Overlap with C4 16–19 (1.7, FR-007) | refused, unchanged, snackbar names Column 17 | Node, Angular, e2e |
+| 7 | Overlap with C4 16–19 (1.7, FR-007) | refused, unchanged, snackbar names Column 16 | Node, Angular, e2e |
 | 8 | Before Column 1 (1.8, FR-006) | stays at Column 1 | Node (`hole-drag`), Angular |
 | 9 | Add E4 at Column 20 (2.1) | Minimum Hole Length in Columns, at least 1 | Node, Angular (form), e2e (double-click) |
 | 10 | Add before a close next Hole (2.2) | cut back, touching, marked | Node, Angular |
@@ -49,10 +50,10 @@ The e2e suite in CI on Linux, Windows and macOS is the proof that the slice runs
 | 16 | Count and list; choose an entry (3.4, FR-011) | count; entry selects and scrolls | Angular, e2e |
 | 17 | Export with problems (3.5, SC-004) | refused as in spec 003 | Angular (`PlotterExport`), e2e (`tape-export.spec.ts`) |
 | 18 | Undo after growth (4.1) | Tape as before, shorter length, saved | Angular, e2e |
-| 19 | Redo; new edit clears redo (4.2, 4.3) | as specified | Node (`EditHistory`), Angular |
+| 19 | Redo; new edit clears redo (4.2, 4.3) | as specified | Angular (`EditHistory` under `ng test`, and the Tape view) |
 | 20 | Nothing to undo/redo (4.4, FR-015) | buttons disabled | Angular |
 | 21 | Refused edit (4.5) | no undo entry | Angular |
-| 22 | n edits + n undos (SC-006) | Tape equals the opened one | Node (`EditHistory`), Angular |
+| 22 | n edits + n undos (SC-006) | Tape equals the opened one | Angular (`EditHistory` under `ng test`, and the Tape view) |
 | 23 | Growth to 104 and 110 Columns; stays after remove (5.1–5.3) | length, ruler, subtitle follow | Node, Angular, e2e |
 | 24 | Keyboard only (6.1, 6.2, SC-005) | every edit, add (form), undo, redo | Angular, e2e |
 | 25 | OS shortcuts (6.3, FR-016) | Ctrl+Z / ⌘Z, Ctrl+Y / Ctrl+Shift+Z / ⌘⇧Z | Angular (both platforms by faked platform), e2e (`ControlOrMeta+Z`) |

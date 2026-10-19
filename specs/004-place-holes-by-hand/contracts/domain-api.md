@@ -68,21 +68,22 @@ export function changeHoleLength(
 export function removeHole(tape: Tape, hole: HoleRef): Result<Tape, HoleEditRefusal>;
 ```
 
-Behaviour (each line is a Node test, numbers from the spec):
+Behaviour (each line is a Node test). Column ranges are the spec's, counted from 1 as the Tape
+view shows them; the domain `start` is one less (C4 10–13 is `{start: 9, length: 4}`):
 
 | Call | Result |
 |------|--------|
-| `moveHole` C4 10–13 → start 12 (spec 1.1) | C4 12–15 |
-| `moveHole` C4 10–13 → D4 (1.2) | D4 10–13; no C4 Hole at 10 |
+| `moveHole` C4 10–13 → Column 12 (`start` 11) (spec 1.1) | C4 12–15 |
+| `moveHole` C4 10–13 → D4 (1.2) | D4 10–13; no C4 Hole at `start` 9 |
 | `changeHoleLength` end +3 then start +2 (1.3) | 10–16, then 12–16 |
 | `removeHole` (1.5) | Hole gone; `length` unchanged |
 | `moveHole`/`changeHoleLength` onto C4 16–19 (1.7) | `err({code: 'overlaps', other: C4 16–19})`; input Tape unchanged |
 | `moveHole` to a Pipe whose Hole covers the Columns (edge case) | `err overlaps` |
-| `addHole` E4 at 19 (2.1), Minimum Hole Length 2.6 Columns | E4 19–21 (3 Columns) |
+| `addHole` E4 at Column 20 (`start` 19) (2.1), Minimum Hole Length 2.6 Columns | E4 20–22 (`start` 19, 3 Columns) |
 | `addHole` with the next E4 Hole 2 Columns later (2.2) | 2 Columns long, touching it (R4) |
 | `addHole` on a covered Column (2.3) | `err overlaps` |
 | `addHole`/`moveHole` to a Pipe not on the Organ | `err not-on-the-organ` |
-| change end to Column 104 on a 100-Column Tape (5.1) | `length` 104 |
+| change the end to Column 104 (`start + length` = 104) on a 100-Column Tape (5.1) | `length` 104 |
 | add/move to end at Column 110 (5.2) | `length` 110 |
 | any success | `songId`, `selectedParts`, `organId`, `transposition`, `columnLength`, `name`, `id` unchanged (FR-017) |
 | any success | other Holes, including Holes whose Pipe is not on the Organ, unchanged (FR-019) |

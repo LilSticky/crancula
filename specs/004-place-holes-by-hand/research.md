@@ -9,10 +9,11 @@ Each entry gives the decision, the reason for it, and the alternatives considere
 Facts about the existing code were read on 2026-10-19 from `api/tape/*`, `app/snapshot-file.ts`,
 `app/application-menu.ts`, `src/app/features/tape/tape-library.store.ts` and
 `src/app/features/tape/tape-view/**`. Columns are counted from 0 in the domain (`Column`) and from
-1 in the UI; "Column 1" in the spec is `start === 0` in code.
+1 in the UI and in every message (`start + 1`). The spec counts Columns as the Tape view shows
+them, so spec Column *n* is `start === n − 1` in code (spec "Column 1" is `start === 0`).
 
-The decisions with the widest reach (R1, R3, R5) are proposed as **ADR 22** (plan.md, "ADR to
-write").
+The decisions with the widest reach (R1, R3, R5) are recorded as **ADR 22** (plan.md, "ADR
+written").
 
 ## R1 One validating Tape factory
 
@@ -101,7 +102,7 @@ write").
   Add, move and change return `Result<HoleEdit, HoleEditRefusal>` where `HoleEdit` is
   `{tape, hole}` (the Hole after the edit, so the UI can select it, spec 2.4); remove returns
   `Result<Tape, HoleEditRefusal>`. A refusal names the Hole in the way (`{code: 'overlaps',
-  other}`), so the UI can say "it would overlap the next Hole of its Pipe at Column 17" (FR-007).
+  other}`), so the UI can say "it would overlap the next Hole of its Pipe at Column 16" (FR-007; C4 at Columns 16–19, `start` 15).
   Each command builds the new Holes (replace or insert, then sort by Pipe and start), grows the
   length if needed (R5) and returns `validTape(...)` (R1); everything else is carried over
   unchanged (FR-017). Cutting Problems are **not** refused (FR-009) and Hole fixes are not applied
@@ -127,12 +128,8 @@ write").
   `start` is not covered (else refused), there is always at least 1 Column, so the command is
   total. A Hole cut back this way touches the next Hole and is marked *too close* (and *too
   short* if it is shorter than the Minimum Hole Length).
-- **Reading of FR-005 / scenario 2.2**: "ends one Column before the next Hole" is read as "its
-  last Column is the one right before the next Hole's first Column" (they touch). **Open
-  question for the user** (plan.md): if a free Column is meant instead, the formula becomes
-  `next.start − 1 − start`, and adding at the Column right before the next Hole must be refused
-  or give a 1-Column Hole that touches. Changing it later is a one-line domain change with its
-  test.
+- **Settled by the spec** (FR-005, scenario 2.2): the new Hole fills the Columns up to the next
+  Hole; its last Column is the one right before the next Hole's first Column (they touch).
 - **Alternatives considered**: leaving a full Minimum Gap before the next Hole (the new Hole
   would often be shorter than needed and still marked); refusing when the Minimum Hole Length
   doesn't fit (contradicts 2.2).
@@ -175,7 +172,7 @@ write").
     refused position shows the Hole at the pointer with an oxblood outline and no change to the
     Tape. **One drag is one Edit**, applied on release (spec 4: one undo step).
   - **Refusal**: on release over a refused position nothing changes and a snackbar says why
-    (FR-007, "The Hole would overlap the Hole of C4 at Column 17."). No undo entry (spec 4.5).
+    (FR-007, "The Hole would overlap the Hole of C4 at Column 16."). No undo entry (spec 4.5).
   - **Auto-scroll**: while dragging within 24 px of the stage's left or right edge, the stage
     scrolls, so a Hole can be dragged past the visible part and past the Tape's end.
 - **Rationale**: dragging is what the user expects of a drawing; a double-click on empty Tape

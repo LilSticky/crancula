@@ -52,7 +52,9 @@ stored); the undo history is not stored (spec, Assumptions). No migration (ADR 2
 **Performance Goals** (SC-002): edit + Cutting Problems + geometry for a 2,000-Column Tape with
 6,000 Holes under 20 ms in Node; key press to updated drawing under 100 ms (research R10).
 
-**Constraints**: offline; Holes snap to whole Columns; no Hole before Column 1 (Lead-in); one undo
+**Constraints**: offline; Holes snap to whole Columns; Column numbers: the domain counts from 0
+(`Column`), the spec, the UI and every message from 1 (`start + 1`), so spec Column *n* is
+`start === n − 1`; no Hole before Column 1 (Lead-in); one undo
 step per gesture or key press; the main process and the snapshot format stay unchanged; the Hole
 selection and arrow-key navigation of slice 003 keep working (spec, Assumptions).
 
@@ -84,22 +86,16 @@ dictionary. The one deviation risk, a renderer-side save debounce, was rejected 
 
 | # | Decision | Source |
 |---|----------|--------|
-| 22 (proposed) | Tape edits are pure domain commands over a single validating Tape factory (`validTape`), returning `Result`; undo/redo is a history of immutable Tape values held by the Tape view (not stored, not in the root store); edits are saved through the existing whole-snapshot path (ADR 8). Sets the pattern for Transpose holes (#106) and Adjust a tape (#107). | research R1, R3, R8, R9 |
+| 22 | Tape edits are pure domain commands over a single validating Tape factory (`validTape`), returning `Result`; undo/redo is a history of immutable Tape values held by the Tape view (not stored, not in the root store); edits are saved through the existing whole-snapshot path (ADR 8). Sets the pattern for Transpose holes (#106) and Adjust a tape (#107). | research R1, R3, R8, R9 |
 
 Not an ADR: the key map and gestures (DESIGN-GUIDE update), the rename to Cutting Problem
 (dictionary), the added Hole's length (spec).
 
 ## Open questions
 
-1. **FR-005 / scenario 2.2, length of an added Hole before a close next Hole** (domain): the plan
-   reads "ends one Column before the next Hole" as *touching it* (its last Column is right before
-   the next Hole's first; always at least 1 Column; marked too close). If one free Column is
-   meant, adding at the Column right before the next Hole has no room. Research R4; a one-line
-   change either way.
-
-Everything else in the spec is settled (Clarifications). Plan-level choices (keys, gestures,
-handles, marks, the Add a Hole form, selection after removal and undo) are recorded in
-research.md.
+None. The spec settles the added Hole's length (FR-005, scenario 2.2: it fills the Columns up to
+the next Hole, touching it; research R4). Plan-level choices (keys, gestures, handles, marks, the
+Add a Hole form, selection after removal and undo) are recorded in research.md.
 
 ## Project Structure
 

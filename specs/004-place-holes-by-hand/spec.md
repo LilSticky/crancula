@@ -44,6 +44,9 @@ From [the discovery](../../documentation/discovery/edit-a-tape.md):
 
 ## User Scenarios & Testing *(mandatory)*
 
+Column numbers in this spec are the ones the Tape view shows: Column 1 is the first Column after
+the Lead-in.
+
 ### User Story 1 - Change and remove holes (Priority: P1)
 
 As the owner of a barrel organ, I open one of my Tapes in the Tape view and see a Hole that is
