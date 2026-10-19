@@ -38,8 +38,8 @@ registerPlotterHandlers(
 /** The folder the renderer's translation files are loaded from: the sources when serving, else the built assets. */
 function i18nDirectory(): string {
   if (serve) return SOURCE_I18N_DIRECTORY;
-  const built = path.join(__dirname, '../dist/browser/assets/i18n');
-  return fs.existsSync(built) ? built : path.join(__dirname, 'browser/assets/i18n');
+  const built = path.join(import.meta.dirname, '../dist/browser/assets/i18n');
+  return fs.existsSync(built) ? built : path.join(import.meta.dirname, 'browser/assets/i18n');
 }
 
 function applyMenu(language: Language): void {
@@ -54,7 +54,7 @@ function createWindow(): BrowserWindow {
     windowOptions(
       process.env,
       screen.getPrimaryDisplay().workAreaSize,
-      path.join(__dirname, 'preload.js'),
+      path.join(import.meta.dirname, 'preload.js'),
       process.platform,
     ),
   );
@@ -63,18 +63,21 @@ function createWindow(): BrowserWindow {
     void import('electron-debug').then((debug) => {
       debug.default({isEnabled: true, showDevTools: true});
     });
-    void import('electron-reloader').then((reloader: {default?: (target: typeof module) => void}) => {
-      reloader.default?.(module);
-    });
+    // Only installed for development; a missing package must not crash the app, but says so.
+    void import('electron-reloader')
+      .then((reloader: {default?: (meta: ImportMeta, options?: {ignore?: RegExp[]}) => void}) => {
+        reloader.default?.(import.meta, {ignore: [/\.ts$/]});
+      })
+      .catch((error: unknown) => console.warn('Live reload is off:', error));
     void win.loadURL('http://localhost:4200');
   } else {
     // Path when running the packaged executable
     let pathIndex = './browser/index.html';
-    if (fs.existsSync(path.join(__dirname, '../dist/browser/index.html'))) {
+    if (fs.existsSync(path.join(import.meta.dirname, '../dist/browser/index.html'))) {
       // Path when running electron in the local folder
       pathIndex = '../dist/browser/index.html';
     }
-    const fullPath = path.join(__dirname, pathIndex);
+    const fullPath = path.join(import.meta.dirname, pathIndex);
     void win.loadURL(`file://${path.resolve(fullPath).replace(/\\/g, '/')}`);
   }
 

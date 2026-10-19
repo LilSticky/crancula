@@ -23,7 +23,7 @@ export async function launchApp(userDataDir?: string): Promise<LaunchedApp> {
   env['CRANCULA_USER_DATA'] = dir;
   if (process.env['HEADED'] !== '1') env['CRANCULA_HEADLESS'] = '1';
   const app = await electron.launch({
-    args: [join(__dirname, '../../app/main.js')],
+    args: [join(__dirname, '../../app/main.mjs')],
     env,
   });
   const window = await app.firstWindow();
