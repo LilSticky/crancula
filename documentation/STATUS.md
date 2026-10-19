@@ -139,6 +139,8 @@ Done 2026-10-19: live Tape preview on the import screen ([#84](https://github.co
 `cranc-tape-preview` draws the first Columns from `tapeGeometry`, 160 px tall at any Tape width (user decision:
 a fixed-height strip, not 1:1, which made the Fit card scroll). The Fit sheet scrolls in short windows. It
 uses `outline` from the Tape view but not `holeRects`, which slice 004 changes.
+Fixed 2026-10-19: the import screen's Song sheet spilled under the action bar in short windows
+([#118](https://github.com/LilSticky/crancula/issues/118)); it now scrolls inside itself, and only the Parts list shrinks.
 
 ## Known broken / WIP
 
