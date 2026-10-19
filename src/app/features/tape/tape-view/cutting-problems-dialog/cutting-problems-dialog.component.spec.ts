@@ -1,7 +1,6 @@
 import {TestBed} from '@angular/core/testing';
 import {MAT_DIALOG_DATA, MatDialogRef} from '@angular/material/dialog';
-import {type CuttingProblem, midiNoteNumber, type MidiNoteNumber, type Millimetres} from '@api/index';
-import {column} from '../../../../../../api/tape/tape';
+import {column, type CuttingProblem, midiNoteNumber, type MidiNoteNumber, type Millimetres} from '@api/index';
 import {vi} from 'vitest';
 import {provideTestTranslations} from '../../../../../testing/test-translations';
 import {CuttingProblemsDialogComponent} from './cutting-problems-dialog.component';

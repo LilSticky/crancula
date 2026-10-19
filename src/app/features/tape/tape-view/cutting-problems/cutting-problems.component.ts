@@ -1,6 +1,9 @@
 import {ChangeDetectionStrategy, Component, computed, inject, input, output} from '@angular/core';
+import {toSignal} from '@angular/core/rxjs-interop';
+import {MatButton} from '@angular/material/button';
 import {TranslatePipe, TranslateService} from '@ngx-translate/core';
 import {type HoleCuttingProblems, type HoleRef} from '@api/index';
+import {map} from 'rxjs';
 import {cuttingProblemText, type ProblemText} from '../cutting-problem-text';
 
 interface Entry {
@@ -13,7 +16,7 @@ interface Entry {
 /** The Cutting Problems section of the side panel: how many Holes can't be cut, and which. */
 @Component({
   selector: 'cranc-cutting-problems',
-  imports: [TranslatePipe],
+  imports: [MatButton, TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: `
     ul {
@@ -21,14 +24,22 @@ interface Entry {
       margin: 0;
       padding: 0;
     }
-    button {
-      all: unset;
-      box-sizing: border-box;
-      width: 100%;
-      cursor: pointer;
+    :host {
+      display: block;
     }
-    button:focus-visible {
-      outline: 2px solid currentColor;
+    h2 {
+      margin: 0 0 0.5rem;
+    }
+    button {
+      display: block;
+      width: 100%;
+      height: auto;
+      padding: 0.5rem 0.75rem;
+      text-align: left;
+      white-space: normal;
+    }
+    .unselectable {
+      padding: 0.5rem 0.75rem;
     }
     p {
       margin: 0;
@@ -36,7 +47,7 @@ interface Entry {
   `,
   template: `
     <section data-testid="cutting-problems">
-      <h3>{{ 'TAPE.CUTTING_PROBLEMS.TITLE' | translate }}</h3>
+      <h2>{{ 'TAPE.CUTTING_PROBLEMS.TITLE' | translate }}</h2>
       <p data-testid="cutting-problems-count">
         @if (entries().length === 0) {
           {{ 'TAPE.CUTTING_PROBLEMS.NONE' | translate }}
@@ -48,13 +59,13 @@ interface Entry {
         @for (entry of entries(); track $index) {
           <li>
             @if (entry.selectable) {
-              <button type="button" data-testid="cutting-problem" (click)="chosen.emit(entry.hole)">
+              <button mat-button type="button" data-testid="cutting-problem" (click)="chosen.emit(entry.hole)">
                 @for (text of entry.texts; track $index) {
                   <p>{{ text.key | translate: text.params }}</p>
                 }
               </button>
             } @else {
-              <div data-testid="cutting-problem">
+              <div class="unselectable" data-testid="cutting-problem">
                 @for (text of entry.texts; track $index) {
                   <p>{{ text.key | translate: text.params }}</p>
                 }
@@ -70,14 +81,16 @@ export class CuttingProblemsComponent {
   readonly holes = input.required<readonly HoleCuttingProblems[]>();
   readonly chosen = output<HoleRef>();
 
-  private readonly language = inject(TranslateService).getCurrentLang() ?? 'en';
+  private readonly translate = inject(TranslateService);
+  private readonly language = toSignal(this.translate.onLangChange.pipe(map((event) => event.lang)), {
+    initialValue: this.translate.getCurrentLang() ?? 'en',
+  });
 
   protected readonly entries = computed<readonly Entry[]>(() =>
     this.holes().map(({hole, problems}) => ({
       hole,
-      texts: problems.map((problem) => cuttingProblemText(problem, this.language)),
+      texts: problems.map((problem) => cuttingProblemText(problem, this.language())),
       selectable: problems.some((problem) => problem.code !== 'no-pipe'),
     })),
   );
-
 }

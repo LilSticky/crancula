@@ -1,5 +1,7 @@
 // API: CuttingProblemsComponent (standalone); input `holes: readonly HoleCuttingProblems[]` (cut order, Columns 0-based); output `chosen: OutputEmitterRef<HoleRef>`.
 import {TestBed} from '@angular/core/testing';
+import {TranslateService} from '@ngx-translate/core';
+import {firstValueFrom} from 'rxjs';
 import {
   column,
   holesWithCuttingProblems,
@@ -123,6 +125,16 @@ describe('CuttingProblemsComponent', () => {
     expect(entries()[0]).toContain('3,3');
     expect(entries()[0]).not.toContain('3.3');
     expect(entries()[1]).toContain('1,2');
+  });
+
+  it('follows a switch of the language', async () => {
+    const {entries} = await render([TOO_SHORT]);
+    expect(entries()[0]).toContain('3.3');
+
+    await firstValueFrom(TestBed.inject(TranslateService).use('de'));
+    TestBed.tick();
+
+    expect(entries()[0]).toContain('3,3');
   });
 
   it('shows every text translated', async () => {
