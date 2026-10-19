@@ -96,7 +96,8 @@ Pipe, start, length and that it is saved.
    **Then** a Hole of E4 starts at Column 20 and is as many Columns long as the Minimum Hole Length
    needs (rounded up to whole Columns), but at least 1 Column.
 2. **Given** the space up to the next Hole of that Pipe is shorter than that length, **When** I add
-   a Hole there, **Then** the new Hole ends one Column before the next Hole, and it is marked with
+   a Hole there, **Then** the new Hole fills the Columns up to the next Hole (its last Column is the one
+   right before the next Hole's first), and it is marked with
    a Cutting Problem if it is too short or too close.
 3. **Given** a Column that is already covered by a Hole of that Pipe, **When** I try to add a Hole
    there, **Then** nothing is added.
@@ -226,7 +227,7 @@ add a Hole, undo and redo; switch to German and check every new text.
 - **FR-004**: Users MUST be able to remove a Hole.
 - **FR-005**: Users MUST be able to add a Hole on the row of a Pipe of the Organ, starting at a
   chosen Column that no Hole of that Pipe covers. Its length is the Minimum Hole Length rounded up
-  to whole Columns (at least 1), limited so it ends one Column before the next Hole of that Pipe.
+  to whole Columns (at least 1), limited so its last Column is the one right before the next Hole of that Pipe.
   The new Hole is selected.
 - **FR-006**: No Hole may start before Column 1; the Lead-in carries no Holes.
 - **FR-007**: An edit that would make two Holes of one Pipe overlap MUST be refused: the Tape does
