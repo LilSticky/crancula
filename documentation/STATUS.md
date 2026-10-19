@@ -124,7 +124,6 @@ Gate: lint, i18n (251 keys), 640 node and 746 Angular tests, 84 e2e green locall
 Follow-ups:
 [#76](https://github.com/LilSticky/crancula/issues/76), [#80](https://github.com/LilSticky/crancula/issues/80) and
 [#85](https://github.com/LilSticky/crancula/issues/85) (component splits),
-[#84](https://github.com/LilSticky/crancula/issues/84) (live Tape preview),
 Lead-in label in the Tape drawing (ux-review finding 11, not filed).
 Open issues carry `priority:` and `size:` labels; triage sets them.
 Fixed 2026-10-19: flaky cut-order export e2e ([#99](https://github.com/LilSticky/crancula/issues/99)); it read
@@ -136,6 +135,10 @@ Done 2026-10-19: ESM main process ([#47](https://github.com/LilSticky/crancula/i
 [ADR 23](adr/0023-esm-main-process-commonjs-preload.md), supersedes ADR 12): `app/main.mjs` in ESM,
 the sandboxed preload stays CommonJS; electron-reloader 2.0.0, its Dependabot hold removed. Gate: lint,
 802 tests, 91 e2e, a packaged launch and a `--serve` reload checked locally.
+Done 2026-10-19: live Tape preview on the import screen ([#84](https://github.com/LilSticky/crancula/issues/84)):
+`cranc-tape-preview` draws the first Columns from `tapeGeometry`, 160 px tall at any Tape width (user decision:
+a fixed-height strip, not 1:1, which made the Fit card scroll). The Fit sheet scrolls in short windows. It
+uses `outline` from the Tape view but not `holeRects`, which slice 004 changes.
 
 ## Known broken / WIP
 
