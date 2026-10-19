@@ -387,6 +387,13 @@ export class TapeViewComponent {
     this.edgeScrollFrame = this.zone.runOutsideAngular(() => requestAnimationFrame(() => this.edgeScroll()));
   }
 
+  /** Forgets the pointer and the pending frame once the drag is over. */
+  private stopEdgeScroll(): void {
+    this.lastPointer = undefined;
+    if (this.edgeScrollFrame !== undefined) cancelAnimationFrame(this.edgeScrollFrame);
+    this.edgeScrollFrame = undefined;
+  }
+
   /** While a Hole is dragged and rests near an edge of the stage, scrolls it each frame; the Tape grows at its end. */
   private edgeScroll(): void {
     this.edgeScrollFrame = undefined;
@@ -424,6 +431,7 @@ export class TapeViewComponent {
   }
 
   protected onPointerUp(event: PointerEvent, svg: Element): void {
+    this.stopEdgeScroll();
     const geometry = this.geometry();
     if (geometry === undefined) return;
     const box = svg.getBoundingClientRect();
@@ -436,6 +444,7 @@ export class TapeViewComponent {
   }
 
   protected onPointerCancel(): void {
+    this.stopEdgeScroll();
     this.holeDrag.cancel();
   }
 
@@ -514,7 +523,7 @@ export class TapeViewComponent {
     inject(DestroyRef).onDestroy(() => {
       this.holeDrag.cancel();
       clearTimeout(this.dragEndedTimer);
-      if (this.edgeScrollFrame !== undefined) cancelAnimationFrame(this.edgeScrollFrame);
+      this.stopEdgeScroll();
     });
     this.sidePanelOpen.set(this.compact() && this.importSummary() !== null);
     afterEveryRender(() => {
