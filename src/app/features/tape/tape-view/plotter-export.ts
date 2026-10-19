@@ -2,9 +2,9 @@ import {inject, Injectable, signal} from '@angular/core';
 import {MatDialog} from '@angular/material/dialog';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {TranslateService} from '@ngx-translate/core';
-import {exportProblems, plotterFileName, plotterSvg, tapeGeometry, type Organ, type Tape} from '@api/index';
+import {cuttingProblems, plotterFileName, plotterSvg, tapeGeometry, type Organ, type Tape} from '@api/index';
 import {CRANCULA_API} from '../../../core/crancula-api.token';
-import {ExportProblemsDialogComponent} from './export-problems-dialog/export-problems-dialog.component';
+import {CuttingProblemsDialogComponent} from './export-problems-dialog/export-problems-dialog.component';
 
 /** How long the "saved" snackbar stays, in ms. */
 const SAVED_DURATION = 6000;
@@ -23,9 +23,9 @@ export class PlotterExport {
 
   async export(tape: Tape, organ: Organ): Promise<void> {
     if (this.savingState()) return;
-    const problems = exportProblems(tape, organ);
+    const problems = cuttingProblems(tape, organ);
     if (problems.length > 0) {
-      this.dialog.open(ExportProblemsDialogComponent, {data: problems});
+      this.dialog.open(CuttingProblemsDialogComponent, {data: problems});
       return;
     }
     this.savingState.set(true);

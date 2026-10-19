@@ -128,7 +128,7 @@ every edit goes through (R8, R9). Every story needs them.
 
 ### Cutting Problem: rename and group per Hole (R2)
 
-- [ ] T006 Refactor under green, domain rename (dictionary: Cutting Problem): `git mv`
+- [x] T006 Refactor under green, domain rename (dictionary: Cutting Problem): `git mv`
   `api/tape/export-problems.ts` → `api/tape/cutting-problems.ts` and
   `api/tape/export-problems.spec.ts` → `api/tape/cutting-problems.spec.ts`; rename
   `exportProblems` → `cuttingProblems`, `ExportProblem` → `CuttingProblem`, `ExportProblemCode` →

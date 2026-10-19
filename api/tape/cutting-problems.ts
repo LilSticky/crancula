@@ -3,10 +3,10 @@ import {minimumHoleLength, type Millimetres, type Organ} from '../organ/organ';
 import {holeLimitsOf} from './hole-fixes';
 import type {Column, Hole, Tape} from './tape';
 
-export type ExportProblemCode = 'no-pipe' | 'too-short' | 'too-close';
+export type CuttingProblemCode = 'no-pipe' | 'too-short' | 'too-close';
 
 /** Why a Tape can not be cut yet. Columns are counted from 0, as in the Tape. */
-export type ExportProblem =
+export type CuttingProblem =
   | {readonly code: 'no-pipe'; readonly pipe: MidiNoteNumber; readonly start: Column}
   | {
       readonly code: 'too-short';
@@ -20,22 +20,22 @@ export type ExportProblem =
       readonly pipe: MidiNoteNumber;
       readonly start: Column;
       readonly nextStart: Column;
-      /** Negative when the two Holes overlap. */
+      /** 0 when the Holes touch; never negative on a valid Tape. */
       readonly gapMm: number;
       readonly minimumGapMm: Millimetres;
     };
 
-const CODE_ORDER: readonly ExportProblemCode[] = ['too-short', 'too-close', 'no-pipe'];
+const CODE_ORDER: readonly CuttingProblemCode[] = ['too-short', 'too-close', 'no-pipe'];
 
 /**
  * Everything that keeps `tape` from being cut on `organ`: Holes without a Pipe, Holes below the
  * Minimum Hole Length and neighbours below the Minimum Gap. Compared in Columns, like `createTape`.
  */
-export function exportProblems(tape: Tape, organ: Organ): readonly ExportProblem[] {
+export function cuttingProblems(tape: Tape, organ: Organ): readonly CuttingProblem[] {
   const limits = holeLimitsOf(organ, tape.columnLength);
   const mm = (columns: number): number => columns * tape.columnLength;
   const rowOf = new Map(organ.pipes.map((pipe, index) => [pipe.note, index]));
-  const problems: ExportProblem[] = [];
+  const problems: CuttingProblem[] = [];
 
   const byStart = (a: Hole, b: Hole): number => a.start - b.start;
   const sorted = [...tape.holes].sort(byStart);
@@ -74,7 +74,7 @@ export function exportProblems(tape: Tape, organ: Organ): readonly ExportProblem
     }
   }
 
-  const row = (problem: ExportProblem): number => rowOf.get(problem.pipe) ?? Number.POSITIVE_INFINITY;
+  const row = (problem: CuttingProblem): number => rowOf.get(problem.pipe) ?? Number.POSITIVE_INFINITY;
   return problems.sort(
     (a, b) => a.start - b.start || row(a) - row(b) || CODE_ORDER.indexOf(a.code) - CODE_ORDER.indexOf(b.code),
   );

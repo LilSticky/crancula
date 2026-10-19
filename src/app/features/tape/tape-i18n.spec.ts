@@ -1,4 +1,4 @@
-import type {ExportProblemCode, HoleFix, SongRejection, TapeViolationCode} from '@api/index';
+import type {CuttingProblemCode, HoleFix, SongRejection, TapeViolationCode} from '@api/index';
 import de from '../../../assets/i18n/de.json';
 import en from '../../../assets/i18n/en.json';
 
@@ -43,7 +43,7 @@ const groups: readonly {name: string; prefix: string; kinds: readonly string[]}[
   {name: 'HoleFix', prefix: 'TAPE.SUMMARY.HOLE_FIX', kinds: Object.keys(holeFixKinds)},
 ];
 
-const exportProblemCodes: Record<ExportProblemCode, true> = {
+const cuttingProblemCodes: Record<CuttingProblemCode, true> = {
   'no-pipe': true,
   'too-short': true,
   'too-close': true,
@@ -58,7 +58,7 @@ function keysUnder(tree: TranslationTree, path: string): readonly string[] {
 }
 
 describe('Tape export texts', () => {
-  for (const code of Object.keys(exportProblemCodes)) {
+  for (const code of Object.keys(cuttingProblemCodes)) {
     const key = `TAPE.EXPORT.PROBLEM_${keyOf(code)}`;
 
     it(`${code} has an English and a German text at ${key}`, () => {

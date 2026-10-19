@@ -1,10 +1,10 @@
 import {TestBed} from '@angular/core/testing';
 import {MAT_DIALOG_DATA, MatDialogRef} from '@angular/material/dialog';
-import {type ExportProblem, midiNoteNumber, type MidiNoteNumber, type Millimetres} from '@api/index';
+import {type CuttingProblem, midiNoteNumber, type MidiNoteNumber, type Millimetres} from '@api/index';
 import {column} from '../../../../../../api/tape/tape';
 import {vi} from 'vitest';
 import {provideTestTranslations} from '../../../../../testing/test-translations';
-import {ExportProblemsDialogComponent} from './export-problems-dialog.component';
+import {CuttingProblemsDialogComponent} from './export-problems-dialog.component';
 
 function note(value: number): MidiNoteNumber {
   const result = midiNoteNumber(value);
@@ -20,15 +20,15 @@ function col(value: number) {
 
 const mm = (value: number): Millimetres => value as Millimetres;
 
-const NO_PIPE: ExportProblem = {code: 'no-pipe', pipe: note(70), start: col(4)}; // Column 5, A#4
-const TOO_SHORT: ExportProblem = {
+const NO_PIPE: CuttingProblem = {code: 'no-pipe', pipe: note(70), start: col(4)}; // Column 5, A#4
+const TOO_SHORT: CuttingProblem = {
   code: 'too-short',
   pipe: note(60), // C4
   start: col(10), // Column 11
   lengthMm: 2.5,
   minimumHoleLengthMm: mm(3.3),
 };
-const TOO_CLOSE: ExportProblem = {
+const TOO_CLOSE: CuttingProblem = {
   code: 'too-close',
   pipe: note(62), // D4
   start: col(20), // Column 21
@@ -37,7 +37,7 @@ const TOO_CLOSE: ExportProblem = {
   minimumGapMm: mm(1.7),
 };
 
-async function render(problems: readonly ExportProblem[], language: 'en' | 'de' = 'en') {
+async function render(problems: readonly CuttingProblem[], language: 'en' | 'de' = 'en') {
   const close = vi.fn<(result?: undefined) => void>();
   TestBed.configureTestingModule({
     providers: [
@@ -46,7 +46,7 @@ async function render(problems: readonly ExportProblem[], language: 'en' | 'de' 
       {provide: MAT_DIALOG_DATA, useValue: problems},
     ],
   });
-  const fixture = TestBed.createComponent(ExportProblemsDialogComponent);
+  const fixture = TestBed.createComponent(CuttingProblemsDialogComponent);
   fixture.autoDetectChanges();
   await fixture.whenStable();
   const element = fixture.nativeElement as HTMLElement;
@@ -57,7 +57,7 @@ async function render(problems: readonly ExportProblem[], language: 'en' | 'de' 
   return {element, entries, close};
 }
 
-describe('ExportProblemsDialogComponent', () => {
+describe('CuttingProblemsDialogComponent', () => {
   it("titles the dialog \"This Tape can't be cut yet\"", async () => {
     const {element} = await render([TOO_SHORT]);
 

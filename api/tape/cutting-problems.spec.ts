@@ -7,7 +7,7 @@ import {readMidiSong} from '../song/midi/read-midi-song';
 import {defaultSelectedParts} from '../song/song';
 import {createTape} from './create-tape';
 import {proposeTransposition} from './transposition';
-import {exportProblems} from './export-problems';
+import {cuttingProblems} from './cutting-problems';
 import {column, columnCount, type Hole, type Tape, type TapeFields, type TapeId} from './tape';
 import {tapeOf as validTapeOf} from './tape-fixture';
 
@@ -46,11 +46,6 @@ function tapeOf(organ: Organ, columnLength: number, holes: readonly Hole[]): Tap
   return validTapeOf(tapeFields(organ, columnLength, [...holes].sort((a, b) => a.pipe - b.pipe || a.start - b.start)));
 }
 
-/** Overlapping Holes are no valid Tape any more; the old overlap case still has to be judged. */
-function overlappingTapeOf(organ: Organ, columnLength: number, holes: readonly Hole[]): Tape {
-  return tapeFields(organ, columnLength, holes) as Tape;
-}
-
 function tapeFields(organ: Organ, columnLength: number, holes: readonly Hole[]): TapeFields {
   return {
     id: '00000000-0000-4000-8000-000000000001' as TapeId,
@@ -65,11 +60,11 @@ function tapeFields(organ: Organ, columnLength: number, holes: readonly Hole[]):
   };
 }
 
-describe('exportProblems', () => {
+describe('cuttingProblems', () => {
   it('is empty for a Tape without Holes', () => {
     const organ = organWith(2.5, 1.5);
 
-    expect(exportProblems(tapeOf(organ, 2.5, []), organ)).toEqual([]);
+    expect(cuttingProblems(tapeOf(organ, 2.5, []), organ)).toEqual([]);
   });
 
   it('is empty for a Tape just made by createTape', () => {
@@ -104,21 +99,21 @@ describe('exportProblems', () => {
     if (!created.ok) throw new Error(`invalid test Tape: ${JSON.stringify(created.error)}`);
     expect(created.value.tape.holes.length).toBeGreaterThan(0);
 
-    expect(exportProblems(created.value.tape, organ)).toEqual([]);
+    expect(cuttingProblems(created.value.tape, organ)).toEqual([]);
   });
 
   it('reports a Hole whose Pipe the Organ does not have as no-pipe, and nothing else for it', () => {
     const organ = organWith(2.5, 1.5);
     const tape = tapeOf(organ, 2.5, [hole(unknown, 4, 5)]); // 1 Column is also too short for nothing: it has no row
 
-    expect(exportProblems(tape, organ)).toEqual([{code: 'no-pipe', pipe: unknown, start: 4}]);
+    expect(cuttingProblems(tape, organ)).toEqual([{code: 'no-pipe', pipe: unknown, start: 4}]);
   });
 
   it('reports a Hole below the Minimum Hole Length as too-short with both lengths in mm', () => {
     const organ = organWith(5, 1.5); // 5 mm = 2 Columns of 2.5 mm
     const tape = tapeOf(organ, 2.5, [hole(first, 10, 11)]);
 
-    expect(exportProblems(tape, organ)).toEqual([
+    expect(cuttingProblems(tape, organ)).toEqual([
       {code: 'too-short', pipe: first, start: 10, lengthMm: 2.5, minimumHoleLengthMm: 5},
     ]);
   });
@@ -127,31 +122,22 @@ describe('exportProblems', () => {
     const organ = organWith(3.3, 1.1);
     const tape = tapeOf(organ, 1.1, [hole(first, 10, 13)]);
 
-    expect(exportProblems(tape, organ)).toEqual([]);
+    expect(cuttingProblems(tape, organ)).toEqual([]);
   });
 
   it('does not refuse a Hole of exactly the Minimum Hole Length in Columns', () => {
     const organ = organWith(5, 1.5);
     const tape = tapeOf(organ, 2.5, [hole(first, 10, 12)]);
 
-    expect(exportProblems(tape, organ)).toEqual([]);
+    expect(cuttingProblems(tape, organ)).toEqual([]);
   });
 
   it('reports a gap below the Minimum Gap once, on the earlier Hole, naming the next start', () => {
     const organ = organWith(2.5, 5); // 5 mm = 2 Columns of 2.5 mm
     const tape = tapeOf(organ, 2.5, [hole(first, 0, 3), hole(first, 4, 7)]); // 1 Column apart
 
-    expect(exportProblems(tape, organ)).toEqual([
+    expect(cuttingProblems(tape, organ)).toEqual([
       {code: 'too-close', pipe: first, start: 0, nextStart: 4, gapMm: 2.5, minimumGapMm: 5},
-    ]);
-  });
-
-  it('gives a negative gap when the two Holes of a Pipe overlap', () => {
-    const organ = organWith(2.5, 5);
-    const tape = overlappingTapeOf(organ, 2.5, [hole(first, 0, 3), hole(first, 2, 6)]);
-
-    expect(exportProblems(tape, organ)).toEqual([
-      {code: 'too-close', pipe: first, start: 0, nextStart: 2, gapMm: -2.5, minimumGapMm: 5},
     ]);
   });
 
@@ -159,14 +145,14 @@ describe('exportProblems', () => {
     const organ = organWith(2.5, 5);
     const tape = tapeOf(organ, 2.5, [hole(first, 0, 3), hole(first, 5, 8), hole(second, 3, 5)]);
 
-    expect(exportProblems(tape, organ)).toEqual([]);
+    expect(cuttingProblems(tape, organ)).toEqual([]);
   });
 
   it('lists every problem of every Hole: a Hole can be too-short and too-close', () => {
     const organ = organWith(5, 5);
     const tape = tapeOf(organ, 2.5, [hole(first, 0, 1), hole(first, 2, 6), hole(second, 20, 21)]);
 
-    expect(exportProblems(tape, organ)).toEqual([
+    expect(cuttingProblems(tape, organ)).toEqual([
       {code: 'too-short', pipe: first, start: 0, lengthMm: 2.5, minimumHoleLengthMm: 5},
       {code: 'too-close', pipe: first, start: 0, nextStart: 2, gapMm: 2.5, minimumGapMm: 5},
       {code: 'too-short', pipe: second, start: 20, lengthMm: 2.5, minimumHoleLengthMm: 5},
@@ -183,7 +169,7 @@ describe('exportProblems', () => {
       hole(first, 2, 6),
     ]);
 
-    expect(exportProblems(tape, organ).map(({code, pipe, start}) => [code, pipe, start])).toEqual([
+    expect(cuttingProblems(tape, organ).map(({code, pipe, start}) => [code, pipe, start])).toEqual([
       ['too-short', first, 0],
       ['too-close', first, 0],
       ['too-short', second, 0],

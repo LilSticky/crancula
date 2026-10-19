@@ -2,7 +2,7 @@ import {ChangeDetectionStrategy, Component, inject} from '@angular/core';
 import {MatButton} from '@angular/material/button';
 import {MAT_DIALOG_DATA, MatDialogActions, MatDialogContent, MatDialogRef, MatDialogTitle} from '@angular/material/dialog';
 import {TranslatePipe, TranslateService} from '@ngx-translate/core';
-import {noteName, type ExportProblem} from '@api/index';
+import {noteName, type CuttingProblem} from '@api/index';
 import {formatNumber} from '../../../shared/format-number';
 
 interface ProblemEntry {
@@ -29,14 +29,14 @@ interface ProblemEntry {
     </mat-dialog-actions>
   `,
 })
-export class ExportProblemsDialogComponent {
-  protected readonly dialogRef = inject<MatDialogRef<ExportProblemsDialogComponent>>(MatDialogRef);
+export class CuttingProblemsDialogComponent {
+  protected readonly dialogRef = inject<MatDialogRef<CuttingProblemsDialogComponent>>(MatDialogRef);
   private readonly language = inject(TranslateService).getCurrentLang() ?? 'en';
-  protected readonly entries: readonly ProblemEntry[] = inject<readonly ExportProblem[]>(MAT_DIALOG_DATA).map((problem) =>
+  protected readonly entries: readonly ProblemEntry[] = inject<readonly CuttingProblem[]>(MAT_DIALOG_DATA).map((problem) =>
     this.entryOf(problem),
   );
 
-  private entryOf(problem: ExportProblem): ProblemEntry {
+  private entryOf(problem: CuttingProblem): ProblemEntry {
     const mm = (value: number): string => formatNumber(value, this.language);
     const base = {note: noteName(problem.pipe), column: String(problem.start + 1)};
     switch (problem.code) {

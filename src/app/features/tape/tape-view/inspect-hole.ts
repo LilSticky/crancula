@@ -1,4 +1,4 @@
-import {exportProblems, noteName, type Hole, type Organ, type Tape} from '@api/index';
+import {cuttingProblems, noteName, type Hole, type Organ, type Tape} from '@api/index';
 
 export interface HoleGap {
   /** What the gap runs to: the next Hole of the row, or the end of the Tape. */
@@ -58,7 +58,7 @@ export function inspectHole(tape: Tape, organ: Organ, hole: Hole): HoleInspectio
 function warningsOf(tape: Tape, organ: Organ, hole: Hole): HoleWarning[] {
   const warnings: HoleWarning[] = [];
   const gaps: {readonly mm: number; readonly minimumMm: number}[] = [];
-  for (const problem of exportProblems(tape, organ)) {
+  for (const problem of cuttingProblems(tape, organ)) {
     if (problem.pipe !== hole.pipe) continue;
     if (problem.code === 'too-short' && problem.start === hole.start) {
       warnings.push({kind: 'tooShort', mm: problem.lengthMm, minimumMm: problem.minimumHoleLengthMm});

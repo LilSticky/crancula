@@ -27,7 +27,7 @@ import {tapeOf} from '../../../../../api/tape/tape-fixture';
 import {vi} from 'vitest';
 import {overviewFrame, scrollLeftFor} from './overview-frame';
 import {pixelsPerMillimetre} from './pixels-per-millimetre';
-import {ExportProblemsDialogComponent} from './export-problems-dialog/export-problems-dialog.component';
+import {CuttingProblemsDialogComponent} from './export-problems-dialog/export-problems-dialog.component';
 import {PlotterExport} from './plotter-export';
 import {columnLines, columnNumbers, rulerNumbers} from './tape-marks';
 import {TapeViewComponent} from './tape-view.component';
@@ -399,7 +399,7 @@ describe('TapeViewComponent', () => {
         await settle();
 
         expect(dialogOpen).toHaveBeenCalledTimes(1);
-        expect(dialogOpen.mock.calls[0]?.[0]).toBe(ExportProblemsDialogComponent);
+        expect(dialogOpen.mock.calls[0]?.[0]).toBe(CuttingProblemsDialogComponent);
       });
     });
 
