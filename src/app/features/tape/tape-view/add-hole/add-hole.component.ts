@@ -8,8 +8,8 @@ import {TranslatePipe} from '@ngx-translate/core';
 import {
   addHole,
   column,
+  firstFreeColumnAfter,
   noteName,
-  type Hole,
   type HoleRef,
   type MidiNoteNumber,
   type Organ,
@@ -19,15 +19,6 @@ import {
 /** The Column as typed, counted from 1. */
 interface AddHoleDraft {
   column: string;
-}
-
-/** The first Column (counted from 1) after the Hole that no Hole of the Pipe covers. */
-function firstFreeColumnAfter(tape: Tape, selected: Hole): number {
-  let free = selected.start + selected.length;
-  const covering = (): Hole | undefined =>
-    tape.holes.find((hole) => hole.pipe === selected.pipe && hole.start <= free && free < hole.start + hole.length);
-  for (let hole = covering(); hole !== undefined; hole = covering()) free = hole.start + hole.length;
-  return free + 1;
 }
 
 /** The "Add a Hole" section of the side panel: a Pipe and a Column (counted from 1). */
@@ -58,14 +49,26 @@ export class AddHoleComponent {
   constructor() {
     effect(() => {
       const selected = this.selected();
-      const hole = selected && this.tape().holes.find((h) => h.pipe === selected.pipe && h.start === selected.start);
-      if (!hole) return;
+      if (selected === undefined) return;
       untracked(() => {
-        this.pipe.set(hole.pipe);
-        this.draft.set({column: String(firstFreeColumnAfter(this.tape(), hole))});
-        this.problem.set(undefined);
+        const tape = this.tape();
+        if (!tape.holes.some((hole) => hole.pipe === selected.pipe && hole.start === selected.start)) return;
+        this.pipe.set(selected.pipe);
+        this.draft.set({column: String(firstFreeColumnAfter(tape, selected) + 1)});
       });
     });
+    effect(() => {
+      void this.fields.column().value();
+      untracked(() => this.problem.set(undefined));
+    });
+  }
+
+  /** Takes the Pipe picked in the select, if it is one of the Organ. */
+  protected pickPipe(note: unknown): void {
+    const pipe = this.organ().pipes.find((candidate) => candidate.note === note);
+    if (pipe === undefined) return;
+    this.pipe.set(pipe.note);
+    this.problem.set(undefined);
   }
 
   protected submit(): void {

@@ -2046,5 +2046,19 @@ describe('TapeViewComponent', () => {
       expect(storedHoles(tape.id).filter((hole) => hole.startsWith('25:2+'))).toHaveLength(1);
       expect(selected(view())).toEqual(['25:2']);
     });
+
+    it('keeps the focus in the form when the add is refused', async () => {
+      const {tape, open, view, settle} = await render({holes: [{row: 24, start: 10, length: 3}]});
+      await open(`/tapes/${tape.id}`);
+      const update = vi.spyOn(TestBed.inject(TapeLibrary), 'update');
+      const input = view()?.querySelector<HTMLInputElement>('[data-testid="add-hole-column"]');
+      input?.focus();
+
+      await addThroughForm(view(), 'E5', '11', settle);
+
+      expect(update).not.toHaveBeenCalled();
+      expect(view()?.querySelector('[data-testid="add-hole"]')?.textContent).toContain('already covers');
+      expect(document.activeElement).not.toBe(view()?.querySelector('[data-testid="tape-scroll"] svg'));
+    });
   });
 });

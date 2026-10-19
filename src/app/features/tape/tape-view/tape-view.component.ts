@@ -339,8 +339,8 @@ export class TapeViewComponent {
     this.holeDrag.cancel();
   }
 
-  /** Saves an edit and selects the Hole it leaves; a refusal says why instead. */
-  private commit(outcome: EditOutcome): void {
+  /** Saves an edit and selects the Hole it leaves; a refusal says why instead. Tells whether the edit was applied. */
+  private commit(outcome: EditOutcome): boolean {
     if (outcome.kind === 'refused') {
       const text = this.translate.instant('TAPE.EDIT.REFUSED_OVERLAP', {
         note: noteName(outcome.other.pipe),
@@ -352,6 +352,7 @@ export class TapeViewComponent {
       this.selectedHole.set(outcome.selection);
       this.scrollToSelection = true;
     }
+    return outcome.kind === 'applied';
   }
 
   /** A double-click on an empty spot of a row adds a Hole of that row's Pipe at that Column. */
@@ -377,8 +378,7 @@ export class TapeViewComponent {
     const tape = this.tape();
     const organ = this.organ();
     if (tape === undefined || organ === undefined) return;
-    this.commit(addEdit(tape, organ, added.pipe, added.start));
-    this.drawingSvg()?.nativeElement.focus();
+    if (this.commit(addEdit(tape, organ, added.pipe, added.start))) this.drawingSvg()?.nativeElement.focus();
   }
 
   protected onPointerLeave(): void {

@@ -3,9 +3,9 @@
   <form (submit)="$event.preventDefault(); submit()">
     <mat-form-field>
       <mat-label>{{ 'TAPE.ADD_HOLE.PIPE' | translate }}</mat-label>
-      <mat-select data-testid="add-hole-pipe" [value]="pipe()" (selectionChange)="pipe.set($event.value)">
-        @for (pipe of pipes(); track pipe.note) {
-          <mat-option [value]="pipe.note">{{ pipe.name }}</mat-option>
+      <mat-select data-testid="add-hole-pipe" [value]="pipe()" (selectionChange)="pickPipe($event.value)">
+        @for (option of pipes(); track option.note) {
+          <mat-option [value]="option.note">{{ option.name }}</mat-option>
         }
       </mat-select>
     </mat-form-field>
@@ -13,10 +13,10 @@
       <mat-label>{{ 'TAPE.ADD_HOLE.COLUMN' | translate }}</mat-label>
       <input matInput type="text" inputmode="numeric" data-testid="add-hole-column" [formField]="fields.column" />
     </mat-form-field>
-    @if (problem(); as problem) {
+    @if (problem(); as shown) {
       <p class="problem" role="alert" data-testid="add-hole-problem">
-        @if (problem.kind === 'covered') {
-          {{ 'TAPE.ADD_HOLE.COVERED' | translate: {note: problem.note, column: problem.column} }}
+        @if (shown.kind === 'covered') {
+          {{ 'TAPE.ADD_HOLE.COVERED' | translate: {note: shown.note, column: shown.column} }}
         } @else {
           {{ 'TAPE.ADD_HOLE.COLUMN_INVALID' | translate }}
         }

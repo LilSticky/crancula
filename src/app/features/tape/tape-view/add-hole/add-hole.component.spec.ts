@@ -91,6 +91,10 @@ async function render(options: {readonly tape?: Tape; readonly selected?: HoleRe
     columnInput,
     submit,
     pipeSelect: () => loader.getHarness(MatSelectHarness.with({selector: '[data-testid="add-hole-pipe"]'})),
+    changeTape: async (tape: Tape) => {
+      fixture.componentRef.setInput('tape', tape);
+      await fixture.whenStable();
+    },
     text: () => element.textContent?.replace(/\s+/g, ' ').trim() ?? '',
     typeColumn: async (value: string) => {
       const input = columnInput();
@@ -170,5 +174,44 @@ describe('AddHoleComponent', () => {
     await clickSubmit();
 
     expect(added).toEqual([{pipe: c4, start: 0}]);
+  });
+
+  describe('when the Tape changes under the form', () => {
+    const selectedD4 = {pipe: d4, start: defined(column(4), 'column')};
+
+    it('keeps the typed Column and the chosen Pipe', async () => {
+      const {pipeSelect, typeColumn, columnInput, changeTape} = await render({selected: selectedD4});
+      await (await pipeSelect()).clickOptions({text: 'E4'});
+      await typeColumn('42');
+
+      await changeTape(tapeWith([hole(c4, 3, 4), hole(d4, 5, 9)]));
+
+      expect(columnInput().value).toBe('42');
+      expect(await (await pipeSelect()).getValueText()).toBe('E4');
+    });
+
+    it('clears the error message once the Column is edited', async () => {
+      const {pipeSelect, typeColumn, clickSubmit, text} = await render();
+      await (await pipeSelect()).clickOptions({text: 'D4'});
+      await typeColumn('6');
+      await clickSubmit();
+      expect(text()).toContain('A Hole of D4 already covers Column 6.');
+
+      await typeColumn('9');
+
+      expect(text()).not.toContain('already covers');
+    });
+
+    it('clears the error message once another Pipe is picked', async () => {
+      const {pipeSelect, typeColumn, clickSubmit, text} = await render();
+      await (await pipeSelect()).clickOptions({text: 'D4'});
+      await typeColumn('6');
+      await clickSubmit();
+      expect(text()).toContain('A Hole of D4 already covers Column 6.');
+
+      await (await pipeSelect()).clickOptions({text: 'E4'});
+
+      expect(text()).not.toContain('already covers');
+    });
   });
 });
