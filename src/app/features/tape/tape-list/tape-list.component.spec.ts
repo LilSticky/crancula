@@ -409,6 +409,25 @@ describe('TapeListComponent', () => {
       expect(field()).not.toBeNull();
       expect(tapes.tapeEntities().map(({name}) => name)).toEqual(['Kirmes-Walzer']);
     });
+
+    it('shows no error before Rename is pressed for the first time', async () => {
+      const {fixture} = await openRenameDialog();
+      await typeName(fixture, '');
+
+      expect(document.querySelector('[data-testid="tape-name-error"]')).toBeNull();
+      expect(field()?.getAttribute('aria-invalid')).not.toBe('true');
+    });
+
+    it('shows the blank-name error in the form field error area and marks the name invalid', async () => {
+      const {fixture} = await openRenameDialog();
+      await typeName(fixture, '');
+
+      await press(fixture, button('rename-tape-confirm'));
+
+      const error = document.querySelector('.mat-mdc-form-field-error-wrapper mat-error');
+      expect(error?.textContent?.trim()).toBe('Give the Tape a name.');
+      expect(field()?.getAttribute('aria-invalid')).toBe('true');
+    });
   });
 
   describe('the Organ filter', () => {

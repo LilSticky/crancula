@@ -1,5 +1,5 @@
-import {ChangeDetectionStrategy, Component, computed, inject, signal} from '@angular/core';
-import {form, FormField} from '@angular/forms/signals';
+import {ChangeDetectionStrategy, Component, inject, signal} from '@angular/core';
+import {form, FormField, validate} from '@angular/forms/signals';
 import {MatButton} from '@angular/material/button';
 import {MAT_DIALOG_DATA, MatDialogActions, MatDialogContent, MatDialogRef, MatDialogTitle} from '@angular/material/dialog';
 import {MatError, MatFormField, MatLabel} from '@angular/material/form-field';
@@ -21,9 +21,11 @@ export interface RenameTapeDialogData {
       <mat-form-field class="name">
         <mat-label>{{ 'TAPE.RENAME.NAME' | translate }}</mat-label>
         <input matInput type="text" data-testid="tape-name-field" [formField]="tape.name" (keydown.enter)="confirm()" />
-        @if (blank()) {
-          <mat-error data-testid="tape-name-error">{{ 'TAPE.RENAME.NAME_REQUIRED' | translate }}</mat-error>
-        }
+        <ng-container ngProjectAs="mat-error">
+          @if (tape.name().touched() && tape.name().invalid()) {
+            <mat-error data-testid="tape-name-error">{{ 'TAPE.RENAME.NAME_REQUIRED' | translate }}</mat-error>
+          }
+        </ng-container>
       </mat-form-field>
     </mat-dialog-content>
     <mat-dialog-actions align="end">
@@ -42,14 +44,14 @@ export interface RenameTapeDialogData {
 export class RenameTapeDialogComponent {
   private readonly dialogRef = inject<MatDialogRef<RenameTapeDialogComponent, string>>(MatDialogRef);
   private readonly draft = signal({name: inject<RenameTapeDialogData>(MAT_DIALOG_DATA).name});
-  private readonly attempted = signal(false);
 
-  protected readonly tape = form(this.draft);
-  protected readonly blank = computed(() => this.attempted() && this.draft().name.trim() === '');
+  protected readonly tape = form(this.draft, (draft) => {
+    validate(draft.name, ({value}) => (value().trim() === '' ? {kind: 'name-required'} : undefined));
+  });
 
   protected confirm(): void {
-    this.attempted.set(true);
-    if (this.draft().name.trim() !== '') this.dialogRef.close(this.draft().name);
+    this.tape.name().markAsTouched();
+    if (this.tape().valid()) this.dialogRef.close(this.draft().name);
   }
 
   protected cancel(): void {
