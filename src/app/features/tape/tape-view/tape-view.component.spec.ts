@@ -3,6 +3,7 @@ import {Component, signal} from '@angular/core';
 import {type Observable, of} from 'rxjs';
 import {TestBed} from '@angular/core/testing';
 import {MatDialog} from '@angular/material/dialog';
+import {MatSnackBar} from '@angular/material/snack-bar';
 import {provideRouter, Router} from '@angular/router';
 import {RouterTestingHarness} from '@angular/router/testing';
 import {
@@ -1597,6 +1598,370 @@ describe('TapeViewComponent', () => {
       await open(`/tapes/${tape.id}`);
 
       expect(router.url).toBe('/tapes');
+    });
+  });
+
+  describe('editing Holes with the keyboard (US1)', () => {
+    // The Pipe of row r is note 52 + r. Row 24 is E5, row 25 F5. Starts count from 0, so start 10 is Column 11.
+    const holes = [
+      {row: 22, start: 0, length: 2},
+      {row: 24, start: 10, length: 3},
+      {row: 25, start: 20, length: 1},
+      {row: 25, start: 30, length: 2},
+    ];
+    const rectAt = (view: HTMLElement | null, row: number, start: number) =>
+      view?.querySelector(`[data-testid="tape-scroll"] rect[data-testid="hole"][data-row="${row - 1}"][data-start="${start}"]`) ?? null;
+    const selected = (view: HTMLElement | null) =>
+      all(view, '[data-testid="tape-scroll"] rect[data-testid="hole"].selected').map(
+        (rect) => `${Number(rect.getAttribute('data-row')) + 1}:${rect.getAttribute('data-start')}`,
+      );
+    const storedHoles = (tapeId: string) =>
+      (TestBed.inject(TapeLibrary).tapeEntities().find((candidate) => candidate.id === tapeId)?.holes ?? []).map(
+        (hole) => `${hole.pipe - 52}:${hole.start}+${hole.length}`,
+      );
+    const tapeSvg = (view: HTMLElement | null) => view?.querySelector('[data-testid="tape-scroll"] svg') as SVGSVGElement;
+    const press = async (view: HTMLElement | null, init: KeyboardEventInit, settle: () => Promise<void>) => {
+      const event = new KeyboardEvent('keydown', {...init, bubbles: true, cancelable: true});
+      tapeSvg(view).dispatchEvent(event);
+      await settle();
+      return event;
+    };
+    const select = async (view: HTMLElement | null, row: number, start: number, settle: () => Promise<void>) => {
+      rectAt(view, row, start)?.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+      await settle();
+    };
+    const setup = async (options: RenderOptions = {holes}) => {
+      const rendered = await render(options);
+      await rendered.open(`/tapes/${rendered.tape.id}`);
+      const update = vi.spyOn(TestBed.inject(TapeLibrary), 'update');
+      const snackBarOpen = vi.spyOn(TestBed.inject(MatSnackBar), 'open');
+      return {...rendered, update, snackBarOpen};
+    };
+
+    it('moves the selected Hole one Column later with Alt+ArrowRight, saving once per key', async () => {
+      const {tape, view, settle, update} = await setup();
+      await select(view(), 24, 10, settle);
+
+      await press(view(), {key: 'ArrowRight', altKey: true}, settle);
+      expect(update).toHaveBeenCalledTimes(1);
+      await press(view(), {key: 'ArrowRight', altKey: true}, settle);
+
+      expect(update).toHaveBeenCalledTimes(2);
+      expect(storedHoles(tape.id)).toContain('24:12+3');
+      expect(selected(view())).toEqual(['24:12']);
+    });
+
+    it('moves the selected Hole to the row below with Alt+ArrowDown', async () => {
+      const {tape, view, settle} = await setup();
+      await select(view(), 24, 10, settle);
+
+      await press(view(), {key: 'ArrowDown', altKey: true}, settle);
+
+      expect(storedHoles(tape.id)).toContain('25:10+3');
+      expect(storedHoles(tape.id)).not.toContain('24:10+3');
+      expect(selected(view())).toEqual(['25:10']);
+    });
+
+    it('changes the end with Shift+Arrow and the start with Alt+Shift+Arrow', async () => {
+      const {tape, view, settle} = await setup();
+      await select(view(), 24, 10, settle);
+
+      for (let times = 0; times < 3; times++) await press(view(), {key: 'ArrowRight', shiftKey: true}, settle);
+      expect(storedHoles(tape.id)).toContain('24:10+6');
+      for (let times = 0; times < 2; times++) await press(view(), {key: 'ArrowRight', altKey: true, shiftKey: true}, settle);
+
+      expect(storedHoles(tape.id)).toContain('24:12+4');
+      expect(selected(view())).toEqual(['24:12']);
+    });
+
+    it('does nothing and saves nothing for Shift+ArrowLeft on a Hole of 1 Column', async () => {
+      const {tape, view, settle, update} = await setup();
+      await select(view(), 25, 20, settle);
+      const before = storedHoles(tape.id);
+
+      await press(view(), {key: 'ArrowLeft', shiftKey: true}, settle);
+
+      expect(update).not.toHaveBeenCalled();
+      expect(storedHoles(tape.id)).toEqual(before);
+    });
+
+    it('does nothing and saves nothing for Alt+ArrowLeft and Alt+Shift+ArrowLeft at Column 1', async () => {
+      const {tape, view, settle, update} = await setup();
+      await select(view(), 22, 0, settle);
+      const before = storedHoles(tape.id);
+
+      await press(view(), {key: 'ArrowLeft', altKey: true}, settle);
+      await press(view(), {key: 'ArrowLeft', altKey: true, shiftKey: true}, settle);
+
+      expect(update).not.toHaveBeenCalled();
+      expect(storedHoles(tape.id)).toEqual(before);
+    });
+
+    it('removes the selected Hole with Delete and selects the next Hole of its row', async () => {
+      const {tape, view, settle, update} = await setup();
+      await select(view(), 25, 20, settle);
+
+      await press(view(), {key: 'Delete'}, settle);
+
+      expect(update).toHaveBeenCalledTimes(1);
+      expect(storedHoles(tape.id)).not.toContain('25:20+1');
+      expect(selected(view())).toEqual(['25:30']);
+    });
+
+    it('removes the selected Hole with Backspace and selects the previous Hole when it was the last of its row', async () => {
+      const {tape, view, settle} = await setup();
+      await select(view(), 25, 30, settle);
+
+      await press(view(), {key: 'Backspace'}, settle);
+
+      expect(storedHoles(tape.id)).not.toContain('25:30+2');
+      expect(selected(view())).toEqual(['25:20']);
+    });
+
+    it('selects nothing after removing the only Hole of its row', async () => {
+      const {tape, view, settle} = await setup();
+      await select(view(), 24, 10, settle);
+
+      await press(view(), {key: 'Delete'}, settle);
+
+      expect(storedHoles(tape.id)).toHaveLength(holes.length - 1);
+      expect(selected(view())).toEqual([]);
+    });
+
+    it('ignores the edit keys without a selection', async () => {
+      const {tape, view, settle, update} = await setup();
+      const before = storedHoles(tape.id);
+
+      await press(view(), {key: 'Delete'}, settle);
+      await press(view(), {key: 'ArrowRight', altKey: true}, settle);
+      await press(view(), {key: 'ArrowRight', shiftKey: true}, settle);
+
+      expect(update).not.toHaveBeenCalled();
+      expect(storedHoles(tape.id)).toEqual(before);
+    });
+
+    it('prevents the default of the edit keys', async () => {
+      const {view, settle} = await setup();
+      await select(view(), 24, 10, settle);
+
+      const keys: KeyboardEventInit[] = [
+        {key: 'ArrowRight', altKey: true},
+        {key: 'ArrowRight', shiftKey: true},
+        {key: 'ArrowRight', altKey: true, shiftKey: true},
+        {key: 'ArrowDown', altKey: true},
+      ];
+      for (const init of keys) expect((await press(view(), init, settle)).defaultPrevented).toBe(true);
+      expect((await press(view(), {key: 'Delete'}, settle)).defaultPrevented).toBe(true);
+    });
+
+    describe('onto a Hole of the same Pipe', () => {
+      const crowded = [
+        {row: 24, start: 10, length: 3},
+        {row: 24, start: 13, length: 3},
+      ];
+
+      it('refuses the key, changes and saves nothing, and tells which Hole is in the way', async () => {
+        const {tape, view, settle, update, snackBarOpen} = await setup({holes: crowded});
+        await select(view(), 24, 10, settle);
+        const before = storedHoles(tape.id);
+
+        await press(view(), {key: 'ArrowRight', altKey: true}, settle);
+
+        expect(update).not.toHaveBeenCalled();
+        expect(storedHoles(tape.id)).toEqual(before);
+        expect(snackBarOpen).toHaveBeenCalledTimes(1);
+        expect(snackBarOpen.mock.calls[0]?.[0]).toBe('The Hole would overlap the Hole of E5 at Column 14.');
+      });
+
+      it('still selects the neighbours with the plain arrows', async () => {
+        const {view, settle} = await setup({holes: crowded});
+        await select(view(), 24, 10, settle);
+
+        await press(view(), {key: 'ArrowRight'}, settle);
+
+        expect(selected(view())).toEqual(['24:13']);
+      });
+    });
+  });
+
+  describe('editing Holes with the pointer (US1)', () => {
+    const RULER_PX = 24;
+    // Row 24 is E5, row 25 F5. Starts count from 0.
+    const holes = [
+      {row: 24, start: 10, length: 3},
+      {row: 24, start: 30, length: 3},
+    ];
+    const drawing = (view: HTMLElement | null) => view?.querySelector('[data-testid="tape-scroll"] svg') as SVGSVGElement;
+    const rectAt = (view: HTMLElement | null, row: number, start: number) =>
+      view?.querySelector(`[data-testid="tape-scroll"] rect[data-testid="hole"][data-row="${row - 1}"][data-start="${start}"]`) ?? null;
+    const selected = (view: HTMLElement | null) =>
+      all(view, '[data-testid="tape-scroll"] rect[data-testid="hole"].selected').map(
+        (rect) => `${Number(rect.getAttribute('data-row')) + 1}:${rect.getAttribute('data-start')}`,
+      );
+    const storedHoles = (tapeId: string) =>
+      (TestBed.inject(TapeLibrary).tapeEntities().find((candidate) => candidate.id === tapeId)?.holes ?? []).map(
+        (hole) => `${hole.pipe - 52}:${hole.start}+${hole.length}`,
+      );
+    const frame = () => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+
+    const setup = async () => {
+      const rendered = await render({holes});
+      await rendered.open(`/tapes/${rendered.tape.id}`);
+      const svg = drawing(rendered.view());
+      Object.defineProperty(svg, 'getBoundingClientRect', {value: () => new DOMRect(0, 0, 4000, 300), configurable: true});
+      const geometry = tapeGeometry(rendered.tape, rendered.organ);
+      /** Pointer position in the middle of a Column (from 0) and a row (from 1), or `offset` px from its left edge. */
+      const at = (column: number, row: number, offset?: number) => ({
+        clientX: (geometry.leadIn + column * geometry.columnLength + (offset === undefined ? geometry.columnLength / 2 : 0)) * SCALE + (offset ?? 0),
+        clientY: (geometry.rowCentres[row - 1] ?? 0) * SCALE + RULER_PX,
+      });
+      const pointer = (type: string, position: {clientX: number; clientY: number}) =>
+        new PointerEvent(type, {...position, pointerId: 1, button: 0, bubbles: true, cancelable: true});
+      const update = vi.spyOn(TestBed.inject(TapeLibrary), 'update');
+      const snackBarOpen = vi.spyOn(TestBed.inject(MatSnackBar), 'open');
+      const down = async (target: Element, position: {clientX: number; clientY: number}) => {
+        target.dispatchEvent(pointer('pointerdown', position));
+        await rendered.settle();
+      };
+      const move = async (position: {clientX: number; clientY: number}) => {
+        svg.dispatchEvent(pointer('pointermove', position));
+        await frame();
+        await rendered.settle();
+      };
+      const up = async (position: {clientX: number; clientY: number}) => {
+        svg.dispatchEvent(pointer('pointerup', position));
+        await rendered.settle();
+      };
+      const click = async (target: Element) => {
+        target.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+        await rendered.settle();
+      };
+      const handle = (end: 'start' | 'end') => rendered.view()?.querySelector(`[data-testid="hole-handle"][data-end="${end}"]`) ?? null;
+      return {...rendered, svg, at, down, move, up, click, handle, update, snackBarOpen};
+    };
+
+    it('moves a Hole body to the snapped Column and row on release, with one save, and selects it', async () => {
+      const {tape, view, at, down, move, up, update} = await setup();
+      const body = rectAt(view(), 24, 10) as Element;
+
+      await down(body, at(11, 24));
+      await move(at(13, 25));
+      await up(at(13, 25));
+
+      expect(update).toHaveBeenCalledTimes(1);
+      expect(storedHoles(tape.id)).toContain('25:12+3');
+      expect(storedHoles(tape.id)).not.toContain('24:10+3');
+      expect(selected(view())).toEqual(['25:12']);
+    });
+
+    it('treats a move under 4 px as a click: selects the Hole, edits nothing', async () => {
+      const {tape, view, at, down, move, up, click, update} = await setup();
+      const body = rectAt(view(), 24, 10) as Element;
+      const pressed = at(11, 24);
+      const before = storedHoles(tape.id);
+
+      await down(body, pressed);
+      await move({clientX: pressed.clientX + 2, clientY: pressed.clientY + 1});
+      await up({clientX: pressed.clientX + 2, clientY: pressed.clientY + 1});
+      await click(body);
+
+      expect(update).not.toHaveBeenCalled();
+      expect(storedHoles(tape.id)).toEqual(before);
+      expect(selected(view())).toEqual(['24:10']);
+    });
+
+    it('moves only the end of the selected Hole when its end handle is dragged', async () => {
+      const {tape, view, at, down, move, up, click, handle, update} = await setup();
+      await click(rectAt(view(), 24, 10) as Element);
+      const endHandle = handle('end');
+      expect(endHandle).not.toBeNull();
+
+      await down(endHandle as Element, at(13, 24, -1));
+      await move(at(14, 24));
+      await up(at(14, 24));
+
+      expect(update).toHaveBeenCalledTimes(1);
+      expect(storedHoles(tape.id)).toContain('24:10+5');
+      expect(selected(view())).toEqual(['24:10']);
+    });
+
+    it('moves only the start of the selected Hole when its start handle is dragged', async () => {
+      const {tape, view, at, down, move, up, click, handle, update} = await setup();
+      await click(rectAt(view(), 24, 10) as Element);
+      const startHandle = handle('start');
+      expect(startHandle).not.toBeNull();
+
+      await down(startHandle as Element, at(10, 24, 1));
+      await move(at(11, 24));
+      await up(at(11, 24));
+
+      expect(update).toHaveBeenCalledTimes(1);
+      expect(storedHoles(tape.id)).toContain('24:11+2');
+    });
+
+    it('offers handles for the selected Hole only', async () => {
+      const {view, click, handle} = await setup();
+      expect(handle('start')).toBeNull();
+
+      await click(rectAt(view(), 24, 10) as Element);
+
+      expect(all(view(), '[data-testid="hole-handle"]').map((element) => element.getAttribute('data-end'))).toEqual(['start', 'end']);
+    });
+
+    it('cancels the drag on Escape: nothing is saved or changed', async () => {
+      const {tape, view, svg, at, down, move, up, update} = await setup();
+      const before = storedHoles(tape.id);
+
+      await down(rectAt(view(), 24, 10) as Element, at(11, 24));
+      await move(at(13, 25));
+      svg.dispatchEvent(new KeyboardEvent('keydown', {key: 'Escape', bubbles: true, cancelable: true}));
+      await up(at(13, 25));
+
+      expect(update).not.toHaveBeenCalled();
+      expect(storedHoles(tape.id)).toEqual(before);
+      expect(rectAt(view(), 24, 10)).not.toBeNull();
+    });
+
+    it('shows the would-be Tape while dragging, before anything is saved', async () => {
+      const {tape, view, at, down, move, update} = await setup();
+      const before = storedHoles(tape.id);
+
+      await down(rectAt(view(), 24, 10) as Element, at(11, 24));
+      await move(at(13, 25));
+
+      expect(rectAt(view(), 25, 12)).not.toBeNull();
+      expect(rectAt(view(), 24, 10)).toBeNull();
+      expect(update).not.toHaveBeenCalled();
+      expect(storedHoles(tape.id)).toEqual(before);
+    });
+
+    it('shows a refused position with the class refused, and on release tells why and changes nothing', async () => {
+      const {tape, view, at, down, move, up, update, snackBarOpen} = await setup();
+      const before = storedHoles(tape.id);
+
+      await down(rectAt(view(), 24, 10) as Element, at(11, 24));
+      await move(at(31, 24));
+
+      expect(rectAt(view(), 24, 30)?.classList.contains('refused') || rectAt(view(), 24, 10)?.classList.contains('refused')).toBe(true);
+      await up(at(31, 24));
+      expect(update).not.toHaveBeenCalled();
+      expect(storedHoles(tape.id)).toEqual(before);
+      expect(snackBarOpen).toHaveBeenCalledTimes(1);
+      expect(all(view(), 'rect[data-testid="hole"].refused')).toHaveLength(0);
+    });
+
+    it('shows the cursors: grab over a Hole body, grabbing while dragging, ew-resize over a handle', async () => {
+      const {view, svg, at, down, move, up, click, handle} = await setup();
+      expect(rectAt(view(), 24, 10)?.classList.contains('grab')).toBe(true);
+
+      await click(rectAt(view(), 24, 10) as Element);
+      expect(handle('end')?.classList.contains('ew-resize')).toBe(true);
+
+      await down(rectAt(view(), 24, 10) as Element, at(11, 24));
+      await move(at(13, 24));
+      expect(svg.classList.contains('grabbing')).toBe(true);
+      await up(at(13, 24));
+      expect(svg.classList.contains('grabbing')).toBe(false);
     });
   });
 });

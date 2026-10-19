@@ -19,6 +19,9 @@
     "SAVED_HERE": "Auf diesem Computer gespeichert"
   },
   "TAPE": {
+    "EDIT": {
+      "REFUSED_OVERLAP": "Das Loch würde das Loch von {{note}} in Spalte {{column}} überlappen."
+    },
     "RENAME": {
       "TITLE": "Lochband umbenennen",
       "NAME": "Name",

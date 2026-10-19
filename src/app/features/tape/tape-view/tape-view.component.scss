@@ -97,6 +97,28 @@ cranc-page-head.compact {
   stroke: var(--cr-select);
   stroke-width: 2;
 }
+.hole.refused {
+  stroke: #7a2a24;
+  stroke-width: 2;
+}
+.scroll svg {
+  user-select: none;
+  touch-action: none;
+}
+.grab {
+  cursor: grab;
+}
+.handle {
+  fill: transparent;
+}
+.ew-resize {
+  cursor: ew-resize;
+}
+svg.grabbing,
+svg.grabbing .grab,
+svg.grabbing .ew-resize {
+  cursor: grabbing;
+}
 .guide,
 .mark {
   stroke: var(--cr-tape-guide);

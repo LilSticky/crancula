@@ -263,7 +263,7 @@ its start, remove a third, reopen the Tape after restarting Crancula and check t
 - [x] T023 [P] [US1] Extend `src/app/features/tape/tape-view/tape-drawing.spec.ts`: `holeRects`
   gives handles (`start`, `end`) only for the selected Hole, each "`min(8 px, width / 3)` wide
   inside the Hole" (research R6). Depends on T016.
-- [ ] T024 [US1] Extend `src/app/features/tape/tape-view/tape-view.component.spec.ts` with keyboard
+- [x] T024 [US1] Extend `src/app/features/tape/tape-view/tape-view.component.spec.ts` with keyboard
   edits on the focused drawing (quickstart 1–5, 7, 8): Alt+→ ×2 moves C4 10–13 to 12–15; Alt+↓
   moves it to D4; Shift+→ ×3 then Alt+Shift+→ ×2 gives 12–16; Shift+← on a 1-Column Hole and
   Alt+← / Alt+Shift+← at Column 1 do nothing (no save); Delete removes and selects "the next Hole
@@ -272,7 +272,7 @@ its start, remove a third, reopen the Tape after restarting Crancula and check t
   selected; a refused key (1.7) changes nothing, saves nothing and shows a snackbar
   `TAPE.EDIT.REFUSED_OVERLAP` "The Hole would overlap the Hole of C4 at Column 16."; arrows still
   select neighbours. Depends on T016.
-- [ ] T025 [US1] Extend `src/app/features/tape/tape-view/tape-view.component.spec.ts` with pointer
+- [x] T025 [US1] Extend `src/app/features/tape/tape-view/tape-view.component.spec.ts` with pointer
   edits through pointer events (contracts/tape-view-ui.md "Pointer"): press + move ≥ 4 px +
   release on a Hole body moves it to the snapped Column and row (one `update`, Hole selected); a
   move under 4 px is a click (selects, no edit); dragging a `data-testid="hole-handle"`
@@ -280,7 +280,7 @@ its start, remove a third, reopen the Tape after restarting Crancula and check t
   cancels it (no `update`); while dragging the drawing shows the would-be Tape, a refused position
   shows the Hole with the `refused` class and release there shows the snackbar and changes
   nothing; cursor classes `grab` / `grabbing` / `ew-resize`. Depends on T024.
-- [ ] T026 [P] [US1] Write `e2e/support/tape-edit.ts` (drag a Hole or a handle by Columns/rows on
+- [x] T026 [P] [US1] Write `e2e/support/tape-edit.ts` (drag a Hole or a handle by Columns/rows on
   the real stage, press keys on the drawing, read Holes from `data-testid="hole"`) and the failing
   e2e test `e2e/tape-edit.spec.ts`, part 1: drag a Hole body 2 Columns later, drag the start
   handle of another Hole 1 Column later, remove a third with Delete; a drag onto the next Hole of
@@ -306,12 +306,12 @@ its start, remove a third, reopen the Tape after restarting Crancula and check t
   Depends on T022.
 - [x] T033 [P] [US1] Add the handles of the selected Hole to `holeRects` in
   `src/app/features/tape/tape-view/tape-drawing.ts` until T023 is green. Depends on T023.
-- [ ] T034 [US1] Wire keyboard edits in `src/app/features/tape/tape-view/tape-view.component.ts`
+- [x] T034 [US1] Wire keyboard edits in `src/app/features/tape/tape-view/tape-view.component.ts`
   (and `.html`): `editIntent` → the command (`moveHole`/`changeHoleLength`/`removeHole`) →
   `TapeEditor.apply` with the new selection, or the snackbar on a refusal; add
   `TAPE.EDIT.REFUSED_OVERLAP` ("The Hole would overlap the Hole of {{note}} at Column
   {{column}}.") to `en.json` and `de.json`; until T024 is green. Depends on T024, T029, T032.
-- [ ] T035 [US1] Wire pointer edits in `src/app/features/tape/tape-view/tape-view.component.ts`,
+- [x] T035 [US1] Wire pointer edits in `src/app/features/tape/tape-view/tape-view.component.ts`,
   `.html` and `.scss` (pointer capture, `gridAt`, `HoleDrag`, preview recomputed only when the
   snapped Column or row changes and at most once per animation frame, `refused` class with an
   oxblood outline, cursors, handles drawn from T033; one drag = one `TapeEditor.apply` on

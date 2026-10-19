@@ -19,6 +19,9 @@
     "SAVED_HERE": "Saved on this computer"
   },
   "TAPE": {
+    "EDIT": {
+      "REFUSED_OVERLAP": "The Hole would overlap the Hole of {{note}} at Column {{column}}."
+    },
     "RENAME": {
       "TITLE": "Rename Tape",
       "NAME": "Name",
