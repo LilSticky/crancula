@@ -1,6 +1,7 @@
 import type {MidiNoteNumber} from '../organ/midi-note-number';
 import type {Organ} from '../organ/organ';
 import {err, ok, type Result} from '../result';
+import {holeLimitsOf} from './hole-fixes';
 import {columnCount, validTape, type Column, type ColumnCount, type Hole, type Tape} from './tape';
 
 /** Names a Hole of a Tape: a Pipe has at most one Hole at a start. */
@@ -33,9 +34,9 @@ function withHoles(tape: Tape, holes: readonly Hole[]): Tape {
   return result.value;
 }
 
-/** Replaces `target` by `replacement`, unless the replacement covers a Column of another Hole of its Pipe. */
-function replaceHole(tape: Tape, target: HoleRef, replacement: Hole): Result<HoleEdit, HoleEditRefusal> {
-  const others = tape.holes.filter((hole) => !sameHole(hole, target));
+/** Replaces `target` (or adds, without one) by `replacement`, unless the replacement covers a Column of another Hole of its Pipe. */
+function replaceHole(tape: Tape, target: HoleRef | undefined, replacement: Hole): Result<HoleEdit, HoleEditRefusal> {
+  const others = tape.holes.filter((hole) => target === undefined || !sameHole(hole, target));
   const replacementEnd = replacement.start + replacement.length;
   const other = others.find(
     (hole) =>
@@ -79,4 +80,18 @@ export function changeHoleLength(
 export function removeHole(tape: Tape, hole: HoleRef): Result<Tape, HoleEditRefusal> {
   if (find(tape, hole) === undefined) return err({code: 'no-such-hole'});
   return ok(withHoles(tape, tape.holes.filter((other) => !sameHole(other, hole))));
+}
+
+/** Adds a Hole at `start` on the Pipe: the Minimum Hole Length, shortened to stop at the next Hole of the Pipe. */
+export function addHole(
+  tape: Tape,
+  organ: Organ,
+  pipe: MidiNoteNumber,
+  start: Column,
+): Result<HoleEdit, HoleEditRefusal> {
+  if (!organ.pipes.some((candidate) => candidate.note === pipe)) return err({code: 'not-on-the-organ', pipe});
+  const minimum = holeLimitsOf(organ, tape.columnLength).minimumHoleLength;
+  const next = tape.holes.find((hole) => hole.pipe === pipe && hole.start > start);
+  const length = next === undefined ? minimum : (columnCount(Math.min(minimum, next.start - start)) ?? minimum);
+  return replaceHole(tape, undefined, {pipe, start, length});
 }

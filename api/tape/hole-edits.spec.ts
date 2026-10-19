@@ -3,7 +3,8 @@ import {midiNoteNumber, type MidiNoteNumber} from '../organ/midi-note-number';
 import {millimetres, organId, type Organ} from '../organ/organ';
 import {validateOrgan} from '../organ/validate-organ';
 import {partIndex, songId} from '../song/song';
-import {changeHoleLength, moveHole, removeHole, type HoleRef} from './hole-edits';
+import {cuttingProblems} from './cutting-problems';
+import {addHole, changeHoleLength, moveHole, removeHole, type HoleRef} from './hole-edits';
 import {tapeOf} from './tape-fixture';
 import {column, columnCount, tapeId, transposition, type Column, type Hole, type Tape} from './tape';
 
@@ -24,6 +25,19 @@ const organ: Organ = (() => {
   const result = validateOrgan({
     name: 'Street organ',
     tapeBed: {tapeWidth: 120, holeDiameter: 3, rowSpacing: 4},
+    minimumGap: 1,
+    leadIn: 20,
+    pipes: [{note: 60}, {note: 62}],
+  });
+  if (!result.ok) throw new Error('invalid test Organ');
+  return result.value;
+})();
+
+/** Minimum Hole Length 6.5 mm = 2.6 Columns of 2.5 mm, so 3 whole Columns. */
+const wideHoleOrgan: Organ = (() => {
+  const result = validateOrgan({
+    name: 'Street organ',
+    tapeBed: {tapeWidth: 120, holeDiameter: 6.5, rowSpacing: 8},
     minimumGap: 1,
     leadIn: 20,
     pipes: [{note: 60}, {note: 62}],
@@ -251,5 +265,58 @@ describe('changeHoleLength', () => {
     expect(edit.tape.holes).toEqual([hole(c4, 10, 15), hole(notOnOrgan, 20, 22)]);
     expect(edit.tape.length).toBe(tape.length);
     expectOtherFieldsUnchanged(tape, edit.tape);
+  });
+});
+
+describe('addHole', () => {
+  it('adds a Hole of the Minimum Hole Length in whole Columns', () => {
+    const tape = aTape([hole(d4, 5, 6)]);
+
+    const edit = unwrap(addHole(tape, wideHoleOrgan, c4, col(19)));
+
+    expect(edit.hole).toEqual(hole(c4, 20, 22));
+    expect(edit.hole).toEqual({pipe: c4, start: col(19), length: defined(columnCount(3), 'length')});
+    expect(edit.tape.holes).toEqual([hole(c4, 20, 22), hole(d4, 5, 6)]);
+    expect(edit.tape.length).toBe(tape.length);
+    expectOtherFieldsUnchanged(tape, edit.tape);
+  });
+
+  it('adds the first Hole to a Tape without Holes', () => {
+    const edit = unwrap(addHole(aTape([]), wideHoleOrgan, c4, col(19)));
+
+    expect(edit.tape.holes).toEqual([hole(c4, 20, 22)]);
+  });
+
+  it('stops at the next Hole of the Pipe, touching it, which is a too-close Cutting Problem', () => {
+    const tape = aTape([hole(c4, 22, 25)]);
+
+    const edit = unwrap(addHole(tape, wideHoleOrgan, c4, col(19)));
+
+    expect(edit.hole).toEqual(hole(c4, 20, 21));
+    expect(edit.tape.holes).toEqual([hole(c4, 20, 21), hole(c4, 22, 25)]);
+    expect(cuttingProblems(edit.tape, wideHoleOrgan).map((problem) => problem.code)).toContain('too-close');
+  });
+
+  it('ignores Holes of other Pipes and earlier Holes when shortening', () => {
+    const tape = aTape([hole(c4, 10, 13), hole(d4, 22, 25)]);
+
+    expect(unwrap(addHole(tape, wideHoleOrgan, c4, col(19))).hole).toEqual(hole(c4, 20, 22));
+  });
+
+  it('refuses a Column that a Hole of the Pipe covers', () => {
+    const tape = aTape([hole(c4, 18, 22)]);
+
+    expect(addHole(tape, wideHoleOrgan, c4, col(19))).toEqual({
+      ok: false,
+      error: {code: 'overlaps', other: hole(c4, 18, 22)},
+    });
+    expect(tape.holes).toEqual([hole(c4, 18, 22)]);
+  });
+
+  it('refuses a Pipe that is not on the Organ', () => {
+    expect(addHole(aTape([]), wideHoleOrgan, notOnOrgan, col(19))).toEqual({
+      ok: false,
+      error: {code: 'not-on-the-organ', pipe: notOnOrgan},
+    });
   });
 });

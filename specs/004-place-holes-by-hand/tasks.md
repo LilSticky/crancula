@@ -362,7 +362,7 @@ Pipe, start, length and that it is saved.
 
 ### Implementation for User Story 2
 
-- [ ] T040 [US2] Implement `addHole` in `api/tape/hole-edits.ts` and export it from `api/index.ts`
+- [x] T040 [US2] Implement `addHole` in `api/tape/hole-edits.ts` and export it from `api/index.ts`
   until T036 is green. Depends on T036.
 - [ ] T041 [US2] Implement `src/app/features/tape/tape-view/add-hole/add-hole.component.ts` (signal
   form, `MatSelect`, `MatFormField`, minimal SCSS) and add `TAPE.ADD_HOLE.TITLE`, `PIPE`, `COLUMN`,
