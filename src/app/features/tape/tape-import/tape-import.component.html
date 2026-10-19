@@ -8,7 +8,7 @@
   </mat-card>
 } @else {
   <form class="tape-import" data-testid="import-form" (submit)="$event.preventDefault()">
-    <mat-card appearance="outlined" data-testid="song-sheet">
+    <mat-card appearance="outlined" class="song-sheet" data-testid="song-sheet">
       <section class="group">
         <h2 class="group-title" data-testid="group-title">{{ 'TAPE.IMPORT.GROUP_SONG' | translate }}</h2>
         <div class="file">

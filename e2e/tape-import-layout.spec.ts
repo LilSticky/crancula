@@ -1,7 +1,7 @@
 import {expect, test, type Locator, type Page} from '@playwright/test';
 import {launchApp, type LaunchedApp} from './support/launch-app';
 import {longSongWithSixteenParts, threePartsWithPercussion, type MidiFilePayload} from './support/midi-file';
-import {saveOrgan} from './support/organ-editor';
+import {defineStreetOrgan, saveOrgan} from './support/organ-editor';
 import {defineOctaveOrgan} from './support/tape-creation';
 import {resizeWindowOrSkip} from './support/window-size';
 
@@ -181,6 +181,56 @@ test.describe('The Parts list in German at 1024 x 700', () => {
       }
     });
   }
+});
+
+test.describe('The Song sheet in German at 1024 x 700 with the Unplayable Notes expanded (#118)', () => {
+  test('its controls fit inside the card and above the action bar', async () => {
+    const launched = await launchApp();
+    const {app, window} = launched;
+    try {
+      await resizeWindowOrSkip(launched, 1024, 700, true);
+      await defineWhiteKeyOrgan(window);
+      await openImport(launched, longSongWithSixteenParts(), 'de');
+      await transposeAwayFromProposal(window);
+      await window.getByTestId('fit-unplayable').click();
+      await expect(window.getByTestId('fit-unplayable')).toHaveAttribute('aria-expanded', 'true');
+
+      const card = window.getByTestId('song-sheet');
+      const actionBar = window.locator('cranc-action-bar');
+      const barTop = (await boxOf(actionBar)).top;
+      expect((await boxOf(card)).bottom, 'the Song sheet ends above the action bar').toBeLessThanOrEqual(barTop + 0.5);
+
+      for (const id of ['use-proposal', 'name', 'column-length'] as const) {
+        const control = window.getByTestId(id);
+        await expect(control, `${id} is shown`).toBeVisible();
+        await control.scrollIntoViewIfNeeded();
+        const box = await boxOf(control);
+        const area = await boxOf(card);
+        expect(box.top, `${id} top inside the Song sheet`).toBeGreaterThanOrEqual(area.top - 0.5);
+        expect(box.bottom, `${id} bottom inside the Song sheet ${JSON.stringify({box, area})}`).toBeLessThanOrEqual(area.bottom + 0.5);
+        expect(box.bottom, `${id} above the action bar`).toBeLessThanOrEqual(barTop + 0.5);
+      }
+    } finally {
+      await app.close();
+    }
+  });
+});
+
+test.describe('The Song sheet in the wide layout at 1280 x 800 (#118)', () => {
+  test('three Parts with the Street organ do not overflow the Song sheet', async () => {
+    const launched = await launchApp();
+    const {app, window} = launched;
+    try {
+      await resizeWindowOrSkip(launched, 1280, 800, true);
+      await defineStreetOrgan(window);
+      await openImport(launched, threePartsWithPercussion());
+      await expect(window.getByTestId('part')).toHaveCount(3);
+      const measured = await window.getByTestId('song-sheet').evaluate((element) => ({scrollHeight: element.scrollHeight, clientHeight: element.clientHeight}));
+      expect(measured.scrollHeight, JSON.stringify(measured)).toBeLessThanOrEqual(measured.clientHeight + 1);
+    } finally {
+      await app.close();
+    }
+  });
 });
 
 test.describe('The Fit disclosures with the real keyboard', () => {
