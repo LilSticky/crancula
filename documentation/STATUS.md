@@ -164,6 +164,7 @@ Fixed 2026-10-19: the import screen's Song sheet spilled under the action bar in
   manual run, or a pull request that changes the workflow or `electron-builder.json`, only builds
   artifacts. Builds are unsigned. v0.0.1 (2026-10-14) is the first release from a tag; v0.1.0
   (2026-10-18) completes v0.1. Release with `/release` (ADR 19); notes come from `CHANGELOG.md`.
+  `/release` also brings the README up to date, including its **Releases** list (one row per version).
 
 ## Process changes
 
