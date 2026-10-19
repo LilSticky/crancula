@@ -59,11 +59,17 @@ function keysUnder(tree: TranslationTree, path: string): readonly string[] {
 
 describe('Tape export texts', () => {
   for (const code of Object.keys(cuttingProblemCodes)) {
-    const key = `TAPE.EXPORT.PROBLEM_${keyOf(code)}`;
+    const key = `TAPE.CUTTING_PROBLEM.${keyOf(code)}`;
 
     it(`${code} has an English and a German text at ${key}`, () => {
       expect(textAt(en as TranslationTree, key)).toBeTruthy();
       expect(textAt(de, key)).toBeTruthy();
+    });
+  }
+
+  for (const [language, tree] of [['English', en], ['German', de]] as const) {
+    it(`has no TAPE.EXPORT.PROBLEM_* key in ${language}`, () => {
+      expect(keysUnder(tree as TranslationTree, 'TAPE.EXPORT').filter((name) => name.startsWith('PROBLEM_'))).toEqual([]);
     });
   }
 

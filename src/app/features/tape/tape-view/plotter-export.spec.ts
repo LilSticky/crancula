@@ -26,7 +26,7 @@ import {
 import {testOrgan} from '../../../../testing/organs';
 import {provideTestTranslations} from '../../../../testing/test-translations';
 import {TapeLibrary} from '../tape-library.store';
-import {CuttingProblemsDialogComponent} from './export-problems-dialog/export-problems-dialog.component';
+import {CuttingProblemsDialogComponent} from './cutting-problems-dialog/cutting-problems-dialog.component';
 import {PlotterExport} from './plotter-export';
 
 const TICKS_PER_QUARTER = 480;

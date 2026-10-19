@@ -4,7 +4,7 @@ import {MatSnackBar} from '@angular/material/snack-bar';
 import {TranslateService} from '@ngx-translate/core';
 import {cuttingProblems, plotterFileName, plotterSvg, tapeGeometry, type Organ, type Tape} from '@api/index';
 import {CRANCULA_API} from '../../../core/crancula-api.token';
-import {CuttingProblemsDialogComponent} from './export-problems-dialog/export-problems-dialog.component';
+import {CuttingProblemsDialogComponent} from './cutting-problems-dialog/cutting-problems-dialog.component';
 
 /** How long the "saved" snackbar stays, in ms. */
 const SAVED_DURATION = 6000;

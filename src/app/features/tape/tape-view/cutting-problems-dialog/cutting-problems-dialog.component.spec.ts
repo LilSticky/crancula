@@ -4,7 +4,7 @@ import {type CuttingProblem, midiNoteNumber, type MidiNoteNumber, type Millimetr
 import {column} from '../../../../../../api/tape/tape';
 import {vi} from 'vitest';
 import {provideTestTranslations} from '../../../../../testing/test-translations';
-import {CuttingProblemsDialogComponent} from './export-problems-dialog.component';
+import {CuttingProblemsDialogComponent} from './cutting-problems-dialog.component';
 
 function note(value: number): MidiNoteNumber {
   const result = midiNoteNumber(value);
@@ -111,7 +111,7 @@ describe('CuttingProblemsDialogComponent', () => {
     const {element, entries} = await render([TOO_SHORT, TOO_CLOSE, NO_PIPE]);
 
     expect(new Set(entries().map((entry) => entry.replace(/[\d.,]+/g, '#'))).size).toBe(3);
-    expect(element.textContent).not.toMatch(/TAPE\.EXPORT/);
+    expect(element.textContent).not.toMatch(/TAPE\.(EXPORT|CUTTING_PROBLEM)/);
   });
 
   it('shows the list inside the scrolling dialog content', async () => {

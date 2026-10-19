@@ -12,7 +12,7 @@ interface ProblemEntry {
 
 /** Lists why a Tape can not be cut yet, one entry per export problem. */
 @Component({
-  selector: 'cranc-export-problems-dialog',
+  selector: 'cranc-cutting-problems-dialog',
   imports: [MatButton, MatDialogActions, MatDialogContent, MatDialogTitle, TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -41,15 +41,15 @@ export class CuttingProblemsDialogComponent {
     const base = {note: noteName(problem.pipe), column: String(problem.start + 1)};
     switch (problem.code) {
       case 'no-pipe':
-        return {key: 'TAPE.EXPORT.PROBLEM_NO_PIPE', params: base};
+        return {key: 'TAPE.CUTTING_PROBLEM.NO_PIPE', params: base};
       case 'too-short':
         return {
-          key: 'TAPE.EXPORT.PROBLEM_TOO_SHORT',
+          key: 'TAPE.CUTTING_PROBLEM.TOO_SHORT',
           params: {...base, length: mm(problem.lengthMm), minimum: mm(problem.minimumHoleLengthMm)},
         };
       case 'too-close':
         return {
-          key: 'TAPE.EXPORT.PROBLEM_TOO_CLOSE',
+          key: 'TAPE.CUTTING_PROBLEM.TOO_CLOSE',
           params: {...base, next: String(problem.nextStart + 1), gap: mm(problem.gapMm), minimum: mm(problem.minimumGapMm)},
         };
     }
