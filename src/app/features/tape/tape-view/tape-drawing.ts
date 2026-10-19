@@ -108,6 +108,34 @@ export function holeRects(
     });
 }
 
+/** Space between a Hole and its Cutting Problem ring, in px. */
+const RING_GAP_PX = 2;
+
+/** The rings around Holes with a Cutting Problem inside `range`, in px. `problems` holds "pipe:start" keys. */
+export function holeMarks(
+  tape: Tape,
+  organ: Organ,
+  geometry: TapeGeometry,
+  scale: number,
+  range: ColumnRange,
+  problems: ReadonlySet<string>,
+) {
+  return holeRects(tape, geometry, scale, range, undefined)
+    .filter((rect) => {
+      const pipe = organ.pipes[rect.row]?.note;
+      return pipe !== undefined && problems.has(`${pipe}:${rect.start}`);
+    })
+    .map((rect) => ({
+      row: rect.row,
+      start: rect.start,
+      x: rect.x - RING_GAP_PX,
+      y: rect.y - RING_GAP_PX,
+      width: rect.width + 2 * RING_GAP_PX,
+      height: rect.height + 2 * RING_GAP_PX,
+      radius: rect.radius + RING_GAP_PX,
+    }));
+}
+
 /**
  * The last ruler number sits right-aligned at the Tape's end (see the template), so it reaches further left
  * than a centred one. The number before it is dropped when they would touch.

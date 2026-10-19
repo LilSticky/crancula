@@ -422,7 +422,7 @@ that the selected Hole says why; lengthen it again and check that the mark is go
 
 ### Implementation for User Story 3
 
-- [ ] T048 [US3] Draw the marks in `src/app/features/tape/tape-view/tape-drawing.ts` and
+- [x] T048 [US3] Draw the marks in `src/app/features/tape/tape-view/tape-drawing.ts` and
   `tape-view.component.scss` (dashed oxblood ring, selection ring stays solid blue) until T043 is
   green. Depends on T043.
 - [ ] T049 [US3] Implement
