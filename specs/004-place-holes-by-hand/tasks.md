@@ -501,12 +501,12 @@ Tape is 104 Columns long, then remove the Hole and check it stays 104 Columns lo
   change the end to Column 104 (`start + length` 104) on a 100-Column Tape → `length` 104; 5.2 add
   and move to end at Column 110 → `length` 110; 5.3 then remove or shorten → `length` stays; an edit inside the Tape
   keeps `length`. Depends on T040.
-- [ ] T058 [US5] Extend `src/app/features/tape/tape-view/tape-view.component.spec.ts` (quickstart
+- [x] T058 [US5] Extend `src/app/features/tape/tape-view/tape-view.component.spec.ts` (quickstart
   23): Shift+→ past the end grows the Tape, and the drawing, ruler, Column numbers, subtitle and
   length in mm follow (5.1); a drag released past the Tape's end grows it (`gridAt` is not clamped
   at the end); removing the Hole keeps the length; undo shrinks it back (4.1, 5.3); during a drag
   within 24 px of the stage's left or right edge the stage scrolls (research R6). Depends on T056.
-- [ ] T059 [P] [US5] Extend `e2e/tape-edit.spec.ts`, part 5: drag the last Hole past the right edge
+- [x] T059 [P] [US5] Extend `e2e/tape-edit.spec.ts`, part 5: drag the last Hole past the right edge
   of the stage → the stage scrolls; release past the end → the subtitle shows the longer Tape;
   remove it → still that long; undo twice → the opened length; relaunch → as last saved.
   Depends on T054.
@@ -515,7 +515,7 @@ Tape is 104 Columns long, then remove the Hole and check it stays 104 Columns lo
 
 - [x] T060 [US5] (already green: `withHoles` grows the Tape since T040) Implement growth in `addHole`, `moveHole` and `changeHoleLength` in
   `api/tape/hole-edits.ts` until T057 is green. Depends on T057.
-- [ ] T061 [US5] Implement auto-scroll during a drag and whatever else the view needs in
+- [x] T061 [US5] Implement auto-scroll during a drag and whatever else the view needs in
   `src/app/features/tape/tape-view/tape-view.component.ts` until T058 and T059 are green.
   Depends on T058, T059, T060.
 

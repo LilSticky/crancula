@@ -1,5 +1,6 @@
 import {
   ChangeDetectionStrategy,
+  NgZone,
   Component,
   computed,
   DestroyRef,
@@ -83,6 +84,12 @@ function shortcutsOf(platform: Platform): {readonly undo: string; readonly redo:
 /** How long the snackbar that explains a refused edit stays, in ms. */
 const REFUSAL_DURATION = 3000;
 
+/** A dragged Hole this close to the stage's left or right edge scrolls the stage, in px. */
+const EDGE_ZONE = 24;
+
+/** How far the stage scrolls per frame while a Hole rests in the edge zone, in px. */
+const EDGE_SCROLL_STEP = 12;
+
 /** The shell's query: below this width the side panel gives way to a toggle. */
 const COMPACT_QUERY = '(max-width: 1179.98px)';
 
@@ -106,10 +113,14 @@ export class TapeViewComponent {
   protected readonly shortcuts = shortcutsOf(this.platform);
   private readonly snackBar = inject(MatSnackBar);
   private readonly translate = inject(TranslateService);
+  private readonly zone = inject(NgZone);
   private readonly holeDrag = new HoleDragSession();
   /** Set after a drag so the click that may follow it does not select. */
   private dragJustEnded = false;
   private dragEndedTimer: ReturnType<typeof setTimeout> | undefined;
+  /** The last pointer position of a drag, so the Column follows when the stage scrolls under a resting pointer. */
+  private lastPointer: {readonly clientX: number; readonly clientY: number; readonly pointerId: number; readonly svg: Element} | undefined;
+  private edgeScrollFrame: number | undefined;
   protected readonly dragging = this.holeDrag.dragging;
   protected readonly plotterExport = inject(PlotterExport);
   private readonly language = inject(LanguagePreference).language;
@@ -349,20 +360,47 @@ export class TapeViewComponent {
   }
 
   protected onPointerMove(event: PointerEvent, svg: Element): void {
+    this.lastPointer = {clientX: event.clientX, clientY: event.clientY, pointerId: event.pointerId, svg};
+    this.followPointer(this.lastPointer);
+    if (this.holeDrag.dragging() && this.edgeScrollFrame === undefined) this.scheduleEdgeScroll();
+  }
+
+  private followPointer({clientX, clientY, pointerId, svg}: NonNullable<typeof this.lastPointer>): void {
     const geometry = this.geometry();
     if (geometry === undefined) return;
     const box = svg.getBoundingClientRect();
-    const x = event.clientX - box.left;
-    const y = event.clientY - box.top - RULER_HEIGHT;
+    const x = clientX - box.left;
+    const y = clientY - box.top - RULER_HEIGHT;
     this.pointer.set(pointerAt(x, y, this.scale(), geometry));
-    if (this.holeDrag.move({x: event.clientX, y: event.clientY}, gridAt(x, y, this.scale(), geometry))) {
+    if (this.holeDrag.move({x: clientX, y: clientY}, gridAt(x, y, this.scale(), geometry))) {
       // Captured only once it is a drag, so that a plain click still reaches the Hole.
       try {
-        svg.setPointerCapture(event.pointerId);
+        svg.setPointerCapture(pointerId);
       } catch {
         // No active pointer to capture (a synthetic event): the drag still follows the moves over the drawing.
       }
     }
+  }
+
+  /** Outside the zone: a frame loop that waits for the pointer must not keep the app from being stable. */
+  private scheduleEdgeScroll(): void {
+    this.edgeScrollFrame = this.zone.runOutsideAngular(() => requestAnimationFrame(() => this.edgeScroll()));
+  }
+
+  /** While a Hole is dragged and rests near an edge of the stage, scrolls it each frame; the Tape grows at its end. */
+  private edgeScroll(): void {
+    this.edgeScrollFrame = undefined;
+    const pointer = this.lastPointer;
+    const scroll = this.scrollElement()?.nativeElement;
+    if (!this.holeDrag.dragging() || pointer === undefined || scroll === undefined) return;
+    const box = scroll.getBoundingClientRect();
+    const step = pointer.clientX > box.right - EDGE_ZONE ? EDGE_SCROLL_STEP : pointer.clientX < box.left + EDGE_ZONE ? -EDGE_SCROLL_STEP : 0;
+    if (step !== 0) {
+      scroll.scrollLeft += step;
+      this.stage.onScroll(scroll);
+      this.followPointer(pointer);
+    }
+    this.scheduleEdgeScroll();
   }
 
   /** Presses a Hole, or one of the handles of the selected Hole; a press that travels turns into a drag. */
@@ -476,6 +514,7 @@ export class TapeViewComponent {
     inject(DestroyRef).onDestroy(() => {
       this.holeDrag.cancel();
       clearTimeout(this.dragEndedTimer);
+      if (this.edgeScrollFrame !== undefined) cancelAnimationFrame(this.edgeScrollFrame);
     });
     this.sidePanelOpen.set(this.compact() && this.importSummary() !== null);
     afterEveryRender(() => {

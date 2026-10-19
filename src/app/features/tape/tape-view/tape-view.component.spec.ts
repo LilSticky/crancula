@@ -2487,4 +2487,189 @@ describe('TapeViewComponent', () => {
       });
     });
   });
+
+  describe('growing the Tape (US5)', () => {
+    const RULER_PX = 24;
+    // Row 24 is E5. The Tape has 100 Columns of 2.5 mm; the last Hole ends at its end (starts count from 0).
+    const holes = [
+      {row: 24, start: 10, length: 3},
+      {row: 24, start: 97, length: 3},
+    ];
+    const rectAt = (view: HTMLElement | null, row: number, start: number) =>
+      view?.querySelector(`[data-testid="tape-scroll"] rect[data-testid="hole"][data-row="${row - 1}"][data-start="${start}"]`) ?? null;
+    const storedTape = (tapeId: string) => TestBed.inject(TapeLibrary).tapeEntities().find((candidate) => candidate.id === tapeId);
+    const lengthOf = (tapeId: string) => storedTape(tapeId)?.length;
+    const frame = () => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+    const subtitle = (view: HTMLElement | null) => view?.querySelector('cranc-page-head p')?.textContent?.trim();
+    const texts = (view: HTMLElement | null, testId: string) =>
+      Array.from(view?.querySelectorAll(`svg [data-testid="${testId}"]`) ?? []).map((element) => element.textContent?.trim());
+
+    const setup = async () => {
+      const rendered = await render({holes});
+      await rendered.open(`/tapes/${rendered.tape.id}`);
+      const svg = rendered.view()?.querySelector('[data-testid="tape-scroll"] svg') as SVGSVGElement;
+      Object.defineProperty(svg, 'getBoundingClientRect', {value: () => new DOMRect(0, 0, 4000, 300), configurable: true});
+      const geometry = tapeGeometry(rendered.tape, rendered.organ);
+      const at = (column: number, row: number, offset?: number) => ({
+        clientX: (geometry.leadIn + column * geometry.columnLength + (offset === undefined ? geometry.columnLength / 2 : 0)) * SCALE + (offset ?? 0),
+        clientY: (geometry.rowCentres[row - 1] ?? 0) * SCALE + RULER_PX,
+      });
+      const pointer = (type: string, position: {clientX: number; clientY: number}) =>
+        new PointerEvent(type, {...position, pointerId: 1, button: 0, bubbles: true, cancelable: true});
+      const down = async (target: Element, position: {clientX: number; clientY: number}) => {
+        target.dispatchEvent(pointer('pointerdown', position));
+        await rendered.settle();
+      };
+      const move = async (position: {clientX: number; clientY: number}) => {
+        svg.dispatchEvent(pointer('pointermove', position));
+        await frame();
+        await rendered.settle();
+      };
+      const up = async (position: {clientX: number; clientY: number}) => {
+        svg.dispatchEvent(pointer('pointerup', position));
+        await rendered.settle();
+      };
+      const click = async (target: Element) => {
+        target.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+        await rendered.settle();
+      };
+      const press = async (init: KeyboardEventInit) => {
+        svg.dispatchEvent(new KeyboardEvent('keydown', {...init, bubbles: true, cancelable: true}));
+        await rendered.settle();
+      };
+      const undo = async () => {
+        rendered.view()?.querySelector<HTMLButtonElement>('[data-testid="undo"]')?.click();
+        await rendered.settle();
+      };
+      return {...rendered, svg, at, down, move, up, click, press, undo};
+    };
+
+    it('grows the Tape when Shift+ArrowRight lengthens the last Hole past the end, and the drawing, ruler, Column numbers and subtitle follow (5.1)', async () => {
+      const {tape, organ, view, click, press} = await setup();
+      await click(rectAt(view(), 24, 97) as Element);
+      const widthBefore = Number(view()?.querySelector('svg .tape')?.getAttribute('width'));
+
+      for (let times = 0; times < 4; times++) await press({key: 'ArrowRight', shiftKey: true});
+
+      const grown = storedTape(tape.id);
+      expect(grown?.length).toBe(104);
+      expect(Number(view()?.querySelector('svg .tape')?.getAttribute('width'))).toBeCloseTo(widthBefore + 4 * 2.5 * SCALE, 0);
+      expect(subtitle(view())).toBe('For the Street organ. 104 Columns of 2.5 mm, 260 mm of Tape.');
+      if (grown === undefined) return;
+      expect(texts(view(), 'ruler-number')).toEqual(rulerNumbers(tapeGeometry(grown, organ).length, SCALE).map(String));
+      expect(texts(view(), 'column-number')).toEqual(columnNumbers(104, 2.5 * SCALE).map(({number}) => String(number)));
+      expect(view()?.querySelectorAll('svg [data-testid="column-mark"]')).toHaveLength(columnLines(104).length);
+    });
+
+    it('grows the Tape when a drag is released past its end (5.1)', async () => {
+      const {tape, view, at, down, move, up, click} = await setup();
+      await click(rectAt(view(), 24, 97) as Element);
+      const endHandle = view()?.querySelector('[data-testid="hole-handle"][data-end="end"]') as Element;
+
+      await down(endHandle, at(100, 24, -1));
+      await move(at(103, 24));
+      await up(at(103, 24));
+
+      expect(lengthOf(tape.id)).toBe(104);
+      expect(subtitle(view())).toContain('104 Columns');
+    });
+
+    it('keeps the length when the grown Hole is removed (5.2)', async () => {
+      const {tape, view, click, press} = await setup();
+      await click(rectAt(view(), 24, 97) as Element);
+      for (let times = 0; times < 2; times++) await press({key: 'ArrowRight', shiftKey: true});
+
+      await press({key: 'Delete'});
+
+      expect(storedTape(tape.id)?.holes).toHaveLength(1);
+      expect(lengthOf(tape.id)).toBe(102);
+      expect(subtitle(view())).toContain('102 Columns');
+    });
+
+    it('shrinks the Tape back with undo, step by step (5.3)', async () => {
+      const {tape, view, click, press, undo} = await setup();
+      await click(rectAt(view(), 24, 97) as Element);
+      for (let times = 0; times < 2; times++) await press({key: 'ArrowRight', shiftKey: true});
+      await press({key: 'Delete'});
+
+      await undo();
+      expect(lengthOf(tape.id)).toBe(102);
+      await undo();
+      expect(lengthOf(tape.id)).toBe(101);
+      await undo();
+
+      expect(lengthOf(tape.id)).toBe(100);
+      expect(subtitle(view())).toContain('100 Columns');
+    });
+
+    describe('scrolling the stage during a drag (research R6)', () => {
+      const STAGE_PX = 500;
+      const SCROLL_PX = 945;
+      const scrollOf = (view: HTMLElement | null) => view?.querySelector('[data-testid="tape-scroll"]') as HTMLElement;
+      const prepare = async () => {
+        const setUp = await setup();
+        const scroll = scrollOf(setUp.view());
+        let scrollLeft = 0;
+        const clamp = (value: number) => Math.min(Math.max(value, 0), SCROLL_PX - STAGE_PX);
+        Object.defineProperty(scroll, 'clientWidth', {value: STAGE_PX, configurable: true});
+        Object.defineProperty(scroll, 'scrollWidth', {value: SCROLL_PX, configurable: true});
+        Object.defineProperty(scroll, 'scrollLeft', {
+          configurable: true,
+          get: () => scrollLeft,
+          set: (value: number) => {
+            scrollLeft = clamp(value);
+          },
+        });
+        Object.defineProperty(scroll, 'scrollBy', {
+          configurable: true,
+          value: (first: number | ScrollToOptions) => {
+            scrollLeft = clamp(scrollLeft + (typeof first === 'number' ? first : (first.left ?? 0)));
+          },
+        });
+        Object.defineProperty(scroll, 'getBoundingClientRect', {value: () => new DOMRect(0, 0, STAGE_PX, 300), configurable: true});
+        scroll.dispatchEvent(new Event('scroll'));
+        await setUp.settle();
+        return {...setUp, scroll};
+      };
+      const drag = async (setUp: Awaited<ReturnType<typeof prepare>>, clientX: number) => {
+        const start = setUp.at(11, 24);
+        await setUp.down(rectAt(setUp.view(), 24, 10) as Element, start);
+        await setUp.move({clientX: 60, clientY: start.clientY});
+        await setUp.move({clientX, clientY: start.clientY});
+        await frame();
+        await frame();
+        await frame();
+        await setUp.settle();
+      };
+
+      it('scrolls the stage right while the pointer is within 24 px of its right edge', async () => {
+        const setUp = await prepare();
+
+        await drag(setUp, STAGE_PX - 10);
+
+        expect(setUp.scroll.scrollLeft).toBeGreaterThan(0);
+      });
+
+      it('scrolls the stage left while the pointer is within 24 px of its left edge', async () => {
+        const setUp = await prepare();
+        setUp.scroll.scrollLeft = 300;
+        setUp.scroll.dispatchEvent(new Event('scroll'));
+        await setUp.settle();
+        const before = setUp.scroll.scrollLeft;
+        expect(before).toBeGreaterThan(0);
+
+        await drag(setUp, 10);
+
+        expect(setUp.scroll.scrollLeft).toBeLessThan(before);
+      });
+
+      it('does not scroll the stage while the pointer is further than 24 px from both edges', async () => {
+        const setUp = await prepare();
+
+        await drag(setUp, STAGE_PX / 2);
+
+        expect(setUp.scroll.scrollLeft).toBe(0);
+      });
+    });
+  });
 });

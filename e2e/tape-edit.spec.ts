@@ -238,6 +238,88 @@ test.describe('Editing a Tape by hand', () => {
     await second.app.close();
   });
 
+  test('scrolls the stage during a drag near its edge, grows the Tape when released past the end, and keeps the length on remove and after undo and a restart', async () => {
+    const first = await launchApp();
+    const {window} = first;
+    await resizeWindowOrSkip(first, 1024, 768);
+    await defineOctaveOrgan(window, 'Octave organ');
+    await createTapeFromSong(window, 'Long scale', songRepeatingC4('long.mid', 40), {columnLength: '1.25'});
+    const subtitle = window.getByTestId('tape-name');
+    const columnsOf = async (): Promise<number> => {
+      const text = (await subtitle.textContent()) ?? '';
+      const match = /(\d+) Columns? of/.exec(text);
+      if (!match?.[1]) throw new Error(`the subtitle shows no Column count: ${text}`);
+      return Number(match[1]);
+    };
+    const openedColumns = await columnsOf();
+    const scroll = window.getByTestId('tape-scroll');
+    const scrollLeft = (): Promise<number> => scroll.evaluate((element) => element.scrollLeft);
+
+    // Park the stage a little before its end, so the last Hole is in view and there is room to scroll.
+    await scroll.evaluate((element) => {
+      element.scrollLeft = element.scrollWidth - element.clientWidth - 300;
+    });
+    const parked = await scrollLeft();
+    expect(parked).toBeGreaterThan(0);
+    // Pick the last Hole that is in view at the parked position.
+    const stageView = await scroll.boundingBox();
+    if (!stageView) throw new Error('the stage is not shown');
+    const inView = () => window.locator('[data-testid="tape-scroll"] svg [data-testid="hole"]').evaluateAll(
+      (rects, view) =>
+        rects
+          .map((rect) => ({
+            row: Number(rect.getAttribute('data-row')),
+            start: Number(rect.getAttribute('data-start')),
+            right: rect.getBoundingClientRect().right,
+            left: rect.getBoundingClientRect().left,
+          }))
+          .filter((hole) => hole.left >= view.left && hole.right <= view.right),
+      {left: stageView.x, right: stageView.x + stageView.width},
+    );
+    await expect.poll(async () => (await inView()).length).toBeGreaterThan(0);
+    const last = (await inView()).sort((a, b) => a.start - b.start).at(-1);
+    if (!last) throw new Error('expected a Hole in view');
+    const hole = holeAt(window, last.row, last.start);
+    const holeBox = await hole.boundingBox();
+    const stageBox = await scroll.boundingBox();
+    if (!holeBox || !stageBox) throw new Error('the last Hole or the stage is not shown');
+
+    // Hold the Hole within 24 px of the stage's right edge: the stage scrolls, without any further pointer move.
+    await window.mouse.move(holeBox.x + holeBox.width / 2, holeBox.y + holeBox.height / 2);
+    await window.mouse.down();
+    await window.mouse.move(stageBox.x + stageBox.width - 8, holeBox.y + holeBox.height / 2, {steps: 8});
+    await expect.poll(scrollLeft, {message: 'the stage scrolls while a drag is held near its right edge'}).toBeGreaterThan(parked);
+    // Keep holding until the stage has scrolled well on, then release past the end of the Tape.
+    await expect.poll(scrollLeft).toBeGreaterThan(parked + 250);
+    await window.mouse.up();
+
+    await expect.poll(columnsOf).toBeGreaterThan(openedColumns);
+    const grownColumns = await columnsOf();
+
+    // Removing the Hole keeps the Tape that long.
+    const moved = window.locator('[data-testid="tape-scroll"] svg [data-testid="hole"].selected');
+    await expect(moved).toHaveCount(1);
+    const movedRow = Number(await moved.getAttribute('data-row'));
+    const movedStart = Number(await moved.getAttribute('data-start'));
+    await pressOnDrawing(window, 'Delete');
+    await expect(holeAt(window, movedRow, movedStart)).toHaveCount(0);
+    expect(await columnsOf()).toBe(grownColumns);
+
+    // Undo twice: the Hole comes back, then the Tape shrinks to the opened length.
+    await pressOnDrawing(window, 'ControlOrMeta+Z');
+    expect(await columnsOf()).toBe(grownColumns);
+    await pressOnDrawing(window, 'ControlOrMeta+Z');
+    await expect.poll(columnsOf).toBe(openedColumns);
+    await expect(window.getByTestId('undo')).toBeDisabled();
+
+    await first.app.close();
+
+    const second = await launchApp(first.userDataDir);
+    await openOnlyTape(second.window);
+    await expect(second.window.getByTestId('tape-name')).toContainText(`${openedColumns} Columns of`);
+    await second.app.close();
+  });
+
   for (const [width, height] of [[1024, 768], [1200, 700]] as const) {
     test(`keeps the side panel clear of the Tape drawing in a ${width}x${height} window and selects a Hole at the left`, async () => {
       const launched = await launchApp();
