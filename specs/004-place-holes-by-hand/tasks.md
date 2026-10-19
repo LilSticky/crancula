@@ -1,4 +1,4 @@
----
+﻿---
 
 description: "Tasks for 004 Place holes by hand"
 ---
@@ -402,7 +402,7 @@ that the selected Hole says why; lengthen it again and check that the mark is go
   {{previous}} is {{gap}} mm, the Minimum Gap is {{minimum}} mm."), mm values in the language's
   notation; choosing a button emits the `HoleRef`; a `no-pipe` Hole is plain text, counted, not a
   button. Depends on T010.
-- [ ] T045 [US3] Extend `src/app/features/tape/tape-view/tape-view.component.spec.ts` (quickstart
+- [x] T045 [US3] Extend `src/app/features/tape/tape-view/tape-view.component.spec.ts` (quickstart
   13–17, 27): with a Minimum Hole Length of 2 Columns, Shift+← to 1 Column applies, marks the Hole
   and the Selected Hole names the problem in mm (3.1); a move below the Minimum Gap marks both
   Holes (3.2); fixing it removes the marks at once (3.3); the Cutting Problems section counts and
@@ -414,7 +414,7 @@ that the selected Hole says why; lengthen it again and check that the mark is go
   R10): on a 2,000-Column Tape with 31 rows and 6,000 Holes, command + `cuttingProblems` +
   `holesWithCuttingProblems` + `tapeGeometry` take a median of 20 runs < 20 ms. If it is green at
   once, record that in the commit; no implementation task needed. Depends on T040.
-- [ ] T047 [P] [US3] Extend `e2e/tape-edit.spec.ts`, part 3: shorten a Hole below the Minimum Hole
+- [x] T047 [P] [US3] Extend `e2e/tape-edit.spec.ts`, part 3: shorten a Hole below the Minimum Hole
   Length → `hole-mark` around it and one entry in `cutting-problems`; choose the entry → the Hole
   is selected; export → the cutting problems dialog, no save dialog; from `Alt+→` to the moved
   `rect` in the DOM under 100 ms on the reference Tape (`performance.now()` in the page, SC-002).
@@ -430,7 +430,7 @@ that the selected Hole says why; lengthen it again and check that the mark is go
   `TAPE.CUTTING_PROBLEMS.TITLE`, `COUNT`, `COUNT_ONE`, `NONE` and
   `TAPE.CUTTING_PROBLEM.TOO_CLOSE_PREVIOUS` to `en.json` and `de.json` until T044 is green.
   Depends on T044.
-- [ ] T050 [US3] Wire marks and the Cutting Problems section in
+- [x] T050 [US3] Wire marks and the Cutting Problems section in
   `src/app/features/tape/tape-view/tape-view.component.ts` and `.html` (`computed` from
   `cuttingProblems(tape, organ)` of the editor's present Tape or the drag preview; choosing selects
   and scrolls into view) until T045 and T047 are green. Depends on T045, T047, T048, T049.

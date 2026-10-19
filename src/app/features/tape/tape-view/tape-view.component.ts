@@ -15,7 +15,7 @@ import {BreakpointObserver} from '@angular/cdk/layout';
 import {toSignal} from '@angular/core/rxjs-interop';
 import {ActivatedRoute, Router} from '@angular/router';
 import {map} from 'rxjs';
-import {column, noteName, type HoleRef, type ImportSummary, type Tape, tapeGeometry} from '@api/index';
+import {column, cuttingProblems, holesWithCuttingProblems, noteName, type HoleRef, type ImportSummary, type Tape, tapeGeometry} from '@api/index';
 import {MatButton, MatIconButton} from '@angular/material/button';
 import {MatButtonToggle, MatButtonToggleGroup} from '@angular/material/button-toggle';
 import {MatIcon} from '@angular/material/icon';
@@ -36,11 +36,12 @@ import {addEdit, keyEdit, type EditOutcome} from './hole-edit-commands';
 import {nextHole, type Direction, type SelectableHole} from './hole-selection';
 import {inspectHole} from './inspect-hole';
 import {AddHoleComponent} from './add-hole/add-hole.component';
+import {CuttingProblemsComponent} from './cutting-problems/cutting-problems.component';
 import {SelectedHoleComponent} from './selected-hole/selected-hole.component';
 import {selectedHoleView} from './selected-hole/selected-hole-view';
 import {stageMetrics} from './stage-metrics';
 import {TapeEditor} from './tape-editor';
-import {columnMarks, drawingParams, holeRects, outline, overviewOf, rowLabels, RULER_HEIGHT, sectionView} from './tape-drawing';
+import {columnMarks, drawingParams, holeMarks, holeRects, outline, overviewOf, rowLabels, RULER_HEIGHT, sectionView} from './tape-drawing';
 import {TapeSectionComponent} from './tape-section/tape-section.component';
 import {TapeStatusLineComponent, type PointerText} from './tape-status-line/tape-status-line.component';
 import {overviewFrame, scrollLeftFor} from './overview-frame';
@@ -84,7 +85,7 @@ const COMPACT_QUERY = '(max-width: 1179.98px)';
   selector: 'cranc-tape-view',
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [TapeEditor],
-  imports: [ImportSummaryComponent, TranslatePipe, PageHeadComponent, MatButton, MatIconButton, MatTooltip, MatButtonToggle, MatButtonToggleGroup, MatIcon, AddHoleComponent, SelectedHoleComponent, TapeSectionComponent, TapeStatusLineComponent],
+  imports: [ImportSummaryComponent, TranslatePipe, PageHeadComponent, MatButton, MatIconButton, MatTooltip, MatButtonToggle, MatButtonToggleGroup, MatIcon, AddHoleComponent, CuttingProblemsComponent, SelectedHoleComponent, TapeSectionComponent, TapeStatusLineComponent],
   templateUrl: './tape-view.component.html',
   styleUrl: './tape-view.component.scss',
 })
@@ -185,6 +186,13 @@ export class TapeViewComponent {
     return selected === undefined || pipe === undefined || start === undefined ? undefined : {pipe, start};
   });
 
+  /** The Holes of the shown Tape (the would-be Tape while dragging) that can't be cut. */
+  protected readonly holesWithProblems = computed(() => {
+    const tape = this.shownTape();
+    const organ = this.organ();
+    return tape === undefined || organ === undefined ? [] : holesWithCuttingProblems(cuttingProblems(tape, organ));
+  });
+
   /** The Hole the Selected Hole section tells about. */
   protected readonly inspection = computed(() => {
     const selected = this.shownSelection();
@@ -230,6 +238,14 @@ export class TapeViewComponent {
         ...hole,
         refused: refused !== undefined && organ.pipes[hole.row]?.note === refused.pipe && hole.start === refused.start,
       })),
+      holeMarks: holeMarks(
+        tape,
+        organ,
+        geometry,
+        scale,
+        range,
+        new Set(this.holesWithProblems().map(({hole}) => `${hole.pipe}:${hole.start}`)),
+      ),
       ...columnMarks(tape, geometry, scale, range),
       ...outline(geometry, scale),
       drawingParams: drawingParams(tape, organ, language),
@@ -245,6 +261,14 @@ export class TapeViewComponent {
   protected select(hole: {readonly row: number; readonly start: number}): void {
     if (this.dragJustEnded) return;
     this.selectedHole.set({row: hole.row + 1, start: hole.start});
+    this.scrollToSelection = true;
+  }
+
+  /** Selects the Hole of a Cutting Problems entry and brings it into view. */
+  protected chooseProblem(hole: HoleRef): void {
+    const row = this.organ()?.pipes.findIndex((pipe) => pipe.note === hole.pipe);
+    if (row === undefined || row < 0) return;
+    this.selectedHole.set({row: row + 1, start: hole.start});
     this.scrollToSelection = true;
   }
 

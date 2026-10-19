@@ -12,6 +12,7 @@ import {
   pressOnDrawing,
   type DrawnHole,
 } from './support/tape-edit';
+import {stubSaveDialog} from './support/save-dialog';
 import {resizeWindowOrSkip} from './support/window-size';
 import {createTapeFromSong,defineOctaveOrgan, songRepeatingC4} from './support/tape-creation';
 
@@ -116,5 +117,81 @@ test.describe('Editing a Tape by hand', () => {
     await openOnlyTape(second.window);
     expect([...(await drawnHoles(second.window))].sort(byPlace)).toEqual(edited);
     await second.app.close();
+  });
+
+  test('marks a Hole shortened below the Minimum Hole Length, lists it, selects it from the list, and refuses the export', async () => {
+    const launched = await launchApp();
+    const {window} = launched;
+    try {
+      const dialog = await stubSaveDialog(launched.app);
+      await dialog.answerWith('cancel');
+      await defineOctaveOrgan(window, 'Octave organ');
+      // Columns of 1.25 mm: the Minimum Hole Length of 2.5 mm is 2 Columns.
+      await createTapeFromSong(window, 'Scale', songRepeatingC4('c4s.mid', 4), {columnLength: '1.25'});
+      const original = [...(await drawnHoles(window))].sort(byPlace);
+      const c4Row = original.filter((hole) => original.filter((other) => other.row === hole.row).length === 4);
+      const target = c4Row[0];
+      if (!target) throw new Error('expected four C4 Holes');
+      await expect(window.getByTestId('hole-mark')).toHaveCount(0);
+      await expect(window.getByTestId('cutting-problems-count')).toHaveText('None');
+
+      // Shorten the Hole to 1 Column, below the Minimum Hole Length.
+      await holeAt(window, target.row, target.start).click();
+      for (let times = 0; times < 20; times++) await pressOnDrawing(window, 'Shift+ArrowLeft');
+
+      await expect(window.getByTestId('hole-mark')).toHaveCount(1);
+      await expect(window.getByTestId('cutting-problems').getByTestId('cutting-problem')).toHaveCount(1);
+      await expect(window.getByTestId('cutting-problems-count')).toHaveText(/^\s*1 Hole can't be cut\s*$/);
+
+      // Choosing the entry selects the Hole.
+      await pressOnDrawing(window, 'Escape');
+      await expect(holeAt(window, target.row, target.start)).not.toHaveClass(/selected/);
+      await window.getByTestId('cutting-problem').click();
+      await expect(holeAt(window, target.row, target.start)).toHaveClass(/selected/);
+
+      // Export is refused with the cutting problems dialog, without the save dialog.
+      await window.getByTestId('export').click();
+      await expect(window.getByRole('dialog').getByTestId('export-problem')).toHaveCount(1);
+      expect(await dialog.calls()).toHaveLength(0);
+    } finally {
+      await launched.app.close();
+    }
+  });
+
+  test('shows the moved Hole within 100 ms of Alt+ArrowRight', async () => {
+    const launched = await launchApp();
+    const {window} = launched;
+    try {
+      await defineOctaveOrgan(window, 'Octave organ');
+      await createTapeFromSong(window, 'Scale', songRepeatingC4('c4s.mid', 4));
+      const [first] = [...(await drawnHoles(window))].sort(byPlace);
+      if (!first) throw new Error('expected Holes');
+      await holeAt(window, first.row, first.start).click();
+      await window.locator('[data-testid="tape-scroll"] svg').focus();
+
+      const elapsed = await window.evaluate(
+        ({row, start}) =>
+          new Promise<number>((resolve, reject) => {
+            const svg = document.querySelector('[data-testid="tape-scroll"] svg');
+            if (!svg) return reject(new Error('the Tape drawing is not shown'));
+            const moved = `[data-testid="hole"][data-row="${row}"][data-start="${start + 1}"]`;
+            const begin = performance.now();
+            const observer = new MutationObserver(() => {
+              if (svg.querySelector(moved)) {
+                observer.disconnect();
+                resolve(performance.now() - begin);
+              }
+            });
+            observer.observe(svg, {childList: true, subtree: true, attributes: true});
+            svg.dispatchEvent(new KeyboardEvent('keydown', {key: 'ArrowRight', altKey: true, bubbles: true, cancelable: true}));
+            setTimeout(() => reject(new Error('the moved Hole did not appear')), 2000);
+          }),
+        {row: first.row, start: first.start},
+      );
+
+      expect(elapsed).toBeLessThan(100);
+    } finally {
+      await launched.app.close();
+    }
   });
 });

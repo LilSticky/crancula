@@ -88,6 +88,9 @@
               <rect class="handle ew-resize" data-testid="hole-handle" data-end="end" [attr.x]="handles.end.x" [attr.y]="hole.y" [attr.width]="handles.end.width" [attr.height]="hole.height" (pointerdown)="onHolePointerDown($event, hole, tapeSvg, 'end')" />
             }
           }
+          @for (mark of drawing.holeMarks; track mark.row + ':' + mark.start) {
+            <rect class="cutting-problem" data-testid="hole-mark" aria-hidden="true" [attr.x]="mark.x" [attr.y]="mark.y" [attr.width]="mark.width" [attr.height]="mark.height" [attr.rx]="mark.radius" [attr.ry]="mark.radius" />
+          }
           @for (number of drawing.numbers; track number.column) {
             <text class="column-number" data-testid="column-number" aria-hidden="true" [attr.x]="number.x" [attr.y]="drawing.numbersY">{{ number.number }}</text>
           }
@@ -126,6 +129,7 @@
     @if (importSummary(); as summary) {
       <cranc-import-summary data-testid="import-summary" [importSummary]="summary" (dismissed)="importSummary.set(null)" />
     }
+    <cranc-cutting-problems [holes]="holesWithProblems()" (chosen)="chooseProblem($event)" />
     @if (tape(); as tape) {
       @if (organ(); as organ) {
         <cranc-add-hole [organ]="organ" [tape]="tape" [selected]="selectedHoleRef()" (added)="addFromForm($event)" />

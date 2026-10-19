@@ -1804,8 +1804,8 @@ describe('TapeViewComponent', () => {
       );
     const frame = () => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
 
-    const setup = async () => {
-      const rendered = await render({holes});
+    const setup = async (options: RenderOptions = {holes}) => {
+      const rendered = await render(options);
       await rendered.open(`/tapes/${rendered.tape.id}`);
       const svg = drawing(rendered.view());
       Object.defineProperty(svg, 'getBoundingClientRect', {value: () => new DOMRect(0, 0, 4000, 300), configurable: true});
@@ -1897,6 +1897,23 @@ describe('TapeViewComponent', () => {
 
       expect(update).toHaveBeenCalledTimes(1);
       expect(storedHoles(tape.id)).toContain('24:11+2');
+    });
+
+    it('marks and counts the Hole whose would-be result has a Cutting Problem while the end handle is dragged, before release', async () => {
+      // Columns of 1.5 mm: a Hole of 1 Column is 1.5 mm, below the Minimum Hole Length of 2.5 mm.
+      const {view, at, down, move, click, handle, update} = await setup({holes: [{row: 24, start: 10, length: 2}], columnLength: 1.5});
+      await click(rectAt(view(), 24, 10) as Element);
+      const marks = () => all(view(), '[data-testid="tape-scroll"] [data-testid="hole-mark"]');
+      const count = () => view()?.querySelector('[data-testid="cutting-problems-count"]')?.textContent?.replace(/\s+/g, ' ').trim();
+      expect(marks()).toHaveLength(0);
+      expect(count()).toBe('None');
+
+      await down(handle('end') as Element, at(12, 24, -1));
+      await move(at(10, 24));
+
+      expect(update).not.toHaveBeenCalled();
+      expect(marks()).toHaveLength(1);
+      expect(count()).toBe("1 Hole can't be cut");
     });
 
     it('offers handles for the selected Hole only', async () => {
@@ -2059,6 +2076,171 @@ describe('TapeViewComponent', () => {
       expect(update).not.toHaveBeenCalled();
       expect(view()?.querySelector('[data-testid="add-hole"]')?.textContent).toContain('already covers');
       expect(document.activeElement).not.toBe(view()?.querySelector('[data-testid="tape-scroll"] svg'));
+    });
+  });
+
+  describe('marking and listing Cutting Problems (US3)', () => {
+    // The Minimum Hole Length is 2.5 mm, the Minimum Gap 1.5 mm. The Pipe of row r is note 52 + r.
+    const marks = (view: HTMLElement | null) => all(view, '[data-testid="tape-scroll"] [data-testid="hole-mark"]');
+    const rectAt = (view: HTMLElement | null, row: number, start: number) =>
+      view?.querySelector(`[data-testid="tape-scroll"] rect[data-testid="hole"][data-row="${row - 1}"][data-start="${start}"]`) ?? null;
+    const selected = (view: HTMLElement | null) =>
+      all(view, '[data-testid="tape-scroll"] rect[data-testid="hole"].selected').map(
+        (rect) => `${Number(rect.getAttribute('data-row')) + 1}:${rect.getAttribute('data-start')}`,
+      );
+    const tapeSvg = (view: HTMLElement | null) => view?.querySelector('[data-testid="tape-scroll"] svg') as SVGSVGElement;
+    const press = async (view: HTMLElement | null, init: KeyboardEventInit, settle: () => Promise<void>) => {
+      tapeSvg(view).dispatchEvent(new KeyboardEvent('keydown', {...init, bubbles: true, cancelable: true}));
+      await settle();
+    };
+    const select = async (view: HTMLElement | null, row: number, start: number, settle: () => Promise<void>) => {
+      rectAt(view, row, start)?.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+      await settle();
+    };
+    const squash = (element: Element | null | undefined) => element?.textContent?.replace(/\s+/g, ' ').trim() ?? '';
+    const countText = (view: HTMLElement | null) => squash(view?.querySelector('[data-testid="cutting-problems-count"]'));
+    const entries = (view: HTMLElement | null) => all(view, '[data-testid="cutting-problems"] [data-testid="cutting-problem"]');
+
+    // Columns of 1.5 mm: 2 Columns are 3 mm (long enough), 1 Column is 1.5 mm (too short).
+    const shortenable = {holes: [{row: 24, start: 10, length: 2}], columnLength: 1.5};
+    // Columns of 1 mm: a gap of 2 Columns is 2 mm (enough), of 1 Column is 1 mm (too close).
+    const spaced = {
+      holes: [
+        {row: 25, start: 10, length: 5},
+        {row: 25, start: 17, length: 5},
+      ],
+      columnLength: 1,
+    };
+
+    it('marks a Hole shortened below the Minimum Hole Length and names the problem in mm on the Selected Hole', async () => {
+      const {tape, open, view, settle} = await render(shortenable);
+      await open(`/tapes/${tape.id}`);
+      await select(view(), 24, 10, settle);
+      expect(marks(view())).toHaveLength(0);
+
+      await press(view(), {key: 'ArrowLeft', shiftKey: true}, settle);
+
+      expect(marks(view())).toHaveLength(1);
+      expect(
+        all(view(), '[data-testid="selected-hole"] [data-testid="hole-warning"]').map((warning) => squash(warning)),
+      ).toEqual(['Shorter than the Minimum Hole Length: 1.5 mm of 2.5 mm']);
+    });
+
+    it('marks both Holes when a move leaves a gap below the Minimum Gap, and removes the marks when it is fixed', async () => {
+      const {tape, open, view, settle} = await render(spaced);
+      await open(`/tapes/${tape.id}`);
+      await select(view(), 25, 17, settle);
+      expect(marks(view())).toHaveLength(0);
+
+      await press(view(), {key: 'ArrowLeft', altKey: true}, settle);
+      expect(marks(view())).toHaveLength(2);
+
+      await press(view(), {key: 'ArrowRight', altKey: true}, settle);
+      expect(marks(view())).toHaveLength(0);
+    });
+
+    it('counts the marked Holes and lists one entry for each in the Cutting Problems section of the side panel', async () => {
+      const {tape, open, view, settle} = await render(spaced);
+      await open(`/tapes/${tape.id}`);
+      expect(countText(view())).toBe('None');
+      expect(entries(view())).toHaveLength(0);
+      await select(view(), 25, 17, settle);
+
+      await press(view(), {key: 'ArrowLeft', altKey: true}, settle);
+
+      expect(view()?.querySelector('[data-testid="side-panel"] [data-testid="cutting-problems"]')).not.toBeNull();
+      expect(countText(view())).toBe("2 Holes can't be cut");
+      expect(entries(view())).toHaveLength(2);
+    });
+
+    it('updates the count at once when the problem is fixed', async () => {
+      const {tape, open, view, settle} = await render(shortenable);
+      await open(`/tapes/${tape.id}`);
+      await select(view(), 24, 10, settle);
+      await press(view(), {key: 'ArrowLeft', shiftKey: true}, settle);
+      expect(countText(view())).toBe("1 Hole can't be cut");
+
+      await press(view(), {key: 'ArrowRight', shiftKey: true}, settle);
+
+      expect(countText(view())).toBe('None');
+      expect(marks(view())).toHaveLength(0);
+    });
+
+    it('selects the Hole of a chosen entry and scrolls it into view', async () => {
+      const {tape, open, view, settle} = await render(shortenable);
+      await open(`/tapes/${tape.id}`);
+      await select(view(), 24, 10, settle);
+      await press(view(), {key: 'ArrowLeft', shiftKey: true}, settle);
+      await press(view(), {key: 'Escape'}, settle);
+      expect(selected(view())).toEqual([]);
+      const scrollIntoView = vi.spyOn(Element.prototype, 'scrollIntoView').mockImplementation(() => undefined);
+
+      try {
+        (entries(view())[0] as HTMLElement | undefined)?.click();
+        await settle();
+
+        expect(selected(view())).toEqual(['24:10']);
+        expect(scrollIntoView.mock.contexts).toContain(rectAt(view(), 24, 10));
+      } finally {
+        scrollIntoView.mockRestore();
+      }
+    });
+
+    it('opens the cutting problems dialog when Export for the Plotter is pressed on a Tape with a marked Hole', async () => {
+      const {tape, open, view, settle} = await render({...shortenable, realExport: true});
+      await open(`/tapes/${tape.id}`);
+      await select(view(), 24, 10, settle);
+      await press(view(), {key: 'ArrowLeft', shiftKey: true}, settle);
+      const dialogOpen = vi.spyOn(TestBed.inject(MatDialog), 'open');
+
+      try {
+        view()?.querySelector<HTMLButtonElement>('[data-testid="export"]')?.click();
+        await settle();
+
+        expect(dialogOpen).toHaveBeenCalledTimes(1);
+        expect(dialogOpen.mock.calls[0]?.[0]).toBe(CuttingProblemsDialogComponent);
+      } finally {
+        TestBed.inject(MatDialog).closeAll();
+      }
+    });
+
+    describe('for a Hole whose Pipe is not on the Organ (FR-019)', () => {
+      const withTwoPipes = (original: Organ): Organ => ({...testOrgan(original.name, 2), id: original.id});
+      const withoutPipe = (tape: Tape, organ: Organ) => {
+        const remaining = new Set(organ.pipes.slice(0, 2).map(({note}) => note));
+        return tape.holes.filter((hole) => !remaining.has(hole.pipe));
+      };
+      const stored = (tapeId: string) => TestBed.inject(TapeLibrary).tapeEntities().find((candidate) => candidate.id === tapeId)?.holes ?? [];
+
+      it('counts it and lists it as text, not as a button, without a mark', async () => {
+        const {tape, organ, open, view} = await render({organNow: withTwoPipes});
+        const orphans = withoutPipe(tape, organ);
+        expect(orphans.length).toBeGreaterThan(0);
+
+        await open(`/tapes/${tape.id}`);
+
+        const noPipeEntries = entries(view()).filter((entry) => squash(entry).includes('the Organ has no Pipe for this note'));
+        expect(noPipeEntries).toHaveLength(orphans.length);
+        expect(noPipeEntries.every((entry) => entry.tagName !== 'BUTTON')).toBe(true);
+        expect(countText(view())).toMatch(/^\d+ Holes? can't be cut$/);
+        expect(marks(view())).toHaveLength(0);
+      });
+
+      it('stays unchanged by edits of the other Holes', async () => {
+        const {tape, organ, open, view, settle} = await render({organNow: withTwoPipes});
+        const orphans = withoutPipe(tape, organ);
+        await open(`/tapes/${tape.id}`);
+        const first = all(view(), '[data-testid="tape-scroll"] rect[data-testid="hole"]')[0];
+        first?.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+        await settle();
+
+        await press(view(), {key: 'Delete'}, settle);
+
+        expect(stored(tape.id).filter((hole) => orphans.some((orphan) => orphan.pipe === hole.pipe && orphan.start === hole.start))).toEqual(
+          orphans,
+        );
+        expect(stored(tape.id)).toHaveLength(tape.holes.length - 1);
+      });
     });
   });
 });
