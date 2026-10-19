@@ -39,7 +39,7 @@
       }
     </ul>
     <div class="scroll" #scroll data-testid="tape-scroll" (scroll)="onScroll(scroll)">
-      <svg #tapeSvg role="application" [attr.aria-label]="'TAPE.VIEW.DRAWING' | translate: drawing.drawingParams" [attr.width]="drawing.width" [attr.height]="drawing.totalHeight" tabindex="0" (keydown)="onKeydown($event)" [class.grabbing]="dragging()" (pointermove)="onPointerMove($event, tapeSvg)" (pointerup)="onPointerUp($event, tapeSvg)" (pointercancel)="onPointerCancel()" (pointerleave)="onPointerLeave()">
+      <svg #tapeSvg role="application" [attr.aria-label]="'TAPE.VIEW.DRAWING' | translate: drawing.drawingParams" [attr.width]="drawing.width" [attr.height]="drawing.totalHeight" tabindex="0" (keydown)="onKeydown($event)" (dblclick)="onDoubleClick($event, tapeSvg)" [class.grabbing]="dragging()" (pointermove)="onPointerMove($event, tapeSvg)" (pointerup)="onPointerUp($event, tapeSvg)" (pointercancel)="onPointerCancel()" (pointerleave)="onPointerLeave()">
         <defs>
           <pattern id="ruler-ticks" patternUnits="userSpaceOnUse" [attr.x]="drawing.leadIn" [attr.width]="5 * scale()" height="8">
             @for (tick of rulerTicks; track tick) {
@@ -125,6 +125,11 @@
     <cranc-selected-hole [inspection]="inspection()" />
     @if (importSummary(); as summary) {
       <cranc-import-summary data-testid="import-summary" [importSummary]="summary" (dismissed)="importSummary.set(null)" />
+    }
+    @if (tape(); as tape) {
+      @if (organ(); as organ) {
+        <cranc-add-hole [organ]="organ" [tape]="tape" [selected]="selectedHoleRef()" (added)="addFromForm($event)" />
+      }
     }
   </aside>
   }

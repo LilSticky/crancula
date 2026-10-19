@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  DestroyRef,
   afterEveryRender,
   effect,
   untracked,
@@ -14,7 +15,7 @@ import {BreakpointObserver} from '@angular/cdk/layout';
 import {toSignal} from '@angular/core/rxjs-interop';
 import {ActivatedRoute, Router} from '@angular/router';
 import {map} from 'rxjs';
-import {noteName, type ImportSummary, type Tape, tapeGeometry} from '@api/index';
+import {column, noteName, type HoleRef, type ImportSummary, type Tape, tapeGeometry} from '@api/index';
 import {MatButton, MatIconButton} from '@angular/material/button';
 import {MatButtonToggle, MatButtonToggleGroup} from '@angular/material/button-toggle';
 import {MatIcon} from '@angular/material/icon';
@@ -31,9 +32,10 @@ import {editIntent} from './edit-keys';
 import {gridAt} from './grid-at';
 import {type HolePart} from './hole-drag';
 import {HoleDragSession} from './hole-drag-session';
-import {keyEdit, type EditOutcome} from './hole-edit-commands';
+import {addEdit, keyEdit, type EditOutcome} from './hole-edit-commands';
 import {nextHole, type Direction, type SelectableHole} from './hole-selection';
 import {inspectHole} from './inspect-hole';
+import {AddHoleComponent} from './add-hole/add-hole.component';
 import {SelectedHoleComponent} from './selected-hole/selected-hole.component';
 import {selectedHoleView} from './selected-hole/selected-hole-view';
 import {stageMetrics} from './stage-metrics';
@@ -82,7 +84,7 @@ const COMPACT_QUERY = '(max-width: 1179.98px)';
   selector: 'cranc-tape-view',
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [TapeEditor],
-  imports: [ImportSummaryComponent, TranslatePipe, PageHeadComponent, MatButton, MatIconButton, MatTooltip, MatButtonToggle, MatButtonToggleGroup, MatIcon, SelectedHoleComponent, TapeSectionComponent, TapeStatusLineComponent],
+  imports: [ImportSummaryComponent, TranslatePipe, PageHeadComponent, MatButton, MatIconButton, MatTooltip, MatButtonToggle, MatButtonToggleGroup, MatIcon, AddHoleComponent, SelectedHoleComponent, TapeSectionComponent, TapeStatusLineComponent],
   templateUrl: './tape-view.component.html',
   styleUrl: './tape-view.component.scss',
 })
@@ -96,6 +98,7 @@ export class TapeViewComponent {
   private readonly holeDrag = new HoleDragSession();
   /** Set after a drag so the click that may follow it does not select. */
   private dragJustEnded = false;
+  private dragEndedTimer: ReturnType<typeof setTimeout> | undefined;
   protected readonly dragging = this.holeDrag.dragging;
   protected readonly plotterExport = inject(PlotterExport);
   private readonly language = inject(LanguagePreference).language;
@@ -133,6 +136,7 @@ export class TapeViewComponent {
 
   private readonly scrollElement = viewChild<ElementRef<HTMLElement>>('scroll');
   private readonly stage = stageMetrics(this.scrollElement);
+  private readonly drawingSvg = viewChild<ElementRef<SVGSVGElement>>('tapeSvg');
   private readonly selectedHole = signal<SelectableHole | undefined>(undefined);
   private scrollToSelection = false;
 
@@ -156,7 +160,7 @@ export class TapeViewComponent {
     return preview?.kind === 'applied' ? preview.selection : this.selectedHole();
   });
 
-  private readonly organ = computed(() => {
+  protected readonly organ = computed(() => {
     const organId = this.tape()?.organId;
     return this.organs.entities().find((organ) => organ.id === organId);
   });
@@ -171,6 +175,14 @@ export class TapeViewComponent {
     const geometry = this.geometry();
     if (geometry === undefined) return pixelsPerMillimetre('1:1', 0, 0);
     return pixelsPerMillimetre(this.zoom(), this.stage.stageWidth(), geometry.totalLength);
+  });
+
+  /** The selected Hole as the form knows it: by Pipe and Column. */
+  protected readonly selectedHoleRef = computed((): HoleRef | undefined => {
+    const selected = this.shownSelection();
+    const pipe = selected === undefined ? undefined : this.organ()?.pipes[selected.row - 1]?.note;
+    const start = selected === undefined ? undefined : column(selected.start);
+    return selected === undefined || pipe === undefined || start === undefined ? undefined : {pipe, start};
   });
 
   /** The Hole the Selected Hole section tells about. */
@@ -318,7 +330,8 @@ export class TapeViewComponent {
     const outcome = this.holeDrag.finish(gridAt(event.clientX - box.left, event.clientY - box.top - RULER_HEIGHT, this.scale(), geometry));
     if (outcome === undefined) return;
     this.dragJustEnded = true;
-    setTimeout(() => (this.dragJustEnded = false));
+    clearTimeout(this.dragEndedTimer);
+    this.dragEndedTimer = setTimeout(() => (this.dragJustEnded = false));
     this.commit(outcome);
   }
 
@@ -339,6 +352,33 @@ export class TapeViewComponent {
       this.selectedHole.set(outcome.selection);
       this.scrollToSelection = true;
     }
+  }
+
+  /** A double-click on an empty spot of a row adds a Hole of that row's Pipe at that Column. */
+  protected onDoubleClick(event: MouseEvent, svg: Element): void {
+    const target = event.target;
+    if (target instanceof Element && target.closest('[data-testid="hole"], [data-testid="hole-handle"]') !== null) return;
+    const tape = this.tape();
+    const organ = this.organ();
+    const geometry = this.geometry();
+    if (tape === undefined || organ === undefined || geometry === undefined) return;
+    const box = svg.getBoundingClientRect();
+    const y = event.clientY - box.top - RULER_HEIGHT;
+    if (y < 0) return;
+    const cell = gridAt(event.clientX - box.left, y, this.scale(), geometry);
+    const pipe = organ.pipes[cell.row - 1]?.note;
+    const start = column(cell.column);
+    if (pipe === undefined || start === undefined) return;
+    this.commit(addEdit(tape, organ, pipe, start));
+  }
+
+  /** Adds the Hole the form asks for, then returns the focus to the drawing. */
+  protected addFromForm(added: HoleRef): void {
+    const tape = this.tape();
+    const organ = this.organ();
+    if (tape === undefined || organ === undefined) return;
+    this.commit(addEdit(tape, organ, added.pipe, added.start));
+    this.drawingSvg()?.nativeElement.focus();
   }
 
   protected onPointerLeave(): void {
@@ -370,6 +410,10 @@ export class TapeViewComponent {
   }
 
   constructor() {
+    inject(DestroyRef).onDestroy(() => {
+      this.holeDrag.cancel();
+      clearTimeout(this.dragEndedTimer);
+    });
     this.sidePanelOpen.set(this.compact() && this.importSummary() !== null);
     afterEveryRender(() => {
       const element = this.scrollElement()?.nativeElement;

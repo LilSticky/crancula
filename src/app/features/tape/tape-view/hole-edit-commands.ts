@@ -1,11 +1,14 @@
 import {
+  addHole,
   changeHoleLength,
   column,
   columnCount,
   moveHole,
   removeHole,
+  type Column,
   type Hole,
   type HoleEditRefusal,
+  type MidiNoteNumber,
   type Organ,
   type Result,
   type Tape,
@@ -34,6 +37,14 @@ function neighbourOf(tape: Tape, removed: Hole, row: number): SelectableHole | u
   const previous = sameRow.filter((hole) => hole.start < removed.start).sort((a, b) => b.start - a.start)[0];
   const neighbour = next ?? previous;
   return neighbour === undefined ? undefined : {row, start: neighbour.start};
+}
+
+/** The result of adding a Hole of the row's Pipe at `start`; the new Hole is selected. */
+export function addEdit(tape: Tape, organ: Organ, pipe: MidiNoteNumber, start: Column): EditOutcome {
+  const result = addHole(tape, organ, pipe, start);
+  if (!result.ok) return result.error.code === 'overlaps' ? {kind: 'refused', other: result.error.other} : NOTHING;
+  const row = organ.pipes.findIndex((candidate) => candidate.note === pipe) + 1;
+  return {kind: 'applied', tape: result.value.tape, selection: {row, start}};
 }
 
 /** The result of an edit key on the selected Hole. */

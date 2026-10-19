@@ -12,7 +12,8 @@ import {
   pressOnDrawing,
   type DrawnHole,
 } from './support/tape-edit';
-import {createTapeFromSong, defineOctaveOrgan, songRepeatingC4} from './support/tape-creation';
+import {resizeWindowOrSkip} from './support/window-size';
+import {createTapeFromSong,defineOctaveOrgan, songRepeatingC4} from './support/tape-creation';
 
 const byPlace = (a: DrawnHole, b: DrawnHole): number => a.row - b.row || a.start - b.start;
 
@@ -67,6 +68,49 @@ test.describe('Editing a Tape by hand', () => {
       expect(Array.isArray(hole)).toBe(true);
       expect(hole).toHaveLength(3);
     }
+
+    const second = await launchApp(first.userDataDir);
+    await openOnlyTape(second.window);
+    expect([...(await drawnHoles(second.window))].sort(byPlace)).toEqual(edited);
+    await second.app.close();
+  });
+
+  test('adds a Hole by double-click and through the form, selects it, and keeps both after a restart', async () => {
+    const first = await launchApp();
+    const {window} = first;
+    await resizeWindowOrSkip(first, 1280, 800);
+    await defineOctaveOrgan(window, 'Octave organ');
+    await createTapeFromSong(window, 'Scale', songRepeatingC4('c4s.mid', 4));
+    const original = [...(await drawnHoles(window))].sort(byPlace);
+    const c4Row = original.filter((hole) => original.filter((other) => other.row === hole.row).length === 4);
+    const d4 = original.find((hole) => original.filter((other) => other.row === hole.row).length === 1);
+    const [firstC4] = c4Row;
+    if (!firstC4 || !d4) throw new Error('expected four C4 Holes and one D4 Hole');
+    const E4_ROW = 4;
+    const G4_ROW = 7;
+
+    // Double-click an empty spot of the E4 row, above the first C4 Hole's Column.
+    const c4Box = await holeAt(window, firstC4.row, firstC4.start).boundingBox();
+    const d4Box = await holeAt(window, d4.row, d4.start).boundingBox();
+    if (!c4Box || !d4Box) throw new Error('the Holes are not shown');
+    const rowStep = (d4Box.y - c4Box.y) / (d4.row - firstC4.row);
+    await window.mouse.dblclick(c4Box.x + (await columnWidth(window)) / 2, c4Box.y + c4Box.height / 2 + rowStep * (E4_ROW - firstC4.row));
+    await expect(holeAt(window, E4_ROW, firstC4.start)).toHaveCount(1);
+    await expect(holeAt(window, E4_ROW, firstC4.start)).toHaveClass(/selected/);
+    await expect(window.getByTestId('selected-hole')).toContainText('E4');
+
+    // Add a G4 Hole at Column 12 through the form.
+    await window.getByTestId('add-hole-pipe').click();
+    await window.getByRole('option', {name: 'G4'}).click();
+    await window.getByTestId('add-hole-column').fill('12');
+    await window.getByTestId('add-hole-submit').click();
+    await expect(holeAt(window, G4_ROW, 11)).toHaveCount(1);
+    await expect(holeAt(window, G4_ROW, 11)).toHaveClass(/selected/);
+
+    const edited = [...(await drawnHoles(window))].sort(byPlace);
+    expect(edited).toHaveLength(original.length + 2);
+
+    await first.app.close();
 
     const second = await launchApp(first.userDataDir);
     await openOnlyTape(second.window);

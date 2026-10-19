@@ -1587,7 +1587,7 @@ describe('TapeViewComponent', () => {
       await open(`/tapes/${tape.id}`);
 
       const controls = all(view(), 'button, input, select, textarea, [contenteditable]').filter(
-        (control) => control.closest('[data-testid="zoom"]') === null && !['export', 'side-panel-toggle'].includes(control.getAttribute('data-testid') ?? ''),
+        (control) => control.closest('[data-testid="zoom"], [data-testid="add-hole"]') === null && !['export', 'side-panel-toggle'].includes(control.getAttribute('data-testid') ?? ''),
       );
       expect(controls).toHaveLength(0);
     });
@@ -1962,6 +1962,89 @@ describe('TapeViewComponent', () => {
       expect(svg.classList.contains('grabbing')).toBe(true);
       await up(at(13, 24));
       expect(svg.classList.contains('grabbing')).toBe(false);
+    });
+
+    it('adds a Hole of the row\'s Pipe at the Column of a double-click on an empty spot, with one save, and selects it', async () => {
+      const {tape, view, svg, at, update, settle} = await setup();
+
+      svg.dispatchEvent(new MouseEvent('dblclick', {...at(20, 25), bubbles: true, cancelable: true}));
+      await settle();
+
+      expect(update).toHaveBeenCalledTimes(1);
+      expect(storedHoles(tape.id).filter((hole) => hole.startsWith('25:20+'))).toHaveLength(1);
+      expect(selected(view())).toEqual(['25:20']);
+    });
+
+    it('adds nothing on a double-click on a Hole', async () => {
+      const {tape, view, at, update, settle} = await setup();
+      const before = storedHoles(tape.id);
+
+      (rectAt(view(), 24, 10) as Element).dispatchEvent(new MouseEvent('dblclick', {...at(11, 24), bubbles: true, cancelable: true}));
+      await settle();
+
+      expect(update).not.toHaveBeenCalled();
+      expect(storedHoles(tape.id)).toEqual(before);
+    });
+  });
+
+  describe('adding a Hole through the side panel (US2)', () => {
+    const section = (view: HTMLElement | null) => view?.querySelector('[data-testid="side-panel"] cranc-add-hole') ?? null;
+    const selected = (view: HTMLElement | null) =>
+      all(view, '[data-testid="tape-scroll"] rect[data-testid="hole"].selected').map(
+        (rect) => `${Number(rect.getAttribute('data-row')) + 1}:${rect.getAttribute('data-start')}`,
+      );
+    const storedHoles = (tapeId: string) =>
+      (TestBed.inject(TapeLibrary).tapeEntities().find((candidate) => candidate.id === tapeId)?.holes ?? []).map(
+        (hole) => `${hole.pipe - 52}:${hole.start}+${hole.length}`,
+      );
+    /** Chooses the Pipe by note name, types the Column (from 1) and presses the submit button. */
+    const addThroughForm = async (view: HTMLElement | null, note: string, typedColumn: string, settle: () => Promise<void>) => {
+      view?.querySelector<HTMLElement>('[data-testid="add-hole-pipe"] .mat-mdc-select-trigger')?.click();
+      await settle();
+      const option = Array.from(document.querySelectorAll<HTMLElement>('mat-option')).find((candidate) => candidate.textContent?.trim() === note);
+      option?.click();
+      await settle();
+      const input = view?.querySelector<HTMLInputElement>('[data-testid="add-hole-column"]');
+      if (input) {
+        input.value = typedColumn;
+        input.dispatchEvent(new Event('input'));
+      }
+      await settle();
+      view?.querySelector<HTMLButtonElement>('[data-testid="add-hole-submit"]')?.click();
+      await settle();
+    };
+
+    it('shows the "Add a Hole" section in the side panel', async () => {
+      const {tape, open, view} = await render({holes: [{row: 24, start: 10, length: 3}]});
+
+      await open(`/tapes/${tape.id}`);
+
+      expect(section(view())).not.toBeNull();
+      expect(view()?.querySelector('[data-testid="side-panel"] [data-testid="add-hole"]')?.textContent).toContain('Add a Hole');
+    });
+
+    it('adds the Hole through the form with one save, selects it and returns the focus to the drawing', async () => {
+      const {tape, open, view, settle} = await render({holes: [{row: 24, start: 10, length: 3}]});
+      await open(`/tapes/${tape.id}`);
+      const update = vi.spyOn(TestBed.inject(TapeLibrary), 'update');
+
+      await addThroughForm(view(), 'F5', '31', settle);
+
+      expect(update).toHaveBeenCalledTimes(1);
+      expect(storedHoles(tape.id).filter((hole) => hole.startsWith('25:30+'))).toHaveLength(1);
+      expect(selected(view())).toEqual(['25:30']);
+      expect(document.activeElement).toBe(view()?.querySelector('[data-testid="tape-scroll"] svg'));
+    });
+
+    it('adds the first Hole to a Tape without Holes', async () => {
+      const {tape, open, view, settle} = await render({holes: []});
+      await open(`/tapes/${tape.id}`);
+      expect(storedHoles(tape.id)).toEqual([]);
+
+      await addThroughForm(view(), 'F5', '3', settle);
+
+      expect(storedHoles(tape.id).filter((hole) => hole.startsWith('25:2+'))).toHaveLength(1);
+      expect(selected(view())).toEqual(['25:2']);
     });
   });
 });

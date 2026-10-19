@@ -351,12 +351,12 @@ Pipe, start, length and that it is saved.
   `TAPE.ADD_HOLE.COVERED` ("A Hole of {{note}} already covers Column {{column}}.") when the Column
   is covered and `TAPE.ADD_HOLE.COLUMN_INVALID` ("Enter a whole Column number from 1.") when it is
   not a whole number ≥ 1; submitting emits the Pipe and the 0-based Column. Depends on T016.
-- [ ] T038 [US2] Extend `src/app/features/tape/tape-view/tape-view.component.spec.ts`: a
+- [x] T038 [US2] Extend `src/app/features/tape/tape-view/tape-view.component.spec.ts`: a
   double-click on an empty spot of a row adds a Hole of that row's Pipe at that Column and selects
   it (2.1, 2.4, one `update`); a double-click on a Hole adds nothing; the "Add a Hole" section is in
   the side panel, adding through it selects the new Hole and returns focus to the drawing; on an
   empty Tape (no Holes) the form adds the first Hole. Depends on T025, T037.
-- [ ] T039 [P] [US2] Extend `e2e/tape-edit.spec.ts`, part 2: double-click an empty spot of the E4
+- [x] T039 [P] [US2] Extend `e2e/tape-edit.spec.ts`, part 2: double-click an empty spot of the E4
   row adds a Hole there, selected and shown in the Selected Hole section; add one through the form;
   both survive a relaunch. Depends on T026.
 
@@ -368,7 +368,7 @@ Pipe, start, length and that it is saved.
   form, `MatSelect`, `MatFormField`, minimal SCSS) and add `TAPE.ADD_HOLE.TITLE`, `PIPE`, `COLUMN`,
   `SUBMIT`, `COVERED`, `COLUMN_INVALID` to `en.json` and `de.json` until T037 is green.
   Depends on T037.
-- [ ] T042 [US2] Wire double-click add and the "Add a Hole" section in
+- [x] T042 [US2] Wire double-click add and the "Add a Hole" section in
   `src/app/features/tape/tape-view/tape-view.component.ts` and `.html` (through `addHole` and
   `TapeEditor.apply`) until T038 and T039 are green. Depends on T038, T039, T040, T041.
 
