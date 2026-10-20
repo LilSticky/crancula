@@ -2,19 +2,19 @@
   <h2>{{ 'TAPE.ADD_HOLE.TITLE' | translate }}</h2>
   <form (submit)="$event.preventDefault(); submit()">
     <div class="fields">
-    <mat-form-field>
-      <mat-label>{{ 'TAPE.ADD_HOLE.PIPE' | translate }}</mat-label>
-      <mat-select data-testid="add-hole-pipe" [value]="pipe()" (selectionChange)="pickPipe($event.value)">
-        @for (option of pipes(); track option.note) {
-          <mat-option [value]="option.note">{{ option.name }}</mat-option>
-        }
-      </mat-select>
-    </mat-form-field>
-    <mat-form-field>
-      <mat-label>{{ 'TAPE.ADD_HOLE.COLUMN' | translate }}</mat-label>
-      <input matInput type="text" inputmode="numeric" data-testid="add-hole-column" [formField]="fields.column" />
-      <mat-hint>{{ 'TAPE.ADD_HOLE.COLUMN_HINT' | translate: {first: 1, last: tape().length} }}</mat-hint>
-    </mat-form-field>
+      <mat-form-field>
+        <mat-label>{{ 'TAPE.ADD_HOLE.PIPE' | translate }}</mat-label>
+        <mat-select data-testid="add-hole-pipe" [value]="pipe()" (selectionChange)="pickPipe($event.value)">
+          @for (option of pipes(); track option.note) {
+            <mat-option [value]="option.note">{{ option.name }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>{{ 'TAPE.ADD_HOLE.COLUMN' | translate }}</mat-label>
+        <input matInput type="text" inputmode="numeric" data-testid="add-hole-column" [formField]="fields.column" />
+        <mat-hint>{{ 'TAPE.ADD_HOLE.COLUMN_HINT' | translate: {first: 1, last: tape().length} }}</mat-hint>
+      </mat-form-field>
     </div>
     @if (problem(); as shown) {
       <p class="problem" role="alert" data-testid="add-hole-problem">

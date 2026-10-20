@@ -522,6 +522,9 @@ describe('TapeViewComponent', () => {
       const toggle = () => view()?.querySelector<HTMLButtonElement>(`[data-testid="${toggleId}"]`) ?? null;
 
       expect(toggle()?.getAttribute('aria-expanded')).toBe('true');
+      const controlled = toggle()?.getAttribute('aria-controls') ?? '';
+      expect(controlled).not.toBe('');
+      expect(view()?.querySelectorAll(`[id="${controlled}"]`)).toHaveLength(1);
       toggle()?.click();
       await settle();
       expect(toggle()?.getAttribute('aria-expanded')).toBe('false');

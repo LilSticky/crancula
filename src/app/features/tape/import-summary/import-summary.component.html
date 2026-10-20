@@ -1,7 +1,7 @@
 @let summary = importSummary();
 <header>
   <h2>{{ 'TAPE.SUMMARY.TITLE' | translate }}</h2>
-  <button matIconButton type="button" data-testid="import-summary-toggle" [attr.aria-expanded]="expanded()" [attr.aria-label]="'TAPE.SUMMARY.TOGGLE' | translate" (click)="expanded.set(!expanded())">
+  <button matIconButton type="button" data-testid="import-summary-toggle" aria-controls="import-summary-content" [attr.aria-expanded]="expanded()" [attr.aria-label]="'TAPE.SUMMARY.TOGGLE' | translate" (click)="expanded.set(!expanded())">
     <mat-icon aria-hidden="true">{{ expanded() ? 'expand_less' : 'expand_more' }}</mat-icon>
   </button>
   <button matIconButton type="button" [attr.aria-label]="'TAPE.SUMMARY.DISMISS' | translate" (click)="dismissed.emit()">
@@ -9,7 +9,7 @@
   </button>
 </header>
 @if (expanded()) {
-<dl>
+<dl id="import-summary-content">
 <dt>{{ 'TAPE.SUMMARY.TRANSPOSITION_TERM' | translate }}</dt>
 <dd data-testid="transposition" [attr.data-value]="summary.transposition">
   {{ 'TAPE.SUMMARY.TRANSPOSITION' | translate: {semitones: signed(summary.transposition)} }}

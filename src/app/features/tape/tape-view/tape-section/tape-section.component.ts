@@ -26,12 +26,12 @@ export interface TapeSectionView {
     <section data-testid="tape-section">
       <header>
         <h2>{{ 'TAPE.SECTION.TITLE' | translate }}</h2>
-        <button matIconButton type="button" data-testid="tape-section-toggle" [attr.aria-expanded]="expanded()" [attr.aria-label]="'TAPE.SECTION.TOGGLE' | translate" (click)="expanded.set(!expanded())">
+        <button matIconButton type="button" data-testid="tape-section-toggle" aria-controls="tape-section-content" [attr.aria-expanded]="expanded()" [attr.aria-label]="'TAPE.SECTION.TOGGLE' | translate" (click)="expanded.set(!expanded())">
           <mat-icon aria-hidden="true">{{ expanded() ? 'expand_less' : 'expand_more' }}</mat-icon>
         </button>
       </header>
       @if (expanded()) {
-      <dl>
+      <dl id="tape-section-content">
         <dt>{{ 'TAPE.SECTION.ORGAN' | translate }}</dt>
         <dd><a matButton [routerLink]="['/organs', view().organId]">{{ view().organName }}</a></dd>
         <dt>{{ 'TAPE.SECTION.COLUMN_LENGTH' | translate }}</dt>
