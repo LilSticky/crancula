@@ -1,5 +1,6 @@
 import {type Hole, type Millimetres, type Organ, type Tape, midiNoteNumber} from '@api/index';
-import {asValidTape, type Column, type ColumnCount} from '../../../../../api/tape/tape';
+import {type Column, type ColumnCount} from '../../../../../api/tape/tape';
+import {tapeOf} from '../../../../../api/tape/tape-fixture';
 import {testOrgan} from '../../../../testing/organs';
 import {inspectHole} from './inspect-hole';
 
@@ -14,7 +15,7 @@ function hole(row: number, start: number, length: number): Hole {
 }
 
 function tapeWith(holes: readonly Hole[], columnLength = 2.5, length = 100): Tape {
-  return asValidTape({
+  return tapeOf({
     id: '00000000-0000-4000-8000-000000000001' as Tape['id'],
     name: 'Melody',
     organId: organ.id,

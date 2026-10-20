@@ -8,7 +8,8 @@ import {launchApp} from './support/launch-app';
 import {melodyC3ToC5, notAMidiFile, type MidiFilePayload} from './support/midi-file';
 import {saveOrgan} from './support/organ-editor';
 import {stubSaveDialog} from './support/save-dialog';
-import {createTapeFromSong, defineOctaveOrgan} from './support/tape-creation';
+import {createTapeFromSong, defineOctaveOrgan, songRepeatingC4} from './support/tape-creation';
+import {drawnHoles, holeAt, pressOnDrawing} from './support/tape-edit';
 
 /** The German text of `TAPE.EXPORT.<key>`. */
 function germanExportText(key: string): string {
@@ -96,6 +97,80 @@ test.describe('I can export a Tape in German', () => {
       await expect(problems.getByRole('button', {name: germanExportText('PROBLEMS_CLOSE')})).toBeVisible();
       expect(await problems.innerText()).not.toMatch(/\bTAPE\.[A-Z_.]+/);
       expect(await dialog.calls()).toHaveLength(0);
+    } finally {
+      await app.close();
+    }
+  });
+});
+
+/** A German text of `TAPE.<section>.<key>` as the file has it. */
+function germanTapeText(section: string, key: string): string {
+  const de = JSON.parse(readFileSync(join(__dirname, '../src/assets/i18n/de.json'), 'utf8')) as {
+    TAPE: Record<string, Record<string, string> | undefined>;
+  };
+  return de.TAPE[section]?.[key] ?? '';
+}
+
+test.describe('I can edit a Tape in German', () => {
+  test('shows the editing texts in German, without translation keys', async () => {
+    const {app, window} = await launchApp();
+    try {
+      await defineOctaveOrgan(window, 'Drehorgel');
+      await createTapeFromSong(window, 'Blip', shortNoteSong(), {columnLength: '1.25'});
+      await window.getByTestId('language-switch').locator('[data-language="de"]').click();
+      const seen: string[] = [];
+      const collect = async (): Promise<void> => {
+        seen.push(await window.locator('body').innerText());
+      };
+
+      await expect(window.getByTestId('add-hole')).toContainText(germanTapeText('ADD_HOLE', 'TITLE'));
+      await expect(window.getByTestId('cutting-problems')).toContainText(germanTapeText('CUTTING_PROBLEMS', 'TITLE'));
+      await expect(window.getByTestId('cutting-problems-count')).toHaveText(germanTapeText('CUTTING_PROBLEMS', 'NONE'));
+      await expect(window.getByTestId('undo')).toHaveAttribute('aria-label', /^Rückgängig \(.+\)$/);
+      await expect(window.getByTestId('redo')).toHaveAttribute('aria-label', /^Wiederholen \(.+\)$/);
+
+      await window.locator('[data-testid="tape-scroll"] svg [data-testid="hole"]').first().click();
+      await expect(window.getByTestId('hole-keys')).toHaveText(germanTapeText('EDIT', 'KEYS'));
+      await collect();
+
+      // Shortening the only Hole below the Minimum Hole Length lists a Cutting Problem in German.
+      await window.locator('[data-testid="tape-scroll"] svg').focus();
+      await window.keyboard.press('Shift+ArrowLeft');
+      await expect(window.getByTestId('cutting-problem')).toHaveCount(1);
+      await expect(window.getByTestId('cutting-problems-count')).toContainText('kann nicht geschnitten werden');
+      await expect(window.getByTestId('cutting-problem')).toContainText('Mindestlochlänge');
+      await collect();
+
+      // A refused edit shows the reason in German: add a Hole onto the one that exists.
+      await window.getByTestId('add-hole-pipe').click();
+      await window.getByRole('option', {name: 'C4'}).click();
+      await window.getByTestId('add-hole-column').fill('1');
+      await window.getByTestId('add-hole-submit').click();
+      await expect(window.getByTestId('add-hole-problem')).toContainText('deckt Spalte');
+      await collect();
+
+      expect(seen.join('\n')).not.toMatch(/\bTAPE\.[A-Z_.]+/);
+    } finally {
+      await app.close();
+    }
+  });
+});
+
+test.describe('I can see a refused edit in German', () => {
+  test('shows the overlap refusal of a keyboard edit in German', async () => {
+    const {app, window} = await launchApp();
+    try {
+      await defineOctaveOrgan(window, 'Drehorgel');
+      await createTapeFromSong(window, 'Tonleiter', songRepeatingC4('c4s.mid', 4));
+      await window.getByTestId('language-switch').locator('[data-language="de"]').click();
+      const holes = [...(await drawnHoles(window))].sort((a, b) => a.row - b.row || a.start - b.start);
+      const target = holes.find((hole) => holes.filter((other) => other.row === hole.row).length === 4);
+      if (!target) throw new Error('expected four C4 Holes');
+      await holeAt(window, target.row, target.start).click();
+      const snackbar = window.locator('.mat-mdc-snack-bar-container');
+      for (let times = 0; times < 9; times++) await pressOnDrawing(window, 'Alt+ArrowRight');
+      await expect(snackbar.filter({hasText: /Das Loch würde das Loch von [A-G]#?\d in Spalte \d+ überlappen\./})).toBeVisible();
+      expect(await window.locator('body').innerText()).not.toMatch(/bTAPE\.[A-Z_.]+/);
     } finally {
       await app.close();
     }

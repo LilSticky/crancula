@@ -50,15 +50,31 @@ export {
 } from './song/song';
 export {MAXIMUM_MIDI_FILE_SIZE, readMidiSong, type SongRejection} from './song/midi/read-midi-song';
 export {
+  addHole,
+  changeHoleLength,
+  firstFreeColumnAfter,
+  moveHole,
+  removeHole,
+  type HoleEdit,
+  type HoleEditRefusal,
+  type HoleRef,
+} from './tape/hole-edits';
+export {
+  column,
+  columnCount,
   removeHolesOfPipes,
   tapeId,
   tapeLengthInMillimetres,
   transposition,
+  validTape,
   type Column,
   type ColumnCount,
   type Hole,
   type Tape,
+  type TapeFields,
   type TapeId,
+  type TapeRuleViolation,
+  type TapeRuleViolationCode,
   type Transposition,
 } from './tape/tape';
 export {allowedTranspositions, proposeTransposition} from './tape/transposition';
@@ -78,7 +94,14 @@ export {
   type TapeLibrarySnapshot,
 } from './tape/tape-library-snapshot';
 export type {HoleFix, ImportSummary} from './tape/import-summary';
-export {exportProblems, type ExportProblem, type ExportProblemCode} from './tape/export-problems';
+export {
+  cuttingProblems,
+  holesWithCuttingProblems,
+  type CuttingProblem,
+  type CuttingProblemCode,
+  type HoleCuttingProblems,
+  type HoleProblem,
+} from './tape/cutting-problems';
 export {renameTape} from './tape/rename-tape';
 export {plotterFileName} from './tape/plotter-file-name';
 export {plotterSvg} from './tape/plotter-svg';

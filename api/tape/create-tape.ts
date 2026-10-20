@@ -6,9 +6,9 @@ import {fixHoles, holeLimitsOf, mergeOverlaps} from './hole-fixes';
 import {fitNotesOfPlaced, fitOf, placedNotesOf} from './fit';
 import {allowedTranspositions} from './transposition';
 import {
-  asValidTape,
   columnCount,
   newTapeId,
+  validTape,
   type Hole,
   type Tape,
   type Transposition,
@@ -93,18 +93,21 @@ export function createTape(input: CreateTapeInput): Result<CreatedTape, readonly
     'Tape length',
   );
 
+  const tape = validTape({
+    id: newTapeId(),
+    name: input.name,
+    organId: organ.id,
+    songId: song.id,
+    selectedParts: [...selectedParts].sort((a, b) => a - b),
+    transposition,
+    columnLength,
+    length,
+    holes: fixed.holes,
+  });
+  if (!tape.ok) throw new Error(`created an invalid Tape: ${tape.error.code}`);
+
   return ok({
-    tape: asValidTape({
-      id: newTapeId(),
-      name: input.name.trim(),
-      organId: organ.id,
-      songId: song.id,
-      selectedParts: [...selectedParts].sort((a, b) => a - b),
-      transposition,
-      columnLength,
-      length,
-      holes: fixed.holes,
-    }),
+    tape: tape.value,
     importSummary: {
       transposition,
       notesOnTape: holes.length,

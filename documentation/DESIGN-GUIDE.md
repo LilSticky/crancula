@@ -114,9 +114,23 @@ Roboto goes once nothing uses it. Add each licence text next to the font files.
   zoom toggle, and **Export for the Plotter** as a disabled outlined button with the visible text
   "Export comes in a later release" beside it, until the export slice ships. Below: the Tape stage
   (ruler, Tape, Column numbers, overview strip), the side panel (300 px), the status line.
-  - **Side panel**, three sections: *Selected Hole* (Pipe and row, Columns 65–79, length "15
-    Columns, 37,5 mm", gap to the next Hole), *Tape* (Organ, Column length, Columns, length, Holes),
-    *Import Summary* (only right after the import, dismissible, not stored).
+  - **Undo and Redo** sit in the page head as icon buttons (`undo`, `redo`) next to the zoom toggle
+    and Export, disabled when there is nothing to undo or redo; tooltip and accessible name name the
+    shortcut: "Undo (Ctrl+Z)", "Redo (Ctrl+Y)" (Ctrl+Shift+Z on Linux, ⌘Z and ⇧⌘Z on macOS).
+  - **Side panel**, in this order: *Tape* (Organ, Column length, Columns, length, Holes), *Selected
+    Hole* (Pipe and row, Columns 65–79, length "15 Columns, 37,5 mm", gap to the next Hole or to the
+    end of the Tape, warnings for a Hole below the Minimum Hole Length or a gap below the Minimum
+    Gap; with a selection also the line of edit keys), *Cutting Problems*, *Import Summary* (only
+    right after the import, dismissible, not stored) and *Add a Hole*.
+  - **Cutting Problems:** heading, then "None" or "3 Holes can't be cut"; one full-width text button
+    per marked Hole with the problems in words and mm ("C4 at Column 16: the gap to the previous
+    Hole at Column 10 is 1 mm, the Minimum Gap is 2 mm."). The button selects the Hole and scrolls it
+    into view. A Hole whose Pipe the Organ lacks is listed as plain text, as there is nothing to
+    select.
+  - **Add a Hole:** a form with a Pipe select (the Organ's Pipes by note name), a Column field
+    (numbered from 1) and the filled button "Add". It is prefilled from the selected Hole. A Column
+    already covered by a Hole of that Pipe, or not a whole number from 1, shows a sentence under
+    the fields (`role="alert"`). After adding, the focus returns to the Tape drawing.
   - **Status line** (26 px, under the stage): pointer position "Column 72 at 177,5 mm", "Row 25,
     F5", zoom, save state ("Saved"). Text, `aria-live="polite"` only for the save state.
 
@@ -153,6 +167,22 @@ Roboto goes once nothing uses it. Add each licence text next to the font files.
   their band), so a 3 mm spacing never collides.
 - Overview strip under the Tape at stage width, visible part framed in brass; click to jump.
 - Selection: click or arrow keys select a Hole; select ring plus the inspector entry.
+- **Handles:** only the selected Hole has two resize handles, one at each end: transparent
+  rectangles as high as the Hole and up to 8 px wide (at most a third of the Hole), so the Hole's
+  look does not change. The cursor is `ew-resize` over a handle, `grab` over a Hole body and
+  `grabbing` during a drag.
+- **Cutting Problem marks:** every Hole that cannot be cut (no Pipe on the Organ, shorter than the
+  Minimum Hole Length, or closer than the Minimum Gap to its neighbour, both Holes of a pair) gets a
+  dashed oxblood ring, 2 px outside the Hole, drawn only for the visible Columns and ignoring the
+  pointer. Colour is never the only cue: the ring is dashed, and the side panel names each problem.
+- **Drag preview:** while a Hole or one of its ends is dragged, the drawing shows the would-be
+  result live, snapped to Columns and rows; the stage scrolls when the pointer is within 24 px of
+  its left or right edge. Escape cancels. A refused position (the result would overlap a Hole of
+  the same Pipe) draws a ghost with an oxblood outline (class `refused`) at the would-be position under the
+  pointer, while the Hole being dragged stays unchanged where it was, for as long as the pointer is on the refused cell. Releasing
+  there changes nothing and opens a snackbar that names the Hole in the way: "The Hole would
+  overlap the Hole of C4 at Column 16."
+- Double-clicking an empty spot of a row adds a Hole of that row's Pipe at that Column.
 
 ## States
 - **Empty:** one sentence of what to do plus the primary button ("No Organs yet. Describe your
@@ -171,6 +201,17 @@ Roboto goes once nothing uses it. Add each licence text next to the font files.
 - 2 px brass focus ring with offset on every control (lighter brass inside the rail).
 - Keyboard: reading order; Pipes move with the row menu or Alt+↑/↓; arrow keys move the Hole
   selection; Escape closes panels and dialogs.
+- **Editing a Hole by keyboard** (focus on the Tape drawing, `role="application"`; without a
+  selection the edit keys do nothing). Alt+←/→ moves the Hole one Column, Alt+↑/↓ one row, Shift+←/→
+  moves its end, Alt+Shift+←/→ its start, Delete or Backspace removes it (the next Hole of the row
+  is selected, else the previous one). A key that would overlap another Hole changes nothing and
+  shows the snackbar. The Selected Hole section lists these keys as text, and the drawing refers to
+  it with `aria-describedby` while a Hole is selected, so the keys are spoken, not only shown.
+- **Undo and redo:** Ctrl+Z, Ctrl+Y and Ctrl+Shift+Z (⌘Z and ⇧⌘Z on macOS), anywhere in the Tape
+  view except text fields, which keep their own undo. The page head buttons do the same.
+- **Adding without a pointer:** the Add a Hole form does what a double-click does.
+- The Selected Hole section is `aria-live="polite"`, so a changed position or length is announced;
+  the edit keys line is outside that live region. The snackbar of a refused edit announces itself.
 - The Tape SVG has a text alternative (rows, Columns, Holes); the Import Summary is text.
 - German expands ~30 %: labels in the outline, two field columns of ~170 px, the rail fits
   "Drehorgeln", the action bar fits "Ungespeicherte Änderungen: Mindestlochlänge".

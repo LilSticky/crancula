@@ -16,11 +16,12 @@ import {
 import {
   type Hole,
   type Tape,
-  asValidTape,
   column,
   columnCount,
   tapeId,
   transposition,
+  validTape,
+  type TapeRuleViolation,
 } from './tape';
 
 /** One Song in the snapshot file. Array order of `parts` is the PartIndex. */
@@ -190,7 +191,7 @@ function parseTape(input: unknown, songs: readonly Song[]): Result<Tape, string>
   const {id, name, songId: songIdInput, selectedParts, holes} = input;
   const brandedId = typeof id === 'string' ? tapeId(id) : undefined;
   if (brandedId === undefined) return err('id is not a UUID');
-  if (typeof name !== 'string' || name.trim() === '') return err('name is blank');
+  if (typeof name !== 'string') return err('name is blank');
   const organ = typeof input['organId'] === 'string' ? organId(input['organId']) : undefined;
   if (organ === undefined) return err('organId is not a UUID');
 
@@ -204,22 +205,37 @@ function parseTape(input: unknown, songs: readonly Song[]): Result<Tape, string>
   const length = typeof input['length'] === 'number' ? columnCount(input['length']) : undefined;
   if (length === undefined) return err('length is not an integer >= 1');
 
-  const parsedHoles = parseHoles(holes, length);
+  const parsedHoles = parseHoles(holes);
   if (!parsedHoles.ok) return parsedHoles;
 
-  return ok(
-    asValidTape({
-      id: brandedId,
-      name: name.trim(),
-      organId: organ,
-      songId: source.value.songId,
-      selectedParts: source.value.selectedParts,
-      transposition: shift,
-      columnLength,
-      length,
-      holes: parsedHoles.value,
-    }),
-  );
+  const tape = validTape({
+    id: brandedId,
+    name,
+    organId: organ,
+    songId: source.value.songId,
+    selectedParts: source.value.selectedParts,
+    transposition: shift,
+    columnLength,
+    length,
+    holes: parsedHoles.value,
+  });
+  return tape.ok ? tape : err(reasonOf(tape.error));
+}
+
+function reasonOf(violation: TapeRuleViolation): string {
+  switch (violation.code) {
+    case 'name-blank':
+      return 'name is blank';
+    case 'song-reference-incomplete':
+      return 'songId and selectedParts must both be present or both absent';
+    case 'selected-parts-invalid':
+      return 'selectedParts is not sorted and unique';
+    case 'hole-beyond-end':
+      return 'a Hole ends beyond the end of the Tape';
+    case 'holes-not-sorted':
+    case 'holes-overlap':
+      return 'Holes are not sorted by pipe then start, or overlap within a row';
+  }
 }
 
 function parseSongReference(
@@ -247,7 +263,7 @@ function parseSongReference(
   return ok({songId: referenced.id, selectedParts: parts});
 }
 
-function parseHoles(input: unknown, tapeLength: number): Result<Hole[], string> {
+function parseHoles(input: unknown): Result<Hole[], string> {
   if (!Array.isArray(input)) return err('holes is not a list');
   const holes: Hole[] = [];
   for (const entry of input as unknown[]) {
@@ -257,12 +273,6 @@ function parseHoles(input: unknown, tapeLength: number): Result<Hole[], string> 
     const length = triple ? columnCount(triple[2]) : undefined;
     if (pipe === undefined || start === undefined || length === undefined) {
       return err('a Hole is not [pipe 0-127, start >= 0, length >= 1]');
-    }
-    if (start + length > tapeLength) return err('a Hole ends beyond the end of the Tape');
-
-    const previous = holes[holes.length - 1];
-    if (previous && (pipe < previous.pipe || (pipe === previous.pipe && start < previous.start + previous.length))) {
-      return err('Holes are not sorted by pipe then start, or overlap within a row');
     }
     holes.push({pipe, start, length});
   }

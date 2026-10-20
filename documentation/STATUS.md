@@ -6,6 +6,22 @@ Issues: [GitHub](https://github.com/LilSticky/crancula/issues)
 
 ## Current slice
 
+**Next step:** Take draft pull request [#108](https://github.com/LilSticky/crancula/pull/108) out of draft for review (it closes
+[#105](https://github.com/LilSticky/crancula/issues/105)), merge it after CI is green, then pick the next issue by
+priority; [#121](https://github.com/LilSticky/crancula/issues/121) (UX findings from the Tape edit review) is a
+candidate. Follow-up [#122](https://github.com/LilSticky/crancula/issues/122): route the application menu's Edit →
+Undo/Redo to the Tape (low priority).
+
+**Done:** [Place holes by hand](../specs/004-place-holes-by-hand/spec.md)
+([#105](https://github.com/LilSticky/crancula/issues/105), part of Edit a tape
+[#103](https://github.com/LilSticky/crancula/issues/103), branch `004-place-holes-by-hand`, PR #108, 2026-10-20):
+all 76 tasks in [tasks](../specs/004-place-holes-by-hand/tasks.md). Move, resize, add and remove Holes by pointer and
+keyboard; Cutting Problems as you edit; undo and redo; the Tape grows. Decisions in
+[discovery/edit-a-tape.md](discovery/edit-a-tape.md) and [ADR 22](adr/0022-tape-edits-as-domain-commands.md). A
+refused drop shows a ghost (`hole-ghost`) at the pointer. Polish (Phase 9) and the `spec-auditor` pass found no
+gaps; ux-review 38/50 (captures 08d–08f). Findings 14–18 are in [#121](https://github.com/LilSticky/crancula/issues/121)
+(T077–T086). Gate: lint, i18n (273 keys), 1016 Angular and 714 node unit tests, build and 104 e2e green locally.
+
 **Done:** [Bring a song onto a tape](../specs/002-bring-a-song-onto-a-tape/spec.md)
 ([#2](https://github.com/LilSticky/crancula/issues/2), PR #51, 2026-10-14): all 78 tasks. MIDI Song
 import, Tape domain (Quantisation, Transposition, Fit, Hole fixes), Tape library snapshot, IPC and
@@ -119,7 +135,7 @@ after the last Column. A Tape that can't be cut opens a dialog naming every prob
 short, too close); nothing is written. Selected Hole warnings follow the same Column rules. Below 1180 px
 Export is an icon button. German texts. ux-review 40/50 (see [design/screens/current/ux-review.md](design/screens/current/ux-review.md)).
 Gate: lint, i18n (251 keys), 640 node and 746 Angular tests, 84 e2e green locally. Tasks in
-[tasks](../specs/003-punch-a-tape/tasks.md). **Released:** v0.1.0 (2026-10-18). **Next step:** triage open issues and choose the next slice from the ROADMAP's "Later" list (user decision). README shows v0.1 with screenshots (`e2e/ux/readme.capture.ts`, `README_SHOTS=1`); open UI bugs from the captures fixed (#96, #97).
+[tasks](../specs/003-punch-a-tape/tasks.md). **Released:** v0.1.0 (2026-10-18). README shows v0.1 with screenshots (`e2e/ux/readme.capture.ts`, `README_SHOTS=1`); open UI bugs from the captures fixed (#96, #97).
 
 Follow-ups:
 [#76](https://github.com/LilSticky/crancula/issues/76), [#80](https://github.com/LilSticky/crancula/issues/80) and

@@ -2,7 +2,8 @@ import {describe, expect, it} from 'vitest';
 import {midiNoteNumber} from '../organ/midi-note-number';
 import type {Millimetres, Organ} from '../organ/organ';
 import {validateOrgan} from '../organ/validate-organ';
-import {asValidTape, type Column, type ColumnCount, type Hole, type Tape} from './tape';
+import {type Column, type ColumnCount, type Hole, type Tape} from './tape';
+import {tapeOf} from './tape-fixture';
 import {tapeGeometry} from './tape-geometry';
 
 /** A valid Organ: 120 mm wide, 3.5 mm rows, 2.5 mm holes, notes 60, 62, … */
@@ -28,7 +29,7 @@ function hole(pipe: number, start: number, length: number): Hole {
 }
 
 function tapeWith(organ: Organ, holes: readonly Hole[]): Tape {
-  return asValidTape({
+  return tapeOf({
     id: '00000000-0000-4000-8000-000000000001' as Tape['id'],
     name: 'Melody',
     organId: organ.id,
@@ -84,7 +85,7 @@ describe('tapeGeometry', () => {
 
   it('leaves out the Holes of a Pipe no longer on the Organ', () => {
     // Note 60 is on the Organ (row 1), note 59 is not.
-    const {slots} = tapeGeometry(tapeWith(streetOrgan, [hole(60, 0, 2), hole(59, 4, 2)]), streetOrgan);
+    const {slots} = tapeGeometry(tapeWith(streetOrgan, [hole(59, 4, 2), hole(60, 0, 2)]), streetOrgan);
 
     expect(slots.map((slot) => slot.start)).toEqual([0]);
   });

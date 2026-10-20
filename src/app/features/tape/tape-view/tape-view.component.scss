@@ -11,7 +11,7 @@
   flex: 1;
   min-height: 0;
 }
-.layout.compact {
+.layout.compact:not(.panel-open) {
   grid-template-columns: minmax(0, 1fr);
 }
 .stage {
@@ -27,6 +27,9 @@
 }
 cranc-page-head.compact {
   padding-bottom: 8px;
+}
+cranc-page-head button[mat-icon-button] {
+  --mat-icon-button-state-layer-size: 40px;
 }
 .stage.compact .overview {
   height: 36px;
@@ -96,6 +99,37 @@ cranc-page-head.compact {
 .hole.selected {
   stroke: var(--cr-select);
   stroke-width: 2;
+}
+.cutting-problem {
+  fill: none;
+  stroke: var(--cr-problem);
+  stroke-width: 2;
+  stroke-dasharray: 4 3;
+  pointer-events: none;
+}
+.hole-ghost.refused {
+  fill: none;
+  stroke: var(--cr-problem);
+  stroke-width: 2;
+  pointer-events: none;
+}
+.scroll svg {
+  user-select: none;
+  touch-action: none;
+}
+.grab {
+  cursor: grab;
+}
+.handle {
+  fill: transparent;
+}
+.ew-resize {
+  cursor: ew-resize;
+}
+svg.grabbing,
+svg.grabbing .grab,
+svg.grabbing .ew-resize {
+  cursor: grabbing;
 }
 .guide,
 .mark {

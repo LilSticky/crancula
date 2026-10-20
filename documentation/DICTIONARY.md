@@ -35,13 +35,13 @@
 
 # Hole
 * Each hole in the tape represents one note being played by a pipe
-* Can be extended along the row to extend the note duration
+* Can be lengthened or shortened at either end along its row, which changes the note duration
 * Has position (its Pipe, start column) and dimensions (length)
 * Cut as a slot from the start of its first Column to the end of its last Column, one hole diameter wide, with half-circle ends inside that length; the Tape view draws exactly this shape
 * Belongs to its Pipe, not to a row number: when the Organ's Pipes are reordered, the Hole moves with its Pipe
-* Usually placed on regular note-value boundaries; can be shifted by single Columns for finer adjustment
-* Can be moved to another pipe or column, or removed
-* Must be at least the Minimum Hole Length long and keep the Minimum Gap to the next hole in its row
+* Usually placed on regular note-value boundaries; can be moved by single Columns for finer adjustment
+* Can be moved to another Pipe or Column, or removed
+* Must be at least the Minimum Hole Length long and keep the Minimum Gap to the next hole in its row; otherwise it has a Cutting Problem
 * Similar to a single musical score, but for punched tape
 
 # Song
@@ -102,7 +102,8 @@
 * Only matters inside the Song Source and the Song read from it; Quantisation turns Ticks into Columns
 
 # Transposition
-* Shifting the notes of a Tape (all or a selection) by a number of semitones
+* Transposing Holes moves each of them by a number of semitones to another Pipe (all Holes of a Tape or the selected ones)
+* The Tape's Transposition is the one it was created with
 * Used to fit a song to the Organ's pipes or to make it sound better
 
 # Fit
@@ -146,6 +147,11 @@
 # Minimum Gap
 * Shortest space in mm between two Holes in the same row the Organ can separate; a hard physical limit
 * German: Mindestabstand
+
+# Cutting Problem
+* Why a Hole can't be cut: its Pipe is not on the Organ, it is shorter than the Minimum Hole Length, or it is closer than the Minimum Gap to the next Hole in its row
+* A Tape with Cutting Problems can be edited but not exported for the Plotter
+* German: Schnittproblem
 
 # Crank
 * Turned by the musician to draw the Tape through the Organ

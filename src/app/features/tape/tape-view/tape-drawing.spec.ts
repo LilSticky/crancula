@@ -1,14 +1,15 @@
 import {type Millimetres, type Organ, type Tape, midiNoteNumber, tapeGeometry} from '@api/index';
-import {asValidTape, type Column, type ColumnCount} from '../../../../../api/tape/tape';
+import {type Column, type ColumnCount} from '../../../../../api/tape/tape';
+import {tapeOf} from '../../../../../api/tape/tape-fixture';
 import {testOrgan} from '../../../../testing/organs';
-import {columnMarks, holeRects, outline, rowLabels, sectionView, RULER_HEIGHT} from './tape-drawing';
+import {columnMarks, holeMarks, holeRects, outline, rowLabels, sectionView, RULER_HEIGHT} from './tape-drawing';
 
 const organ: Organ = testOrgan('Street organ', 31, {pipes: Array.from({length: 31}, (_, row) => ({note: 58 + 2 * (row + 1)}))});
 
 function tapeWith(holeStarts: readonly number[], length = 100): Tape {
   const note = midiNoteNumber(60);
   if (note === undefined) throw new Error('not a note');
-  return asValidTape({
+  return tapeOf({
     id: '00000000-0000-4000-8000-000000000001' as Tape['id'],
     name: 'Melody',
     organId: organ.id,
@@ -98,6 +99,67 @@ describe('holeRects', () => {
     const rects = holeRects(tape, geometry, 2, {first: 0, last: 10}, slot && {row: slot.row, start: slot.start});
 
     expect(rects[0]?.selected).toBe(true);
+  });
+
+  it('gives handles at both ends of the selected Hole only', () => {
+    const slot = geometry.slots[0];
+    const rects = holeRects(tape, geometry, 2, {first: 0, last: 60}, slot && {row: slot.row, start: slot.start});
+
+    expect(rects[1]?.handles).toBeUndefined();
+    expect(rects[0]?.handles).toBeDefined();
+  });
+
+  it('makes each handle 8 px wide inside the Hole', () => {
+    const slot = geometry.slots[0];
+    const [rect] = holeRects(tape, geometry, 20, {first: 0, last: 10}, slot && {row: slot.row, start: slot.start});
+
+    expect(rect?.width).toBeGreaterThan(24);
+    expect(rect?.handles).toEqual({
+      start: {x: rect?.x, width: 8},
+      end: {x: (rect?.x ?? 0) + (rect?.width ?? 0) - 8, width: 8},
+    });
+  });
+
+  it('makes each handle a third of the Hole wide when the Hole is narrow', () => {
+    const slot = geometry.slots[0];
+    const [rect] = holeRects(tape, geometry, 2, {first: 0, last: 10}, slot && {row: slot.row, start: slot.start});
+    const width = (rect?.width ?? 0) / 3;
+
+    expect(width).toBeLessThan(8);
+    expect(rect?.handles?.start.width).toBeCloseTo(width);
+    expect(rect?.handles?.end.width).toBeCloseTo(width);
+    expect(rect?.handles?.end.x).toBeCloseTo((rect?.x ?? 0) + (rect?.width ?? 0) - width);
+  });
+});
+
+describe('holeMarks', () => {
+  const range = {first: 0, last: 60};
+
+  it('rings only the Holes whose "pipe:start" key has a Cutting Problem', () => {
+    const marks = holeMarks(tape, organ, geometry, 2, range, new Set(['60:0']));
+
+    expect(marks.map((mark) => mark.start)).toEqual([0]);
+  });
+
+  it('puts the ring 2 px outside the slot on every side', () => {
+    const [mark] = holeMarks(tape, organ, geometry, 2, range, new Set(['60:0']));
+    const [rect] = holeRects(tape, geometry, 2, range, undefined);
+
+    expect(mark).toMatchObject({
+      x: (rect?.x ?? 0) - 2,
+      y: (rect?.y ?? 0) - 2,
+      width: (rect?.width ?? 0) + 4,
+      height: (rect?.height ?? 0) + 4,
+      radius: (rect?.radius ?? 0) + 2,
+    });
+  });
+
+  it('draws no ring for a marked Hole outside the visible range', () => {
+    expect(holeMarks(tape, organ, geometry, 2, {first: 0, last: 10}, new Set(['60:50']))).toEqual([]);
+  });
+
+  it('draws no ring when no Hole has a Cutting Problem', () => {
+    expect(holeMarks(tape, organ, geometry, 2, range, new Set())).toEqual([]);
   });
 });
 

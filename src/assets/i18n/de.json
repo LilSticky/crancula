@@ -19,12 +19,30 @@
     "SAVED_HERE": "Auf diesem Computer gespeichert"
   },
   "TAPE": {
+    "EDIT": {
+      "REFUSED_OVERLAP": "Das Loch würde das Loch von {{note}} in Spalte {{column}} überlappen.",
+      "UNDO_TOOLTIP": "Rückgängig ({{shortcut}})",
+      "REDO_TOOLTIP": "Wiederholen ({{shortcut}})",
+      "KEYS": "Alt+Pfeiltasten verschieben es, Umschalt+Pfeiltasten verschieben sein Ende, Alt+Umschalt+Pfeiltasten seinen Anfang, Entf löscht es."
+    },
     "RENAME": {
       "TITLE": "Lochband umbenennen",
       "NAME": "Name",
       "CANCEL": "Abbrechen",
       "CONFIRM": "Umbenennen",
       "NAME_REQUIRED": "Gib dem Lochband einen Namen."
+    },
+    "CUTTING_PROBLEMS": {
+      "TITLE": "Schnittprobleme",
+      "COUNT": "{{count}} Löcher können nicht geschnitten werden",
+      "COUNT_ONE": "{{count}} Loch kann nicht geschnitten werden",
+      "NONE": "Keine"
+    },
+    "CUTTING_PROBLEM": {
+      "TOO_CLOSE_PREVIOUS": "{{note}} in Spalte {{column}}: Der Abstand zum vorherigen Loch in Spalte {{previous}} beträgt {{gap}} mm, der Mindestabstand beträgt {{minimum}} mm.",
+      "NO_PIPE": "{{note}} in Spalte {{column}}: Die Orgel hat keine Pfeife für diesen Ton.",
+      "TOO_SHORT": "{{note}} in Spalte {{column}}: Das Loch ist {{length}} mm lang, die Mindestlochlänge beträgt {{minimum}} mm.",
+      "TOO_CLOSE": "{{note}} in Spalte {{column}}: Der Abstand zum nächsten Loch in Spalte {{next}} beträgt {{gap}} mm, der Mindestabstand beträgt {{minimum}} mm."
     },
     "EXPORT": {
       "DIALOG_TITLE": "Für den Plotter exportieren",
@@ -33,10 +51,7 @@
       "FAILED": "Speichern fehlgeschlagen: {{reason}}",
       "RETRY": "Erneut versuchen",
       "PROBLEMS_TITLE": "Dieses Lochband kann noch nicht geschnitten werden",
-      "PROBLEMS_CLOSE": "Schließen",
-      "PROBLEM_NO_PIPE": "{{note}} in Spalte {{column}}: Die Orgel hat keine Pfeife für diesen Ton.",
-      "PROBLEM_TOO_SHORT": "{{note}} in Spalte {{column}}: Das Loch ist {{length}} mm lang, die Mindestlochlänge beträgt {{minimum}} mm.",
-      "PROBLEM_TOO_CLOSE": "{{note}} in Spalte {{column}}: Der Abstand zum nächsten Loch in Spalte {{next}} beträgt {{gap}} mm, der Mindestabstand beträgt {{minimum}} mm."
+      "PROBLEMS_CLOSE": "Schließen"
     },
     "NAV": "Lochbänder",
     "VIEW": {
@@ -175,6 +190,14 @@
       "HOLES": "Löcher",
       "PARTS": "Stimmen auf dem Lochband",
       "MM": "{{value}} mm"
+    },
+    "ADD_HOLE": {
+      "TITLE": "Loch hinzufügen",
+      "PIPE": "Pfeife",
+      "COLUMN": "Spalte",
+      "SUBMIT": "Hinzufügen",
+      "COVERED": "Ein Loch der Pfeife {{note}} deckt Spalte {{column}} bereits ab.",
+      "COLUMN_INVALID": "Gib eine ganze Spaltennummer ab 1 ein."
     },
     "HOLE": {
       "TITLE": "Ausgewähltes Loch",

@@ -2,16 +2,20 @@ import {describe, expect, it} from 'vitest';
 import {midiNoteNumber} from '../organ/midi-note-number';
 import {millimetres, organId} from '../organ/organ';
 import {
-  asValidTape,
   column,
   columnCount,
   removeHolesOfPipes,
   tapeId,
   tapeLengthInMillimetres,
   transposition,
+  validTape,
   type Hole,
   type Tape,
+  type TapeFields,
+  type TapeRuleViolationCode,
 } from './tape';
+import {tapeOf} from './tape-fixture';
+import {partIndex, songId} from '../song/song';
 
 const UUID = '3f2b8c1e-9d4a-4f6b-8e2c-1a2b3c4d5e6f';
 
@@ -29,7 +33,7 @@ function aHole(pipe: number, start: number, length: number): Hole {
 }
 
 function aTape(holes: readonly Hole[], length: number, columnLength: number): Tape {
-  return asValidTape({
+  return tapeOf({
     id: defined(tapeId(UUID), 'id'),
     name: 'Fugue',
     organId: defined(organId(UUID), 'organ id'),
@@ -111,5 +115,108 @@ describe('removeHolesOfPipes', () => {
 
   it('changes nothing for Pipes without Holes', () => {
     expect(removeHolesOfPipes(tape, pipes(70))).toEqual(tape);
+  });
+});
+
+describe('validTape', () => {
+  const SONG = '7a1c2d3e-4f50-4a6b-8c7d-9e0f1a2b3c4d';
+  const part = (n: number) => defined(partIndex(n, 10), 'part');
+
+  function fields(overrides: Partial<TapeFields> = {}): TapeFields {
+    const {holes: _holes, ...rest} = aTape([], 10, 2);
+    void _holes;
+    return {...rest, holes: [], ...overrides};
+  }
+
+  function violationOf(input: TapeFields) {
+    const result = validTape(input);
+    if (result.ok) throw new Error('expected a rule violation');
+    return result.error;
+  }
+
+  it('accepts a Tape without Holes and carries every field over', () => {
+    const input = fields();
+    const result = validTape(input);
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.value).toEqual(input);
+  });
+
+  it('accepts valid Holes and carries them over', () => {
+    const holes = [aHole(60, 0, 2), aHole(60, 5, 2), aHole(62, 1, 3)];
+    const result = validTape(fields({holes}));
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.value.holes).toEqual(holes);
+  });
+
+  it('stores the name trimmed', () => {
+    const result = validTape(fields({name: '  Fugue \n'}));
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.value.name).toBe('Fugue');
+  });
+
+  it('rejects a blank name with name-blank', () => {
+    expect(violationOf(fields({name: '  \t '})).code).toBe('name-blank');
+  });
+
+  it('rejects a song without selected parts with song-reference-incomplete', () => {
+    expect(violationOf(fields({songId: defined(songId(SONG), 'song id')})).code).toBe(
+      'song-reference-incomplete',
+    );
+  });
+
+  it('rejects selected parts without a song with song-reference-incomplete', () => {
+    expect(violationOf(fields({selectedParts: [part(0)]})).code).toBe('song-reference-incomplete');
+  });
+
+  it('accepts a song with selected parts', () => {
+    const result = validTape(fields({songId: defined(songId(SONG), 'song id'), selectedParts: [part(0), part(2)]}));
+    expect(result.ok).toBe(true);
+  });
+
+  it.each([
+    ['empty', []],
+    ['unsorted', [2, 1]],
+    ['duplicated', [1, 1]],
+  ])('rejects %s selected parts with selected-parts-invalid', (_name, parts) => {
+    const input = fields({songId: defined(songId(SONG), 'song id'), selectedParts: parts.map(part)});
+    expect(violationOf(input).code).toBe('selected-parts-invalid');
+  });
+
+  it('rejects a Hole beyond the end with hole-beyond-end naming the first offending Hole', () => {
+    const first = aHole(62, 8, 3);
+    const violation = violationOf(fields({holes: [aHole(60, 0, 2), first, aHole(64, 9, 5)]}));
+    expect(violation).toEqual({code: 'hole-beyond-end', hole: first});
+  });
+
+  it('accepts a Hole that ends exactly at the end of the Tape', () => {
+    expect(validTape(fields({holes: [aHole(60, 8, 2)]})).ok).toBe(true);
+  });
+
+  it('rejects Holes not sorted by Pipe with holes-not-sorted', () => {
+    expect(violationOf(fields({holes: [aHole(62, 0, 1), aHole(60, 0, 1)]})).code).toBe('holes-not-sorted');
+  });
+
+  it('rejects Holes of one Pipe not sorted by start with holes-not-sorted', () => {
+    expect(violationOf(fields({holes: [aHole(60, 5, 1), aHole(60, 0, 1)]})).code).toBe('holes-not-sorted');
+  });
+
+  it('rejects overlapping Holes of one Pipe with holes-overlap', () => {
+    expect(violationOf(fields({holes: [aHole(60, 0, 3), aHole(60, 2, 2)]})).code).toBe('holes-overlap');
+  });
+
+  it('accepts touching Holes of one Pipe', () => {
+    expect(validTape(fields({holes: [aHole(60, 0, 3), aHole(60, 3, 2)]})).ok).toBe(true);
+  });
+
+  it('names exactly the six rule codes', () => {
+    const codes: Record<TapeRuleViolationCode, true> = {
+      'name-blank': true,
+      'song-reference-incomplete': true,
+      'selected-parts-invalid': true,
+      'hole-beyond-end': true,
+      'holes-not-sorted': true,
+      'holes-overlap': true,
+    };
+    expect(Object.keys(codes)).toHaveLength(6);
   });
 });

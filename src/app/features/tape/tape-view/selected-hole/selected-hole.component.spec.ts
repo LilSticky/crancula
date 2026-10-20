@@ -73,6 +73,35 @@ describe('SelectedHoleComponent', () => {
     expect(warnings[0]).toContain('Shorter than the Minimum Hole Length: 2 mm of 3 mm');
   });
 
+  it('shows the key help line for the selected Hole', async () => {
+    const {element} = await render(VIEW);
+
+    const keys = element.querySelector('[data-testid="hole-keys"]');
+    expect(keys?.textContent?.replace(/\s+/g, ' ').trim()).toBe(
+      'Alt+arrows move it, Shift+arrows move its end, Alt+Shift+arrows its start, Delete removes it.',
+    );
+  });
+
+  it('keeps the key help line outside the live region', async () => {
+    const {element} = await render(VIEW);
+
+    const keys = element.querySelector('[data-testid="hole-keys"]');
+    expect(keys).not.toBeNull();
+    expect(keys?.closest('[aria-live]')).toBeNull();
+  });
+
+  it('gives the key help line the stable id hole-keys-help', async () => {
+    const {element} = await render(VIEW);
+
+    expect(element.querySelector('[data-testid="hole-keys"]')?.id).toBe('hole-keys-help');
+  });
+
+  it('shows no key help line without an inspection', async () => {
+    const {element} = await render(undefined);
+
+    expect(element.querySelector('[data-testid="hole-keys"]')).toBeNull();
+  });
+
   it('announces changes politely', async () => {
     const {section} = await render(VIEW);
 

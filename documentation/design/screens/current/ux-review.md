@@ -1,10 +1,12 @@
-# UX review: running app, screens/current (2026-10-17, after #69)
+# UX review: running app, screens/current (2026-10-20, after 004 Place holes by hand)
 
-Previous: 39/50 (after 003 US1-US3), 38/50 (after #66), 36/50 (after #65), 36/50 (after #64), 33/50 (after #63), 30/50 (after #62), 29/50 (before #62)
+Previous: 40/50 (after 003 findings 12 and 13), 39/50 (after 003 US1-US3), 38/50 (after #66), 36/50 (after #65), 36/50 (after #64), 33/50 (after #63), 30/50 (after #62), 29/50 (before #62)
 
 | H1 | H2 | H3 | H4 | H5 | H6 | H7 | H8 | H9 | H10 | Total |
 |----|----|----|----|----|----|----|----|----|-----|-------|
-| 4  | 5  | 4  | 4  | 5  | 3  | 3  | 3  | 4  | 5   | 40/50 |
+| 4  | 4  | 4  | 4  | 4  | 3  | 3  | 3  | 4  | 5   | 38/50 |
+
+After 004 (edited Tape; re-run 2026-10-20; new screens 08d edited, 08e edited in the dark scheme, 08f after one Undo with Redo enabled): 38/50, down two. H2 loses one: the editing tools exist, but Add a Hole sits at the very bottom of a long side panel and the panel opens scrolled past its first rows, so the next step is not visible. H5 loses one: the Cutting Problem is explained twice in words (Selected Hole panel, Cutting Problems list) but the mark on the drawing is hard to see and the list entry does not look clickable. Everything else is unchanged; the dark scheme (08e) keeps contrast for the warning text and the Undo/Redo buttons. Findings 14 to 18 below.
 
 After 003 findings 12 and 13 (re-run 2026-10-17; new screen 08c, 14 re-checked): 40/50. H5 gains one: the export problems dialog (08c) says what is wrong in the Tape's own words ("C4 at Column 1: the Hole is 2.5 mm long, the Minimum Hole Length is 4 mm"), blocks the save dialog and offers one Close; and below 1180 px the Plotter export is a scissors icon button that keeps the head on one line (14). H8 stays: the icon-only export has a tooltip but no visible label. Findings 12 and 13 are resolved; finding 4 shows again in 08c (the "Organ saved" snackbar floats over the dialog's page). The dialog does not yet say how to fix the Tape (restore the Organ's hole diameter or bring the Song onto a new Tape), a minor gap, no defect.
 
@@ -28,6 +30,11 @@ After #66 (Organ and Tape lists as ledgers: Tape Bed miniature and facts line, T
 11. **[sev 2] H6 - 08, 14, 15** - The drawing shows no end cut: the Tape ends in a plain straight edge after Column 24, and the Lead-in diagonal has no label in the drawing. Fix: draw the end cut (and a "Lead-in 20 mm" label) so the drawing matches what the Plotter cuts. Tag: new (003).
 12. **[resolved, sev 2] H2 - screens script** - No screenshot of the export problems dialog (nor of a Tape with export problems), so it cannot be reviewed. Fix: add the dialog to `ux:screens` as 08c. Tag: new (003).
 13. **[resolved, sev 2] H7 - 15** - In the German UI the Organ name "Street organ" and the part names are English sample data, fine, but the "Export for the Plotter" button wraps at 1024 px (14) next to "Tape details". Fix: shorten or icon-plus-tooltip below 1180 px. Tag: new (003, relates to finding 2).
+14. **[sev 3] H2 - 08d, 08f** - The side panel stacks Tape details, Parts, Selected Hole, Cutting Problems, Import Summary and Add a Hole; at 1280x800 Add a Hole is the last block, below the fold, and the panel opens scrolled so its first rows ("Length") are cut by the page head. Fix: order the panel by use (Selected Hole, Cutting Problems, Add a Hole first; Tape details and Import Summary after, collapsible) and open it scrolled to the top. Tag: new (004).
+15. **[sev 3] H6 - 08d, 08e** - A selected Hole of one Column shows its handles and the Cutting Problem mark as one small dotted blue blob; the problem is not recognisable on the drawing, and the handles are far below 24 px. Fix: draw the Cutting Problem mark in the warning colour with a glyph (not colour alone) and a visible outline, and give the handles a 24 px hit area. Tag: new (004).
+16. **[sev 2] H4 - 08d** - The Add a Hole form: the floating labels "Pipe" and "Column" sit on the field borders and are partly cut, the fields stack at different widths, and the Column field gives no range ("1 to 9") or unit. Fix: standard outline-field spacing, one row for the fields, a hint with the allowed Columns. Tag: new (004).
+17. **[sev 2] H5 - 08d** - A Cutting Problems entry is plain bold text; nothing says it selects the Hole, and the same problem is worded twice (Selected Hole panel and the list). Fix: render entries as buttons with a pointer, hover state and a "Show the Hole" icon; shorten the Selected Hole warning to a pointer to the list. Tag: new (004).
+18. **[sev 2] H8 - 08d, 08f** - Undo and Redo are icon-only; disabled Redo (grey on beige, 08d) and disabled Undo (08f) fall below 3:1 and the tooltips are the only text. Fix: raise the disabled icon contrast to 3:1, and name the shortcut in the accessible label. Tag: new (004).
 
 ## Strengths
 - The editor fits one screen: Tape Bed (fields in a two-column grid, fit sentence, drawing) left, scrolling Pipe rack right, action bar always in view (H3).
@@ -37,3 +44,4 @@ After #66 (Organ and Tape lists as ledgers: Tape Bed miniature and facts line, T
 - Note names (F3, F#3) with sharps dimmed make the rack scannable; German (10) shows locale decimals everywhere ("2,5", "6,25").
 - The walnut rail, serif titles and dark scheme from #63 stay consistent (H1, H7, H9); plain Material with tokens keeps the rest feasible (H10).
 - The Tape view (#65) has a mm ruler, Column numbers, note row labels, an overview strip and a status line; selecting a Hole (08b) outlines it and fills the Selected Hole panel; at 1024x700 it fits one screen with a Tape details toggle (14).
+- Editing a Tape (04) reads clearly: Undo and Redo sit in the page head and change state with the history (08d, 08f), the Selected Hole panel gives row, Columns, length and the distance to the Tape end, and the Cutting Problems list names the note, Column, actual and required length in plain words (H5). The dark scheme (08e) keeps the same structure and contrast.

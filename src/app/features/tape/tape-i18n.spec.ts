@@ -1,4 +1,4 @@
-import type {ExportProblemCode, HoleFix, SongRejection, TapeViolationCode} from '@api/index';
+import type {CuttingProblemCode, HoleFix, HoleProblem, SongRejection, TapeViolationCode} from '@api/index';
 import de from '../../../assets/i18n/de.json';
 import en from '../../../assets/i18n/en.json';
 
@@ -43,7 +43,7 @@ const groups: readonly {name: string; prefix: string; kinds: readonly string[]}[
   {name: 'HoleFix', prefix: 'TAPE.SUMMARY.HOLE_FIX', kinds: Object.keys(holeFixKinds)},
 ];
 
-const exportProblemCodes: Record<ExportProblemCode, true> = {
+const cuttingProblemCodes: Record<CuttingProblemCode, true> = {
   'no-pipe': true,
   'too-short': true,
   'too-close': true,
@@ -58,12 +58,18 @@ function keysUnder(tree: TranslationTree, path: string): readonly string[] {
 }
 
 describe('Tape export texts', () => {
-  for (const code of Object.keys(exportProblemCodes)) {
-    const key = `TAPE.EXPORT.PROBLEM_${keyOf(code)}`;
+  for (const code of Object.keys(cuttingProblemCodes)) {
+    const key = `TAPE.CUTTING_PROBLEM.${keyOf(code)}`;
 
     it(`${code} has an English and a German text at ${key}`, () => {
       expect(textAt(en as TranslationTree, key)).toBeTruthy();
       expect(textAt(de, key)).toBeTruthy();
+    });
+  }
+
+  for (const [language, tree] of [['English', en], ['German', de]] as const) {
+    it(`has no TAPE.EXPORT.PROBLEM_* key in ${language}`, () => {
+      expect(keysUnder(tree as TranslationTree, 'TAPE.EXPORT').filter((name) => name.startsWith('PROBLEM_'))).toEqual([]);
     });
   }
 
@@ -86,6 +92,72 @@ describe('Tape export texts', () => {
       expect(textAt(tree as TranslationTree, 'TAPE.VIEW.EXPORT_LATER')).toBeUndefined();
     });
   }
+});
+
+const holeProblemCodes: Record<HoleProblem['code'], true> = {
+  'no-pipe': true,
+  'too-short': true,
+  'too-close': true,
+  'too-close-previous': true,
+};
+
+function leavesUnder(tree: TranslationTree, path: string): readonly string[] {
+  const collect = (node: string | TranslationTree, prefix: string): string[] =>
+    typeof node === 'string' ? [prefix] : Object.entries(node).flatMap(([name, child]) => collect(child, `${prefix}.${name}`));
+  let node: string | TranslationTree | undefined = tree;
+  for (const segment of path.split('.')) {
+    node = typeof node === 'string' || node === undefined ? undefined : node[segment];
+  }
+  return node === undefined ? [] : collect(node, path);
+}
+
+const englishTerms = /\b(Holes?|Pipes?|Columns?|Cutting Problems?|Minimum Gap|Minimum Hole Length)\b/;
+
+describe('Tape editing texts (FR-018)', () => {
+  for (const code of Object.keys(holeProblemCodes)) {
+    const key = `TAPE.CUTTING_PROBLEM.${keyOf(code)}`;
+
+    it(`HoleProblem ${code} has an English and a German text at ${key}`, () => {
+      expect(textAt(en as TranslationTree, key)).toBeTruthy();
+      expect(textAt(de, key)).toBeTruthy();
+    });
+  }
+
+  it('has the key help TAPE.EDIT.KEYS in English and German', () => {
+    expect(textAt(en as TranslationTree, 'TAPE.EDIT.KEYS')).toBe(
+      'Alt+arrows move it, Shift+arrows move its end, Alt+Shift+arrows its start, Delete removes it.',
+    );
+    expect(textAt(de, 'TAPE.EDIT.KEYS')).toBeTruthy();
+  });
+
+  for (const group of ['TAPE.EDIT', 'TAPE.ADD_HOLE', 'TAPE.CUTTING_PROBLEMS', 'TAPE.CUTTING_PROBLEM']) {
+    for (const key of leavesUnder(en, group)) {
+      it(`${key} has a German text that differs from the English one`, () => {
+        const german = textAt(de, key);
+        expect(german).toBeTruthy();
+        expect(german).not.toBe(textAt(en as TranslationTree, key));
+      });
+
+      it(`${key} uses the dictionary words in German`, () => {
+        expect(textAt(de, key) ?? '').not.toMatch(englishTerms);
+      });
+    }
+  }
+
+  it('German names the Hole, Pipe, Column, Cutting Problem, Minimum Hole Length and Minimum Gap with the dictionary words', () => {
+    const german = [
+      ...leavesUnder(de, 'TAPE.ADD_HOLE'),
+      ...leavesUnder(de, 'TAPE.CUTTING_PROBLEMS'),
+      ...leavesUnder(de, 'TAPE.CUTTING_PROBLEM'),
+      ...leavesUnder(de, 'TAPE.EDIT'),
+    ]
+      .map((key) => textAt(de, key) ?? '')
+      .join(' ');
+
+    for (const word of ['Loch', 'Pfeife', 'Spalte', 'Schnittproblem', 'Mindestlochlänge', 'Mindestabstand']) {
+      expect(german).toContain(word);
+    }
+  });
 });
 
 describe('Tape texts', () => {

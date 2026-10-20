@@ -1,4 +1,4 @@
-import {noteName, type Organ, type Tape, type TapeGeometry} from '@api/index';
+import {noteName, tapeGeometry, type Hole, type Organ, type Tape, type TapeGeometry} from '@api/index';
 import {formatNumber} from '../../shared/format-number';
 import {pixelsPerMillimetre} from './pixels-per-millimetre';
 import {columnLines, columnNumbers, rulerNumbers} from './tape-marks';
@@ -15,6 +15,9 @@ const RULER_END_EDGE_PX = 12;
 const RULER_END_GAP_PX = 50;
 /** Row labels stay at least this far apart, in px; crowded rows are labelled every k-th. */
 const MINIMUM_LABEL_PITCH_PX = 12;
+
+/** Widest a resize handle of the selected Hole gets, in px. */
+const HANDLE_PX = 8;
 
 /** What the Tape section of the side panel tells. */
 export function sectionView(
@@ -84,15 +87,67 @@ export function holeRects(
         (slot.start >= range.first && slot.start <= range.last) ||
         (slot.start < range.first && slot.start + slot.width / tape.columnLength > range.first),
     )
-    .map((slot) => ({
-      row: slot.row - 1,
-      selected: slot.row === selected?.row && slot.start === selected?.start,
-      start: slot.start,
-      x: slot.x * scale,
-      y: slot.y * scale,
-      width: slot.width * scale,
-      height: slot.height * scale,
-      radius: slot.radius * scale,
+    .map((slot) => {
+      const isSelected = slot.row === selected?.row && slot.start === selected?.start;
+      const x = slot.x * scale;
+      const width = slot.width * scale;
+      const handleWidth = Math.min(HANDLE_PX, width / 3);
+      return {
+        row: slot.row - 1,
+        selected: isSelected,
+        start: slot.start,
+        x,
+        y: slot.y * scale,
+        width,
+        height: slot.height * scale,
+        radius: slot.radius * scale,
+        handles: isSelected
+          ? {start: {x, width: handleWidth}, end: {x: x + width - handleWidth, width: handleWidth}}
+          : undefined,
+      };
+    });
+}
+
+/** The rectangle, in px, of a Hole that a refused drag would have placed; `undefined` if the Organ has no row for it. */
+export function ghostRect(tape: Tape, organ: Organ, attempted: Hole, scale: number) {
+  const slot = tapeGeometry({...tape, holes: [attempted]}, organ).slots[0];
+  if (slot === undefined) return undefined;
+  return {
+    row: slot.row - 1,
+    start: slot.start,
+    x: slot.x * scale,
+    y: slot.y * scale,
+    width: slot.width * scale,
+    height: slot.height * scale,
+    radius: slot.radius * scale,
+  };
+}
+
+/** Space between a Hole and its Cutting Problem ring, in px. */
+const RING_GAP_PX = 2;
+
+/** The rings around Holes with a Cutting Problem inside `range`, in px. `problems` holds "pipe:start" keys. */
+export function holeMarks(
+  tape: Tape,
+  organ: Organ,
+  geometry: TapeGeometry,
+  scale: number,
+  range: ColumnRange,
+  problems: ReadonlySet<string>,
+) {
+  return holeRects(tape, geometry, scale, range, undefined)
+    .filter((rect) => {
+      const pipe = organ.pipes[rect.row]?.note;
+      return pipe !== undefined && problems.has(`${pipe}:${rect.start}`);
+    })
+    .map((rect) => ({
+      row: rect.row,
+      start: rect.start,
+      x: rect.x - RING_GAP_PX,
+      y: rect.y - RING_GAP_PX,
+      width: rect.width + 2 * RING_GAP_PX,
+      height: rect.height + 2 * RING_GAP_PX,
+      radius: rect.radius + RING_GAP_PX,
     }));
 }
 

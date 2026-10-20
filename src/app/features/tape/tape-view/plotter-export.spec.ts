@@ -5,7 +5,7 @@ import {TranslateService} from '@ngx-translate/core';
 import {
   createTape,
   defaultSelectedParts,
-  exportProblems,
+  cuttingProblems,
   plotterFileName,
   plotterSvg,
   proposeTransposition,
@@ -26,7 +26,7 @@ import {
 import {testOrgan} from '../../../../testing/organs';
 import {provideTestTranslations} from '../../../../testing/test-translations';
 import {TapeLibrary} from '../tape-library.store';
-import {ExportProblemsDialogComponent} from './export-problems-dialog/export-problems-dialog.component';
+import {CuttingProblemsDialogComponent} from './cutting-problems-dialog/cutting-problems-dialog.component';
 import {PlotterExport} from './plotter-export';
 
 const TICKS_PER_QUARTER = 480;
@@ -160,7 +160,7 @@ describe('PlotterExport', () => {
       const organ = widerOrgan(setup.organ);
       const open = vi.spyOn(TestBed.inject(MatDialog), 'open');
       const saveSvg = vi.spyOn(setup.api.plotter, 'saveSvg');
-      const problems = exportProblems(setup.tape, organ);
+      const problems = cuttingProblems(setup.tape, organ);
       const before = structuredClone(setup.library.tapeEntities());
       const pending = setup.plotterExport.export(setup.tape, organ);
       await Promise.race([pending, new Promise((resolve) => setTimeout(resolve, 0))]);
@@ -172,7 +172,7 @@ describe('PlotterExport', () => {
 
       expect(problems.length).toBeGreaterThan(0);
       expect(open).toHaveBeenCalledTimes(1);
-      expect(open.mock.calls[0]?.[0]).toBe(ExportProblemsDialogComponent);
+      expect(open.mock.calls[0]?.[0]).toBe(CuttingProblemsDialogComponent);
       expect(open.mock.calls[0]?.[1]?.data).toEqual(problems);
     });
 

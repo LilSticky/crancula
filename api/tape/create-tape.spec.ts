@@ -5,7 +5,8 @@ import {encodeSmf, type SmfTimedEvent, type SmfTrack} from '../song/midi/smf-tes
 import {readMidiSong} from '../song/midi/read-midi-song';
 import {partIndex, type PartIndex, type Song} from '../song/song';
 import {createTape, prefilledColumnLength, type CreateTapeInput} from './create-tape';
-import {asValidTape, columnCount, tapeId, transposition, type Tape} from './tape';
+import {columnCount, tapeId, transposition, type Tape} from './tape';
+import {tapeOf} from './tape-fixture';
 
 const ORGAN_ID = '3f2b8c1e-9d4a-4f6b-8e2c-1a2b3c4d5e6f';
 const OTHER_ORGAN_ID = '9a1b2c3d-4e5f-4a6b-8c7d-0e1f2a3b4c5d';
@@ -317,7 +318,7 @@ describe('createTape, the Import Summary', () => {
 
 describe('prefilledColumnLength', () => {
   function aTape(organ: string, columnLength: number): Tape {
-    return asValidTape({
+    return tapeOf({
       id: defined(tapeId(crypto.randomUUID()), 'tape id'),
       name: 'Tape',
       organId: defined(organId(organ), 'organ id'),

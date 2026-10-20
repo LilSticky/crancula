@@ -3,7 +3,8 @@ import {midiNoteNumber} from '../organ/midi-note-number';
 import type {Millimetres} from '../organ/organ';
 import {validateOrgan} from '../organ/validate-organ';
 import {plotterSvg} from './plotter-svg';
-import {asValidTape, type Column, type ColumnCount, type Hole, type Tape} from './tape';
+import {type Column, type ColumnCount, type Hole, type Tape} from './tape';
+import {tapeOf} from './tape-fixture';
 import {tapeGeometry, type Slot, type TapeGeometry} from './tape-geometry';
 
 const STROKE = 'fill="none" stroke="#000000" stroke-width="0.1"/>';
@@ -125,7 +126,7 @@ describe('plotterSvg', () => {
       return {pipe: note, start: start as Column, length: 3 as ColumnCount};
     };
     // Stored by Pipe (row 1, 2, 3), then start.
-    const tape = asValidTape({
+    const tape = tapeOf({
       id: '00000000-0000-4000-8000-000000000003' as Tape['id'],
       name: 'Rows',
       organId: organ.value.id,
@@ -183,7 +184,7 @@ describe('plotterSvg', () => {
     if (!organ.ok) throw new Error('invalid test Organ');
     const note = midiNoteNumber(60);
     if (note === undefined) throw new Error('not a note');
-    const tape = asValidTape({
+    const tape = tapeOf({
       id: '00000000-0000-4000-8000-000000000001' as Tape['id'],
       name: 'Secret Waltz',
       organId: organ.value.id,
@@ -217,7 +218,8 @@ describe('plotterSvg', () => {
       if (note === undefined) throw new Error('not a note');
       holes.push({pipe: note, start: start as Column, length: 3 as ColumnCount});
     }
-    const tape = asValidTape({
+    holes.sort((a, b) => a.pipe - b.pipe || a.start - b.start);
+    const tape = tapeOf({
       id: '00000000-0000-4000-8000-000000000002' as Tape['id'],
       name: 'Long',
       organId: organ.value.id,

@@ -18,6 +18,16 @@ States: `planned` · `in progress` · `done`
 
 Released as v0.1.0 on 2026-10-18: cross-platform GitHub Releases built in CI.
 
+## Next: Edit a tape ([#103](https://github.com/LilSticky/crancula/issues/103))
+
+Split by the user on 2026-10-19 ([discovery](discovery/edit-a-tape.md)).
+
+| Slice | Lets the user… | Domain | Adapters | State |
+|-------|----------------|--------|----------|-------|
+| Place holes by hand ([#105](https://github.com/LilSticky/crancula/issues/105)) | add, move, lengthen or shorten and remove Holes, see Cutting Problems as they happen, undo and redo | Tape | Tape view interaction, snapshot persistence | done |
+| Transpose holes ([#106](https://github.com/LilSticky/crancula/issues/106)) | transpose the selected Holes or all of them by semitones | Tape | Tape view | planned |
+| Adjust a tape ([#107](https://github.com/LilSticky/crancula/issues/107)) | change a Tape's Column length | Tape | Tape view | planned (later) |
+
 ## Project infrastructure (not slices)
 
 - **GitHub repository**: [LilSticky/crancula](https://github.com/LilSticky/crancula) (public, MIT).
@@ -31,8 +41,6 @@ Released as v0.1.0 on 2026-10-18: cross-platform GitHub Releases built in CI.
 
 ## Later (unordered)
 
-- **Edit a tape**: add, extend, move and remove Holes; Transposition of all or single notes;
-  checks for Minimum Hole Length and Minimum Gap.
 - **Crank a tape**: preview playback at an adjustable crank speed.
 - **Air Demand**: warn when too many Pipes play at once (domain discovery not finished).
 - More Song Sources: MusicXML, PDF, printed Scores.

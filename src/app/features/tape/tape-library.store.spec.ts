@@ -318,6 +318,85 @@ describe('TapeLibrary', () => {
     });
   });
 
+  describe('update', () => {
+    function countingApi(inMemory: CranculaApi, results: () => TapeLibrarySaveResult | undefined): {api: CranculaApi; saves: () => number} {
+      let saves = 0;
+      return {
+        saves: () => saves,
+        api: {
+          organs: inMemory.organs,
+          tapes: {
+            load: () => inMemory.tapes.load(),
+            save: (snapshot) => {
+              saves += 1;
+              const forced = results();
+              return forced === undefined ? inMemory.tapes.save(snapshot) : Promise.resolve(forced);
+            },
+          },
+          plotter: inMemory.plotter,
+          app: inMemory.app,
+        },
+      };
+    }
+
+    it('replaces the Tape in memory, keeps the others and saves the whole library once', async () => {
+      const stored = library({tape: 1, song: 1}, {tape: 2, song: 1});
+      const counting = countingApi(createInMemoryCranculaApi(undefined, snapshotOf(stored)), () => undefined);
+      const {store} = setup(counting.api);
+      await store.load();
+      const edited: Tape = {...stored.tapes[0], holes: stored.tapes[0].holes.slice(1)};
+
+      expect(await store.update(edited)).toBe(true);
+
+      expect(store.tapeEntities()).toEqual([edited, stored.tapes[1]]);
+      expect(store.songEntities()).toEqual(stored.songs);
+      expect(counting.saves()).toBe(1);
+      expect(await storedTapes(counting.api)).toEqual(snapshotOf({tapes: [edited, stored.tapes[1]], songs: stored.songs}));
+    });
+
+    it('resolves false and writes nothing for an unknown id', async () => {
+      const stored = library({tape: 1, song: 1});
+      const counting = countingApi(createInMemoryCranculaApi(undefined, snapshotOf(stored)), () => undefined);
+      const {store} = setup(counting.api);
+      await store.load();
+      const unknown = library({tape: 9, song: 9}).tapes[0];
+
+      expect(await store.update(unknown)).toBe(false);
+
+      expect(store.tapeEntities()).toEqual(stored.tapes);
+      expect(counting.saves()).toBe(0);
+    });
+
+    it('resolves false and never writes while the stored Tapes could not be read', async () => {
+      const counting = countingApi(createInMemoryCranculaApi(undefined, undefined, {tapes: {load: 'unreadable'}}), () => undefined);
+      const {store} = setup(counting.api);
+      await store.load();
+      const content = library({tape: 1, song: 1});
+
+      expect(await store.update(content.tapes[0])).toBe(false);
+
+      expect(counting.saves()).toBe(0);
+    });
+
+    it('keeps the new Tape in memory and reports the problem when writing failed, until the next save works', async () => {
+      const stored = library({tape: 1, song: 1});
+      let next: TapeLibrarySaveResult | undefined = {status: 'failed', reason: 'disk full'};
+      const counting = countingApi(createInMemoryCranculaApi(undefined, snapshotOf(stored)), () => next);
+      const {store} = setup(counting.api);
+      await store.load();
+      const edited: Tape = {...stored.tapes[0], holes: stored.tapes[0].holes.slice(1)};
+      const again: Tape = {...stored.tapes[0], holes: stored.tapes[0].holes.slice(2)};
+
+      expect(await store.update(edited)).toBe(false);
+      expect(store.tapeEntities()).toEqual([edited]);
+      expect(store.saveProblem()).toEqual({reason: 'disk full'});
+
+      next = undefined;
+      expect(await store.update(again)).toBe(true);
+      expect(store.saveProblem()).toBeNull();
+    });
+  });
+
   describe('Tapes of an Organ', () => {
     it('tapesOf lists only the Tapes of that Organ, in order', async () => {
       const stored = library(

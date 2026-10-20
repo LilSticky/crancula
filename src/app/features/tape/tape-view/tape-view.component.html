@@ -17,6 +17,12 @@
     </mat-button-toggle-group>
     @if (compact()) {<button pageHeadActions mat-stroked-button type="button" data-testid="side-panel-toggle" [attr.aria-expanded]="sidePanelOpen()" (click)="toggleSidePanel()">{{ 'TAPE.VIEW.DETAILS' | translate }}</button>}
     <ng-container ngProjectAs="[pageHeadActions]">
+      <button mat-icon-button type="button" data-testid="undo" [attr.aria-label]="'TAPE.EDIT.UNDO_TOOLTIP' | translate: {shortcut: shortcuts.undo}" [matTooltip]="'TAPE.EDIT.UNDO_TOOLTIP' | translate: {shortcut: shortcuts.undo}" [disabled]="!editor.canUndo()" (click)="undo()">
+        <mat-icon aria-hidden="true">undo</mat-icon>
+      </button>
+      <button mat-icon-button type="button" data-testid="redo" [attr.aria-label]="'TAPE.EDIT.REDO_TOOLTIP' | translate: {shortcut: shortcuts.redo}" [matTooltip]="'TAPE.EDIT.REDO_TOOLTIP' | translate: {shortcut: shortcuts.redo}" [disabled]="!editor.canRedo()" (click)="redo()">
+        <mat-icon aria-hidden="true">redo</mat-icon>
+      </button>
       @if (compact()) {
         <button mat-icon-button type="button" data-testid="export" [attr.aria-label]="'TAPE.VIEW.EXPORT' | translate" [matTooltip]="'TAPE.VIEW.EXPORT' | translate" [disabled]="plotterExport.saving()" (click)="exportTape()">
           <mat-icon aria-hidden="true">content_cut</mat-icon>
@@ -30,7 +36,7 @@
       }
     </ng-container>
   </cranc-page-head>
-  <div class="layout" [class.compact]="compact()">
+  <div class="layout" [class.compact]="compact()" [class.panel-open]="sidePanelOpen()">
   <div class="stage" [class.compact]="compact()">
   <div class="drawing">
     <ul class="labels" [style.height.px]="drawing.totalHeight">
@@ -39,7 +45,7 @@
       }
     </ul>
     <div class="scroll" #scroll data-testid="tape-scroll" (scroll)="onScroll(scroll)">
-      <svg #tapeSvg role="application" [attr.aria-label]="'TAPE.VIEW.DRAWING' | translate: drawing.drawingParams" [attr.width]="drawing.width" [attr.height]="drawing.totalHeight" tabindex="0" (keydown)="onKeydown($event)" (pointermove)="onPointerMove($event, tapeSvg)" (pointerleave)="onPointerLeave()">
+      <svg #tapeSvg role="application" [attr.aria-label]="'TAPE.VIEW.DRAWING' | translate: drawing.drawingParams" [attr.width]="drawing.width" [attr.height]="drawing.totalHeight" tabindex="0" [attr.aria-describedby]="inspection() ? 'hole-keys-help' : null" (keydown)="onKeydown($event)" (dblclick)="onDoubleClick($event, tapeSvg)" [class.grabbing]="dragging()" (pointermove)="onPointerMove($event, tapeSvg)" (pointerup)="onPointerUp($event, tapeSvg)" (pointercancel)="onPointerCancel()" (pointerleave)="onPointerLeave()">
         <defs>
           <pattern id="ruler-ticks" patternUnits="userSpaceOnUse" [attr.x]="drawing.leadIn" [attr.width]="5 * scale()" height="8">
             @for (tick of rulerTicks; track tick) {
@@ -67,11 +73,12 @@
           }
           @for (hole of drawing.holes; track hole.row + ':' + hole.start) {
             <rect
-              class="hole"
+              class="hole grab"
               [class.selected]="hole.selected"
               [attr.aria-label]="hole.selected && inspection() ? (('TAPE.HOLE.ROW' | translate: {row: inspection()?.rowText, note: inspection()?.noteName}) + '. ' + ('TAPE.HOLE.COLUMNS_RANGE' | translate: {from: inspection()?.fromText, to: inspection()?.toText})) : null"
               data-testid="hole"
               (click)="select(hole)"
+              (pointerdown)="onHolePointerDown($event, hole, tapeSvg)"
               [attr.data-row]="hole.row"
               [attr.data-start]="hole.start"
               [attr.x]="hole.x"
@@ -81,6 +88,16 @@
               [attr.rx]="hole.radius"
               [attr.ry]="hole.radius"
             />
+            @if (hole.handles; as handles) {
+              <rect class="handle ew-resize" data-testid="hole-handle" data-end="start" [attr.x]="handles.start.x" [attr.y]="hole.y" [attr.width]="handles.start.width" [attr.height]="hole.height" (pointerdown)="onHolePointerDown($event, hole, tapeSvg, 'start')" />
+              <rect class="handle ew-resize" data-testid="hole-handle" data-end="end" [attr.x]="handles.end.x" [attr.y]="hole.y" [attr.width]="handles.end.width" [attr.height]="hole.height" (pointerdown)="onHolePointerDown($event, hole, tapeSvg, 'end')" />
+            }
+          }
+          @if (drawing.ghost; as ghost) {
+            <rect class="hole-ghost refused" data-testid="hole-ghost" aria-hidden="true" [attr.data-row]="ghost.row" [attr.data-start]="ghost.start" [attr.x]="ghost.x" [attr.y]="ghost.y" [attr.width]="ghost.width" [attr.height]="ghost.height" [attr.rx]="ghost.radius" [attr.ry]="ghost.radius" />
+          }
+          @for (mark of drawing.holeMarks; track mark.row + ':' + mark.start) {
+            <rect class="cutting-problem" data-testid="hole-mark" aria-hidden="true" [attr.x]="mark.x" [attr.y]="mark.y" [attr.width]="mark.width" [attr.height]="mark.height" [attr.rx]="mark.radius" [attr.ry]="mark.radius" />
           }
           @for (number of drawing.numbers; track number.column) {
             <text class="column-number" data-testid="column-number" aria-hidden="true" [attr.x]="number.x" [attr.y]="drawing.numbersY">{{ number.number }}</text>
@@ -117,8 +134,14 @@
   <aside class="side-panel" data-testid="side-panel" (keydown)="onSidePanelKeydown($event)" [attr.aria-label]="'TAPE.VIEW.SIDE_PANEL' | translate">
     <cranc-tape-section [view]="drawing.section" />
     <cranc-selected-hole [inspection]="inspection()" />
+    <cranc-cutting-problems [holes]="holesWithProblems()" (chosen)="chooseProblem($event)" />
     @if (importSummary(); as summary) {
       <cranc-import-summary data-testid="import-summary" [importSummary]="summary" (dismissed)="importSummary.set(null)" />
+    }
+    @if (tape(); as tape) {
+      @if (organ(); as organ) {
+        <cranc-add-hole [organ]="organ" [tape]="tape" [selected]="selectedHoleRef()" (added)="addFromForm($event)" />
+      }
     }
   </aside>
   }

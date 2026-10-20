@@ -42,6 +42,9 @@ export type SelectedHoleView = Omit<HoleInspection, 'warnings'> & {
         <p>{{ 'TAPE.HOLE.EMPTY' | translate }}</p>
       }
     </section>
+    @if (inspection()) {
+      <p class="keys" id="hole-keys-help" data-testid="hole-keys">{{ 'TAPE.EDIT.KEYS' | translate }}</p>
+    }
   `,
   styles: `
     :host {
@@ -49,6 +52,10 @@ export type SelectedHoleView = Omit<HoleInspection, 'warnings'> & {
     }
     h2 {
       margin: 0 0 0.5rem;
+    }
+    .keys {
+      color: var(--mat-sys-on-surface-variant);
+      font: var(--mat-sys-body-small);
     }
     .warning {
       display: flex;
