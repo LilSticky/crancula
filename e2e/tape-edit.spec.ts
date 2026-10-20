@@ -320,6 +320,79 @@ test.describe('Editing a Tape by hand', () => {
     await second.app.close();
   });
 
+  test('edits, adds a Hole through the form, undoes and redoes with the keyboard only', async () => {
+    const launched = await launchApp();
+    const {window} = launched;
+    try {
+      await resizeWindowOrSkip(launched, 1280, 800);
+      await defineOctaveOrgan(window, 'Octave organ');
+      await createTapeFromSong(window, 'Scale', songRepeatingC4('c4s.mid', 4));
+      const original = [...(await drawnHoles(window))].sort(byPlace);
+      const column = await columnWidth(window);
+      const selected = window.locator('[data-testid="tape-scroll"] svg [data-testid="hole"].selected');
+      const selectedHole = async (): Promise<DrawnHole> => {
+        await expect(selected).toHaveCount(1);
+        return {
+          row: Number(await selected.getAttribute('data-row')),
+          start: Number(await selected.getAttribute('data-start')),
+          width: Number(await selected.getAttribute('width')),
+        };
+      };
+      const press = (key: string): Promise<void> => window.keyboard.press(key);
+
+      // Tab to the drawing; Enter selects the first Hole.
+      const drawing = window.locator('[data-testid="tape-scroll"] svg');
+      await window.locator('body').focus();
+      for (let tabs = 0; tabs < 60; tabs++) {
+        if (await drawing.evaluate((svg) => document.activeElement === svg)) break;
+        await press('Tab');
+      }
+      await expect(drawing).toBeFocused();
+      await press('Enter');
+      const start = await selectedHole();
+
+      await press('Alt+ArrowRight');
+      await expect(holeAt(window, start.row, start.start + 1)).toHaveClass(/selected/);
+      await press('Alt+ArrowDown');
+      await expect(holeAt(window, start.row + 1, start.start + 1)).toHaveClass(/selected/);
+      await press('Shift+ArrowRight');
+      await expect.poll(async () => (await selectedHole()).width).toBeCloseTo(start.width + column, 0);
+      await press('Alt+Shift+ArrowRight');
+      await expect(holeAt(window, start.row + 1, start.start + 2)).toHaveClass(/selected/);
+      await expect.poll(async () => (await selectedHole()).width).toBeCloseTo(start.width, 0);
+      const beforeDelete = (await drawnHoles(window)).length;
+      await press('Delete');
+      await expect.poll(async () => (await drawnHoles(window)).length).toBe(beforeDelete - 1);
+
+      // Add a G4 Hole at Column 12 through the form, with the keyboard.
+      await window.getByTestId('add-hole-pipe').focus();
+      await press('Enter');
+      await window.getByRole('option', {name: 'G4'}).waitFor();
+      const active = window.locator('.mat-mdc-option.mat-mdc-option-active');
+      for (let steps = 0; steps < 30 && !/G4/.test((await active.first().textContent()) ?? ''); steps++) await press('ArrowDown');
+      await expect(active.first()).toContainText('G4');
+      await press('Enter');
+      await press('Tab');
+      await press('ControlOrMeta+A');
+      await window.keyboard.type('12');
+      await press('Tab');
+      await press('Enter');
+      await expect(holeAt(window, 7, 11)).toHaveClass(/selected/);
+      const added = [...(await drawnHoles(window))].sort(byPlace);
+      expect(added).toHaveLength(beforeDelete);
+
+      // The form returned the focus to the drawing: undo the add, then redo it.
+      await press('ControlOrMeta+Z');
+      await expect(holeAt(window, 7, 11)).toHaveCount(0);
+      await press('ControlOrMeta+Shift+Z');
+      await expect(holeAt(window, 7, 11)).toHaveCount(1);
+      expect([...(await drawnHoles(window))].sort(byPlace)).toEqual(added);
+      expect(original.length).toBeGreaterThan(0);
+    } finally {
+      await launched.app.close();
+    }
+  });
+
   for (const [width, height] of [[1024, 768], [1200, 700]] as const) {
     test(`keeps the side panel clear of the Tape drawing in a ${width}x${height} window and selects a Hole at the left`, async () => {
       const launched = await launchApp();
