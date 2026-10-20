@@ -533,19 +533,19 @@ add a Hole, undo and redo; switch to German and check every new text.
 
 ### Tests for User Story 6 ⚠️ (write first, must fail)
 
-- [ ] T062 [P] [US6] Extend
+- [x] T062 [P] [US6] Extend
   `src/app/features/tape/tape-view/selected-hole/selected-hole.component.spec.ts`: a key help line
   `data-testid="hole-keys"` with `TAPE.EDIT.KEYS` ("Alt+arrows move it, Shift+arrows move its
   end, Alt+Shift+arrows its start, Delete removes it."). Depends on T016.
-- [ ] T063 [P] [US6] Extend `src/app/features/tape/tape-i18n.spec.ts` (FR-018): every
+- [x] T063 [P] [US6] Extend `src/app/features/tape/tape-i18n.spec.ts` (FR-018): every
   `TAPE.EDIT.*`, `TAPE.ADD_HOLE.*`, `TAPE.CUTTING_PROBLEMS.*` and `TAPE.CUTTING_PROBLEM.*` key has
   a German text that differs from the English one; every `HoleProblem` code has a
   `TAPE.CUTTING_PROBLEM.<CODE>` key; German uses the dictionary (Loch, Pfeife, Spalte,
   Schnittproblem, Mindestlochlänge, Mindestabstand). Depends on T056.
-- [ ] T064 [P] [US6] Extend `e2e/tape-edit.spec.ts`, part 6 (SC-005, quickstart 24): keyboard only —
+- [x] T064 [P] [US6] Extend `e2e/tape-edit.spec.ts`, part 6 (SC-005, quickstart 24): keyboard only —
   Tab to the drawing, select a Hole, Alt+→, Alt+↓, Shift+→, Alt+Shift+→, Delete, add a Hole through
   the Add a Hole form, `ControlOrMeta+Z`, redo; no pointer event is used. Depends on T059.
-- [ ] T065 [P] [US6] Extend `e2e/tape-german.spec.ts` (6.4): with the app set to German, the undo
+- [x] T065 [P] [US6] Extend `e2e/tape-german.spec.ts` (6.4): with the app set to German, the undo
   and redo tooltips, the refusal snackbar, the Add a Hole section, the Cutting Problems section and
   the key help are German, and no visible text matches a `TAPE.` key pattern. Depends on T059.
 
@@ -554,7 +554,7 @@ add a Hole, undo and redo; switch to German and check every new text.
 - [x] T066 [US6] Add the key help line to
   `src/app/features/tape/tape-view/selected-hole/selected-hole.component.ts` and `TAPE.EDIT.KEYS`
   to `en.json` and `de.json` until T062 is green. Depends on T062.
-- [ ] T067 [US6] Fill every missing or untranslated text in `src/assets/i18n/de.json` (and
+- [x] T067 [US6] Fill every missing or untranslated text in `src/assets/i18n/de.json` (and
   `en.json`) and fix any keyboard gap in the Tape view until T063, T064 and T065 are green.
   Depends on T063–T066.
 

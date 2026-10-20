@@ -28,10 +28,13 @@ Done 2026-10-20: main merged in (#119, #120); Phase 7 User Story 5 (T057–T061,
 already in `withHoles`, now pinned by tests; the stage auto-scrolls while a Hole is dragged within 24 px of its
 edge (rAF loop outside the zone, `src/main.ts` still uses zone change detection), and a release past the end grows
 the Tape. `angular-reviewer` pass done and fixed.
-Unit tests (714 node, 967 Angular), lint and i18n green; 101 e2e green locally. Earlier: CI green on all three OSes (2026-10-20) after a fix: the Undo/Redo icon buttons were 8 px shorter than the other page-head actions.
-Earlier: CI green on all three OSes (2026-10-19) after a fix: below 1180 px the opened side panel covered the Tape drawing, it now sits beside it.
-**Next step:** Phase 8, User Story 6 (keyboard, German and English) from T062 in
-[tasks](../specs/004-place-holes-by-hand/tasks.md). Run `npm run e2e` (it rebuilds) rather than bare Playwright,
+Done 2026-10-20: Phase 8 User Story 6 (T062–T067, keyboard, German and English): a key help line under the Selected
+Hole (`TAPE.EDIT.KEYS`), outside the live region and tied to the Tape drawing via `aria-describedby`; the keyboard-only
+e2e (T064), the German texts and keyboard refusal snackbar (T065) and the i18n checks (T063) were green at once.
+`angular-reviewer` pass done and fixed. Unit tests (1014 Angular plus node), lint and i18n green; the tape-edit and
+tape-german e2e files green locally.
+**Next step:** Phase 9 polish from T068 in [tasks](../specs/004-place-holes-by-hand/tasks.md), including the open
+refused-drop ghost from the Story 1 review. Run `npm run e2e` (it rebuilds) rather than bare Playwright,
 or `npm run electron:bundle` plus a fresh web build before e2e (ESM main process).
 
 **Done:** [Bring a song onto a tape](../specs/002-bring-a-song-onto-a-tape/spec.md)
