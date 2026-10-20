@@ -161,6 +161,7 @@
       "NO_NOTE_ON_A_PIPE": "Not a single Note of the chosen Parts fits a Pipe of this Organ, not even moved by octaves."
     },
     "SUMMARY": {
+      "TOGGLE": "Show or hide the Import Summary",
       "TITLE": "Import Summary",
       "DISMISS": "Dismiss",
       "NONE": "None",
@@ -180,6 +181,7 @@
       "MOVED_NOTE_ONE": "{{note}} moved by 1 octave to Pipe {{pipe}} (Part {{part}}, Column {{column}})"
     },
     "SECTION": {
+      "TOGGLE": "Show or hide the Tape details",
       "TITLE": "Tape",
       "ORGAN": "Organ",
       "COLUMN_LENGTH": "Column length",

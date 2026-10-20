@@ -1,5 +1,6 @@
-import {ChangeDetectionStrategy, Component, input} from '@angular/core';
-import {MatButton} from '@angular/material/button';
+import {ChangeDetectionStrategy, Component, input, signal} from '@angular/core';
+import {MatButton, MatIconButton} from '@angular/material/button';
+import {MatIcon} from '@angular/material/icon';
 import {RouterLink} from '@angular/router';
 import {TranslatePipe} from '@ngx-translate/core';
 
@@ -20,10 +21,16 @@ export interface TapeSectionView {
 @Component({
   selector: 'cranc-tape-section',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MatButton, RouterLink, TranslatePipe],
+  imports: [MatButton, MatIconButton, MatIcon, RouterLink, TranslatePipe],
   template: `
     <section data-testid="tape-section">
-      <h2>{{ 'TAPE.SECTION.TITLE' | translate }}</h2>
+      <header>
+        <h2>{{ 'TAPE.SECTION.TITLE' | translate }}</h2>
+        <button matIconButton type="button" data-testid="tape-section-toggle" [attr.aria-expanded]="expanded()" [attr.aria-label]="'TAPE.SECTION.TOGGLE' | translate" (click)="expanded.set(!expanded())">
+          <mat-icon aria-hidden="true">{{ expanded() ? 'expand_less' : 'expand_more' }}</mat-icon>
+        </button>
+      </header>
+      @if (expanded()) {
       <dl>
         <dt>{{ 'TAPE.SECTION.ORGAN' | translate }}</dt>
         <dd><a matButton [routerLink]="['/organs', view().organId]">{{ view().organName }}</a></dd>
@@ -44,11 +51,17 @@ export interface TapeSectionView {
           <li data-testid="selected-part">{{ part.name ?? ('TAPE.PARTS.UNNAMED' | translate: {number: part.index + 1}) }}</li>
         }
       </ul>
+      }
     </section>
   `,
   styles: `
     :host {
       display: block;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
     h2,
     h3 {
@@ -72,4 +85,5 @@ export interface TapeSectionView {
 })
 export class TapeSectionComponent {
   readonly view = input.required<TapeSectionView>();
+  protected readonly expanded = signal(true);
 }

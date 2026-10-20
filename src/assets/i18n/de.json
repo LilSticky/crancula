@@ -161,6 +161,7 @@
       "NO_NOTE_ON_A_PIPE": "Keine einzige Note der gewählten Stimmen passt auf eine Pfeife dieser Drehorgel, auch nicht um Oktaven verschoben."
     },
     "SUMMARY": {
+      "TOGGLE": "Importzusammenfassung ein- oder ausblenden",
       "TITLE": "Importübersicht",
       "DISMISS": "Schließen",
       "NONE": "Keine",
@@ -180,6 +181,7 @@
       "MOVED_NOTE_ONE": "{{note}} um 1 Oktave auf Pfeife {{pipe}} verschoben (Stimme {{part}}, Spalte {{column}})"
     },
     "SECTION": {
+      "TOGGLE": "Lochband-Details ein- oder ausblenden",
       "TITLE": "Lochband",
       "ORGAN": "Drehorgel",
       "COLUMN_LENGTH": "Spaltenlänge",

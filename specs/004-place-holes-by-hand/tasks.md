@@ -582,7 +582,7 @@ add a Hole, undo and redo; switch to German and check every new text.
   `src/app/features/tape/tape-view/tape-view.component.spec.ts`, the side panel lists Selected Hole,
   Cutting Problems and Add a Hole before Tape details and Import Summary, and it opens scrolled to
   its top. Extend `e2e/tape-edit.spec.ts` so Add a Hole is visible without scrolling at 1280x800.
-- [ ] ~~T078~~ (moved to #121) Reorder the side panel in `tape-view.component.html` and `.scss` (details and Import
+- [x] ~~T078~~ (moved to #121) Reorder the side panel in `tape-view.component.html` and `.scss` (details and Import
   Summary after the editing sections, collapsible) until T077 is green. Depends on T077.
 - [ ] ~~T079~~ (moved to #121) [P] Write the red test for UX finding 15: in `tape-drawing.spec.ts` and
   `tape-marks.spec.ts`, a Hole with a Cutting Problem has a mark in the warning colour with a glyph
