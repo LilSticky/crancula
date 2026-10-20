@@ -152,26 +152,31 @@ describe('CuttingProblemsComponent', () => {
     expect(chosen).toEqual([{pipe: note(62), start: col(20)}]);
   });
 
-  it('gives each selectable entry an accessible name that says it shows the Hole on the Tape', async () => {
+  function description(element: HTMLElement, button: HTMLButtonElement | undefined): string {
+    const id = button?.getAttribute('aria-describedby') ?? '';
+    return element.querySelector(`#${CSS.escape(id)}`)?.textContent?.trim() ?? '';
+  }
+
+  it('keeps the visible text as the accessible name and describes that the entry shows the Hole on the Tape', async () => {
     const {element} = await render([TOO_SHORT, TOO_CLOSE]);
 
-    const names = [...element.querySelectorAll<HTMLButtonElement>('button[data-testid="cutting-problem"]')].map((button) =>
-      button.getAttribute('aria-label'),
-    );
-    expect(names[0]).toMatch(/^Show /);
-    expect(names[0]).toContain('C4');
-    expect(names[0]).toMatch(/\b11\b/);
-    expect(names[1]).toMatch(/^Show /);
-    expect(names[1]).toContain('D4');
-    expect(names[1]).toMatch(/\b21\b/);
+    const buttons = [...element.querySelectorAll<HTMLButtonElement>('button[data-testid="cutting-problem"]')];
+    expect(buttons[0]?.hasAttribute('aria-label')).toBe(false);
+    expect(description(element, buttons[0])).toMatch(/^Show /);
+    expect(description(element, buttons[0])).toContain('C4');
+    expect(description(element, buttons[0])).toMatch(/\b11\b/);
+    expect(description(element, buttons[1])).toMatch(/^Show /);
+    expect(description(element, buttons[1])).toContain('D4');
+    expect(description(element, buttons[1])).toMatch(/\b21\b/);
+    expect(new Set(buttons.map((button) => button.getAttribute('aria-describedby'))).size).toBe(buttons.length);
   });
 
-  it('names the entry buttons in German', async () => {
+  it('describes the entry buttons in German', async () => {
     const {element} = await render([TOO_SHORT], 'de');
 
-    const name = element.querySelector<HTMLButtonElement>('button[data-testid="cutting-problem"]')?.getAttribute('aria-label') ?? '';
-    expect(name).toMatch(/^Zeige /);
-    expect(name).toContain('C4');
+    const text = description(element, element.querySelector<HTMLButtonElement>('button[data-testid="cutting-problem"]') ?? undefined);
+    expect(text).toMatch(/^Zeige /);
+    expect(text).toContain('C4');
   });
 
   it('lists a Hole without a Pipe as plain text, counted but not a button', async () => {

@@ -41,9 +41,6 @@ interface Entry {
       text-align: left;
       white-space: normal;
     }
-    button:hover {
-      background: var(--mat-sys-surface-container-high);
-    }
     button .row {
       display: flex;
       align-items: center;
@@ -57,6 +54,14 @@ interface Entry {
     }
     p {
       margin: 0;
+    }
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
     }
   `,
   template: `
@@ -73,7 +78,7 @@ interface Entry {
         @for (entry of entries(); track $index) {
           <li>
             @if (entry.selectable) {
-              <button mat-button type="button" data-testid="cutting-problem" [attr.aria-label]="'TAPE.CUTTING_PROBLEMS.SHOW_HOLE' | translate: entry.label" (click)="chosen.emit(entry.hole)">
+              <button mat-button type="button" data-testid="cutting-problem" [attr.aria-describedby]="showId + $index" (click)="chosen.emit(entry.hole)">
                 <span class="row">
                   <mat-icon aria-hidden="true" fontIcon="my_location" />
                   <span>
@@ -83,6 +88,7 @@ interface Entry {
                   </span>
                 </span>
               </button>
+              <span class="visually-hidden" [id]="showId + $index">{{ 'TAPE.CUTTING_PROBLEMS.SHOW_HOLE' | translate: entry.label }}</span>
             } @else {
               <div class="unselectable" data-testid="cutting-problem">
                 @for (text of entry.texts; track $index) {
@@ -99,6 +105,10 @@ interface Entry {
 export class CuttingProblemsComponent {
   readonly holes = input.required<readonly HoleCuttingProblems[]>();
   readonly chosen = output<HoleRef>();
+
+  private static nextId = 0;
+  /** Prefix of the ids of the descriptions, unique per instance. */
+  protected readonly showId = `cutting-problem-show-${CuttingProblemsComponent.nextId++}-`;
 
   private readonly translate = inject(TranslateService);
   private readonly language = toSignal(this.translate.onLangChange.pipe(map((event) => event.lang)), {
