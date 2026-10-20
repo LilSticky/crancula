@@ -762,7 +762,7 @@ describe('TapeViewComponent', () => {
 
       await select(view(), 0, settle);
 
-      expect(warnings(view())).toEqual(['Shorter than the Minimum Hole Length: 2 mm of 2.5 mm']);
+      expect(warnings(view())).toEqual(['Too short to cut, see Cutting Problems']);
     });
 
     it('warns with the numbers when a gap is below the Minimum Gap', async () => {
@@ -777,7 +777,7 @@ describe('TapeViewComponent', () => {
 
       await select(view(), 0, settle);
 
-      expect(warnings(view())).toEqual(['Gap below the Minimum Gap: 1 mm of 1.5 mm']);
+      expect(warnings(view())).toEqual(['Gap too small to cut, see Cutting Problems']);
     });
 
     it('shows no warning for a Hole within the limits', async () => {
@@ -2484,7 +2484,7 @@ describe('TapeViewComponent', () => {
       expect(marks(view())).toHaveLength(1);
       expect(
         all(view(), '[data-testid="selected-hole"] [data-testid="hole-warning"]').map((warning) => squash(warning)),
-      ).toEqual(['Shorter than the Minimum Hole Length: 1.5 mm of 2.5 mm']);
+      ).toEqual(['Too short to cut, see Cutting Problems']);
     });
 
     it('marks both Holes when a move leaves a gap below the Minimum Gap, and removes the marks when it is fixed', async () => {

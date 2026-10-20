@@ -36,6 +36,7 @@
       "TITLE": "Schnittprobleme",
       "COUNT": "{{count}} Löcher können nicht geschnitten werden",
       "COUNT_ONE": "{{count}} Loch kann nicht geschnitten werden",
+      "SHOW_HOLE": "Zeige {{note}} in Spalte {{column}} auf dem Lochband",
       "NONE": "Keine"
     },
     "CUTTING_PROBLEM": {
@@ -197,8 +198,8 @@
       "TITLE": "Loch hinzufügen",
       "PIPE": "Pfeife",
       "COLUMN": "Spalte",
-      "SUBMIT": "Hinzufügen",
       "COLUMN_HINT": "{{first}} bis {{last}}",
+      "SUBMIT": "Hinzufügen",
       "COVERED": "Ein Loch der Pfeife {{note}} deckt Spalte {{column}} bereits ab.",
       "COLUMN_INVALID": "Gib eine ganze Spaltennummer ab 1 ein."
     },
@@ -210,8 +211,8 @@
       "LENGTH": "{{columns}}, {{mm}} mm",
       "GAP_NEXT": "Abstand zum nächsten Loch: {{columns}}, {{mm}} mm",
       "GAP_END": "Bis zum Ende des Lochbands: {{columns}}, {{mm}} mm",
-      "TOO_SHORT": "Kürzer als die Mindestlochlänge: {{mm}} mm von {{minimum}} mm",
-      "GAP_TOO_SMALL": "Abstand unter dem Mindestabstand: {{mm}} mm von {{minimum}} mm"
+      "TOO_SHORT": "Zu kurz zum Schneiden, siehe Schnittprobleme",
+      "GAP_TOO_SMALL": "Abstand zu klein zum Schneiden, siehe Schnittprobleme"
     }
   },
   "ORGAN": {

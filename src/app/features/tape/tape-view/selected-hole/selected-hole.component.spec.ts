@@ -70,7 +70,20 @@ describe('SelectedHoleComponent', () => {
 
     const warnings = [...element.querySelectorAll('[data-testid="hole-warning"]')].map((warning) => warning.textContent ?? '');
     expect(warnings).toHaveLength(1);
-    expect(warnings[0]).toContain('Shorter than the Minimum Hole Length: 2 mm of 3 mm');
+    expect(warnings[0]).toContain('Cutting Problems');
+    expect(warnings[0]).not.toContain('Minimum Hole Length');
+    expect(warnings[0]).not.toContain('2 mm of 3 mm');
+  });
+
+  it('points a gap warning to the Cutting Problems list instead of repeating the numbers', async () => {
+    const {element} = await render({
+      ...VIEW,
+      warnings: [{kind: 'gapTooSmall', mmText: '1', minimumText: '1.5'}],
+    });
+
+    const warning = element.querySelector('[data-testid="hole-warning"]')?.textContent ?? '';
+    expect(warning).toContain('Cutting Problems');
+    expect(warning).not.toContain('Minimum Gap');
   });
 
   it('shows the key help line for the selected Hole', async () => {
