@@ -12,6 +12,14 @@ as its GitHub Release notes.
 - Rename a Tape: choose Rename in the Tape's menu in the Tape list.
 - Bringing a Song onto a Tape shows a live preview of the Tape's first Columns under the Fit. It
   follows the Parts, the Transposition and the Column length before you create the Tape.
+- Edit a Tape's Holes by hand. Move a Hole by dragging it or with the arrow keys, lengthen or shorten
+  it by its end, add a Hole (double-click, or the Add a Hole form), and remove it with Delete.
+  Keyboard users get the same controls, in German and English.
+- Cutting Problems show as you edit: a Hole that can't be cut is outlined, and the Selected Hole
+  lists its problems.
+- Undo and redo for Tape edits: the Undo and Redo buttons, and Ctrl+Z, Ctrl+Y or Ctrl+Shift+Z
+  (⌘Z and ⇧⌘Z on macOS).
+- The Tape grows when you move a Hole past its end; the view scrolls while you drag near an edge.
 
 ## [0.1.0] - 2026-10-18
 
