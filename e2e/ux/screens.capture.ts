@@ -245,5 +245,33 @@ test.describe('UX screens', () => {
     });
     await window.mouse.move(640, 400);
     await capture(window, '08c-tape-view-export-problems');
+
+    // The Blip Tape now has a Cutting Problem. Edit it by hand: select its Hole, add a Hole through the form.
+    await window.getByRole('dialog').getByRole('button', {name: 'Close'}).click();
+    await expect(window.getByRole('dialog')).toBeHidden();
+    await expect(window.getByTestId('hole-mark')).toHaveCount(1);
+    await window.getByTestId('tape-scroll').locator('[data-testid="hole"]').first().click();
+    await window.getByTestId('add-hole-pipe').click();
+    await window.getByRole('option').nth(2).click();
+    await window.getByTestId('add-hole-column').fill('8');
+    await window.getByTestId('add-hole-submit').click();
+    await expect(window.getByTestId('undo')).toBeEnabled();
+    await window.getByTestId('tape-scroll').locator('[data-testid="hole"]').first().click();
+    await expect(window.getByTestId('tape-scroll').locator('rect.hole.selected')).toHaveCount(1);
+    await window.mouse.move(640, 400);
+    await capture(window, '08d-tape-view-edited');
+
+    const schemeToggle = window.getByTestId('scheme-switch');
+    await schemeToggle.locator('[data-scheme="dark"]').click();
+    await expect(window.locator('html')).toHaveClass(/\bcr-dark\b/);
+    await window.mouse.move(640, 400);
+    await capture(window, '08e-tape-view-edited-dark');
+    await schemeToggle.locator('[data-scheme="system"]').click();
+
+    // Undo the added Hole: Redo is enabled too.
+    await window.getByTestId('undo').click();
+    await expect(window.getByTestId('redo')).toBeEnabled();
+    await window.mouse.move(640, 400);
+    await capture(window, '08f-tape-view-edited-undone');
   });
 });
