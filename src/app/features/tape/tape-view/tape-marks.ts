@@ -49,3 +49,19 @@ export function rulerNumbers(lengthMm: number, pixelsPerMm: number): readonly nu
   for (let mm = 0; mm <= lengthMm; mm += step) numbers.push(mm);
   return numbers;
 }
+
+/** Least size of a pointer target, in px. */
+export const MINIMUM_HIT_PX = 24;
+
+/** A span of `size` grown to at least `MINIMUM_HIT_PX`, around its centre; shifted so it stays within `limits` where it can. */
+export function hitSpan(
+  start: number,
+  size: number,
+  limits: {readonly min?: number; readonly max?: number} = {},
+): {readonly start: number; readonly size: number} {
+  if (size >= MINIMUM_HIT_PX) return {start, size};
+  let grown = start + size / 2 - MINIMUM_HIT_PX / 2;
+  if (limits.max !== undefined && grown + MINIMUM_HIT_PX > limits.max) grown = limits.max - MINIMUM_HIT_PX;
+  if (limits.min !== undefined && grown < limits.min) grown = limits.min;
+  return {start: grown, size: MINIMUM_HIT_PX};
+}

@@ -490,8 +490,53 @@ describe('TapeViewComponent', () => {
     });
   });
 
+  describe('the order of the side panel (UX finding 14)', () => {
+    const sectionIds = ['selected-hole', 'cutting-problems', 'add-hole', 'tape-section', 'import-summary'] as const;
+
+    it('lists Selected Hole, Cutting Problems and Add a Hole before the Tape details and the Import Summary', async () => {
+      const {tape, importSummary, open, view} = await render();
+
+      await open(`/tapes/${tape.id}`, importSummary);
+
+      const panel = view()?.querySelector('[data-testid="side-panel"]');
+      const order = [...(panel?.querySelectorAll(sectionIds.map((id) => `[data-testid="${id}"]`).join(',')) ?? [])].map(
+        (section) => section.getAttribute('data-testid'),
+      );
+      expect(order).toEqual([...sectionIds]);
+    });
+
+    it('opens the side panel scrolled to its top', async () => {
+      const {tape, importSummary, open, view} = await render();
+
+      await open(`/tapes/${tape.id}`, importSummary);
+
+      expect(view()?.querySelector('[data-testid="side-panel"]')?.scrollTop).toBe(0);
+    });
+
+    it.each([
+      ['tape-section', 'tape-section-toggle'],
+      ['import-summary', 'import-summary-toggle'],
+    ] as const)('lets the %s be collapsed and expanded with its toggle button', async (section, toggleId) => {
+      const {tape, importSummary, open, view, settle} = await render();
+      await open(`/tapes/${tape.id}`, importSummary);
+      const toggle = () => view()?.querySelector<HTMLButtonElement>(`[data-testid="${toggleId}"]`) ?? null;
+
+      expect(toggle()?.getAttribute('aria-expanded')).toBe('true');
+      const controlled = toggle()?.getAttribute('aria-controls') ?? '';
+      expect(controlled).not.toBe('');
+      expect(view()?.querySelectorAll(`[id="${controlled}"]`)).toHaveLength(1);
+      toggle()?.click();
+      await settle();
+      expect(toggle()?.getAttribute('aria-expanded')).toBe('false');
+      expect(view()?.querySelector(`[data-testid="${section}"] dl, [data-testid="${section}"] ul`)?.checkVisibility()).not.toBe(true);
+      toggle()?.click();
+      await settle();
+      expect(toggle()?.getAttribute('aria-expanded')).toBe('true');
+    });
+  });
+
   describe('the Import Summary in the side panel (V14)', () => {
-    it('is the fourth section of the side panel and offers a Dismiss button', async () => {
+    it('is a direct section of the side panel and offers a Dismiss button', async () => {
       const {tape, importSummary, open, view} = await render();
 
       await open(`/tapes/${tape.id}`, importSummary);
@@ -500,7 +545,6 @@ describe('TapeViewComponent', () => {
       const summary = panel?.querySelector('[data-testid="import-summary"]') ?? null;
       expect(summary).not.toBeNull();
       expect(summary?.parentElement).toBe(panel);
-      expect([...(panel?.children ?? [])].indexOf(summary as Element)).toBe(3);
       expect(summary?.querySelector('button[aria-label="Dismiss"]')).not.toBeNull();
     });
 
@@ -721,7 +765,7 @@ describe('TapeViewComponent', () => {
 
       await select(view(), 0, settle);
 
-      expect(warnings(view())).toEqual(['Shorter than the Minimum Hole Length: 2 mm of 2.5 mm']);
+      expect(warnings(view())).toEqual(['Too short to cut, see Cutting Problems']);
     });
 
     it('warns with the numbers when a gap is below the Minimum Gap', async () => {
@@ -736,7 +780,7 @@ describe('TapeViewComponent', () => {
 
       await select(view(), 0, settle);
 
-      expect(warnings(view())).toEqual(['Gap below the Minimum Gap: 1 mm of 1.5 mm']);
+      expect(warnings(view())).toEqual(['Gap too small to cut, see Cutting Problems']);
     });
 
     it('shows no warning for a Hole within the limits', async () => {
@@ -1603,7 +1647,7 @@ describe('TapeViewComponent', () => {
       await open(`/tapes/${tape.id}`);
 
       const controls = all(view(), 'button, input, select, textarea, [contenteditable]').filter(
-        (control) => control.closest('[data-testid="zoom"], [data-testid="add-hole"]') === null && !['export', 'side-panel-toggle', 'undo', 'redo'].includes(control.getAttribute('data-testid') ?? ''),
+        (control) => control.closest('[data-testid="zoom"], [data-testid="add-hole"]') === null && !['export', 'side-panel-toggle', 'undo', 'redo', 'tape-section-toggle', 'import-summary-toggle'].includes(control.getAttribute('data-testid') ?? ''),
       );
       expect(controls).toHaveLength(0);
     });
@@ -2216,6 +2260,21 @@ describe('TapeViewComponent', () => {
 
         expect(button(view(), 'undo')?.getAttribute('aria-label')).toBe('Undo (⌘Z)');
       });
+
+      // Global theme styles are not loaded in unit tests, so the contrast is guarded on the token value:
+      // the Material default (on-surface at 38%) is below 3:1 in both schemes; light-dark() tokens carry both.
+      it('colour the disabled Undo and Redo icons with at least 3:1 contrast (#121 finding 18)', async () => {
+        const {view} = await setup();
+
+        for (const testId of ['undo', 'redo'] as const) {
+          const target = button(view(), testId);
+          if (!target) throw new Error(`no ${testId} button`);
+          const token = getComputedStyle(target).getPropertyValue('--mat-icon-button-disabled-icon-color').trim();
+          const share = /^color-mix\(in srgb,\s*var\(--mat-sys-on-surface\)\s+(\d+)%/.exec(token)?.[1];
+          const strongEnough = token === 'var(--mat-sys-on-surface-variant)' || (share !== undefined && Number(share) >= 60);
+          expect(strongEnough, `${testId}: disabled icon colour token is "${token}"`).toBe(true);
+        }
+      });
     });
 
     it('undoes an edit with the button: the Tape and the earlier selection are back, saved once (4.1)', async () => {
@@ -2428,7 +2487,7 @@ describe('TapeViewComponent', () => {
       expect(marks(view())).toHaveLength(1);
       expect(
         all(view(), '[data-testid="selected-hole"] [data-testid="hole-warning"]').map((warning) => squash(warning)),
-      ).toEqual(['Shorter than the Minimum Hole Length: 1.5 mm of 2.5 mm']);
+      ).toEqual(['Too short to cut, see Cutting Problems']);
     });
 
     it('marks both Holes when a move leaves a gap below the Minimum Gap, and removes the marks when it is fixed', async () => {

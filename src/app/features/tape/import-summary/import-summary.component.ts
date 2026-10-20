@@ -1,4 +1,4 @@
-import {ChangeDetectionStrategy, Component, input, output} from '@angular/core';
+import {ChangeDetectionStrategy, Component, input, output, signal} from '@angular/core';
 import {MatIconButton} from '@angular/material/button';
 import {MatIcon} from '@angular/material/icon';
 import {TranslatePipe} from '@ngx-translate/core';
@@ -36,6 +36,7 @@ export class ImportSummaryComponent {
   /** The user closed the summary. */
   readonly dismissed = output<void>();
 
+  protected readonly expanded = signal(true);
   protected readonly noteName = noteName;
 
   protected signed(value: number): string {

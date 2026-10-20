@@ -89,8 +89,8 @@
               [attr.ry]="hole.radius"
             />
             @if (hole.handles; as handles) {
-              <rect class="handle ew-resize" data-testid="hole-handle" data-end="start" [attr.x]="handles.start.x" [attr.y]="hole.y" [attr.width]="handles.start.width" [attr.height]="hole.height" (pointerdown)="onHolePointerDown($event, hole, tapeSvg, 'start')" />
-              <rect class="handle ew-resize" data-testid="hole-handle" data-end="end" [attr.x]="handles.end.x" [attr.y]="hole.y" [attr.width]="handles.end.width" [attr.height]="hole.height" (pointerdown)="onHolePointerDown($event, hole, tapeSvg, 'end')" />
+              <rect class="handle ew-resize" data-testid="hole-handle" data-end="start" [attr.x]="handles.start.hit.x" [attr.y]="handles.start.hit.y" [attr.width]="handles.start.hit.width" [attr.height]="handles.start.hit.height" (pointerdown)="onHolePointerDown($event, hole, tapeSvg, 'start')" />
+              <rect class="handle ew-resize" data-testid="hole-handle" data-end="end" [attr.x]="handles.end.hit.x" [attr.y]="handles.end.hit.y" [attr.width]="handles.end.hit.width" [attr.height]="handles.end.hit.height" (pointerdown)="onHolePointerDown($event, hole, tapeSvg, 'end')" />
             }
           }
           @if (drawing.ghost; as ghost) {
@@ -98,6 +98,7 @@
           }
           @for (mark of drawing.holeMarks; track mark.row + ':' + mark.start) {
             <rect class="cutting-problem" data-testid="hole-mark" aria-hidden="true" [attr.x]="mark.x" [attr.y]="mark.y" [attr.width]="mark.width" [attr.height]="mark.height" [attr.rx]="mark.radius" [attr.ry]="mark.radius" />
+            <text class="cutting-problem-glyph" aria-hidden="true" [attr.x]="mark.glyph.x" [attr.y]="mark.glyph.y" [attr.font-size]="mark.glyph.size">!</text>
           }
           @for (number of drawing.numbers; track number.column) {
             <text class="column-number" data-testid="column-number" aria-hidden="true" [attr.x]="number.x" [attr.y]="drawing.numbersY">{{ number.number }}</text>
@@ -132,16 +133,16 @@
   </div>
   @if (!compact() || sidePanelOpen()) {
   <aside class="side-panel" data-testid="side-panel" (keydown)="onSidePanelKeydown($event)" [attr.aria-label]="'TAPE.VIEW.SIDE_PANEL' | translate">
-    <cranc-tape-section [view]="drawing.section" />
     <cranc-selected-hole [inspection]="inspection()" />
     <cranc-cutting-problems [holes]="holesWithProblems()" (chosen)="chooseProblem($event)" />
-    @if (importSummary(); as summary) {
-      <cranc-import-summary data-testid="import-summary" [importSummary]="summary" (dismissed)="importSummary.set(null)" />
-    }
     @if (tape(); as tape) {
       @if (organ(); as organ) {
         <cranc-add-hole [organ]="organ" [tape]="tape" [selected]="selectedHoleRef()" (added)="addFromForm($event)" />
       }
+    }
+    <cranc-tape-section [view]="drawing.section" />
+    @if (importSummary(); as summary) {
+      <cranc-import-summary data-testid="import-summary" [importSummary]="summary" (dismissed)="importSummary.set(null)" />
     }
   </aside>
   }

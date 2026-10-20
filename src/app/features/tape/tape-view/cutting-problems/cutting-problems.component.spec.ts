@@ -152,6 +152,33 @@ describe('CuttingProblemsComponent', () => {
     expect(chosen).toEqual([{pipe: note(62), start: col(20)}]);
   });
 
+  function description(element: HTMLElement, button: HTMLButtonElement | undefined): string {
+    const id = button?.getAttribute('aria-describedby') ?? '';
+    return element.querySelector(`#${CSS.escape(id)}`)?.textContent?.trim() ?? '';
+  }
+
+  it('keeps the visible text as the accessible name and describes that the entry shows the Hole on the Tape', async () => {
+    const {element} = await render([TOO_SHORT, TOO_CLOSE]);
+
+    const buttons = [...element.querySelectorAll<HTMLButtonElement>('button[data-testid="cutting-problem"]')];
+    expect(buttons[0]?.hasAttribute('aria-label')).toBe(false);
+    expect(description(element, buttons[0])).toMatch(/^Show /);
+    expect(description(element, buttons[0])).toContain('C4');
+    expect(description(element, buttons[0])).toMatch(/\b11\b/);
+    expect(description(element, buttons[1])).toMatch(/^Show /);
+    expect(description(element, buttons[1])).toContain('D4');
+    expect(description(element, buttons[1])).toMatch(/\b21\b/);
+    expect(new Set(buttons.map((button) => button.getAttribute('aria-describedby'))).size).toBe(buttons.length);
+  });
+
+  it('describes the entry buttons in German', async () => {
+    const {element} = await render([TOO_SHORT], 'de');
+
+    const text = description(element, element.querySelector<HTMLButtonElement>('button[data-testid="cutting-problem"]') ?? undefined);
+    expect(text).toMatch(/^Zeige /);
+    expect(text).toContain('C4');
+  });
+
   it('lists a Hole without a Pipe as plain text, counted but not a button', async () => {
     const {element, text, entries} = await render([NO_PIPE]);
 

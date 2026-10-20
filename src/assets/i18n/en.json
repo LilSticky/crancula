@@ -36,6 +36,7 @@
       "TITLE": "Cutting Problems",
       "COUNT": "{{count}} Holes can't be cut",
       "COUNT_ONE": "{{count}} Hole can't be cut",
+      "SHOW_HOLE": "Show {{note}} at Column {{column}} on the Tape",
       "NONE": "None"
     },
     "CUTTING_PROBLEM": {
@@ -161,6 +162,7 @@
       "NO_NOTE_ON_A_PIPE": "Not a single Note of the chosen Parts fits a Pipe of this Organ, not even moved by octaves."
     },
     "SUMMARY": {
+      "TOGGLE": "Show or hide the Import Summary",
       "TITLE": "Import Summary",
       "DISMISS": "Dismiss",
       "NONE": "None",
@@ -180,6 +182,7 @@
       "MOVED_NOTE_ONE": "{{note}} moved by 1 octave to Pipe {{pipe}} (Part {{part}}, Column {{column}})"
     },
     "SECTION": {
+      "TOGGLE": "Show or hide the Tape details",
       "TITLE": "Tape",
       "ORGAN": "Organ",
       "COLUMN_LENGTH": "Column length",
@@ -195,6 +198,7 @@
       "TITLE": "Add a Hole",
       "PIPE": "Pipe",
       "COLUMN": "Column",
+      "COLUMN_HINT": "{{first}} to {{last}}",
       "SUBMIT": "Add",
       "COVERED": "A Hole of {{note}} already covers Column {{column}}.",
       "COLUMN_INVALID": "Enter a whole Column number from 1."
@@ -207,8 +211,8 @@
       "LENGTH": "{{columns}}, {{mm}} mm",
       "GAP_NEXT": "Gap to the next Hole: {{columns}}, {{mm}} mm",
       "GAP_END": "To the end of the Tape: {{columns}}, {{mm}} mm",
-      "TOO_SHORT": "Shorter than the Minimum Hole Length: {{mm}} mm of {{minimum}} mm",
-      "GAP_TOO_SMALL": "Gap below the Minimum Gap: {{mm}} mm of {{minimum}} mm"
+      "TOO_SHORT": "Too short to cut, see Cutting Problems",
+      "GAP_TOO_SMALL": "Gap too small to cut, see Cutting Problems"
     }
   },
   "ORGAN": {

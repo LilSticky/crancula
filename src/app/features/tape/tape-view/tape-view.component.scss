@@ -30,6 +30,7 @@ cranc-page-head.compact {
 }
 cranc-page-head button[mat-icon-button] {
   --mat-icon-button-state-layer-size: 40px;
+  --mat-icon-button-disabled-icon-color: var(--mat-sys-on-surface-variant);
 }
 .stage.compact .overview {
   height: 36px;
@@ -105,6 +106,13 @@ cranc-page-head button[mat-icon-button] {
   stroke: var(--cr-problem);
   stroke-width: 2;
   stroke-dasharray: 4 3;
+  pointer-events: none;
+}
+.cutting-problem-glyph {
+  fill: var(--cr-problem);
+  font-weight: bold;
+  text-anchor: middle;
+  dominant-baseline: central;
   pointer-events: none;
 }
 .hole-ghost.refused {

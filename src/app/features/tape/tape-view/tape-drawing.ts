@@ -1,7 +1,7 @@
 import {noteName, tapeGeometry, type Hole, type Organ, type Tape, type TapeGeometry} from '@api/index';
 import {formatNumber} from '../../shared/format-number';
 import {pixelsPerMillimetre} from './pixels-per-millimetre';
-import {columnLines, columnNumbers, rulerNumbers} from './tape-marks';
+import {columnLines, columnNumbers, hitSpan, rulerNumbers} from './tape-marks';
 import type {ColumnRange} from './visible-columns';
 import type {TapeSectionView} from './tape-section/tape-section.component';
 
@@ -15,6 +15,9 @@ const RULER_END_EDGE_PX = 12;
 const RULER_END_GAP_PX = 50;
 /** Row labels stay at least this far apart, in px; crowded rows are labelled every k-th. */
 const MINIMUM_LABEL_PITCH_PX = 12;
+
+/** Largest font size of the glyph in a Cutting Problem ring, in px. */
+const MAX_GLYPH_PX = 12;
 
 /** Widest a resize handle of the selected Hole gets, in px. */
 const HANDLE_PX = 8;
@@ -92,18 +95,24 @@ export function holeRects(
       const x = slot.x * scale;
       const width = slot.width * scale;
       const handleWidth = Math.min(HANDLE_PX, width / 3);
+      const y = slot.y * scale;
+      const height = slot.height * scale;
+      const hitY = hitSpan(y, height);
+      const centre = x + width / 2;
+      const handle = (handleX: number, limits: {readonly min?: number; readonly max?: number}) => {
+        const hitX = hitSpan(handleX, handleWidth, limits);
+        return {x: handleX, width: handleWidth, hit: {x: hitX.start, y: hitY.start, width: hitX.size, height: hitY.size}};
+      };
       return {
         row: slot.row - 1,
         selected: isSelected,
         start: slot.start,
         x,
-        y: slot.y * scale,
+        y,
         width,
-        height: slot.height * scale,
+        height,
         radius: slot.radius * scale,
-        handles: isSelected
-          ? {start: {x, width: handleWidth}, end: {x: x + width - handleWidth, width: handleWidth}}
-          : undefined,
+        handles: isSelected ? {start: handle(x, {max: centre}), end: handle(x + width - handleWidth, {min: centre})} : undefined,
       };
     });
 }
@@ -134,8 +143,9 @@ export function holeMarks(
   scale: number,
   range: ColumnRange,
   problems: ReadonlySet<string>,
+  selected?: {readonly row: number; readonly start: number},
 ) {
-  return holeRects(tape, geometry, scale, range, undefined)
+  return holeRects(tape, geometry, scale, range, selected)
     .filter((rect) => {
       const pipe = organ.pipes[rect.row]?.note;
       return pipe !== undefined && problems.has(`${pipe}:${rect.start}`);
@@ -143,6 +153,8 @@ export function holeMarks(
     .map((rect) => ({
       row: rect.row,
       start: rect.start,
+      selected: rect.selected,
+      glyph: {x: rect.x + rect.width / 2, y: rect.y + rect.height / 2, size: Math.min(MAX_GLYPH_PX, rect.height)},
       x: rect.x - RING_GAP_PX,
       y: rect.y - RING_GAP_PX,
       width: rect.width + 2 * RING_GAP_PX,

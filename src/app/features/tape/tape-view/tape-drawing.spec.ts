@@ -114,7 +114,7 @@ describe('holeRects', () => {
     const [rect] = holeRects(tape, geometry, 20, {first: 0, last: 10}, slot && {row: slot.row, start: slot.start});
 
     expect(rect?.width).toBeGreaterThan(24);
-    expect(rect?.handles).toEqual({
+    expect(rect?.handles).toMatchObject({
       start: {x: rect?.x, width: 8},
       end: {x: (rect?.x ?? 0) + (rect?.width ?? 0) - 8, width: 8},
     });
@@ -129,6 +129,37 @@ describe('holeRects', () => {
     expect(rect?.handles?.start.width).toBeCloseTo(width);
     expect(rect?.handles?.end.width).toBeCloseTo(width);
     expect(rect?.handles?.end.x).toBeCloseTo((rect?.x ?? 0) + (rect?.width ?? 0) - width);
+  });
+});
+
+describe('holeRects handle hit areas', () => {
+  it('gives each handle of a wide Hole a hit area of at least 24 px by 24 px around the handle', () => {
+    const slot = geometry.slots[0];
+    const [rect] = holeRects(tape, geometry, 20, {first: 0, last: 10}, slot && {row: slot.row, start: slot.start});
+    const handles = rect?.handles;
+
+    for (const handle of [handles?.start, handles?.end]) {
+      expect(handle?.hit.width).toBeGreaterThanOrEqual(24);
+      expect(handle?.hit.height).toBeGreaterThanOrEqual(24);
+      expect(handle?.hit.x).toBeLessThanOrEqual(handle?.x ?? -Infinity);
+      expect(handle?.hit.x ?? 0).toBeCloseTo((handle?.x ?? 0) + (handle?.width ?? 0) / 2 - (handle?.hit.width ?? 0) / 2);
+      expect(handle?.hit.y ?? 0).toBeCloseTo((rect?.y ?? 0) + (rect?.height ?? 0) / 2 - (handle?.hit.height ?? 0) / 2);
+    }
+  });
+});
+
+describe('holeRects handle hit areas on a short Hole', () => {
+  it('lets the start hit area stop at the Hole centre and the end hit area start there, so they do not overlap', () => {
+    const slot = geometry.slots[0];
+    const [rect] = holeRects(tape, geometry, 2, {first: 0, last: 10}, slot && {row: slot.row, start: slot.start});
+    const handles = rect?.handles;
+    const centre = (rect?.x ?? 0) + (rect?.width ?? 0) / 2;
+
+    expect(rect?.width).toBeLessThan(24);
+    expect((handles?.start.hit.x ?? 0) + (handles?.start.hit.width ?? 0)).toBeLessThanOrEqual(centre + 1e-9);
+    expect(handles?.end.hit.x ?? 0).toBeGreaterThanOrEqual(centre - 1e-9);
+    expect(handles?.start.hit.width).toBeGreaterThanOrEqual(24);
+    expect(handles?.end.hit.width).toBeGreaterThanOrEqual(24);
   });
 });
 
@@ -152,6 +183,35 @@ describe('holeMarks', () => {
       height: (rect?.height ?? 0) + 4,
       radius: (rect?.radius ?? 0) + 2,
     });
+  });
+
+  it('gives each ring a glyph inside it, so the problem is not shown by colour alone', () => {
+    const [mark] = holeMarks(tape, organ, geometry, 2, range, new Set(['60:0']));
+
+    expect(mark?.glyph.x).toBeGreaterThanOrEqual(mark?.x ?? Infinity);
+    expect(mark?.glyph.x).toBeLessThanOrEqual((mark?.x ?? 0) + (mark?.width ?? 0));
+    expect(mark?.glyph.y).toBeGreaterThanOrEqual(mark?.y ?? Infinity);
+    expect(mark?.glyph.y).toBeLessThanOrEqual((mark?.y ?? 0) + (mark?.height ?? 0));
+  });
+
+  it('sizes the glyph to the Hole height, at most 12 px', () => {
+    const small = holeMarks(tape, organ, geometry, 2, range, new Set(['60:0']))[0];
+    const large = holeMarks(tape, organ, geometry, 20, range, new Set(['60:0']))[0];
+    const [rect] = holeRects(tape, geometry, 2, range, undefined);
+
+    expect(small?.glyph.size).toBeCloseTo(Math.min(12, rect?.height ?? 0));
+    expect(small?.glyph.size).toBeLessThan(12);
+    expect(large?.glyph.size).toBe(12);
+  });
+
+  it('still draws the ring, flagged selected, when the Hole is selected', () => {
+    const slot = geometry.slots[0];
+    const selected = slot && {row: slot.row, start: slot.start};
+    const marks = holeMarks(tape, organ, geometry, 2, range, new Set(['60:0']), selected);
+
+    expect(marks).toHaveLength(1);
+    expect(marks[0]?.selected).toBe(true);
+    expect(holeMarks(tape, organ, geometry, 2, range, new Set(['60:0']))[0]?.selected).toBe(false);
   });
 
   it('draws no ring for a marked Hole outside the visible range', () => {

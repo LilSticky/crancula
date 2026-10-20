@@ -1,7 +1,7 @@
 import {ChangeDetectionStrategy, Component, computed, effect, input, output, signal, untracked} from '@angular/core';
 import {form, FormField} from '@angular/forms/signals';
 import {MatButton} from '@angular/material/button';
-import {MatFormField, MatLabel} from '@angular/material/form-field';
+import {MatFormField, MatHint, MatLabel} from '@angular/material/form-field';
 import {MatInput} from '@angular/material/input';
 import {MatOption, MatSelect} from '@angular/material/select';
 import {TranslatePipe} from '@ngx-translate/core';
@@ -25,7 +25,7 @@ interface AddHoleDraft {
 @Component({
   selector: 'cranc-add-hole',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormField, MatButton, MatFormField, MatInput, MatLabel, MatOption, MatSelect, TranslatePipe],
+  imports: [FormField, MatButton, MatFormField, MatHint, MatInput, MatLabel, MatOption, MatSelect, TranslatePipe],
   templateUrl: './add-hole.component.html',
   styleUrl: './add-hole.component.scss',
 })

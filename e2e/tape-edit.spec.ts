@@ -90,6 +90,9 @@ test.describe('Editing a Tape by hand', () => {
     const E4_ROW = 4;
     const G4_ROW = 7;
 
+    // The Add a Hole form is visible without scrolling the side panel (UX finding 14).
+    await expect(window.getByTestId('add-hole-submit')).toBeInViewport({ratio: 1});
+
     // Double-click an empty spot of the E4 row, above the first C4 Hole's Column.
     const c4Box = await holeAt(window, firstC4.row, firstC4.start).boundingBox();
     const d4Box = await holeAt(window, d4.row, d4.start).boundingBox();
