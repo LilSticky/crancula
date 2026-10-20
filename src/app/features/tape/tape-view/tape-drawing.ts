@@ -16,6 +16,9 @@ const RULER_END_GAP_PX = 50;
 /** Row labels stay at least this far apart, in px; crowded rows are labelled every k-th. */
 const MINIMUM_LABEL_PITCH_PX = 12;
 
+/** Largest font size of the glyph in a Cutting Problem ring, in px. */
+const MAX_GLYPH_PX = 12;
+
 /** Widest a resize handle of the selected Hole gets, in px. */
 const HANDLE_PX = 8;
 
@@ -95,8 +98,9 @@ export function holeRects(
       const y = slot.y * scale;
       const height = slot.height * scale;
       const hitY = hitSpan(y, height);
-      const handle = (handleX: number) => {
-        const hitX = hitSpan(handleX, handleWidth);
+      const centre = x + width / 2;
+      const handle = (handleX: number, limits: {readonly min?: number; readonly max?: number}) => {
+        const hitX = hitSpan(handleX, handleWidth, limits);
         return {x: handleX, width: handleWidth, hit: {x: hitX.start, y: hitY.start, width: hitX.size, height: hitY.size}};
       };
       return {
@@ -108,7 +112,7 @@ export function holeRects(
         width,
         height,
         radius: slot.radius * scale,
-        handles: isSelected ? {start: handle(x), end: handle(x + width - handleWidth)} : undefined,
+        handles: isSelected ? {start: handle(x, {max: centre}), end: handle(x + width - handleWidth, {min: centre})} : undefined,
       };
     });
 }
@@ -150,7 +154,7 @@ export function holeMarks(
       row: rect.row,
       start: rect.start,
       selected: rect.selected,
-      glyph: {x: rect.x + rect.width / 2, y: rect.y + rect.height / 2},
+      glyph: {x: rect.x + rect.width / 2, y: rect.y + rect.height / 2, size: Math.min(MAX_GLYPH_PX, rect.height)},
       x: rect.x - RING_GAP_PX,
       y: rect.y - RING_GAP_PX,
       width: rect.width + 2 * RING_GAP_PX,

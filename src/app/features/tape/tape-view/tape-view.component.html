@@ -98,7 +98,7 @@
           }
           @for (mark of drawing.holeMarks; track mark.row + ':' + mark.start) {
             <rect class="cutting-problem" data-testid="hole-mark" aria-hidden="true" [attr.x]="mark.x" [attr.y]="mark.y" [attr.width]="mark.width" [attr.height]="mark.height" [attr.rx]="mark.radius" [attr.ry]="mark.radius" />
-            <text class="cutting-problem-glyph" aria-hidden="true" [attr.x]="mark.glyph.x" [attr.y]="mark.glyph.y">!</text>
+            <text class="cutting-problem-glyph" aria-hidden="true" [attr.x]="mark.glyph.x" [attr.y]="mark.glyph.y" [attr.font-size]="mark.glyph.size">!</text>
           }
           @for (number of drawing.numbers; track number.column) {
             <text class="column-number" data-testid="column-number" aria-hidden="true" [attr.x]="number.x" [attr.y]="drawing.numbersY">{{ number.number }}</text>
