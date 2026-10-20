@@ -608,8 +608,8 @@ add a Hole, undo and redo; switch to German and check every new text.
 - [ ] ~~T086~~ (moved to #121) Name the shortcut in the Undo and Redo labels and raise the disabled icon colour in
   `tape-view.component.scss` until T085 is green. Depends on T085.
 
-- [ ] T072 Run `npm run lint`, `npm run i18n:check`, `npm run test` and `npm run build`; all green.
-- [ ] T073 Run `npm run e2e`; the whole suite, including the 001–003 tests (`tape-restart`,
+- [x] T072 Run `npm run lint`, `npm run i18n:check`, `npm run test` and `npm run build`; all green.
+- [x] T073 Run `npm run e2e`; the whole suite, including the 001–003 tests (`tape-restart`,
   `tape-export`, `tape-german`, `tape-layout`), is green.
 - [ ] T074 Run the `spec-auditor` agent on the slice against `spec.md` and this file; fix every gap
   through a new test+implementation task pair appended to this file.
