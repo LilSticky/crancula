@@ -564,7 +564,7 @@ add a Hole, undo and redo; switch to German and check every new text.
 
 ## Phase 9: Polish & Cross-Cutting Concerns
 
-- [ ] T068 [P] Check the changed files: `api/tape/tape.ts`, `hole-edits.ts`, `cutting-problems.ts`
+- [x] T068 [P] Check the changed files: `api/tape/tape.ts`, `hole-edits.ts`, `cutting-problems.ts`
   import nothing from Angular, Electron or Node; no `any`, no non-null assertions, no `console.*`;
   `app/` is unchanged (`git diff main -- app/` empty); no i18n key is left unused
   (`npm run i18n:check` warnings).
