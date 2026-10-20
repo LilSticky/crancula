@@ -6,15 +6,23 @@ Issues: [GitHub](https://github.com/LilSticky/crancula/issues)
 
 ## Current slice
 
-**Next step:** Take draft pull request [#108](https://github.com/LilSticky/crancula/pull/108) out of draft for review (it closes
-[#105](https://github.com/LilSticky/crancula/issues/105)), merge it after CI is green, then pick the next issue by
-priority; [#121](https://github.com/LilSticky/crancula/issues/121) (UX findings from the Tape edit review) is a
-candidate. Follow-up [#122](https://github.com/LilSticky/crancula/issues/122): route the application menu's Edit →
-Undo/Redo to the Tape (low priority).
+**Next step:** Open the pull request for [#121](https://github.com/LilSticky/crancula/issues/121) (branch
+`121-tape-view-ux`), merge it when CI is green, then pick the next issue by priority: candidates are
+[#106](https://github.com/LilSticky/crancula/issues/106) "Slice: Transpose holes" (priority medium) and
+[#122](https://github.com/LilSticky/crancula/issues/122) (low): route the application menu's Edit →
+Undo/Redo to the Tape.
+
+**Done:** [Tape view UX findings 14–18](https://github.com/LilSticky/crancula/issues/121) (2026-10-20, branch
+`121-tape-view-ux`): sections editable first in the side panel, with Tape details and Import Summary collapsible.
+A Cutting Problem mark shows a "!" glyph also on a selected Hole; handle hit areas are at least 24 px. Pipe and
+Column sit on one row in Add a Hole, with a Column hint. Cutting Problems entries have accessible names, an icon and
+a hover state; Selected Hole warnings are shorter. Undo and Redo icons are disabled in on-surface-variant (their
+labels already name the shortcut). Gate: 1037 unit tests, lint, i18n, build and e2e/tape-edit green locally; full
+e2e in CI.
 
 **Done:** [Place holes by hand](../specs/004-place-holes-by-hand/spec.md)
 ([#105](https://github.com/LilSticky/crancula/issues/105), part of Edit a tape
-[#103](https://github.com/LilSticky/crancula/issues/103), branch `004-place-holes-by-hand`, PR #108, 2026-10-20):
+[#103](https://github.com/LilSticky/crancula/issues/103), branch `004-place-holes-by-hand`, PR #108, merged 2026-10-20 as 973f89f):
 all 76 tasks in [tasks](../specs/004-place-holes-by-hand/tasks.md). Move, resize, add and remove Holes by pointer and
 keyboard; Cutting Problems as you edit; undo and redo; the Tape grows. Decisions in
 [discovery/edit-a-tape.md](discovery/edit-a-tape.md) and [ADR 22](adr/0022-tape-edits-as-domain-commands.md). A
