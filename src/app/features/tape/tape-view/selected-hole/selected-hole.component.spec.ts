@@ -82,6 +82,20 @@ describe('SelectedHoleComponent', () => {
     );
   });
 
+  it('keeps the key help line outside the live region', async () => {
+    const {element} = await render(VIEW);
+
+    const keys = element.querySelector('[data-testid="hole-keys"]');
+    expect(keys).not.toBeNull();
+    expect(keys?.closest('[aria-live]')).toBeNull();
+  });
+
+  it('gives the key help line the stable id hole-keys-help', async () => {
+    const {element} = await render(VIEW);
+
+    expect(element.querySelector('[data-testid="hole-keys"]')?.id).toBe('hole-keys-help');
+  });
+
   it('shows no key help line without an inspection', async () => {
     const {element} = await render(undefined);
 

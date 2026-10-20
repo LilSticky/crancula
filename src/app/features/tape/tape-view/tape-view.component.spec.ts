@@ -1513,6 +1513,17 @@ describe('TapeViewComponent', () => {
         expect(all(view(), '[aria-selected]')).toHaveLength(0);
       });
 
+      it('describes the focusable Tape drawing by the key help line while a Hole is selected', async () => {
+        const {tape, open, view, settle} = await render({holes: HOLES});
+        await open(`/tapes/${tape.id}`);
+
+        await press(view(), 'ArrowRight', settle);
+
+        const helpId = view()?.querySelector('[data-testid="hole-keys"]')?.id;
+        expect(helpId).toBe('hole-keys-help');
+        expect(tapeSvg(view()).getAttribute('aria-describedby')?.split(/\s+/)).toContain('hole-keys-help');
+      });
+
       it('announces the Selected Hole section politely', async () => {
         const {tape, open, view} = await render({holes: HOLES});
 
