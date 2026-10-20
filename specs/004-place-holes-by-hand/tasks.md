@@ -572,7 +572,7 @@ add a Hole, undo and redo; switch to German and check every new text.
   marks, handles of the selected Hole, cursors, drag preview and the `refused` outline),
   "Accessibility commitments" (the edit keys, undo/redo shortcuts, keyboard add), "Screens" →
   Tape view (Undo/Redo in the page head, the Add a Hole and Cutting Problems side-panel sections).
-- [ ] T070 [P] Update `specs/004-place-holes-by-hand/data-model.md`, `quickstart.md` and the
+- [x] T070 [P] Update `specs/004-place-holes-by-hand/data-model.md`, `quickstart.md` and the
   contracts only where the implementation settled a detail (final i18n key names, drawn elements).
 - [ ] T071 Add Tape view captures with an edited Tape (selected Hole with handles, Cutting Problem
   marks, the Add a Hole and Cutting Problems sections, Undo/Redo) to `e2e/ux/screens.capture.ts`,
