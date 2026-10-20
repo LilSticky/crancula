@@ -568,7 +568,7 @@ add a Hole, undo and redo; switch to German and check every new text.
   import nothing from Angular, Electron or Node; no `any`, no non-null assertions, no `console.*`;
   `app/` is unchanged (`git diff main -- app/` empty); no i18n key is left unused
   (`npm run i18n:check` warnings).
-- [ ] T069 [P] Update `documentation/DESIGN-GUIDE.md`: "The Tape visualisation" (Cutting Problem
+- [x] T069 [P] Update `documentation/DESIGN-GUIDE.md`: "The Tape visualisation" (Cutting Problem
   marks, handles of the selected Hole, cursors, drag preview and the `refused` outline),
   "Accessibility commitments" (the edit keys, undo/redo shortcuts, keyboard add), "Screens" →
   Tape view (Undo/Redo in the page head, the Add a Hole and Cutting Problems side-panel sections).
