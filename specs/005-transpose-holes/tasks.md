@@ -44,8 +44,8 @@ changing behaviour; every existing test stays green and is adapted only in types
 **Goal**: transpose all Holes by n semitones with the outcome shown first; saved; Tape fields unchanged.
 **Independent test**: e2e — transpose all by +2, restart, Holes on the new Pipes.
 
-- [ ] T004 [US1] Red: in `api/tape/transpose-holes.spec.ts` — contract lines 1, 4, 7, 8 for `{kind:'all'}` (Pipes C4, D4, E4; Holes C4 10–13, D4 20–21; +2 → D4 10–13, E4 20–21, both `moved`; length, transposition, songId, selectedParts, columnLength, name unchanged; `resulting` names both; 0 semitones returns the Tape unchanged).
-- [ ] T005 [US1] Green: implement `transposeHoles` for targets that have a Pipe in `api/tape/transpose-holes.ts`, building the Tape only through `validTape`.
+- [x] T004 [US1] Red: in `api/tape/transpose-holes.spec.ts` — contract lines 1, 4, 7, 8 for `{kind:'all'}` (Pipes C4, D4, E4; Holes C4 10–13, D4 20–21; +2 → D4 10–13, E4 20–21, both `moved`; length, transposition, songId, selectedParts, columnLength, name unchanged; `resulting` names both; 0 semitones returns the Tape unchanged).
+- [x] T005 [US1] Green: implement `transposeHoles` for targets that have a Pipe in `api/tape/transpose-holes.ts`, building the Tape only through `validTape`.
 - [ ] T006 [P] [US1] Red: `src/app/features/tape/tape-view/transpose-dialog/transpose-dialog.component.spec.ts` — scope "All Holes", semitones field (range from `transposeRange`, initial 0), `transpose-outcome` counts follow every change, Apply disabled at 0, Cancel closes with nothing, Apply closes with the `Transposed` value (test ids as in contracts/tape-view-ui.md).
 - [ ] T007 [US1] Green: `TransposeDialogComponent` (standalone, OnPush, signals, Material dialog/radio/form field, minimal SCSS) in `src/app/features/tape/tape-view/transpose-dialog/`.
 - [ ] T008 [US1] Red: `tape-view.component.spec.ts` — `transpose` button in the action bar, disabled when no Hole has a row; a dialog result is committed as one `TapeEditor.apply` with `outcome.resulting` selected.
@@ -58,15 +58,15 @@ changing behaviour; every existing test stays green and is adapted only in types
 
 **Independent test**: unit — octave moves and removals on an Organ with gaps; dialog lists removed Holes.
 
-- [ ] T011 [US2] Red: `api/tape/transpose-holes.spec.ts` — contract lines 2, 3, 6 (Pipes C4, D4, D#5: D4 +1 → D#5 `moved-by-octaves`; no C# Pipe: C4 +1 → `removed`; target outside 0–127 → `removed`; tie goes upward; Hole whose Pipe is not on the Organ unchanged and counted in `leftOut` for `all`).
-- [ ] T012 [US2] Green: use `octaveMoveTable(organ)` in `transposeHoles`; removals and `leftOut`.
+- [x] T011 [US2] Red: `api/tape/transpose-holes.spec.ts` — contract lines 2, 3, 6 (Pipes C4, D4, D#5: D4 +1 → D#5 `moved-by-octaves`; no C# Pipe: C4 +1 → `removed`; target outside 0–127 → `removed`; tie goes upward; Hole whose Pipe is not on the Organ unchanged and counted in `leftOut` for `all`).
+- [x] T012 [US2] Green: use `octaveMoveTable(organ)` in `transposeHoles`; removals and `leftOut`.
 - [ ] T013 [P] [US2] Red: `transpose-dialog.component.spec.ts` — `outcome-moved-by-octaves`, `outcome-removed`, `outcome-removed-holes` ("C#4 · Column 12", Columns counted from 1), `outcome-left-out` only when > 0, the "nothing left" note when every Hole would be removed.
 - [ ] T014 [US2] Green: those outcome parts in `transpose-dialog.component.*`.
 
 ## Phase 5: User Story 3 — Holes that land on each other are merged (P1)
 
-- [ ] T015 [US3] Red: `api/tape/transpose-holes.spec.ts` — contract line 5 (C4 10–13 transposed +2 onto D4 12–16 → one D4 10–16, one `Merge` with both `from`; octave move onto a Hole merges; touching Holes not merged; three overlapping in a run → one merge) and line 9 (1,000 Holes < 50 ms).
-- [ ] T016 [US3] Green: merging runs per Pipe in `transposeHoles`; `resulting` names merged Holes.
+- [x] T015 [US3] Red: `api/tape/transpose-holes.spec.ts` — contract line 5 (C4 10–13 transposed +2 onto D4 12–16 → one D4 10–16, one `Merge` with both `from`; octave move onto a Hole merges; touching Holes not merged; three overlapping in a run → one merge) and line 9 (1,000 Holes < 50 ms).
+- [x] T016 [US3] Green: merging runs per Pipe in `transposeHoles`; `resulting` names merged Holes.
 - [ ] T017 [P] [US3] Red→green: `outcome-merged` count in `transpose-dialog.component.*`.
 
 **Checkpoint**: whole-Tape transposition complete (P1). STATUS updated.
