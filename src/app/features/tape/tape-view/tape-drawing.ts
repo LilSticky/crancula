@@ -1,7 +1,7 @@
 import {noteName, tapeGeometry, type Hole, type Organ, type Tape, type TapeGeometry} from '@api/index';
 import {formatNumber} from '../../shared/format-number';
 import {pixelsPerMillimetre} from './pixels-per-millimetre';
-import {columnLines, columnNumbers, rulerNumbers} from './tape-marks';
+import {columnLines, columnNumbers, hitSpan, rulerNumbers} from './tape-marks';
 import type {ColumnRange} from './visible-columns';
 import type {TapeSectionView} from './tape-section/tape-section.component';
 
@@ -92,18 +92,23 @@ export function holeRects(
       const x = slot.x * scale;
       const width = slot.width * scale;
       const handleWidth = Math.min(HANDLE_PX, width / 3);
+      const y = slot.y * scale;
+      const height = slot.height * scale;
+      const hitY = hitSpan(y, height);
+      const handle = (handleX: number) => {
+        const hitX = hitSpan(handleX, handleWidth);
+        return {x: handleX, width: handleWidth, hit: {x: hitX.start, y: hitY.start, width: hitX.size, height: hitY.size}};
+      };
       return {
         row: slot.row - 1,
         selected: isSelected,
         start: slot.start,
         x,
-        y: slot.y * scale,
+        y,
         width,
-        height: slot.height * scale,
+        height,
         radius: slot.radius * scale,
-        handles: isSelected
-          ? {start: {x, width: handleWidth}, end: {x: x + width - handleWidth, width: handleWidth}}
-          : undefined,
+        handles: isSelected ? {start: handle(x), end: handle(x + width - handleWidth)} : undefined,
       };
     });
 }
@@ -134,8 +139,9 @@ export function holeMarks(
   scale: number,
   range: ColumnRange,
   problems: ReadonlySet<string>,
+  selected?: {readonly row: number; readonly start: number},
 ) {
-  return holeRects(tape, geometry, scale, range, undefined)
+  return holeRects(tape, geometry, scale, range, selected)
     .filter((rect) => {
       const pipe = organ.pipes[rect.row]?.note;
       return pipe !== undefined && problems.has(`${pipe}:${rect.start}`);
@@ -143,6 +149,8 @@ export function holeMarks(
     .map((rect) => ({
       row: rect.row,
       start: rect.start,
+      selected: rect.selected,
+      glyph: {x: rect.x + rect.width / 2, y: rect.y + rect.height / 2},
       x: rect.x - RING_GAP_PX,
       y: rect.y - RING_GAP_PX,
       width: rect.width + 2 * RING_GAP_PX,

@@ -584,11 +584,11 @@ add a Hole, undo and redo; switch to German and check every new text.
   its top. Extend `e2e/tape-edit.spec.ts` so Add a Hole is visible without scrolling at 1280x800.
 - [x] ~~T078~~ (moved to #121) Reorder the side panel in `tape-view.component.html` and `.scss` (details and Import
   Summary after the editing sections, collapsible) until T077 is green. Depends on T077.
-- [ ] ~~T079~~ (moved to #121) [P] Write the red test for UX finding 15: in `tape-drawing.spec.ts` and
+- [x] ~~T079~~ (moved to #121) [P] Write the red test for UX finding 15: in `tape-drawing.spec.ts` and
   `tape-marks.spec.ts`, a Hole with a Cutting Problem has a mark in the warning colour with a glyph
   and an outline that is also drawn when the Hole is selected, and each handle has a hit area of at
   least 24 px.
-- [ ] ~~T080~~ (moved to #121) Draw the Cutting Problem mark and the larger handle hit areas in `tape-drawing.ts` and
+- [x] ~~T080~~ (moved to #121) Draw the Cutting Problem mark and the larger handle hit areas in `tape-drawing.ts` and
   `tape-view.component.scss` until T079 is green. Depends on T079.
 - [ ] ~~T081~~ (moved to #121) [P] Write the red test for UX finding 16: in
   `src/app/features/tape/tape-view/add-hole/` (component spec), the Pipe and Column fields share one

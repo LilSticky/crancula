@@ -1,4 +1,18 @@
-import {columnLines, columnNumbers, rulerNumbers} from './tape-marks';
+import {columnLines, columnNumbers, hitSpan, MINIMUM_HIT_PX, rulerNumbers} from './tape-marks';
+
+describe('hitSpan', () => {
+  it('requires a hit area of at least 24 px', () => {
+    expect(MINIMUM_HIT_PX).toBe(24);
+  });
+
+  it('grows a small span to 24 px around its centre', () => {
+    expect(hitSpan(100, 8)).toEqual({start: 92, size: 24});
+  });
+
+  it('keeps a span that is already 24 px or more', () => {
+    expect(hitSpan(100, 30)).toEqual({start: 100, size: 30});
+  });
+});
 
 describe('columnLines', () => {
   it('draws a line at every 8th Column, strong at every 32nd, starting at Column 1', () => {

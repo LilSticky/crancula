@@ -265,6 +265,7 @@ export class TapeViewComponent {
         scale,
         range,
         new Set(this.holesWithProblems().map(({hole}) => `${hole.pipe}:${hole.start}`)),
+        this.shownSelection(),
       ),
       ...columnMarks(tape, geometry, scale, range),
       ...outline(geometry, scale),
