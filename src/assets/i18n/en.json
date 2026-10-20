@@ -198,6 +198,7 @@
       "PIPE": "Pipe",
       "COLUMN": "Column",
       "SUBMIT": "Add",
+      "COLUMN_HINT": "{{first}} to {{last}}",
       "COVERED": "A Hole of {{note}} already covers Column {{column}}.",
       "COLUMN_INVALID": "Enter a whole Column number from 1."
     },

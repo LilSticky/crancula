@@ -198,6 +198,7 @@
       "PIPE": "Pfeife",
       "COLUMN": "Spalte",
       "SUBMIT": "Hinzufügen",
+      "COLUMN_HINT": "{{first}} bis {{last}}",
       "COVERED": "Ein Loch der Pfeife {{note}} deckt Spalte {{column}} bereits ab.",
       "COLUMN_INVALID": "Gib eine ganze Spaltennummer ab 1 ein."
     },

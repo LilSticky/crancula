@@ -20,6 +20,8 @@ import {tapeOf} from '../../../../../../api/tape/tape-fixture';
 import {testOrgan} from '../../../../../testing/organs';
 import {provideTestTranslations} from '../../../../../testing/test-translations';
 import {partIndex, songId} from '../../../../../../api/song/song';
+import de from '../../../../../assets/i18n/de.json';
+import en from '../../../../../assets/i18n/en.json';
 import {AddHoleComponent} from './add-hole.component';
 
 function defined<T>(value: T | undefined, what: string): T {
@@ -212,6 +214,34 @@ describe('AddHoleComponent', () => {
       await (await pipeSelect()).clickOptions({text: 'E4'});
 
       expect(text()).not.toContain('already covers');
+    });
+  });
+
+  describe('layout and hint (#121 finding 16)', () => {
+    it('puts the Pipe and Column fields in one row', async () => {
+      const {element} = await render();
+
+      const fields = [...element.querySelectorAll('mat-form-field')];
+      expect(fields).toHaveLength(2);
+      const row = fields[0]?.parentElement;
+      expect(row).not.toBe(element.querySelector('form'));
+      expect(row?.contains(fields[1] ?? null)).toBe(true);
+      expect(row?.querySelector('button')).toBeNull();
+    });
+
+    it('hints the allowed Columns, first to last, on the Column field', async () => {
+      const {element} = await render();
+
+      const hint = element.querySelector('mat-form-field:has([data-testid="add-hole-column"]) mat-hint');
+      expect(hint?.textContent?.replace(/\s+/g, ' ').trim()).toBe('1 to 100');
+    });
+
+    it('has the hint text in English and German', () => {
+      for (const tree of [en, de]) {
+        const text = (tree as {TAPE: {ADD_HOLE: Record<string, string>}}).TAPE.ADD_HOLE['COLUMN_HINT'];
+        expect(text).toContain('{{first}}');
+        expect(text).toContain('{{last}}');
+      }
     });
   });
 });
