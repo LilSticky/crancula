@@ -213,6 +213,25 @@
       "GAP_END": "Bis zum Ende des Lochbands: {{columns}}, {{mm}} mm",
       "TOO_SHORT": "Zu kurz zum Schneiden, siehe Schnittprobleme",
       "GAP_TOO_SMALL": "Abstand zu klein zum Schneiden, siehe Schnittprobleme"
+    },
+    "SELECTION": {
+      "COUNT": "{{count}} Löcher ausgewählt"
+    },
+    "TRANSPOSE": {
+      "BUTTON": "Transponieren…",
+      "TITLE": "Löcher transponieren",
+      "SCOPE_SELECTED": "Ausgewählte Löcher ({{count}})",
+      "SCOPE_ALL": "Alle Löcher",
+      "SEMITONES": "Halbtöne",
+      "MOVED": "Verschoben",
+      "MOVED_BY_OCTAVES": "Um Oktaven verschoben",
+      "MERGED": "Zusammengelegt",
+      "REMOVED": "Entfernt",
+      "REMOVED_HOLE": "{{note}} · Spalte {{column}}",
+      "LEFT_OUT": "Ausgelassen (keine Pfeife auf der Drehorgel)",
+      "NOTHING_LEFT": "Von den gewählten Löchern bleibt nichts übrig.",
+      "APPLY": "Transponieren",
+      "CANCEL": "Abbrechen"
     }
   },
   "ORGAN": {
