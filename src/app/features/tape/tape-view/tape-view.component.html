@@ -75,7 +75,6 @@
             <rect
               class="hole grab"
               [class.selected]="hole.selected"
-              [class.refused]="hole.refused"
               [attr.aria-label]="hole.selected && inspection() ? (('TAPE.HOLE.ROW' | translate: {row: inspection()?.rowText, note: inspection()?.noteName}) + '. ' + ('TAPE.HOLE.COLUMNS_RANGE' | translate: {from: inspection()?.fromText, to: inspection()?.toText})) : null"
               data-testid="hole"
               (click)="select(hole)"
@@ -93,6 +92,9 @@
               <rect class="handle ew-resize" data-testid="hole-handle" data-end="start" [attr.x]="handles.start.x" [attr.y]="hole.y" [attr.width]="handles.start.width" [attr.height]="hole.height" (pointerdown)="onHolePointerDown($event, hole, tapeSvg, 'start')" />
               <rect class="handle ew-resize" data-testid="hole-handle" data-end="end" [attr.x]="handles.end.x" [attr.y]="hole.y" [attr.width]="handles.end.width" [attr.height]="hole.height" (pointerdown)="onHolePointerDown($event, hole, tapeSvg, 'end')" />
             }
+          }
+          @if (drawing.ghost; as ghost) {
+            <rect class="hole-ghost refused" data-testid="hole-ghost" aria-hidden="true" [attr.data-row]="ghost.row" [attr.data-start]="ghost.start" [attr.x]="ghost.x" [attr.y]="ghost.y" [attr.width]="ghost.width" [attr.height]="ghost.height" [attr.rx]="ghost.radius" [attr.ry]="ghost.radius" />
           }
           @for (mark of drawing.holeMarks; track mark.row + ':' + mark.start) {
             <rect class="cutting-problem" data-testid="hole-mark" aria-hidden="true" [attr.x]="mark.x" [attr.y]="mark.y" [attr.width]="mark.width" [attr.height]="mark.height" [attr.rx]="mark.radius" [attr.ry]="mark.radius" />

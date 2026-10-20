@@ -1975,12 +1975,62 @@ describe('TapeViewComponent', () => {
       await down(rectAt(view(), 24, 10) as Element, at(11, 24));
       await move(at(31, 24));
 
-      expect(rectAt(view(), 24, 30)?.classList.contains('refused') || rectAt(view(), 24, 10)?.classList.contains('refused')).toBe(true);
+      expect(all(view(), 'rect[data-testid="hole-ghost"].refused')).toHaveLength(1);
+      expect(all(view(), 'rect[data-testid="hole"].refused')).toHaveLength(0);
       await up(at(31, 24));
       expect(update).not.toHaveBeenCalled();
       expect(storedHoles(tape.id)).toEqual(before);
       expect(snackBarOpen).toHaveBeenCalledTimes(1);
       expect(all(view(), 'rect[data-testid="hole"].refused')).toHaveLength(0);
+    });
+
+    describe('a refused position while dragging (contract: Pointer)', () => {
+      const ghosts = (view: HTMLElement | null) => all(view, '[data-testid="tape-scroll"] [data-testid="hole-ghost"]');
+
+      it('draws a refused ghost of the Hole under the pointer and leaves the Hole at its original place unchanged, during a body drag', async () => {
+        const {tape, view, at, down, move, up, update} = await setup();
+        const before = storedHoles(tape.id);
+
+        await down(rectAt(view(), 24, 10) as Element, at(11, 24));
+        await move(at(31, 24));
+
+        const found = ghosts(view());
+        expect(found).toHaveLength(1);
+        expect(found[0]?.classList.contains('refused')).toBe(true);
+        expect(found[0]?.getAttribute('data-row')).toBe('23');
+        expect(found[0]?.getAttribute('data-start')).toBe('30');
+        expect(rectAt(view(), 24, 10)).not.toBeNull();
+        expect(rectAt(view(), 24, 10)?.classList.contains('refused')).toBe(false);
+        expect(rectAt(view(), 24, 30)?.classList.contains('refused')).toBe(false);
+        expect(all(view(), 'rect[data-testid="hole"].refused')).toHaveLength(0);
+
+        await up(at(31, 24));
+        expect(ghosts(view())).toHaveLength(0);
+        expect(update).not.toHaveBeenCalled();
+        expect(storedHoles(tape.id)).toEqual(before);
+      });
+
+      it('draws a refused ghost of the Hole and leaves the Hole unchanged, during a resize drag', async () => {
+        const {tape, view, at, down, move, up, click, handle, update} = await setup();
+        const before = storedHoles(tape.id);
+        await click(rectAt(view(), 24, 10) as Element);
+
+        await down(handle('end') as Element, at(13, 24, -1));
+        await move(at(31, 24));
+
+        const found = ghosts(view());
+        expect(found).toHaveLength(1);
+        expect(found[0]?.classList.contains('refused')).toBe(true);
+        expect(found[0]?.getAttribute('data-row')).toBe('23');
+        expect(found[0]?.getAttribute('data-start')).toBe('10');
+        expect(rectAt(view(), 24, 10)?.classList.contains('refused')).toBe(false);
+        expect(all(view(), 'rect[data-testid="hole"].refused')).toHaveLength(0);
+
+        await up(at(31, 24));
+        expect(ghosts(view())).toHaveLength(0);
+        expect(update).not.toHaveBeenCalled();
+        expect(storedHoles(tape.id)).toEqual(before);
+      });
     });
 
     it('shows the cursors: grab over a Hole body, grabbing while dragging, ew-resize over a handle', async () => {

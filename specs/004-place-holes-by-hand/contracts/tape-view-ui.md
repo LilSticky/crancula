@@ -14,9 +14,10 @@ What the user can do in the Tape view and what the tests observe. Decisions and 
 | Escape during a drag | — | drag cancelled; Tape unchanged | 0 |
 | release on a refused position | — | Tape unchanged; snackbar names the Hole in the way | 0 |
 
-- While dragging, the drawing shows the would-be result. A refused position shows no ghost at the
-  pointer: the Hole stays where it was and gets the `refused` class (oxblood outline) while the
-  pointer is on the refused cell.
+- While dragging, the drawing shows the would-be result. A refused position draws a ghost
+  (`rect` with class `refused`, test id `hole-ghost`, oxblood outline) at the would-be position
+  under the pointer, while the Hole stays unchanged where it was. The ghost disappears on release
+  or Escape.
 - Only the selected Hole has handles (`hole-handle`): transparent, as high as the Hole, at most 8 px
   and at most a third of its width wide.
 - Near the stage's left or right edge (24 px) the stage scrolls during a drag.

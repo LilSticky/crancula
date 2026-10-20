@@ -1,4 +1,4 @@
-import {noteName, type Organ, type Tape, type TapeGeometry} from '@api/index';
+import {noteName, tapeGeometry, type Hole, type Organ, type Tape, type TapeGeometry} from '@api/index';
 import {formatNumber} from '../../shared/format-number';
 import {pixelsPerMillimetre} from './pixels-per-millimetre';
 import {columnLines, columnNumbers, rulerNumbers} from './tape-marks';
@@ -106,6 +106,21 @@ export function holeRects(
           : undefined,
       };
     });
+}
+
+/** The rectangle, in px, of a Hole that a refused drag would have placed; `undefined` if the Organ has no row for it. */
+export function ghostRect(tape: Tape, organ: Organ, attempted: Hole, scale: number) {
+  const slot = tapeGeometry({...tape, holes: [attempted]}, organ).slots[0];
+  if (slot === undefined) return undefined;
+  return {
+    row: slot.row - 1,
+    start: slot.start,
+    x: slot.x * scale,
+    y: slot.y * scale,
+    width: slot.width * scale,
+    height: slot.height * scale,
+    radius: slot.radius * scale,
+  };
 }
 
 /** Space between a Hole and its Cutting Problem ring, in px. */

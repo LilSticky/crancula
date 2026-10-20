@@ -20,7 +20,7 @@ import type {SelectableHole} from './hole-selection';
 /** What an edit of one Hole comes to: a new Tape with the selection, a refusal to explain, or no change. */
 export type EditOutcome =
   | {readonly kind: 'applied'; readonly tape: Tape; readonly selection: SelectableHole | undefined}
-  | {readonly kind: 'refused'; readonly other: Hole}
+  | {readonly kind: 'refused'; readonly other: Hole; readonly attempted?: Hole}
   | {readonly kind: 'nothing'};
 
 const NOTHING: EditOutcome = {kind: 'nothing'};
@@ -86,8 +86,15 @@ export function dragEdit(tape: Tape, organ: Organ, drag: HoleDrag, target: DragT
   if (target.part === 'body') {
     if (target.pipe === hole.pipe && target.start === hole.start) return NOTHING;
     const row = organ.pipes.findIndex((pipe) => pipe.note === target.pipe) + 1;
-    return edited(moveHole(tape, organ, hole, {pipe: target.pipe, start: target.start}), {row, start: target.start});
+    const result = edited(moveHole(tape, organ, hole, {pipe: target.pipe, start: target.start}), {row, start: target.start});
+    return withAttempted(result, {pipe: target.pipe, start: target.start, length: hole.length});
   }
   if (target.start === hole.start && target.length === hole.length) return NOTHING;
-  return edited(changeHoleLength(tape, hole, {start: target.start, length: target.length}), {row: drag.hole.row, start: target.start});
+  const result = edited(changeHoleLength(tape, hole, {start: target.start, length: target.length}), {row: drag.hole.row, start: target.start});
+  return withAttempted(result, {pipe: hole.pipe, start: target.start, length: target.length});
+}
+
+/** A refusal of a drag also names the position the Hole would have taken. */
+function withAttempted(outcome: EditOutcome, attempted: Hole): EditOutcome {
+  return outcome.kind === 'refused' ? {...outcome, attempted} : outcome;
 }

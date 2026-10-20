@@ -134,7 +134,7 @@ dropped when the view is left or another Tape opens (FR-014).
 | `hole` | the grabbed Hole (`HoleRef` + `length`, row) |
 | `from` | `{column, row}` under the press point (`gridAt`) |
 
-`dragTarget(drag, now)` (the drag starts after 4 px of travel; the preview is a `HoleEdit` outcome, `applied` or `refused` with the Hole in the way; a refused preview only marks the grabbed Hole) → for `body`: `{pipe of row + Δrow, start: max(0, start + Δcolumn)}`; for
+`dragTarget(drag, now)` (the drag starts after 4 px of travel; the preview is a `HoleEdit` outcome, `applied` or `refused` with the Hole in the way; a refused preview also carries the would-be Hole, drawn as an outlined ghost while the grabbed Hole stays unchanged) → for `body`: `{pipe of row + Δrow, start: max(0, start + Δcolumn)}`; for
 `end`: `{start, length: max(1, length + Δcolumn)}`; for `start`: `start' = clamp(start + Δcolumn,
 0, end − 1)`, `length = end − start'`. Rows are clamped to the Organ's rows.
 

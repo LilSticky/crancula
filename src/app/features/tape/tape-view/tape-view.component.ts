@@ -43,7 +43,7 @@ import {SelectedHoleComponent} from './selected-hole/selected-hole.component';
 import {selectedHoleView} from './selected-hole/selected-hole-view';
 import {stageMetrics} from './stage-metrics';
 import {TapeEditor} from './tape-editor';
-import {columnMarks, drawingParams, holeMarks, holeRects, outline, overviewOf, rowLabels, RULER_HEIGHT, sectionView} from './tape-drawing';
+import {columnMarks, drawingParams, ghostRect, holeMarks, holeRects, outline, overviewOf, rowLabels, RULER_HEIGHT, sectionView} from './tape-drawing';
 import {TapeSectionComponent} from './tape-section/tape-section.component';
 import {TapeStatusLineComponent, type PointerText} from './tape-status-line/tape-status-line.component';
 import {overviewFrame, scrollLeftFor} from './overview-frame';
@@ -247,7 +247,8 @@ export class TapeViewComponent {
     const organ = this.organ();
     const geometry = this.geometry();
     const range = this.visibleRange();
-    const refused = this.holeDrag.preview()?.kind === 'refused' ? this.holeDrag.grabbed : undefined;
+    const preview = this.holeDrag.preview();
+    const attempted = preview?.kind === 'refused' ? preview.attempted : undefined;
     if (tape === undefined || organ === undefined || geometry === undefined || range === undefined) return undefined;
     const scale = this.scale();
     const language = this.language();
@@ -255,10 +256,8 @@ export class TapeViewComponent {
       tape,
       section: sectionView(tape, organ, geometry, language, this.partNames(tape)),
       ...rowLabels(organ, geometry, scale),
-      holes: holeRects(tape, geometry, scale, range, this.shownSelection()).map((hole) => ({
-        ...hole,
-        refused: refused !== undefined && organ.pipes[hole.row]?.note === refused.pipe && hole.start === refused.start,
-      })),
+      holes: holeRects(tape, geometry, scale, range, this.shownSelection()),
+      ghost: attempted === undefined ? undefined : ghostRect(tape, organ, attempted, scale),
       holeMarks: holeMarks(
         tape,
         organ,

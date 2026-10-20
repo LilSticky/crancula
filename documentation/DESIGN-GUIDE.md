@@ -178,8 +178,8 @@ Roboto goes once nothing uses it. Add each licence text next to the font files.
 - **Drag preview:** while a Hole or one of its ends is dragged, the drawing shows the would-be
   result live, snapped to Columns and rows; the stage scrolls when the pointer is within 24 px of
   its left or right edge. Escape cancels. A refused position (the result would overlap a Hole of
-  the same Pipe) shows no ghost at the pointer: the Hole being dragged stays where it was and gets
-  an oxblood outline (class `refused`) for as long as the pointer is on the refused cell. Releasing
+  the same Pipe) draws a ghost with an oxblood outline (class `refused`) at the would-be position under the
+  pointer, while the Hole being dragged stays unchanged where it was, for as long as the pointer is on the refused cell. Releasing
   there changes nothing and opens a snackbar that names the Hole in the way: "The Hole would
   overlap the Hole of C4 at Column 16."
 - Double-clicking an empty spot of a row adds a Hole of that row's Pipe at that Column.
