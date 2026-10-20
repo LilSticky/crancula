@@ -30,7 +30,7 @@ Side panel: with two or more selected, the Selected Hole section shows "n Holes 
   - Number field `transpose-semitones`, range from `transposeRange`, initial 0.
   - Outcome `transpose-outcome`: `outcome-moved`, `outcome-moved-by-octaves`, `outcome-merged`,
     `outcome-removed` (each "label: count"), list `outcome-removed-holes` ("C#4 · Column 12"), and
-    `outcome-left-out` when > 0.
+    `outcome-left-out` when > 0, and `outcome-nothing-left` when every chosen Hole would be removed.
   - `transpose-cancel`, `transpose-apply` (disabled at 0 semitones).
 - Apply: one edit in the history; the resulting Holes are selected; the Tape is saved.
 
