@@ -2257,6 +2257,21 @@ describe('TapeViewComponent', () => {
 
         expect(button(view(), 'undo')?.getAttribute('aria-label')).toBe('Undo (⌘Z)');
       });
+
+      // Global theme styles are not loaded in unit tests, so the contrast is guarded on the token value:
+      // the Material default (on-surface at 38%) is below 3:1 in both schemes; light-dark() tokens carry both.
+      it('colour the disabled Undo and Redo icons with at least 3:1 contrast (#121 finding 18)', async () => {
+        const {view} = await setup();
+
+        for (const testId of ['undo', 'redo'] as const) {
+          const target = button(view(), testId);
+          if (!target) throw new Error(`no ${testId} button`);
+          const token = getComputedStyle(target).getPropertyValue('--mat-icon-button-disabled-icon-color').trim();
+          const share = /^color-mix\(in srgb,\s*var\(--mat-sys-on-surface\)\s+(\d+)%/.exec(token)?.[1];
+          const strongEnough = token === 'var(--mat-sys-on-surface-variant)' || (share !== undefined && Number(share) >= 60);
+          expect(strongEnough, `${testId}: disabled icon colour token is "${token}"`).toBe(true);
+        }
+      });
     });
 
     it('undoes an edit with the button: the Tape and the earlier selection are back, saved once (4.1)', async () => {

@@ -30,6 +30,7 @@ cranc-page-head.compact {
 }
 cranc-page-head button[mat-icon-button] {
   --mat-icon-button-state-layer-size: 40px;
+  --mat-icon-button-disabled-icon-color: var(--mat-sys-on-surface-variant);
 }
 .stage.compact .overview {
   height: 36px;
