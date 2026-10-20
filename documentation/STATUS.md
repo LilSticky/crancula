@@ -6,36 +6,21 @@ Issues: [GitHub](https://github.com/LilSticky/crancula/issues)
 
 ## Current slice
 
-**In progress:** [Place holes by hand](../specs/004-place-holes-by-hand/spec.md)
+**Next step:** Take draft pull request [#108](https://github.com/LilSticky/crancula/pull/108) out of draft for review (it closes
+[#105](https://github.com/LilSticky/crancula/issues/105)), merge it after CI is green, then pick the next issue by
+priority; [#121](https://github.com/LilSticky/crancula/issues/121) (UX findings from the Tape edit review) is a
+candidate. Follow-up [#122](https://github.com/LilSticky/crancula/issues/122): route the application menu's Edit →
+Undo/Redo to the Tape (low priority).
+
+**Done:** [Place holes by hand](../specs/004-place-holes-by-hand/spec.md)
 ([#105](https://github.com/LilSticky/crancula/issues/105), part of Edit a tape
-[#103](https://github.com/LilSticky/crancula/issues/103), branch `004-place-holes-by-hand`). Spec, clarify,
-plan ([ADR 22](adr/0022-tape-edits-as-domain-commands.md)) and 76 tasks are done; decisions in
-[discovery/edit-a-tape.md](discovery/edit-a-tape.md). Done (2026-10-19, draft PR #108): Phase 2 foundational
-(T001–T016: `validTape`, Cutting Problems rename, `holesWithCuttingProblems`, EditHistory, `TapeLibrary.update`,
-TapeEditor) and Phase 3 User Story 1 (T017–T035: move, resize and remove Holes by pointer and keyboard,
-`e2e/tape-edit.spec.ts`) and Phase 4 User Story 2 (T036–T042, 2026-10-19: `addHole`, `firstFreeColumnAfter`, the
-"Add a Hole" side-panel form, double-click add). `angular-reviewer` passes over Story 1 and Story 2 done and fixed;
-still open from the Story 1 review: a refused drop shows the original Hole outlined instead of a ghost at the
-pointer (contract "Pointer"), to settle in Phase 9 polish. Done 2026-10-19: Phase 5 User Story 3 (T043–T051,
-Cutting Problems as they happen): Holes with Cutting Problems get a dashed oxblood ring (`--cr-problem`); a
-Cutting Problems section under the Selected Hole counts and lists them; choosing selects and scrolls; marks follow
-the drag preview. T046 timing green at once (median 1.17 ms); T051 not needed. `angular-reviewer` pass done and fixed.
-Done 2026-10-19: Phase 6 User Story 4 (T052–T056, undo and redo): Undo and Redo icon buttons in the page head
-with shortcut tooltips; Ctrl+Z, Ctrl+Y and Ctrl+Shift+Z (⌘Z and ⇧⌘Z on macOS) anywhere in the Tape view except
-text fields, via `historyIntent` and a `PLATFORM` token; the Electron Edit menu's accelerators don't interfere;
-undo restores the earlier selection; undo is saved. `angular-reviewer` pass done and fixed.
-Done 2026-10-20: main merged in (#119, #120); Phase 7 User Story 5 (T057–T061, the Tape grows): growth was
-already in `withHoles`, now pinned by tests; the stage auto-scrolls while a Hole is dragged within 24 px of its
-edge (rAF loop outside the zone, `src/main.ts` still uses zone change detection), and a release past the end grows
-the Tape. `angular-reviewer` pass done and fixed.
-Done 2026-10-20: Phase 8 User Story 6 (T062–T067, keyboard, German and English): a key help line under the Selected
-Hole (`TAPE.EDIT.KEYS`), outside the live region and tied to the Tape drawing via `aria-describedby`; the keyboard-only
-e2e (T064), the German texts and keyboard refusal snackbar (T065) and the i18n checks (T063) were green at once.
-`angular-reviewer` pass done and fixed. Unit tests (1014 Angular plus node), lint and i18n green; the tape-edit and
-tape-german e2e files green locally.
-**Next step:** Phase 9 polish from T068 in [tasks](../specs/004-place-holes-by-hand/tasks.md), including the open
-refused-drop ghost from the Story 1 review. Run `npm run e2e` (it rebuilds) rather than bare Playwright,
-or `npm run electron:bundle` plus a fresh web build before e2e (ESM main process).
+[#103](https://github.com/LilSticky/crancula/issues/103), branch `004-place-holes-by-hand`, PR #108, 2026-10-20):
+all 76 tasks in [tasks](../specs/004-place-holes-by-hand/tasks.md). Move, resize, add and remove Holes by pointer and
+keyboard; Cutting Problems as you edit; undo and redo; the Tape grows. Decisions in
+[discovery/edit-a-tape.md](discovery/edit-a-tape.md) and [ADR 22](adr/0022-tape-edits-as-domain-commands.md). A
+refused drop shows a ghost (`hole-ghost`) at the pointer. Polish (Phase 9) and the `spec-auditor` pass found no
+gaps; ux-review 38/50 (captures 08d–08f). Findings 14–18 are in [#121](https://github.com/LilSticky/crancula/issues/121)
+(T077–T086). Gate: lint, i18n (273 keys), 1016 Angular and 714 node unit tests, build and 104 e2e green locally.
 
 **Done:** [Bring a song onto a tape](../specs/002-bring-a-song-onto-a-tape/spec.md)
 ([#2](https://github.com/LilSticky/crancula/issues/2), PR #51, 2026-10-14): all 78 tasks. MIDI Song
