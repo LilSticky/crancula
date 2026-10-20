@@ -611,9 +611,10 @@ add a Hole, undo and redo; switch to German and check every new text.
 - [x] T072 Run `npm run lint`, `npm run i18n:check`, `npm run test` and `npm run build`; all green.
 - [x] T073 Run `npm run e2e`; the whole suite, including the 001–003 tests (`tape-restart`,
   `tape-export`, `tape-german`, `tape-layout`), is green.
-- [ ] T074 Run the `spec-auditor` agent on the slice against `spec.md` and this file; fix every gap
-  through a new test+implementation task pair appended to this file.
-- [ ] T075 Through the `housekeeper` agent: update `documentation/STATUS.md` (slice done, next
+- [x] T074 Run the `spec-auditor` agent on the slice against `spec.md` and this file; fix every gap
+  through a new test+implementation task pair appended to this file. Done: no gaps found; FR-013 (failed
+  save) is covered at store level only (minor, not a gap).
+- [x] T075 Through the `housekeeper` agent: update `documentation/STATUS.md` (slice done, next
   step), set "Place holes by hand" to `done` in `documentation/ROADMAP.md`, add the editing under
   `[Unreleased]` in `CHANGELOG.md`, and file a follow-up issue for routing the application menu's
   Edit → Undo/Redo to the Tape (research R7 "Known limit").
