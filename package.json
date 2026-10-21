@@ -69,7 +69,7 @@
     "electron-debug": "5.0.0",
     "electron-reloader": "2.0.0",
     "esbuild": "0.28.2",
-    "eslint": "10.12.0",
+    "eslint": "10.13.0",
     "eslint-plugin-jsdoc": "65.3.6",
     "eslint-plugin-prefer-arrow": "1.2.3",
     "jsdom": "30.1.2",
