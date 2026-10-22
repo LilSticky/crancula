@@ -1,5 +1,5 @@
 import {BreakpointObserver, type BreakpointState} from '@angular/cdk/layout';
-import {Component, signal} from '@angular/core';
+import {ApplicationRef, Component, signal} from '@angular/core';
 import {type Observable, of} from 'rxjs';
 import {TestBed} from '@angular/core/testing';
 import {MatDialog} from '@angular/material/dialog';
@@ -78,6 +78,8 @@ interface RenderOptions {
    * (from 1) is note 52 + r, so row 25 is F5. The Minimum Hole Length is 2.5 mm, the Minimum Gap 1.5 mm.
    */
   readonly holes?: readonly {readonly row: number; readonly start: number; readonly length: number}[];
+  /** The notes of the Organ's Pipes from row 1 on, for `holes`; the notes 53 to 77 when not given. */
+  readonly pipeNotes?: readonly number[];
   /** The Column length of the Tape with `holes` in mm; 2.5 when not given. */
   readonly columnLength?: number;
   /** The language of the texts; English when not given. */
@@ -140,10 +142,11 @@ async function render(options: RenderOptions = {}) {
         : [{provide: BreakpointObserver, useValue: stubBreakpointObserver(options.windowWidth)}]),
     ],
   });
+  const pipeNotes = options.pipeNotes ?? Array.from({length: 25}, (_, index) => 52 + index + 1);
   const organ = options.holes
-    ? testOrgan('Street organ', 25, {
+    ? testOrgan('Street organ', pipeNotes.length, {
         leadIn: options.leadIn ?? 0,
-        pipes: Array.from({length: 25}, (_, index) => ({note: 52 + index + 1})),
+        pipes: pipeNotes.map((note) => ({note})),
       })
     : testOrgan('Street organ', 3, options.leadIn === undefined ? {} : {leadIn: options.leadIn});
   const organs = TestBed.inject(OrganLibrary);
@@ -1647,7 +1650,7 @@ describe('TapeViewComponent', () => {
       await open(`/tapes/${tape.id}`);
 
       const controls = all(view(), 'button, input, select, textarea, [contenteditable]').filter(
-        (control) => control.closest('[data-testid="zoom"], [data-testid="add-hole"]') === null && !['export', 'side-panel-toggle', 'undo', 'redo', 'tape-section-toggle', 'import-summary-toggle'].includes(control.getAttribute('data-testid') ?? ''),
+        (control) => control.closest('[data-testid="zoom"], [data-testid="add-hole"]') === null && !['export', 'side-panel-toggle', 'undo', 'redo', 'transpose', 'tape-section-toggle', 'import-summary-toggle'].includes(control.getAttribute('data-testid') ?? ''),
       );
       expect(controls).toHaveLength(0);
     });
@@ -2864,6 +2867,377 @@ describe('TapeViewComponent', () => {
 
         expect(setUp.scroll.scrollLeft).toBe(resting);
       });
+    });
+  });
+
+  describe('transposing Holes (T008)', () => {
+    // The Pipe of row r is note 52 + r. Row 24 is E5, row 25 F5, so transposing a Hole of row 24 by +1 lands on row 25.
+    const holes = [{row: 24, start: 10, length: 3}];
+    const transposeButton = (view: HTMLElement | null) =>
+      view?.querySelector<HTMLButtonElement>('[data-testid="page-head-actions"] [data-testid="transpose"]') ?? null;
+    const selected = (view: HTMLElement | null) =>
+      all(view, '[data-testid="tape-scroll"] rect[data-testid="hole"].selected').map(
+        (rect) => `${Number(rect.getAttribute('data-row')) + 1}:${rect.getAttribute('data-start')}`,
+      );
+    const storedHoles = (tapeId: string) =>
+      (TestBed.inject(TapeLibrary).tapeEntities().find((candidate) => candidate.id === tapeId)?.holes ?? []).map(
+        (hole) => `${hole.pipe - 52}:${hole.start}+${hole.length}`,
+      );
+
+    it('shows a Transpose button in the action bar, enabled on a Tape with Holes', async () => {
+      const {tape, open, view} = await render({holes});
+
+      await open(`/tapes/${tape.id}`);
+
+      expect(transposeButton(view())?.textContent?.trim()).toBe('Transpose…');
+      expect(transposeButton(view())?.disabled).toBe(false);
+    });
+
+    it('disables the Transpose button on a Tape without Holes', async () => {
+      const {tape, open, view} = await render({oneColumn: true});
+
+      await open(`/tapes/${tape.id}`);
+
+      expect(transposeButton(view())).not.toBeNull();
+      expect(transposeButton(view())?.disabled).toBe(true);
+    });
+
+    it('commits a transposition applied in the dialog as one saved edit and selects the resulting Holes', async () => {
+      const {tape, open, view, settle} = await render({holes});
+      await open(`/tapes/${tape.id}`);
+      const update = vi.spyOn(TestBed.inject(TapeLibrary), 'update');
+      const flush = async () => {
+        TestBed.inject(ApplicationRef).tick();
+        await settle();
+      };
+
+      transposeButton(view())?.click();
+      await flush();
+      const field = document.body.querySelector<HTMLInputElement>('[data-testid="transpose-semitones"]');
+      expect(field).not.toBeNull();
+      if (field === null) return;
+      field.value = '1';
+      field.dispatchEvent(new Event('input', {bubbles: true}));
+      await flush();
+      document.body.querySelector<HTMLButtonElement>('[data-testid="transpose-apply"]')?.click();
+      await settle();
+
+      expect(update).toHaveBeenCalledTimes(1);
+      expect(storedHoles(tape.id)).toEqual(['25:10+3']);
+      expect(selected(view())).toEqual(['25:10']);
+      TestBed.inject(MatDialog).closeAll();
+    });
+  });
+
+  describe('undoing a transposition (T025)', () => {
+    // The Organ has no D#4, D#5 or C#4 (notes 63, 75 and 61 left out), so transposing by +1 moves a C4 Hole
+    // by an octave onto C#5 and removes a D4 Hole; a C5 Hole moves onto C#5 and merges with the C4 Hole.
+    const pipeNotes = Array.from({length: 25}, (_, index) => 53 + index).filter((note) => ![61, 63, 75].includes(note));
+    const rowOf = (note: number): number => pipeNotes.indexOf(note) + 1;
+    const holes = [
+      {row: rowOf(60), start: 10, length: 3},
+      {row: rowOf(72), start: 10, length: 5},
+      {row: rowOf(62), start: 20, length: 2},
+      {row: rowOf(66), start: 30, length: 2},
+    ];
+    const transposeButton = (view: HTMLElement | null) =>
+      view?.querySelector<HTMLButtonElement>('[data-testid="page-head-actions"] [data-testid="transpose"]') ?? null;
+    const button = (view: HTMLElement | null, testId: 'undo' | 'redo') =>
+      view?.querySelector<HTMLButtonElement>(`[data-testid="page-head-actions"] [data-testid="${testId}"]`) ?? null;
+    const rectAt = (view: HTMLElement | null, note: number, start: number): SVGRectElement => {
+      const rect = view?.querySelector<SVGRectElement>(
+        `[data-testid="tape-scroll"] rect[data-testid="hole"][data-row="${rowOf(note) - 1}"][data-start="${start}"]`,
+      );
+      if (!rect) throw new Error(`no Hole drawn on note ${note} at start ${start}`);
+      return rect;
+    };
+    const selected = (view: HTMLElement | null) =>
+      all(view, '[data-testid="tape-scroll"] rect[data-testid="hole"].selected')
+        .map((rect) => `${Number(rect.getAttribute('data-row')) + 1}:${rect.getAttribute('data-start')}`)
+        .sort();
+    /** The Holes as stored: the Pipe's note, start Column and length in Columns, sorted. */
+    const storedHoles = (tapeId: string) =>
+      (TestBed.inject(TapeLibrary).tapeEntities().find((candidate) => candidate.id === tapeId)?.holes ?? [])
+        .map((hole) => `${hole.pipe}:${hole.start}+${hole.length}`)
+        .sort();
+    const dialogInput = (testId: string): HTMLInputElement => {
+      const found = document.body.querySelector(`[data-testid="${testId}"]`);
+      const input = found instanceof HTMLInputElement ? found : found?.querySelector('input');
+      if (!input) throw new Error(`no input in ${testId}`);
+      return input;
+    };
+
+    /** Transposes the whole Tape by one semitone, selecting the C4 Hole first. */
+    const transposeByOne = async () => {
+      const {tape, open, view, settle} = await render({holes, pipeNotes});
+      await open(`/tapes/${tape.id}`);
+      const flush = async () => {
+        TestBed.inject(ApplicationRef).tick();
+        await settle();
+      };
+      const before = storedHoles(tape.id);
+      rectAt(view(), 60, 10).dispatchEvent(new MouseEvent('click', {bubbles: true}));
+      await settle();
+      expect(selected(view())).toEqual([`${rowOf(60)}:10`]);
+
+      transposeButton(view())?.click();
+      await flush();
+      dialogInput('transpose-scope-all').click();
+      await flush();
+      const field = document.body.querySelector<HTMLInputElement>('[data-testid="transpose-semitones"]');
+      if (field === null) throw new Error('no semitones field');
+      field.value = '1';
+      field.dispatchEvent(new Event('input', {bubbles: true}));
+      await flush();
+      document.body.querySelector<HTMLButtonElement>('[data-testid="transpose-apply"]')?.click();
+      await settle();
+
+      const transposed = storedHoles(tape.id);
+      expect(transposed).toEqual(['67:30+2', '73:10+5']);
+      expect(selected(view())).toEqual([`${rowOf(67)}:30`, `${rowOf(73)}:10`].sort());
+      return {tape, view, settle, before, transposed};
+    };
+
+    it('restores the Tape and the selection before a transposition with merges and removals in one undo', async () => {
+      const {tape, view, settle, before} = await transposeByOne();
+      const update = vi.spyOn(TestBed.inject(TapeLibrary), 'update');
+      button(view(), 'undo')?.click();
+      await settle();
+
+      expect(storedHoles(tape.id)).toEqual(before);
+      expect(selected(view())).toEqual([`${rowOf(60)}:10`]);
+      expect(update).toHaveBeenCalledTimes(1);
+      expect(button(view(), 'undo')?.disabled).toBe(true);
+    });
+
+    it('applies the transposition again with redo', async () => {
+      const {tape, view, settle, transposed} = await transposeByOne();
+      button(view(), 'undo')?.click();
+      await settle();
+      const update = vi.spyOn(TestBed.inject(TapeLibrary), 'update');
+      button(view(), 'redo')?.click();
+      await settle();
+
+      expect(storedHoles(tape.id)).toEqual(transposed);
+      expect(selected(view())).toEqual([`${rowOf(67)}:30`, `${rowOf(73)}:10`].sort());
+      expect(update).toHaveBeenCalledTimes(1);
+      expect(button(view(), 'redo')?.disabled).toBe(true);
+    });
+  });
+
+  describe('selecting several Holes (T020)', () => {
+    const RULER_PX = 24;
+    // The Pipe of row r is note 52 + r. Row 24 is E5, row 25 F5. Starts count from 0.
+    // A frame from Column 5 to Column 16 over rows 24 and 25 holds the Holes at (24, 10) and (25, 12) only.
+    const holes = [
+      {row: 23, start: 10, length: 3},
+      {row: 24, start: 10, length: 3},
+      {row: 24, start: 30, length: 3},
+      {row: 25, start: 12, length: 2},
+      {row: 25, start: 40, length: 2},
+    ];
+    type Modifiers = Pick<MouseEventInit, 'ctrlKey' | 'metaKey'>;
+    type Position = {readonly clientX: number; readonly clientY: number};
+    const drawn = (view: HTMLElement | null) => all(view, '[data-testid="tape-scroll"] rect[data-testid="hole"]') as SVGRectElement[];
+    const selected = (view: HTMLElement | null) =>
+      drawn(view)
+        .filter((rect) => rect.classList.contains('selected'))
+        .map((rect) => `${Number(rect.getAttribute('data-row')) + 1}:${rect.getAttribute('data-start')}`)
+        .sort();
+    const storedHoles = (tapeId: string) =>
+      (TestBed.inject(TapeLibrary).tapeEntities().find((candidate) => candidate.id === tapeId)?.holes ?? []).map(
+        (hole) => `${hole.pipe - 52}:${hole.start}+${hole.length}`,
+      );
+    const tapeSvg = (view: HTMLElement | null) => view?.querySelector('[data-testid="tape-scroll"] svg') as SVGSVGElement;
+    const rectAt = (view: HTMLElement | null, row: number, start: number): SVGRectElement => {
+      const rect = view?.querySelector<SVGRectElement>(
+        `[data-testid="tape-scroll"] rect[data-testid="hole"][data-row="${row - 1}"][data-start="${start}"]`,
+      );
+      if (!rect) throw new Error(`no Hole drawn at row ${row}, start ${start}`);
+      return rect;
+    };
+    const frame = () => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+
+    const setup = async (options: RenderOptions = {holes}) => {
+      const rendered = await render(options);
+      await rendered.open(`/tapes/${rendered.tape.id}`);
+      const svg = tapeSvg(rendered.view());
+      Object.defineProperty(svg, 'getBoundingClientRect', {value: () => new DOMRect(0, 0, 4000, 300), configurable: true});
+      const geometry = tapeGeometry(rendered.tape, rendered.organ);
+      /** The middle of a Column (from 0) in a row (from 1), in client coordinates. */
+      const at = (column: number, row: number): Position => ({
+        clientX: (geometry.leadIn + (column + 0.5) * geometry.columnLength) * SCALE,
+        clientY: (geometry.rowCentres[row - 1] ?? 0) * SCALE + RULER_PX,
+      });
+      const pointer = (type: string, position: Position, modifiers: Modifiers = {}) =>
+        new PointerEvent(type, {...position, ...modifiers, pointerId: 1, button: 0, bubbles: true, cancelable: true});
+      const down = async (target: Element, position: Position, modifiers: Modifiers = {}) => {
+        target.dispatchEvent(pointer('pointerdown', position, modifiers));
+        await rendered.settle();
+      };
+      const move = async (position: Position) => {
+        svg.dispatchEvent(pointer('pointermove', position));
+        await frame();
+        await rendered.settle();
+      };
+      const up = async (position: Position) => {
+        svg.dispatchEvent(pointer('pointerup', position));
+        await rendered.settle();
+      };
+      const click = async (row: number, start: number, modifiers: Modifiers = {}) => {
+        rectAt(rendered.view(), row, start).dispatchEvent(new MouseEvent('click', {bubbles: true, ...modifiers}));
+        await rendered.settle();
+      };
+      const press = async (init: KeyboardEventInit) => {
+        svg.dispatchEvent(new KeyboardEvent('keydown', {...init, bubbles: true, cancelable: true}));
+        await rendered.settle();
+      };
+      const update = vi.spyOn(TestBed.inject(TapeLibrary), 'update');
+      return {...rendered, svg, at, down, move, up, click, press, update};
+    };
+
+    it('adds a Hole to the selection with Ctrl-click and takes it out again with a second Ctrl-click', async () => {
+      const {view, click} = await setup({holes, platform: 'win32'});
+      await click(24, 10);
+
+      await click(24, 30, {ctrlKey: true});
+      expect(selected(view())).toEqual(['24:10', '24:30']);
+
+      await click(24, 10, {ctrlKey: true});
+      expect(selected(view())).toEqual(['24:30']);
+    });
+
+    it('adds a Hole to the selection with Cmd-click on macOS', async () => {
+      const {view, click} = await setup({holes, platform: 'darwin'});
+      await click(24, 10);
+
+      await click(24, 30, {metaKey: true});
+
+      expect(selected(view())).toEqual(['24:10', '24:30']);
+    });
+
+    it('selects only the clicked Hole with a plain click after a several-Hole selection', async () => {
+      const {view, click} = await setup({holes, platform: 'win32'});
+      await click(24, 10);
+      await click(24, 30, {ctrlKey: true});
+      expect(selected(view())).toEqual(['24:10', '24:30']);
+
+      await click(25, 12);
+
+      expect(selected(view())).toEqual(['25:12']);
+    });
+
+    it('draws a selection frame while dragging from an empty spot and selects the Holes it overlaps on release', async () => {
+      const {view, svg, at, down, move, up} = await setup({holes, platform: 'win32'});
+
+      await down(svg, at(5, 24));
+      await move(at(16, 25));
+
+      expect(view()?.querySelector('[data-testid="selection-frame"]')).not.toBeNull();
+      expect(selected(view())).toEqual([]);
+
+      await up(at(16, 25));
+
+      expect(selected(view())).toEqual(['24:10', '25:12']);
+    });
+
+    it('adds the Holes of a frame to the selection when dragging from an empty spot with Ctrl', async () => {
+      const {view, svg, at, down, move, up, click} = await setup({holes, platform: 'win32'});
+      await click(23, 10);
+
+      await down(svg, at(5, 24), {ctrlKey: true});
+      await move(at(16, 25));
+      await up(at(16, 25));
+
+      expect(selected(view())).toEqual(['23:10', '24:10', '25:12']);
+    });
+
+    it('clears the selection on a press without travel on an empty spot', async () => {
+      const {view, svg, at, down, up, click} = await setup({holes, platform: 'win32'});
+      await click(24, 10);
+      expect(selected(view())).toEqual(['24:10']);
+
+      await down(svg, at(5, 24));
+      await up(at(5, 24));
+
+      expect(selected(view())).toEqual([]);
+    });
+
+    it('extends the selection to the next Hole of the row with Ctrl+ArrowRight', async () => {
+      const {view, click, press} = await setup({holes, platform: 'win32'});
+      await click(24, 10);
+
+      await press({key: 'ArrowRight', ctrlKey: true});
+
+      expect(selected(view())).toEqual(['24:10', '24:30']);
+    });
+
+    it('extends the selection to the next Hole of the row with Cmd+ArrowRight on macOS', async () => {
+      const {view, click, press} = await setup({holes, platform: 'darwin'});
+      await click(24, 10);
+
+      await press({key: 'ArrowRight', metaKey: true});
+
+      expect(selected(view())).toEqual(['24:10', '24:30']);
+    });
+
+    it('selects every Hole that has a row with Ctrl+A and draws each of them selected', async () => {
+      const {view, click, press} = await setup({holes, platform: 'win32'});
+      await click(24, 10);
+
+      await press({key: 'a', ctrlKey: true});
+
+      expect(selected(view())).toEqual(['23:10', '24:10', '24:30', '25:12', '25:40']);
+      expect(drawn(view())).toHaveLength(holes.length);
+    });
+
+    it('leaves out a Hole whose Pipe is not on the Organ when selecting all with Ctrl+A', async () => {
+      const withTwoPipes = (original: Organ): Organ => ({...testOrgan(original.name, 2), id: original.id});
+      const {tape, organ, view, press} = await setup({platform: 'win32', organNow: withTwoPipes});
+      const remaining = new Set(organ.pipes.slice(0, 2).map(({note}) => note));
+      const withRow = tape.holes.filter((hole) => remaining.has(hole.pipe));
+      expect(withRow.length).toBeLessThan(tape.holes.length);
+
+      await press({key: 'a', ctrlKey: true});
+
+      expect(selected(view())).toHaveLength(withRow.length);
+    });
+
+    it('clears a several-Hole selection on Escape', async () => {
+      const {view, click, press} = await setup({holes, platform: 'win32'});
+      await click(24, 10);
+      await click(24, 30, {ctrlKey: true});
+      expect(selected(view())).toEqual(['24:10', '24:30']);
+
+      await press({key: 'Escape'});
+
+      expect(selected(view())).toEqual([]);
+    });
+
+    it('shows "2 Holes selected" in the Selected Hole section for two selected Holes', async () => {
+      const {view, click} = await setup({holes, platform: 'win32'});
+      await click(24, 10);
+
+      await click(24, 30, {ctrlKey: true});
+
+      const count = view()?.querySelector('[data-testid="selected-hole"] [data-testid="selection-count"]');
+      expect(count?.textContent?.trim()).toBe('2 Holes selected');
+    });
+
+    it('offers no Hole handles and changes nothing with the edit keys while several Holes are selected', async () => {
+      const {tape, view, click, press, update} = await setup({holes, platform: 'win32'});
+      await click(24, 10);
+      expect(all(view(), '[data-testid="hole-handle"]')).toHaveLength(2);
+      await click(24, 30, {ctrlKey: true});
+      const before = storedHoles(tape.id);
+
+      await press({key: 'ArrowRight', altKey: true});
+      await press({key: 'ArrowDown', altKey: true});
+      await press({key: 'Delete'});
+
+      expect(all(view(), '[data-testid="hole-handle"]')).toHaveLength(0);
+      expect(update).not.toHaveBeenCalled();
+      expect(storedHoles(tape.id)).toEqual(before);
     });
   });
 });

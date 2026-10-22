@@ -232,3 +232,34 @@ test.describe('I can bring a Song onto a Tape in German', () => {
     await app.close();
   });
 });
+
+test.describe('I can transpose Holes in German', () => {
+  test('shows the selection count and the Transpose dialog in German, without translation keys', async () => {
+    const {app, window} = await launchApp();
+    try {
+      await defineOctaveOrgan(window, 'Drehorgel');
+      await createTapeFromSong(window, 'Tonleiter', songRepeatingC4('c4s.mid', 4));
+      await window.getByTestId('language-switch').locator('[data-language="de"]').click();
+      const [first, second] = [...(await drawnHoles(window))].sort((a, b) => a.start - b.start);
+      if (!first || !second) throw new Error('expected two Holes');
+
+      await holeAt(window, first.row, first.start).click();
+      await holeAt(window, second.row, second.start).click({modifiers: [process.platform === 'darwin' ? 'Meta' : 'Control']});
+      await expect(window.getByTestId('selection-count')).toHaveText('2 Löcher ausgewählt');
+
+      await expect(window.getByTestId('transpose')).toHaveText(germanTapeText('TRANSPOSE', 'BUTTON'));
+      await window.getByTestId('transpose').click();
+      const dialog = window.getByRole('dialog');
+      await expect(window.getByTestId('transpose-dialog')).toBeVisible();
+      await expect(dialog).toContainText(germanTapeText('TRANSPOSE', 'TITLE'));
+      await expect(window.getByTestId('transpose-scope-selected')).toContainText('Ausgewählte Löcher (2)');
+      await expect(window.getByTestId('transpose-scope-all')).toContainText(germanTapeText('TRANSPOSE', 'SCOPE_ALL'));
+      await expect(window.getByTestId('transpose-apply')).toHaveText(germanTapeText('TRANSPOSE', 'APPLY'));
+      await expect(window.getByTestId('transpose-cancel')).toHaveText(germanTapeText('TRANSPOSE', 'CANCEL'));
+      expect(await dialog.innerText()).not.toMatch(/\bTAPE\.[A-Z_.]+/);
+      expect(await window.locator('body').innerText()).not.toMatch(/\bTAPE\.[A-Z_.]+/);
+    } finally {
+      await app.close();
+    }
+  });
+});

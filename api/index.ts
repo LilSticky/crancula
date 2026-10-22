@@ -102,6 +102,16 @@ export {
   type HoleCuttingProblems,
   type HoleProblem,
 } from './tape/cutting-problems';
+export {
+  transposeHoles,
+  transposeRange,
+  transpositionWithin,
+  type HoleFate,
+  type HolesToTranspose,
+  type Merge,
+  type Transposed,
+  type TranspositionOutcome,
+} from './tape/transpose-holes';
 export {renameTape} from './tape/rename-tape';
 export {plotterFileName} from './tape/plotter-file-name';
 export {plotterSvg} from './tape/plotter-svg';

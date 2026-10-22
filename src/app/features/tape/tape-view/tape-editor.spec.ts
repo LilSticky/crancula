@@ -60,7 +60,7 @@ describe('TapeEditor', () => {
     const {editor, tape} = await setup();
 
     expect(editor.tape()).toBe(tape);
-    expect(editor.selection()).toBeUndefined();
+    expect(editor.selection()).toEqual([]);
     expect(editor.canUndo()).toBe(false);
     expect(editor.canRedo()).toBe(false);
   });
@@ -69,10 +69,10 @@ describe('TapeEditor', () => {
     const {editor, library, tape, saves} = await setup();
     const edited = named(tape, 'Edited');
 
-    expect(await editor.apply({tape: edited, selection: {row: 1, start: 3}})).toBe(true);
+    expect(await editor.apply({tape: edited, selection: [{row: 1, start: 3}]})).toBe(true);
 
     expect(editor.tape()).toBe(edited);
-    expect(editor.selection()).toEqual({row: 1, start: 3});
+    expect(editor.selection()).toEqual([{row: 1, start: 3}]);
     expect(editor.canUndo()).toBe(true);
     expect(library.tapeEntityMap()[tape.id]).toBe(edited);
     expect(saves()).toBe(1);
@@ -80,12 +80,12 @@ describe('TapeEditor', () => {
 
   it('undo restores the earlier Tape and its selection, saves once, and enables redo', async () => {
     const {editor, library, tape, saves} = await setup();
-    await editor.apply({tape: named(tape, 'Edited'), selection: {row: 1, start: 3}});
+    await editor.apply({tape: named(tape, 'Edited'), selection: [{row: 1, start: 3}]});
 
     await editor.undo();
 
     expect(editor.tape()).toBe(tape);
-    expect(editor.selection()).toBeUndefined();
+    expect(editor.selection()).toEqual([]);
     expect(library.tapeEntityMap()[tape.id]).toBe(tape);
     expect(editor.canUndo()).toBe(false);
     expect(editor.canRedo()).toBe(true);
@@ -95,13 +95,13 @@ describe('TapeEditor', () => {
   it('redo brings the undone entry back with its selection and saves once', async () => {
     const {editor, library, tape, saves} = await setup();
     const edited = named(tape, 'Edited');
-    await editor.apply({tape: edited, selection: {row: 1, start: 3}});
+    await editor.apply({tape: edited, selection: [{row: 1, start: 3}]});
     await editor.undo();
 
     await editor.redo();
 
     expect(editor.tape()).toBe(edited);
-    expect(editor.selection()).toEqual({row: 1, start: 3});
+    expect(editor.selection()).toEqual([{row: 1, start: 3}]);
     expect(library.tapeEntityMap()[tape.id]).toBe(edited);
     expect(editor.canRedo()).toBe(false);
     expect(saves()).toBe(3);
@@ -109,10 +109,10 @@ describe('TapeEditor', () => {
 
   it('apply after undo clears redo', async () => {
     const {editor, tape} = await setup();
-    await editor.apply({tape: named(tape, 'First'), selection: undefined});
+    await editor.apply({tape: named(tape, 'First'), selection: []});
     await editor.undo();
 
-    await editor.apply({tape: named(tape, 'Second'), selection: undefined});
+    await editor.apply({tape: named(tape, 'Second'), selection: []});
 
     expect(editor.canRedo()).toBe(false);
   });
@@ -129,11 +129,11 @@ describe('TapeEditor', () => {
 
   it('resets the history to the TapeLibrary Tape when that is no longer the present', async () => {
     const {editor, library, tape} = await setup();
-    await editor.apply({tape: named(tape, 'Edited'), selection: undefined});
+    await editor.apply({tape: named(tape, 'Edited'), selection: []});
     const elsewhere = named(tape, 'Changed elsewhere');
     await library.update(elsewhere);
 
-    await editor.apply({tape: named(elsewhere, 'Edited again'), selection: undefined});
+    await editor.apply({tape: named(elsewhere, 'Edited again'), selection: []});
     await editor.undo();
 
     expect(editor.tape()).toBe(elsewhere);
@@ -165,7 +165,7 @@ describe('TapeEditor', () => {
     const edited = named(tape, 'Edited');
     failSaves();
 
-    expect(await editor.apply({tape: edited, selection: undefined})).toBe(false);
+    expect(await editor.apply({tape: edited, selection: []})).toBe(false);
 
     expect(editor.tape()).toBe(edited);
     expect(editor.canUndo()).toBe(true);

@@ -38,6 +38,8 @@ export type SelectedHoleView = Omit<HoleInspection, 'warnings'> & {
             {{ (warning.kind === 'tooShort' ? 'TAPE.HOLE.TOO_SHORT' : 'TAPE.HOLE.GAP_TOO_SMALL') | translate: {mm: warning.mmText, minimum: warning.minimumText} }}
           </p>
         }
+      } @else if (selectionCount() >= 2) {
+        <p data-testid="selection-count">{{ 'TAPE.SELECTION.COUNT' | translate: {count: selectionCount()} }}</p>
       } @else {
         <p>{{ 'TAPE.HOLE.EMPTY' | translate }}</p>
       }
@@ -67,4 +69,6 @@ export type SelectedHoleView = Omit<HoleInspection, 'warnings'> & {
 })
 export class SelectedHoleComponent {
   readonly inspection = input.required<SelectedHoleView | undefined>();
+  /** How many Holes are selected; from two on, the section says so. */
+  readonly selectionCount = input(0);
 }

@@ -213,6 +213,25 @@
       "GAP_END": "To the end of the Tape: {{columns}}, {{mm}} mm",
       "TOO_SHORT": "Too short to cut, see Cutting Problems",
       "GAP_TOO_SMALL": "Gap too small to cut, see Cutting Problems"
+    },
+    "SELECTION": {
+      "COUNT": "{{count}} Holes selected"
+    },
+    "TRANSPOSE": {
+      "BUTTON": "Transpose…",
+      "TITLE": "Transpose Holes",
+      "SCOPE_SELECTED": "Selected Holes ({{count}})",
+      "SCOPE_ALL": "All Holes",
+      "SEMITONES": "Semitones",
+      "MOVED": "Moved",
+      "MOVED_BY_OCTAVES": "Moved by octaves",
+      "MERGED": "Merged",
+      "REMOVED": "Removed",
+      "REMOVED_HOLE": "{{note}} · Column {{column}}",
+      "LEFT_OUT": "Left out (no Pipe on the Organ)",
+      "NOTHING_LEFT": "Nothing is left of the chosen Holes.",
+      "APPLY": "Transpose",
+      "CANCEL": "Cancel"
     }
   },
   "ORGAN": {

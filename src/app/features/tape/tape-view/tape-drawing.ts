@@ -2,6 +2,7 @@ import {noteName, tapeGeometry, type Hole, type Organ, type Tape, type TapeGeome
 import {formatNumber} from '../../shared/format-number';
 import {pixelsPerMillimetre} from './pixels-per-millimetre';
 import {columnLines, columnNumbers, hitSpan, rulerNumbers} from './tape-marks';
+import type {HoleSelection, SelectableHole} from './hole-selection';
 import type {ColumnRange} from './visible-columns';
 import type {TapeSectionView} from './tape-section/tape-section.component';
 
@@ -76,14 +77,20 @@ export function rowLabels(organ: Organ, geometry: TapeGeometry, scale: number) {
   };
 }
 
-/** The Holes to draw for `range`, in px; `selected` is flagged. Rows count from 0 here, from 1 in `selected`. */
-export function holeRects(
-  tape: Tape,
-  geometry: TapeGeometry,
-  scale: number,
-  range: ColumnRange,
-  selected: {readonly row: number; readonly start: number} | undefined,
-) {
+/** One selected Hole or several; `undefined` selects nothing. */
+type Selected = SelectableHole | HoleSelection | undefined;
+
+function selectedList(selected: Selected): HoleSelection {
+  if (selected === undefined) return [];
+  return 'row' in selected ? [selected] : selected;
+}
+
+/**
+ * The Holes to draw for `range`, in px; every selected one is flagged, and only a sole selected Hole gets handles.
+ * Rows count from 0 here, from 1 in `selected`.
+ */
+export function holeRects(tape: Tape, geometry: TapeGeometry, scale: number, range: ColumnRange, selected: Selected) {
+  const selection = selectedList(selected);
   return geometry.slots
     .filter(
       (slot) =>
@@ -91,7 +98,7 @@ export function holeRects(
         (slot.start < range.first && slot.start + slot.width / tape.columnLength > range.first),
     )
     .map((slot) => {
-      const isSelected = slot.row === selected?.row && slot.start === selected?.start;
+      const isSelected = selection.some((hole) => hole.row === slot.row && hole.start === slot.start);
       const x = slot.x * scale;
       const width = slot.width * scale;
       const handleWidth = Math.min(HANDLE_PX, width / 3);
@@ -112,7 +119,7 @@ export function holeRects(
         width,
         height,
         radius: slot.radius * scale,
-        handles: isSelected ? {start: handle(x, {max: centre}), end: handle(x + width - handleWidth, {min: centre})} : undefined,
+        handles: isSelected && selection.length === 1 ? {start: handle(x, {max: centre}), end: handle(x + width - handleWidth, {min: centre})} : undefined,
       };
     });
 }
@@ -143,7 +150,7 @@ export function holeMarks(
   scale: number,
   range: ColumnRange,
   problems: ReadonlySet<string>,
-  selected?: {readonly row: number; readonly start: number},
+  selected?: Selected,
 ) {
   return holeRects(tape, geometry, scale, range, selected)
     .filter((rect) => {

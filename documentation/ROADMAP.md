@@ -25,7 +25,7 @@ Split by the user on 2026-10-19 ([discovery](discovery/edit-a-tape.md)).
 | Slice | Lets the user… | Domain | Adapters | State |
 |-------|----------------|--------|----------|-------|
 | Place holes by hand ([#105](https://github.com/LilSticky/crancula/issues/105)) | add, move, lengthen or shorten and remove Holes, see Cutting Problems as they happen, undo and redo | Tape | Tape view interaction, snapshot persistence | done |
-| Transpose holes ([#106](https://github.com/LilSticky/crancula/issues/106)) | transpose the selected Holes or all of them by semitones | Tape | Tape view | planned |
+| Transpose holes ([#106](https://github.com/LilSticky/crancula/issues/106)) | transpose the selected Holes or all of them by semitones | Tape | Tape view | done |
 | Adjust a tape ([#107](https://github.com/LilSticky/crancula/issues/107)) | change a Tape's Column length | Tape | Tape view | planned (later) |
 
 ## Project infrastructure (not slices)

@@ -3,12 +3,12 @@ import type {Tape} from '@api/index';
 import {TapeLibrary} from '../tape-library.store';
 import * as edits from './edit-history';
 import {type EditHistory, editHistory} from './edit-history';
-import type {SelectableHole} from './hole-selection';
+import type {HoleSelection} from './hole-selection';
 
 /** One step of the edit history: the Tape and the Hole selected in it. */
 export interface TapeEdit {
   readonly tape: Tape;
-  readonly selection: SelectableHole | undefined;
+  readonly selection: HoleSelection;
 }
 
 /** Edits one open Tape with undo and redo; every step is saved through `TapeLibrary.update`. */
@@ -18,7 +18,7 @@ export class TapeEditor {
   private readonly state = signal<EditHistory<TapeEdit> | undefined>(undefined);
 
   readonly tape = computed(() => this.state()?.present.tape);
-  readonly selection = computed(() => this.state()?.present.selection);
+  readonly selection = computed(() => this.state()?.present.selection ?? []);
   readonly canUndo = computed(() => {
     const state = this.state();
     return state !== undefined && edits.canUndo(state);
@@ -29,11 +29,11 @@ export class TapeEditor {
   });
 
   open(tape: Tape): void {
-    this.state.set(editHistory({tape, selection: undefined}));
+    this.state.set(editHistory({tape, selection: []}));
   }
 
-  /** Remembers the selected Hole with the present entry, so that undoing back to it restores the selection. */
-  remember(selection: SelectableHole | undefined): void {
+  /** Remembers the selected Holes with the present entry, so that undoing back to it restores the selection. */
+  remember(selection: HoleSelection): void {
     this.state.update((state) => (state === undefined ? state : {...state, present: {...state.present, selection}}));
   }
 
@@ -66,6 +66,6 @@ export class TapeEditor {
     if (state === undefined) return undefined;
     const stored = this.library.tapeEntityMap()[state.present.tape.id];
     if (stored === undefined || stored === state.present.tape) return state;
-    return editHistory({tape: stored, selection: undefined});
+    return editHistory({tape: stored, selection: []});
   }
 }
