@@ -1,3 +1,4 @@
+import type {EditCommand} from './edit-command';
 import type {Language} from './language';
 import type {SvgSaveRequest, SvgSaveResult} from './svg-save-request';
 import type {OrganLibrarySnapshot} from '../organ/organ-library-snapshot';
@@ -47,5 +48,9 @@ export interface CranculaApi {
   readonly app: {
     /** Tells the main process the language, so it can translate the application menu. */
     setLanguage(language: Language): Promise<SetLanguageResult>;
+  };
+  readonly edit: {
+    /** Calls `listener` for every Edit Command the application menu sends; returns the unsubscribe function. */
+    onCommand(listener: (command: EditCommand) => void): () => void;
   };
 }

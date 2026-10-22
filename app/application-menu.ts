@@ -1,7 +1,8 @@
 import {readFileSync} from 'node:fs';
 import {join} from 'node:path';
-import type {MenuItemConstructorOptions} from 'electron';
-import type {Language} from '../api';
+import type {BaseWindow, BrowserWindow, MenuItemConstructorOptions} from 'electron';
+import type {EditCommand, Language} from '../api';
+import {EDIT_CHANNELS} from './edit-ipc';
 
 const ENGLISH_LABELS = {
   APP: 'Crancula',
@@ -84,6 +85,17 @@ export function loadMenuLabels(language: Language, i18nDirectory: string): MenuL
   };
 }
 
+function isBrowserWindow(window: BaseWindow): window is BrowserWindow {
+  return 'webContents' in window;
+}
+
+/** Sends the Edit Command to the window the menu was clicked in; the renderer decides what it undoes. */
+function sendEditCommand(command: EditCommand): NonNullable<MenuItemConstructorOptions['click']> {
+  return (_item, window) => {
+    if (window && isBrowserWindow(window)) window.webContents.send(EDIT_CHANNELS.command, command);
+  };
+}
+
 /** The application menu with explicit labels, so roles do not fall back to the operating system language. */
 export function menuTemplate(
   language: Language,
@@ -93,6 +105,11 @@ export function menuTemplate(
   const t = loadMenuLabels(language, i18nDirectory);
   const mac = platform === 'darwin';
   const separator: MenuItemConstructorOptions = {type: 'separator'};
+  // Off macOS the keys stay with the renderer (text fields, Tape shortcuts); the accelerator is only shown.
+  const editAccelerators = {
+    undo: {accelerator: 'CmdOrCtrl+Z', registerAccelerator: mac},
+    redo: {accelerator: mac ? 'Shift+CmdOrCtrl+Z' : 'Ctrl+Y', registerAccelerator: mac},
+  } as const;
 
   const application: MenuItemConstructorOptions[] = mac
     ? [
@@ -115,8 +132,8 @@ export function menuTemplate(
     {
       label: t.EDIT,
       submenu: [
-        {role: 'undo', label: t.UNDO},
-        {role: 'redo', label: t.REDO},
+        {id: 'undo', label: t.UNDO, ...editAccelerators.undo, click: sendEditCommand('undo')},
+        {id: 'redo', label: t.REDO, ...editAccelerators.redo, click: sendEditCommand('redo')},
         separator,
         {role: 'cut', label: t.CUT},
         {role: 'copy', label: t.COPY},
