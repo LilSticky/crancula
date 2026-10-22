@@ -42,7 +42,6 @@ Split by the user on 2026-10-19 ([discovery](discovery/edit-a-tape.md)).
 ## Later (unordered)
 
 - **Crank a tape**: preview playback at an adjustable crank speed.
-- **Air Demand**: warn when too many Pipes play at once (domain discovery not finished).
 - More Song Sources: MusicXML, PDF, printed Scores.
 - More Plotter formats: DXF, HPGL; splitting the Tape into pieces for other devices.
 - Export a Song as audio or Scores.
