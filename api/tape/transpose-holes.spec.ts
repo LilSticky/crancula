@@ -5,7 +5,7 @@ import {partIndex, songId} from '../song/song';
 import type {HoleRef} from './hole-edits';
 import {tapeOf} from './tape-fixture';
 import {column, columnCount, tapeId, transposition, validTape, type Hole, type Tape, type Transposition} from './tape';
-import {transposeHoles, transposeRange, type HolesToTranspose} from './transpose-holes';
+import {transposeHoles, transposeRange, transpositionWithin, type HolesToTranspose} from './transpose-holes';
 
 function defined<T>(value: T | undefined, what: string): T {
   if (value === undefined) throw new Error(`invalid test value: ${what}`);
@@ -299,5 +299,21 @@ describe('transposeRange', () => {
 
   it('is at most plus and minus 127', () => {
     expect(transposeRange(anOrgan([0, 127]))).toEqual({lowest: -127, highest: 127});
+  });
+});
+
+describe('transpositionWithin', () => {
+  const organ = anOrgan([60, 64, 76]);
+
+  it('gives the amount when it lies inside the range of the Organ, ends included', () => {
+    expect(transpositionWithin(organ, -16)).toBe(-16);
+    expect(transpositionWithin(organ, 0)).toBe(0);
+    expect(transpositionWithin(organ, 16)).toBe(16);
+  });
+
+  it('gives nothing outside the range or for a fraction', () => {
+    expect(transpositionWithin(organ, 17)).toBeUndefined();
+    expect(transpositionWithin(organ, -17)).toBeUndefined();
+    expect(transpositionWithin(organ, 1.5)).toBeUndefined();
   });
 });

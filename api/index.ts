@@ -105,6 +105,7 @@ export {
 export {
   transposeHoles,
   transposeRange,
+  transpositionWithin,
   type HoleFate,
   type HolesToTranspose,
   type Merge,

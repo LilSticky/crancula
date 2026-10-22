@@ -136,3 +136,9 @@ export function transposeRange(organ: Organ): {readonly lowest: Transposition; r
   const span = notes.length === 0 ? 0 : Math.max(...notes) - Math.min(...notes);
   return {lowest: reach(0 - span), highest: reach(span)};
 }
+
+/** @returns the amount as a Transposition, or `undefined` if it is not a whole number inside `transposeRange(organ)` */
+export function transpositionWithin(organ: Organ, value: number): Transposition | undefined {
+  const {lowest, highest} = transposeRange(organ);
+  return value >= lowest && value <= highest ? transposition(value) : undefined;
+}

@@ -9,7 +9,7 @@ import {
   noteName,
   transposeHoles,
   transposeRange,
-  transposition,
+  transpositionWithin,
   type HoleRef,
   type Organ,
   type Tape,
@@ -109,8 +109,7 @@ export class TransposeDialogComponent {
   /** What transposing would do; undefined when the field holds no usable, non-zero amount. */
   protected readonly transposed = computed<Transposed | undefined>(() => {
     const amount = this.semitones();
-    if (amount === undefined || amount === 0 || amount < this.range.lowest || amount > this.range.highest) return undefined;
-    const semitones = transposition(amount);
+    const semitones = amount === undefined || amount === 0 ? undefined : transpositionWithin(this.data.organ, amount);
     if (semitones === undefined) return undefined;
     const which = this.scope() === 'selected' ? ({kind: 'these', holes: this.data.selected} as const) : ({kind: 'all'} as const);
     return transposeHoles(this.data.tape, this.data.organ, which, semitones);
