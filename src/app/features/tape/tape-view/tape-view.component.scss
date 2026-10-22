@@ -71,6 +71,7 @@ cranc-page-head button[mat-icon-button] {
 }
 .zoom,
 [data-testid='export'],
+[data-testid='transpose'],
 [data-testid='side-panel-toggle'] {
   --mat-button-toggle-height: 40px;
   --mat-button-outlined-container-height: 40px;
