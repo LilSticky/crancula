@@ -30,9 +30,9 @@ restart and the real menu.
 
 ## Phase 2: Foundational (domain)
 
-- [ ] T002 Red: in `api/tape/tape.spec.ts` (or the existing `validTape` spec), `validTape` refuses `columnLength` 0, -1, NaN and Infinity with `{code: 'column-length-not-positive'}`.
+- [x] T002 Red: in `api/tape/tape.spec.ts` (or the existing `validTape` spec), `validTape` refuses `columnLength` 0, -1, NaN and Infinity with `{code: 'column-length-not-positive'}`.
 - [x] T003 Green: add the rule and the code to `TapeRuleViolationCode` in `api/tape/tape.ts`; every existing test green.
-- [ ] T004 Red: `api/tape/change-column-length.spec.ts`, every row of contracts/domain-api.md.
+- [x] T004 Red: `api/tape/change-column-length.spec.ts`, every row of contracts/domain-api.md.
 - [x] T005 Green: `changeColumnLength` in `api/tape/change-column-length.ts`, exported from `api/index.ts`, building the Tape only through `validTape`.
 
 **Checkpoint**: domain command exported; nothing visible changed.
