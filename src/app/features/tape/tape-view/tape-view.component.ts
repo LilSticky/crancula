@@ -16,7 +16,8 @@ import {BreakpointObserver} from '@angular/cdk/layout';
 import {toSignal} from '@angular/core/rxjs-interop';
 import {ActivatedRoute, Router} from '@angular/router';
 import {map} from 'rxjs';
-import {column, cuttingProblems, holesWithCuttingProblems, noteName, type HoleRef, type ImportSummary, type Tape, tapeGeometry, type Organ, type Transposed} from '@api/index';
+import {column, cuttingProblems, holesWithCuttingProblems, noteName, type HoleRef, type ImportSummary, type Tape, tapeGeometry, type Transposed} from '@api/index';
+import {canTranspose, holeRefsOf, selectionOfRefs} from './transpose-selection';
 import {MatDialog} from '@angular/material/dialog';
 import {TransposeDialogComponent, type TransposeDialogData} from './transpose-dialog/transpose-dialog.component';
 import {MatButton, MatIconButton} from '@angular/material/button';
@@ -41,7 +42,7 @@ import {
   allOf,
   extended,
   frameBetween,
-  framed as holesIn,
+  framed,
   nextHole,
   soleOf,
   toggled,
@@ -205,12 +206,12 @@ export class TapeViewComponent {
     return preview?.kind === 'applied' ? preview.tape : this.tape();
   });
 
-  private readonly shownSelectionAll = computed((): HoleSelection => {
+  protected readonly shownSelection = computed((): HoleSelection => {
     const preview = this.holeDrag.preview();
     return preview?.kind === 'applied' ? preview.selection : this.selection();
   });
 
-  private readonly shownSelection = computed(() => soleOf(this.shownSelectionAll()));
+  private readonly shownSoleHole = computed(() => soleOf(this.shownSelection()));
 
   /** The Holes the selection works on: row (from 1), start and length in Columns. */
   private readonly selectable = computed((): readonly SpanningHole[] => {
@@ -241,7 +242,7 @@ export class TapeViewComponent {
 
   /** The selected Hole as the form knows it: by Pipe and Column. */
   protected readonly selectedHoleRef = computed((): HoleRef | undefined => {
-    const selected = this.shownSelection();
+    const selected = this.shownSoleHole();
     const pipe = selected === undefined ? undefined : this.organ()?.pipes[selected.row - 1]?.note;
     const start = selected === undefined ? undefined : column(selected.start);
     return selected === undefined || pipe === undefined || start === undefined ? undefined : {pipe, start};
@@ -256,7 +257,7 @@ export class TapeViewComponent {
 
   /** The Hole the Selected Hole section tells about. */
   protected readonly inspection = computed(() => {
-    const selected = this.shownSelection();
+    const selected = this.shownSoleHole();
     const tape = this.shownTape();
     const organ = this.organ();
     if (selected === undefined || tape === undefined || organ === undefined) return undefined;
@@ -296,7 +297,7 @@ export class TapeViewComponent {
       tape,
       section: sectionView(tape, organ, geometry, language, this.partNames(tape)),
       ...rowLabels(organ, geometry, scale),
-      holes: holeRects(tape, geometry, scale, range, this.shownSelectionAll()),
+      holes: holeRects(tape, geometry, scale, range, this.shownSelection()),
       ghost: attempted === undefined ? undefined : ghostRect(tape, organ, attempted, scale),
       holeMarks: holeMarks(
         tape,
@@ -305,7 +306,7 @@ export class TapeViewComponent {
         scale,
         range,
         new Set(this.holesWithProblems().map(({hole}) => `${hole.pipe}:${hole.start}`)),
-        this.shownSelectionAll(),
+        this.shownSelection(),
       ),
       ...columnMarks(tape, geometry, scale, range),
       ...outline(geometry, scale),
@@ -319,11 +320,10 @@ export class TapeViewComponent {
     if (tape !== undefined && organ !== undefined) void this.plotterExport.export(tape, organ);
   }
 
-  /** Transposing needs a Hole whose Pipe the Organ has. */
   protected readonly canTranspose = computed(() => {
     const tape = this.tape();
     const organ = this.organ();
-    return tape !== undefined && organ !== undefined && tape.holes.some((hole) => organ.pipes.some((pipe) => pipe.note === hole.pipe));
+    return tape !== undefined && organ !== undefined && canTranspose(tape, organ);
   });
 
   /** Asks in a dialog how to transpose, then saves the result as one edit and selects the moved Holes. */
@@ -331,23 +331,11 @@ export class TapeViewComponent {
     const tape = this.tape();
     const organ = this.organ();
     if (tape === undefined || organ === undefined) return;
-    const selected = this.selection().flatMap(({row, start}) => {
-      const pipe = organ.pipes[row - 1]?.note;
-      const startColumn = column(start);
-      return pipe === undefined || startColumn === undefined ? [] : [{pipe, start: startColumn}];
-    });
+    const selected = holeRefsOf(this.selection(), organ);
     const dialog = this.dialog.open<TransposeDialogComponent, TransposeDialogData, Transposed>(TransposeDialogComponent, {data: {tape, organ, selected}});
     dialog.beforeClosed().subscribe((result) => {
-      if (result !== undefined) this.commitTransposed(result, organ);
+      if (result !== undefined) this.commit({kind: 'applied', tape: result.tape, selection: selectionOfRefs(result.outcome.resulting, organ)});
     });
-  }
-
-  private commitTransposed(result: Transposed, organ: Organ): void {
-    const selection = result.outcome.resulting.flatMap(({pipe, start}) => {
-      const row = organ.pipes.findIndex((candidate) => candidate.note === pipe) + 1;
-      return row > 0 ? [{row, start}] : [];
-    });
-    this.commit({kind: 'applied', tape: result.tape, selection});
   }
 
   /** Whether the event carries the key that adds to a selection: Ctrl, or Cmd on macOS. */
@@ -410,11 +398,13 @@ export class TapeViewComponent {
       if (direction !== undefined) {
         event.preventDefault();
         this.setSelection(extended(this.selection(), this.selectable(), direction));
-      } else if (event.key.toLowerCase() === 'a') {
+        return;
+      }
+      if (event.key.toLowerCase() === 'a') {
         event.preventDefault();
         this.setSelection(allOf(this.selectable()));
+        return;
       }
-      return;
     }
     const intent = editIntent(event);
     if (intent !== undefined) {
@@ -456,7 +446,7 @@ export class TapeViewComponent {
   /** Starts a selection frame at an empty spot of the Tape; it only shows once the press travels. */
   protected onPointerDown(event: PointerEvent, svg: Element): void {
     const target = event.target;
-    if (event.button !== 0 || (target instanceof Element && target.closest('[data-testid="hole"], [data-testid="hole-handle"]') !== null)) return;
+    if (event.button !== 0 || (target instanceof Element && target.closest('.hole-part') !== null)) return;
     const geometry = this.geometry();
     if (geometry === undefined) return;
     const box = svg.getBoundingClientRect();
@@ -498,16 +488,16 @@ export class TapeViewComponent {
   private finishFrame(event: PointerEvent, svg: Element): void {
     const framing = this.framing;
     const geometry = this.geometry();
-    const framed = this.frameRect() !== undefined;
+    const travelled = this.frameRect() !== undefined;
     this.cancelFrame();
     if (framing === undefined || geometry === undefined) return;
-    if (!framed) {
+    if (!travelled) {
       if (!framing.additive) this.selection.set([]);
       return;
     }
     const box = svg.getBoundingClientRect();
     const end = gridAt(event.clientX - box.left, Math.max(0, event.clientY - box.top - RULER_HEIGHT), this.scale(), geometry);
-    const inside = holesIn(this.selectable(), frameBetween(framing.cell, end));
+    const inside = framed(this.selectable(), frameBetween(framing.cell, end));
     this.setSelection(framing.additive ? united(this.selection(), inside) : inside);
   }
 
@@ -631,7 +621,7 @@ export class TapeViewComponent {
   /** A double-click on an empty spot of a row adds a Hole of that row's Pipe at that Column. */
   protected onDoubleClick(event: MouseEvent, svg: Element): void {
     const target = event.target;
-    if (target instanceof Element && target.closest('[data-testid="hole"], [data-testid="hole-handle"]') !== null) return;
+    if (target instanceof Element && target.closest('.hole-part') !== null) return;
     const tape = this.tape();
     const organ = this.organ();
     const geometry = this.geometry();

@@ -3115,6 +3115,16 @@ describe('TapeViewComponent', () => {
       expect(selected(view())).toEqual([]);
     });
 
+    it('shows "2 Holes selected" in the Selected Hole section for two selected Holes', async () => {
+      const {view, click} = await setup({holes, platform: 'win32'});
+      await click(24, 10);
+
+      await click(24, 30, {ctrlKey: true});
+
+      const count = view()?.querySelector('[data-testid="selected-hole"] [data-testid="selection-count"]');
+      expect(count?.textContent?.trim()).toBe('2 Holes selected');
+    });
+
     it('offers no Hole handles and changes nothing with the edit keys while several Holes are selected', async () => {
       const {tape, view, click, press, update} = await setup({holes, platform: 'win32'});
       await click(24, 10);
