@@ -273,6 +273,9 @@ test.describe('Selecting Holes and transposing the selection', () => {
       await tabTo(window, window.getByTestId('transpose-semitones'));
       await window.keyboard.press('ControlOrMeta+A');
       await window.keyboard.type('-12');
+      await expect(window.getByTestId('transpose-semitones')).toHaveValue('-12');
+      await expect(window.getByTestId('transpose-outcome')).toBeVisible();
+      await expect(window.getByTestId('transpose-apply')).toBeEnabled();
       await window.keyboard.press('Enter');
       await expect(window.getByTestId('transpose-dialog')).toHaveCount(0);
 
@@ -297,6 +300,8 @@ test.describe('Selecting Holes and transposing the selection', () => {
       await tabTo(window, window.getByTestId('transpose-semitones'));
       await window.keyboard.press('ControlOrMeta+A');
       await window.keyboard.type('-12');
+      await expect(window.getByTestId('transpose-semitones')).toHaveValue('-12');
+      await expect(window.getByTestId('transpose-outcome')).toBeVisible();
       await window.keyboard.press('Escape');
       await expect(window.getByTestId('transpose-dialog')).toHaveCount(0);
 
