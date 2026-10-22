@@ -40,3 +40,55 @@ export function nextHole<T extends SelectableHole>(holes: readonly T[], current:
 function byRowThenStart(a: SelectableHole, b: SelectableHole): number {
   return a.row - b.row || a.start - b.start;
 }
+
+/** A Hole that also knows its length in Columns. */
+export interface SpanningHole extends SelectableHole {
+  readonly length: number;
+}
+
+/** A rectangle dragged over the Tape: rows `firstRow` to `lastRow` (both inclusive), Columns from `fromColumn` up to, not including, `toColumn`. */
+export interface SelectionFrame {
+  readonly firstRow: number;
+  readonly lastRow: number;
+  readonly fromColumn: number;
+  readonly toColumn: number;
+}
+
+/** The Hole the selection ends on: the one added last, or `undefined` when nothing is selected. */
+export function activeOf(selection: HoleSelection): SelectableHole | undefined {
+  return selection[selection.length - 1];
+}
+
+/** The selection with the Hole added as the active one, or taken out when it is already selected (matched by row and start). */
+export function toggled(selection: HoleSelection, hole: SelectableHole): HoleSelection {
+  return isIn(selection, hole) ? selection.filter((selected) => !sameHole(selected, hole)) : [...selection, hole];
+}
+
+/** The Holes on rows inside the frame that lie at least partly inside its Columns. */
+export function framed<T extends SpanningHole>(holes: readonly T[], frame: SelectionFrame): readonly T[] {
+  return holes.filter(
+    ({row, start, length}) =>
+      row >= frame.firstRow && row <= frame.lastRow && start < frame.toColumn && start + length > frame.fromColumn,
+  );
+}
+
+/** The selection plus the next Hole in the direction as the active one; unchanged when there is none or it is already selected. */
+export function extended<T extends SelectableHole>(selection: HoleSelection, holes: readonly T[], direction: Direction): HoleSelection {
+  const active = activeOf(selection);
+  const current = active === undefined ? undefined : holes.find((hole) => sameHole(hole, active));
+  const next = nextHole(holes, current, direction);
+  return next === undefined || isIn(selection, next) ? selection : [...selection, next];
+}
+
+/** Every Hole of the Tape. */
+export function allOf<T extends SelectableHole>(holes: readonly T[]): readonly T[] {
+  return [...holes];
+}
+
+function sameHole(a: SelectableHole, b: SelectableHole): boolean {
+  return a.row === b.row && a.start === b.start;
+}
+
+function isIn(selection: HoleSelection, hole: SelectableHole): boolean {
+  return selection.some((selected) => sameHole(selected, hole));
+}
