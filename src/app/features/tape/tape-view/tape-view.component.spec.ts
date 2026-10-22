@@ -2967,7 +2967,8 @@ describe('TapeViewComponent', () => {
       return input;
     };
 
-    it('restores the Tape and the selection before a transposition with merges and removals in one undo, and applies it again with redo', async () => {
+    /** Transposes the whole Tape by one semitone, selecting the C4 Hole first. */
+    const transposeByOne = async () => {
       const {tape, open, view, settle} = await render({holes, pipeNotes});
       await open(`/tapes/${tape.id}`);
       const flush = async () => {
@@ -2994,7 +2995,11 @@ describe('TapeViewComponent', () => {
       const transposed = storedHoles(tape.id);
       expect(transposed).toEqual(['67:30+2', '73:10+5']);
       expect(selected(view())).toEqual([`${rowOf(67)}:30`, `${rowOf(73)}:10`].sort());
+      return {tape, view, settle, before, transposed};
+    };
 
+    it('restores the Tape and the selection before a transposition with merges and removals in one undo', async () => {
+      const {tape, view, settle, before} = await transposeByOne();
       const update = vi.spyOn(TestBed.inject(TapeLibrary), 'update');
       button(view(), 'undo')?.click();
       await settle();
@@ -3003,13 +3008,19 @@ describe('TapeViewComponent', () => {
       expect(selected(view())).toEqual([`${rowOf(60)}:10`]);
       expect(update).toHaveBeenCalledTimes(1);
       expect(button(view(), 'undo')?.disabled).toBe(true);
+    });
 
+    it('applies the transposition again with redo', async () => {
+      const {tape, view, settle, transposed} = await transposeByOne();
+      button(view(), 'undo')?.click();
+      await settle();
+      const update = vi.spyOn(TestBed.inject(TapeLibrary), 'update');
       button(view(), 'redo')?.click();
       await settle();
 
       expect(storedHoles(tape.id)).toEqual(transposed);
       expect(selected(view())).toEqual([`${rowOf(67)}:30`, `${rowOf(73)}:10`].sort());
-      expect(update).toHaveBeenCalledTimes(2);
+      expect(update).toHaveBeenCalledTimes(1);
       expect(button(view(), 'redo')?.disabled).toBe(true);
     });
   });
