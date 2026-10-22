@@ -107,6 +107,14 @@ async function tabTo(window: Page, target: Locator): Promise<void> {
   await expect(target).toBeFocused();
 }
 
+/**
+ * Waits until focus has entered the Transpose dialog. MatDialog moves focus into the dialog only after its
+ * open animation; tabbing before that can have focus pulled back out of the semitones field (#133).
+ */
+async function focusEnteredDialog(window: Page): Promise<void> {
+  await expect(window.getByRole('dialog').locator(':focus')).toHaveCount(1);
+}
+
 /** Transposes all Holes through the dialog by `semitones` and applies it. */
 async function transposeAllBy(window: Page, semitones: string): Promise<void> {
   await window.getByTestId('transpose').click();
@@ -270,6 +278,7 @@ test.describe('Selecting Holes and transposing the selection', () => {
       await tabTo(window, window.getByTestId('transpose'));
       await window.keyboard.press('Enter');
       await expect(window.getByTestId('transpose-dialog')).toBeVisible();
+      await focusEnteredDialog(window);
       await tabTo(window, window.getByTestId('transpose-semitones'));
       await window.keyboard.press('ControlOrMeta+A');
       await window.keyboard.type('-12');
@@ -297,6 +306,7 @@ test.describe('Selecting Holes and transposing the selection', () => {
       await selectTwoWithKeyboard(window);
       await tabTo(window, window.getByTestId('transpose'));
       await window.keyboard.press('Enter');
+      await focusEnteredDialog(window);
       await tabTo(window, window.getByTestId('transpose-semitones'));
       await window.keyboard.press('ControlOrMeta+A');
       await window.keyboard.type('-12');
