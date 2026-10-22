@@ -2,7 +2,7 @@
 name: angular-reviewer
 description: Reviews changed Angular code in src/ against Crancula's Angular conventions — standalone, OnPush, signals and signal forms, strict typing, Angular Material with minimal SCSS, en/de translation parity, no domain logic in components. Read-only; reports findings. Use after an implementer step or before merging a slice.
 tools: Read, Grep, Glob, Bash
-model: sonnet
+model: opus
 effort: medium
 ---
 

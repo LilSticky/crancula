@@ -12,7 +12,7 @@ Custom agents, skills and setup still to build for the spec-, test- and domain-d
 - [x] `angular-reviewer` - signals, signal forms, standalone/OnPush/zoneless, strict typing, Material-only styling, en/de translation parity
 - [x] `electron-reviewer` - `app/main.mjs`, preload and IPC: context isolation, channel allow-list, payload validation against `@api` types, CSP
 - [x] `spec-auditor` - after `/speckit-implement`, compares code and tests against `spec.md` acceptance criteria and reports gaps
-- [x] `implementer` - TDD green and refactor phase for one task (sonnet)
+- [x] `implementer` - TDD green and refactor phase for one task (haiku)
 - [x] `housekeeper` - STATUS/ROADMAP upkeep, GitHub Issues and board, i18n parity (haiku)
 - [x] `ux-designer` - one design variant per run (guide, `mat.theme`, HTML mockup, self-review); preloads `frontend-design` and `ux-review`; run several in parallel (opus, [#12](https://github.com/LilSticky/crancula/issues/12))
 
