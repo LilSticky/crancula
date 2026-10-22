@@ -16,8 +16,15 @@ about 2.5 s). Not proven from the CI trace (an Electron trace has no app log); r
 
 **Done:** flaky Transpose e2e on Windows ([#133](https://github.com/LilSticky/crancula/issues/133), PR #134): keyboard tests wait for focus to enter the dialog before tabbing.
 
-**Next step:** [#103](https://github.com/LilSticky/crancula/issues/103) Edit a tape (medium, XL): see what is left
-after #105 and #106, and split it before taking the next part.
+**In progress:** [Adjust a tape](../specs/006-adjust-a-tape/spec.md) ([#107](https://github.com/LilSticky/crancula/issues/107),
+the last part of Edit a tape [#103](https://github.com/LilSticky/crancula/issues/103), branch `006-adjust-a-tape`,
+worktree `.claude/worktrees/006-adjust-a-tape`, pushed; no pull request yet). US1 (MVP) done, T001–T010: the Column
+length is a field in the Tape section; Apply or Enter changes the Tape (`changeColumnLength`), and it survives a restart
+(`e2e/tape-column-length.spec.ts`). Fixed on the way: a click on Apply put the old value back (the `#applyButton`
+reference was the MatButton, not its element). Unit tests, lint and 114 e2e green locally.
+
+**Next step:** #107 US2, T011 in [tasks](../specs/006-adjust-a-tape/tasks.md): the Cutting Problems hint (now/then)
+before applying a new Column length.
 
 **Done:** menu Undo and Redo act on the Tape ([#122](https://github.com/LilSticky/crancula/issues/122), PR #135, 2026-10-22, branch
 `122-menu-undo-redo`). The menu sends an Edit Command over `edit:command`; text fields keep their own undo, the
