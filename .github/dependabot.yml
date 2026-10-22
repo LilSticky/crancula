@@ -33,6 +33,9 @@ updates:
       # Hold until the Electron Node runtime moves beyond 24.
       - dependency-name: "@types/node"
         update-types: ["version-update:semver-major"]
+      # Hold until Angular's peer range allows TypeScript 7 (#136).
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: npm
     directory: /app
     schedule:
