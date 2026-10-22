@@ -6,7 +6,7 @@ Issues: [GitHub](https://github.com/LilSticky/crancula/issues)
 
 ## Current slice
 
-**In review:** flaky Transpose e2e on Windows ([#133](https://github.com/LilSticky/crancula/issues/133)): keyboard tests wait for focus to enter the dialog before tabbing.
+**Done:** flaky Transpose e2e on Windows ([#133](https://github.com/LilSticky/crancula/issues/133), PR #134): keyboard tests wait for focus to enter the dialog before tabbing.
 
 **Next step:** [#122](https://github.com/LilSticky/crancula/issues/122) (low): route the application menu's
 Edit → Undo/Redo to the Tape. Follow-up from #106: the T031 `ux-review` of the Tape view with the Transpose dialog.
