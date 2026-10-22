@@ -118,7 +118,7 @@ export class TapeSectionComponent {
   readonly columnLengthChange = output<Tape>();
 
   protected readonly expanded = signal(true);
-  private readonly applyButton = viewChild<ElementRef<HTMLButtonElement>>('applyButton');
+  private readonly applyButton = viewChild<string, ElementRef<HTMLButtonElement>>('applyButton', {read: ElementRef});
 
   /** The Column length as typed; starts with, and goes back to, the Column length of the Tape. */
   private readonly draft = linkedSignal<number | null>(() => this.tape().columnLength);

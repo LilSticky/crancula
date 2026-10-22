@@ -77,8 +77,9 @@ async function render(options: {readonly view?: TapeSectionView; readonly column
     fixture.detectChanges();
     await fixture.whenStable();
   };
-  const blur = async (): Promise<void> => {
-    field().dispatchEvent(new Event('blur'));
+  /** Moves the focus out of the field, to `next` if given. */
+  const blur = async (next?: HTMLElement): Promise<void> => {
+    field().dispatchEvent(new FocusEvent('blur', {relatedTarget: next ?? null}));
     fixture.detectChanges();
     await fixture.whenStable();
   };
@@ -179,6 +180,17 @@ describe('TapeSectionComponent', () => {
       await press('Escape');
 
       expect(field().value).toBe('2.5');
+      expect(emitted).toHaveLength(0);
+    });
+
+    it('keeps the typed Column length when the focus moves from the field to the Apply button', async () => {
+      const {field, apply, type, blur, emitted} = await render({columnLength: 2.5});
+
+      await type('7');
+      await blur(apply());
+
+      expect(field().value).toBe('7');
+      expect(apply().disabled).toBe(false);
       expect(emitted).toHaveLength(0);
     });
 
