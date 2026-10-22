@@ -53,7 +53,7 @@ type Scope = 'selected' | 'all';
           [value]="semitones() ?? ''"
           (input)="typed($event)"
           (blur)="clamp()"
-          (keydown.enter)="apply()"
+          (keydown.enter)="applyOnEnter($event)"
         />
       </mat-form-field>
 
@@ -136,6 +136,12 @@ export class TransposeDialogComponent {
   protected clamp(): void {
     const amount = this.semitones() ?? 0;
     this.semitones.set(Math.min(this.range.highest, Math.max(this.range.lowest, amount)));
+  }
+
+  /** Enter applies; its default is stopped so that it cannot click the Transpose button once focus returns there. */
+  protected applyOnEnter(event: Event): void {
+    event.preventDefault();
+    this.apply();
   }
 
   protected apply(): void {

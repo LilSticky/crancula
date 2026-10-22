@@ -186,6 +186,18 @@ describe('TransposeDialogComponent', () => {
       expect(close).toHaveBeenCalledWith(transposeHoles(tape, ORGAN, {kind: 'these', holes: selected}, semitones(2)));
     });
 
+    it('prevents the default of the Enter key that applies, so focus returning to the Transpose button cannot click it', async () => {
+      const tape = tapeWith([hole(60, 3, 4), hole(62, 5, 8)]);
+      const {close, nativeInput, setSemitones} = await render({tape, selected: [ref(60, 3)]});
+
+      await setSemitones(2);
+      const enter = new KeyboardEvent('keydown', {key: 'Enter', cancelable: true, bubbles: true});
+      nativeInput('transpose-semitones').dispatchEvent(enter);
+
+      expect(enter.defaultPrevented).toBe(true);
+      expect(close).toHaveBeenCalledWith(transposeHoles(tape, ORGAN, {kind: 'these', holes: [ref(60, 3)]}, semitones(2)));
+    });
+
     it('closes with the Transposed of all Holes when that scope is chosen', async () => {
       const tape = tapeWith([hole(60, 3, 4), hole(62, 5, 8)]);
       const {close, button, setSemitones, click} = await render({tape, selected: [ref(60, 3)]});
