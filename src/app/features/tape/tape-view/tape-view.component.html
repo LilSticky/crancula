@@ -46,7 +46,7 @@
       }
     </ul>
     <div class="scroll" #scroll data-testid="tape-scroll" (scroll)="onScroll(scroll)">
-      <svg #tapeSvg role="application" [attr.aria-label]="'TAPE.VIEW.DRAWING' | translate: drawing.drawingParams" [attr.width]="drawing.width" [attr.height]="drawing.totalHeight" tabindex="0" [attr.aria-describedby]="inspection() ? 'hole-keys-help' : null" (keydown)="onKeydown($event)" (dblclick)="onDoubleClick($event, tapeSvg)" [class.grabbing]="dragging()" (pointermove)="onPointerMove($event, tapeSvg)" (pointerup)="onPointerUp($event, tapeSvg)" (pointercancel)="onPointerCancel()" (pointerleave)="onPointerLeave()">
+      <svg #tapeSvg role="application" [attr.aria-label]="'TAPE.VIEW.DRAWING' | translate: drawing.drawingParams" [attr.width]="drawing.width" [attr.height]="drawing.totalHeight" tabindex="0" [attr.aria-describedby]="inspection() ? 'hole-keys-help' : null" (keydown)="onKeydown($event)" (pointerdown)="onPointerDown($event, tapeSvg)" (dblclick)="onDoubleClick($event, tapeSvg)" [class.grabbing]="dragging()" (pointermove)="onPointerMove($event, tapeSvg)" (pointerup)="onPointerUp($event, tapeSvg)" (pointercancel)="onPointerCancel()" (pointerleave)="onPointerLeave()">
         <defs>
           <pattern id="ruler-ticks" patternUnits="userSpaceOnUse" [attr.x]="drawing.leadIn" [attr.width]="5 * scale()" height="8">
             @for (tick of rulerTicks; track tick) {
@@ -78,7 +78,7 @@
               [class.selected]="hole.selected"
               [attr.aria-label]="hole.selected && inspection() ? (('TAPE.HOLE.ROW' | translate: {row: inspection()?.rowText, note: inspection()?.noteName}) + '. ' + ('TAPE.HOLE.COLUMNS_RANGE' | translate: {from: inspection()?.fromText, to: inspection()?.toText})) : null"
               data-testid="hole"
-              (click)="select(hole)"
+              (click)="select(hole, $event)"
               (pointerdown)="onHolePointerDown($event, hole, tapeSvg)"
               [attr.data-row]="hole.row"
               [attr.data-start]="hole.start"
@@ -100,6 +100,9 @@
           @for (mark of drawing.holeMarks; track mark.row + ':' + mark.start) {
             <rect class="cutting-problem" data-testid="hole-mark" aria-hidden="true" [attr.x]="mark.x" [attr.y]="mark.y" [attr.width]="mark.width" [attr.height]="mark.height" [attr.rx]="mark.radius" [attr.ry]="mark.radius" />
             <text class="cutting-problem-glyph" aria-hidden="true" [attr.x]="mark.glyph.x" [attr.y]="mark.glyph.y" [attr.font-size]="mark.glyph.size">!</text>
+          }
+          @if (frameRect(); as frame) {
+            <rect class="selection-frame" data-testid="selection-frame" aria-hidden="true" [attr.x]="frame.x" [attr.y]="frame.y" [attr.width]="frame.width" [attr.height]="frame.height" />
           }
           @for (number of drawing.numbers; track number.column) {
             <text class="column-number" data-testid="column-number" aria-hidden="true" [attr.x]="number.x" [attr.y]="drawing.numbersY">{{ number.number }}</text>

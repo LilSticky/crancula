@@ -64,6 +64,22 @@ export function toggled(selection: HoleSelection, hole: SelectableHole): HoleSel
   return isIn(selection, hole) ? selection.filter((selected) => !sameHole(selected, hole)) : [...selection, hole];
 }
 
+/** A Column (from 0) and a row (from 1) of the Tape. */
+export interface GridCell {
+  readonly column: number;
+  readonly row: number;
+}
+
+/** The frame that spans both cells, each included. */
+export function frameBetween(a: GridCell, b: GridCell): SelectionFrame {
+  return {
+    firstRow: Math.min(a.row, b.row),
+    lastRow: Math.max(a.row, b.row),
+    fromColumn: Math.min(a.column, b.column),
+    toColumn: Math.max(a.column, b.column) + 1,
+  };
+}
+
 /** The Holes on rows inside the frame that lie at least partly inside its Columns. */
 export function framed<T extends SpanningHole>(holes: readonly T[], frame: SelectionFrame): readonly T[] {
   return holes.filter(
@@ -78,6 +94,11 @@ export function extended<T extends SelectableHole>(selection: HoleSelection, hol
   const current = active === undefined ? undefined : holes.find((hole) => sameHole(hole, active));
   const next = nextHole(holes, current, direction);
   return next === undefined || isIn(selection, next) ? selection : [...selection, next];
+}
+
+/** The selection plus those of the Holes that are not selected yet. */
+export function united(selection: HoleSelection, holes: readonly SelectableHole[]): HoleSelection {
+  return [...selection, ...holes.filter((hole) => !isIn(selection, hole))];
 }
 
 /** Every Hole of the Tape. */

@@ -115,6 +115,13 @@ cranc-page-head button[mat-icon-button] {
   dominant-baseline: central;
   pointer-events: none;
 }
+.selection-frame {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1;
+  stroke-dasharray: 4 3;
+  pointer-events: none;
+}
 .hole-ghost.refused {
   fill: none;
   stroke: var(--cr-problem);

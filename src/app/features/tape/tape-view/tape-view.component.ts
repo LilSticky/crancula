@@ -34,10 +34,24 @@ import {TapeLibrary} from '../tape-library.store';
 import {editIntent, historyIntent, type Platform} from './edit-keys';
 import {PLATFORM} from './platform.token';
 import {gridAt} from './grid-at';
-import {type HolePart} from './hole-drag';
+import {isDrag, type HolePart} from './hole-drag';
 import {HoleDragSession} from './hole-drag-session';
 import {addEdit, keyEdit, type EditOutcome} from './hole-edit-commands';
-import {nextHole, soleOf, type Direction, type HoleSelection, type SelectableHole} from './hole-selection';
+import {
+  allOf,
+  extended,
+  frameBetween,
+  framed as holesIn,
+  nextHole,
+  soleOf,
+  toggled,
+  united,
+  type Direction,
+  type GridCell,
+  type HoleSelection,
+  type SelectableHole,
+  type SpanningHole,
+} from './hole-selection';
 import {inspectHole} from './inspect-hole';
 import {AddHoleComponent} from './add-hole/add-hole.component';
 import {CuttingProblemsComponent} from './cutting-problems/cutting-problems.component';
@@ -92,6 +106,11 @@ const EDGE_ZONE = 24;
 /** How far the stage scrolls per frame while a Hole rests in the edge zone, in px. */
 const EDGE_SCROLL_STEP = 12;
 
+interface Point {
+  readonly x: number;
+  readonly y: number;
+}
+
 /** The shell's query: below this width the side panel gives way to a toggle. */
 const COMPACT_QUERY = '(max-width: 1179.98px)';
 
@@ -124,6 +143,12 @@ export class TapeViewComponent {
   /** The last pointer position of a drag, so the Column follows when the stage scrolls under a resting pointer. */
   private lastPointer: {readonly clientX: number; readonly clientY: number; readonly pointerId: number; readonly svg: Element} | undefined;
   private edgeScrollFrame: number | undefined;
+  /** An empty spot pressed on the Tape: where (client px and drawing px), in which cell, and whether it adds to the selection. */
+  private framing:
+    | {readonly press: Point; readonly origin: Point; readonly cell: GridCell; readonly additive: boolean}
+    | undefined;
+  /** The selection frame as dragged, in px of the drawing; `undefined` until the press has travelled. */
+  protected readonly frameRect = signal<{readonly x: number; readonly y: number; readonly width: number; readonly height: number} | undefined>(undefined);
   protected readonly dragging = this.holeDrag.dragging;
   protected readonly plotterExport = inject(PlotterExport);
   private readonly language = inject(LanguagePreference).language;
@@ -180,9 +205,21 @@ export class TapeViewComponent {
     return preview?.kind === 'applied' ? preview.tape : this.tape();
   });
 
-  private readonly shownSelection = computed(() => {
+  private readonly shownSelectionAll = computed((): HoleSelection => {
     const preview = this.holeDrag.preview();
-    return soleOf(preview?.kind === 'applied' ? preview.selection : this.selection());
+    return preview?.kind === 'applied' ? preview.selection : this.selection();
+  });
+
+  private readonly shownSelection = computed(() => soleOf(this.shownSelectionAll()));
+
+  /** The Holes the selection works on: row (from 1), start and length in Columns. */
+  private readonly selectable = computed((): readonly SpanningHole[] => {
+    const tape = this.shownTape();
+    return (this.geometry()?.slots ?? []).map(({row, start, width}) => ({
+      row,
+      start,
+      length: tape === undefined ? 0 : width / tape.columnLength,
+    }));
   });
 
   protected readonly organ = computed(() => {
@@ -259,7 +296,7 @@ export class TapeViewComponent {
       tape,
       section: sectionView(tape, organ, geometry, language, this.partNames(tape)),
       ...rowLabels(organ, geometry, scale),
-      holes: holeRects(tape, geometry, scale, range, this.shownSelection()),
+      holes: holeRects(tape, geometry, scale, range, this.shownSelectionAll()),
       ghost: attempted === undefined ? undefined : ghostRect(tape, organ, attempted, scale),
       holeMarks: holeMarks(
         tape,
@@ -268,7 +305,7 @@ export class TapeViewComponent {
         scale,
         range,
         new Set(this.holesWithProblems().map(({hole}) => `${hole.pipe}:${hole.start}`)),
-        this.shownSelection(),
+        this.shownSelectionAll(),
       ),
       ...columnMarks(tape, geometry, scale, range),
       ...outline(geometry, scale),
@@ -313,9 +350,15 @@ export class TapeViewComponent {
     this.commit({kind: 'applied', tape: result.tape, selection});
   }
 
-  protected select(hole: {readonly row: number; readonly start: number}): void {
+  /** Whether the event carries the key that adds to a selection: Ctrl, or Cmd on macOS. */
+  private isAdditive(event: {readonly ctrlKey: boolean; readonly metaKey: boolean}): boolean {
+    return this.platform === 'darwin' ? event.metaKey : event.ctrlKey;
+  }
+
+  protected select(hole: {readonly row: number; readonly start: number}, event: MouseEvent): void {
     if (this.dragJustEnded) return;
-    this.selection.set([{row: hole.row + 1, start: hole.start}]);
+    const clicked = {row: hole.row + 1, start: hole.start};
+    this.selection.set(this.isAdditive(event) ? toggled(this.selection(), clicked) : [clicked]);
     this.scrollToSelection = true;
   }
 
@@ -358,7 +401,19 @@ export class TapeViewComponent {
   protected onKeydown(event: KeyboardEvent): void {
     if (event.key === 'Escape') {
       if (this.holeDrag.dragging()) this.holeDrag.cancel();
+      else if (this.framing !== undefined) this.cancelFrame();
       else this.selection.set([]);
+      return;
+    }
+    if (this.isAdditive(event) && !event.altKey) {
+      const direction = ARROW_DIRECTIONS[event.key];
+      if (direction !== undefined) {
+        event.preventDefault();
+        this.setSelection(extended(this.selection(), this.selectable(), direction));
+      } else if (event.key.toLowerCase() === 'a') {
+        event.preventDefault();
+        this.setSelection(allOf(this.selectable()));
+      }
       return;
     }
     const intent = editIntent(event);
@@ -393,7 +448,76 @@ export class TapeViewComponent {
     this.scrollToSelection = true;
   }
 
+  private setSelection(holes: HoleSelection): void {
+    this.selection.set(holes.map(({row, start}) => ({row, start})));
+    this.scrollToSelection = true;
+  }
+
+  /** Starts a selection frame at an empty spot of the Tape; it only shows once the press travels. */
+  protected onPointerDown(event: PointerEvent, svg: Element): void {
+    const target = event.target;
+    if (event.button !== 0 || (target instanceof Element && target.closest('[data-testid="hole"], [data-testid="hole-handle"]') !== null)) return;
+    const geometry = this.geometry();
+    if (geometry === undefined) return;
+    const box = svg.getBoundingClientRect();
+    const x = event.clientX - box.left;
+    const y = event.clientY - box.top - RULER_HEIGHT;
+    if (y < 0) return;
+    this.framing = {
+      press: {x: event.clientX, y: event.clientY},
+      origin: {x, y},
+      cell: gridAt(x, y, this.scale(), geometry),
+      additive: this.isAdditive(event),
+    };
+  }
+
+  private stretchFrame(event: PointerEvent, svg: Element): void {
+    const framing = this.framing;
+    if (framing === undefined) return;
+    const travelled = isDrag(framing.press, {x: event.clientX, y: event.clientY});
+    if (!travelled && this.frameRect() === undefined) return;
+    if (this.frameRect() === undefined) {
+      try {
+        svg.setPointerCapture(event.pointerId);
+      } catch {
+        // No active pointer to capture (a synthetic event): the frame still follows the moves over the drawing.
+      }
+    }
+    const box = svg.getBoundingClientRect();
+    const x = event.clientX - box.left;
+    const y = Math.max(0, event.clientY - box.top - RULER_HEIGHT);
+    this.frameRect.set({
+      x: Math.min(framing.origin.x, x),
+      y: Math.min(framing.origin.y, y),
+      width: Math.abs(x - framing.origin.x),
+      height: Math.abs(y - framing.origin.y),
+    });
+  }
+
+  /** Ends the frame: a frame selects the Holes it overlaps (adding to the selection when additive); a press without travel clears. */
+  private finishFrame(event: PointerEvent, svg: Element): void {
+    const framing = this.framing;
+    const geometry = this.geometry();
+    const framed = this.frameRect() !== undefined;
+    this.cancelFrame();
+    if (framing === undefined || geometry === undefined) return;
+    if (!framed) {
+      if (!framing.additive) this.selection.set([]);
+      return;
+    }
+    const box = svg.getBoundingClientRect();
+    const end = gridAt(event.clientX - box.left, Math.max(0, event.clientY - box.top - RULER_HEIGHT), this.scale(), geometry);
+    const inside = holesIn(this.selectable(), frameBetween(framing.cell, end));
+    this.setSelection(framing.additive ? united(this.selection(), inside) : inside);
+  }
+
+  private cancelFrame(): void {
+    this.framing = undefined;
+    this.frameRect.set(undefined);
+  }
+
   protected onPointerMove(event: PointerEvent, svg: Element): void {
+    this.stretchFrame(event, svg);
     this.lastPointer = {clientX: event.clientX, clientY: event.clientY, pointerId: event.pointerId, svg};
     this.followPointer(this.lastPointer);
     if (this.holeDrag.dragging() && this.edgeScrollFrame === undefined) this.scheduleEdgeScroll();
@@ -466,6 +590,10 @@ export class TapeViewComponent {
 
   protected onPointerUp(event: PointerEvent, svg: Element): void {
     this.stopEdgeScroll();
+    if (this.framing !== undefined) {
+      this.finishFrame(event, svg);
+      return;
+    }
     const geometry = this.geometry();
     if (geometry === undefined) return;
     const box = svg.getBoundingClientRect();
@@ -479,6 +607,7 @@ export class TapeViewComponent {
 
   protected onPointerCancel(): void {
     this.stopEdgeScroll();
+    this.cancelFrame();
     this.holeDrag.cancel();
   }
 

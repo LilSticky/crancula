@@ -77,8 +77,8 @@ changing behaviour; every existing test stays green and is adapted only in types
 
 - [x] T018 [P] [US4] Red: `hole-selection.spec.ts` — `toggled`, `framed` (Holes on rows inside the frame that overlap its Columns), `extended` (next Hole in a direction added and made active, uses `nextHole`), `allOf`, `activeOf`.
 - [x] T019 [US4] Green: those functions in `hole-selection.ts`.
-- [ ] T020 [US4] Red: `tape-view.component.spec.ts` — Ctrl-click (Cmd on darwin via the platform token) toggles; plain click selects one; drag from an empty spot shows `selection-frame` and selects on release (Ctrl/Cmd adds); a press without travel clears; Ctrl/Cmd+Arrow extends; Ctrl/Cmd+A selects all with a row; Escape clears; every selected Hole drawn `rect.selected`; 004 edit keys and handles do nothing with several selected.
-- [ ] T021 [US4] Green: the view and `tape-drawing.ts` (selected state per Hole, frame rect); keep logic in `hole-selection.ts`, not the component.
+- [x] T020 [US4] Red: `tape-view.component.spec.ts` — Ctrl-click (Cmd on darwin via the platform token) toggles; plain click selects one; drag from an empty spot shows `selection-frame` and selects on release (Ctrl/Cmd adds); a press without travel clears; Ctrl/Cmd+Arrow extends; Ctrl/Cmd+A selects all with a row; Escape clears; every selected Hole drawn `rect.selected`; 004 edit keys and handles do nothing with several selected.
+- [x] T021 [US4] Green: the view and `tape-drawing.ts` (selected state per Hole, frame rect); keep logic in `hole-selection.ts`, not the component.
 - [ ] T022 [P] [US4] Red→green: `selected-hole` shows "n Holes selected" (`selection-count`) for two or more.
 - [ ] T023 [US4] Red→green: dialog scope `transpose-scope-selected` ("Selected Holes (n)", preselected when n > 0, disabled at 0) passes `{kind:'these', holes}`; `transposeHoles` red test for `these` (only those move; unknown refs ignored; merges with untouched Holes) first in `api/tape/transpose-holes.spec.ts`.
 - [ ] T024 [US4] Red→green: `e2e/tape-transpose.spec.ts` — Ctrl-click three Holes, drag a frame over two more, transpose selected by −12, only those five moved and are selected.

@@ -2925,4 +2925,210 @@ describe('TapeViewComponent', () => {
       TestBed.inject(MatDialog).closeAll();
     });
   });
+
+  describe('selecting several Holes (T020)', () => {
+    const RULER_PX = 24;
+    // The Pipe of row r is note 52 + r. Row 24 is E5, row 25 F5. Starts count from 0.
+    // A frame from Column 5 to Column 16 over rows 24 and 25 holds the Holes at (24, 10) and (25, 12) only.
+    const holes = [
+      {row: 23, start: 10, length: 3},
+      {row: 24, start: 10, length: 3},
+      {row: 24, start: 30, length: 3},
+      {row: 25, start: 12, length: 2},
+      {row: 25, start: 40, length: 2},
+    ];
+    type Modifiers = Pick<MouseEventInit, 'ctrlKey' | 'metaKey'>;
+    type Position = {readonly clientX: number; readonly clientY: number};
+    const drawn = (view: HTMLElement | null) => all(view, '[data-testid="tape-scroll"] rect[data-testid="hole"]') as SVGRectElement[];
+    const selected = (view: HTMLElement | null) =>
+      drawn(view)
+        .filter((rect) => rect.classList.contains('selected'))
+        .map((rect) => `${Number(rect.getAttribute('data-row')) + 1}:${rect.getAttribute('data-start')}`)
+        .sort();
+    const storedHoles = (tapeId: string) =>
+      (TestBed.inject(TapeLibrary).tapeEntities().find((candidate) => candidate.id === tapeId)?.holes ?? []).map(
+        (hole) => `${hole.pipe - 52}:${hole.start}+${hole.length}`,
+      );
+    const tapeSvg = (view: HTMLElement | null) => view?.querySelector('[data-testid="tape-scroll"] svg') as SVGSVGElement;
+    const rectAt = (view: HTMLElement | null, row: number, start: number): SVGRectElement => {
+      const rect = view?.querySelector<SVGRectElement>(
+        `[data-testid="tape-scroll"] rect[data-testid="hole"][data-row="${row - 1}"][data-start="${start}"]`,
+      );
+      if (!rect) throw new Error(`no Hole drawn at row ${row}, start ${start}`);
+      return rect;
+    };
+    const frame = () => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+
+    const setup = async (options: RenderOptions = {holes}) => {
+      const rendered = await render(options);
+      await rendered.open(`/tapes/${rendered.tape.id}`);
+      const svg = tapeSvg(rendered.view());
+      Object.defineProperty(svg, 'getBoundingClientRect', {value: () => new DOMRect(0, 0, 4000, 300), configurable: true});
+      const geometry = tapeGeometry(rendered.tape, rendered.organ);
+      /** The middle of a Column (from 0) in a row (from 1), in client coordinates. */
+      const at = (column: number, row: number): Position => ({
+        clientX: (geometry.leadIn + (column + 0.5) * geometry.columnLength) * SCALE,
+        clientY: (geometry.rowCentres[row - 1] ?? 0) * SCALE + RULER_PX,
+      });
+      const pointer = (type: string, position: Position, modifiers: Modifiers = {}) =>
+        new PointerEvent(type, {...position, ...modifiers, pointerId: 1, button: 0, bubbles: true, cancelable: true});
+      const down = async (target: Element, position: Position, modifiers: Modifiers = {}) => {
+        target.dispatchEvent(pointer('pointerdown', position, modifiers));
+        await rendered.settle();
+      };
+      const move = async (position: Position) => {
+        svg.dispatchEvent(pointer('pointermove', position));
+        await frame();
+        await rendered.settle();
+      };
+      const up = async (position: Position) => {
+        svg.dispatchEvent(pointer('pointerup', position));
+        await rendered.settle();
+      };
+      const click = async (row: number, start: number, modifiers: Modifiers = {}) => {
+        rectAt(rendered.view(), row, start).dispatchEvent(new MouseEvent('click', {bubbles: true, ...modifiers}));
+        await rendered.settle();
+      };
+      const press = async (init: KeyboardEventInit) => {
+        svg.dispatchEvent(new KeyboardEvent('keydown', {...init, bubbles: true, cancelable: true}));
+        await rendered.settle();
+      };
+      const update = vi.spyOn(TestBed.inject(TapeLibrary), 'update');
+      return {...rendered, svg, at, down, move, up, click, press, update};
+    };
+
+    it('adds a Hole to the selection with Ctrl-click and takes it out again with a second Ctrl-click', async () => {
+      const {view, click} = await setup({holes, platform: 'win32'});
+      await click(24, 10);
+
+      await click(24, 30, {ctrlKey: true});
+      expect(selected(view())).toEqual(['24:10', '24:30']);
+
+      await click(24, 10, {ctrlKey: true});
+      expect(selected(view())).toEqual(['24:30']);
+    });
+
+    it('adds a Hole to the selection with Cmd-click on macOS', async () => {
+      const {view, click} = await setup({holes, platform: 'darwin'});
+      await click(24, 10);
+
+      await click(24, 30, {metaKey: true});
+
+      expect(selected(view())).toEqual(['24:10', '24:30']);
+    });
+
+    it('selects only the clicked Hole with a plain click after a several-Hole selection', async () => {
+      const {view, click} = await setup({holes, platform: 'win32'});
+      await click(24, 10);
+      await click(24, 30, {ctrlKey: true});
+      expect(selected(view())).toEqual(['24:10', '24:30']);
+
+      await click(25, 12);
+
+      expect(selected(view())).toEqual(['25:12']);
+    });
+
+    it('draws a selection frame while dragging from an empty spot and selects the Holes it overlaps on release', async () => {
+      const {view, svg, at, down, move, up} = await setup({holes, platform: 'win32'});
+
+      await down(svg, at(5, 24));
+      await move(at(16, 25));
+
+      expect(view()?.querySelector('[data-testid="selection-frame"]')).not.toBeNull();
+      expect(selected(view())).toEqual([]);
+
+      await up(at(16, 25));
+
+      expect(selected(view())).toEqual(['24:10', '25:12']);
+    });
+
+    it('adds the Holes of a frame to the selection when dragging from an empty spot with Ctrl', async () => {
+      const {view, svg, at, down, move, up, click} = await setup({holes, platform: 'win32'});
+      await click(23, 10);
+
+      await down(svg, at(5, 24), {ctrlKey: true});
+      await move(at(16, 25));
+      await up(at(16, 25));
+
+      expect(selected(view())).toEqual(['23:10', '24:10', '25:12']);
+    });
+
+    it('clears the selection on a press without travel on an empty spot', async () => {
+      const {view, svg, at, down, up, click} = await setup({holes, platform: 'win32'});
+      await click(24, 10);
+      expect(selected(view())).toEqual(['24:10']);
+
+      await down(svg, at(5, 24));
+      await up(at(5, 24));
+
+      expect(selected(view())).toEqual([]);
+    });
+
+    it('extends the selection to the next Hole of the row with Ctrl+ArrowRight', async () => {
+      const {view, click, press} = await setup({holes, platform: 'win32'});
+      await click(24, 10);
+
+      await press({key: 'ArrowRight', ctrlKey: true});
+
+      expect(selected(view())).toEqual(['24:10', '24:30']);
+    });
+
+    it('extends the selection to the next Hole of the row with Cmd+ArrowRight on macOS', async () => {
+      const {view, click, press} = await setup({holes, platform: 'darwin'});
+      await click(24, 10);
+
+      await press({key: 'ArrowRight', metaKey: true});
+
+      expect(selected(view())).toEqual(['24:10', '24:30']);
+    });
+
+    it('selects every Hole that has a row with Ctrl+A and draws each of them selected', async () => {
+      const {view, click, press} = await setup({holes, platform: 'win32'});
+      await click(24, 10);
+
+      await press({key: 'a', ctrlKey: true});
+
+      expect(selected(view())).toEqual(['23:10', '24:10', '24:30', '25:12', '25:40']);
+      expect(drawn(view())).toHaveLength(holes.length);
+    });
+
+    it('leaves out a Hole whose Pipe is not on the Organ when selecting all with Ctrl+A', async () => {
+      const withTwoPipes = (original: Organ): Organ => ({...testOrgan(original.name, 2), id: original.id});
+      const {tape, organ, view, press} = await setup({platform: 'win32', organNow: withTwoPipes});
+      const remaining = new Set(organ.pipes.slice(0, 2).map(({note}) => note));
+      const withRow = tape.holes.filter((hole) => remaining.has(hole.pipe));
+      expect(withRow.length).toBeLessThan(tape.holes.length);
+
+      await press({key: 'a', ctrlKey: true});
+
+      expect(selected(view())).toHaveLength(withRow.length);
+    });
+
+    it('clears a several-Hole selection on Escape', async () => {
+      const {view, click, press} = await setup({holes, platform: 'win32'});
+      await click(24, 10);
+      await click(24, 30, {ctrlKey: true});
+      expect(selected(view())).toEqual(['24:10', '24:30']);
+
+      await press({key: 'Escape'});
+
+      expect(selected(view())).toEqual([]);
+    });
+
+    it('offers no Hole handles and changes nothing with the edit keys while several Holes are selected', async () => {
+      const {tape, view, click, press, update} = await setup({holes, platform: 'win32'});
+      await click(24, 10);
+      expect(all(view(), '[data-testid="hole-handle"]')).toHaveLength(2);
+      await click(24, 30, {ctrlKey: true});
+      const before = storedHoles(tape.id);
+
+      await press({key: 'ArrowRight', altKey: true});
+      await press({key: 'ArrowDown', altKey: true});
+      await press({key: 'Delete'});
+
+      expect(all(view(), '[data-testid="hole-handle"]')).toHaveLength(0);
+      expect(update).not.toHaveBeenCalled();
+      expect(storedHoles(tape.id)).toEqual(before);
+    });
+  });
 });
