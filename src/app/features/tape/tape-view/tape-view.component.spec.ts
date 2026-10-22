@@ -9,6 +9,7 @@ import {RouterTestingHarness} from '@angular/router/testing';
 import {
   createTape,
   noteName,
+  changeColumnLength,
   defaultSelectedParts,
   proposeTransposition,
   readMidiSong,
@@ -36,6 +37,8 @@ import {columnLines, columnNumbers, rulerNumbers} from './tape-marks';
 import {type Platform} from './edit-keys';
 import {PLATFORM} from './platform.token';
 import {TapeViewComponent} from './tape-view.component';
+import {TapeSectionComponent} from './tape-section/tape-section.component';
+import {By} from '@angular/platform-browser';
 
 /** The scale the Tape opens at: 1:1, true size on screen. */
 const SCALE = pixelsPerMillimetre('1:1', 0, 0);
@@ -252,6 +255,12 @@ async function render(options: RenderOptions = {}) {
     harness.detectChanges();
     await harness.fixture.whenStable();
   };
+  /** The Tape section of the side panel, as the Tape view renders it. */
+  const tapeSection = (): TapeSectionComponent => {
+    const found = harness.fixture.debugElement.query(By.directive(TapeSectionComponent));
+    if (found === null) throw new Error('no Tape section');
+    return found.injector.get(TapeSectionComponent);
+  };
   return {
     tape,
     organ,
@@ -264,6 +273,7 @@ async function render(options: RenderOptions = {}) {
     view,
     settle,
     sendEditCommand,
+    tapeSection,
   };
 }
 
@@ -486,14 +496,14 @@ describe('TapeViewComponent', () => {
 
       expect(section(view())?.closest('[data-testid="side-panel"]')).not.toBeNull();
       expect(section(view())?.querySelector('dl')).not.toBeNull();
-      expect(values(view()).slice(0, 6)).toEqual([
+      expect(values(view()).slice(0, 6).filter((_, index) => index !== 1)).toEqual([
         organ.name,
-        '2.5 mm',
         `${tape.length}`,
         `${tape.length * 2.5} mm`,
         '30 mm',
         `${tape.holes.length}`,
       ]);
+      expect(section(view())?.querySelector<HTMLInputElement>('[data-testid="column-length-input"]')?.value).toBe('2.5');
     });
 
     it('links the Organ to the Organ editor', async () => {
@@ -1678,7 +1688,7 @@ describe('TapeViewComponent', () => {
       await open(`/tapes/${tape.id}`);
 
       const controls = all(view(), 'button, input, select, textarea, [contenteditable]').filter(
-        (control) => control.closest('[data-testid="zoom"], [data-testid="add-hole"]') === null && !['export', 'side-panel-toggle', 'undo', 'redo', 'transpose', 'tape-section-toggle', 'import-summary-toggle'].includes(control.getAttribute('data-testid') ?? ''),
+        (control) => control.closest('[data-testid="zoom"], [data-testid="add-hole"]') === null && !['export', 'side-panel-toggle', 'undo', 'redo', 'transpose', 'tape-section-toggle', 'import-summary-toggle', 'column-length-input', 'column-length-apply'].includes(control.getAttribute('data-testid') ?? ''),
       );
       expect(controls).toHaveLength(0);
     });
@@ -3101,6 +3111,74 @@ describe('TapeViewComponent', () => {
       expect(selected(view())).toEqual([`${rowOf(67)}:30`, `${rowOf(73)}:10`].sort());
       expect(update).toHaveBeenCalledTimes(1);
       expect(button(view(), 'redo')?.disabled).toBe(true);
+    });
+  });
+
+  describe('changing the Column length (T008)', () => {
+    // The Pipe of row r is note 52 + r. Row 24 has one Hole at Column 11; the Tape is 100 Columns of 2.5 mm.
+    const holes = [{row: 24, start: 10, length: 3}];
+    const selected = (view: HTMLElement | null) =>
+      all(view, '[data-testid="tape-scroll"] rect[data-testid="hole"].selected').map(
+        (rect) => `${Number(rect.getAttribute('data-row')) + 1}:${rect.getAttribute('data-start')}`,
+      );
+    const storedHoles = (tapeId: string) =>
+      (TestBed.inject(TapeLibrary).tapeEntities().find((candidate) => candidate.id === tapeId)?.holes ?? []).map(
+        (hole) => `${hole.pipe - 52}:${hole.start}+${hole.length}`,
+      );
+    const storedColumnLength = (tapeId: string) =>
+      TestBed.inject(TapeLibrary).tapeEntities().find((candidate) => candidate.id === tapeId)?.columnLength;
+    const select = async (view: HTMLElement | null, row: number, start: number, settle: () => Promise<void>) => {
+      all(view, `[data-testid="tape-scroll"] rect[data-testid="hole"][data-row="${row - 1}"][data-start="${start}"]`)[0]?.dispatchEvent(
+        new MouseEvent('click', {bubbles: true}),
+      );
+      await settle();
+    };
+    /** The Tape with the Column length of `columnLength` mm; the other fields stay. */
+    const withColumnLength = (tape: Tape, columnLength: number): Tape => {
+      const changed = changeColumnLength(tape, columnLength);
+      if (!changed.ok) throw new Error(`invalid test Column length: ${columnLength}`);
+      return changed.value;
+    };
+    const numberAttribute = (element: Element, name: string) => Number(element.getAttribute(name));
+
+    it('saves a changed Column length as one edit and keeps the selected Hole', async () => {
+      const {tape, open, view, settle, tapeSection} = await render({holes});
+      await open(`/tapes/${tape.id}`);
+      const update = vi.spyOn(TestBed.inject(TapeLibrary), 'update');
+      await select(view(), 24, 10, settle);
+
+      tapeSection().columnLengthChange.emit(withColumnLength(tape, 5));
+      await settle();
+
+      expect(update).toHaveBeenCalledTimes(1);
+      expect(storedColumnLength(tape.id)).toBe(5);
+      expect(storedHoles(tape.id)).toEqual(['24:10+3']);
+      expect(selected(view())).toEqual(['24:10']);
+    });
+
+    it('lets the Tape length text follow the new Column length', async () => {
+      const {tape, organ, open, view, settle, tapeSection} = await render({holes});
+      await open(`/tapes/${tape.id}`);
+
+      tapeSection().columnLengthChange.emit(withColumnLength(tape, 5));
+      await settle();
+
+      expect(view()?.querySelector('cranc-page-head p')?.textContent?.trim()).toBe(
+        `For the ${organ.name}. ${tape.length} Columns of 5 mm, ${tape.length * 5} mm of Tape.`,
+      );
+    });
+
+    it('lets the drawing of the Tape body follow the new Column length', async () => {
+      const {tape, organ, open, view, settle, tapeSection} = await render({holes, leadIn: 0});
+      await open(`/tapes/${tape.id}`);
+      const changed = withColumnLength(tape, 5);
+
+      tapeSection().columnLengthChange.emit(changed);
+      await settle();
+
+      const body = view()?.querySelector('svg .tape');
+      expect(body).not.toBeNull();
+      expect(numberAttribute(body as Element, 'width')).toBeCloseTo(tapeGeometry(changed, organ).totalLength * SCALE, 1);
     });
   });
 

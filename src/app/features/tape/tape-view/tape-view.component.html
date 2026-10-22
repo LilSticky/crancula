@@ -144,7 +144,7 @@
         <cranc-add-hole [organ]="organ" [tape]="tape" [selected]="selectedHoleRef()" (added)="addFromForm($event)" />
       }
     }
-    <cranc-tape-section [view]="drawing.section" />
+    <cranc-tape-section [view]="drawing.section" [tape]="drawing.tape" (columnLengthChange)="onColumnLengthChange($event)" />
     @if (importSummary(); as summary) {
       <cranc-import-summary data-testid="import-summary" [importSummary]="summary" (dismissed)="importSummary.set(null)" />
     }

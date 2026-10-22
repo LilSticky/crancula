@@ -41,10 +41,10 @@ restart and the real menu.
 
 **Independent test**: e2e — change 5 → 10 mm, restart, Tape at 10 mm with the same Holes.
 
-- [ ] T006 [US1] Red: `src/app/features/tape/tape-view/tape-section/tape-section.component.spec.ts` — the Column length row is a field (`column-length-input`) showing the current value in the language's notation; typing a valid different value and pressing Enter or `column-length-apply` emits `columnLengthChange` with the changed Tape; the same value (also "5,0" for 5) or invalid text keeps Apply disabled and emits nothing; invalid shows `column-length-error`; Escape and blur put the current value back.
-- [ ] T007 [US1] Green: the field in `tape-section.component.ts` (Material outlined field, `crancDecimalInput`, "mm" suffix), the section gets the Tape as input (or the current `columnLength` plus a change callback) as the contract says; minimal SCSS.
-- [ ] T008 [US1] Red: `tape-view.component.spec.ts` — a `columnLengthChange` from the section is one `TapeEditor.apply` with the current selection; drawing width, Tape length text and status line follow the new Column length.
-- [ ] T009 [US1] Green: wire it in `tape-view.component.ts`/`.html`.
+- [x] T006 [US1] Red: `src/app/features/tape/tape-view/tape-section/tape-section.component.spec.ts` — the Column length row is a field (`column-length-input`) showing the current value in the language's notation; typing a valid different value and pressing Enter or `column-length-apply` emits `columnLengthChange` with the changed Tape; the same value (also "5,0" for 5) or invalid text keeps Apply disabled and emits nothing; invalid shows `column-length-error`; Escape and blur put the current value back.
+- [x] T007 [US1] Green: the field in `tape-section.component.ts` (Material outlined field, `crancDecimalInput`, "mm" suffix), the section gets the Tape as input (or the current `columnLength` plus a change callback) as the contract says; minimal SCSS.
+- [x] T008 [US1] Red: `tape-view.component.spec.ts` — a `columnLengthChange` from the section is one `TapeEditor.apply` with the current selection; drawing width, Tape length text and status line follow the new Column length.
+- [x] T009 [US1] Green: wire it in `tape-view.component.ts`/`.html`.
 - [ ] T010 [US1] Red→green: `e2e/tape-column-length.spec.ts` — change the Column length 5 → 10 mm in the Tape section, restart Crancula, the Tape shows 10 mm, the same number of Columns and Holes, Tape length doubled.
 
 **Checkpoint**: MVP — STATUS updated.
