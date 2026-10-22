@@ -12,6 +12,8 @@ import {
   defaultSelectedParts,
   proposeTransposition,
   readMidiSong,
+  type CranculaApi,
+  type EditCommand,
   type Organ,
   type Tape,
   toTapeLibrarySnapshot,
@@ -113,7 +115,7 @@ async function render(options: RenderOptions = {}) {
   const inMemory = createInMemoryCranculaApi(undefined, undefined, options.saveFails ? {tapes: {save: 'failed'}} : {});
   let finishLoad: () => void = () => undefined;
   let deferredSnapshot: ReturnType<typeof toTapeLibrarySnapshot> | null = null;
-  const api = options.deferLoad
+  const base = options.deferLoad
     ? {
         ...inMemory,
         tapes: {
@@ -126,6 +128,20 @@ async function render(options: RenderOptions = {}) {
         },
       }
     : inMemory;
+  // The listeners the app registered for Edit Commands from the application menu, so a test can send one.
+  const editListeners = new Set<(command: EditCommand) => void>();
+  const api: CranculaApi = {
+    ...base,
+    edit: {
+      onCommand: (listener) => {
+        editListeners.add(listener);
+        return () => void editListeners.delete(listener);
+      },
+    },
+  };
+  const sendEditCommand = (command: EditCommand): void => {
+    for (const listener of [...editListeners]) listener(command);
+  };
   const plotterExport = {export: vi.fn((): Promise<void> => Promise.resolve()), saving: signal(false)};
   TestBed.configureTestingModule({
     providers: [
@@ -236,7 +252,19 @@ async function render(options: RenderOptions = {}) {
     harness.detectChanges();
     await harness.fixture.whenStable();
   };
-  return {tape, organ, plotterExport, importSummary: created.value.importSummary, open, summaryShown, router, finish, view, settle};
+  return {
+    tape,
+    organ,
+    plotterExport,
+    importSummary: created.value.importSummary,
+    open,
+    summaryShown,
+    router,
+    finish,
+    view,
+    settle,
+    sendEditCommand,
+  };
 }
 
 describe('TapeViewComponent', () => {
@@ -2367,6 +2395,57 @@ describe('TapeViewComponent', () => {
 
       expect(button(view(), 'undo')?.disabled).toBe(true);
       expect(button(view(), 'redo')?.disabled).toBe(true);
+    });
+
+    describe('the Edit Commands from the application menu (#122)', () => {
+      let execCommand: ReturnType<typeof vi.fn<(commandId: string) => boolean>>;
+
+      beforeEach(() => {
+        // Without a Tape handler the command falls back to the text history; jsdom may not provide execCommand.
+        execCommand = vi.fn<(commandId: string) => boolean>(() => true);
+        Object.defineProperty(document, 'execCommand', {configurable: true, writable: true, value: execCommand});
+      });
+
+      afterEach(() => {
+        Reflect.deleteProperty(document, 'execCommand');
+      });
+
+      const moveHole = async (rendered: Awaited<ReturnType<typeof setup>>) => {
+        await select(rendered.view(), 24, 10, rendered.settle);
+        await press(tapeSvg(rendered.view()), {key: 'ArrowRight', altKey: true}, rendered.settle);
+      };
+
+      it('undoes and redoes the edit on the Edit Commands undo and redo', async () => {
+        const rendered = await setup();
+        const {tape, settle, opened, sendEditCommand} = rendered;
+        await moveHole(rendered);
+        const moved = storedHoles(tape.id);
+        expect(moved).not.toEqual(opened);
+
+        sendEditCommand('undo');
+        await settle();
+        expect(storedHoles(tape.id)).toEqual(opened);
+
+        sendEditCommand('redo');
+        await settle();
+        expect(storedHoles(tape.id)).toEqual(moved);
+        expect(execCommand).not.toHaveBeenCalled();
+      });
+
+      it('no longer undoes the Tape once the Tape view is left', async () => {
+        const rendered = await setup();
+        const {tape, router, settle, sendEditCommand} = rendered;
+        await moveHole(rendered);
+        const moved = storedHoles(tape.id);
+
+        await router.navigateByUrl('/tapes');
+        await settle();
+        sendEditCommand('undo');
+        await settle();
+
+        expect(storedHoles(tape.id)).toEqual(moved);
+        expect(execCommand).toHaveBeenCalledExactlyOnceWith('undo');
+      });
     });
 
     describe('the shortcuts', () => {

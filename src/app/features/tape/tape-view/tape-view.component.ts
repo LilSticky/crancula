@@ -32,6 +32,7 @@ import {PageHeadComponent} from '../../shared/components/page-head/page-head.com
 import {OrganLibrary} from '../../organ/organ-library.store';
 import {ImportSummaryComponent} from '../import-summary/import-summary.component';
 import {TapeLibrary} from '../tape-library.store';
+import {EditCommandRouter} from '../../shared/edit-command-router';
 import {editIntent, historyIntent, type Platform} from './edit-keys';
 import {PLATFORM} from './platform.token';
 import {gridAt} from './grid-at';
@@ -137,6 +138,7 @@ export class TapeViewComponent {
   private readonly dialog = inject(MatDialog);
   private readonly translate = inject(TranslateService);
   private readonly zone = inject(NgZone);
+  private readonly editCommands = inject(EditCommandRouter);
   private readonly holeDrag = new HoleDragSession();
   /** Set after a drag so the click that may follow it does not select. */
   private dragJustEnded = false;
@@ -673,7 +675,12 @@ export class TapeViewComponent {
   }
 
   constructor() {
+    const unregisterEditCommands = this.editCommands.register((command) => {
+      if (command === 'undo') this.undo();
+      else this.redo();
+    });
     inject(DestroyRef).onDestroy(() => {
+      unregisterEditCommands();
       this.holeDrag.cancel();
       clearTimeout(this.dragEndedTimer);
       this.stopEdgeScroll();

@@ -96,6 +96,12 @@ function sendEditCommand(command: EditCommand): NonNullable<MenuItemConstructorO
   };
 }
 
+/** Redo is Cmd+Shift+Z on macOS, Ctrl+Shift+Z on Linux and Ctrl+Y on Windows, as the Tape view shows them. */
+function redoAccelerator(platform: NodeJS.Platform): string {
+  if (platform === 'darwin') return 'Shift+CmdOrCtrl+Z';
+  return platform === 'linux' ? 'Ctrl+Shift+Z' : 'Ctrl+Y';
+}
+
 /** The application menu with explicit labels, so roles do not fall back to the operating system language. */
 export function menuTemplate(
   language: Language,
@@ -108,7 +114,7 @@ export function menuTemplate(
   // Off macOS the keys stay with the renderer (text fields, Tape shortcuts); the accelerator is only shown.
   const editAccelerators = {
     undo: {accelerator: 'CmdOrCtrl+Z', registerAccelerator: mac},
-    redo: {accelerator: mac ? 'Shift+CmdOrCtrl+Z' : 'Ctrl+Y', registerAccelerator: mac},
+    redo: {accelerator: redoAccelerator(platform), registerAccelerator: mac},
   } as const;
 
   const application: MenuItemConstructorOptions[] = mac

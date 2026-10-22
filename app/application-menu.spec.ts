@@ -102,7 +102,7 @@ describe('Undo and Redo on the Tape', () => {
   it.each<[NodeJS.Platform, string]>([
     ['darwin', 'Shift+CmdOrCtrl+Z'],
     ['win32', 'Ctrl+Y'],
-    ['linux', 'Ctrl+Y'],
+    ['linux', 'Ctrl+Shift+Z'],
   ])('accelerates Redo on %s with %s', (platform, accelerator) => {
     expect(withId(menuTemplate('en', platform), 'redo')?.accelerator).toBe(accelerator);
   });
