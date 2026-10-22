@@ -1,6 +1,6 @@
 import {describe, expect, it} from 'vitest';
 import {midiNoteNumber} from '../organ/midi-note-number';
-import {millimetres, organId} from '../organ/organ';
+import {millimetres, organId, type Millimetres} from '../organ/organ';
 import {
   column,
   columnCount,
@@ -208,7 +208,17 @@ describe('validTape', () => {
     expect(validTape(fields({holes: [aHole(60, 0, 3), aHole(60, 3, 2)]})).ok).toBe(true);
   });
 
-  it('names exactly the six rule codes', () => {
+  // The brand cannot hold what millimetres() refuses; validTape must refuse these values anyway.
+  const unchecked = (value: number): Millimetres => value as Millimetres;
+
+  it.each([0, -1, Number.NaN, Number.POSITIVE_INFINITY])(
+    'rejects the Column length %d with column-length-not-positive',
+    (value) => {
+      expect(violationOf(fields({columnLength: unchecked(value)}))).toEqual({code: 'column-length-not-positive'});
+    },
+  );
+
+  it('names exactly the seven rule codes', () => {
     const codes: Record<TapeRuleViolationCode, true> = {
       'name-blank': true,
       'song-reference-incomplete': true,
@@ -216,7 +226,8 @@ describe('validTape', () => {
       'hole-beyond-end': true,
       'holes-not-sorted': true,
       'holes-overlap': true,
+      'column-length-not-positive': true,
     };
-    expect(Object.keys(codes)).toHaveLength(6);
+    expect(Object.keys(codes)).toHaveLength(7);
   });
 });

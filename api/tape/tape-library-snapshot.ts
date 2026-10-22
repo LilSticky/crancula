@@ -230,6 +230,8 @@ function reasonOf(violation: TapeRuleViolation): string {
       return 'songId and selectedParts must both be present or both absent';
     case 'selected-parts-invalid':
       return 'selectedParts is not sorted and unique';
+    case 'column-length-not-positive':
+      return 'columnLength is not a finite number above 0';
     case 'hole-beyond-end':
       return 'a Hole ends beyond the end of the Tape';
     case 'holes-not-sorted':

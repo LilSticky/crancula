@@ -94,7 +94,8 @@ export type TapeRuleViolationCode =
   | 'selected-parts-invalid'
   | 'hole-beyond-end'
   | 'holes-not-sorted'
-  | 'holes-overlap';
+  | 'holes-overlap'
+  | 'column-length-not-positive';
 
 /** The first Tape rule that fields break; only `hole-beyond-end` names the Hole. */
 export type TapeRuleViolation =
@@ -108,6 +109,9 @@ export type TapeRuleViolation =
 export function validTape(fields: TapeFields): Result<Tape, TapeRuleViolation> {
   const name = fields.name.trim();
   if (name === '') return err({code: 'name-blank'});
+  if (!(Number.isFinite(fields.columnLength) && fields.columnLength > 0)) {
+    return err({code: 'column-length-not-positive'});
+  }
   if ((fields.songId === undefined) !== (fields.selectedParts === undefined)) {
     return err({code: 'song-reference-incomplete'});
   }

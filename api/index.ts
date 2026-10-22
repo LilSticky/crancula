@@ -114,6 +114,7 @@ export {
   type TranspositionOutcome,
 } from './tape/transpose-holes';
 export {renameTape} from './tape/rename-tape';
+export {changeColumnLength} from './tape/change-column-length';
 export {plotterFileName} from './tape/plotter-file-name';
 export {plotterSvg} from './tape/plotter-svg';
 export {tapeGeometry, type Point, type Slot, type TapeGeometry, type TapeOutline} from './tape/tape-geometry';
