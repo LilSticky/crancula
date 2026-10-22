@@ -6,12 +6,11 @@ Issues: [GitHub](https://github.com/LilSticky/crancula/issues)
 
 ## Current slice
 
-**Next step:** Open the pull request for [#106](https://github.com/LilSticky/crancula/issues/106) (branch
-`005-transpose-holes`), merge it when CI is green, then [#122](https://github.com/LilSticky/crancula/issues/122)
-(low): route the application menu's Edit → Undo/Redo to the Tape.
+**Next step:** [#122](https://github.com/LilSticky/crancula/issues/122) (low): route the application menu's
+Edit → Undo/Redo to the Tape. Follow-up from #106: the T031 `ux-review` of the Tape view with the Transpose dialog.
 
 **Done:** Transpose holes ([#106](https://github.com/LilSticky/crancula/issues/106), part of Edit a tape
-[#103](https://github.com/LilSticky/crancula/issues/103), branch `005-transpose-holes`, 2026-10-22): transpose all or
+[#103](https://github.com/LilSticky/crancula/issues/103), branch `005-transpose-holes`, PR #130, 2026-10-22): transpose all or
 the selected Holes by semitones, in a dialog that shows the outcome (octave moves, removals, merges) before it
 applies. Several Holes are selected by Ctrl/Cmd-click, frame drag, Ctrl/Cmd+Arrow and Ctrl/Cmd+A; each
 transposition is one undo. Gate: 1092 unit tests (Angular) and 737 node tests, lint and i18n green; 105 e2e green locally.
