@@ -93,7 +93,6 @@ What changed in each version is under [Releases](#releases).
 
 - **Edit a Tape**: add, stretch, move and remove Holes; transpose the whole Song or single notes
 - **Crank a Tape**: hear a preview at an adjustable crank speed
-- **Air Demand**: warn when too many Pipes play at once
 - More Song Sources: MusicXML, PDF, printed Scores
 - More Plotter formats: DXF, HPGL; splitting long Tapes into pieces
 - Export a Song as audio or as Scores

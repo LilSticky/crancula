@@ -6,6 +6,9 @@ Issues: [GitHub](https://github.com/LilSticky/crancula/issues)
 
 ## Current slice
 
+**Done:** Air Demand dropped from scope (2026-10-22, user decision): it came from a misunderstanding and was never
+meant to be built; removed from ROADMAP, README and the constitution (1.1.3).
+
 **Done:** flaky Transpose e2e on Windows ([#133](https://github.com/LilSticky/crancula/issues/133), PR #134): keyboard tests wait for focus to enter the dialog before tabbing.
 
 **Next step:** [#103](https://github.com/LilSticky/crancula/issues/103) Edit a tape (medium, XL): see what is left
@@ -193,8 +196,6 @@ Fixed 2026-10-19: the import screen's Song sheet spilled under the action bar in
 
 ## Open questions
 
-- **Air Demand:** how "too many Pipes at once" depends on which Pipes play. Domain discovery is
-  not finished; not in v0.1.
 - Release workflow ([#11](https://github.com/LilSticky/crancula/issues/11)): `.github/workflows/release.yml`
   packages on Linux, Windows and macOS. A pushed tag `v*` also creates a draft GitHub Release; a
   manual run, or a pull request that changes the workflow or `electron-builder.json`, only builds

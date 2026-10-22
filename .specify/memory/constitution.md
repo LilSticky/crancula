@@ -87,8 +87,8 @@ Rationale: frequent, visible progress keeps momentum.
 - Releases: cross-platform (Windows, macOS, Linux) builds published as GitHub Releases and built
   in CI. No code signing or auto-update for now.
 - v0.1 scope: Describe my organ, Bring a song onto a tape (MIDI), Punch a tape (SVG for a vinyl
-  cutter). Tape editing, crank preview, further import formats (MusicXML, PDF), DXF/HPGL export
-  and Air Demand warnings come later.
+  cutter). Tape editing, crank preview, further import formats (MusicXML, PDF) and DXF/HPGL export
+  come later.
 
 ## Development Workflow & Definition of Done
 
@@ -116,4 +116,4 @@ Rationale: frequent, visible progress keeps momentum.
 - Every spec, plan and implementation MUST be checked against these principles (the Constitution
   Check in `/speckit-plan`); any deviation MUST be justified in the plan or rejected.
 
-**Version**: 1.1.2 | **Ratified**: 2026-10-13 | **Last Amended**: 2026-10-14
+**Version**: 1.1.3 | **Ratified**: 2026-10-13 | **Last Amended**: 2026-10-22
