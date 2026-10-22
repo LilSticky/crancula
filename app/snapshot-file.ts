@@ -5,12 +5,12 @@ import type {Result, SnapshotLoadResult, SnapshotSaveResult} from '../api';
 /** The file operations the store needs; replaceable in tests. */
 export type FileSystem = Pick<typeof nodeFs, 'mkdir' | 'readFile' | 'rename' | 'writeFile'>;
 
-const RENAME_ATTEMPTS = 10;
+const RENAME_ATTEMPTS = 7;
 
 export interface SnapshotFileOptions {
   /** Trailing debounce for coalescing quick saves (ADR 8). */
   readonly debounceMs?: number;
-  /** Delay between attempts when the final rename is blocked (EPERM, EBUSY, EACCES). */
+  /** First delay between attempts when the final rename is blocked (EPERM, EBUSY, EACCES); doubled after each blocked attempt. */
   readonly renameRetryDelayMs?: number;
   readonly fs?: FileSystem;
   readonly now?: () => Date;
@@ -127,15 +127,20 @@ export function createSnapshotFile<S, V>(
     }
   }
 
-  /** Windows briefly locks the target (antivirus, indexer), so a blocked final rename is retried a few times. */
+  /**
+   * Windows briefly locks the target (antivirus, indexer), so a blocked final rename is retried with an
+   * exponential backoff: the wait starts at `renameRetryDelayMs` and doubles after each blocked attempt.
+   */
   async function renameWithRetry(tempPath: string): Promise<void> {
+    let delayMs = renameRetryDelayMs;
     for (let attempt = 1; ; attempt++) {
       try {
         await fs.rename(tempPath, filePath);
         return;
       } catch (error) {
         if (attempt >= RENAME_ATTEMPTS || !isBlockedRename(error)) throw error;
-        await new Promise((resolve) => setTimeout(resolve, renameRetryDelayMs));
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+        delayMs *= 2;
       }
     }
   }
