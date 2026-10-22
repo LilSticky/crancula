@@ -35,7 +35,7 @@ import {gridAt} from './grid-at';
 import {type HolePart} from './hole-drag';
 import {HoleDragSession} from './hole-drag-session';
 import {addEdit, keyEdit, type EditOutcome} from './hole-edit-commands';
-import {nextHole, type Direction, type SelectableHole} from './hole-selection';
+import {nextHole, soleOf, type Direction, type HoleSelection, type SelectableHole} from './hole-selection';
 import {inspectHole} from './inspect-hole';
 import {AddHoleComponent} from './add-hole/add-hole.component';
 import {CuttingProblemsComponent} from './cutting-problems/cutting-problems.component';
@@ -159,7 +159,7 @@ export class TapeViewComponent {
   private readonly scrollElement = viewChild<ElementRef<HTMLElement>>('scroll');
   private readonly stage = stageMetrics(this.scrollElement);
   private readonly drawingSvg = viewChild<ElementRef<SVGSVGElement>>('tapeSvg');
-  private readonly selectedHole = signal<SelectableHole | undefined>(undefined);
+  private readonly selection = signal<HoleSelection>([]);
   private scrollToSelection = false;
 
   protected readonly importSummary = signal(importSummaryOf(this.router.currentNavigation()?.extras.state));
@@ -179,7 +179,7 @@ export class TapeViewComponent {
 
   private readonly shownSelection = computed(() => {
     const preview = this.holeDrag.preview();
-    return preview?.kind === 'applied' ? preview.selection : this.selectedHole();
+    return soleOf(preview?.kind === 'applied' ? preview.selection : this.selection());
   });
 
   protected readonly organ = computed(() => {
@@ -281,7 +281,7 @@ export class TapeViewComponent {
 
   protected select(hole: {readonly row: number; readonly start: number}): void {
     if (this.dragJustEnded) return;
-    this.selectedHole.set({row: hole.row + 1, start: hole.start});
+    this.selection.set([{row: hole.row + 1, start: hole.start}]);
     this.scrollToSelection = true;
   }
 
@@ -289,7 +289,7 @@ export class TapeViewComponent {
   protected chooseProblem(hole: HoleRef): void {
     const row = this.organ()?.pipes.findIndex((pipe) => pipe.note === hole.pipe);
     if (row === undefined || row < 0) return;
-    this.selectedHole.set({row: row + 1, start: hole.start});
+    this.selection.set([{row: row + 1, start: hole.start}]);
     this.scrollToSelection = true;
   }
 
@@ -306,7 +306,7 @@ export class TapeViewComponent {
   }
 
   private restoreSelection(): void {
-    this.selectedHole.set(this.editor.selection());
+    this.selection.set(this.editor.selection());
     this.scrollToSelection = true;
   }
 
@@ -324,14 +324,14 @@ export class TapeViewComponent {
   protected onKeydown(event: KeyboardEvent): void {
     if (event.key === 'Escape') {
       if (this.holeDrag.dragging()) this.holeDrag.cancel();
-      else this.selectedHole.set(undefined);
+      else this.selection.set([]);
       return;
     }
     const intent = editIntent(event);
     if (intent !== undefined) {
       const tape = this.tape();
       const organ = this.organ();
-      const selected = this.selectedHole();
+      const selected = soleOf(this.selection());
       if (tape === undefined || organ === undefined || selected === undefined) return;
       event.preventDefault();
       this.commit(keyEdit(tape, organ, selected, intent));
@@ -339,7 +339,7 @@ export class TapeViewComponent {
     }
     const slots = this.geometry()?.slots;
     if (slots === undefined) return;
-    const current = this.selectedHole();
+    const current = soleOf(this.selection());
     if ((event.key === 'Enter' || event.key === ' ') && current === undefined) {
       event.preventDefault();
       this.moveSelection(nextHole(slots, undefined, 'right'));
@@ -355,7 +355,7 @@ export class TapeViewComponent {
 
   private moveSelection(target: SelectableHole | undefined): void {
     if (target === undefined) return;
-    this.selectedHole.set({row: target.row, start: target.start});
+    this.selection.set([{row: target.row, start: target.start}]);
     this.scrollToSelection = true;
   }
 
@@ -457,9 +457,9 @@ export class TapeViewComponent {
       });
       this.snackBar.open(String(text), undefined, {duration: REFUSAL_DURATION});
     } else if (outcome.kind === 'applied') {
-      this.editor.remember(this.selectedHole());
+      this.editor.remember(this.selection());
       void this.editor.apply({tape: outcome.tape, selection: outcome.selection});
-      this.selectedHole.set(outcome.selection);
+      this.selection.set(outcome.selection);
       this.scrollToSelection = true;
     }
     return outcome.kind === 'applied';
@@ -537,7 +537,7 @@ export class TapeViewComponent {
         selected.scrollIntoView({block: 'nearest', inline: 'nearest'});
         return;
       }
-      const current = this.selectedHole();
+      const current = soleOf(this.selection());
       const geometry = this.geometry();
       const slot = geometry?.slots.find((candidate) => candidate.row === current?.row && candidate.start === current?.start);
       if (geometry === undefined || slot === undefined) return;

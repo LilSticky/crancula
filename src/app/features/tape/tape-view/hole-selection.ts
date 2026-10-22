@@ -4,6 +4,14 @@ export interface SelectableHole {
   readonly start: number;
 }
 
+/** The selected Holes in the order they were added; the last is the active one, and `[]` selects nothing. */
+export type HoleSelection = readonly SelectableHole[];
+
+/** The Hole the selection comes down to when exactly one is selected, else `undefined`. */
+export function soleOf(selection: HoleSelection): SelectableHole | undefined {
+  return selection.length === 1 ? selection[0] : undefined;
+}
+
 export type Direction = 'left' | 'right' | 'up' | 'down';
 
 /**

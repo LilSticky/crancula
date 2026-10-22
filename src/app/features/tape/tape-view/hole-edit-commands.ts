@@ -15,18 +15,18 @@ import {
 } from '@api/index';
 import type {EditIntent} from './edit-keys';
 import type {DragTarget, HoleDrag} from './hole-drag';
-import type {SelectableHole} from './hole-selection';
+import type {HoleSelection, SelectableHole} from './hole-selection';
 
 /** What an edit of one Hole comes to: a new Tape with the selection, a refusal to explain, or no change. */
 export type EditOutcome =
-  | {readonly kind: 'applied'; readonly tape: Tape; readonly selection: SelectableHole | undefined}
+  | {readonly kind: 'applied'; readonly tape: Tape; readonly selection: HoleSelection}
   | {readonly kind: 'refused'; readonly other: Hole; readonly attempted?: Hole}
   | {readonly kind: 'nothing'};
 
 const NOTHING: EditOutcome = {kind: 'nothing'};
 
 function edited(result: Result<{readonly tape: Tape}, HoleEditRefusal>, selection: SelectableHole): EditOutcome {
-  if (result.ok) return {kind: 'applied', tape: result.value.tape, selection};
+  if (result.ok) return {kind: 'applied', tape: result.value.tape, selection: [selection]};
   return result.error.code === 'overlaps' ? {kind: 'refused', other: result.error.other} : NOTHING;
 }
 
@@ -44,7 +44,7 @@ export function addEdit(tape: Tape, organ: Organ, pipe: MidiNoteNumber, start: C
   const result = addHole(tape, organ, pipe, start);
   if (!result.ok) return result.error.code === 'overlaps' ? {kind: 'refused', other: result.error.other} : NOTHING;
   const row = organ.pipes.findIndex((candidate) => candidate.note === pipe) + 1;
-  return {kind: 'applied', tape: result.value.tape, selection: {row, start}};
+  return {kind: 'applied', tape: result.value.tape, selection: [{row, start}]};
 }
 
 /** The result of an edit key on the selected Hole. */
@@ -55,7 +55,8 @@ export function keyEdit(tape: Tape, organ: Organ, selected: SelectableHole, inte
   switch (intent.kind) {
     case 'remove': {
       const result = removeHole(tape, hole);
-      return result.ok ? {kind: 'applied', tape: result.value, selection: neighbourOf(tape, hole, selected.row)} : NOTHING;
+      const neighbour = neighbourOf(tape, hole, selected.row);
+      return result.ok ? {kind: 'applied', tape: result.value, selection: neighbour === undefined ? [] : [neighbour]} : NOTHING;
     }
     case 'move-column': {
       const start = column(hole.start + intent.by);

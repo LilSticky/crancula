@@ -35,7 +35,7 @@ changing behaviour; every existing test stays green and is adapted only in types
 ## Phase 2: Foundational
 
 - [x] T002 Domain skeleton: export `HolesToTranspose`, `HoleFate`, `Merge`, `TranspositionOutcome`, `Transposed` (exactly as in data-model.md) and `transposeHoles`/`transposeRange` stubs from `api/tape/transpose-holes.ts` via `api/index.ts`; red test first in `api/tape/transpose-holes.spec.ts` for `transposeRange` ("±(highest − lowest Pipe note), at most ±127"), then implement `transposeRange`.
-- [ ] T003 Refactor under green: introduce `type HoleSelection = readonly SelectableHole[]` (last = active, `[]` = none) in `src/app/features/tape/tape-view/hole-selection.ts`; make `TapeEdit.selection` (`tape-editor.ts`), `EditOutcome.selection` (`hole-edit-commands.ts`) and the view's `selectedHole` signal (`tape-view.component.ts`) use it; the inspection, handles and 004 edits use the single selected Hole only when the selection has exactly one entry. All existing tests green.
+- [x] T003 Refactor under green: introduce `type HoleSelection = readonly SelectableHole[]` (last = active, `[]` = none) in `src/app/features/tape/tape-view/hole-selection.ts`; make `TapeEdit.selection` (`tape-editor.ts`), `EditOutcome.selection` (`hole-edit-commands.ts`) and the view's `selectedHole` signal (`tape-view.component.ts`) use it; the inspection, handles and 004 edits use the single selected Hole only when the selection has exactly one entry. All existing tests green.
 
 **Checkpoint**: domain types exported, selection is a set; nothing visible changed.
 
