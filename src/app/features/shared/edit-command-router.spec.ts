@@ -1,8 +1,14 @@
+import {Component} from '@angular/core';
 import {TestBed} from '@angular/core/testing';
+import {MatDialog} from '@angular/material/dialog';
+import {firstValueFrom} from 'rxjs';
 import {vi} from 'vitest';
 import type {CranculaApi, EditCommand} from '@api/index';
 import {CRANCULA_API, createInMemoryCranculaApi} from '../../core/crancula-api.token';
 import {EditCommandRouter} from './edit-command-router';
+
+@Component({selector: 'cranc-open-test-dialog', template: ''})
+class OpenTestDialogComponent {}
 
 /** A CranculaApi whose edit.onCommand keeps the listener, so a test can send Edit Commands as the menu would. */
 function setup(): {readonly send: (command: EditCommand) => void} {
@@ -51,6 +57,47 @@ const editableFields: readonly [string, () => HTMLElement][] = [
   ],
 ];
 
+/** Focusable elements that do not take typed text, so Undo and Redo belong to the open view. */
+const nonTextFocusables: readonly [string, () => HTMLElement][] = [
+  [
+    'a checkbox',
+    () => {
+      const element = document.createElement('input');
+      element.type = 'checkbox';
+      return element;
+    },
+  ],
+  [
+    'a radio button',
+    () => {
+      const element = document.createElement('input');
+      element.type = 'radio';
+      return element;
+    },
+  ],
+  [
+    'a readonly text input',
+    () => {
+      const element = document.createElement('input');
+      element.type = 'text';
+      element.readOnly = true;
+      return element;
+    },
+  ],
+  [
+    'a contenteditable="false" element',
+    () => {
+      const element = document.createElement('div');
+      element.setAttribute('contenteditable', 'false');
+      element.tabIndex = 0;
+      return element;
+    },
+  ],
+];
+
+/** Input types that take typed text; their Undo and Redo belong to the text. */
+const textInputTypes = ['text', 'search', 'url', 'tel', 'email', 'password', 'number'] as const;
+
 describe('EditCommandRouter', () => {
   let execCommand: ReturnType<typeof vi.fn<(commandId: string) => boolean>>;
 
@@ -88,6 +135,32 @@ describe('EditCommandRouter', () => {
     expect(handler).not.toHaveBeenCalled();
   });
 
+  it.each(nonTextFocusables)('hands the undo command to the handler while %s has the focus', (_label, create) => {
+    const {send} = setup();
+    const handler = vi.fn<(received: EditCommand) => void>();
+    TestBed.inject(EditCommandRouter).register(handler);
+    focus(create());
+
+    send('undo');
+
+    expect(handler).toHaveBeenCalledExactlyOnceWith('undo');
+    expect(execCommand).not.toHaveBeenCalled();
+  });
+
+  it.each(textInputTypes)('runs the text undo, not the handler, while an input of type %s has the focus', (type) => {
+    const {send} = setup();
+    const handler = vi.fn<(received: EditCommand) => void>();
+    TestBed.inject(EditCommandRouter).register(handler);
+    const input = document.createElement('input');
+    input.type = type;
+    focus(input);
+
+    send('undo');
+
+    expect(execCommand).toHaveBeenCalledExactlyOnceWith('undo');
+    expect(handler).not.toHaveBeenCalled();
+  });
+
   it('runs the text command when no handler is registered', () => {
     const {send} = setup();
     TestBed.inject(EditCommandRouter);
@@ -107,5 +180,23 @@ describe('EditCommandRouter', () => {
 
     expect(handler).not.toHaveBeenCalled();
     expect(execCommand).toHaveBeenCalledExactlyOnceWith('undo');
+  });
+
+  it('runs the text command, not the handler, while a dialog is open', async () => {
+    const {send} = setup();
+    const handler = vi.fn<(received: EditCommand) => void>();
+    TestBed.inject(EditCommandRouter).register(handler);
+    const dialog = TestBed.inject(MatDialog);
+    const dialogRef = dialog.open(OpenTestDialogComponent);
+    try {
+      send('undo');
+
+      expect(handler).not.toHaveBeenCalled();
+      expect(execCommand).toHaveBeenCalledExactlyOnceWith('undo');
+    } finally {
+      const closed = firstValueFrom(dialogRef.afterClosed());
+      dialogRef.close();
+      await closed;
+    }
   });
 });

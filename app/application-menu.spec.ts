@@ -130,7 +130,7 @@ describe('Undo and Redo on the Tape', () => {
 
   it.each(['undo', 'redo'] as const)('sends the %s Edit Command on edit:command to the window', (command) => {
     const send = vi.fn();
-    const window = {webContents: {send}} as unknown as BaseWindow;
+    const window = {webContents: {send, isDestroyed: () => false}} as unknown as BaseWindow;
 
     withId(menuTemplate('en', 'win32'), command)?.click?.({} as MenuItem, window, {} as KeyboardEvent);
 

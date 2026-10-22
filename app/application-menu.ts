@@ -92,7 +92,9 @@ function isBrowserWindow(window: BaseWindow): window is BrowserWindow {
 /** Sends the Edit Command to the window the menu was clicked in; the renderer decides what it undoes. */
 function sendEditCommand(command: EditCommand): NonNullable<MenuItemConstructorOptions['click']> {
   return (_item, window) => {
-    if (window && isBrowserWindow(window)) window.webContents.send(EDIT_CHANNELS.command, command);
+    if (window && isBrowserWindow(window) && !window.webContents.isDestroyed()) {
+      window.webContents.send(EDIT_CHANNELS.command, command);
+    }
   };
 }
 
