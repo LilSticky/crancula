@@ -8,8 +8,13 @@ Issues: [GitHub](https://github.com/LilSticky/crancula/issues)
 
 **Done:** flaky Transpose e2e on Windows ([#133](https://github.com/LilSticky/crancula/issues/133), PR #134): keyboard tests wait for focus to enter the dialog before tabbing.
 
-**Next step:** [#122](https://github.com/LilSticky/crancula/issues/122) (low): route the application menu's
-Edit → Undo/Redo to the Tape. Follow-up from #106: the T031 `ux-review` of the Tape view with the Transpose dialog.
+**Next step:** [#103](https://github.com/LilSticky/crancula/issues/103) Edit a tape (medium, XL): see what is left
+after #105 and #106, and split it before taking the next part.
+
+**In review:** menu Undo and Redo act on the Tape ([#122](https://github.com/LilSticky/crancula/issues/122), branch
+`122-menu-undo-redo`). The menu sends an Edit Command over `edit:command`; text fields keep their own undo, the
+Tape view handles the rest, and a dialog that is open stops it. Design: [discovery/menu-undo-redo.md](discovery/menu-undo-redo.md).
+Known gap: not tried on a real Mac yet.
 
 **Done:** Transpose holes ([#106](https://github.com/LilSticky/crancula/issues/106), part of Edit a tape
 [#103](https://github.com/LilSticky/crancula/issues/103), branch `005-transpose-holes`, PR #130, 2026-10-22): transpose all or

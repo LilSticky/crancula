@@ -20,6 +20,13 @@ them with the mouse in the Tape view does nothing to the Tape.
   element is editable text (`input`, `textarea`, `contenteditable`) or no Tape handler is registered, it
   runs the text command (`document.execCommand(command)`); otherwise it calls the registered handler.
   The Tape view registers its undo/redo while it is open and unregisters on destroy.
+  - Text fields are textareas, inputs of a text-like type (text, search, url, tel, email, password, number)
+    that are not read-only, and `contenteditable` elements other than `contenteditable="false"`.
+  - While a dialog is open, the Tape behind it is never undone; the text command runs instead.
+  - The router is created at app start (`provideAppInitializer`), so text fields anywhere get menu Undo.
+  - `document.execCommand` is deprecated but runs Chromium's editor undo; `webContents.undo()/redo()` in
+    main is the replacement if it goes away.
+- **macOS**: not tried on a Mac yet. Cmd+Z there goes through the registered accelerator and this IPC path.
 
 ## Tests
 
