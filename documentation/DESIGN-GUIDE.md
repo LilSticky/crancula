@@ -167,6 +167,14 @@ Roboto goes once nothing uses it. Add each licence text next to the font files.
   their band), so a 3 mm spacing never collides.
 - Overview strip under the Tape at stage width, visible part framed in brass; click to jump.
 - Selection: click or arrow keys select a Hole; select ring plus the inspector entry.
+- **Selecting several Holes:** a plain click selects one Hole; Ctrl/Cmd-click toggles a Hole in or
+  out of the selection. Dragging a frame from an empty spot selects the Holes it touches; with
+  Ctrl/Cmd it adds to the selection, and a press without travel clears it. Ctrl/Cmd+Arrow extends
+  the selection, Ctrl/Cmd+A selects all Holes, Escape clears it. Handles show only with exactly one
+  Hole selected. The status line reads "n Holes selected".
+- **Transpose dialog:** opened from the page head. Scope is all Holes or the selected ones; the
+  semitones field accepts only values within the allowed range, and the outcome (moved, merged,
+  removed Holes) is shown before applying. Apply is one undo step.
 - **Handles:** only the selected Hole has two resize handles, one at each end: transparent
   rectangles as high as the Hole and up to 8 px wide (at most a third of the Hole), so the Hole's
   look does not change. The cursor is `ew-resize` over a handle, `grab` over a Hole body and
