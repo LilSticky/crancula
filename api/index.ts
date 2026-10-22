@@ -37,6 +37,7 @@ export type {
 } from './app/crancula-api';
 export {parseSvgSaveRequest} from './app/svg-save-request';
 export {isLanguage, type Language} from './app/language';
+export {isEditCommand, type EditCommand} from './app/edit-command';
 export {
   defaultSelectedParts,
   songId,

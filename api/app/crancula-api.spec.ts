@@ -12,6 +12,7 @@ import type {
 import type {TapeLibrarySnapshot} from '../tape/tape-library-snapshot';
 import type {OrganLibrarySnapshot} from '../organ/organ-library-snapshot';
 import type {Language} from './language';
+import type {EditCommand} from './edit-command';
 import * as api from '../index';
 
 describe('CranculaApi', () => {
@@ -63,6 +64,12 @@ describe('CranculaApi', () => {
   it('sets the language of the application menu', () => {
     expectTypeOf<CranculaApi['app']['setLanguage']>().toEqualTypeOf<
       (language: Language) => Promise<SetLanguageResult>
+    >();
+  });
+
+  it('subscribes to Edit Commands and returns the unsubscribe function', () => {
+    expectTypeOf<CranculaApi['edit']['onCommand']>().toEqualTypeOf<
+      (listener: (command: EditCommand) => void) => () => void
     >();
   });
 

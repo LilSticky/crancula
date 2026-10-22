@@ -86,6 +86,7 @@ function apiSaving(result: TapeLibrarySaveResult, initialTapes?: TapeLibrarySnap
     tapes: {load: () => inMemory.tapes.load(), save: () => Promise.resolve(result)},
     plotter: inMemory.plotter,
     app: inMemory.app,
+    edit: inMemory.edit,
   };
 }
 
@@ -220,6 +221,7 @@ describe('TapeLibrary', () => {
         },
         plotter: inMemory.plotter,
         app: inMemory.app,
+        edit: inMemory.edit,
       });
       const content = library({tape: 1, song: 1}, {tape: 2, song: 2});
 
@@ -308,6 +310,7 @@ describe('TapeLibrary', () => {
         },
         plotter: inMemory.plotter,
         app: inMemory.app,
+        edit: inMemory.edit,
       });
       await store.load();
       const content = library({tape: 1, song: 1});
@@ -335,6 +338,7 @@ describe('TapeLibrary', () => {
           },
           plotter: inMemory.plotter,
           app: inMemory.app,
+          edit: inMemory.edit,
         },
       };
     }
@@ -488,6 +492,7 @@ describe('TapeLibrary', () => {
         },
         plotter: inMemory.plotter,
         app: inMemory.app,
+        edit: inMemory.edit,
       });
       await store.load();
       const content = library({tape: 1, song: 1});

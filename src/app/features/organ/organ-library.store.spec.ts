@@ -96,6 +96,7 @@ describe('OrganLibrary', () => {
         tapes: inMemory.tapes,
         plotter: inMemory.plotter,
         app: inMemory.app,
+        edit: inMemory.edit,
       };
     }
 
@@ -143,6 +144,7 @@ describe('OrganLibrary', () => {
         tapes: inMemory.tapes,
         plotter: inMemory.plotter,
         app: inMemory.app,
+        edit: inMemory.edit,
       };
       const {library} = setup(api);
 

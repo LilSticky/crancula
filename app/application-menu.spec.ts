@@ -1,6 +1,7 @@
 import {readFileSync} from 'node:fs';
 import {join} from 'node:path';
 import type {MenuItemConstructorOptions} from 'electron';
+import type {BaseWindow, MenuItem} from 'electron';
 import {describe, expect, it, vi} from 'vitest';
 import type {Language} from '../api/app/language';
 import {loadMenuLabels, menuTemplate} from './application-menu';
@@ -25,13 +26,17 @@ function roles(item: MenuItemConstructorOptions | undefined): (string | undefine
   return submenu(item).map((entry) => entry.role);
 }
 
+function withId(items: MenuItemConstructorOptions[], id: string): MenuItemConstructorOptions | undefined {
+  return everyItem(items).find((item) => item.id === id);
+}
+
 describe('menuTemplate', () => {
   it('labels the English menu in English', () => {
     const template = menuTemplate('en', 'win32');
 
     expect(template.map((item) => item.label)).toEqual(['File', 'Edit', 'View', 'Window']);
     const edit = submenu(template[1]);
-    expect(edit.find((item) => item.role === 'undo')?.label).toBe('Undo');
+    expect(withId(edit, 'undo')?.label).toBe('Undo');
     expect(edit.find((item) => item.role === 'paste')?.label).toBe('Paste');
   });
 
@@ -40,7 +45,7 @@ describe('menuTemplate', () => {
 
     expect(template.map((item) => item.label)).toEqual(['Datei', 'Bearbeiten', 'Ansicht', 'Fenster']);
     const edit = submenu(template[1]);
-    expect(edit.find((item) => item.role === 'undo')?.label).toBe('Rückgängig');
+    expect(withId(edit, 'undo')?.label).toBe('Rückgängig');
     expect(edit.find((item) => item.role === 'paste')?.label).toBe('Einfügen');
   });
 
@@ -60,7 +65,7 @@ describe('menuTemplate', () => {
     const [file, edit, view, window] = menuTemplate('en', 'win32');
 
     expect(roles(file)).toContain('quit');
-    expect(roles(edit)).toEqual(expect.arrayContaining(['undo', 'redo', 'cut', 'copy', 'paste', 'selectAll']));
+    expect(roles(edit)).toEqual(expect.arrayContaining(['cut', 'copy', 'paste', 'selectAll']));
     expect(roles(view)).toEqual(
       expect.arrayContaining(['reload', 'toggleDevTools', 'resetZoom', 'zoomIn', 'zoomOut', 'togglefullscreen']),
     );
@@ -75,6 +80,61 @@ describe('menuTemplate', () => {
     expect(mac[0]?.label).toBeTruthy();
     expect(roles(mac[0])).toContain('quit');
     expect(mac.slice(1).map((item) => item.label)).toEqual(windows.map((item) => item.label));
+  });
+});
+
+describe('Undo and Redo on the Tape', () => {
+  it('gives Undo and Redo no role, so the menu command reaches the Tape', () => {
+    const template = menuTemplate('en', 'win32');
+    const undo = withId(template, 'undo');
+    const redo = withId(template, 'redo');
+
+    expect(undo).toBeDefined();
+    expect(redo).toBeDefined();
+    expect(undo?.role).toBeUndefined();
+    expect(redo?.role).toBeUndefined();
+  });
+
+  it.each<NodeJS.Platform>(['darwin', 'win32', 'linux'])('accelerates Undo with CmdOrCtrl+Z on %s', (platform) => {
+    expect(withId(menuTemplate('en', platform), 'undo')?.accelerator).toBe('CmdOrCtrl+Z');
+  });
+
+  it.each<[NodeJS.Platform, string]>([
+    ['darwin', 'Shift+CmdOrCtrl+Z'],
+    ['win32', 'Ctrl+Y'],
+    ['linux', 'Ctrl+Shift+Z'],
+  ])('accelerates Redo on %s with %s', (platform, accelerator) => {
+    expect(withId(menuTemplate('en', platform), 'redo')?.accelerator).toBe(accelerator);
+  });
+
+  it.each<NodeJS.Platform>(['win32', 'linux'])(
+    'leaves the keys to the renderer on %s (registerAccelerator false)',
+    (platform) => {
+      const template = menuTemplate('en', platform);
+
+      expect(withId(template, 'undo')?.registerAccelerator).toBe(false);
+      expect(withId(template, 'redo')?.registerAccelerator).toBe(false);
+    },
+  );
+
+  it('registers the accelerators on macOS', () => {
+    const template = menuTemplate('en', 'darwin');
+    const undo = withId(template, 'undo');
+    const redo = withId(template, 'redo');
+
+    expect(undo).toBeDefined();
+    expect(redo).toBeDefined();
+    expect(undo?.registerAccelerator).not.toBe(false);
+    expect(redo?.registerAccelerator).not.toBe(false);
+  });
+
+  it.each(['undo', 'redo'] as const)('sends the %s Edit Command on edit:command to the window', (command) => {
+    const send = vi.fn();
+    const window = {webContents: {send, isDestroyed: () => false}} as unknown as BaseWindow;
+
+    withId(menuTemplate('en', 'win32'), command)?.click?.({} as MenuItem, window, {} as KeyboardEvent);
+
+    expect(send).toHaveBeenCalledExactlyOnceWith('edit:command', command);
   });
 });
 

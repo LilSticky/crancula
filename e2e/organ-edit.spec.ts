@@ -40,6 +40,31 @@ test.describe('I can rearrange and delete my organs', () => {
     await app.close();
   });
 
+  test('undoes the text I typed in an Organ field with the Edit menu item, without a Tape open (#122)', async () => {
+    const launched = await launchApp();
+    const {window, app} = launched;
+    try {
+      await window.getByRole('link', {name: 'Organs'}).click();
+      await window.getByTestId('new-organ').click();
+      const name = window.getByTestId('name');
+      await expect(name).toHaveValue('');
+      // One insertion, so that one undo step takes all of it back (Chromium groups typed text differently).
+      await name.fill('Street');
+      await expect(name).toHaveValue('Street');
+
+      await app.evaluate(
+        ({BrowserWindow, Menu}, itemId) => {
+          Menu.getApplicationMenu()?.getMenuItemById(itemId)?.click(undefined, BrowserWindow.getAllWindows()[0]);
+        },
+        'undo',
+      );
+
+      await expect(name).toHaveValue('');
+    } finally {
+      await app.close();
+    }
+  });
+
   test('tells me when the text of a number field is not a number', async () => {
     const {app, window} = await launchApp();
     await window.getByRole('link', {name: 'Organs'}).click();

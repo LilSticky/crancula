@@ -89,5 +89,9 @@ export function createInMemoryCranculaApi(
     app: {
       setLanguage: () => Promise.resolve({status: 'set'}),
     },
+    edit: {
+      // The browser has no application menu, so no Edit Command ever arrives.
+      onCommand: () => () => undefined,
+    },
   };
 }

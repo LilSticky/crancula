@@ -198,6 +198,68 @@ test.describe('Editing a Tape by hand', () => {
     }
   });
 
+  test('undoes and redoes a moved Hole with the Edit menu items (#122)', async () => {
+    const launched = await launchApp();
+    const {window, app} = launched;
+    try {
+      await defineOctaveOrgan(window, 'Octave organ');
+      await createTapeFromSong(window, 'Scale', songRepeatingC4('c4s.mid', 4));
+      const [first] = [...(await drawnHoles(window))].sort(byPlace);
+      if (!first) throw new Error('expected Holes');
+      await holeAt(window, first.row, first.start).click();
+      await pressOnDrawing(window, 'Alt+ArrowRight');
+      await expect(holeAt(window, first.row, first.start + 1)).toHaveCount(1);
+
+      // The menu item sends its Edit Command to the window it is clicked in.
+      const clickMenuItem = (id: 'undo' | 'redo') =>
+        app.evaluate(
+          ({BrowserWindow, Menu}, itemId) => {
+            Menu.getApplicationMenu()?.getMenuItemById(itemId)?.click(undefined, BrowserWindow.getAllWindows()[0]);
+          },
+          id,
+        );
+
+      await clickMenuItem('undo');
+      await expect(holeAt(window, first.row, first.start)).toHaveCount(1);
+      await expect(holeAt(window, first.row, first.start + 1)).toHaveCount(0);
+
+      await clickMenuItem('redo');
+      await expect(holeAt(window, first.row, first.start + 1)).toHaveCount(1);
+      await expect(holeAt(window, first.row, first.start)).toHaveCount(0);
+    } finally {
+      await app.close();
+    }
+  });
+
+  test('ignores Edit Commands on the channel that are not undo or redo, and keeps the moved Hole (#122)', async () => {
+    const launched = await launchApp();
+    const {window, app} = launched;
+    try {
+      await defineOctaveOrgan(window, 'Octave organ');
+      await createTapeFromSong(window, 'Scale', songRepeatingC4('c4s.mid', 4));
+      const [first] = [...(await drawnHoles(window))].sort(byPlace);
+      if (!first) throw new Error('expected Holes');
+      await holeAt(window, first.row, first.start).click();
+      await pressOnDrawing(window, 'Alt+ArrowRight');
+      await expect(holeAt(window, first.row, first.start + 1)).toHaveCount(1);
+      const moved = [...(await drawnHoles(window))].sort(byPlace);
+
+      for (const payload of ['cut', 42, {}] as const) {
+        await app.evaluate(({BrowserWindow}, command) => {
+          BrowserWindow.getAllWindows()[0]?.webContents.send('edit:command', command);
+        }, payload);
+      }
+      // The renderer receives the messages in order; give it time to handle them before checking the Tape.
+      await window.waitForTimeout(200);
+
+      await expect(holeAt(window, first.row, first.start + 1)).toHaveCount(1);
+      await expect(holeAt(window, first.row, first.start)).toHaveCount(0);
+      expect([...(await drawnHoles(window))].sort(byPlace)).toEqual(moved);
+    } finally {
+      await app.close();
+    }
+  });
+
   test('undoes three edits with the shortcut, redoes the first, and keeps the undone state after a restart', async () => {
     const first = await launchApp();
     const {window} = first;

@@ -1,4 +1,4 @@
-import {enableProdMode, importProvidersFrom, provideZoneChangeDetection} from '@angular/core';
+import {enableProdMode, importProvidersFrom, inject, provideAppInitializer, provideZoneChangeDetection} from '@angular/core';
 import {bootstrapApplication} from '@angular/platform-browser';
 import {provideHttpClient, withInterceptorsFromDi, withXhr} from '@angular/common/http';
 import {provideRouter, withComponentInputBinding, withHashLocation} from '@angular/router';
@@ -13,6 +13,7 @@ import {routes} from "./app.routes";
 import {provideOrganLibrary} from "./app/features/organ/organ-library.store";
 import {provideTapeLibrary} from "./app/features/tape/tape-library.store";
 import {provideFormFieldDefaults} from "./app/features/shared/form-field-defaults";
+import {EditCommandRouter} from "./app/features/shared/edit-command-router";
 
 if (APP_CONFIG.production) {
   enableProdMode();
@@ -34,6 +35,10 @@ bootstrapApplication(AppComponent, {
     provideOrganLibrary(),
     provideTapeLibrary(),
     provideFormFieldDefaults(),
+    // Listens for the menu's Edit Commands from the start, so Undo and Redo work before any view registers.
+    provideAppInitializer(() => {
+      inject(EditCommandRouter);
+    }),
     importProvidersFrom(
       CoreModule,
       SharedModule
