@@ -50,7 +50,7 @@ changing behaviour; every existing test stays green and is adapted only in types
 - [x] T007 [US1] Green: `TransposeDialogComponent` (standalone, OnPush, signals, Material dialog/radio/form field, minimal SCSS) in `src/app/features/tape/tape-view/transpose-dialog/`.
 - [x] T008 [US1] Red: `tape-view.component.spec.ts` — `transpose` button in the action bar, disabled when no Hole has a row; a dialog result is committed as one `TapeEditor.apply` with `outcome.resulting` selected.
 - [x] T009 [US1] Green: wire the button and the dialog result through the existing `commit` path in `tape-view.component.ts`/`.html`.
-- [ ] T010 [US1] Red→green: `e2e/tape-transpose.spec.ts` — transpose all by +2 through the dialog, restart Crancula, the Holes are on the new Pipes and the Tape's Transposition shown is unchanged.
+- [x] T010 [US1] Red→green: `e2e/tape-transpose.spec.ts` — transpose all by +2 through the dialog, restart Crancula, the Holes are on the new Pipes and the Tape's Transposition shown is unchanged.
 
 **Checkpoint**: MVP — STATUS updated.
 
