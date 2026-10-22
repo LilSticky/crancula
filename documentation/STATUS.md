@@ -9,6 +9,11 @@ Issues: [GitHub](https://github.com/LilSticky/crancula/issues)
 **Done:** Air Demand dropped from scope (2026-10-22, user decision): it came from a misunderstanding and was never
 meant to be built; removed from ROADMAP, README and the constitution (1.1.3).
 
+**Done:** flaky tape-rename e2e on Windows ([#139](https://github.com/LilSticky/crancula/issues/139), 2026-10-22): a
+blocked snapshot rename (EPERM/EBUSY/EACCES) was retried only 10 × 40 ms, and a failed write is never retried on its
+own, so a longer antivirus lock left `tapes.json` with the old name. The retry now doubles its wait (7 attempts,
+about 2.5 s). Not proven from the CI trace (an Electron trace has no app log); reopen if it recurs.
+
 **Done:** flaky Transpose e2e on Windows ([#133](https://github.com/LilSticky/crancula/issues/133), PR #134): keyboard tests wait for focus to enter the dialog before tabbing.
 
 **Next step:** [#103](https://github.com/LilSticky/crancula/issues/103) Edit a tape (medium, XL): see what is left

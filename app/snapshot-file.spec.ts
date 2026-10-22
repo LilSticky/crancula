@@ -216,6 +216,23 @@ describe('save when the final rename is blocked', () => {
     expect(await readSnapshot()).toEqual(snapshot('new'));
   });
 
+  it('saves when the rename stays blocked for longer than ten fixed retry delays', async () => {
+    const delayMs = 5;
+    let firstAttemptAt: number | undefined;
+    const fs: FileSystem = {
+      ...nodeFs,
+      rename: vi.fn((from: PathLike, to: PathLike) => {
+        const started = (firstAttemptAt ??= Date.now());
+        return Date.now() - started < 60 * delayMs ? Promise.reject(fsError('EPERM')) : nodeFs.rename(from, to);
+      }),
+    };
+
+    const result = await create(dir, {debounceMs: 5, fs, renameRetryDelayMs: delayMs}).save(snapshot('new'));
+
+    expect(result).toEqual({status: 'saved'});
+    expect(await readSnapshot()).toEqual(snapshot('new'));
+  });
+
   it('fails after a bounded number of attempts when the rename stays blocked', async () => {
     await writeFile(toysFile(), JSON.stringify(snapshot('old')));
     const fs = failingRename('EPERM', Number.POSITIVE_INFINITY);
