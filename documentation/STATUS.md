@@ -14,7 +14,8 @@ Edit → Undo/Redo to the Tape. Follow-up from #106: the T031 `ux-review` of the
 the selected Holes by semitones, in a dialog that shows the outcome (octave moves, removals, merges) before it
 applies. Several Holes are selected by Ctrl/Cmd-click, frame drag, Ctrl/Cmd+Arrow and Ctrl/Cmd+A; each
 transposition is one undo. Gate: 1092 unit tests (Angular) and 737 node tests, lint and i18n green; 105 e2e green locally.
-Also: the `test-first` agent runs on Haiku ([#129](https://github.com/LilSticky/crancula/issues/129), PR #128).
+Also: the `test-first` agent runs on Haiku ([#129](https://github.com/LilSticky/crancula/issues/129), PR #128); the
+`implementer` too, and `angular-reviewer`/`electron-reviewer` on Opus ([#132](https://github.com/LilSticky/crancula/issues/132), PR #131).
 
 **Done:** [Tape view UX findings 14–18](https://github.com/LilSticky/crancula/issues/121) (2026-10-20, branch
 `121-tape-view-ux`): sections editable first in the side panel, with Tape details and Import Summary collapsible.
