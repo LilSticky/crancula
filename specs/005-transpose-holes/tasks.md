@@ -81,17 +81,17 @@ changing behaviour; every existing test stays green and is adapted only in types
 - [x] T021 [US4] Green: the view and `tape-drawing.ts` (selected state per Hole, frame rect); keep logic in `hole-selection.ts`, not the component.
 - [x] T022 [P] [US4] Red→green: `selected-hole` shows "n Holes selected" (`selection-count`) for two or more.
 - [x] T023 [US4] Red→green: dialog scope `transpose-scope-selected` ("Selected Holes (n)", preselected when n > 0, disabled at 0) passes `{kind:'these', holes}`; `transposeHoles` red test for `these` (only those move; unknown refs ignored; merges with untouched Holes) first in `api/tape/transpose-holes.spec.ts`.
-- [ ] T024 [US4] Red→green: `e2e/tape-transpose.spec.ts` — Ctrl-click three Holes, drag a frame over two more, transpose selected by −12, only those five moved and are selected.
+- [x] T024 [US4] Red→green: `e2e/tape-transpose.spec.ts` — Ctrl-click three Holes, drag a frame over two more, transpose selected by −12, only those five moved and are selected.
 
 ## Phase 7: User Story 5 — Undo a transposition (P2)
 
-- [ ] T025 [US5] Red→green: `tape-view.component.spec.ts` — after a transposition with merges and removals, one undo restores the Tape and the selection before it; redo applies it again (`remember` stores the `HoleSelection`).
-- [ ] T026 [US5] Red→green: `e2e/tape-transpose.spec.ts` — Ctrl+Z once after transposing gives the stored Tape from before.
+- [x] T025 [US5] Red→green: `tape-view.component.spec.ts` — after a transposition with merges and removals, one undo restores the Tape and the selection before it; redo applies it again (`remember` stores the `HoleSelection`).
+- [x] T026 [US5] Red→green: `e2e/tape-transpose.spec.ts` — Ctrl+Z once after transposing gives the stored Tape from before.
 
 ## Phase 8: User Story 6 — Keyboard and German or English (P3)
 
-- [ ] T027 [US6] Red→green: `e2e/tape-transpose.spec.ts` — keyboard only: Ctrl+Arrow to extend, Tab to `transpose`, type semitones, Enter applies; Escape cancels.
-- [ ] T028 [P] [US6] Red→green: `e2e/tape-german.spec.ts` — the dialog and "n Löcher ausgewählt" in German.
+- [x] T027 [US6] Red→green: `e2e/tape-transpose.spec.ts` — keyboard only: Ctrl+Arrow to extend, Tab to `transpose`, type semitones, Enter applies; Escape cancels.
+- [x] T028 [P] [US6] Red→green: `e2e/tape-german.spec.ts` — the dialog and "n Löcher ausgewählt" in German.
 
 ## Phase 9: Polish
 
