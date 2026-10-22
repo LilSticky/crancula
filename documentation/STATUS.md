@@ -243,3 +243,6 @@ Fixed 2026-10-19: the import screen's Song sheet spilled under the action bar in
   Electron Node runtime moves beyond 24) and `electron-reloader` are held in `dependabot.yml`;
   `electron-reloader` waits for the ESM main process ([#47](https://github.com/LilSticky/crancula/issues/47)).
   A flaky macOS e2e test is tracked in [#48](https://github.com/LilSticky/crancula/issues/48).
+- 2026-10-22: TypeScript 7 held in `dependabot.yml` ([#136](https://github.com/LilSticky/crancula/issues/136)):
+  Angular 22 (including 22.3.0-next) requires TypeScript `>=6.0 <6.1`, so `npm ci` failed on #116,
+  which is closed. Remove the hold once Angular's peer range allows 7.
