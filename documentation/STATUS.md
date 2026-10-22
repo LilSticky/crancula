@@ -11,10 +11,10 @@ Issues: [GitHub](https://github.com/LilSticky/crancula/issues)
 **Next step:** [#103](https://github.com/LilSticky/crancula/issues/103) Edit a tape (medium, XL): see what is left
 after #105 and #106, and split it before taking the next part.
 
-**In review:** menu Undo and Redo act on the Tape ([#122](https://github.com/LilSticky/crancula/issues/122), branch
+**Done:** menu Undo and Redo act on the Tape ([#122](https://github.com/LilSticky/crancula/issues/122), PR #135, 2026-10-22, branch
 `122-menu-undo-redo`). The menu sends an Edit Command over `edit:command`; text fields keep their own undo, the
 Tape view handles the rest, and a dialog that is open stops it. Design: [discovery/menu-undo-redo.md](discovery/menu-undo-redo.md).
-Known gap: not tried on a real Mac yet.
+Gate: 765 node + 1114 Angular unit tests, lint, i18n and 113 e2e green. Known gap: not tried on a real Mac yet.
 
 **Done:** Transpose holes ([#106](https://github.com/LilSticky/crancula/issues/106), part of Edit a tape
 [#103](https://github.com/LilSticky/crancula/issues/103), branch `005-transpose-holes`, PR #130, 2026-10-22): transpose all or
