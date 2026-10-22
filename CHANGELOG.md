@@ -9,6 +9,7 @@ as its GitHub Release notes.
 ## [Unreleased]
 
 ### Added
+- Transpose all or the selected Holes of a Tape.
 - Rename a Tape: choose Rename in the Tape's menu in the Tape list.
 - Bringing a Song onto a Tape shows a live preview of the Tape's first Columns under the Fit. It
   follows the Parts, the Transposition and the Column length before you create the Tape.

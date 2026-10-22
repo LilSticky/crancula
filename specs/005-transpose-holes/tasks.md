@@ -98,7 +98,7 @@ changing behaviour; every existing test stays green and is adapted only in types
 - [x] T029 [P] `documentation/DESIGN-GUIDE.md`: selection gestures and keys, the Transpose dialog.
 - [x] T030 [P] `angular-reviewer` on the `src/` diff (done twice, findings fixed); fix findings via `implementer`.
 - [ ] T031 `spec-auditor` against spec.md; `npm run lint`, `npm run test`, `npm run i18n:check`, `npm run build`, `npm run e2e` green; `ux-review` of the Tape view with the dialog.
-- [ ] T032 STATUS and ROADMAP (#106 done), `CHANGELOG.md` `[Unreleased]`: "Transpose all or the selected Holes of a Tape".
+- [x] T032 STATUS and ROADMAP (#106 done), `CHANGELOG.md` `[Unreleased]`: "Transpose all or the selected Holes of a Tape".
 
 ## Dependencies
 

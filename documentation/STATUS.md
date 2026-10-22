@@ -6,11 +6,16 @@ Issues: [GitHub](https://github.com/LilSticky/crancula/issues)
 
 ## Current slice
 
-**Next step:** Open the pull request for [#121](https://github.com/LilSticky/crancula/issues/121) (branch
-`121-tape-view-ux`), merge it when CI is green, then pick the next issue by priority: candidates are
-[#106](https://github.com/LilSticky/crancula/issues/106) "Slice: Transpose holes" (priority medium) and
-[#122](https://github.com/LilSticky/crancula/issues/122) (low): route the application menu's Edit →
-Undo/Redo to the Tape.
+**Next step:** Open the pull request for [#106](https://github.com/LilSticky/crancula/issues/106) (branch
+`005-transpose-holes`), merge it when CI is green, then [#122](https://github.com/LilSticky/crancula/issues/122)
+(low): route the application menu's Edit → Undo/Redo to the Tape.
+
+**Done:** Transpose holes ([#106](https://github.com/LilSticky/crancula/issues/106), part of Edit a tape
+[#103](https://github.com/LilSticky/crancula/issues/103), branch `005-transpose-holes`, 2026-10-22): transpose all or
+the selected Holes by semitones, in a dialog that shows the outcome (octave moves, removals, merges) before it
+applies. Several Holes are selected by Ctrl/Cmd-click, frame drag, Ctrl/Cmd+Arrow and Ctrl/Cmd+A; each
+transposition is one undo. Gate: 1092 unit tests (Angular) and 737 node tests, lint and i18n green; 105 e2e green locally.
+Also: the `test-first` agent runs on Haiku ([#129](https://github.com/LilSticky/crancula/issues/129), PR #128).
 
 **Done:** [Tape view UX findings 14–18](https://github.com/LilSticky/crancula/issues/121) (2026-10-20, branch
 `121-tape-view-ux`): sections editable first in the side panel, with Tape details and Import Summary collapsible.
