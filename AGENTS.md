@@ -94,7 +94,7 @@ and commits. It does not write code itself, which keeps its context small across
 |------|-------|-------|
 | Domain discovery, slicing, dictionary review | `domain-modeler` | opus |
 | Failing test for one task (red) | `test-first` | haiku |
-| Make it green, refactor (green) | `implementer` | sonnet |
+| Make it green, refactor (green) | `implementer` | haiku |
 | Review `src/` changes | `angular-reviewer` | sonnet |
 | Review `app/` and IPC changes | `electron-reviewer` | sonnet |
 | Slice vs. `spec.md` before merging | `spec-auditor` | sonnet |
