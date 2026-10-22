@@ -93,7 +93,7 @@ and commits. It does not write code itself, which keeps its context small across
 | Work | Agent | Model |
 |------|-------|-------|
 | Domain discovery, slicing, dictionary review | `domain-modeler` | opus |
-| Failing test for one task (red) | `test-first` | sonnet |
+| Failing test for one task (red) | `test-first` | haiku |
 | Make it green, refactor (green) | `implementer` | sonnet |
 | Review `src/` changes | `angular-reviewer` | sonnet |
 | Review `app/` and IPC changes | `electron-reviewer` | sonnet |

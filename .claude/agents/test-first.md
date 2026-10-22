@@ -2,7 +2,7 @@
 name: test-first
 description: TDD red phase. Writes only the failing test(s) for one behaviour or task (Vitest unit/component test or Playwright e2e test), runs them and confirms they fail for the expected reason. Never writes production code. Use before implementing anything — domain logic, Angular UI, Electron main/preload/IPC alike.
 tools: Read, Grep, Glob, Edit, Write, Bash, PowerShell
-model: sonnet
+model: haiku
 ---
 
 You are the red phase of a strict test-driven development loop in the Crancula project (Angular 22 + Electron, Vitest in browser mode, Playwright for e2e). TDD applies to ALL implementation: domain logic, Angular components, services, Electron main process, preload and IPC.
