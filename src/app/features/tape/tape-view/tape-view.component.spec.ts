@@ -78,6 +78,8 @@ interface RenderOptions {
    * (from 1) is note 52 + r, so row 25 is F5. The Minimum Hole Length is 2.5 mm, the Minimum Gap 1.5 mm.
    */
   readonly holes?: readonly {readonly row: number; readonly start: number; readonly length: number}[];
+  /** The notes of the Organ's Pipes from row 1 on, for `holes`; the notes 53 to 77 when not given. */
+  readonly pipeNotes?: readonly number[];
   /** The Column length of the Tape with `holes` in mm; 2.5 when not given. */
   readonly columnLength?: number;
   /** The language of the texts; English when not given. */
@@ -140,10 +142,11 @@ async function render(options: RenderOptions = {}) {
         : [{provide: BreakpointObserver, useValue: stubBreakpointObserver(options.windowWidth)}]),
     ],
   });
+  const pipeNotes = options.pipeNotes ?? Array.from({length: 25}, (_, index) => 52 + index + 1);
   const organ = options.holes
-    ? testOrgan('Street organ', 25, {
+    ? testOrgan('Street organ', pipeNotes.length, {
         leadIn: options.leadIn ?? 0,
-        pipes: Array.from({length: 25}, (_, index) => ({note: 52 + index + 1})),
+        pipes: pipeNotes.map((note) => ({note})),
       })
     : testOrgan('Street organ', 3, options.leadIn === undefined ? {} : {leadIn: options.leadIn});
   const organs = TestBed.inject(OrganLibrary);
@@ -2923,6 +2926,91 @@ describe('TapeViewComponent', () => {
       expect(storedHoles(tape.id)).toEqual(['25:10+3']);
       expect(selected(view())).toEqual(['25:10']);
       TestBed.inject(MatDialog).closeAll();
+    });
+  });
+
+  describe('undoing a transposition (T025)', () => {
+    // The Organ has no D#4, D#5 or C#4 (notes 63, 75 and 61 left out), so transposing by +1 moves a C4 Hole
+    // by an octave onto C#5 and removes a D4 Hole; a C5 Hole moves onto C#5 and merges with the C4 Hole.
+    const pipeNotes = Array.from({length: 25}, (_, index) => 53 + index).filter((note) => ![61, 63, 75].includes(note));
+    const rowOf = (note: number): number => pipeNotes.indexOf(note) + 1;
+    const holes = [
+      {row: rowOf(60), start: 10, length: 3},
+      {row: rowOf(72), start: 10, length: 5},
+      {row: rowOf(62), start: 20, length: 2},
+      {row: rowOf(66), start: 30, length: 2},
+    ];
+    const transposeButton = (view: HTMLElement | null) =>
+      view?.querySelector<HTMLButtonElement>('[data-testid="page-head-actions"] [data-testid="transpose"]') ?? null;
+    const button = (view: HTMLElement | null, testId: 'undo' | 'redo') =>
+      view?.querySelector<HTMLButtonElement>(`[data-testid="page-head-actions"] [data-testid="${testId}"]`) ?? null;
+    const rectAt = (view: HTMLElement | null, note: number, start: number): SVGRectElement => {
+      const rect = view?.querySelector<SVGRectElement>(
+        `[data-testid="tape-scroll"] rect[data-testid="hole"][data-row="${rowOf(note) - 1}"][data-start="${start}"]`,
+      );
+      if (!rect) throw new Error(`no Hole drawn on note ${note} at start ${start}`);
+      return rect;
+    };
+    const selected = (view: HTMLElement | null) =>
+      all(view, '[data-testid="tape-scroll"] rect[data-testid="hole"].selected')
+        .map((rect) => `${Number(rect.getAttribute('data-row')) + 1}:${rect.getAttribute('data-start')}`)
+        .sort();
+    /** The Holes as stored: the Pipe's note, start Column and length in Columns, sorted. */
+    const storedHoles = (tapeId: string) =>
+      (TestBed.inject(TapeLibrary).tapeEntities().find((candidate) => candidate.id === tapeId)?.holes ?? [])
+        .map((hole) => `${hole.pipe}:${hole.start}+${hole.length}`)
+        .sort();
+    const dialogInput = (testId: string): HTMLInputElement => {
+      const found = document.body.querySelector(`[data-testid="${testId}"]`);
+      const input = found instanceof HTMLInputElement ? found : found?.querySelector('input');
+      if (!input) throw new Error(`no input in ${testId}`);
+      return input;
+    };
+
+    it('restores the Tape and the selection before a transposition with merges and removals in one undo, and applies it again with redo', async () => {
+      const {tape, open, view, settle} = await render({holes, pipeNotes});
+      await open(`/tapes/${tape.id}`);
+      const flush = async () => {
+        TestBed.inject(ApplicationRef).tick();
+        await settle();
+      };
+      const before = storedHoles(tape.id);
+      rectAt(view(), 60, 10).dispatchEvent(new MouseEvent('click', {bubbles: true}));
+      await settle();
+      expect(selected(view())).toEqual([`${rowOf(60)}:10`]);
+
+      transposeButton(view())?.click();
+      await flush();
+      dialogInput('transpose-scope-all').click();
+      await flush();
+      const field = document.body.querySelector<HTMLInputElement>('[data-testid="transpose-semitones"]');
+      if (field === null) throw new Error('no semitones field');
+      field.value = '1';
+      field.dispatchEvent(new Event('input', {bubbles: true}));
+      await flush();
+      document.body.querySelector<HTMLButtonElement>('[data-testid="transpose-apply"]')?.click();
+      await settle();
+
+      const transposed = storedHoles(tape.id);
+      expect(transposed).toEqual(['67:30+2', '73:10+5']);
+      expect(selected(view())).toEqual([`${rowOf(67)}:30`, `${rowOf(73)}:10`].sort());
+
+      const update = vi.spyOn(TestBed.inject(TapeLibrary), 'update');
+      button(view(), 'undo')?.click();
+      await settle();
+
+      expect(storedHoles(tape.id)).toEqual(before);
+      expect(selected(view())).toEqual([`${rowOf(60)}:10`]);
+      expect(update).toHaveBeenCalledTimes(1);
+      expect(button(view(), 'undo')?.disabled).toBe(true);
+
+      button(view(), 'redo')?.click();
+      await settle();
+
+      expect(storedHoles(tape.id)).toEqual(transposed);
+      expect(selected(view())).toEqual([`${rowOf(67)}:30`, `${rowOf(73)}:10`].sort());
+      expect(update).toHaveBeenCalledTimes(2);
+      expect(button(view(), 'redo')?.disabled).toBe(true);
     });
   });
 
