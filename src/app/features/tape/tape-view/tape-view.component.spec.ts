@@ -1,5 +1,5 @@
 import {BreakpointObserver, type BreakpointState} from '@angular/cdk/layout';
-import {Component, signal} from '@angular/core';
+import {ApplicationRef, Component, signal} from '@angular/core';
 import {type Observable, of} from 'rxjs';
 import {TestBed} from '@angular/core/testing';
 import {MatDialog} from '@angular/material/dialog';
@@ -1647,7 +1647,7 @@ describe('TapeViewComponent', () => {
       await open(`/tapes/${tape.id}`);
 
       const controls = all(view(), 'button, input, select, textarea, [contenteditable]').filter(
-        (control) => control.closest('[data-testid="zoom"], [data-testid="add-hole"]') === null && !['export', 'side-panel-toggle', 'undo', 'redo', 'tape-section-toggle', 'import-summary-toggle'].includes(control.getAttribute('data-testid') ?? ''),
+        (control) => control.closest('[data-testid="zoom"], [data-testid="add-hole"]') === null && !['export', 'side-panel-toggle', 'undo', 'redo', 'transpose', 'tape-section-toggle', 'import-summary-toggle'].includes(control.getAttribute('data-testid') ?? ''),
       );
       expect(controls).toHaveLength(0);
     });
@@ -2864,6 +2864,65 @@ describe('TapeViewComponent', () => {
 
         expect(setUp.scroll.scrollLeft).toBe(resting);
       });
+    });
+  });
+
+  describe('transposing Holes (T008)', () => {
+    // The Pipe of row r is note 52 + r. Row 24 is E5, row 25 F5, so transposing a Hole of row 24 by +1 lands on row 25.
+    const holes = [{row: 24, start: 10, length: 3}];
+    const transposeButton = (view: HTMLElement | null) =>
+      view?.querySelector<HTMLButtonElement>('[data-testid="page-head-actions"] [data-testid="transpose"]') ?? null;
+    const selected = (view: HTMLElement | null) =>
+      all(view, '[data-testid="tape-scroll"] rect[data-testid="hole"].selected').map(
+        (rect) => `${Number(rect.getAttribute('data-row')) + 1}:${rect.getAttribute('data-start')}`,
+      );
+    const storedHoles = (tapeId: string) =>
+      (TestBed.inject(TapeLibrary).tapeEntities().find((candidate) => candidate.id === tapeId)?.holes ?? []).map(
+        (hole) => `${hole.pipe - 52}:${hole.start}+${hole.length}`,
+      );
+
+    it('shows a Transpose button in the action bar, enabled on a Tape with Holes', async () => {
+      const {tape, open, view} = await render({holes});
+
+      await open(`/tapes/${tape.id}`);
+
+      expect(transposeButton(view())?.textContent?.trim()).toBe('Transpose…');
+      expect(transposeButton(view())?.disabled).toBe(false);
+    });
+
+    it('disables the Transpose button on a Tape without Holes', async () => {
+      const {tape, open, view} = await render({oneColumn: true});
+
+      await open(`/tapes/${tape.id}`);
+
+      expect(transposeButton(view())).not.toBeNull();
+      expect(transposeButton(view())?.disabled).toBe(true);
+    });
+
+    it('commits a transposition applied in the dialog as one saved edit and selects the resulting Holes', async () => {
+      const {tape, open, view, settle} = await render({holes});
+      await open(`/tapes/${tape.id}`);
+      const update = vi.spyOn(TestBed.inject(TapeLibrary), 'update');
+      const flush = async () => {
+        TestBed.inject(ApplicationRef).tick();
+        await settle();
+      };
+
+      transposeButton(view())?.click();
+      await flush();
+      const field = document.body.querySelector<HTMLInputElement>('[data-testid="transpose-semitones"]');
+      expect(field).not.toBeNull();
+      if (field === null) return;
+      field.value = '1';
+      field.dispatchEvent(new Event('input', {bubbles: true}));
+      await flush();
+      document.body.querySelector<HTMLButtonElement>('[data-testid="transpose-apply"]')?.click();
+      await settle();
+
+      expect(update).toHaveBeenCalledTimes(1);
+      expect(storedHoles(tape.id)).toEqual(['25:10+3']);
+      expect(selected(view())).toEqual(['25:10']);
+      TestBed.inject(MatDialog).closeAll();
     });
   });
 });

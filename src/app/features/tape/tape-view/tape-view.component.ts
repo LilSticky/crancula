@@ -16,7 +16,9 @@ import {BreakpointObserver} from '@angular/cdk/layout';
 import {toSignal} from '@angular/core/rxjs-interop';
 import {ActivatedRoute, Router} from '@angular/router';
 import {map} from 'rxjs';
-import {column, cuttingProblems, holesWithCuttingProblems, noteName, type HoleRef, type ImportSummary, type Tape, tapeGeometry} from '@api/index';
+import {column, cuttingProblems, holesWithCuttingProblems, noteName, type HoleRef, type ImportSummary, type Tape, tapeGeometry, type Organ, type Transposed} from '@api/index';
+import {MatDialog} from '@angular/material/dialog';
+import {TransposeDialogComponent, type TransposeDialogData} from './transpose-dialog/transpose-dialog.component';
 import {MatButton, MatIconButton} from '@angular/material/button';
 import {MatButtonToggle, MatButtonToggleGroup} from '@angular/material/button-toggle';
 import {MatIcon} from '@angular/material/icon';
@@ -112,6 +114,7 @@ export class TapeViewComponent {
   /** The shortcuts of Undo and Redo as the tooltips name them. */
   protected readonly shortcuts = shortcutsOf(this.platform);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly dialog = inject(MatDialog);
   private readonly translate = inject(TranslateService);
   private readonly zone = inject(NgZone);
   private readonly holeDrag = new HoleDragSession();
@@ -277,6 +280,37 @@ export class TapeViewComponent {
     const tape = this.tape();
     const organ = this.organ();
     if (tape !== undefined && organ !== undefined) void this.plotterExport.export(tape, organ);
+  }
+
+  /** Transposing needs a Hole whose Pipe the Organ has. */
+  protected readonly canTranspose = computed(() => {
+    const tape = this.tape();
+    const organ = this.organ();
+    return tape !== undefined && organ !== undefined && tape.holes.some((hole) => organ.pipes.some((pipe) => pipe.note === hole.pipe));
+  });
+
+  /** Asks in a dialog how to transpose, then saves the result as one edit and selects the moved Holes. */
+  protected transpose(): void {
+    const tape = this.tape();
+    const organ = this.organ();
+    if (tape === undefined || organ === undefined) return;
+    const selected = this.selection().flatMap(({row, start}) => {
+      const pipe = organ.pipes[row - 1]?.note;
+      const startColumn = column(start);
+      return pipe === undefined || startColumn === undefined ? [] : [{pipe, start: startColumn}];
+    });
+    const dialog = this.dialog.open<TransposeDialogComponent, TransposeDialogData, Transposed>(TransposeDialogComponent, {data: {tape, organ, selected}});
+    dialog.beforeClosed().subscribe((result) => {
+      if (result !== undefined) this.commitTransposed(result, organ);
+    });
+  }
+
+  private commitTransposed(result: Transposed, organ: Organ): void {
+    const selection = result.outcome.resulting.flatMap(({pipe, start}) => {
+      const row = organ.pipes.findIndex((candidate) => candidate.note === pipe) + 1;
+      return row > 0 ? [{row, start}] : [];
+    });
+    this.commit({kind: 'applied', tape: result.tape, selection});
   }
 
   protected select(hole: {readonly row: number; readonly start: number}): void {
