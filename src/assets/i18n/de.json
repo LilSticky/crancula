@@ -320,8 +320,7 @@
       "SAVE_BLOCKED": "Deine Lochbänder konnten nicht geladen werden, darum können Pfeifen mit Löchern vorerst nicht entfernt werden.",
       "REMOVE_PIPES_HOLES": "Beim Entfernen dieser Pfeifen werden auch ihre Löcher ({{holes}}) aus Lochbändern ({{tapes}}) dieser Drehorgel entfernt.",
       "TAPE_PER_CRANK_TURN": "Bandvorschub pro Umdrehung",
-      "TAPE_PER_CRANK_TURN_HINT": "Wie weit eine Umdrehung das Lochband zieht; nötig, um ein Lochband anzuhören",
-      "TAPE_PER_CRANK_TURN_INVALID": "Der Bandvorschub pro Umdrehung muss größer als 0 sein."
+      "TAPE_PER_CRANK_TURN_HINT": "Wie weit eine Umdrehung das Lochband zieht; nötig, um ein Lochband anzuhören"
     },
     "LEAVE": {
       "TITLE": "Nicht gespeicherte Änderungen",

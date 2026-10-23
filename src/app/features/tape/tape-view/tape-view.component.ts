@@ -115,6 +115,12 @@ interface Point {
   readonly y: number;
 }
 
+/** How long after the owner last scrolled or wheeled the stage the playhead leaves the stage alone, in ms. */
+const OWNER_SCROLL_PAUSE = 2000;
+
+/** Where the playhead lands when the stage follows it: this share of the stage's width in from the left edge. */
+const FOLLOW_LEAD = 0.2;
+
 /** The shell's query: below this width the side panel gives way to a toggle. */
 const COMPACT_QUERY = '(max-width: 1179.98px)';
 
@@ -190,6 +196,10 @@ export class TapeViewComponent {
     };
   });
 
+  /** When the owner last scrolled or wheeled the stage, in ms of `performance.now()`. */
+  private ownerScrolledAt = Number.NEGATIVE_INFINITY;
+  /** The scroll position the playhead last set, so the scroll event it causes is not taken for the owner's. */
+  private followedScrollLeft: number | undefined;
   private readonly scrollElement = viewChild<ElementRef<HTMLElement>>('scroll');
   private readonly stage = stageMetrics(this.scrollElement);
   private readonly drawingSvg = viewChild<ElementRef<SVGSVGElement>>('tapeSvg');
@@ -376,6 +386,25 @@ export class TapeViewComponent {
     return {x: (geometry.leadIn + playhead * tape.columnLength) * this.scale(), column: Math.round(playhead * 100) / 100};
   });
 
+  /** Whether editing is paused: the Preview plays, and the Tape must not change except by its Crank speed. */
+  protected readonly editingPaused = computed(() => this.preview.playing());
+
+  /** A click on the ruler moves the playhead to the Column under it, rounded down; nothing happens while the Preview plays. */
+  protected onRulerClick(event: MouseEvent, svg: Element): void {
+    const tape = this.shownTape();
+    const geometry = this.geometry();
+    if (tape === undefined || geometry === undefined || this.editingPaused()) return;
+    const x = event.clientX - svg.getBoundingClientRect().left;
+    const picked = column(Math.min(gridAt(x, 0, this.scale(), geometry).column, tape.length - 1));
+    if (picked !== undefined) this.preview.setPlayhead(picked);
+  }
+
+  /** The start Column the Preview section typed (0-based): moves the playhead there. */
+  protected onStartColumnChange(index: number): void {
+    const picked = column(index);
+    if (picked !== undefined) this.preview.setPlayhead(picked);
+  }
+
   /** Starts a Preview from the playhead, or from the first Column when the playhead is at the end; stops a playing one. */
   protected togglePreview(): void {
     if (this.preview.playing()) {
@@ -391,13 +420,13 @@ export class TapeViewComponent {
   }
 
   protected undo(): void {
-    if (!this.editor.canUndo()) return;
+    if (this.editingPaused() || !this.editor.canUndo()) return;
     void this.editor.undo();
     this.restoreSelection(); // The editor moves its history before it saves.
   }
 
   protected redo(): void {
-    if (!this.editor.canRedo()) return;
+    if (this.editingPaused() || !this.editor.canRedo()) return;
     void this.editor.redo();
     this.restoreSelection(); // The editor moves its history before it saves.
   }
@@ -448,6 +477,7 @@ export class TapeViewComponent {
     }
     const intent = editIntent(event);
     if (intent !== undefined) {
+      if (this.editingPaused()) return;
       const tape = this.tape();
       const organ = this.organ();
       const selected = soleOf(this.selection());
@@ -605,7 +635,7 @@ export class TapeViewComponent {
     const geometry = this.geometry();
     const pipe = organ?.pipes[hole.row]?.note;
     const stored = tape?.holes.find((candidate) => candidate.pipe === pipe && candidate.start === hole.start);
-    if (event.button !== 0 || tape === undefined || organ === undefined || geometry === undefined || stored === undefined) return;
+    if (event.button !== 0 || this.editingPaused() || tape === undefined || organ === undefined || geometry === undefined || stored === undefined) return;
     const box = svg.getBoundingClientRect();
     this.holeDrag.start(
       {
@@ -641,8 +671,14 @@ export class TapeViewComponent {
     this.holeDrag.cancel();
   }
 
-  /** Saves an edit and selects the Hole it leaves; a refusal says why instead. Tells whether the edit was applied. */
+  /** Saves an edit unless editing is paused, and selects the Hole it leaves; a refusal says why instead. Tells whether the edit was applied. */
   private commit(outcome: EditOutcome): boolean {
+    if (this.editingPaused()) return false;
+    return this.save(outcome);
+  }
+
+  /** Saves an outcome as one edit; the Crank speed may change while editing is paused, so it bypasses the pause. */
+  private save(outcome: EditOutcome): boolean {
     if (outcome.kind === 'refused') {
       const text = this.translate.instant('TAPE.EDIT.REFUSED_OVERLAP', {
         note: noteName(outcome.other.pipe),
@@ -665,7 +701,7 @@ export class TapeViewComponent {
 
   /** Saves the Tape with a new Crank speed as one edit; the Holes and the selection stay. */
   protected onCrankSpeedChange(tape: Tape): void {
-    this.commit({kind: 'applied', tape, selection: this.selection()});
+    this.save({kind: 'applied', tape, selection: this.selection()});
   }
 
   /** A double-click on an empty spot of a row adds a Hole of that row's Pipe at that Column. */
@@ -707,7 +743,26 @@ export class TapeViewComponent {
   }
 
   protected onScroll(element: HTMLElement): void {
+    if (element.scrollLeft !== this.followedScrollLeft) this.ownerScrolledAt = performance.now();
     this.stage.onScroll(element);
+  }
+
+  protected onWheel(): void {
+    this.ownerScrolledAt = performance.now();
+  }
+
+  /**
+   * While the Preview plays, scrolls the stage when the playhead leaves its visible part, so the playhead stays in view;
+   * not while the owner scrolled or wheeled the stage lately.
+   */
+  private followPlayhead(element: HTMLElement): void {
+    const line = this.playheadLine();
+    if (!this.preview.playing() || line === undefined) return;
+    if (performance.now() - this.ownerScrolledAt < OWNER_SCROLL_PAUSE) return;
+    const visibleEnd = element.scrollLeft + element.clientWidth;
+    if (line.x >= element.scrollLeft && line.x <= visibleEnd) return;
+    element.scrollLeft = line.x - element.clientWidth * FOLLOW_LEAD;
+    this.followedScrollLeft = element.scrollLeft;
   }
 
   protected onOverviewClick(event: MouseEvent, overview: Element): void {
@@ -738,6 +793,7 @@ export class TapeViewComponent {
       const element = this.scrollElement()?.nativeElement;
       if (element === undefined) return;
       this.stage.readStage(element);
+      this.followPlayhead(element);
       if (!this.scrollToSelection) return;
       const selected = element.querySelector('rect.selected');
       if (selected !== null) {

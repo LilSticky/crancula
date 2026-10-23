@@ -90,17 +90,17 @@ green). Test pyramid: Node Vitest for `api/`; `ng test` (jsdom, fake `PreviewSou
 
 **Goal**: start the Preview at a chosen Column. **Independent test**: start at Column 200, the playhead starts there.
 
-- [ ] T036 [US4] Red: `tape-view.component.spec.ts` and `preview-section.component.spec.ts`: a ruler click (stopped) sets the start Column (rounded down from the x position) and moves the playhead; `preview-start-column` (1-based, 1..columns) does the same; Play at the end starts at Column 1; while playing a ruler click does nothing.
-- [ ] T037 [US4] Green: ruler click and start field in `tape-view.component.ts/.html` and the Preview section.
-- [ ] T038 [US4] Red: `tape-view.component.spec.ts`: while playing the view scrolls to keep the playhead visible unless the owner scrolled in the last 2 seconds.
-- [ ] T039 [US4] Green: follow-the-playhead in `tape-view.component.ts`.
+- [x] T036 [US4] Red: `tape-view.component.spec.ts` and `preview-section.component.spec.ts`: a ruler click (stopped) sets the start Column (rounded down from the x position) and moves the playhead; `preview-start-column` (1-based, 1..columns) does the same; Play at the end starts at Column 1; while playing a ruler click does nothing.
+- [x] T037 [US4] Green: ruler click and start field in `tape-view.component.ts/.html` and the Preview section.
+- [x] T038 [US4] Red: `tape-view.component.spec.ts`: while playing the view scrolls to keep the playhead visible unless the owner scrolled in the last 2 seconds.
+- [x] T039 [US4] Green: follow-the-playhead in `tape-view.component.ts`.
 
 ## Phase 7: User Story 5 — Editing is paused while it plays (P2)
 
 **Goal**: no Tape edit while playing except the Crank speed. **Independent test**: start, try to drag, Delete, Undo, Transpose; nothing changes.
 
-- [ ] T040 [US5] Red: `tape-view.component.spec.ts`: while `TapePreview.playing()`: pointer drag, resize, add and remove do nothing; Delete, Ctrl+Z/Y, Ctrl+A-and-arrow moves do nothing; Undo, Redo, Transpose, Add a Hole, Column length Apply are disabled; the `EditCommandRouter` handler ignores menu Undo/Redo; `editing-paused` shows; the Crank speed field still applies; after stop all of it works again.
-- [ ] T041 [US5] Green: `editingPaused` computed and the guards in `tape-view.component.ts/.html`, the hole-editing handlers and the Tape and side panel sections.
+- [x] T040 [US5] Red: `tape-view.component.spec.ts`: while `TapePreview.playing()`: pointer drag, resize, add and remove do nothing; Delete, Ctrl+Z/Y, Ctrl+A-and-arrow moves do nothing; Undo, Redo, Transpose, Add a Hole, Column length Apply are disabled; the `EditCommandRouter` handler ignores menu Undo/Redo; `editing-paused` shows; the Crank speed field still applies; after stop all of it works again.
+- [x] T041 [US5] Green: `editingPaused` computed and the guards in `tape-view.component.ts/.html`, the hole-editing handlers and the Tape and side panel sections.
 - [ ] T042 [US5] Red: `e2e/tape-preview.spec.ts`: while playing a Hole drag and the menu Undo change nothing; after stop they work.
 - [ ] T043 [US5] Green: whatever T042 still needs.
 

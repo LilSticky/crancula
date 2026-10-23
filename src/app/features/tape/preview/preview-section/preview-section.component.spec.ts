@@ -39,6 +39,8 @@ async function render(
     readonly tape?: Tape;
     readonly organ?: Organ;
     readonly playing?: boolean;
+    /** The Column under the playhead, 0-based; the start field shows it when stopped. */
+    readonly playhead?: number;
   } = {},
 ) {
   TestBed.configureTestingModule({
@@ -48,6 +50,7 @@ async function render(
   fixture.componentRef.setInput('tape', options.tape ?? tapeWith(10));
   fixture.componentRef.setInput('organ', options.organ ?? organWith(10));
   fixture.componentRef.setInput('playing', options.playing ?? false);
+  if (options.playhead !== undefined) fixture.componentRef.setInput('playhead', options.playhead);
   const emitted: Tape[] = [];
   fixture.componentInstance.crankSpeedChange.subscribe((changed: Tape) => emitted.push(changed));
   fixture.autoDetectChanges();
@@ -83,7 +86,7 @@ async function render(
     await fixture.whenStable();
   };
   const text = (testId: string): string | undefined => element.querySelector(`[data-testid="${testId}"]`)?.textContent?.trim();
-  return {element, field, apply, type, press, blur, text, emitted};
+  return {element, fixture, component: fixture.componentInstance, field, apply, type, press, blur, text, emitted};
 }
 
 describe('PreviewSectionComponent', () => {
@@ -206,5 +209,48 @@ describe('PreviewSectionComponent', () => {
 
     expect(field().value).toBe('60');
     expect(emitted).toHaveLength(0);
+  });
+
+  describe('the start Column (T036)', () => {
+    const startField = (element: HTMLElement): HTMLInputElement => {
+      const input = element.querySelector<HTMLInputElement>('[data-testid="preview-start-column"]');
+      if (input === null) throw new Error('no start Column field');
+      return input;
+    };
+    /** Types a Column into the start field the way a user does, then presses Enter. */
+    const typeStartColumn = async (element: HTMLElement, fixture: ComponentFixture<PreviewSectionComponent>, text: string) => {
+      const field = startField(element);
+      field.value = text;
+      field.dispatchEvent(new Event('input', {bubbles: true}));
+      field.dispatchEvent(new KeyboardEvent('keydown', {key: 'Enter', bubbles: true, cancelable: true}));
+      fixture.detectChanges();
+      await fixture.whenStable();
+    };
+
+    it('shows the Column of the playhead in the start field when stopped, counting Columns from 1', async () => {
+      const {element} = await render({playhead: 36});
+
+      expect(startField(element).value).toBe('37');
+    });
+
+    it('emits the typed Column counted from 0 when Enter is pressed in the start field', async () => {
+      const {element, fixture, component} = await render({tape: tapeWith(50)});
+      const emitted: number[] = [];
+      component.startColumnChange.subscribe((column: number) => emitted.push(column));
+
+      await typeStartColumn(element, fixture, '38');
+
+      expect(emitted).toEqual([37]);
+    });
+
+    it.each(['0', '11'])('emits nothing for "%s", which is no Column of a 10-Column Tape', async (typed) => {
+      const {element, fixture, component} = await render({tape: tapeWith(10)});
+      const emitted: number[] = [];
+      component.startColumnChange.subscribe((column: number) => emitted.push(column));
+
+      await typeStartColumn(element, fixture, typed);
+
+      expect(emitted).toEqual([]);
+    });
   });
 });

@@ -34,6 +34,12 @@ function minutesAndSeconds(seconds: number): string {
   template: `
     <section data-testid="preview-section">
       <h2>{{ 'TAPE.PREVIEW.SECTION_TITLE' | translate }}</h2>
+      <div class="start-column">
+        <mat-form-field subscriptSizing="dynamic">
+          <mat-label>{{ 'TAPE.PREVIEW.START_COLUMN' | translate }}</mat-label>
+          <input matInput type="text" inputmode="numeric" data-testid="preview-start-column" [formField]="startColumn" (keydown)="onStartKeydown($event)" />
+        </mat-form-field>
+      </div>
       <div class="crank-speed">
         <mat-form-field subscriptSizing="dynamic">
           <mat-label>{{ 'TAPE.PREVIEW.CRANK_SPEED' | translate }}</mat-label>
@@ -44,6 +50,9 @@ function minutesAndSeconds(seconds: number): string {
       </div>
       @if (length(); as length) {
         <p data-testid="preview-length">{{ 'TAPE.PREVIEW.LENGTH' | translate: {time: length} }}</p>
+      }
+      @if (playing()) {
+        <p data-testid="editing-paused">{{ 'TAPE.PREVIEW.EDITING_PAUSED' | translate }}</p>
       }
     </section>
   `,
@@ -60,6 +69,7 @@ function minutesAndSeconds(seconds: number): string {
       align-items: center;
       gap: 0.5rem;
     }
+    .start-column mat-form-field,
     .crank-speed mat-form-field {
       width: 9rem;
       min-width: 0;
@@ -75,8 +85,12 @@ export class PreviewSectionComponent {
   readonly organ = input.required<Organ>();
   /** Whether a Preview plays; the Crank speed field stays usable meanwhile, a change re-anchors the Preview. */
   readonly playing = input(false);
+  /** The Column under the playhead, 0-based and fractional while playing; the start field shows it counted from 1. */
+  readonly playhead = input(0);
   /** The Tape with the typed Crank speed; the Tape view saves it. */
   readonly crankSpeedChange = output<Tape>();
+  /** The 0-based Column the typed start Column counts to; the Tape view moves the playhead there. */
+  readonly startColumnChange = output<number>();
 
   protected readonly minimum = MIN_CRANK_SPEED;
   protected readonly maximum = MAX_CRANK_SPEED;
@@ -91,6 +105,12 @@ export class PreviewSectionComponent {
       return typed !== null && crankSpeedChangeTo(this.tape(), typed).state !== 'invalid' ? undefined : {kind: 'crank-speed-out-of-range'};
     });
   });
+  /** The Column under the playhead, counted from 1 and rounded down: what the start field shows. */
+  private readonly shownStart = computed(() => Math.floor(this.playhead()) + 1);
+  /** The start Column as typed; goes back to the shown Column when the playhead moves to another Column. */
+  private readonly startDraft = linkedSignal(() => String(this.shownStart()));
+  /** The start field: its text, counted from 1. */
+  protected readonly startColumn = form(this.startDraft);
   /** What the typed Crank speed does to the Tape. */
   private readonly change = computed<CrankSpeedChange>(() => crankSpeedChangeTo(this.tape(), this.draft()));
   /** The change, if the field is valid and the Tape changes. */
@@ -109,6 +129,17 @@ export class PreviewSectionComponent {
   protected apply(): void {
     const changed = this.changed();
     if (changed !== undefined) this.crankSpeedChange.emit(changed);
+  }
+
+  /** Enter moves the playhead to the typed Column, if it is a Column of the Tape; other keys are left alone. */
+  protected onStartKeydown(event: KeyboardEvent): void {
+    if (event.key !== 'Enter') return;
+    event.preventDefault();
+    const typed = this.startColumn().value().trim();
+    if (!/^\d+$/.test(typed)) return;
+    const number = Number(typed);
+    if (number < 1 || number > this.tape().length) return;
+    this.startColumnChange.emit(number - 1);
   }
 
   protected onKeydown(event: KeyboardEvent): void {

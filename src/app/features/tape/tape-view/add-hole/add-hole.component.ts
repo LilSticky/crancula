@@ -1,5 +1,5 @@
 import {ChangeDetectionStrategy, Component, computed, effect, input, output, signal, untracked} from '@angular/core';
-import {form, FormField} from '@angular/forms/signals';
+import {disabled, form, FormField} from '@angular/forms/signals';
 import {MatButton} from '@angular/material/button';
 import {MatFormField, MatHint, MatLabel} from '@angular/material/form-field';
 import {MatInput} from '@angular/material/input';
@@ -33,12 +33,16 @@ export class AddHoleComponent {
   readonly organ = input.required<Organ>();
   readonly tape = input.required<Tape>();
   readonly selected = input.required<HoleRef | undefined>();
+  /** Whether editing is paused (the Preview plays): the Hole can't be added meanwhile. */
+  readonly editingPaused = input(false);
   /** The Pipe and the 0-based Column of the Hole to add. */
   readonly added = output<HoleRef>();
 
   private readonly draft = signal<AddHoleDraft>({column: ''});
   protected readonly pipe = signal<MidiNoteNumber | undefined>(undefined);
-  protected readonly fields = form(this.draft);
+  protected readonly fields = form(this.draft, (path) => {
+    disabled(path.column, () => this.editingPaused());
+  });
   protected readonly pipes = computed(() =>
     this.organ().pipes.map((pipe) => ({note: pipe.note, name: noteName(pipe.note)})),
   );

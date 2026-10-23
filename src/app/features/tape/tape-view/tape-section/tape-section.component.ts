@@ -66,7 +66,7 @@ class ColumnLengthErrorMatcher extends ErrorStateMatcher {
             <span matTextSuffix>mm</span>
             <mat-error data-testid="column-length-error">{{ 'TAPE.SECTION.COLUMN_LENGTH_INVALID' | translate }}</mat-error>
           </mat-form-field>
-          <button matButton type="button" data-testid="column-length-apply" [disabled]="changed() === undefined" (click)="apply()" #applyButton>{{ 'TAPE.SECTION.COLUMN_LENGTH_APPLY' | translate }}</button>
+          <button matButton type="button" data-testid="column-length-apply" [disabled]="changed() === undefined || editingPaused()" (click)="apply()" #applyButton>{{ 'TAPE.SECTION.COLUMN_LENGTH_APPLY' | translate }}</button>
           @if (hint(); as hint) {
             <p class="column-length-hint" data-testid="column-length-hint">{{ 'TAPE.SECTION.COLUMN_LENGTH_HINT' | translate: {now: hint.now, then: hint.then, value: hint.value} }}</p>
           }
@@ -142,6 +142,8 @@ export class TapeSectionComponent {
   readonly tape = input.required<Tape>();
   /** The Organ of the Tape, to count its Cutting Problems. */
   readonly organ = input.required<Organ>();
+  /** Whether editing is paused (the Preview plays): the Column length can't be applied meanwhile. */
+  readonly editingPaused = input(false);
   /** The Tape with the Column length the user applied; the Tape view saves it. */
   readonly columnLengthChange = output<Tape>();
 

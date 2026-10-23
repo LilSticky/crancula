@@ -45,6 +45,18 @@ import {PREVIEW_SOUND, type PreviewSound, type PreviewVoice} from '../preview/pr
 /** The scale the Tape opens at: 1:1, true size on screen. */
 const SCALE = pixelsPerMillimetre('1:1', 0, 0);
 
+/** The value, or an error that names what the view lacks. */
+function required<T>(value: T | null | undefined, what: string): T {
+  if (value === null || value === undefined) throw new Error(`missing ${what}`);
+  return value;
+}
+
+/** Resolves after two animation frames, once the playhead has moved on the frame after a clock change. */
+const twoFrames = () => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+
+/** Resolves after `milliseconds` of real time, long enough for the Preview's scheduler to tick. */
+const pause = (milliseconds: number) => new Promise<void>((resolve) => setTimeout(resolve, milliseconds));
+
 /** The corners of a path made of absolute M, L, H, V and Z commands. */
 function pathCorners(d: string): {readonly x: number; readonly y: number}[] {
   const corners: {x: number; y: number}[] = [];
@@ -1726,7 +1738,7 @@ describe('TapeViewComponent', () => {
       await open(`/tapes/${tape.id}`);
 
       const controls = all(view(), 'button, input, select, textarea, [contenteditable]').filter(
-        (control) => control.closest('[data-testid="zoom"], [data-testid="add-hole"]') === null && !['export', 'side-panel-toggle', 'undo', 'redo', 'transpose', 'tape-section-toggle', 'import-summary-toggle', 'column-length-input', 'column-length-apply', 'crank-speed-input', 'crank-speed-apply', 'preview-toggle'].includes(control.getAttribute('data-testid') ?? ''),
+        (control) => control.closest('[data-testid="zoom"], [data-testid="add-hole"]') === null && !['export', 'side-panel-toggle', 'undo', 'redo', 'transpose', 'tape-section-toggle', 'import-summary-toggle', 'column-length-input', 'column-length-apply', 'crank-speed-input', 'crank-speed-apply', 'preview-toggle', 'preview-start-column'].includes(control.getAttribute('data-testid') ?? ''),
       );
       expect(controls).toHaveLength(0);
     });
@@ -3701,6 +3713,360 @@ describe('TapeViewComponent', () => {
 
         expect(previewSound.stops.length).toBeGreaterThan(stopsBefore);
       });
+    });
+  });
+
+  describe('the start Column (T036)', () => {
+    const sounding = [{row: 1, start: 0, length: 10}];
+    const tapePerCrankTurn = 100;
+    const toggle = (view: HTMLElement | null) => view?.querySelector<HTMLButtonElement>('[data-testid="preview-toggle"]') ?? null;
+    const playhead = (view: HTMLElement | null) => view?.querySelector('[data-testid="playhead"]') ?? null;
+
+    const setup = async () => {
+      const rendered = await render({holes: sounding, tapePerCrankTurn});
+      await rendered.open(`/tapes/${rendered.tape.id}`);
+      const svg = required(rendered.view()?.querySelector<SVGSVGElement>('[data-testid="tape-scroll"] svg'), 'Tape drawing');
+      Object.defineProperty(svg, 'getBoundingClientRect', {value: () => new DOMRect(0, 0, 4000, 300), configurable: true});
+      const geometry = tapeGeometry(rendered.tape, rendered.organ);
+      /** The x position in px of the left edge of a Column (from 0), as the ruler and the playhead draw it. */
+      const columnX = (column: number) => (geometry.leadIn + column * geometry.columnLength) * SCALE;
+      const clickRuler = async (clientX: number): Promise<void> => {
+        required(rendered.view()?.querySelector('[data-testid="ruler"]'), 'ruler').dispatchEvent(new MouseEvent('click', {bubbles: true, clientX, clientY: 4}));
+        await rendered.settle();
+      };
+      /** Types a Column into the start field the way a user does (1-based), and presses Enter. */
+      const typeStart = async (text: string): Promise<void> => {
+        const field = required(rendered.view()?.querySelector<HTMLInputElement>('[data-testid="preview-start-column"]'), 'start Column field');
+        field.value = text;
+        field.dispatchEvent(new Event('input', {bubbles: true}));
+        field.dispatchEvent(new KeyboardEvent('keydown', {key: 'Enter', bubbles: true, cancelable: true}));
+        await rendered.settle();
+      };
+      const clickToggle = async (): Promise<void> => {
+        toggle(rendered.view())?.click();
+        await rendered.settle();
+      };
+      return {...rendered, columnX, clickRuler, typeStart, clickToggle};
+    };
+
+    it('moves the playhead to the Column under a click on the ruler, rounded down', async () => {
+      const {columnX, clickRuler, view} = await setup();
+
+      await clickRuler(columnX(37.9));
+
+      const line = required(playhead(view()), 'playhead');
+      expect(line.getAttribute('data-column')).toBe('37');
+      expect(Number(line.getAttribute('x'))).toBeCloseTo(columnX(37), 1);
+    });
+
+    it('moves the playhead to the Column typed in the start field, which counts Columns from 1', async () => {
+      const {typeStart, view} = await setup();
+
+      await typeStart('38');
+
+      expect(required(playhead(view()), 'playhead').getAttribute('data-column')).toBe('37');
+    });
+
+    it('starts from Column 1 when Play is pressed with the playhead at the end', async () => {
+      const {clickToggle, previewSound, settle, view} = await setup();
+      await clickToggle();
+      // 100 Columns of 0.025 s each: the Tape ends after 2.5 s of the clock.
+      previewSound.advance(3);
+      await pause(80);
+      await settle();
+      expect(toggle(view())?.getAttribute('aria-pressed')).toBe('false');
+
+      await clickToggle();
+
+      expect(toggle(view())?.getAttribute('aria-pressed')).toBe('true');
+      expect(required(playhead(view()), 'playhead').getAttribute('data-column')).toBe('0');
+    });
+
+    it('does nothing on a click on the ruler while the Preview plays', async () => {
+      const {clickToggle, clickRuler, columnX, view} = await setup();
+      await clickToggle();
+
+      await clickRuler(columnX(37.5));
+
+      expect(required(playhead(view()), 'playhead').getAttribute('data-column')).toBe('0');
+    });
+  });
+
+  describe('following the playhead while it plays (T038)', () => {
+    /** 100 Columns of 50 mm: a Tape far wider than the stage, at 0.5 s per Column. */
+    const wide = {holes: [{row: 1, start: 0, length: 10}], tapePerCrankTurn: 100, columnLength: 50};
+    const toggle = (view: HTMLElement | null) => view?.querySelector<HTMLButtonElement>('[data-testid="preview-toggle"]') ?? null;
+    const playhead = (view: HTMLElement | null) => view?.querySelector('[data-testid="playhead"]') ?? null;
+    const stage = (view: HTMLElement | null) => required(view?.querySelector<HTMLElement>('[data-testid="tape-scroll"]'), 'stage');
+
+    const setup = async () => {
+      const rendered = await render(wide);
+      await rendered.open(`/tapes/${rendered.tape.id}`);
+      const clickToggle = async (): Promise<void> => {
+        toggle(rendered.view())?.click();
+        await rendered.settle();
+      };
+      return {...rendered, clickToggle};
+    };
+
+    it('scrolls the stage to keep the playhead in view while it plays', async () => {
+      const {clickToggle, previewSound, settle, view} = await setup();
+      await clickToggle();
+
+      // Column 50 of 100: well beyond the window the stage shows at the start.
+      previewSound.advance(25);
+      await twoFrames();
+      await settle();
+
+      const scroll = stage(view());
+      const x = Number(required(playhead(view()), 'playhead').getAttribute('x'));
+      expect(scroll.scrollLeft).toBeGreaterThan(0);
+      expect(x).toBeGreaterThanOrEqual(scroll.scrollLeft);
+      expect(x).toBeLessThanOrEqual(scroll.scrollLeft + scroll.clientWidth);
+    });
+
+    it('does not scroll while the owner scrolled within the last 2 seconds', async () => {
+      const {clickToggle, previewSound, settle, view} = await setup();
+      await clickToggle();
+      stage(view()).dispatchEvent(new WheelEvent('wheel', {bubbles: true, deltaX: 200}));
+
+      previewSound.advance(25);
+      await twoFrames();
+      await settle();
+
+      expect(stage(view()).scrollLeft).toBe(0);
+    });
+  });
+
+  describe('editing while the Preview plays (T040)', () => {
+    const sounding = [{row: 1, start: 0, length: 10}];
+    const tapePerCrankTurn = 100;
+    const RULER_PX = 24;
+    const toggle = (view: HTMLElement | null) => view?.querySelector<HTMLButtonElement>('[data-testid="preview-toggle"]') ?? null;
+    const button = (view: HTMLElement | null, testId: string) =>
+      required(view?.querySelector<HTMLButtonElement>(`[data-testid="${testId}"]`), testId);
+    const pointer = (type: string, position: {clientX: number; clientY: number}) =>
+      new PointerEvent(type, {...position, pointerId: 1, button: 0, bubbles: true, cancelable: true});
+    const storedTape = (tapeId: string) => TestBed.inject(TapeLibrary).tapeEntities().find((candidate) => candidate.id === tapeId);
+
+    const setup = async (options: RenderOptions = {holes: sounding, tapePerCrankTurn, platform: 'win32'}) => {
+      const rendered = await render(options);
+      await rendered.open(`/tapes/${rendered.tape.id}`);
+      const view = rendered.view;
+      const svg = required(view()?.querySelector<SVGSVGElement>('[data-testid="tape-scroll"] svg'), 'Tape drawing');
+      Object.defineProperty(svg, 'getBoundingClientRect', {value: () => new DOMRect(0, 0, 4000, 300), configurable: true});
+      const geometry = tapeGeometry(rendered.tape, rendered.organ);
+      /** A position in the middle of a Column (from 0) and a row (from 1), in client px. */
+      const at = (column: number, row: number) => ({
+        clientX: (geometry.leadIn + (column + 0.5) * geometry.columnLength) * SCALE,
+        clientY: (geometry.rowCentres[row - 1] ?? 0) * SCALE + RULER_PX,
+      });
+      const holeRect = (row: number, start: number) =>
+        required(view()?.querySelector(`[data-testid="tape-scroll"] rect[data-testid="hole"][data-row="${row - 1}"][data-start="${start}"]`), 'Hole');
+      const update = vi.spyOn(TestBed.inject(TapeLibrary), 'update');
+      const holeCount = () => storedTape(rendered.tape.id)?.holes.length;
+      const press = async (target: Element, init: KeyboardEventInit): Promise<void> => {
+        target.dispatchEvent(new KeyboardEvent('keydown', {...init, bubbles: true, cancelable: true}));
+        await rendered.settle();
+      };
+      const clickToggle = async (): Promise<void> => {
+        toggle(view())?.click();
+        await rendered.settle();
+      };
+      const select = async (row: number, start: number): Promise<void> => {
+        holeRect(row, start).dispatchEvent(new MouseEvent('click', {bubbles: true}));
+        await rendered.settle();
+      };
+      /** Presses a Hole, drags it to another Column and releases it on the drawing. */
+      const drag = async (row: number, start: number, from: number, to: number): Promise<void> => {
+        holeRect(row, start).dispatchEvent(pointer('pointerdown', at(from, row)));
+        await rendered.settle();
+        svg.dispatchEvent(pointer('pointermove', at(to, row)));
+        await twoFrames();
+        await rendered.settle();
+        svg.dispatchEvent(pointer('pointerup', at(to, row)));
+        await rendered.settle();
+      };
+      return {...rendered, svg, update, holeCount, press, clickToggle, select, drag, button, storedTape};
+    };
+
+    it('ignores a pointer drag of a Hole while it plays', async () => {
+      const {clickToggle, drag, update} = await setup();
+      await clickToggle();
+
+      await drag(1, 0, 5, 8);
+
+      expect(update).not.toHaveBeenCalled();
+    });
+
+    it('ignores Delete on the selected Hole while it plays', async () => {
+      const {select, clickToggle, press, svg, update, holeCount} = await setup();
+      await select(1, 0);
+      await clickToggle();
+
+      await press(svg, {key: 'Delete'});
+
+      expect(update).not.toHaveBeenCalled();
+      expect(holeCount()).toBe(1);
+    });
+
+    it('ignores Ctrl+Z while it plays, so an edit made before stays', async () => {
+      const {select, clickToggle, press, svg, update, holeCount} = await setup();
+      await select(1, 0);
+      await press(svg, {key: 'Delete'});
+      await clickToggle();
+
+      await press(svg, {key: 'z', ctrlKey: true});
+
+      expect(update).toHaveBeenCalledTimes(1);
+      expect(holeCount()).toBe(0);
+    });
+
+    it('ignores Ctrl+Y while it plays, so an undone edit stays undone', async () => {
+      const {select, clickToggle, press, svg, update, holeCount} = await setup();
+      await select(1, 0);
+      await press(svg, {key: 'Delete'});
+      await press(svg, {key: 'z', ctrlKey: true});
+      await clickToggle();
+
+      await press(svg, {key: 'y', ctrlKey: true});
+
+      expect(update).toHaveBeenCalledTimes(2);
+      expect(holeCount()).toBe(1);
+    });
+
+    it('ignores Ctrl+A and then Alt+ArrowRight, which would move the selected Hole, while it plays', async () => {
+      const {clickToggle, press, svg, update} = await setup();
+      await clickToggle();
+
+      await press(svg, {key: 'a', ctrlKey: true});
+      await press(svg, {key: 'ArrowRight', altKey: true});
+
+      expect(update).not.toHaveBeenCalled();
+    });
+
+    it('ignores the Undo command from the application menu while it plays', async () => {
+      const {select, clickToggle, press, svg, sendEditCommand, update, holeCount} = await setup();
+      await select(1, 0);
+      await press(svg, {key: 'Delete'});
+      await clickToggle();
+
+      sendEditCommand('undo');
+
+      expect(update).toHaveBeenCalledTimes(1);
+      expect(holeCount()).toBe(0);
+    });
+
+    it('ignores the Redo command from the application menu while it plays', async () => {
+      const {select, clickToggle, press, svg, sendEditCommand, update, holeCount} = await setup();
+      await select(1, 0);
+      await press(svg, {key: 'Delete'});
+      await press(svg, {key: 'z', ctrlKey: true});
+      await clickToggle();
+
+      sendEditCommand('redo');
+
+      expect(update).toHaveBeenCalledTimes(2);
+      expect(holeCount()).toBe(1);
+    });
+
+    it('disables Undo and Redo while it plays', async () => {
+      const {select, clickToggle, press, svg, button, view, settle} = await setup();
+      // Two edits, then one undo: an edit to undo and an edit to redo.
+      const field = required(view()?.querySelector<HTMLInputElement>('[data-testid="column-length-input"]'), 'Column length field');
+      field.value = '5';
+      field.dispatchEvent(new Event('input', {bubbles: true}));
+      await settle();
+      button(view(), 'column-length-apply').click();
+      await settle();
+      await select(1, 0);
+      await press(svg, {key: 'Delete'});
+      await press(svg, {key: 'z', ctrlKey: true});
+      expect(button(view(), 'undo').disabled).toBe(false);
+      expect(button(view(), 'redo').disabled).toBe(false);
+
+      await clickToggle();
+
+      expect(button(view(), 'undo').disabled).toBe(true);
+      expect(button(view(), 'redo').disabled).toBe(true);
+    });
+
+    it('disables Transpose and the Column length Apply while it plays', async () => {
+      const {clickToggle, button, settle, view} = await setup();
+      const field = required(view()?.querySelector<HTMLInputElement>('[data-testid="column-length-input"]'), 'Column length field');
+      field.value = '5';
+      field.dispatchEvent(new Event('input', {bubbles: true}));
+      await settle();
+      expect(button(view(), 'column-length-apply').disabled).toBe(false);
+      expect(button(view(), 'transpose').disabled).toBe(false);
+
+      await clickToggle();
+
+      expect(button(view(), 'column-length-apply').disabled).toBe(true);
+      expect(button(view(), 'transpose').disabled).toBe(true);
+    });
+
+    it('disables the Add a Hole controls while it plays', async () => {
+      const {clickToggle, button, settle, view} = await setup();
+      const column = required(view()?.querySelector<HTMLInputElement>('[data-testid="add-hole-column"]'), 'Add a Hole Column field');
+      expect(column.disabled).toBe(false);
+
+      await clickToggle();
+      await settle();
+
+      expect(required(view()?.querySelector<HTMLInputElement>('[data-testid="add-hole-column"]'), 'Add a Hole Column field').disabled).toBe(true);
+      expect(button(view(), 'add-hole-submit').disabled).toBe(true);
+    });
+
+    it('shows that editing is paused while it plays, and not after it stops', async () => {
+      const {clickToggle, view} = await setup();
+      expect(view()?.querySelector('[data-testid="editing-paused"]')).toBeNull();
+
+      await clickToggle();
+      expect(required(view()?.querySelector('[data-testid="editing-paused"]'), 'editing-paused notice').textContent?.trim()).toBe(
+        'Editing is paused while the Preview plays',
+      );
+
+      await clickToggle();
+      expect(view()?.querySelector('[data-testid="editing-paused"]')).toBeNull();
+    });
+
+    it('still applies a new Crank speed while it plays, as one save', async () => {
+      const {clickToggle, settle, update, storedTape, tape, view} = await setup();
+      await clickToggle();
+      const field = required(view()?.querySelector<HTMLInputElement>('[data-testid="crank-speed-input"]'), 'Crank speed field');
+
+      field.value = '120';
+      field.dispatchEvent(new Event('input', {bubbles: true}));
+      await settle();
+      field.dispatchEvent(new KeyboardEvent('keydown', {key: 'Enter', bubbles: true, cancelable: true}));
+      await settle();
+
+      expect(update).toHaveBeenCalledTimes(1);
+      expect(storedTape(tape.id)?.crankSpeed).toBe(120);
+    });
+
+    it('edits again after it stops', async () => {
+      const {select, clickToggle, press, svg, update, holeCount} = await setup();
+      await clickToggle();
+      await clickToggle();
+
+      await select(1, 0);
+      await press(svg, {key: 'Delete'});
+
+      expect(update).toHaveBeenCalledTimes(1);
+      expect(holeCount()).toBe(0);
+    });
+
+    it('enables Undo again after it stops', async () => {
+      const {select, clickToggle, press, svg, button, settle, view} = await setup();
+      await select(1, 0);
+      await press(svg, {key: 'Delete'});
+      await clickToggle();
+      await clickToggle();
+      await settle();
+
+      expect(button(view(), 'undo').disabled).toBe(false);
     });
   });
 });

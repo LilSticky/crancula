@@ -320,8 +320,7 @@
       "SAVE_BLOCKED": "Your Tapes couldn't be loaded, so Pipes with Holes can't be removed for now.",
       "REMOVE_PIPES_HOLES": "Removing these Pipes also removes their Holes ({{holes}}) from Tapes ({{tapes}}) of this Organ.",
       "TAPE_PER_CRANK_TURN": "Tape per Crank turn",
-      "TAPE_PER_CRANK_TURN_HINT": "How far one Crank turn draws the Tape; needed to hear a Tape",
-      "TAPE_PER_CRANK_TURN_INVALID": "The Tape per Crank turn must be greater than 0."
+      "TAPE_PER_CRANK_TURN_HINT": "How far one Crank turn draws the Tape; needed to hear a Tape"
     },
     "LEAVE": {
       "TITLE": "Unsaved changes",
