@@ -36,7 +36,7 @@ function note(value: number): MidiNoteNumber {
 }
 
 interface ParamEvent {
-  readonly kind: 'set' | 'ramp' | 'cancel';
+  readonly kind: 'set' | 'ramp' | 'cancel' | 'hold';
   readonly value?: number;
   readonly time: number;
 }
@@ -57,6 +57,11 @@ class FakeParam {
 
   cancelScheduledValues(time: number): this {
     this.events.push({kind: 'cancel', time});
+    return this;
+  }
+
+  cancelAndHoldAtTime(time: number): this {
+    this.events.push({kind: 'hold', time});
     return this;
   }
 }
@@ -208,6 +213,20 @@ describe('WebAudioPreviewSound', () => {
       expect(gainOf(path[3]).gain.value).toBe(0.2);
       expect(path[4]).toBeInstanceOf(FakeCompressor);
       expect(path[5]).toBe(context.destination);
+    });
+
+    it('holds the envelope at its current value when a voice stops, so the release starts at the stop time', () => {
+      const voice = sound.start(note(69), 1);
+
+      sound.stop(voice, 2);
+
+      const oscillator = defined(context.oscillators[0], 'first oscillator');
+      const events = gainOf(route(oscillator)[2]).gain.events;
+      const hold = events.findIndex((event) => event.time === 2 && (event.kind === 'hold' || event.kind === 'set'));
+      const release = events.findIndex((event) => event.kind === 'ramp' && event.value === 0);
+      expect(hold).toBeGreaterThanOrEqual(0);
+      expect(release).toBeGreaterThan(hold);
+      expect(events[release]?.time).toBeCloseTo(2 + RELEASE_SECONDS, 9);
     });
 
     it('stops a voice by ramping its envelope to silence over 30 ms and stopping the oscillators after it', () => {

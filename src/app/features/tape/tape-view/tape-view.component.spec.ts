@@ -51,6 +51,11 @@ function required<T>(value: T | null | undefined, what: string): T {
   return value;
 }
 
+/** Whether the Preview toggle reads Stop preview: the state is told by its label, not by a pressed state. */
+function isPreviewing(view: HTMLElement | null): boolean {
+  return view?.querySelector('[data-testid="preview-toggle"]')?.textContent?.includes('Stop preview') ?? false;
+}
+
 /** Resolves after two animation frames, once the playhead has moved on the frame after a clock change. */
 const twoFrames = () => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
 
@@ -3585,22 +3590,24 @@ describe('TapeViewComponent', () => {
     };
 
     describe('the toggle', () => {
-      it('is not pressed and reads Preview before it plays', async () => {
+      it('reads Preview before it plays, and has no pressed state', async () => {
         const {view} = await setup();
 
-        expect(toggle(view())?.getAttribute('aria-pressed')).toBe('false');
+        expect(isPreviewing(view())).toBe(false);
         expect(toggle(view())?.textContent).toContain('Preview');
         expect(toggle(view())?.textContent).not.toContain('Stop');
+        expect(toggle(view())?.hasAttribute('aria-pressed')).toBe(false);
       });
 
-      it('is pressed and reads Stop preview while it plays', async () => {
+      it('reads Stop preview while it plays, and has no pressed state', async () => {
         const {view, settle} = await setup();
 
         toggle(view())?.click();
         await settle();
 
-        expect(toggle(view())?.getAttribute('aria-pressed')).toBe('true');
+        expect(isPreviewing(view())).toBe(true);
         expect(toggle(view())?.textContent).toContain('Stop preview');
+        expect(toggle(view())?.hasAttribute('aria-pressed')).toBe(false);
       });
 
       it('starts the Preview on a click and stops it on the next click', async () => {
@@ -3613,7 +3620,7 @@ describe('TapeViewComponent', () => {
 
         toggle(view())?.click();
         await settle();
-        expect(toggle(view())?.getAttribute('aria-pressed')).toBe('false');
+        expect(isPreviewing(view())).toBe(false);
         expect(previewSound.stops.length).toBeGreaterThan(0);
       });
 
@@ -3628,10 +3635,10 @@ describe('TapeViewComponent', () => {
         const {view, settle} = await setup();
 
         await press(tapeSvg(view()), {key: ' '}, settle);
-        expect(toggle(view())?.getAttribute('aria-pressed')).toBe('true');
+        expect(isPreviewing(view())).toBe(true);
 
         await press(tapeSvg(view()), {key: ' '}, settle);
-        expect(toggle(view())?.getAttribute('aria-pressed')).toBe('false');
+        expect(isPreviewing(view())).toBe(false);
       });
 
       it('starts the Preview on Space with nothing selected and selects no Hole', async () => {
@@ -3639,7 +3646,7 @@ describe('TapeViewComponent', () => {
 
         await press(tapeSvg(view()), {key: ' '}, settle);
 
-        expect(toggle(view())?.getAttribute('aria-pressed')).toBe('true');
+        expect(isPreviewing(view())).toBe(true);
         expect(view()?.querySelectorAll('[data-testid="tape-scroll"] rect[data-testid="hole"].selected')).toHaveLength(0);
       });
 
@@ -3647,11 +3654,11 @@ describe('TapeViewComponent', () => {
         const {view, settle} = await setup();
 
         await press(tapeSvg(view()), {key: ' '}, settle);
-        expect(toggle(view())?.getAttribute('aria-pressed')).toBe('true');
+        expect(isPreviewing(view())).toBe(true);
 
         await press(tapeSvg(view()), {key: ' ', repeat: true}, settle);
 
-        expect(toggle(view())?.getAttribute('aria-pressed')).toBe('true');
+        expect(isPreviewing(view())).toBe(true);
       });
 
       it('ignores Space in a text field', async () => {
@@ -3661,7 +3668,7 @@ describe('TapeViewComponent', () => {
 
         await press(field as Element, {key: ' '}, settle);
 
-        expect(toggle(view())?.getAttribute('aria-pressed')).toBe('false');
+        expect(isPreviewing(view())).toBe(false);
       });
 
       it('ignores Space on the toggle itself, which answers its own click', async () => {
@@ -3669,7 +3676,77 @@ describe('TapeViewComponent', () => {
 
         await press(toggle(view()) as HTMLButtonElement, {key: ' '}, settle);
 
-        expect(toggle(view())?.getAttribute('aria-pressed')).toBe('false');
+        expect(isPreviewing(view())).toBe(false);
+      });
+
+      /** Dispatches Space on `target` and tells whether the view left the key to it (not prevented). */
+      const spaceOn = async (target: Element, settle: () => Promise<void>): Promise<boolean> => {
+        const event = new KeyboardEvent('keydown', {key: ' ', bubbles: true, cancelable: true});
+        target.dispatchEvent(event);
+        await settle();
+        return event.defaultPrevented;
+      };
+
+      it('ignores Space in a combobox, such as the Pipe picker of Add a Hole', async () => {
+        const {view, settle} = await setup();
+        const picker = required(view()?.querySelector('[data-testid="add-hole-pipe"]'), 'Pipe picker');
+        expect(picker.getAttribute('role')).toBe('combobox');
+
+        const prevented = await spaceOn(picker, settle);
+
+        expect(isPreviewing(view())).toBe(false);
+        expect(prevented).toBe(false);
+      });
+
+      it('ignores Space on a link, and leaves the key to it', async () => {
+        const {view, settle} = await setup({holes: sounding});
+        const link = required(view()?.querySelector('[data-testid="preview-open-organ"]'), 'link to the Organ');
+
+        const prevented = await spaceOn(link, settle);
+
+        expect(isPreviewing(view())).toBe(false);
+        expect(prevented).toBe(false);
+      });
+
+      it('ignores Space on an option', async () => {
+        const {view, settle} = await setup();
+        const option = document.createElement('div');
+        option.setAttribute('role', 'option');
+        required(view(), 'view').appendChild(option);
+
+        const prevented = await spaceOn(option, settle);
+
+        expect(isPreviewing(view())).toBe(false);
+        expect(prevented).toBe(false);
+      });
+
+      it('ignores Space in a contenteditable element', async () => {
+        const {view, settle} = await setup();
+        const editable = document.createElement('div');
+        editable.setAttribute('contenteditable', 'true');
+        required(view(), 'view').appendChild(editable);
+
+        const prevented = await spaceOn(editable, settle);
+
+        expect(isPreviewing(view())).toBe(false);
+        expect(prevented).toBe(false);
+      });
+
+      it('ignores Space that an earlier listener already prevented', async () => {
+        const {view, settle} = await setup();
+        const prevent = (event: KeyboardEvent): void => {
+          event.preventDefault();
+        };
+        // On the view's root, which sees the event before the Tape view does (the fixture is not in the document).
+        const root = view();
+        root?.addEventListener('keydown', prevent, {capture: true});
+        try {
+          await press(tapeSvg(root), {key: ' '}, settle);
+        } finally {
+          root?.removeEventListener('keydown', prevent, {capture: true});
+        }
+
+        expect(isPreviewing(view())).toBe(false);
       });
     });
 
@@ -3687,10 +3764,14 @@ describe('TapeViewComponent', () => {
     });
 
     describe('without a Tape per Crank turn', () => {
-      it('disables the toggle', async () => {
+      it('keeps the toggle focusable, marks it aria-disabled, and describes it by the unavailable notice', async () => {
         const {view} = await setup({});
+        const notice = required(view()?.querySelector('[data-testid="preview-unavailable"]'), 'unavailable notice');
 
-        expect(toggle(view())?.disabled).toBe(true);
+        expect(toggle(view())?.disabled).toBe(false);
+        expect(toggle(view())?.getAttribute('aria-disabled')).toBe('true');
+        expect(notice.id).not.toBe('');
+        expect(toggle(view())?.getAttribute('aria-describedby')).toBe(notice.id);
       });
 
       it('says why the Tape can not be heard and links to the Organ editor', async () => {
@@ -3774,11 +3855,11 @@ describe('TapeViewComponent', () => {
       previewSound.advance(3);
       await pause(80);
       await settle();
-      expect(toggle(view())?.getAttribute('aria-pressed')).toBe('false');
+      expect(isPreviewing(view())).toBe(false);
 
       await clickToggle();
 
-      expect(toggle(view())?.getAttribute('aria-pressed')).toBe('true');
+      expect(isPreviewing(view())).toBe(true);
       expect(required(playhead(view()), 'playhead').getAttribute('data-column')).toBe('0');
     });
 
@@ -4029,6 +4110,14 @@ describe('TapeViewComponent', () => {
 
       await clickToggle();
       expect(view()?.querySelector('[data-testid="editing-paused"]')).toBeNull();
+    });
+
+    it('announces that editing is paused in a status region', async () => {
+      const {clickToggle, view} = await setup();
+
+      await clickToggle();
+
+      expect(required(view()?.querySelector('[data-testid="editing-paused"]'), 'editing-paused notice').getAttribute('role')).toBe('status');
     });
 
     it('still applies a new Crank speed while it plays, as one save', async () => {

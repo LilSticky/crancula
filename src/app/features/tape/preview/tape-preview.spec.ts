@@ -112,6 +112,8 @@ class FakePreviewSound implements PreviewSound {
   readonly starts: {readonly pipe: MidiNoteNumber; readonly at: number; readonly voice: PreviewVoice}[] = [];
   readonly stops: {readonly voice: PreviewVoice; readonly at: number}[] = [];
   private elapsedMs = 0;
+  resumes = 0;
+  closes = 0;
 
   now(): number {
     return START_SECONDS + this.elapsedMs / 1000;
@@ -128,10 +130,13 @@ class FakePreviewSound implements PreviewSound {
   }
 
   resume(): Promise<void> {
+    this.resumes++;
     return Promise.resolve();
   }
 
-  close(): void {}
+  close(): void {
+    this.closes++;
+  }
 
   elapse(ms: number): void {
     this.elapsedMs += ms;
@@ -283,6 +288,25 @@ describe('TapePreview', () => {
 
     const stoppedNow = sound.stops.filter((stop) => stop.at === sound.now()).map((stop) => stop.voice);
     expect(stoppedNow).toEqual(expect.arrayContaining(sound.starts.map((start) => start.voice)));
+  });
+
+  it('resumes the sound when a Preview starts, as a suspended audio context plays nothing', () => {
+    const organ = organOf(100);
+    const tape = aTape(100, [hole(60, 0, 10)]);
+
+    preview.play(tape, organ, col(0));
+
+    expect(sound.resumes).toBeGreaterThan(0);
+  });
+
+  it('closes the sound once when the view is destroyed, after it has been played', () => {
+    const organ = organOf(100);
+    const tape = aTape(100, [hole(60, 0, 10)]);
+    preview.play(tape, organ, col(0));
+
+    fixture.destroy();
+
+    expect(sound.closes).toBe(1);
   });
 
   describe('changing the Tape while it plays (T032)', () => {

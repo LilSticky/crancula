@@ -54,7 +54,10 @@ export class TapePreview {
   readonly playhead = this.playheadSignal.asReadonly();
 
   constructor() {
-    inject(DestroyRef).onDestroy(() => this.stop());
+    inject(DestroyRef).onDestroy(() => {
+      this.stop();
+      this.sound?.close();
+    });
   }
 
   /**
@@ -81,6 +84,8 @@ export class TapePreview {
     if (secondsPerColumn === undefined) return;
     this.stop();
     const sound = this.soundPort();
+    // A suspended audio context plays nothing; a rejected resume leaves the Preview silent, as it was.
+    void sound.resume().catch(() => undefined);
     const session: Session = {
       sound,
       length: tape.length,

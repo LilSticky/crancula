@@ -81,7 +81,8 @@ export class WebAudioPreviewSound implements PreviewSound {
   stop(voice: PreviewVoice, at: number): void {
     if (!(voice instanceof WebAudioVoice)) return;
     const end = at + RELEASE_SECONDS;
-    voice.envelope.gain.cancelScheduledValues(at);
+    // Hold the envelope where it stands at `at`, so the release starts from there rather than jumping.
+    voice.envelope.gain.cancelAndHoldAtTime(at);
     voice.envelope.gain.linearRampToValueAtTime(0, end);
     for (const oscillator of voice.oscillators) {
       oscillator.stop(end);

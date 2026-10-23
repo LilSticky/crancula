@@ -52,7 +52,7 @@ function minutesAndSeconds(seconds: number): string {
         <p data-testid="preview-length">{{ 'TAPE.PREVIEW.LENGTH' | translate: {time: length} }}</p>
       }
       @if (playing()) {
-        <p data-testid="editing-paused">{{ 'TAPE.PREVIEW.EDITING_PAUSED' | translate }}</p>
+        <p role="status" data-testid="editing-paused">{{ 'TAPE.PREVIEW.EDITING_PAUSED' | translate }}</p>
       }
     </section>
   `,

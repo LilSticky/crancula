@@ -5,6 +5,7 @@ import {
   computed,
   DestroyRef,
   afterEveryRender,
+  afterRenderEffect,
   effect,
   untracked,
   ElementRef,
@@ -16,7 +17,7 @@ import {BreakpointObserver} from '@angular/cdk/layout';
 import {toSignal} from '@angular/core/rxjs-interop';
 import {ActivatedRoute, Router, RouterLink} from '@angular/router';
 import {map} from 'rxjs';
-import {column, cuttingProblems, holesWithCuttingProblems, noteName, type HoleRef, type ImportSummary, type Tape, tapeGeometry, type Transposed} from '@api/index';
+import {column, columnDuration, cuttingProblems, holesWithCuttingProblems, noteName, type HoleRef, type ImportSummary, type Tape, tapeGeometry, type Transposed} from '@api/index';
 import {canTranspose, holeRefsOf, selectionOfRefs} from './transpose-selection';
 import {MatDialog} from '@angular/material/dialog';
 import {TransposeDialogComponent, type TransposeDialogData} from './transpose-dialog/transpose-dialog.component';
@@ -120,6 +121,9 @@ const OWNER_SCROLL_PAUSE = 2000;
 
 /** Where the playhead lands when the stage follows it: this share of the stage's width in from the left edge. */
 const FOLLOW_LEAD = 0.2;
+
+/** Where Space is left to the element it lands on: fields, controls, links, list options and editable text. */
+const SPACE_IS_KEPT_BY = 'input, textarea, button, a, select, [role=combobox], [role=option], [contenteditable]';
 
 /** The shell's query: below this width the side panel gives way to a toggle. */
 const COMPACT_QUERY = '(max-width: 1179.98px)';
@@ -375,7 +379,11 @@ export class TapeViewComponent {
   }
 
   /** Whether the Organ can play the Tape: it needs a Tape per Crank turn. */
-  protected readonly previewAvailable = computed(() => this.organ()?.tapePerCrankTurn !== undefined);
+  protected readonly previewAvailable = computed(() => {
+    const tape = this.shownTape();
+    const organ = this.organ();
+    return tape !== undefined && organ !== undefined && columnDuration(tape, organ) !== undefined;
+  });
 
   /** Where the playhead is drawn, in px of the drawing, and the Column it stands on, rounded for the DOM. */
   protected readonly playheadLine = computed(() => {
@@ -438,6 +446,7 @@ export class TapeViewComponent {
 
   /** Undo and redo shortcuts work wherever the focus is in the Tape view; text fields keep their own history. */
   protected onViewKeydown(event: KeyboardEvent): void {
+    if (event.defaultPrevented) return;
     const {key, altKey, shiftKey, ctrlKey, metaKey} = event;
     const target = event.target instanceof Element ? event.target : null;
     const intent = historyIntent({key, altKey, shiftKey, ctrlKey, metaKey, target}, this.platform);
@@ -447,8 +456,8 @@ export class TapeViewComponent {
       else this.redo();
       return;
     }
-    // Space plays and stops the Preview, except where it types or presses a control.
-    if (key === ' ' && !target?.matches('input, textarea, button')) {
+    // Space plays and stops the Preview, except where it types, follows a link, or picks from a list.
+    if (key === ' ' && !target?.matches(SPACE_IS_KEPT_BY)) {
       event.preventDefault();
       // A held Space repeats its keydown; only the first press toggles.
       if (!event.repeat) this.togglePreview();
@@ -699,9 +708,11 @@ export class TapeViewComponent {
     this.commit({kind: 'applied', tape, selection: this.selection()});
   }
 
-  /** Saves the Tape with a new Crank speed as one edit; the Holes and the selection stay. */
+  /** Saves the Tape with a new Crank speed as one edit, and re-anchors a Preview that plays; the Holes and the selection stay. */
   protected onCrankSpeedChange(tape: Tape): void {
     this.save({kind: 'applied', tape, selection: this.selection()});
+    const organ = this.organ();
+    if (organ !== undefined) this.preview.changeTape(tape, organ);
   }
 
   /** A double-click on an empty spot of a row adds a Hole of that row's Pipe at that Column. */
@@ -751,18 +762,19 @@ export class TapeViewComponent {
     this.ownerScrolledAt = performance.now();
   }
 
+
   /**
-   * While the Preview plays, scrolls the stage when the playhead leaves its visible part, so the playhead stays in view;
-   * not while the owner scrolled or wheeled the stage lately.
+   * Where the stage scrolls to keep the playhead in view while the Preview plays, or `undefined` to leave it:
+   * not when the playhead is visible, or while the owner scrolled or wheeled the stage lately.
    */
-  private followPlayhead(element: HTMLElement): void {
+  private followTarget(): number | undefined {
+    const element = this.scrollElement()?.nativeElement;
     const line = this.playheadLine();
-    if (!this.preview.playing() || line === undefined) return;
-    if (performance.now() - this.ownerScrolledAt < OWNER_SCROLL_PAUSE) return;
+    if (element === undefined || !this.preview.playing() || line === undefined) return undefined;
+    if (performance.now() - this.ownerScrolledAt < OWNER_SCROLL_PAUSE) return undefined;
     const visibleEnd = element.scrollLeft + element.clientWidth;
-    if (line.x >= element.scrollLeft && line.x <= visibleEnd) return;
-    element.scrollLeft = line.x - element.clientWidth * FOLLOW_LEAD;
-    this.followedScrollLeft = element.scrollLeft;
+    if (line.x >= element.scrollLeft && line.x <= visibleEnd) return undefined;
+    return line.x - element.clientWidth * FOLLOW_LEAD;
   }
 
   protected onOverviewClick(event: MouseEvent, overview: Element): void {
@@ -793,7 +805,6 @@ export class TapeViewComponent {
       const element = this.scrollElement()?.nativeElement;
       if (element === undefined) return;
       this.stage.readStage(element);
-      this.followPlayhead(element);
       if (!this.scrollToSelection) return;
       const selected = element.querySelector('rect.selected');
       if (selected !== null) {
@@ -817,11 +828,16 @@ export class TapeViewComponent {
     effect(() => {
       if (this.library.loaded() && this.drawing() === undefined) void this.router.navigateByUrl('/tapes');
     });
-    // A changed Tape (its Crank speed, or an undo or redo) re-anchors a Preview that plays; a stopped one ignores it.
-    effect(() => {
-      const tape = this.tape();
-      const organ = this.organ();
-      if (tape !== undefined && organ !== undefined) untracked(() => this.preview.changeTape(tape, organ));
+    // While the Preview plays, the stage follows the playhead: the layout is read first, then the scroll is written.
+    afterRenderEffect({
+      earlyRead: () => this.followTarget(),
+      write: (target) => {
+        const scrollLeft = target();
+        const element = this.scrollElement()?.nativeElement;
+        if (scrollLeft === undefined || element === undefined) return;
+        element.scrollLeft = scrollLeft;
+        this.followedScrollLeft = element.scrollLeft;
+      },
     });
   }
 }

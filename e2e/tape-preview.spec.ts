@@ -59,12 +59,12 @@ async function focusTapeView(window: Page): Promise<void> {
 test.describe('Preview a Tape on the Organ', () => {
   test('Space starts the Preview: the toggle is pressed and the playhead moves along the Tape', async () => {
     const {app, window} = await openTapeOfOrganWithTapePerCrankTurn(SHORT_PREVIEW_TAPE_PER_CRANK_TURN);
-    await expect(window.getByTestId('preview-toggle')).toHaveAttribute('aria-pressed', 'false');
+    await expect(window.getByTestId('preview-toggle')).toContainText('Preview');
 
     await focusTapeView(window);
     await window.keyboard.press(' ');
 
-    await expect(window.getByTestId('preview-toggle')).toHaveAttribute('aria-pressed', 'true');
+    await expect(window.getByTestId('preview-toggle')).toContainText('Stop preview');
     await expect.poll(() => playheadColumn(window)).toBeGreaterThan(0);
     await app.close();
   });
@@ -76,7 +76,7 @@ test.describe('Preview a Tape on the Organ', () => {
 
     await window.getByTestId('preview-toggle').click();
 
-    await expect(window.getByTestId('preview-toggle')).toHaveAttribute('aria-pressed', 'false');
+    await expect(window.getByTestId('preview-toggle')).toContainText('Preview');
     await expect.poll(() => playheadColumn(window)).toBe(length);
     await app.close();
   });
@@ -90,7 +90,7 @@ test.describe('Preview a Tape on the Organ', () => {
     await expect.poll(() => playheadColumn(window)).toBeGreaterThan(0);
     await window.keyboard.press(' ');
 
-    await expect(window.getByTestId('preview-toggle')).toHaveAttribute('aria-pressed', 'false');
+    await expect(window.getByTestId('preview-toggle')).toContainText('Preview');
     const stoppedAt = await playheadColumn(window);
     expect(stoppedAt).toBeGreaterThan(0);
     expect(stoppedAt).toBeLessThan(length);
@@ -171,18 +171,18 @@ test.describe('Editing a Tape while its Preview plays', () => {
     const storedEdited = await readFile(tapesFile, 'utf8');
 
     await preview.click();
-    await expect(preview).toHaveAttribute('aria-pressed', 'true');
+    await expect(preview).toContainText('Stop preview');
     await expect(window.getByTestId('editing-paused')).toBeVisible();
 
     await dragHole(window, holeAt(window, originalHole.row, movedStart), -2);
     await clickMenuItem(app, 'undo');
 
-    await expect(preview).toHaveAttribute('aria-pressed', 'true');
+    await expect(preview).toContainText('Stop preview');
     expect([...(await drawnHoles(window))]).toEqual(edited);
     expect(await readFile(tapesFile, 'utf8')).toBe(storedEdited);
 
     await preview.click();
-    await expect(preview).toHaveAttribute('aria-pressed', 'false');
+    await expect(preview).toContainText('Preview');
     await expect(window.getByTestId('editing-paused')).toHaveCount(0);
 
     await dragHole(window, holeAt(window, originalHole.row, movedStart), -2);

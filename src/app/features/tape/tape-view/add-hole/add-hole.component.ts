@@ -41,7 +41,7 @@ export class AddHoleComponent {
   private readonly draft = signal<AddHoleDraft>({column: ''});
   protected readonly pipe = signal<MidiNoteNumber | undefined>(undefined);
   protected readonly fields = form(this.draft, (path) => {
-    disabled(path.column, () => this.editingPaused());
+    disabled(path.column, {when: () => this.editingPaused()});
   });
   protected readonly pipes = computed(() =>
     this.organ().pipes.map((pipe) => ({note: pipe.note, name: noteName(pipe.note)})),
