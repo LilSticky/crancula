@@ -18,7 +18,7 @@ States: `planned` · `in progress` · `done`
 
 Released as v0.1.0 on 2026-10-18: cross-platform GitHub Releases built in CI.
 
-## Next: Edit a tape ([#103](https://github.com/LilSticky/crancula/issues/103))
+## Edit a tape ([#103](https://github.com/LilSticky/crancula/issues/103)): done
 
 Split by the user on 2026-10-19 ([discovery](discovery/edit-a-tape.md)).
 
@@ -26,7 +26,7 @@ Split by the user on 2026-10-19 ([discovery](discovery/edit-a-tape.md)).
 |-------|----------------|--------|----------|-------|
 | Place holes by hand ([#105](https://github.com/LilSticky/crancula/issues/105)) | add, move, lengthen or shorten and remove Holes, see Cutting Problems as they happen, undo and redo | Tape | Tape view interaction, snapshot persistence | done |
 | Transpose holes ([#106](https://github.com/LilSticky/crancula/issues/106)) | transpose the selected Holes or all of them by semitones | Tape | Tape view | done |
-| Adjust a tape ([#107](https://github.com/LilSticky/crancula/issues/107)) | change a Tape's Column length | Tape | Tape view | in progress |
+| Adjust a tape ([#107](https://github.com/LilSticky/crancula/issues/107)) | change a Tape's Column length | Tape | Tape view | done |
 
 ## Project infrastructure (not slices)
 
