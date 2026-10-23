@@ -113,16 +113,23 @@ class ColumnLengthErrorMatcher extends ErrorStateMatcher {
       text-align: right;
     }
     .column-length {
+      grid-column: 1 / -1;
       display: flex;
       flex-wrap: wrap;
       align-items: center;
       justify-content: flex-end;
       gap: 0.5rem;
     }
+    .column-length mat-form-field {
+      width: 9rem;
+      min-width: 0;
+    }
     .column-length-hint {
       flex-basis: 100%;
+      min-width: 0;
       margin: 0;
       text-align: right;
+      overflow-wrap: anywhere;
     }
     .parts {
       margin: 0;

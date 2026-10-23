@@ -4,6 +4,7 @@ import {expect, type Page, test} from '@playwright/test';
 import {launchApp} from './support/launch-app';
 import {melodyC3ToC5} from './support/midi-file';
 import {createTapeFromSong, defineOctaveOrgan} from './support/tape-creation';
+import {resizeWindowOrSkip} from './support/window-size';
 
 interface StoredTapes {
   readonly tapes: readonly {readonly columnLength: number}[];
@@ -91,4 +92,69 @@ test.describe('Adjust the Column length of a Tape', () => {
       await app.close();
     }
   });
+});
+
+interface Box {
+  readonly left: number;
+  readonly top: number;
+  readonly right: number;
+  readonly bottom: number;
+}
+
+/** The box of an element as drawn on screen. */
+function boxOf(locator: ReturnType<Page['getByTestId']>): Promise<Box> {
+  return locator.evaluate((element) => {
+    const {left, top, right, bottom} = element.getBoundingClientRect();
+    return {left, top, right, bottom};
+  });
+}
+
+/** The area of the side panel that shows content: its padding box, without the border and any scrollbar. */
+function visibleBoxOf(panel: ReturnType<Page['getByTestId']>): Promise<Box> {
+  return panel.evaluate((element) => {
+    const rect = element.getBoundingClientRect();
+    const left = rect.left + element.clientLeft;
+    const top = rect.top + element.clientTop;
+    return {left, top, right: left + element.clientWidth, bottom: top + element.clientHeight};
+  });
+}
+
+test.describe('Adjust the Column length of a Tape within the side panel', () => {
+  for (const [width, height] of [[1280, 800], [1024, 700]] as const) {
+    test(`at ${width} x ${height}: the side panel does not scroll sideways and shows the field, Apply and hint in full`, async () => {
+      const launched = await launchApp();
+      const {window, app} = launched;
+      try {
+        await resizeWindowOrSkip(launched, width, height, true);
+        await defineOctaveOrgan(window, 'Octave organ');
+        await createTapeFromSong(window, 'Scale', melodyC3ToC5(), {columnLength: '5'});
+        await expect(window.getByTestId('side-panel')).toBeVisible();
+
+        await window.getByTestId('column-length-input').fill('10');
+        await expect(window.getByTestId('column-length-apply')).toBeEnabled();
+        await expect(window.getByTestId('column-length-hint')).toBeVisible();
+
+        const panel = window.getByTestId('side-panel');
+        const overflow = await panel.evaluate((element) => ({scrollWidth: element.scrollWidth, clientWidth: element.clientWidth}));
+        expect(overflow.scrollWidth, JSON.stringify(overflow)).toBeLessThanOrEqual(overflow.clientWidth);
+
+        const visible = await visibleBoxOf(panel);
+        const parts = {
+          field: window.getByTestId('column-length-input').locator('xpath=ancestor::mat-form-field[1]'),
+          apply: window.getByTestId('column-length-apply'),
+          hint: window.getByTestId('column-length-hint'),
+        } as const;
+        for (const [name, locator] of Object.entries(parts)) {
+          const box = await boxOf(locator);
+          const detail = `${name} ${JSON.stringify({box, visible})}`;
+          expect(box.left, detail).toBeGreaterThanOrEqual(visible.left - 0.5);
+          expect(box.right, detail).toBeLessThanOrEqual(visible.right + 0.5);
+          expect(box.top, detail).toBeGreaterThanOrEqual(visible.top - 0.5);
+          expect(box.bottom, detail).toBeLessThanOrEqual(visible.bottom + 0.5);
+        }
+      } finally {
+        await app.close();
+      }
+    });
+  }
 });
