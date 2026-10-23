@@ -8,21 +8,29 @@ as its GitHub Release notes.
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-10-23
+
 ### Added
-- Transpose all or the selected Holes of a Tape.
-- Rename a Tape: choose Rename in the Tape's menu in the Tape list.
-- Bringing a Song onto a Tape shows a live preview of the Tape's first Columns under the Fit. It
-  follows the Parts, the Transposition and the Column length before you create the Tape.
 - Edit a Tape's Holes by hand. Move a Hole by dragging it or with the arrow keys, lengthen or shorten
   it by its end, add a Hole (double-click, or the Add a Hole form), and remove it with Delete.
   Keyboard users get the same controls, in German and English.
 - Cutting Problems show as you edit: a Hole that can't be cut is outlined, and the Selected Hole
   lists its problems.
-- Undo and redo for Tape edits: the Undo and Redo buttons, and Ctrl+Z, Ctrl+Y or Ctrl+Shift+Z
-  (⌘Z and ⇧⌘Z on macOS).
+- Undo and redo for Tape edits: the Undo and Redo buttons, the Edit menu, and Ctrl+Z, Ctrl+Y or
+  Ctrl+Shift+Z (⌘Z and ⇧⌘Z on macOS).
 - The Tape grows when you move a Hole past its end; the view scrolls while you drag near an edge.
-- Change a Tape's Column length in the Tape section of the side panel. A hint shows the Cutting Problems
-  now and after the change; Apply (or Enter) changes the Tape, and one Undo takes it back.
+- Transpose all or the selected Holes of a Tape.
+- Change a Tape's Column length in the Tape section of the side panel. A hint shows the Cutting
+  Problems now and after the change; Apply (or Enter) changes the Tape, and one Undo takes it back.
+- Rename a Tape: choose Rename in the Tape's menu in the Tape list.
+- Bringing a Song onto a Tape shows a live preview of the Tape's first Columns under the Fit. It
+  follows the Parts, the Transposition and the Column length before you create the Tape.
+
+### Fixed
+- The Pipe note fields in the Organ editor are no longer clipped.
+- At Whole Tape, the ruler numbers and row labels are thinned out so they don't overlap.
+- The import screen's Song sheet scrolls in short windows instead of spilling into the action bar.
+- Saving on Windows retries longer when another program holds the saved file open.
 
 ## [0.1.0] - 2026-10-18
 
@@ -66,6 +74,7 @@ as its GitHub Release notes.
   application menu.
 - Downloads for Windows (portable `.exe`), macOS (`.dmg`, Apple silicon) and Linux (`.AppImage`).
 
-[Unreleased]: https://github.com/LilSticky/crancula/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/LilSticky/crancula/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/LilSticky/crancula/releases/tag/v0.1.1
 [0.1.0]: https://github.com/LilSticky/crancula/releases/tag/v0.1.0
 [0.0.1]: https://github.com/LilSticky/crancula/releases/tag/v0.0.1
