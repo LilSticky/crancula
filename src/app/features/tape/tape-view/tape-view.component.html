@@ -17,7 +17,7 @@
     </mat-button-toggle-group>
     @if (compact()) {<button pageHeadActions mat-stroked-button type="button" data-testid="side-panel-toggle" [attr.aria-expanded]="sidePanelOpen()" (click)="toggleSidePanel()">{{ 'TAPE.VIEW.DETAILS' | translate }}</button>}
     <ng-container ngProjectAs="[pageHeadActions]">
-      <button mat-stroked-button type="button" data-testid="preview-toggle" [disabled]="!previewAvailable()" disabledInteractive [attr.aria-describedby]="previewAvailable() ? null : 'preview-unavailable'" (click)="togglePreview()">
+      <button mat-stroked-button type="button" data-testid="preview-toggle" [disabled]="!previewAvailable()" disabledInteractive [attr.aria-describedby]="previewAvailable() ? null : 'preview-unavailable-reason'" (click)="togglePreview()">
         <mat-icon aria-hidden="true">{{ preview.playing() ? 'stop' : 'play_arrow' }}</mat-icon>
         {{ (preview.playing() ? 'TAPE.PREVIEW.STOP' : 'TAPE.PREVIEW.PLAY') | translate }}
       </button>
@@ -118,12 +118,7 @@
       </svg>
     </div>
   </div>
-  @if (!previewAvailable()) {
-    <p class="preview-unavailable" id="preview-unavailable" data-testid="preview-unavailable">
-      {{ 'TAPE.PREVIEW.UNAVAILABLE' | translate }}
-      <a data-testid="preview-open-organ" [routerLink]="['/organs', drawing.organ.id]">{{ 'TAPE.PREVIEW.OPEN_ORGAN' | translate }}</a>
-    </p>
-  }
+  <span id="preview-unavailable-reason" class="cdk-visually-hidden" data-testid="preview-unavailable-reason">{{ 'TAPE.PREVIEW.UNAVAILABLE' | translate }}</span>
   @if (overview(); as overview) {
     <svg
       #overviewSvg
@@ -157,6 +152,12 @@
         <cranc-add-hole [organ]="organ" [tape]="tape" [selected]="selectedHoleRef()" [editingPaused]="editingPaused()" (added)="addFromForm($event)" />
       }
       <cranc-tape-section [view]="drawing.section" [tape]="tape" [organ]="drawing.organ" [editingPaused]="editingPaused()" (columnLengthChange)="onColumnLengthChange($event)" />
+      @if (!previewAvailable()) {
+        <p class="preview-unavailable" data-testid="preview-unavailable">
+          {{ 'TAPE.PREVIEW.UNAVAILABLE' | translate }}
+          <a data-testid="preview-open-organ" [routerLink]="['/organs', drawing.organ.id]">{{ 'TAPE.PREVIEW.OPEN_ORGAN' | translate }}</a>
+        </p>
+      }
       @if (organ(); as organ) {
         <cranc-preview-section [tape]="tape" [organ]="organ" [playing]="preview.playing()" [playhead]="preview.playhead()" (crankSpeedChange)="onCrankSpeedChange($event)" (startColumnChange)="onStartColumnChange($event)" />
       }

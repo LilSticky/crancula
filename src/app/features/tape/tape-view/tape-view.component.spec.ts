@@ -3764,20 +3764,32 @@ describe('TapeViewComponent', () => {
     });
 
     describe('without a Tape per Crank turn', () => {
-      it('keeps the toggle focusable, marks it aria-disabled, and describes it by the unavailable notice', async () => {
+      it('keeps the toggle focusable, marks it aria-disabled, and describes it by the reason', async () => {
         const {view} = await setup({});
-        const notice = required(view()?.querySelector('[data-testid="preview-unavailable"]'), 'unavailable notice');
+        const reason = required(view()?.querySelector('[data-testid="preview-unavailable-reason"]'), 'unavailable reason');
 
         expect(toggle(view())?.disabled).toBe(false);
         expect(toggle(view())?.getAttribute('aria-disabled')).toBe('true');
-        expect(notice.id).not.toBe('');
-        expect(toggle(view())?.getAttribute('aria-describedby')).toBe(notice.id);
+        expect(reason.id).not.toBe('');
+        expect(toggle(view())?.getAttribute('aria-describedby')).toBe(reason.id);
+        expect(reason.textContent?.trim()).toBe("Set the Organ's Tape per Crank turn to hear this Tape");
       });
 
-      it('says why the Tape can not be heard and links to the Organ editor', async () => {
-        const {organ, view} = await setup({});
+      it('keeps the reason for the toggle in the DOM while the compact side panel is closed', async () => {
+        const {tape, open, view} = await render({windowWidth: 1100});
+        await open(`/tapes/${tape.id}`);
 
-        expect(view()?.querySelector('[data-testid="preview-unavailable"]')).not.toBeNull();
+        expect(view()?.querySelector('[data-testid="side-panel"]')).toBeNull();
+        const reason = required(view()?.querySelector('[data-testid="preview-unavailable-reason"]'), 'unavailable reason');
+        expect(toggle(view())?.getAttribute('aria-describedby')).toBe(reason.id);
+      });
+
+      it('shows the unavailable notice inside the side panel, not in the stage, and links to the Organ editor', async () => {
+        const {tape, organ, open, view} = await render({windowWidth: 1400});
+        await open(`/tapes/${tape.id}`);
+
+        const notice = required(view()?.querySelector('[data-testid="preview-unavailable"]'), 'unavailable notice');
+        expect(notice.closest('aside.side-panel')).not.toBeNull();
         expect(view()?.querySelector('[data-testid="preview-open-organ"]')?.getAttribute('href')).toBe(`/organs/${organ.id}`);
       });
     });
