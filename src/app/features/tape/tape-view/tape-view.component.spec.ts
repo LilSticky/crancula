@@ -3200,6 +3200,104 @@ describe('TapeViewComponent', () => {
     });
   });
 
+  describe('undoing a changed Column length (T015)', () => {
+    // The Pipe of row r is note 52 + r. Row 24 has one Hole of 2 Columns at Column 10; the Tape is 100 Columns of 1.5 mm.
+    const holes = [{row: 24, start: 10, length: 2}];
+    const button = (view: HTMLElement | null, testId: 'undo' | 'redo') =>
+      view?.querySelector<HTMLButtonElement>(`[data-testid="page-head-actions"] [data-testid="${testId}"]`) ?? null;
+    const storedHoles = (tapeId: string) =>
+      (TestBed.inject(TapeLibrary).tapeEntities().find((candidate) => candidate.id === tapeId)?.holes ?? []).map(
+        (hole) => `${hole.pipe - 52}:${hole.start}+${hole.length}`,
+      );
+    const storedColumnLength = (tapeId: string) =>
+      TestBed.inject(TapeLibrary).tapeEntities().find((candidate) => candidate.id === tapeId)?.columnLength;
+    const storedTape = (tapeId: string): Tape => {
+      const found = TestBed.inject(TapeLibrary).tapeEntities().find((candidate) => candidate.id === tapeId);
+      if (!found) throw new Error(`no stored Tape ${tapeId}`);
+      return found;
+    };
+    const marks = (view: HTMLElement | null) => all(view, '[data-testid="tape-scroll"] [data-testid="hole-mark"]');
+    const countText = (view: HTMLElement | null) =>
+      view?.querySelector('[data-testid="cutting-problems-count"]')?.textContent?.replace(/\s+/g, ' ').trim();
+    const press = async (target: Element, init: KeyboardEventInit, settle: () => Promise<void>) => {
+      target.dispatchEvent(new KeyboardEvent('keydown', {...init, bubbles: true, cancelable: true}));
+      await settle();
+    };
+    const select = async (view: HTMLElement | null, row: number, start: number, settle: () => Promise<void>) => {
+      all(view, `[data-testid="tape-scroll"] rect[data-testid="hole"][data-row="${row - 1}"][data-start="${start}"]`)[0]?.dispatchEvent(
+        new MouseEvent('click', {bubbles: true}),
+      );
+      await settle();
+    };
+    /** The Tape with the Column length of `columnLength` mm; the other fields stay. */
+    const withColumnLength = (tape: Tape, columnLength: number): Tape => {
+      const changed = changeColumnLength(tape, columnLength);
+      if (!changed.ok) throw new Error(`invalid test Column length: ${columnLength}`);
+      return changed.value;
+    };
+
+    it('takes a changed Column length back in one step, with its Cutting Problems and marks', async () => {
+      const {tape, open, view, settle, tapeSection} = await render({holes, columnLength: 1.5});
+      await open(`/tapes/${tape.id}`);
+      const update = vi.spyOn(TestBed.inject(TapeLibrary), 'update');
+      expect(countText(view())).toBe('None');
+
+      tapeSection().columnLengthChange.emit(withColumnLength(tape, 1));
+      await settle();
+      expect(countText(view())).toBe("1 Hole can't be cut");
+      update.mockClear();
+
+      button(view(), 'undo')?.click();
+      await settle();
+
+      expect(storedColumnLength(tape.id)).toBe(1.5);
+      expect(storedHoles(tape.id)).toEqual(['24:10+2']);
+      expect(countText(view())).toBe('None');
+      expect(marks(view())).toHaveLength(0);
+      expect(update).toHaveBeenCalledTimes(1);
+      expect(button(view(), 'undo')?.disabled).toBe(true);
+    });
+
+    it('brings the Column length back with redo, with its Cutting Problems and marks', async () => {
+      const {tape, open, view, settle, tapeSection} = await render({holes, columnLength: 1.5});
+      await open(`/tapes/${tape.id}`);
+      tapeSection().columnLengthChange.emit(withColumnLength(tape, 1));
+      await settle();
+      button(view(), 'undo')?.click();
+      await settle();
+
+      button(view(), 'redo')?.click();
+      await settle();
+
+      expect(storedColumnLength(tape.id)).toBe(1);
+      expect(countText(view())).toBe("1 Hole can't be cut");
+      expect(marks(view())).toHaveLength(1);
+      expect(button(view(), 'redo')?.disabled).toBe(true);
+    });
+
+    it('undoes a Hole move and a later Column length change in reverse order', async () => {
+      const {tape, open, view, settle, tapeSection} = await render({holes, columnLength: 2.5});
+      await open(`/tapes/${tape.id}`);
+      await select(view(), 24, 10, settle);
+      await press(view()?.querySelector('[data-testid="tape-scroll"] svg') as SVGSVGElement, {key: 'ArrowRight', altKey: true}, settle);
+      expect(storedHoles(tape.id)).toEqual(['24:11+2']);
+
+      tapeSection().columnLengthChange.emit(withColumnLength(storedTape(tape.id), 5));
+      await settle();
+      expect(storedColumnLength(tape.id)).toBe(5);
+
+      button(view(), 'undo')?.click();
+      await settle();
+      expect(storedColumnLength(tape.id)).toBe(2.5);
+      expect(storedHoles(tape.id)).toEqual(['24:11+2']);
+
+      button(view(), 'undo')?.click();
+      await settle();
+      expect(storedHoles(tape.id)).toEqual(['24:10+2']);
+      expect(button(view(), 'undo')?.disabled).toBe(true);
+    });
+  });
+
   describe('selecting several Holes (T020)', () => {
     const RULER_PX = 24;
     // The Pipe of row r is note 52 + r. Row 24 is E5, row 25 F5. Starts count from 0.

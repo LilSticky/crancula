@@ -58,8 +58,8 @@ restart and the real menu.
 
 ## Phase 5: User Story 3 — Undo the change (P2)
 
-- [ ] T015 [US3] Red→green: `tape-view.component.spec.ts` — undo after a Column length change restores the old Column length and marks in one step; redo brings the new one back; mixed with a Hole move, undo order is reverse.
-- [ ] T016 [US3] Red→green: extend `e2e/tape-column-length.spec.ts` — the application menu's Edit > Undo takes the change back when the field has no focus.
+- [x] T015 [US3] Red→green: `tape-view.component.spec.ts` — undo after a Column length change restores the old Column length and marks in one step; redo brings the new one back; mixed with a Hole move, undo order is reverse.
+- [x] T016 [US3] Red→green: extend `e2e/tape-column-length.spec.ts` — the application menu's Edit > Undo takes the change back when the field has no focus.
 
 ## Phase 6: Polish
 

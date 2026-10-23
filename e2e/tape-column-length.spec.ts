@@ -56,4 +56,39 @@ test.describe('Adjust the Column length of a Tape', () => {
     expect(numberIn(lengthAfter ?? '')).toBe(2 * numberIn(lengthBefore ?? ''));
     await second.app.close();
   });
+
+  test('takes a changed Column length back with the Edit menu Undo when the field has no focus (T016)', async () => {
+    const launched = await launchApp();
+    const {window, app, userDataDir} = launched;
+    try {
+      await defineOctaveOrgan(window, 'Octave organ');
+      await createTapeFromSong(window, 'Scale', melodyC3ToC5(), {columnLength: '5'});
+      const lengthBefore = await sectionValue(window, 'Length').textContent();
+      await window.getByTestId('column-length-input').fill('10');
+      await window.getByTestId('column-length-apply').click();
+      await expect(window.getByTestId('column-length-input')).toHaveValue(/^10([.,]0)?$/);
+
+      // The field gives up the focus, so the Edit menu's Undo is the only way back.
+      await window.evaluate(() => {
+        if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+      });
+      await expect(window.getByTestId('column-length-input')).not.toBeFocused();
+
+      // The menu item sends its Edit Command to the window it is clicked in.
+      await app.evaluate(({BrowserWindow, Menu}) => {
+        Menu.getApplicationMenu()?.getMenuItemById('undo')?.click(undefined, BrowserWindow.getAllWindows()[0]);
+      });
+
+      await expect(window.getByTestId('column-length-input')).toHaveValue(/^5([.,]0)?$/);
+      await expect(sectionValue(window, 'Length')).toHaveText(lengthBefore ?? '');
+      await expect
+        .poll(async () => {
+          const stored = JSON.parse(await readFile(join(userDataDir, 'snapshots', 'tapes.json'), 'utf8')) as StoredTapes;
+          return stored.tapes.map((tape) => tape.columnLength);
+        })
+        .toEqual([5]);
+    } finally {
+      await app.close();
+    }
+  });
 });
