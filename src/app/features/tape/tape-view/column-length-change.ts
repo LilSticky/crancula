@@ -9,10 +9,13 @@ export type ColumnLengthChange =
 
 /** Works out the change the typed text would make to the Column length of the Tape, and counts the Cutting Problems before and after it. */
 export function columnLengthChange(tape: Tape, organ: Organ, typed: string): ColumnLengthChange {
-  const columnLength = parseDecimal(typed);
+  return columnLengthChangeTo(tape, organ, parseDecimal(typed));
+}
+
+/** The same as `columnLengthChange`, for a Column length that is already a number; `null` is no Column length, `NaN` is not one. */
+export function columnLengthChangeTo(tape: Tape, organ: Organ, columnLength: number | null): ColumnLengthChange {
   if (columnLength === null) return {state: 'unchanged'};
   if (columnLength === tape.columnLength) return {state: 'unchanged'};
-  if (Number.isNaN(columnLength)) return {state: 'invalid'};
 
   const changed = changeColumnLength(tape, columnLength);
   if (!changed.ok) return {state: 'invalid'};

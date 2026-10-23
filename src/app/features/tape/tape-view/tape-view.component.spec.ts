@@ -3180,6 +3180,24 @@ describe('TapeViewComponent', () => {
       expect(body).not.toBeNull();
       expect(numberAttribute(body as Element, 'width')).toBeCloseTo(tapeGeometry(changed, organ).totalLength * SCALE, 1);
     });
+
+    it('lists and marks the Cutting Problems of the applied Column length', async () => {
+      // A Hole of 2 Columns is 3 mm at 1.5 mm per Column (long enough) and 2 mm at 1 mm per Column (below the 2.5 mm Minimum Hole Length).
+      const {tape, open, view, settle, tapeSection} = await render({holes: [{row: 24, start: 10, length: 2}], columnLength: 1.5});
+      await open(`/tapes/${tape.id}`);
+      const marks = () => all(view(), '[data-testid="tape-scroll"] [data-testid="hole-mark"]');
+      const countText = () => view()?.querySelector('[data-testid="cutting-problems-count"]')?.textContent?.replace(/\s+/g, ' ').trim();
+      const entries = () => all(view(), '[data-testid="cutting-problems"] [data-testid="cutting-problem"]');
+      expect(countText()).toBe('None');
+      expect(marks()).toHaveLength(0);
+
+      tapeSection().columnLengthChange.emit(withColumnLength(tape, 1));
+      await settle();
+
+      expect(marks()).toHaveLength(1);
+      expect(countText()).toBe("1 Hole can't be cut");
+      expect(entries()).toHaveLength(1);
+    });
   });
 
   describe('selecting several Holes (T020)', () => {

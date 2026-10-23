@@ -1,8 +1,9 @@
 import {provideRouter} from '@angular/router';
 import {type ComponentFixture, TestBed} from '@angular/core/testing';
-import {columnCount, millimetres, organId, tapeId, transposition, type Tape} from '@api/index';
+import {column, columnCount, type Hole, midiNoteNumber, millimetres, type Organ, organId, tapeId, transposition, type Tape} from '@api/index';
 import {tapeOf} from '../../../../../../api/tape/tape-fixture';
 import {partIndex, songId} from '../../../../../../api/song/song';
+import {testOrgan} from '../../../../../testing/organs';
 import {provideTestTranslations} from '../../../../../testing/test-translations';
 import {TapeSectionComponent, type TapeSectionView} from './tape-section.component';
 
@@ -26,8 +27,20 @@ const VIEW: TapeSectionView = {
   ],
 };
 
-/** A Tape of 100 Columns without Holes, with the given Column length in mm. */
-function tapeWith(columnLength: number): Tape {
+/** The Organ of the section: its one Pipe is note 60, as the test Organs of the other specs. */
+const ORGAN: Organ = testOrgan('Fairground', 1);
+
+/** A Hole on the first Pipe of ORGAN, `length` Columns long from Column `start`. */
+function holeOf(start: number, length: number): Hole {
+  return {
+    pipe: defined(midiNoteNumber(60), 'pipe note'),
+    start: defined(column(start), 'start'),
+    length: defined(columnCount(length), 'hole length'),
+  };
+}
+
+/** A Tape of 100 Columns with the given Holes, with the given Column length in mm. */
+function tapeWith(columnLength: number, holes: readonly Hole[] = []): Tape {
   return tapeOf({
     id: defined(tapeId('00000000-0000-4000-8000-000000000001'), 'tape id'),
     name: 'Melody',
@@ -37,17 +50,27 @@ function tapeWith(columnLength: number): Tape {
     transposition: defined(transposition(0), 'transposition'),
     columnLength: defined(millimetres(columnLength), 'column length'),
     length: defined(columnCount(100), 'length'),
-    holes: [],
+    holes,
   });
 }
 
-async function render(options: {readonly view?: TapeSectionView; readonly columnLength?: number; readonly language?: 'en' | 'de'} = {}) {
+async function render(
+  options: {
+    readonly view?: TapeSectionView;
+    readonly columnLength?: number;
+    readonly holes?: readonly Hole[];
+    /** The Organ the section works out the Cutting Problems on; the Organ of ORGAN when not given. */
+    readonly organ?: Organ;
+    readonly language?: 'en' | 'de';
+  } = {},
+) {
   TestBed.configureTestingModule({
     providers: [provideTestTranslations(options.language ?? 'en'), provideRouter([])],
   });
   const fixture: ComponentFixture<TapeSectionComponent> = TestBed.createComponent(TapeSectionComponent);
   fixture.componentRef.setInput('view', options.view ?? VIEW);
-  fixture.componentRef.setInput('tape', tapeWith(options.columnLength ?? 2.5));
+  fixture.componentRef.setInput('tape', tapeWith(options.columnLength ?? 2.5, options.holes));
+  fixture.componentRef.setInput('organ', options.organ ?? ORGAN);
   const emitted: Tape[] = [];
   fixture.componentInstance.columnLengthChange.subscribe((changed: Tape) => emitted.push(changed));
   fixture.autoDetectChanges();
@@ -77,13 +100,15 @@ async function render(options: {readonly view?: TapeSectionView; readonly column
     fixture.detectChanges();
     await fixture.whenStable();
   };
+  /** The text of the hint under the Column length field, if shown. */
+  const hint = (): string | undefined => element.querySelector('[data-testid="column-length-hint"]')?.textContent?.trim();
   /** Moves the focus out of the field, to `next` if given. */
   const blur = async (next?: HTMLElement): Promise<void> => {
     field().dispatchEvent(new FocusEvent('blur', {relatedTarget: next ?? null}));
     fixture.detectChanges();
     await fixture.whenStable();
   };
-  return {element, section, field, apply, type, press, blur, emitted};
+  return {element, section, field, apply, type, press, blur, hint, emitted};
 }
 
 describe('TapeSectionComponent', () => {
@@ -202,6 +227,34 @@ describe('TapeSectionComponent', () => {
 
       expect(field().value).toBe('2.5');
       expect(emitted).toHaveLength(0);
+    });
+
+    describe('the hint of the Cutting Problems (T013)', () => {
+      it('shows the Cutting Problems now and with the typed Column length', async () => {
+        // A Hole of 2 Columns is 4 mm at 2 mm per Column (long enough), and 2 mm at 1 mm per Column (below the 2.5 mm Minimum Hole Length).
+        const {type, hint} = await render({columnLength: 2, holes: [holeOf(10, 2)], organ: ORGAN});
+
+        await type('1');
+
+        expect(hint()).toBe('Cutting Problems: 0 now, 1 with 1 mm');
+      });
+
+      it('shows the same count when the typed Column length keeps the Cutting Problems', async () => {
+        // A Hole of 1 Column is 1 mm, below the 2.5 mm Minimum Hole Length, at 1 mm and at 1.5 mm per Column.
+        const {type, hint} = await render({columnLength: 1, holes: [holeOf(10, 1)], organ: ORGAN});
+
+        await type('1.5');
+
+        expect(hint()).toBe('Cutting Problems: 1 now, 1 with 1.5 mm');
+      });
+
+      it('shows zero and zero for a Tape without Holes', async () => {
+        const {type, hint} = await render({columnLength: 2.5, organ: ORGAN});
+
+        await type('5');
+
+        expect(hint()).toBe('Cutting Problems: 0 now, 0 with 5 mm');
+      });
     });
   });
 });
