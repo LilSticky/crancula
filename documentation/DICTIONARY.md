@@ -26,7 +26,7 @@
 * Defines the physical length of one Column in mm
 * Always editable in Crancula; the tool does not track whether it has been punched
 * Can be exported for the Plotter only when every Hole has a Pipe on its Organ and respects the Minimum Hole Length and Minimum Gap; exporting does not change the Tape
-* Holds no tempo: playing speed is set by the Crank
+* Keeps a Crank speed, the tempo its Preview plays at; changing it is an edit like the Column length
 * German: Lochband (plural Lochbänder); compounds keep "Band": Bandbett, Bandbreite
 * Effectively a table
   * each row represents one pipe
@@ -160,6 +160,7 @@
 
 # Crank speed
 * Crank turns per minute
+* Kept by each Tape
 * Together with the Organ's Tape per Crank turn and the Tape's Column length it sets how long a Column plays
 * German: Kurbelgeschwindigkeit
 
@@ -170,7 +171,7 @@
 
 # Preview
 * Playing a Tape in Crancula at a Crank speed, to hear it before it is cut
-* Changes nothing: not the Tape, not the Organ
+* Changes nothing: no Hole, not the Organ (only the Tape's Crank speed can be changed while it plays)
 
 # Punch
 * Cutting a Hole into a physical Tape; irreversible
