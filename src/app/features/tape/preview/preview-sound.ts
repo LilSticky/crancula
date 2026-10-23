@@ -1,5 +1,6 @@
 import {InjectionToken} from '@angular/core';
 import type {MidiNoteNumber} from '@api/index';
+import {WebAudioPreviewSound} from './web-audio-preview-sound';
 
 /** One sounding Pipe as the sound made it; the Preview only passes it back to `stop`. */
 export type PreviewVoice = object;
@@ -17,4 +18,15 @@ export interface PreviewSound {
 }
 
 /** Makes the PreviewSound a Preview plays on; a Preview calls it once, on its first play. */
-export const PREVIEW_SOUND = new InjectionToken<() => PreviewSound>('PREVIEW_SOUND');
+export const PREVIEW_SOUND = new InjectionToken<() => PreviewSound>('PREVIEW_SOUND', {
+  providedIn: 'root',
+  factory: () => () =>
+    new WebAudioPreviewSound(() => {
+      if (typeof AudioContext === 'undefined') return undefined;
+      try {
+        return new AudioContext();
+      } catch {
+        return undefined;
+      }
+    }),
+});
