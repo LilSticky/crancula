@@ -15,6 +15,7 @@ import {
   readMidiSong,
   type CranculaApi,
   type EditCommand,
+  type MidiNoteNumber,
   type Organ,
   type Tape,
   toTapeLibrarySnapshot,
@@ -39,6 +40,7 @@ import {PLATFORM} from './platform.token';
 import {TapeViewComponent} from './tape-view.component';
 import {TapeSectionComponent} from './tape-section/tape-section.component';
 import {By} from '@angular/platform-browser';
+import {PREVIEW_SOUND, type PreviewSound, type PreviewVoice} from '../preview/preview-sound';
 
 /** The scale the Tape opens at: 1:1, true size on screen. */
 const SCALE = pixelsPerMillimetre('1:1', 0, 0);
@@ -97,6 +99,39 @@ interface RenderOptions {
   readonly windowWidth?: number;
   /** The platform the shortcuts are read for; faked through the PLATFORM token. */
   readonly platform?: Platform;
+  /** The Organ's Tape per Crank turn in mm; none (the Preview is unavailable) when not given. */
+  readonly tapePerCrankTurn?: number;
+}
+
+/** The sound of a Preview: a clock the test moves, and a record of every start and stop. */
+class FakePreviewSound implements PreviewSound {
+  readonly starts: {readonly pipe: MidiNoteNumber; readonly at: number; readonly voice: PreviewVoice}[] = [];
+  readonly stops: {readonly voice: PreviewVoice; readonly at: number}[] = [];
+  private seconds = 0;
+
+  now(): number {
+    return this.seconds;
+  }
+
+  advance(seconds: number): void {
+    this.seconds += seconds;
+  }
+
+  start(pipe: MidiNoteNumber, at: number): PreviewVoice {
+    const voice: PreviewVoice = {};
+    this.starts.push({pipe, at, voice});
+    return voice;
+  }
+
+  stop(voice: PreviewVoice, at: number): void {
+    this.stops.push({voice, at});
+  }
+
+  resume(): Promise<void> {
+    return Promise.resolve();
+  }
+
+  close(): void {}
 }
 
 /** Evaluates `min-width` and `max-width` queries against a fixed window width. */
@@ -146,9 +181,11 @@ async function render(options: RenderOptions = {}) {
     for (const listener of [...editListeners]) listener(command);
   };
   const plotterExport = {export: vi.fn((): Promise<void> => Promise.resolve()), saving: signal(false)};
+  const previewSound = new FakePreviewSound();
   TestBed.configureTestingModule({
     providers: [
       ...(options.realExport ? [] : [{provide: PlotterExport, useValue: plotterExport}]),
+      {provide: PREVIEW_SOUND, useValue: (): PreviewSound => previewSound},
       provideRouter([
         {path: 'tapes', component: TapeListStubComponent},
         {path: 'tapes/:id', component: TapeViewComponent},
@@ -162,12 +199,14 @@ async function render(options: RenderOptions = {}) {
     ],
   });
   const pipeNotes = options.pipeNotes ?? Array.from({length: 25}, (_, index) => 52 + index + 1);
+  const perCrankTurn = options.tapePerCrankTurn === undefined ? {} : {tapePerCrankTurn: options.tapePerCrankTurn};
   const organ = options.holes
     ? testOrgan('Street organ', pipeNotes.length, {
         leadIn: options.leadIn ?? 0,
         pipes: pipeNotes.map((note) => ({note})),
+        ...perCrankTurn,
       })
-    : testOrgan('Street organ', 3, options.leadIn === undefined ? {} : {leadIn: options.leadIn});
+    : testOrgan('Street organ', 3, {...(options.leadIn === undefined ? {} : {leadIn: options.leadIn}), ...perCrankTurn});
   const organs = TestBed.inject(OrganLibrary);
   await organs.put(organ);
 
@@ -274,6 +313,7 @@ async function render(options: RenderOptions = {}) {
     settle,
     sendEditCommand,
     tapeSection,
+    previewSound,
   };
 }
 
@@ -1617,16 +1657,14 @@ describe('TapeViewComponent', () => {
         expect(view()?.querySelector('[data-testid="selected-hole"]')?.getAttribute('aria-live')).toBe('polite');
       });
 
-      for (const key of ['Enter', ' ']) {
-        it(`selects the first Hole on ${key === ' ' ? 'Space' : key} when none is selected`, async () => {
-          const {tape, open, view, settle} = await render({holes: HOLES});
-          await open(`/tapes/${tape.id}`);
+      it('selects the first Hole on Enter when none is selected', async () => {
+        const {tape, open, view, settle} = await render({holes: HOLES});
+        await open(`/tapes/${tape.id}`);
 
-          await press(view(), key, settle);
+        await press(view(), 'Enter', settle);
 
-          expect(selectedRects(view()).map((rect) => rect.getAttribute('data-start'))).toEqual(['10']);
-        });
-      }
+        expect(selectedRects(view()).map((rect) => rect.getAttribute('data-start'))).toEqual(['10']);
+      });
 
       it('draws all Holes in the overview as one path and no rects', async () => {
         const {tape, open, view} = await render({holes: HOLES});
@@ -1688,7 +1726,7 @@ describe('TapeViewComponent', () => {
       await open(`/tapes/${tape.id}`);
 
       const controls = all(view(), 'button, input, select, textarea, [contenteditable]').filter(
-        (control) => control.closest('[data-testid="zoom"], [data-testid="add-hole"]') === null && !['export', 'side-panel-toggle', 'undo', 'redo', 'transpose', 'tape-section-toggle', 'import-summary-toggle', 'column-length-input', 'column-length-apply'].includes(control.getAttribute('data-testid') ?? ''),
+        (control) => control.closest('[data-testid="zoom"], [data-testid="add-hole"]') === null && !['export', 'side-panel-toggle', 'undo', 'redo', 'transpose', 'tape-section-toggle', 'import-summary-toggle', 'column-length-input', 'column-length-apply', 'preview-toggle'].includes(control.getAttribute('data-testid') ?? ''),
       );
       expect(controls).toHaveLength(0);
     });
@@ -3511,6 +3549,158 @@ describe('TapeViewComponent', () => {
       expect(all(view(), '[data-testid="hole-handle"]')).toHaveLength(0);
       expect(update).not.toHaveBeenCalled();
       expect(storedHoles(tape.id)).toEqual(before);
+    });
+  });
+
+  describe('the Preview in the Tape view (T024)', () => {
+    /** A Hole at Column 0 of the first Pipe, so a Preview starts a voice at once and the fake sound records its stop. */
+    const sounding = [{row: 1, start: 0, length: 10}];
+    const tapePerCrankTurn = 100;
+    const toggle = (view: HTMLElement | null) => view?.querySelector<HTMLButtonElement>('[data-testid="preview-toggle"]') ?? null;
+    const playhead = (view: HTMLElement | null) => view?.querySelector('[data-testid="playhead"]') ?? null;
+    const tapeSvg = (view: HTMLElement | null) => view?.querySelector('[data-testid="tape-scroll"] svg') as SVGSVGElement;
+    const numberAttribute = (element: Element, name: string) => Number(element.getAttribute(name));
+
+    const setup = async (options: RenderOptions = {holes: sounding, tapePerCrankTurn}) => {
+      const rendered = await render(options);
+      await rendered.open(`/tapes/${rendered.tape.id}`);
+      return rendered;
+    };
+
+    const press = async (target: Element, init: KeyboardEventInit, settle: () => Promise<void>) => {
+      target.dispatchEvent(new KeyboardEvent('keydown', {...init, bubbles: true, cancelable: true}));
+      await settle();
+    };
+
+    describe('the toggle', () => {
+      it('is not pressed and reads Preview before it plays', async () => {
+        const {view} = await setup();
+
+        expect(toggle(view())?.getAttribute('aria-pressed')).toBe('false');
+        expect(toggle(view())?.textContent).toContain('Preview');
+        expect(toggle(view())?.textContent).not.toContain('Stop');
+      });
+
+      it('is pressed and reads Stop preview while it plays', async () => {
+        const {view, settle} = await setup();
+
+        toggle(view())?.click();
+        await settle();
+
+        expect(toggle(view())?.getAttribute('aria-pressed')).toBe('true');
+        expect(toggle(view())?.textContent).toContain('Stop preview');
+      });
+
+      it('starts the Preview on a click and stops it on the next click', async () => {
+        const {view, settle, previewSound} = await setup();
+
+        toggle(view())?.click();
+        await settle();
+        expect(previewSound.starts.length).toBeGreaterThan(0);
+        expect(previewSound.stops).toHaveLength(0);
+
+        toggle(view())?.click();
+        await settle();
+        expect(toggle(view())?.getAttribute('aria-pressed')).toBe('false');
+        expect(previewSound.stops.length).toBeGreaterThan(0);
+      });
+
+      it('is enabled and shows no unavailable notice when the Organ has a Tape per Crank turn', async () => {
+        const {view} = await setup();
+
+        expect(toggle(view())?.disabled).toBe(false);
+        expect(view()?.querySelector('[data-testid="preview-unavailable"]')).toBeNull();
+      });
+
+      it('toggles with Space when the focus is on the Tape view', async () => {
+        const {view, settle} = await setup();
+
+        await press(tapeSvg(view()), {key: ' '}, settle);
+        expect(toggle(view())?.getAttribute('aria-pressed')).toBe('true');
+
+        await press(tapeSvg(view()), {key: ' '}, settle);
+        expect(toggle(view())?.getAttribute('aria-pressed')).toBe('false');
+      });
+
+      it('starts the Preview on Space with nothing selected and selects no Hole', async () => {
+        const {view, settle} = await setup();
+
+        await press(tapeSvg(view()), {key: ' '}, settle);
+
+        expect(toggle(view())?.getAttribute('aria-pressed')).toBe('true');
+        expect(view()?.querySelectorAll('[data-testid="tape-scroll"] rect[data-testid="hole"].selected')).toHaveLength(0);
+      });
+
+      it('ignores a repeated Space keydown so holding Space does not toggle again', async () => {
+        const {view, settle} = await setup();
+
+        await press(tapeSvg(view()), {key: ' '}, settle);
+        expect(toggle(view())?.getAttribute('aria-pressed')).toBe('true');
+
+        await press(tapeSvg(view()), {key: ' ', repeat: true}, settle);
+
+        expect(toggle(view())?.getAttribute('aria-pressed')).toBe('true');
+      });
+
+      it('ignores Space in a text field', async () => {
+        const {view, settle} = await setup();
+        const field = view()?.querySelector('[data-testid="add-hole-column"]');
+        expect(field).not.toBeNull();
+
+        await press(field as Element, {key: ' '}, settle);
+
+        expect(toggle(view())?.getAttribute('aria-pressed')).toBe('false');
+      });
+
+      it('ignores Space on the toggle itself, which answers its own click', async () => {
+        const {view, settle} = await setup();
+
+        await press(toggle(view()) as HTMLButtonElement, {key: ' '}, settle);
+
+        expect(toggle(view())?.getAttribute('aria-pressed')).toBe('false');
+      });
+    });
+
+    describe('the playhead', () => {
+      it('is drawn at Column 0 when stopped, at the Lead-in, with its Column in data-column', async () => {
+        const {tape, organ, view} = await setup({holes: sounding, tapePerCrankTurn, leadIn: 30});
+        const {leadIn, columnLength} = tapeGeometry(tape, organ);
+
+        const line = playhead(view());
+
+        expect(line).not.toBeNull();
+        expect(numberAttribute(line as Element, 'data-column')).toBe(0);
+        expect(numberAttribute(line as Element, 'x')).toBeCloseTo((leadIn + 0 * columnLength) * SCALE, 1);
+      });
+    });
+
+    describe('without a Tape per Crank turn', () => {
+      it('disables the toggle', async () => {
+        const {view} = await setup({});
+
+        expect(toggle(view())?.disabled).toBe(true);
+      });
+
+      it('says why the Tape can not be heard and links to the Organ editor', async () => {
+        const {organ, view} = await setup({});
+
+        expect(view()?.querySelector('[data-testid="preview-unavailable"]')).not.toBeNull();
+        expect(view()?.querySelector('[data-testid="preview-open-organ"]')?.getAttribute('href')).toBe(`/organs/${organ.id}`);
+      });
+    });
+
+    describe('leaving the Tape view', () => {
+      it('stops the Preview when the view is destroyed', async () => {
+        const {view, settle, previewSound, router} = await setup();
+        toggle(view())?.click();
+        await settle();
+        const stopsBefore = previewSound.stops.length;
+
+        await router.navigateByUrl('/tapes');
+        await settle();
+
+        expect(previewSound.stops.length).toBeGreaterThan(stopsBefore);
+      });
     });
   });
 });

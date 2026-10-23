@@ -1,4 +1,4 @@
-import {DestroyRef, inject, Injectable, signal} from '@angular/core';
+import {DestroyRef, inject, Injectable, NgZone, signal} from '@angular/core';
 import {columnDuration, performance as notesOf, type Column, type Organ, type PreviewNote, type Tape} from '@api/index';
 import {PREVIEW_SOUND, type PreviewSound, type PreviewVoice} from './preview-sound';
 
@@ -42,6 +42,7 @@ function timeAt(session: Session, column: number): number {
 @Injectable()
 export class TapePreview {
   private readonly factory = inject(PREVIEW_SOUND);
+  private readonly zone = inject(NgZone);
   private sound: PreviewSound | undefined;
   private session: Session | undefined;
   private readonly playingSignal = signal(false);
@@ -74,7 +75,8 @@ export class TapePreview {
     this.session = session;
     this.playingSignal.set(true);
     this.playheadSignal.set(from);
-    session.timer = setInterval(() => this.tick(session), TICK_MILLISECONDS);
+    // Outside the zone: the scheduler and the playhead ticks must not keep the view unstable.
+    session.timer = this.zone.runOutsideAngular(() => setInterval(() => this.tick(session), TICK_MILLISECONDS));
     this.follow(session);
     this.tick(session);
   }
@@ -128,10 +130,12 @@ export class TapePreview {
   }
 
   private follow(session: Session): void {
-    session.frame = requestAnimationFrame(() => {
-      this.playheadSignal.set(Math.min(columnAt(session, session.sound.now()), session.length));
-      this.follow(session);
-    });
+    session.frame = this.zone.runOutsideAngular(() =>
+      requestAnimationFrame(() => {
+        this.playheadSignal.set(Math.min(columnAt(session, session.sound.now()), session.length));
+        this.follow(session);
+      }),
+    );
   }
 
   /** Ends the session: cancels the scheduler and the playhead, stops the voices still sounding now. */

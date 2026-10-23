@@ -14,7 +14,7 @@ import {
 } from '@angular/core';
 import {BreakpointObserver} from '@angular/cdk/layout';
 import {toSignal} from '@angular/core/rxjs-interop';
-import {ActivatedRoute, Router} from '@angular/router';
+import {ActivatedRoute, Router, RouterLink} from '@angular/router';
 import {map} from 'rxjs';
 import {column, cuttingProblems, holesWithCuttingProblems, noteName, type HoleRef, type ImportSummary, type Tape, tapeGeometry, type Transposed} from '@api/index';
 import {canTranspose, holeRefsOf, selectionOfRefs} from './transpose-selection';
@@ -61,6 +61,7 @@ import {SelectedHoleComponent} from './selected-hole/selected-hole.component';
 import {selectedHoleView} from './selected-hole/selected-hole-view';
 import {stageMetrics} from './stage-metrics';
 import {TapeEditor} from './tape-editor';
+import {TapePreview} from '../preview/tape-preview';
 import {columnMarks, drawingParams, ghostRect, holeMarks, holeRects, outline, overviewOf, rowLabels, RULER_HEIGHT, sectionView} from './tape-drawing';
 import {TapeSectionComponent} from './tape-section/tape-section.component';
 import {TapeStatusLineComponent, type PointerText} from './tape-status-line/tape-status-line.component';
@@ -120,8 +121,8 @@ const COMPACT_QUERY = '(max-width: 1179.98px)';
 @Component({
   selector: 'cranc-tape-view',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  providers: [TapeEditor],
-  imports: [ImportSummaryComponent, TranslatePipe, PageHeadComponent, MatButton, MatIconButton, MatTooltip, MatButtonToggle, MatButtonToggleGroup, MatIcon, AddHoleComponent, CuttingProblemsComponent, SelectedHoleComponent, TapeSectionComponent, TapeStatusLineComponent],
+  providers: [TapeEditor, TapePreview],
+  imports: [ImportSummaryComponent, TranslatePipe, RouterLink, PageHeadComponent, MatButton, MatIconButton, MatTooltip, MatButtonToggle, MatButtonToggleGroup, MatIcon, AddHoleComponent, CuttingProblemsComponent, SelectedHoleComponent, TapeSectionComponent, TapeStatusLineComponent],
   templateUrl: './tape-view.component.html',
   styleUrl: './tape-view.component.scss',
   host: {'(keydown)': 'onViewKeydown($event)'},
@@ -131,6 +132,7 @@ export class TapeViewComponent {
   private readonly organs = inject(OrganLibrary);
   private readonly router = inject(Router);
   protected readonly editor = inject(TapeEditor);
+  protected readonly preview = inject(TapePreview);
   private readonly platform = inject(PLATFORM);
   /** The shortcuts of Undo and Redo as the tooltips name them. */
   protected readonly shortcuts = shortcutsOf(this.platform);
@@ -361,6 +363,32 @@ export class TapeViewComponent {
     this.scrollToSelection = true;
   }
 
+  /** Whether the Organ can play the Tape: it needs a Tape per Crank turn. */
+  protected readonly previewAvailable = computed(() => this.organ()?.tapePerCrankTurn !== undefined);
+
+  /** Where the playhead is drawn, in px of the drawing, and the Column it stands on, rounded for the DOM. */
+  protected readonly playheadLine = computed(() => {
+    const geometry = this.geometry();
+    const tape = this.shownTape();
+    if (geometry === undefined || tape === undefined) return undefined;
+    const playhead = this.preview.playhead();
+    return {x: (geometry.leadIn + playhead * tape.columnLength) * this.scale(), column: Math.round(playhead * 100) / 100};
+  });
+
+  /** Starts a Preview from the playhead, or from the first Column when the playhead is at the end; stops a playing one. */
+  protected togglePreview(): void {
+    if (this.preview.playing()) {
+      this.preview.stop();
+      return;
+    }
+    const tape = this.shownTape();
+    const organ = this.organ();
+    if (tape === undefined || organ === undefined) return;
+    const playhead = this.preview.playhead();
+    const from = column(playhead >= tape.length ? 0 : Math.floor(playhead));
+    if (from !== undefined) this.preview.play(tape, organ, from);
+  }
+
   protected undo(): void {
     if (!this.editor.canUndo()) return;
     void this.editor.undo();
@@ -383,10 +411,18 @@ export class TapeViewComponent {
     const {key, altKey, shiftKey, ctrlKey, metaKey} = event;
     const target = event.target instanceof Element ? event.target : null;
     const intent = historyIntent({key, altKey, shiftKey, ctrlKey, metaKey, target}, this.platform);
-    if (intent === undefined) return;
-    event.preventDefault();
-    if (intent.kind === 'undo') this.undo();
-    else this.redo();
+    if (intent !== undefined) {
+      event.preventDefault();
+      if (intent.kind === 'undo') this.undo();
+      else this.redo();
+      return;
+    }
+    // Space plays and stops the Preview, except where it types or presses a control.
+    if (key === ' ' && !target?.matches('input, textarea, button')) {
+      event.preventDefault();
+      // A held Space repeats its keydown; only the first press toggles.
+      if (!event.repeat) this.togglePreview();
+    }
   }
 
   protected onKeydown(event: KeyboardEvent): void {
@@ -422,7 +458,7 @@ export class TapeViewComponent {
     const slots = this.geometry()?.slots;
     if (slots === undefined) return;
     const current = soleOf(this.selection());
-    if ((event.key === 'Enter' || event.key === ' ') && current === undefined) {
+    if (event.key === 'Enter' && current === undefined) {
       event.preventDefault();
       this.moveSelection(nextHole(slots, undefined, 'right'));
       return;

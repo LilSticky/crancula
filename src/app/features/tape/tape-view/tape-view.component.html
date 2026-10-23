@@ -17,6 +17,10 @@
     </mat-button-toggle-group>
     @if (compact()) {<button pageHeadActions mat-stroked-button type="button" data-testid="side-panel-toggle" [attr.aria-expanded]="sidePanelOpen()" (click)="toggleSidePanel()">{{ 'TAPE.VIEW.DETAILS' | translate }}</button>}
     <ng-container ngProjectAs="[pageHeadActions]">
+      <button mat-stroked-button type="button" data-testid="preview-toggle" [attr.aria-pressed]="preview.playing()" [disabled]="!previewAvailable()" (click)="togglePreview()">
+        <mat-icon aria-hidden="true">{{ preview.playing() ? 'stop' : 'play_arrow' }}</mat-icon>
+        {{ (preview.playing() ? 'TAPE.PREVIEW.STOP' : 'TAPE.PREVIEW.PLAY') | translate }}
+      </button>
       <button mat-icon-button type="button" data-testid="undo" [attr.aria-label]="'TAPE.EDIT.UNDO_TOOLTIP' | translate: {shortcut: shortcuts.undo}" [matTooltip]="'TAPE.EDIT.UNDO_TOOLTIP' | translate: {shortcut: shortcuts.undo}" [disabled]="!editor.canUndo()" (click)="undo()">
         <mat-icon aria-hidden="true">undo</mat-icon>
       </button>
@@ -107,10 +111,19 @@
           @for (number of drawing.numbers; track number.column) {
             <text class="column-number" data-testid="column-number" aria-hidden="true" [attr.x]="number.x" [attr.y]="drawing.numbersY">{{ number.number }}</text>
           }
+          @if (playheadLine(); as line) {
+            <rect class="playhead" data-testid="playhead" aria-hidden="true" [attr.x]="line.x" y="0" width="2" [attr.height]="drawing.height" [attr.data-column]="line.column" />
+          }
         </g>
       </svg>
     </div>
   </div>
+  @if (!previewAvailable()) {
+    <p class="preview-unavailable" data-testid="preview-unavailable">
+      {{ 'TAPE.PREVIEW.UNAVAILABLE' | translate }}
+      <a data-testid="preview-open-organ" [routerLink]="['/organs', drawing.organ.id]">{{ 'TAPE.PREVIEW.OPEN_ORGAN' | translate }}</a>
+    </p>
+  }
   @if (overview(); as overview) {
     <svg
       #overviewSvg
