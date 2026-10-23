@@ -6,7 +6,7 @@ import {MatIcon} from '@angular/material/icon';
 import {MatError, MatFormField, MatInput, MatLabel, MatSuffix} from '@angular/material/input';
 import {RouterLink} from '@angular/router';
 import {TranslatePipe} from '@ngx-translate/core';
-import {type Organ, type Tape} from '@api/index';
+import {changeColumnLength, cuttingProblems, type Organ, type Tape} from '@api/index';
 import {DecimalInputDirective} from '../../../shared/decimal-input.directive';
 import {formatNumber} from '../../../shared/format-number';
 import {LanguagePreference} from '../../../shared/language-preference';
@@ -148,11 +148,11 @@ export class TapeSectionComponent {
   protected readonly columnLength = form(this.draft, (path) => {
     validate(path, ({value}) => {
       const typed = value();
-      return typed !== null && columnLengthChangeTo(this.tape(), this.organ(), typed).state !== 'invalid' ? undefined : {kind: 'column-length-must-be-positive'};
+      return typed !== null && changeColumnLength(this.tape(), typed).ok ? undefined : {kind: 'column-length-must-be-positive'};
     });
   });
   /** What the typed Column length does to the Tape. */
-  private readonly change = computed<ColumnLengthChange>(() => columnLengthChangeTo(this.tape(), this.organ(), this.draft()));
+  private readonly change = computed<ColumnLengthChange>(() => columnLengthChangeTo(this.tape(), this.draft()));
   /** The change, if the field is valid and the Tape changes. */
   private readonly readyChange = computed(() => {
     const change = this.change();
@@ -160,12 +160,15 @@ export class TapeSectionComponent {
   });
   /** The Tape with the typed Column length, if the field is valid and the length differs from the Tape's. */
   protected readonly changed = computed<Tape | undefined>(() => this.readyChange()?.tape);
+  /** The Cutting Problems of the saved Tape; counted once per Tape, not per keystroke. */
+  private readonly problemsNow = computed(() => cuttingProblems(this.tape(), this.organ()).length);
   /** The Cutting Problems now and with the typed Column length, if the field is valid and the Tape changes. */
   protected readonly hint = computed<ColumnLengthHint | undefined>(() => {
     const change = this.readyChange();
     if (change === undefined) return undefined;
     const number = (value: number): string => formatNumber(value, this.language());
-    return {now: number(change.problemsNow), then: number(change.problemsThen), value: number(change.tape.columnLength)};
+    const problemsThen = cuttingProblems(change.tape, this.organ()).length;
+    return {now: number(this.problemsNow()), then: number(problemsThen), value: number(change.tape.columnLength)};
   });
 
   protected apply(): void {

@@ -297,6 +297,7 @@ export class TapeViewComponent {
     const language = this.language();
     return {
       tape,
+      organ,
       section: sectionView(tape, organ, geometry, language, this.partNames(tape)),
       ...rowLabels(organ, geometry, scale),
       holes: holeRects(tape, geometry, scale, range, this.shownSelection()),
