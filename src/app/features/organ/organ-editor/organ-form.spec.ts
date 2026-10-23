@@ -103,6 +103,10 @@ describe('changedFields', () => {
     expect(changedFields(saved, {...saved, tapeBed: {...saved.tapeBed, holeDiameter: 3.3}})).toEqual(['tapeBed.holeDiameter']);
   });
 
+  it('names the Tape per Crank turn alone when only it changed', () => {
+    expect(changedFields(saved, {...saved, tapePerCrankTurn: 120})).toEqual(['tapePerCrankTurn']);
+  });
+
   it('names pipes once for a note edit', () => {
     const pipes = saved.pipes.map((pipe, row) => (row === 1 ? {...pipe, note: 99} : pipe));
 
@@ -144,6 +148,12 @@ describe('problemFields', () => {
       {path: 'minimumGap', label: {key: 'ORGAN.EDITOR.MINIMUM_GAP', params: {}}},
       {path: 'leadIn', label: {key: 'ORGAN.EDITOR.LEAD_IN', params: {}}},
       {path: 'pipes', label: {key: 'ORGAN.EDITOR.PIPES', params: {}}},
+    ]);
+  });
+
+  it('labels the Tape per Crank turn with its label', () => {
+    expect(problemFields([problem('tapePerCrankTurn')])).toEqual([
+      {path: 'tapePerCrankTurn', label: {key: 'ORGAN.EDITOR.TAPE_PER_CRANK_TURN', params: {}}},
     ]);
   });
 

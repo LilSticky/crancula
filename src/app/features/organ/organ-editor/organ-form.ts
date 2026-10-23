@@ -133,6 +133,7 @@ export const FIELD_LABEL_KEYS: Readonly<Record<string, string>> = {
   'tapeBed.rowSpacing': 'ORGAN.EDITOR.ROW_SPACING',
   minimumGap: 'ORGAN.EDITOR.MINIMUM_GAP',
   leadIn: 'ORGAN.EDITOR.LEAD_IN',
+  tapePerCrankTurn: 'ORGAN.EDITOR.TAPE_PER_CRANK_TURN',
   pipes: 'ORGAN.EDITOR.PIPES',
 };
 
@@ -176,6 +177,7 @@ function pathOf(organ: ReadonlyFieldTree<OrganDraft>, field: ReadonlyFieldTree<u
     ...TAPE_BED_FIELDS.map((tapeBedField) => `tapeBed.${tapeBedField}`),
     'minimumGap',
     'leadIn',
+    'tapePerCrankTurn',
     ...Array.from({length: organ.pipes.length}, (_, row) => `pipes.${row}.note`),
   ];
   return paths.find((path) => fieldAt(organ, path) === field);
@@ -201,7 +203,7 @@ export class ShownViolationMatcher extends ErrorStateMatcher {
 }
 
 /** The input fields of the Organ whose change the editor reports; every Pipe change counts as `pipes`. */
-export type ChangedField = 'name' | `tapeBed.${TapeBedField}` | 'minimumGap' | 'leadIn' | 'pipes';
+export type ChangedField = 'name' | `tapeBed.${TapeBedField}` | 'minimumGap' | 'leadIn' | 'tapePerCrankTurn' | 'pipes';
 
 /** The fields of `draft` that differ from the `saved` draft, in reading order; `pipes` once for any Pipe change. */
 export function changedFields(saved: OrganDraft, draft: OrganDraft): readonly ChangedField[] {
@@ -212,6 +214,7 @@ export function changedFields(saved: OrganDraft, draft: OrganDraft): readonly Ch
   }
   if (saved.minimumGap !== draft.minimumGap) changed.push('minimumGap');
   if (saved.leadIn !== draft.leadIn) changed.push('leadIn');
+  if (saved.tapePerCrankTurn !== draft.tapePerCrankTurn) changed.push('tapePerCrankTurn');
   const pipesChanged =
     saved.pipes.length !== draft.pipes.length || saved.pipes.some((pipe, row) => pipe.note !== draft.pipes[row]?.note);
   if (pipesChanged) changed.push('pipes');

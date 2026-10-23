@@ -47,6 +47,7 @@ const FIELD_TEST_IDS: Readonly<Record<string, string>> = {
   'tapeBed.rowSpacing': 'row-spacing',
   minimumGap: 'minimum-gap',
   leadIn: 'lead-in',
+  tapePerCrankTurn: 'tape-per-crank-turn',
 };
 
 @Component({

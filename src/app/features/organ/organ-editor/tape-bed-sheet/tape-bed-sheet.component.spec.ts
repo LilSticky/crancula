@@ -93,4 +93,61 @@ describe('TapeBedSheetComponent', () => {
     expect(element.querySelector('[data-testid="fit-check"]')).toBeNull();
     expect(element.querySelector('[data-testid="tape-bed-drawing"]')).toBeNull();
   });
+
+  describe('the Tape per Crank turn field', () => {
+    it('is empty for an Organ without a Tape per Crank turn', async () => {
+      const {field} = await render();
+
+      expect(field('tape-per-crank-turn').value).toBe('');
+    });
+
+    it('shows the Tape per Crank turn of the Organ', async () => {
+      const {field} = await render({draft: toDraft(testOrgan('Positive', 2, {tapePerCrankTurn: 100}))});
+
+      expect(field('tape-per-crank-turn').value).toBe('100');
+    });
+
+    it('is a decimal text input with the suffix "mm"', async () => {
+      const {field} = await render();
+
+      expect(field('tape-per-crank-turn').type).toBe('text');
+      expect(field('tape-per-crank-turn').getAttribute('inputmode')).toBe('decimal');
+      expect(field('tape-per-crank-turn').closest('mat-form-field')?.querySelector('[matTextSuffix]')?.textContent?.trim()).toBe('mm');
+    });
+
+    it('is labelled "Tape per Crank turn" and has a hint that is a translated text', async () => {
+      const {field} = await render();
+
+      const formField = field('tape-per-crank-turn').closest('mat-form-field');
+      expect(formField?.querySelector('mat-label')?.textContent?.trim()).toBe('Tape per Crank turn');
+      const hint = formField?.querySelector('mat-hint')?.textContent?.trim() ?? '';
+      expect(hint).not.toBe('');
+      expect(hint).not.toMatch(/^ORGAN\./);
+    });
+
+    it('writes a typed decimal comma into the form as a number', async () => {
+      const {field, organ, fixture} = await render();
+
+      const input = field('tape-per-crank-turn');
+      input.value = '2,5';
+      input.dispatchEvent(new Event('input'));
+      await fixture.whenStable();
+
+      expect(organ.tapePerCrankTurn().value()).toBe(2.5);
+    });
+
+    it.each(['0', '-1'])('shows "Must be greater than 0." under its path for %s', async (value) => {
+      const {field, fixture, element} = await render();
+
+      const input = field('tape-per-crank-turn');
+      input.value = value;
+      input.dispatchEvent(new Event('input'));
+      await fixture.whenStable();
+
+      const messages = [...element.querySelectorAll('[data-testid="violation"][data-path="tapePerCrankTurn"]')].map((error) =>
+        error.textContent?.trim(),
+      );
+      expect(messages).toEqual(['Must be greater than 0.']);
+    });
+  });
 });

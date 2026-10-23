@@ -28,7 +28,7 @@ green). Test pyramid: Node Vitest for `api/`; `ng test` (jsdom, fake `PreviewSou
 
 ## Phase 1: Setup
 
-- [ ] T001 Add the keys of contracts/preview-ui.md with en and de texts to `src/assets/i18n/en.json` and `de.json`: `ORGAN.EDITOR.TAPE_PER_CRANK_TURN`, `_HINT`, `_INVALID`; `TAPE.PREVIEW.PLAY`, `STOP`, `SECTION_TITLE`, `CRANK_SPEED`, `CRANK_SPEED_APPLY`, `CRANK_SPEED_INVALID` (with `{{min}}`, `{{max}}`), `START_COLUMN`, `LENGTH` (with `{{time}}`), `EDITING_PAUSED`, `UNAVAILABLE`, `OPEN_ORGAN`; `npm run i18n:check` green (unused keys are fine until used).
+- [x] T001 Add the keys of contracts/preview-ui.md with en and de texts to `src/assets/i18n/en.json` and `de.json`: `ORGAN.EDITOR.TAPE_PER_CRANK_TURN`, `_HINT`, `_INVALID`; `TAPE.PREVIEW.PLAY`, `STOP`, `SECTION_TITLE`, `CRANK_SPEED`, `CRANK_SPEED_APPLY`, `CRANK_SPEED_INVALID` (with `{{min}}`, `{{max}}`), `START_COLUMN`, `LENGTH` (with `{{time}}`), `EDITING_PAUSED`, `UNAVAILABLE`, `OPEN_ORGAN`; `npm run i18n:check` green (unused keys are fine until used).
 
 ## Phase 2: Foundational (domain and snapshots)
 
@@ -54,8 +54,8 @@ green). Test pyramid: Node Vitest for `api/`; `ng test` (jsdom, fake `PreviewSou
 
 **Goal**: the Organ editor edits and keeps Tape per Crank turn. **Independent test**: set 120 mm, restart, see 120 mm.
 
-- [ ] T017 [US3] Red: `src/app/features/organ/organ-editor/tape-bed-sheet/tape-bed-sheet.component.spec.ts` and `organ-editor.component.spec.ts`: field `tape-per-crank-turn` (decimal, comma or point, optional), error under `data-path="tapePerCrankTurn"` for 0 and -1, label and hint from T001, value saved with the Organ; `organ-form.ts` maps the field (label key, problem order, changed fields).
-- [ ] T018 [US3] Green: the field in `tape-bed-sheet.component.html/.ts`, `organ-form.ts`, `organ-editor.component.ts` (test-id map).
+- [x] T017 [US3] Red: `src/app/features/organ/organ-editor/tape-bed-sheet/tape-bed-sheet.component.spec.ts` and `organ-editor.component.spec.ts`: field `tape-per-crank-turn` (decimal, comma or point, optional), error under `data-path="tapePerCrankTurn"` for 0 and -1, label and hint from T001, value saved with the Organ; `organ-form.ts` maps the field (label key, problem order, changed fields).
+- [x] T018 [US3] Green: the field in `tape-bed-sheet.component.html/.ts`, `organ-form.ts`, `organ-editor.component.ts` (test-id map).
 - [ ] T019 [US3] Red: `e2e/organ-tape-per-crank-turn.spec.ts`: set 120 mm, save, restart, see 120 (comma in German); a seeded version 3 `organs.json` loads, the field is empty, and saving writes version 4.
 - [ ] T020 [US3] Green: whatever T019 still needs.
 

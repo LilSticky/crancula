@@ -62,6 +62,17 @@
       </ng-container>
     </mat-form-field>
     <mat-form-field>
+      <mat-label>{{ 'ORGAN.EDITOR.TAPE_PER_CRANK_TURN' | translate }}</mat-label>
+      <input matInput crancDecimalInput inputmode="decimal" data-testid="tape-per-crank-turn" [formField]="organ().tapePerCrankTurn"/>
+      <span matTextSuffix>mm</span>
+      <mat-hint>{{ 'ORGAN.EDITOR.TAPE_PER_CRANK_TURN_HINT' | translate }}</mat-hint>
+      <ng-container ngProjectAs="mat-error">
+        @for (message of messagesAt(organ().tapePerCrankTurn); track message.key) {
+          <mat-error data-testid="violation" data-path="tapePerCrankTurn">{{ message.key | translate: message.params }}</mat-error>
+        }
+      </ng-container>
+    </mat-form-field>
+    <mat-form-field>
       <mat-label>{{ 'ORGAN.EDITOR.BORDER' | translate }}</mat-label>
       <input matInput readonly class="cr-readonly" data-testid="border" [value]="border()"/>
       <span matTextSuffix>mm</span>
