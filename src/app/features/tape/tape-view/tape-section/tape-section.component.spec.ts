@@ -280,7 +280,7 @@ describe('TapeSectionComponent', () => {
 
         await type('1,5');
 
-        expect(hint()).toBe('Schnittprobleme: jetzt 1, mit 1,5 mm 1');
+        expect(hint()).toBe('Schnittprobleme: 1 jetzt, 1 mit 1,5 mm');
       });
     });
   });
