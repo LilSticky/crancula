@@ -21,7 +21,15 @@ and the full e2e suite green in CI on Linux, Windows and macOS.
 by hand, transpose Holes, change the Column length, undo and redo), Rename a Tape, the live Tape preview on the import
 screen, and fixes. README describes v0.1.1 with new screenshots.
 
-**Next step:** the next slice from the [ROADMAP](ROADMAP.md) or the highest-priority triaged issue ("go").
+**Next step:** start the slice Crank a tape (v0.2): open its issue, then `/speckit-specify` on branch
+`007-crank-a-tape` from [discovery/later.md](discovery/later.md), section 1. Its proposed terms (Crank speed, Tape per
+Crank turn, Preview) need the user's approval before DICTIONARY.md changes.
+
+**Done:** discovery for the roadmap's "Later" items (2026-10-23, [discovery/later.md](discovery/later.md)): 14
+decisions by the user. Order and versions: v0.2 Crank a tape (turns per minute, the Organ gains Tape per Crank turn,
+synthesised tone, playhead) and Record a tape; v0.3 Bring Scores onto a tape (MusicXML only, one Part per staff,
+repeats played out); v0.4 Cut a tape in pieces (a described Plotter, Hole-free Joins with a glue overlap); then Read a
+tape as Scores. DXF/HPGL wait for a device. Open: the minor-versus-patch rule for releases.
 
 **Done:** flaky Electron launch on Linux CI ([#145](https://github.com/LilSticky/crancula/issues/145), 2026-10-23):
 one launch in ~117 failed with "Missing X server or $DISPLAY" although Xvfb was up. `launchApp` now retries only that

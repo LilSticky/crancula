@@ -39,9 +39,18 @@ Split by the user on 2026-10-19 ([discovery](discovery/edit-a-tape.md)).
 - **Design guide**: done 2026-10-15 ([DESIGN-GUIDE.md](DESIGN-GUIDE.md), #12); applying it to the
   app ([#59](https://github.com/LilSticky/crancula/issues/59), sub-issues #62–#66 and #69) is done with PR #86, before "Punch a tape".
 
+## Next, by version
+
+Decided by the user on 2026-10-23 ([discovery](discovery/later.md)): one capability per minor version.
+
+| Version | Slice | Lets the user… | Domain | Adapters | State |
+|---------|-------|----------------|--------|----------|-------|
+| v0.2 | Crank a tape | hear a Tape at an adjustable Crank speed (turns per minute), with a playhead, before cutting it | Tape, Organ (Tape per Crank turn) | Web Audio, Tape view, Organ editor | planned |
+| v0.2 | Record a tape | save what Crank a tape plays as an audio file | Tape | audio file writer, save dialog | planned |
+| v0.3 | Bring Scores onto a tape | import MusicXML (one Part per staff, repeats played out); PDF and printed Scores through an outside recognition tool | Song | MusicXML reader | planned |
+| v0.4 | Cut a tape in pieces | describe a Plotter (name, format, working area) and cut a long Tape in pieces with a glue overlap | Plotter, Tape | Plotter editor, snapshot, SVG | planned |
+| later | Read a tape as Scores | export the Tape as MusicXML, bars from the Song's time signature | Tape, Song | MusicXML writer | planned |
+
 ## Later (unordered)
 
-- **Crank a tape**: preview playback at an adjustable crank speed.
-- More Song Sources: MusicXML, PDF, printed Scores.
-- More Plotter formats: DXF, HPGL; splitting the Tape into pieces for other devices.
-- Export a Song as audio or Scores.
+- More Plotter formats (DXF, HPGL): only when a concrete device needs one.
