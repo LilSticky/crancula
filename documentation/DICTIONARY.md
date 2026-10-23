@@ -3,6 +3,7 @@
 * Has a Tape Bed
 * Defines the Minimum Hole Length and Minimum Gap its tapes must respect
 * Defines the length of the Lead-in its tapes start with
+* Defines its Tape per Crank turn
 * Defines the physical characteristics and capabilities of a barrel organ
 * Plays punched tape
   * tape is drawn through a pneumatic system
@@ -155,7 +156,21 @@
 
 # Crank
 * Turned by the musician to draw the Tape through the Organ
-* Its speed sets the tempo; in Crancula's preview the crank speed is adjustable
+* Its speed sets the tempo; in Crancula's Preview the Crank speed is adjustable
+
+# Crank speed
+* Crank turns per minute
+* Together with the Organ's Tape per Crank turn and the Tape's Column length it sets how long a Column plays
+* German: Kurbelgeschwindigkeit
+
+# Tape per Crank turn
+* How far one Crank turn draws the Tape through the Organ, in mm
+* Defined by the Organ
+* German: Bandvorschub pro Umdrehung
+
+# Preview
+* Playing a Tape in Crancula at a Crank speed, to hear it before it is cut
+* Changes nothing: not the Tape, not the Organ
 
 # Punch
 * Cutting a Hole into a physical Tape; irreversible
