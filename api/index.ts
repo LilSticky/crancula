@@ -78,6 +78,7 @@ export {
   type TapeRuleViolationCode,
   type Transposition,
 } from './tape/tape';
+export {DEFAULT_CRANK_SPEED, MAX_CRANK_SPEED, MIN_CRANK_SPEED, crankSpeed, type CrankSpeed} from './tape/crank-speed';
 export {allowedTranspositions, proposeTransposition} from './tape/transposition';
 export {fitAndNotesOf, fitNotesOf, fitOf, type Fit, type FitNotes} from './tape/fit';
 export {
@@ -115,6 +116,7 @@ export {
 } from './tape/transpose-holes';
 export {renameTape} from './tape/rename-tape';
 export {changeColumnLength} from './tape/change-column-length';
+export {changeCrankSpeed} from './tape/change-crank-speed';
 export {plotterFileName} from './tape/plotter-file-name';
 export {plotterSvg} from './tape/plotter-svg';
 export {tapeGeometry, type Point, type Slot, type TapeGeometry, type TapeOutline} from './tape/tape-geometry';

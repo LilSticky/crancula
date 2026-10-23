@@ -4,6 +4,7 @@ import type {PartIndex, Song} from '../song/song';
 import type {ImportSummary} from './import-summary';
 import {fixHoles, holeLimitsOf, mergeOverlaps} from './hole-fixes';
 import {fitNotesOfPlaced, fitOf, placedNotesOf} from './fit';
+import {DEFAULT_CRANK_SPEED} from './crank-speed';
 import {allowedTranspositions} from './transposition';
 import {
   columnCount,
@@ -101,6 +102,7 @@ export function createTape(input: CreateTapeInput): Result<CreatedTape, readonly
     selectedParts: [...selectedParts].sort((a, b) => a - b),
     transposition,
     columnLength,
+    crankSpeed: DEFAULT_CRANK_SPEED,
     length,
     holes: fixed.holes,
   });

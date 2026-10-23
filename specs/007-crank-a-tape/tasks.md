@@ -33,11 +33,11 @@ green). Test pyramid: Node Vitest for `api/`; `ng test` (jsdom, fake `PreviewSou
 ## Phase 2: Foundational (domain and snapshots)
 
 - [ ] T002 [P] Red: `api/tape/crank-speed.spec.ts`: `crankSpeed(v)` returns a `CrankSpeed` for finite `1 ≤ v ≤ 300` (1, 60, 300, 72.5) and `undefined` for 0, 0.99, 300.01, -5, NaN, Infinity; `DEFAULT_CRANK_SPEED` is 60.
-- [ ] T003 Green: `api/tape/crank-speed.ts` (`CrankSpeed` brand, `MIN_CRANK_SPEED`, `MAX_CRANK_SPEED`, `DEFAULT_CRANK_SPEED`, `crankSpeed`), exported from `api/index.ts`.
+- [x] T003 Green: `api/tape/crank-speed.ts` (`CrankSpeed` brand, `MIN_CRANK_SPEED`, `MAX_CRANK_SPEED`, `DEFAULT_CRANK_SPEED`, `crankSpeed`), exported from `api/index.ts`.
 - [ ] T004 Red: `api/tape/tape.spec.ts`: `validTape` requires `crankSpeed` and refuses values outside "finite, `1 ≤ v ≤ 300`" with `{code: 'crank-speed-out-of-range'}`; `api/tape/tape-fixture.ts` and every Tape builder in `api/` give 60 by default.
-- [ ] T005 Green: `Tape.crankSpeed: CrankSpeed` in `api/tape/tape.ts`; every Tape creation in `api/` (import/`createTape`, commands) passes or keeps it; all node tests green (`npm run test:node`).
+- [x] T005 Green: `Tape.crankSpeed: CrankSpeed` in `api/tape/tape.ts`; every Tape creation in `api/` (import/`createTape`, commands) passes or keeps it; all node tests green (`npm run test:node`).
 - [ ] T006 [P] Red: `api/tape/change-crank-speed.spec.ts`: changes only `crankSpeed`, keeps Holes, Columns, Column length, name; same object back when unchanged; `crank-speed-out-of-range` for 0, 301, NaN.
-- [ ] T007 Green: `changeCrankSpeed` in `api/tape/change-crank-speed.ts` through `validTape`, exported.
+- [x] T007 Green: `changeCrankSpeed` in `api/tape/change-crank-speed.ts` through `validTape`, exported.
 - [ ] T008 [P] Red: `api/tape/tape-library-snapshot.spec.ts`: writes version 2 with `crankSpeed`; reads version 2; reads version 1 with every Tape at 60; rejects a version 2 entry with `crankSpeed` 0 or missing.
 - [ ] T009 Green: version 2 in `api/tape/tape-library-snapshot.ts` (migrated on read, ADR 20).
 - [ ] T010 [P] Red: `api/organ/validate-organ.spec.ts` and `organ-draft.spec.ts`: `tapePerCrankTurn` `null` is valid (absent on the Organ); a given value must be finite and above 0, else `tape-per-crank-turn-not-positive` at path `tapePerCrankTurn`; `emptyOrganDraft` has `null`; `toDraft` copies it.

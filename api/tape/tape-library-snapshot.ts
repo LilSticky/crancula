@@ -1,4 +1,5 @@
 import {err, ok, type Result} from '../result';
+import {DEFAULT_CRANK_SPEED} from './crank-speed';
 import {midiNoteNumber} from '../organ/midi-note-number';
 import {millimetres, organId} from '../organ/organ';
 import {
@@ -216,6 +217,7 @@ function parseTape(input: unknown, songs: readonly Song[]): Result<Tape, string>
     selectedParts: source.value.selectedParts,
     transposition: shift,
     columnLength,
+    crankSpeed: DEFAULT_CRANK_SPEED,
     length,
     holes: parsedHoles.value,
   });
@@ -232,6 +234,8 @@ function reasonOf(violation: TapeRuleViolation): string {
       return 'selectedParts is not sorted and unique';
     case 'column-length-not-positive':
       return 'columnLength is not a finite number above 0';
+    case 'crank-speed-out-of-range':
+      return 'crankSpeed is not a finite number from 1 to 300';
     case 'hole-beyond-end':
       return 'a Hole ends beyond the end of the Tape';
     case 'holes-not-sorted':

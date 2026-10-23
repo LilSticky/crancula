@@ -6,6 +6,7 @@ import {encodeSmf} from '../song/midi/smf-test-helper';
 import {readMidiSong} from '../song/midi/read-midi-song';
 import {defaultSelectedParts} from '../song/song';
 import {createTape} from './create-tape';
+import {DEFAULT_CRANK_SPEED} from './crank-speed';
 import {proposeTransposition} from './transposition';
 import {cuttingProblems, holesWithCuttingProblems} from './cutting-problems';
 import {column, columnCount, type Hole, type Tape, type TapeFields, type TapeId} from './tape';
@@ -55,6 +56,7 @@ function tapeFields(organ: Organ, columnLength: number, holes: readonly Hole[]):
     selectedParts: undefined,
     transposition: 0 as Tape['transposition'],
     columnLength: mm(columnLength),
+    crankSpeed: DEFAULT_CRANK_SPEED,
     length: defined(columnCount(100), 'length'),
     holes,
   };
