@@ -256,5 +256,32 @@ describe('TapeSectionComponent', () => {
         expect(hint()).toBe('Cutting Problems: 0 now, 0 with 5 mm');
       });
     });
+
+    describe('in German (T017)', () => {
+      it('shows the Column length in the field with a comma as decimal separator', async () => {
+        const {field} = await render({columnLength: 2.5, language: 'de'});
+
+        expect(field().value).toBe('2,5');
+      });
+
+      it('accepts a comma as decimal separator and emits the changed Tape when Enter is pressed', async () => {
+        const {type, press, emitted} = await render({columnLength: 2.5, language: 'de'});
+
+        await type('5,5');
+        await press('Enter');
+
+        expect(emitted).toHaveLength(1);
+        expect(emitted[0]?.columnLength).toBe(5.5);
+      });
+
+      it('shows the Cutting Problems with the typed Column length in German notation', async () => {
+        // A Hole of 1 Column is 1 mm, below the 2.5 mm Minimum Hole Length, at 1 mm and at 1,5 mm per Column.
+        const {type, hint} = await render({columnLength: 1, holes: [holeOf(10, 1)], organ: ORGAN, language: 'de'});
+
+        await type('1,5');
+
+        expect(hint()).toBe('Schnittprobleme: jetzt 1, mit 1,5 mm 1');
+      });
+    });
   });
 });
