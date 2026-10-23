@@ -23,6 +23,7 @@ function numberIn(text: string): number {
 test.describe('Adjust the Column length of a Tape', () => {
   test('keeps the new Column length, the Columns and Holes, and doubles the Tape length after a restart', async () => {
     const first = await launchApp();
+    await resizeWindowOrSkip(first, 1280, 800);
     await defineOctaveOrgan(first.window, 'Octave organ');
     await createTapeFromSong(first.window, 'Scale', melodyC3ToC5(), {columnLength: '5'});
     const {window} = first;
@@ -46,6 +47,7 @@ test.describe('Adjust the Column length of a Tape', () => {
     await first.app.close();
 
     const second = await launchApp(first.userDataDir);
+    await resizeWindowOrSkip(second, 1280, 800);
     await second.window.getByRole('link', {name: 'Tapes'}).click();
     await second.window.getByTestId('open-tape').click();
     await expect(second.window.getByTestId('tape-name').getByRole('heading', {level: 1})).toHaveText('Scale');
@@ -62,6 +64,7 @@ test.describe('Adjust the Column length of a Tape', () => {
     const launched = await launchApp();
     const {window, app, userDataDir} = launched;
     try {
+      await resizeWindowOrSkip(launched, 1280, 800);
       await defineOctaveOrgan(window, 'Octave organ');
       await createTapeFromSong(window, 'Scale', melodyC3ToC5(), {columnLength: '5'});
       const lengthBefore = await sectionValue(window, 'Length').textContent();
