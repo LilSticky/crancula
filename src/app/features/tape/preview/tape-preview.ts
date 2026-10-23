@@ -7,20 +7,20 @@ export const LOOK_AHEAD_SECONDS = 0.1;
 /** How often the scheduler looks ahead, in milliseconds. */
 const TICK_MILLISECONDS = 25;
 
-/** A Pipe that sounds, and the time in seconds its stop is scheduled for. */
+/** A Pipe that sounds, and the Column its Hole ends at; its stop is scheduled from that Column, so a change of speed moves it. */
 interface SoundingVoice {
   readonly voice: PreviewVoice;
-  readonly end: number;
+  readonly endColumn: number;
 }
 
 /** One Preview from `play` to `stop`: the clock anchor, the notes not yet started and the voices sounding. */
 interface Session {
   readonly sound: PreviewSound;
-  readonly length: number;
+  length: number;
   /** Seconds of the audio clock at `anchorColumn`. */
-  readonly anchorTime: number;
-  readonly anchorColumn: number;
-  readonly columnSeconds: number;
+  anchorTime: number;
+  anchorColumn: number;
+  columnSeconds: number;
   readonly pending: PreviewNote[];
   sounding: SoundingVoice[];
   timer?: ReturnType<typeof setInterval>;
@@ -55,6 +55,24 @@ export class TapePreview {
 
   constructor() {
     inject(DestroyRef).onDestroy(() => this.stop());
+  }
+
+  /**
+   * Re-anchors the Preview at the current time and Column, at the Crank speed of `tape`; the sounding Pipes stop at the new rate.
+   * Pending notes keep their Columns, so they start at the new rate too. Does nothing while stopped, or if the Organ has no Tape per Crank turn.
+   */
+  changeTape(tape: Tape, organ: Organ): void {
+    const session = this.session;
+    if (session === undefined) return;
+    const secondsPerColumn = columnDuration(tape, organ);
+    if (secondsPerColumn === undefined) return;
+    const now = session.sound.now();
+    const current = Math.min(columnAt(session, now), session.length);
+    session.anchorTime = now;
+    session.anchorColumn = current;
+    session.columnSeconds = secondsPerColumn;
+    session.length = tape.length;
+    this.playheadSignal.set(current);
   }
 
   /** Plays `tape` on `organ` from `from`. Does nothing if the Organ has no Tape per Crank turn. */
@@ -116,17 +134,17 @@ export class TapePreview {
     }
     const stillSounding: SoundingVoice[] = [];
     for (const sounding of session.sounding) {
-      if (sounding.end <= horizon) session.sound.stop(sounding.voice, sounding.end);
+      const end = timeAt(session, sounding.endColumn);
+      if (end <= horizon) session.sound.stop(sounding.voice, end);
       else stillSounding.push(sounding);
     }
     session.sounding = stillSounding;
   }
 
   private startNote(session: Session, note: PreviewNote, now: number): void {
-    const end = timeAt(session, note.endColumn);
-    if (end <= now) return;
+    if (timeAt(session, note.endColumn) <= now) return;
     const start = Math.max(timeAt(session, note.startColumn), now);
-    session.sounding.push({voice: session.sound.start(note.pipe, start), end});
+    session.sounding.push({voice: session.sound.start(note.pipe, start), endColumn: note.endColumn});
   }
 
   private follow(session: Session): void {

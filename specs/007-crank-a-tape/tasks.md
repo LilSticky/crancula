@@ -77,12 +77,12 @@ green). Test pyramid: Node Vitest for `api/`; `ng test` (jsdom, fake `PreviewSou
 
 **Goal**: change the Tape's Crank speed, also while playing. **Independent test**: 30 → 60 halves the Preview length.
 
-- [ ] T028 [US2] Red: `src/app/features/tape/tape-view/crank-speed-change.spec.ts`: like `column-length-change.ts`: typed text → `unchanged` / `invalid` (outside 1–300, not a number) / `ready` with the Tape from `changeCrankSpeed`; comma or point.
-- [ ] T029 [US2] Green: `crank-speed-change.ts`.
-- [ ] T030 [US2] Red: `src/app/features/tape/preview/preview-section/preview-section.component.spec.ts`: `crank-speed-input`, `crank-speed-apply` (disabled when unchanged or invalid), Enter applies, `crank-speed-error` with min and max, `preview-length` "m:ss" from `previewLength`, emits `crankSpeedChange(tape)`; stays enabled while playing.
-- [ ] T031 [US2] Green: `preview-section.component.ts` in the side panel of `tape-view.component.html`, wired to `commit({kind: 'applied', …})` (one undo step through `TapeEditor.apply`).
-- [ ] T032 [US2] Red: `tape-preview.spec.ts`: a Crank speed change while playing re-anchors at `now()` and the current Column; later notes use the new rate; sounding voices get their stop re-scheduled; no voice restarts, no gap.
-- [ ] T033 [US2] Green: re-anchoring in `tape-preview.ts` (the view passes the new Tape's `columnDuration`).
+- [x] T028 [US2] Red: `src/app/features/tape/tape-view/crank-speed-change.spec.ts`: like `column-length-change.ts`: typed text → `unchanged` / `invalid` (outside 1–300, not a number) / `ready` with the Tape from `changeCrankSpeed`; comma or point.
+- [x] T029 [US2] Green: `crank-speed-change.ts`.
+- [x] T030 [US2] Red: `src/app/features/tape/preview/preview-section/preview-section.component.spec.ts`: `crank-speed-input`, `crank-speed-apply` (disabled when unchanged or invalid), Enter applies, `crank-speed-error` with min and max, `preview-length` "m:ss" from `previewLength`, emits `crankSpeedChange(tape)`; stays enabled while playing.
+- [x] T031 [US2] Green: `preview-section.component.ts` in the side panel of `tape-view.component.html`, wired to `commit({kind: 'applied', …})` (one undo step through `TapeEditor.apply`).
+- [x] T032 [US2] Red: `tape-preview.spec.ts`: a Crank speed change while playing re-anchors at `now()` and the current Column; later notes use the new rate; sounding voices get their stop re-scheduled; no voice restarts, no gap.
+- [x] T033 [US2] Green: re-anchoring in `tape-preview.ts` (the view passes the new Tape's `columnDuration`).
 - [ ] T034 [US2] Red: `e2e/tape-preview.spec.ts`: change 60 → 120, restart, Tape opens with 120; Undo brings 60 back, Redo 120; German comma input.
 - [ ] T035 [US2] Green: whatever T034 still needs.
 

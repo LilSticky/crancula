@@ -2,6 +2,7 @@ import {Component, inject} from '@angular/core';
 import {ComponentFixture, TestBed} from '@angular/core/testing';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 import {
+  changeCrankSpeed,
   column,
   columnCount,
   emptyOrganDraft,
@@ -42,7 +43,7 @@ import {TapePreview} from './tape-preview';
  *     play(tape: Tape, organ: Organ, from: Column): void;
  *     stop(): void;
  *     setPlayhead(column: Column): void;                     // only when stopped
- *     changeTape(tape: Tape): void;                          // not tested here
+ *     changeTape(tape: Tape, organ: Organ): void;            // re-anchors at now() and the current Column while playing; nothing while stopped
  *     // stops on destroy
  *   }
  */
@@ -97,6 +98,13 @@ function aTape(length: number, holes: readonly Hole[] = []): Tape {
     length: defined(columnCount(length), `length ${length}`),
     holes,
   });
+}
+
+/** The same Tape at another Crank speed, through the public change of the Crank speed. */
+function atCrankSpeed(tape: Tape, speed: number): Tape {
+  const changed = changeCrankSpeed(tape, speed);
+  if (!changed.ok) throw new Error(`invalid test Crank speed: ${speed}`);
+  return changed.value;
 }
 
 /** A PreviewSound with a clock the test moves; records every start and stop. */
@@ -275,5 +283,51 @@ describe('TapePreview', () => {
 
     const stoppedNow = sound.stops.filter((stop) => stop.at === sound.now()).map((stop) => stop.voice);
     expect(stoppedNow).toEqual(expect.arrayContaining(sound.starts.map((start) => start.voice)));
+  });
+
+  describe('changing the Tape while it plays (T032)', () => {
+    it('re-anchors at the current time and Column, so the notes after the playhead start at the new rate', () => {
+      const organ = organOf(100);
+      // At 60 turns per minute Column 10 is 500 ms after the start; at 120 it is 6 Columns of 25 ms after Column 4.
+      const tape = aTape(100, [hole(62, 10, 2)]);
+
+      preview.play(tape, organ, col(0));
+      advance(sound, 200);
+      preview.changeTape(atCrankSpeed(tape, 120), organ);
+      const kept = preview.playhead();
+      advance(sound, 400);
+
+      expect(kept).toBeCloseTo(4, 6);
+      const start = sound.starts.find((candidate) => candidate.pipe === 62);
+      expect(start?.at).toBeCloseTo(START_SECONDS + 0.2 + 6 * 0.025, 6);
+    });
+
+    it('re-schedules the stop of a sounding voice at the new rate, without starting it again', () => {
+      const organ = organOf(100);
+      // The Hole ends at Column 10: 500 ms after the start at 60 turns per minute, 350 ms at 120 after the change at Column 4.
+      const tape = aTape(100, [hole(60, 0, 10)]);
+
+      preview.play(tape, organ, col(0));
+      advance(sound, 200);
+      preview.changeTape(atCrankSpeed(tape, 120), organ);
+      advance(sound, 400);
+
+      expect(sound.starts.filter((candidate) => candidate.pipe === 60)).toHaveLength(1);
+      const voice = startAt(sound, 0).voice;
+      const stops = sound.stops.filter((candidate) => candidate.voice === voice);
+      expect(stops.at(-1)?.at).toBeCloseTo(START_SECONDS + 0.2 + 6 * 0.025, 6);
+    });
+
+    it('does nothing while stopped', () => {
+      const organ = organOf(100);
+      const tape = aTape(100, [hole(60, 0, 10)]);
+
+      preview.changeTape(atCrankSpeed(tape, 120), organ);
+      advance(sound, 500);
+
+      expect(preview.playing()).toBe(false);
+      expect(sound.starts).toEqual([]);
+      expect(sound.stops).toEqual([]);
+    });
   });
 });

@@ -62,6 +62,7 @@ import {selectedHoleView} from './selected-hole/selected-hole-view';
 import {stageMetrics} from './stage-metrics';
 import {TapeEditor} from './tape-editor';
 import {TapePreview} from '../preview/tape-preview';
+import {PreviewSectionComponent} from '../preview/preview-section/preview-section.component';
 import {columnMarks, drawingParams, ghostRect, holeMarks, holeRects, outline, overviewOf, rowLabels, RULER_HEIGHT, sectionView} from './tape-drawing';
 import {TapeSectionComponent} from './tape-section/tape-section.component';
 import {TapeStatusLineComponent, type PointerText} from './tape-status-line/tape-status-line.component';
@@ -122,7 +123,7 @@ const COMPACT_QUERY = '(max-width: 1179.98px)';
   selector: 'cranc-tape-view',
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [TapeEditor, TapePreview],
-  imports: [ImportSummaryComponent, TranslatePipe, RouterLink, PageHeadComponent, MatButton, MatIconButton, MatTooltip, MatButtonToggle, MatButtonToggleGroup, MatIcon, AddHoleComponent, CuttingProblemsComponent, SelectedHoleComponent, TapeSectionComponent, TapeStatusLineComponent],
+  imports: [ImportSummaryComponent, TranslatePipe, RouterLink, PageHeadComponent, MatButton, MatIconButton, MatTooltip, MatButtonToggle, MatButtonToggleGroup, MatIcon, AddHoleComponent, CuttingProblemsComponent, SelectedHoleComponent, TapeSectionComponent, PreviewSectionComponent, TapeStatusLineComponent],
   templateUrl: './tape-view.component.html',
   styleUrl: './tape-view.component.scss',
   host: {'(keydown)': 'onViewKeydown($event)'},
@@ -662,6 +663,11 @@ export class TapeViewComponent {
     this.commit({kind: 'applied', tape, selection: this.selection()});
   }
 
+  /** Saves the Tape with a new Crank speed as one edit; the Holes and the selection stay. */
+  protected onCrankSpeedChange(tape: Tape): void {
+    this.commit({kind: 'applied', tape, selection: this.selection()});
+  }
+
   /** A double-click on an empty spot of a row adds a Hole of that row's Pipe at that Column. */
   protected onDoubleClick(event: MouseEvent, svg: Element): void {
     const target = event.target;
@@ -754,6 +760,12 @@ export class TapeViewComponent {
     });
     effect(() => {
       if (this.library.loaded() && this.drawing() === undefined) void this.router.navigateByUrl('/tapes');
+    });
+    // A changed Tape (its Crank speed, or an undo or redo) re-anchors a Preview that plays; a stopped one ignores it.
+    effect(() => {
+      const tape = this.tape();
+      const organ = this.organ();
+      if (tape !== undefined && organ !== undefined) untracked(() => this.preview.changeTape(tape, organ));
     });
   }
 }

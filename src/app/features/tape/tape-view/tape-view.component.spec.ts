@@ -1726,7 +1726,7 @@ describe('TapeViewComponent', () => {
       await open(`/tapes/${tape.id}`);
 
       const controls = all(view(), 'button, input, select, textarea, [contenteditable]').filter(
-        (control) => control.closest('[data-testid="zoom"], [data-testid="add-hole"]') === null && !['export', 'side-panel-toggle', 'undo', 'redo', 'transpose', 'tape-section-toggle', 'import-summary-toggle', 'column-length-input', 'column-length-apply', 'preview-toggle'].includes(control.getAttribute('data-testid') ?? ''),
+        (control) => control.closest('[data-testid="zoom"], [data-testid="add-hole"]') === null && !['export', 'side-panel-toggle', 'undo', 'redo', 'transpose', 'tape-section-toggle', 'import-summary-toggle', 'column-length-input', 'column-length-apply', 'crank-speed-input', 'crank-speed-apply', 'preview-toggle'].includes(control.getAttribute('data-testid') ?? ''),
       );
       expect(controls).toHaveLength(0);
     });
