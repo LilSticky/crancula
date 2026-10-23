@@ -8,7 +8,7 @@
 
 <p align="center">
   <a href="https://github.com/LilSticky/crancula/actions/workflows/ci.yml"><img src="https://github.com/LilSticky/crancula/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-  <img src="https://img.shields.io/badge/version-0.1.0-b08fd8" alt="Version 0.1.0">
+  <img src="https://img.shields.io/badge/version-0.1.1-b08fd8" alt="Version 0.1.1">
   <img src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-1a1426" alt="Platforms: Windows, macOS, Linux">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-efe4c8" alt="MIT license"></a>
 </p>
@@ -27,12 +27,12 @@ out as a Tape that fits your Pipes. You then export the Tape as an SVG that a vi
 other Plotter can punch. Feed the Tape into your Organ, turn the Crank, and it plays.
 
 > [!NOTE]
-> **v0.1 is out.** Describe your Organ, bring a MIDI Song onto a Tape and export it for your
-> Plotter: the whole way from music to a cuttable Tape works. Crancula is a hobby project, so
-> expect rough edges. [Download it](#download) for Windows, macOS or Linux.
+> **v0.1.1 is out.** Describe your Organ, bring a MIDI Song onto a Tape, edit its Holes by hand
+> and export it for your Plotter: the whole way from music to a cuttable Tape works. Crancula is
+> a hobby project, so expect rough edges. [Download it](#download) for Windows, macOS or Linux.
 
 <p align="center">
-  <img src="documentation/images/screenshots/tape.png" alt="A Tape for a 31-Pipe street organ: rows labelled F3 to B5, Holes as dark slots along a ruler in millimetres, the angled Lead-in on the left, and the Tape's facts beside it" width="100%">
+  <img src="documentation/images/screenshots/tape.png" alt="A Tape for a 31-Pipe street organ: rows labelled F3 to B5, Holes as dark slots along a ruler in millimetres, the angled Lead-in on the left, and beside it the side panel to select and add Holes, see Cutting Problems and change the Column length; Undo, Redo and Transpose above" width="100%">
 </p>
 
 ## How it works
@@ -56,7 +56,9 @@ flowchart LR
    that can't exist, for example duplicate Pipes or more Pipes than fit on the tape.
 2. **Bring a Song onto a Tape.** Import a MIDI file. Crancula shifts it up or down
    (Transposition) so that it fits the Pipes your Organ has.
-3. **Punch the Tape.** Export the Tape as a true-to-scale SVG and cut it with your Plotter.
+3. **Edit the Tape.** Add, move, lengthen and remove Holes, transpose them or change the
+   Column length. Cutting Problems show as you go, and Undo takes any edit back.
+4. **Punch the Tape.** Export the Tape as a true-to-scale SVG and cut it with your Plotter.
    A Tape that can't be cut (a Hole too short, or too close to the next) is not exported;
    Crancula names every problem Hole instead.
 
@@ -72,18 +74,19 @@ flowchart LR
     <td><b>Bring a Song onto a Tape.</b> Pick the Parts; the Fit shows how the Song meets your Pipes.</td>
   </tr>
   <tr>
-    <td colspan="2"><img src="documentation/images/screenshots/tape-dark-german.png" alt="The Tape view in the dark scheme with German texts: Lochband, Drehorgeln, Export für den Plotter"></td>
+    <td colspan="2"><img src="documentation/images/screenshots/tape-dark-german.png" alt="The Tape view in the dark scheme with German texts: Lochband, Ausgewähltes Loch, Schnittprobleme, Loch hinzufügen, Transponieren, Export für den Plotter"></td>
   </tr>
   <tr>
-    <td colspan="2"><b>Look at the Tape</b> at 1:1 or 2:1 and export it for the Plotter. Light or dark, English or German.</td>
+    <td colspan="2"><b>Edit the Tape</b> at 1:1 or 2:1, transpose its Holes and export it for the Plotter. Light or dark, English or German.</td>
   </tr>
 </table>
 
-## What's in v0.1
+## What's in v0.1.1
 
 - [x] **Describe my organ**: create, edit, reorder and delete Organs, kept across restarts, in English and German
 - [x] **Bring a song onto a tape**: import a MIDI file onto a Tape, with automatic Transposition ([#2](https://github.com/LilSticky/crancula/issues/2))
 - [x] **Punch a tape**: export the Tape as an SVG for a vinyl cutter ([#3](https://github.com/LilSticky/crancula/issues/3))
+- [x] **Edit a tape**: place Holes by hand, transpose Holes, change the Column length, with undo and redo ([#103](https://github.com/LilSticky/crancula/issues/103))
 - [x] Downloadable releases for Windows, macOS and Linux ([#11](https://github.com/LilSticky/crancula/issues/11))
 
 What changed in each version is under [Releases](#releases).
@@ -91,7 +94,6 @@ What changed in each version is under [Releases](#releases).
 <details>
 <summary><b>Ideas for later</b></summary>
 
-- **Edit a Tape**: add, stretch, move and remove Holes; transpose the whole Song or single notes
 - **Crank a Tape**: hear a preview at an adjustable crank speed
 - More Song Sources: MusicXML, PDF, printed Scores
 - More Plotter formats: DXF, HPGL; splitting long Tapes into pieces
@@ -124,6 +126,7 @@ All terms, with their German names, are in the [dictionary](documentation/DICTIO
 
 | Version | Date | Highlights |
 |---------|------|------------|
+| [0.1.1](https://github.com/LilSticky/crancula/releases/tag/v0.1.1) | 2026-10-23 | Edit a Tape's Holes by hand; transpose Holes; change the Column length; undo and redo |
 | [0.1.0](https://github.com/LilSticky/crancula/releases/tag/v0.1.0) | 2026-10-18 | Export a Tape for the Plotter as SVG; Lead-in; derived Border; a new look |
 | [0.0.1](https://github.com/LilSticky/crancula/releases/tag/v0.0.1) | 2026-10-14 | Describe your Organ; bring a MIDI Song onto a Tape; English and German |
 
