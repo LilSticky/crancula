@@ -45,8 +45,8 @@ green). Test pyramid: Node Vitest for `api/`; `ng test` (jsdom, fake `PreviewSou
 - [ ] T012 [P] Red: `api/organ/organ-library-snapshot.spec.ts`: writes version 4 with `tapePerCrankTurn` when present and without it when absent; reads versions 1–3 without it; rejects a version 4 value ≤ 0.
 - [x] T013 Green: version 4 in `api/organ/organ-library-snapshot.ts`.
 - [ ] T014 [P] Red: `api/preview/performance.spec.ts`: `performance` leaves out Holes whose Pipe is not on the Organ, keeps Holes with other Cutting Problems, joins touching Holes of one row (end = next start), keeps a 1-Column gap as two notes, sorts by `startColumn` then `pipe`; `columnDuration` = `columnLength / (tapePerCrankTurn × crankSpeed / 60)` (100 mm, 5 mm, 60/min → 0.05 s) and `undefined` without `tapePerCrankTurn`; `previewLength` = Columns × that; `noteFrequency(69)` = 440, `noteFrequency(81)` = 880.
-- [ ] T015 Green: `api/preview/performance.ts`, exported from `api/index.ts`.
-- [ ] T016 Fix the `src/` and `e2e/` compile after T005/T011 (`src/testing/organs.ts`, Tape fixtures get `tapePerCrankTurn: 100` where the test needs a Preview, `crankSpeed: 60`); `npm run test` and `npm run build` green.
+- [x] T015 Green: `api/preview/performance.ts`, exported from `api/index.ts`.
+- [x] T016 Fix the `src/` and `e2e/` compile after T005/T011 (`src/testing/organs.ts`, Tape fixtures get `tapePerCrankTurn: 100` where the test needs a Preview, `crankSpeed: 60`); `npm run test` and `npm run build` green.
 
 **Checkpoint**: domain and snapshots ready; nothing visible changed. Commit, STATUS.
 
