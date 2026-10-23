@@ -7,7 +7,7 @@ Issues: [GitHub](https://github.com/LilSticky/crancula/issues)
 ## Current slice
 
 **Done:** [Adjust a tape](../specs/006-adjust-a-tape/spec.md) ([#107](https://github.com/LilSticky/crancula/issues/107),
-2026-10-23, branch `006-adjust-a-tape`, pull request open at merge), the last part of Edit a tape
+2026-10-23, branch `006-adjust-a-tape`, PR #143), the last part of Edit a tape
 [#103](https://github.com/LilSticky/crancula/issues/103), which is now done with
 [#105](https://github.com/LilSticky/crancula/issues/105), [#106](https://github.com/LilSticky/crancula/issues/106) and #107.
 The Column length is a field in the Tape section of the side panel; Apply or Enter changes the Tape, and a hint shows
@@ -15,7 +15,7 @@ the Cutting Problems now and after the change. One undo step; German comma input
 counted once per Tape, and the section gets the saved Tape, not the drag preview. The field no longer makes the side
 panel scroll sideways (e2e at 1280×800 and 1024×700). UX capture 08g; review notes in
 [audit.md](../specs/006-adjust-a-tape/audit.md). Gate: 778 node and 1151 Angular unit tests, lint, i18n (295 keys)
-and the tape-column-length e2e green locally; full e2e in CI.
+and the full e2e suite green in CI on Linux, Windows and macOS.
 
 **Next step:** a release (`/release`, ADR 19) after this pull request merges. The user starts a new session for it.
 
