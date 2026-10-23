@@ -18,6 +18,7 @@ function organ(name: string, id?: string): Organ {
     tapeBed: {tapeWidth: 120, holeDiameter: 2.5, rowSpacing: 3.5},
     minimumGap: 1.5,
     leadIn: 20,
+    tapePerCrankTurn: null,
     pipes: [{note: 60}, {note: 62}],
   };
   const result = validateOrgan(draft);

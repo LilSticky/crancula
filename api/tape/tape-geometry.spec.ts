@@ -13,6 +13,7 @@ function testOrgan(name: string, pipeCount: number, leadIn: number): Organ {
     tapeBed: {tapeWidth: 120, holeDiameter: 2.5, rowSpacing: 3.5},
     minimumGap: 1.5,
     leadIn,
+    tapePerCrankTurn: null,
     pipes: Array.from({length: pipeCount}, (_, row) => ({note: 60 + 2 * row})),
   });
   if (!result.ok) throw new Error(`invalid test Organ: ${JSON.stringify(result.error)}`);
@@ -96,6 +97,7 @@ describe('tapeGeometry', () => {
       tapeBed: streetOrgan.tapeBed,
       minimumGap: streetOrgan.minimumGap,
       leadIn: streetOrgan.leadIn,
+      tapePerCrankTurn: null,
       pipes: [...streetOrgan.pipes].reverse().map((pipe) => ({note: pipe.note})),
     });
     if (!reordered.ok) throw new Error('invalid test Organ');
@@ -123,6 +125,7 @@ describe('tapeGeometry', () => {
         tapeBed: streetOrgan.tapeBed,
         minimumGap: streetOrgan.minimumGap,
         leadIn: streetOrgan.leadIn,
+        tapePerCrankTurn: null,
         pipes: [...streetOrgan.pipes].reverse().map((pipe) => ({note: pipe.note})),
       });
       if (!reordered.ok) throw new Error('invalid test Organ');
@@ -144,6 +147,7 @@ describe('tapeGeometry', () => {
           : {tapeWidth: 100, holeDiameter: 3, rowSpacing: 12},
         minimumGap,
         leadIn,
+        tapePerCrankTurn: null,
         pipes: Array.from({length: 4}, (_, row) => ({note: 60 + 2 * row})),
       });
       if (!result.ok) throw new Error(`invalid test Organ: ${JSON.stringify(result.error)}`);

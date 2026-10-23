@@ -52,6 +52,8 @@ function fieldAt(organ: ReadonlyFieldTree<OrganDraft>, path: string): ReadonlyFi
       return organ.minimumGap;
     case 'leadIn':
       return organ.leadIn;
+    case 'tapePerCrankTurn':
+      return organ.tapePerCrankTurn;
     case 'tapeBed': {
       const field = TAPE_BED_FIELDS.find((candidate) => candidate === rest[0]);
       return field ? organ.tapeBed[field] : organ;

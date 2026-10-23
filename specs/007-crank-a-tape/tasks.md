@@ -39,11 +39,11 @@ green). Test pyramid: Node Vitest for `api/`; `ng test` (jsdom, fake `PreviewSou
 - [ ] T006 [P] Red: `api/tape/change-crank-speed.spec.ts`: changes only `crankSpeed`, keeps Holes, Columns, Column length, name; same object back when unchanged; `crank-speed-out-of-range` for 0, 301, NaN.
 - [x] T007 Green: `changeCrankSpeed` in `api/tape/change-crank-speed.ts` through `validTape`, exported.
 - [ ] T008 [P] Red: `api/tape/tape-library-snapshot.spec.ts`: writes version 2 with `crankSpeed`; reads version 2; reads version 1 with every Tape at 60; rejects a version 2 entry with `crankSpeed` 0 or missing.
-- [ ] T009 Green: version 2 in `api/tape/tape-library-snapshot.ts` (migrated on read, ADR 20).
+- [x] T009 Green: version 2 in `api/tape/tape-library-snapshot.ts` (migrated on read, ADR 20).
 - [ ] T010 [P] Red: `api/organ/validate-organ.spec.ts` and `organ-draft.spec.ts`: `tapePerCrankTurn` `null` is valid (absent on the Organ); a given value must be finite and above 0, else `tape-per-crank-turn-not-positive` at path `tapePerCrankTurn`; `emptyOrganDraft` has `null`; `toDraft` copies it.
-- [ ] T011 Green: `Organ.tapePerCrankTurn?: Millimetres` in `api/organ/organ.ts`, `organ-draft.ts`, `validate-organ.ts`.
+- [x] T011 Green: `Organ.tapePerCrankTurn?: Millimetres` in `api/organ/organ.ts`, `organ-draft.ts`, `validate-organ.ts`.
 - [ ] T012 [P] Red: `api/organ/organ-library-snapshot.spec.ts`: writes version 4 with `tapePerCrankTurn` when present and without it when absent; reads versions 1–3 without it; rejects a version 4 value ≤ 0.
-- [ ] T013 Green: version 4 in `api/organ/organ-library-snapshot.ts`.
+- [x] T013 Green: version 4 in `api/organ/organ-library-snapshot.ts`.
 - [ ] T014 [P] Red: `api/preview/performance.spec.ts`: `performance` leaves out Holes whose Pipe is not on the Organ, keeps Holes with other Cutting Problems, joins touching Holes of one row (end = next start), keeps a 1-Column gap as two notes, sorts by `startColumn` then `pipe`; `columnDuration` = `columnLength / (tapePerCrankTurn × crankSpeed / 60)` (100 mm, 5 mm, 60/min → 0.05 s) and `undefined` without `tapePerCrankTurn`; `previewLength` = Columns × that; `noteFrequency(69)` = 440, `noteFrequency(81)` = 880.
 - [ ] T015 Green: `api/preview/performance.ts`, exported from `api/index.ts`.
 - [ ] T016 Fix the `src/` and `e2e/` compile after T005/T011 (`src/testing/organs.ts`, Tape fixtures get `tapePerCrankTurn: 100` where the test needs a Preview, `crankSpeed: 60`); `npm run test` and `npm run build` green.

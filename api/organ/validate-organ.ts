@@ -13,7 +13,8 @@ export type OrganViolationCode =
   | 'must-be-positive'
   | 'must-not-be-negative'
   | 'row-spacing-below-hole-diameter'
-  | 'pipes-exceed-tape-width';
+  | 'pipes-exceed-tape-width'
+  | 'tape-per-crank-turn-not-positive';
 
 /** A rule an {@link OrganDraft} breaks, located by the dotted path of the offending field. */
 export interface OrganViolation {
@@ -43,6 +44,7 @@ export function validateOrgan(draft: OrganDraft): Result<Organ, OrganViolation[]
   const tapeBed = validateTapeBed(draft, add);
   const minimumGap = measurement(draft.minimumGap, 'minimumGap', add);
   const leadIn = measurement(draft.leadIn, 'leadIn', add, true);
+  const tapePerCrankTurn = optionalPositive(draft.tapePerCrankTurn, add);
 
   if (tapeBed && draft.pipes.length > 0) {
     const required = rowSpan(tapeBed, draft.pipes.length);
@@ -63,6 +65,7 @@ export function validateOrgan(draft: OrganDraft): Result<Organ, OrganViolation[]
       tapeBed,
       minimumGap,
       leadIn,
+      ...(tapePerCrankTurn === undefined ? {} : {tapePerCrankTurn}),
       pipes: notes.map((note) => ({note})),
     }),
   );
@@ -129,6 +132,14 @@ function measurement(
     return undefined;
   }
   return millimetres(value);
+}
+
+/** Absent (`null`, or missing from untyped input) is valid; a given value must be finite and above 0. */
+function optionalPositive(value: number | null, add: AddViolation): Millimetres | undefined {
+  if (value === null || value === undefined) return undefined;
+  const valid = Number.isFinite(value) && value > 0 ? millimetres(value) : undefined;
+  if (valid === undefined) add({code: 'tape-per-crank-turn-not-positive', path: 'tapePerCrankTurn'});
+  return valid;
 }
 
 function roundMm(value: number): number {

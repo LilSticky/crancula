@@ -28,6 +28,7 @@ function organWith(holeDiameter: number, minimumGap: number): Organ {
     tapeBed: {tapeWidth: 120, holeDiameter, rowSpacing: holeDiameter + 1},
     minimumGap,
     leadIn: 20,
+    tapePerCrankTurn: null,
     pipes: [{note: 60}, {note: 62}],
   });
   if (!result.ok) throw new Error(`invalid test Organ: ${JSON.stringify(result.error)}`);

@@ -54,6 +54,7 @@ function organWith(notes: readonly number[]): Organ {
     tapeBed: {tapeWidth: 120, holeDiameter: 2.5, rowSpacing: 3.5},
     minimumGap: 1.5,
     leadIn: 20,
+    tapePerCrankTurn: null,
     pipes: notes.map((each) => ({note: each})),
   });
   if (!result.ok) throw new Error('invalid test Organ');
