@@ -83,8 +83,8 @@ green). Test pyramid: Node Vitest for `api/`; `ng test` (jsdom, fake `PreviewSou
 - [x] T031 [US2] Green: `preview-section.component.ts` in the side panel of `tape-view.component.html`, wired to `commit({kind: 'applied', …})` (one undo step through `TapeEditor.apply`).
 - [x] T032 [US2] Red: `tape-preview.spec.ts`: a Crank speed change while playing re-anchors at `now()` and the current Column; later notes use the new rate; sounding voices get their stop re-scheduled; no voice restarts, no gap.
 - [x] T033 [US2] Green: re-anchoring in `tape-preview.ts` (the view passes the new Tape's `columnDuration`).
-- [ ] T034 [US2] Red: `e2e/tape-preview.spec.ts`: change 60 → 120, restart, Tape opens with 120; Undo brings 60 back, Redo 120; German comma input.
-- [ ] T035 [US2] Green: whatever T034 still needs.
+- [x] T034 [US2] Red: `e2e/tape-preview.spec.ts`: change 60 → 120, restart, Tape opens with 120; Undo brings 60 back, Redo 120; German comma input.
+- [x] T035 [US2] Green: whatever T034 still needs.
 
 ## Phase 6: User Story 4 — Start from any Column (P2)
 
@@ -101,8 +101,8 @@ green). Test pyramid: Node Vitest for `api/`; `ng test` (jsdom, fake `PreviewSou
 
 - [x] T040 [US5] Red: `tape-view.component.spec.ts`: while `TapePreview.playing()`: pointer drag, resize, add and remove do nothing; Delete, Ctrl+Z/Y, Ctrl+A-and-arrow moves do nothing; Undo, Redo, Transpose, Add a Hole, Column length Apply are disabled; the `EditCommandRouter` handler ignores menu Undo/Redo; `editing-paused` shows; the Crank speed field still applies; after stop all of it works again.
 - [x] T041 [US5] Green: `editingPaused` computed and the guards in `tape-view.component.ts/.html`, the hole-editing handlers and the Tape and side panel sections.
-- [ ] T042 [US5] Red: `e2e/tape-preview.spec.ts`: while playing a Hole drag and the menu Undo change nothing; after stop they work.
-- [ ] T043 [US5] Green: whatever T042 still needs.
+- [x] T042 [US5] Red: `e2e/tape-preview.spec.ts`: while playing a Hole drag and the menu Undo change nothing; after stop they work.
+- [x] T043 [US5] Green: whatever T042 still needs.
 
 ## Phase 8: Polish
 
