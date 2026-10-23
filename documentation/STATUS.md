@@ -17,7 +17,11 @@ panel scroll sideways (e2e at 1280×800 and 1024×700). UX capture 08g; review n
 [audit.md](../specs/006-adjust-a-tape/audit.md). Gate: 778 node and 1151 Angular unit tests, lint, i18n (295 keys)
 and the full e2e suite green in CI on Linux, Windows and macOS.
 
-**Next step:** a release (`/release`, ADR 19) after this pull request merges. The user starts a new session for it.
+**Done:** v0.1.1 released (2026-10-23, [CHANGELOG](../CHANGELOG.md#011---2026-10-23)): Edit a tape (place Holes
+by hand, transpose Holes, change the Column length, undo and redo), Rename a Tape, the live Tape preview on the import
+screen, and fixes. README describes v0.1.1 with new screenshots.
+
+**Next step:** the next slice from the [ROADMAP](ROADMAP.md) or the highest-priority triaged issue ("go").
 
 **Done:** Air Demand dropped from scope (2026-10-22, user decision): it came from a misunderstanding and was never
 meant to be built; removed from ROADMAP, README and the constitution (1.1.3).
