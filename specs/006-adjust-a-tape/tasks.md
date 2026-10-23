@@ -51,8 +51,8 @@ restart and the real menu.
 
 ## Phase 4: User Story 2 — See what the new Column length breaks (P1)
 
-- [ ] T011 [P] [US2] Red: `src/app/features/tape/tape-view/column-length-change.spec.ts` — states `unchanged`, `invalid`, `ready` of data-model.md from (typed value, Tape, Organ); `ready` carries `problemsNow` and `problemsThen` from `cuttingProblems`.
-- [ ] T012 [US2] Green: `column-length-change.ts` (pure, no Angular).
+- [x] T011 [P] [US2] Red: `src/app/features/tape/tape-view/column-length-change.spec.ts` — states `unchanged`, `invalid`, `ready` of data-model.md from (typed value, Tape, Organ); `ready` carries `problemsNow` and `problemsThen` from `cuttingProblems`.
+- [x] T012 [US2] Green: `column-length-change.ts` (pure, no Angular).
 - [ ] T013 [US2] Red: section spec — in `ready` the hint `column-length-hint` shows now/then counts (also when equal or 0); after applying, the Cutting Problems list and marks follow (view spec).
 - [ ] T014 [US2] Green: use `column-length-change.ts` in the section; the section needs the Organ (input).
 
