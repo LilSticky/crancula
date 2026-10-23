@@ -273,5 +273,11 @@ test.describe('UX screens', () => {
     await expect(window.getByTestId('redo')).toBeEnabled();
     await window.mouse.move(640, 400);
     await capture(window, '08f-tape-view-edited-undone');
+
+    // Type a different valid Column length without applying it: the hint names the count after the change.
+    await window.getByTestId('column-length-input').fill('3');
+    await expect(window.getByTestId('column-length-hint')).toBeVisible();
+    await window.getByTestId('column-length-input').scrollIntoViewIfNeeded();
+    await capture(window, '08g-tape-view-column-length-hint');
   });
 });

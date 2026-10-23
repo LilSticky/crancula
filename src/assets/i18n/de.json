@@ -192,7 +192,10 @@
       "LEAD_IN_NONE": "Keiner",
       "HOLES": "Löcher",
       "PARTS": "Stimmen auf dem Lochband",
-      "MM": "{{value}} mm"
+      "MM": "{{value}} mm",
+      "COLUMN_LENGTH_APPLY": "Übernehmen",
+      "COLUMN_LENGTH_HINT": "Schnittprobleme: {{now}} jetzt, {{then}} mit {{value}} mm",
+      "COLUMN_LENGTH_INVALID": "Die Spaltenlänge muss größer als 0 sein."
     },
     "ADD_HOLE": {
       "TITLE": "Loch hinzufügen",

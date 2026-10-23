@@ -143,8 +143,8 @@
       @if (organ(); as organ) {
         <cranc-add-hole [organ]="organ" [tape]="tape" [selected]="selectedHoleRef()" (added)="addFromForm($event)" />
       }
+      <cranc-tape-section [view]="drawing.section" [tape]="tape" [organ]="drawing.organ" (columnLengthChange)="onColumnLengthChange($event)" />
     }
-    <cranc-tape-section [view]="drawing.section" />
     @if (importSummary(); as summary) {
       <cranc-import-summary data-testid="import-summary" [importSummary]="summary" (dismissed)="importSummary.set(null)" />
     }

@@ -297,6 +297,7 @@ export class TapeViewComponent {
     const language = this.language();
     return {
       tape,
+      organ,
       section: sectionView(tape, organ, geometry, language, this.partNames(tape)),
       ...rowLabels(organ, geometry, scale),
       holes: holeRects(tape, geometry, scale, range, this.shownSelection()),
@@ -618,6 +619,11 @@ export class TapeViewComponent {
       this.scrollToSelection = true;
     }
     return outcome.kind === 'applied';
+  }
+
+  /** Saves the Tape with a new Column length as one edit; the Holes and the selection stay. */
+  protected onColumnLengthChange(tape: Tape): void {
+    this.commit({kind: 'applied', tape, selection: this.selection()});
   }
 
   /** A double-click on an empty spot of a row adds a Hole of that row's Pipe at that Column. */

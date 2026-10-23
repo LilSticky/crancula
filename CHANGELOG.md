@@ -21,6 +21,8 @@ as its GitHub Release notes.
 - Undo and redo for Tape edits: the Undo and Redo buttons, and Ctrl+Z, Ctrl+Y or Ctrl+Shift+Z
   (⌘Z and ⇧⌘Z on macOS).
 - The Tape grows when you move a Hole past its end; the view scrolls while you drag near an edge.
+- Change a Tape's Column length in the Tape section of the side panel. A hint shows the Cutting Problems
+  now and after the change; Apply (or Enter) changes the Tape, and one Undo takes it back.
 
 ## [0.1.0] - 2026-10-18
 

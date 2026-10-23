@@ -6,6 +6,19 @@ Issues: [GitHub](https://github.com/LilSticky/crancula/issues)
 
 ## Current slice
 
+**Done:** [Adjust a tape](../specs/006-adjust-a-tape/spec.md) ([#107](https://github.com/LilSticky/crancula/issues/107),
+2026-10-23, branch `006-adjust-a-tape`, PR #143), the last part of Edit a tape
+[#103](https://github.com/LilSticky/crancula/issues/103), which is now done with
+[#105](https://github.com/LilSticky/crancula/issues/105), [#106](https://github.com/LilSticky/crancula/issues/106) and #107.
+The Column length is a field in the Tape section of the side panel; Apply or Enter changes the Tape, and a hint shows
+the Cutting Problems now and after the change. One undo step; German comma input. Review fixes: Cutting Problems are
+counted once per Tape, and the section gets the saved Tape, not the drag preview. The field no longer makes the side
+panel scroll sideways (e2e at 1280×800 and 1024×700). UX capture 08g; review notes in
+[audit.md](../specs/006-adjust-a-tape/audit.md). Gate: 778 node and 1151 Angular unit tests, lint, i18n (295 keys)
+and the full e2e suite green in CI on Linux, Windows and macOS.
+
+**Next step:** a release (`/release`, ADR 19) after this pull request merges. The user starts a new session for it.
+
 **Done:** Air Demand dropped from scope (2026-10-22, user decision): it came from a misunderstanding and was never
 meant to be built; removed from ROADMAP, README and the constitution (1.1.3).
 
@@ -16,8 +29,6 @@ about 2.5 s). Not proven from the CI trace (an Electron trace has no app log); r
 
 **Done:** flaky Transpose e2e on Windows ([#133](https://github.com/LilSticky/crancula/issues/133), PR #134): keyboard tests wait for focus to enter the dialog before tabbing.
 
-**Next step:** [#103](https://github.com/LilSticky/crancula/issues/103) Edit a tape (medium, XL): see what is left
-after #105 and #106, and split it before taking the next part.
 
 **Done:** menu Undo and Redo act on the Tape ([#122](https://github.com/LilSticky/crancula/issues/122), PR #135, 2026-10-22, branch
 `122-menu-undo-redo`). The menu sends an Edit Command over `edit:command`; text fields keep their own undo, the

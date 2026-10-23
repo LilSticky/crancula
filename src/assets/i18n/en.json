@@ -192,7 +192,10 @@
       "LEAD_IN_NONE": "None",
       "HOLES": "Holes",
       "PARTS": "Parts on the Tape",
-      "MM": "{{value}} mm"
+      "MM": "{{value}} mm",
+      "COLUMN_LENGTH_APPLY": "Apply",
+      "COLUMN_LENGTH_HINT": "Cutting Problems: {{now}} now, {{then}} with {{value}} mm",
+      "COLUMN_LENGTH_INVALID": "The Column length must be greater than 0."
     },
     "ADD_HOLE": {
       "TITLE": "Add a Hole",
