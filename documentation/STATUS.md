@@ -23,6 +23,11 @@ screen, and fixes. README describes v0.1.1 with new screenshots.
 
 **Next step:** the next slice from the [ROADMAP](ROADMAP.md) or the highest-priority triaged issue ("go").
 
+**Done:** flaky Electron launch on Linux CI ([#145](https://github.com/LilSticky/crancula/issues/145), 2026-10-23):
+one launch in ~117 failed with "Missing X server or $DISPLAY" although Xvfb was up. `launchApp` now retries only that
+error (3 attempts, 500 and 1000 ms apart); other launch failures still fail. The retry path is verified by review
+only; reopen if it recurs.
+
 **Done:** Air Demand dropped from scope (2026-10-22, user decision): it came from a misunderstanding and was never
 meant to be built; removed from ROADMAP, README and the constitution (1.1.3).
 
