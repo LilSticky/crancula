@@ -106,10 +106,10 @@ green). Test pyramid: Node Vitest for `api/`; `ng test` (jsdom, fake `PreviewSou
 
 ## Phase 8: Polish
 
-- [ ] T044 [P] `ux-review` of the Tape view with the Preview (capture 09a) and the Organ editor field; fix findings or record them in an issue.
-- [ ] T045 [P] `angular-reviewer` over `src/` changes; `electron-reviewer` only if `app/` changed; fixes via `implementer`.
-- [ ] T046 `spec-auditor` against spec.md; write `specs/007-crank-a-tape/audit.md`.
-- [ ] T047 STATUS, ROADMAP (Crank a tape → done), CHANGELOG `[Unreleased]`, README if it lists capabilities; quickstart by hand on Windows.
+- [ ] T044 [P] `ux-review` of the Tape view with the Preview (capture 09a) and the Organ editor field; fix findings or record them in an issue. Deferred to #151.
+- [x] T045 [P] `angular-reviewer` over `src/` changes; `electron-reviewer` only if `app/` changed; fixes via `implementer`.
+- [x] T046 `spec-auditor` against spec.md; write `specs/007-crank-a-tape/audit.md`.
+- [x] T047 STATUS, ROADMAP (Crank a tape → done), CHANGELOG `[Unreleased]`, README if it lists capabilities; quickstart by hand on Windows (listening left to the owner, see STATUS).
 - [ ] T048 Gate: `npm run lint`, `npm run test:node`, `npm run test`, `npm run i18n:check`, `npm run build`, full e2e in CI; open the pull request (`Closes #149`).
 
 ## Dependencies

@@ -45,7 +45,7 @@ Decided by the user on 2026-10-23 ([discovery](discovery/later.md)): one capabil
 
 | Version | Slice | Lets the user… | Domain | Adapters | State |
 |---------|-------|----------------|--------|----------|-------|
-| v0.2 | Crank a tape | hear a Tape at an adjustable Crank speed (turns per minute), with a playhead, before cutting it | Tape, Organ (Tape per Crank turn) | Web Audio, Tape view, Organ editor | in progress ([#149](https://github.com/LilSticky/crancula/issues/149)) |
+| v0.2 | Crank a tape | hear a Tape at an adjustable Crank speed (turns per minute), with a playhead, before cutting it | Tape, Organ (Tape per Crank turn) | Web Audio, Tape view, Organ editor | done ([#149](https://github.com/LilSticky/crancula/issues/149)) |
 | v0.2 | Record a tape | save what Crank a tape plays as an audio file | Tape | audio file writer, save dialog | planned |
 | v0.3 | Bring Scores onto a tape | import MusicXML (one Part per staff, repeats played out); PDF and printed Scores through an outside recognition tool | Song | MusicXML reader | planned |
 | v0.4 | Cut a tape in pieces | describe a Plotter (name, format, working area) and cut a long Tape in pieces with a glue overlap | Plotter, Tape | Plotter editor, snapshot, SVG | planned |

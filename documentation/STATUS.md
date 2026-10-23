@@ -6,6 +6,20 @@ Issues: [GitHub](https://github.com/LilSticky/crancula/issues)
 
 ## Current slice
 
+**Done:** [Crank a tape](../specs/007-crank-a-tape/spec.md) ([#149](https://github.com/LilSticky/crancula/issues/149),
+v0.2, 2026-10-24, branch `007-crank-a-tape`, PR #150): Preview a Tape with a synthesised tone per Pipe and a
+playhead (toolbar button or Space), from any Column (ruler or field); each Tape keeps an undoable Crank speed
+(1–300 turns per minute, 60 to begin with; Tape snapshot v2); an Organ may describe its Tape per Crank turn
+(Organ snapshot v4; older Organs have none until entered, and their Tapes can't be heard). Editing waits while it
+plays. [ADR 24](adr/0024-preview-synthesised-with-web-audio.md): Web Audio in the renderer behind a port, look-ahead
+scheduler on the audio clock. Review findings fixed; accepted test gaps in
+[audit.md](../specs/007-crank-a-tape/audit.md). T044 (ux-review) not done: [#151](https://github.com/LilSticky/crancula/issues/151). Gate: 844 node
+and 1270 Angular unit tests, lint, i18n (309 keys); e2e in CI. Sound itself is not tested automatically: listen
+once by hand on Windows ([quickstart](../specs/007-crank-a-tape/quickstart.md)).
+
+**Next step:** listen to a Preview by hand, then release v0.2.0 (`/release`), or start Record a tape
+([discovery/later.md](discovery/later.md), section 1, slice 2).
+
 **Done:** [Adjust a tape](../specs/006-adjust-a-tape/spec.md) ([#107](https://github.com/LilSticky/crancula/issues/107),
 2026-10-23, branch `006-adjust-a-tape`, PR #143), the last part of Edit a tape
 [#103](https://github.com/LilSticky/crancula/issues/103), which is now done with
@@ -20,14 +34,6 @@ and the full e2e suite green in CI on Linux, Windows and macOS.
 **Done:** v0.1.1 released (2026-10-23, [CHANGELOG](../CHANGELOG.md#011---2026-10-23)): Edit a tape (place Holes
 by hand, transpose Holes, change the Column length, undo and redo), Rename a Tape, the live Tape preview on the import
 screen, and fixes. README describes v0.1.1 with new screenshots.
-
-**In progress:** [Crank a tape](../specs/007-crank-a-tape/spec.md) ([#149](https://github.com/LilSticky/crancula/issues/149),
-v0.2, branch `007-crank-a-tape`, worktree `../crancula-crank`). Spec, plan, [tasks](../specs/007-crank-a-tape/tasks.md)
-(T001–T048) and [ADR 24](adr/0024-preview-synthesised-with-web-audio.md) done; dictionary has Crank speed, Tape per
-Crank turn and Preview (user, 2026-10-23). User decisions: Crank speed is kept per Tape and undoable; Organs saved
-before this slice have no Tape per Crank turn until entered.
-
-**Next step:** implement T001 onward (`/speckit-implement`), MVP = Phase 2 + US3 + US1.
 
 **Done:** discovery for the roadmap's "Later" items (2026-10-23, [discovery/later.md](discovery/later.md)): 14
 decisions by the user. Order and versions: v0.2 Crank a tape (turns per minute, the Organ gains Tape per Crank turn,
