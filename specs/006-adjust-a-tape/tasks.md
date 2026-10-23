@@ -65,5 +65,5 @@ restart and the real menu.
 
 - [x] T017 [P] German pass: comma input and the language's notation in the field and hint (section spec in `de`).
 - [x] T018 [P] `angular-reviewer` on `src/` changes; fix findings via `implementer`.
-- [ ] T019 `spec-auditor` against spec.md; `npm run ux:screens` capture of the Tape section with a hint, short `ux-review` note in STATUS.
+- [x] T019 `spec-auditor` against spec.md; `npm run ux:screens` capture of the Tape section with a hint, short `ux-review` note in STATUS.
 - [ ] T020 Docs: STATUS, ROADMAP (Adjust a tape done; #103 closes), DESIGN-GUIDE line for editable side-panel values if it adds a pattern; gate: lint, i18n, unit, e2e in CI.
