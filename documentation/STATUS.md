@@ -21,9 +21,13 @@ and the full e2e suite green in CI on Linux, Windows and macOS.
 by hand, transpose Holes, change the Column length, undo and redo), Rename a Tape, the live Tape preview on the import
 screen, and fixes. README describes v0.1.1 with new screenshots.
 
-**Next step:** start the slice Crank a tape (v0.2): open its issue, then `/speckit-specify` on branch
-`007-crank-a-tape` from [discovery/later.md](discovery/later.md), section 1. Its proposed terms (Crank speed, Tape per
-Crank turn, Preview) need the user's approval before DICTIONARY.md changes.
+**In progress:** [Crank a tape](../specs/007-crank-a-tape/spec.md) ([#149](https://github.com/LilSticky/crancula/issues/149),
+v0.2, branch `007-crank-a-tape`, worktree `../crancula-crank`). Spec, plan, [tasks](../specs/007-crank-a-tape/tasks.md)
+(T001–T048) and [ADR 24](adr/0024-preview-synthesised-with-web-audio.md) done; dictionary has Crank speed, Tape per
+Crank turn and Preview (user, 2026-10-23). User decisions: Crank speed is kept per Tape and undoable; Organs saved
+before this slice have no Tape per Crank turn until entered.
+
+**Next step:** implement T001 onward (`/speckit-implement`), MVP = Phase 2 + US3 + US1.
 
 **Done:** discovery for the roadmap's "Later" items (2026-10-23, [discovery/later.md](discovery/later.md)): 14
 decisions by the user. Order and versions: v0.2 Crank a tape (turns per minute, the Organ gains Tape per Crank turn,
