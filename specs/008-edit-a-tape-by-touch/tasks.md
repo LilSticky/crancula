@@ -53,12 +53,12 @@ real Electron touch, restart and migration.
 
 ## Phase 4: US2 Change a Hole by touch (P1)
 
-- [ ] T016 [P] [US2] Red: `hole-drag.spec.ts`: a press anywhere on a Hole body is a move (no inside handle); grip hit areas from a new `gripRects(holeRect, scale)` are outside the Hole beside each end and ≥ 44 × 44 screen px at scales 0.5, 1, 2, also for a 1-Column Hole, and don't overlap each other.
-- [ ] T017 [US2] Green: `hole-drag.ts` (`holePartAt` and `HANDLE_PX` removed, `gripRects`); template draws visible grips (6 px accent bar) and the hit rects with `data-testid="hole-handle"` and `data-end`; component spec for dragging a grip still green.
-- [ ] T018 [P] [US2] Red: `double-tap.spec.ts`: two taps on the same Hole within 400 ms are a double; 401 ms, another Hole, a modifier on the first tap, or a first tap that added the Hole are not.
-- [ ] T019 [US2] Green: `double-tap.ts` (`TapMemory`, `nextTap`, `DOUBLE_TAP_MS`).
-- [ ] T020 [US2] Red: component spec: double-tap (touch and mouse) on a Hole removes it, one undo step, next selection as Delete; tap-tap-tap on empty Tape adds one Hole and keeps it; refused while the Preview plays.
-- [ ] T021 [US2] Green: Tape view uses `nextTap` in the Hole tap path and `keyEdit(…, 'remove')`.
+- [x] T016 [P] [US2] Red: `hole-drag.spec.ts`: a press anywhere on a Hole body is a move (no inside handle); grip hit areas from a new `gripRects(holeRect, scale)` are outside the Hole beside each end and ≥ 44 × 44 screen px at scales 0.5, 1, 2, also for a 1-Column Hole, and don't overlap each other.
+- [x] T017 [US2] Green: `hole-drag.ts` (`holePartAt` and `HANDLE_PX` removed, `gripRects`); template draws visible grips (6 px accent bar) and the hit rects with `data-testid="hole-handle"` and `data-end`; component spec for dragging a grip still green.
+- [x] T018 [P] [US2] Red: `double-tap.spec.ts`: two taps on the same Hole within 400 ms are a double; 401 ms, another Hole, a modifier on the first tap, or a first tap that added the Hole are not.
+- [x] T019 [US2] Green: `double-tap.ts` (`TapMemory`, `nextTap`, `DOUBLE_TAP_MS`).
+- [x] T020 [US2] Red: component spec: double-tap (touch and mouse) on a Hole removes it, one undo step, next selection as Delete; tap-tap-tap on empty Tape adds one Hole and keeps it; refused while the Preview plays.
+- [x] T021 [US2] Green: Tape view uses `nextTap` in the Hole tap path and `keyEdit(…, 'remove')`.
 
 **Checkpoint**: P1 done; commit, STATUS.
 
