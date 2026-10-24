@@ -1,6 +1,12 @@
 import type {EditCommand} from './edit-command';
 import type {Language} from './language';
 import type {SvgSaveRequest, SvgSaveResult} from './svg-save-request';
+import type {
+  RecordingChooseRequest,
+  RecordingChooseResult,
+  RecordingWriteRequest,
+  RecordingWriteResult,
+} from '../recording/recording-save-request';
 import type {OrganLibrarySnapshot} from '../organ/organ-library-snapshot';
 import type {TapeLibrarySnapshot} from '../tape/tape-library-snapshot';
 
@@ -44,6 +50,12 @@ export interface CranculaApi {
   readonly plotter: {
     /** Shows the save dialog and writes `request.svg` where the user chooses. */
     saveSvg(request: SvgSaveRequest): Promise<SvgSaveResult>;
+  };
+  readonly recording: {
+    /** Shows the save dialog for a Recording; the chosen target is the only place its bytes may be written. */
+    chooseFile(request: RecordingChooseRequest): Promise<RecordingChooseResult>;
+    /** Writes the rendered Recording to the target `chooseFile` returned. */
+    writeFile(request: RecordingWriteRequest): Promise<RecordingWriteResult>;
   };
   readonly app: {
     /** Tells the main process the language, so it can translate the application menu. */

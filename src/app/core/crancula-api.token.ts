@@ -86,6 +86,11 @@ export function createInMemoryCranculaApi(
         return Promise.resolve({status: 'saved', filePath: `in-memory/${parsed.value.suggestedFileName}`});
       },
     },
+    recording: {
+      // Recordings need the desktop app; the browser stand-in has no save dialog yet.
+      chooseFile: () => Promise.resolve({status: 'rejected', reason: 'not implemented'}),
+      writeFile: () => Promise.resolve({status: 'rejected', reason: 'not implemented'}),
+    },
     app: {
       setLanguage: () => Promise.resolve({status: 'set'}),
     },
