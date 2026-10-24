@@ -2,7 +2,7 @@ import {expect, test, type Page} from '@playwright/test';
 import {join} from 'node:path';
 import {encodeSmf, type SmfTimedEvent} from '../../api/song/midi/smf-test-helper';
 import {launchApp, type LaunchedApp} from '../support/launch-app';
-import {defineStreetOrgan} from '../support/organ-editor';
+import {defineStreetOrgan, saveOrgan} from '../support/organ-editor';
 
 // Screenshots for the README; run with `$env:README_SHOTS='1'; npm run ux:screens`.
 const SHOTS = join(__dirname, '../../documentation/images/screenshots');
@@ -56,6 +56,8 @@ test.describe('README screenshots', () => {
   test('captures the README screens', async () => {
     const {window} = launched;
     await defineStreetOrgan(window);
+    await window.getByTestId('tape-per-crank-turn').fill('50');
+    await saveOrgan(window);
     await window.getByRole('link', {name: 'Organs'}).click();
     await window.getByTestId('organ').first().click();
     await expect(window.getByTestId('save-organ')).toBeVisible();

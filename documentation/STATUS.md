@@ -8,8 +8,15 @@ Issues: [GitHub](https://github.com/LilSticky/crancula/issues)
 
 No slice in progress.
 
-**Next step:** the UX findings in [#151](https://github.com/LilSticky/crancula/issues/151) (then retake the README
-screenshots), or Record a tape ([discovery/later.md](discovery/later.md), section 1, slice 2).
+**Next step:** the review follow-ups in [#156](https://github.com/LilSticky/crancula/issues/156) (incl. the clipped
+Crank speed label noted there), or Record a tape ([discovery/later.md](discovery/later.md), section 1, slice 2).
+
+**Done:** [UX findings in #151](https://github.com/LilSticky/crancula/issues/151) (2026-10-24, branch
+`151-preview-ux-findings`): the German page head no longer clips the 2:1 zoom toggle; the Export button stays on one
+line; the Tape section's Organ row sits on one baseline with a gap before Parts on the Tape; the Tape per Crank turn
+label and Lead-in height finding no longer reproduces at 1440×900 (regression e2e added). The README fixture now has a
+Tape per Crank turn and the README screenshots are retaken. New layout e2e: `e2e/tape-layout.spec.ts` and
+`e2e/organ-layout.spec.ts`.
 
 **Done:** [Edit a tape by touch](../specs/008-edit-a-tape-by-touch/spec.md)
 ([#152](https://github.com/LilSticky/crancula/issues/152), v0.2, merged 2026-10-24, branch `008-edit-a-tape-by-touch`,
@@ -32,8 +39,8 @@ scheduler on the audio clock. Review findings fixed; accepted test gaps in
 and 1270 Angular unit tests, lint, i18n (309 keys); e2e in CI. Sound itself is not tested automatically; the user
 listened to a Preview by hand on Windows on 2026-10-24 and it works ([quickstart](../specs/007-crank-a-tape/quickstart.md)).
 
-Open after it: the UX findings in [#151](https://github.com/LilSticky/crancula/issues/151) (then retake the README
-screenshots), or Record a tape ([discovery/later.md](discovery/later.md), section 1, slice 2).
+Open after it: the review follow-ups in [#156](https://github.com/LilSticky/crancula/issues/156), or Record a tape
+([discovery/later.md](discovery/later.md), section 1, slice 2).
 
 **Done:** v0.2.0 released (2026-10-24, [CHANGELOG](../CHANGELOG.md#020---2026-10-24)): Crank a tape (Preview, Crank
 speed, Tape per Crank turn). README describes v0.2.0 but keeps the v0.1.1 screenshots: the retaken ones showed the

@@ -102,9 +102,13 @@ class ColumnLengthErrorMatcher extends ErrorStateMatcher {
     h3 {
       margin: 0 0 0.5rem;
     }
+    h3 {
+      margin-top: 0.75rem;
+    }
     dl {
       display: grid;
       grid-template-columns: auto 1fr;
+      align-items: baseline;
       gap: 4px 12px;
       margin: 0;
     }
