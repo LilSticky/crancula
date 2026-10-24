@@ -107,8 +107,8 @@ Branch `156-touch-review-follow-ups`. Details in `review.md` (items 2–5), `ux-
 - [x] F01 Red/green: `spot.ts` `holeAt` looks the Hole up in the Tape instead of deriving its length from the slot width (review 2).
 - [x] F02 Refactor (behaviour unchanged, existing specs green): `holeSelection` returns a module constant `NO_HOLES`; the Spot `<rect>` gets `aria-hidden="true"` (spec asserts it); name the `framing` type (`interface Framing`) (review 3–5).
 - [x] F03 Red/green: a touch whose `pointerup` never reaches the drawing (`pointercancel`, `lostpointercapture`) leaves the touch set, so touch edits work again (audit).
-- [ ] F04 Red/green: the toast after a Crank speed change names the speed (en/de keys) (ux-review 5).
+- [x] F04 Dropped (user, 2026-10-24): the Crank speed is an undoable Tape edit like the others, which show no toast; the "Organ saved" toast in the review shots was a leftover of the screenshot script (F07).
 - [ ] F05 Red/green (layout e2e): the Crank speed field's outlined label is not clipped (German, 1440×900); the zoom segment is not clipped at 1024 px and the side panel does not scroll sideways (ux-review 7, #156 comment).
 - [ ] F06 Dark theme: grips and playhead use a lighter blue with at least 4.5:1 against the Tape (ux-review 8).
-- [ ] F07 `npm run ux:screens` also captures a selected Spot, the Crank speed slider and the playing state.
+- [ ] F07 `npm run ux:screens` also captures a selected Spot, the Crank speed slider and the playing state, without the leftover "Organ saved" toast.
 - [ ] F08 Reviews (angular-reviewer), STATUS, full gate, PR "Closes #156".
