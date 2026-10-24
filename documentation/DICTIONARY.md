@@ -45,6 +45,12 @@
 * Must be at least the Minimum Hole Length long and keep the Minimum Gap to the next hole in its row; otherwise it has a Cutting Problem
 * Similar to a single musical score, but for punched tape
 
+# Spot
+* One Column in one Pipe's row where no Hole is, selected in the Tape view to add a Hole there
+* Drawn as the outline of the Hole that would be added (Minimum Hole Length long)
+* Selecting a Spot clears the Hole selection, and the other way round
+* German: Stelle
+
 # Song
 * A specific sequence of sounds forming music
 * Imported from a Song Source
@@ -163,6 +169,12 @@
 * Kept by each Tape
 * Together with the Organ's Tape per Crank turn and the Tape's Column length it sets how long a Column plays
 * German: Kurbelgeschwindigkeit
+
+# Crank speed range
+* The Crank speeds an Organ is meant to be turned at, from its Slowest to its Fastest Crank speed
+* Defined by the Organ; Organs saved before it existed load with 30–120 turns per minute
+* Bounds the Preview's speed slider; a Tape's Crank speed may lie outside it and still plays
+* German: Kurbelbereich; Slowest / Fastest Crank speed: langsamste / schnellste Kurbelgeschwindigkeit
 
 # Tape per Crank turn
 * How far one Crank turn draws the Tape through the Organ, in mm
