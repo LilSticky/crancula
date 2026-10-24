@@ -69,6 +69,12 @@ cranc-page-head button[mat-icon-button] {
 .overview {
   display: block;
 }
+.zoom {
+  flex: none;
+}
+[data-testid='export'] {
+  white-space: nowrap;
+}
 .zoom,
 [data-testid='preview-toggle'],
 [data-testid='export'],
