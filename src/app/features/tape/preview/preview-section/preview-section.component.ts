@@ -89,8 +89,10 @@ function minutesAndSeconds(seconds: number): string {
       width: 9rem;
       min-width: 0;
     }
+    /* The thumb's input reaches past the track on both sides; the margin keeps it inside the side panel. */
     .crank-speed-slider {
-      width: 100%;
+      width: calc(100% - 3rem);
+      margin: 0 1.5rem;
     }
     p {
       margin: 0.5rem 0 0;
