@@ -144,6 +144,7 @@ export {recordingFileName} from './recording/recording-file-name';
 export {pcm16} from './recording/pcm';
 export {wavFile} from './recording/wav-file';
 export {
+  MAXIMUM_RECORDING_BYTES,
   parseRecordingChooseRequest,
   parseRecordingWriteRequest,
   type RecordingChooseRequest,

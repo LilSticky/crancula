@@ -8,6 +8,7 @@
   is disabled, and the Preview button is disabled with `TAPE.PREVIEW.WHILE_RECORDING`.
 - **Saved**: snackbar `TAPE.RECORD.SAVED` with the file path, 6 s.
 - **Failed**: snackbar `TAPE.RECORD.FAILED` with the reason and a Retry action, as Export.
+- **Too large** (bytes above 128 MiB, a WAV of about 25 minutes): snackbar `TAPE.RECORD.TOO_LARGE`; MP3 still works.
 - **Cancelled**: nothing shown.
 - Dialog texts: `TAPE.RECORD.DIALOG_TITLE`, `TAPE.RECORD.WAV_FILTER`, `TAPE.RECORD.MP3_FILTER`.
 - Leaving the Tape view while recording lets the Recording finish and save (it changes nothing).

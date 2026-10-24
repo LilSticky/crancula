@@ -247,7 +247,8 @@
       "WAV_FILTER": "WAV-Audio",
       "MP3_FILTER": "MP3-Audio",
       "NO_TAPE_PER_TURN": "Stelle den Bandvorschub pro Umdrehung der Drehorgel ein, um dieses Lochband aufzunehmen",
-      "WHILE_PREVIEW": "Beende das Anhören, um dieses Lochband aufzunehmen"
+      "WHILE_PREVIEW": "Beende das Anhören, um dieses Lochband aufzunehmen",
+      "TOO_LARGE": "Die Aufnahme ist zu groß"
     },
     "PREVIEW": {
       "PLAY": "Anhören",

@@ -247,7 +247,8 @@
       "WAV_FILTER": "WAV audio",
       "MP3_FILTER": "MP3 audio",
       "NO_TAPE_PER_TURN": "Set the Organ's Tape per Crank turn to record this Tape",
-      "WHILE_PREVIEW": "Stop the Preview to record this Tape"
+      "WHILE_PREVIEW": "Stop the Preview to record this Tape",
+      "TOO_LARGE": "the Recording is too large"
     },
     "PREVIEW": {
       "PLAY": "Preview",
