@@ -8,8 +8,12 @@ Issues: [GitHub](https://github.com/LilSticky/crancula/issues)
 
 No slice in progress.
 
-**Next step:** Record a tape ([discovery/later.md](discovery/later.md), section 1, slice 2), or the new issue
-[#159](https://github.com/LilSticky/crancula/issues/159) (preview label wraps at 1280 px).
+**Next step:** Record a tape ([discovery/later.md](discovery/later.md), section 1, slice 2).
+
+**Done:** [Stop preview label wraps at 1280 px (#159)](https://github.com/LilSticky/crancula/issues/159) (2026-10-24,
+branch `159-stop-preview-label`): the Preview toggle no longer wraps, in English and German (`white-space: nowrap`, as
+Export). New e2e in `e2e/tape-layout.spec.ts` measures the toggle while a Preview plays at 1280×800. Gate: 1375 Angular
+unit tests, lint, `tape-layout` e2e locally; full e2e in CI.
 
 **Done:** [Touch review follow-ups (#156)](https://github.com/LilSticky/crancula/issues/156) (2026-10-24, branch
 `156-touch-review-follow-ups`): a Hole under a cell is looked up in the Tape (`holeCovering` in `api`); the Spot is
