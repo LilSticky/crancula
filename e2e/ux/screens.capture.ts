@@ -2,13 +2,17 @@ import {expect, test, type Page} from '@playwright/test';
 import {join} from 'node:path';
 import {encodeSmf} from '../../api/song/midi/smf-test-helper';
 import {launchApp, type LaunchedApp} from '../support/launch-app';
-import {longSongWithSixteenParts, threePartsWithPercussion} from '../support/midi-file';
+import {longSongWithSixteenParts, melodyC3ToC5, threePartsWithPercussion} from '../support/midi-file';
 import {defineStreetOrgan, saveOrgan} from '../support/organ-editor';
 import {stubSaveDialog} from '../support/save-dialog';
-import {createTapeFromSong} from '../support/tape-creation';
+import {createTapeFromSong, defineOctaveOrgan} from '../support/tape-creation';
+import {columnWidth, drawnHoles, holeAt} from '../support/tape-edit';
 
 /** Where the `ux-review` skill expects the screens of the running app. */
 const SCREENS = process.env['UX_SCREENS_DIR'] ?? join(__dirname, '../../documentation/design/screens/current');
+
+/** Tape per Crank turn of 10 mm with a 5 mm Column: at 60 turns per minute a Column plays for half a second, so a Preview lasts long enough to shoot it mid-Tape. */
+const SLOW_PREVIEW_TAPE_PER_CRANK_TURN = '10';
 
 async function capture(window: Page, name: string): Promise<void> {
   await window.waitForLoadState('networkidle');
@@ -23,6 +27,12 @@ async function capture(window: Page, name: string): Promise<void> {
     }
   });
   await window.screenshot({path: join(SCREENS, `${name}.png`), fullPage: true});
+}
+
+/** Waits until no snackbar shows: the "Organ saved" toast of an Organ save would otherwise float on the Tape view. */
+async function captureTapeView(window: Page, name: string): Promise<void> {
+  await expect(window.locator('.mat-mdc-snack-bar-container')).toHaveCount(0);
+  await capture(window, name);
 }
 
 async function resizeWindow({app}: LaunchedApp, width: number, height: number): Promise<void> {
@@ -92,12 +102,12 @@ test.describe('UX screens', () => {
     await capture(window, '07-tape-import');
 
     await createTapeFromSong(window, 'Three parts', threePartsWithPercussion());
-    await capture(window, '08-tape-view');
+    await captureTapeView(window, '08-tape-view');
 
     await window.getByTestId('tape-scroll').locator('[data-testid="hole"]').first().click();
     await expect(window.getByTestId('tape-scroll').locator('rect.hole.selected')).toHaveCount(1);
     await window.mouse.move(640, 400);
-    await capture(window, '08b-tape-view-selected-hole');
+    await captureTapeView(window, '08b-tape-view-selected-hole');
 
     await window.getByRole('link', {name: 'Tapes'}).click();
     await capture(window, '09-tape-list');
@@ -121,7 +131,7 @@ test.describe('UX screens', () => {
     await window.getByRole('link', {name: 'Tapes'}).click();
     await window.getByTestId('open-tape').first().click();
     await expect(window.getByTestId('tape-name')).toBeVisible();
-    await capture(window, '11-tape-view-dark');
+    await captureTapeView(window, '11-tape-view-dark');
     await schemeSwitch.locator('[data-scheme="system"]').click();
 
     await resizeWindow(launched, 1024, 700);
@@ -140,13 +150,13 @@ test.describe('UX screens', () => {
     await window.getByTestId('open-tape').first().click();
     await expect(window.getByTestId('tape-name')).toBeVisible();
     await window.mouse.move(640, 400);
-    await capture(window, '14-tape-view-compact');
+    await captureTapeView(window, '14-tape-view-compact');
 
     await resizeWindow(launched, 1280, 800);
     await window.getByTestId('language-switch').locator('[data-language="de"]').click();
     await expect(window.getByTestId('tape-name')).toBeVisible();
     await window.mouse.move(640, 400);
-    await capture(window, '15-tape-view-german');
+    await captureTapeView(window, '15-tape-view-german');
 
     await resizeWindow(launched, 1024, 700);
     await window.getByRole('link', {name: 'Orgeln'}).click();
@@ -244,7 +254,7 @@ test.describe('UX screens', () => {
       return panel !== null && getComputedStyle(panel).opacity === '1';
     });
     await window.mouse.move(640, 400);
-    await capture(window, '08c-tape-view-export-problems');
+    await captureTapeView(window, '08c-tape-view-export-problems');
 
     // The Blip Tape now has a Cutting Problem. Edit it by hand: select its Hole, add a Hole through the form.
     await window.getByRole('dialog').getByRole('button', {name: 'Close'}).click();
@@ -259,25 +269,63 @@ test.describe('UX screens', () => {
     await window.getByTestId('tape-scroll').locator('[data-testid="hole"]').first().click();
     await expect(window.getByTestId('tape-scroll').locator('rect.hole.selected')).toHaveCount(1);
     await window.mouse.move(640, 400);
-    await capture(window, '08d-tape-view-edited');
+    await captureTapeView(window, '08d-tape-view-edited');
 
     const schemeToggle = window.getByTestId('scheme-switch');
     await schemeToggle.locator('[data-scheme="dark"]').click();
     await expect(window.locator('html')).toHaveClass(/\bcr-dark\b/);
     await window.mouse.move(640, 400);
-    await capture(window, '08e-tape-view-edited-dark');
+    await captureTapeView(window, '08e-tape-view-edited-dark');
     await schemeToggle.locator('[data-scheme="system"]').click();
 
     // Undo the added Hole: Redo is enabled too.
     await window.getByTestId('undo').click();
     await expect(window.getByTestId('redo')).toBeEnabled();
     await window.mouse.move(640, 400);
-    await capture(window, '08f-tape-view-edited-undone');
+    await captureTapeView(window, '08f-tape-view-edited-undone');
 
     // Type a different valid Column length without applying it: the hint names the count after the change.
     await window.getByTestId('column-length-input').fill('3');
     await expect(window.getByTestId('column-length-hint')).toBeVisible();
     await window.getByTestId('column-length-input').scrollIntoViewIfNeeded();
-    await capture(window, '08g-tape-view-column-length-hint');
+    await captureTapeView(window, '08g-tape-view-column-length-hint');
+
+    // Last: an Organ whose Tape per Crank turn makes a Preview, and a Tape on it that a Preview plays slowly.
+    await window.getByRole('link', {name: 'Organs'}).click();
+    await defineOctaveOrgan(window, 'Octave organ');
+    await window.getByTestId('tape-per-crank-turn').fill(SLOW_PREVIEW_TAPE_PER_CRANK_TURN);
+    await saveOrgan(window);
+    await window.getByRole('link', {name: 'Tapes'}).click();
+    await window.getByTestId('new-tape').click();
+    await window.getByTestId('song-file').setInputFiles(melodyC3ToC5());
+    await expect(window.getByTestId('song-file-name')).toHaveText('melody-c3-c5.mid');
+    await window.getByTestId('organ').selectOption({label: 'Octave organ'});
+    await window.getByTestId('name').fill('Scale');
+    await window.getByTestId('column-length').fill('5');
+    await window.getByTestId('create-tape').click();
+    await expect(window).toHaveURL(/\/tapes\/[0-9a-f-]{36}$/);
+    await expect(window.getByTestId('preview-toggle')).toBeEnabled();
+
+    // A Spot: an empty Column in a Pipe's row, just after the first Hole of that row (each Pipe has one Hole here).
+    const [firstHole] = await drawnHoles(window);
+    if (!firstHole) throw new Error('expected Holes on the Scale Tape');
+    const holeBox = await holeAt(window, firstHole.row, firstHole.start).boundingBox();
+    if (!holeBox) throw new Error('the first Hole is not shown');
+    await window.mouse.click(holeBox.x + holeBox.width + (await columnWidth(window)) / 2, holeBox.y + holeBox.height / 2);
+    await expect(window.getByTestId('spot')).toHaveCount(1);
+    await window.mouse.move(640, 400);
+    await captureTapeView(window, '08h-tape-view-selected-spot');
+
+    // The Crank speed slider sits low in the side panel's Preview section.
+    await window.getByTestId('crank-speed-slider').scrollIntoViewIfNeeded();
+    await window.mouse.move(640, 400);
+    await captureTapeView(window, '08i-tape-view-crank-speed-slider');
+
+    // Playing: the toggle reads "Stop preview" and the playhead stands on a Column in the middle of the Tape.
+    await window.getByTestId('preview-toggle').click();
+    await expect(window.getByTestId('preview-toggle')).toContainText('Stop preview');
+    await expect.poll(async () => Number(await window.getByTestId('playhead').getAttribute('data-column'))).toBeGreaterThan(2);
+    await window.mouse.move(640, 400);
+    await captureTapeView(window, '08j-tape-view-playing');
   });
 });
