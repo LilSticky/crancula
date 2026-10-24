@@ -6,6 +6,7 @@ import {encodeSmf} from '../song/midi/smf-test-helper';
 import {readMidiSong} from '../song/midi/read-midi-song';
 import {defaultSelectedParts} from '../song/song';
 import {createTape} from './create-tape';
+import {DEFAULT_CRANK_SPEED} from './crank-speed';
 import {proposeTransposition} from './transposition';
 import {cuttingProblems, holesWithCuttingProblems} from './cutting-problems';
 import {column, columnCount, type Hole, type Tape, type TapeFields, type TapeId} from './tape';
@@ -27,6 +28,7 @@ function organWith(holeDiameter: number, minimumGap: number): Organ {
     tapeBed: {tapeWidth: 120, holeDiameter, rowSpacing: holeDiameter + 1},
     minimumGap,
     leadIn: 20,
+    tapePerCrankTurn: null,
     pipes: [{note: 60}, {note: 62}],
   });
   if (!result.ok) throw new Error(`invalid test Organ: ${JSON.stringify(result.error)}`);
@@ -55,6 +57,7 @@ function tapeFields(organ: Organ, columnLength: number, holes: readonly Hole[]):
     selectedParts: undefined,
     transposition: 0 as Tape['transposition'],
     columnLength: mm(columnLength),
+    crankSpeed: DEFAULT_CRANK_SPEED,
     length: defined(columnCount(100), 'length'),
     holes,
   };

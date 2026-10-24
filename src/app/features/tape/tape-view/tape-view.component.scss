@@ -70,6 +70,7 @@ cranc-page-head button[mat-icon-button] {
   display: block;
 }
 .zoom,
+[data-testid='preview-toggle'],
 [data-testid='export'],
 [data-testid='transpose'],
 [data-testid='side-panel-toggle'] {
@@ -155,6 +156,14 @@ svg.grabbing .ew-resize {
 .mark.strong,
 .border-line {
   stroke: var(--cr-tape-guide-strong);
+}
+.playhead {
+  fill: var(--cr-select);
+  pointer-events: none;
+}
+.preview-unavailable {
+  margin: 0;
+  font-size: 0.875rem;
 }
 .ruler {
   stroke: var(--cr-brass);

@@ -1,7 +1,21 @@
 import {describe, expect, it} from 'vitest';
 import {midiNoteNumber, type MidiNoteNumber} from './midi-note-number';
-import {asValidOrgan, millimetres, type Millimetres, newOrganId} from './organ';
+import {asValidOrgan, millimetres, type Millimetres, newOrganId, type Organ} from './organ';
 import {addPipe, emptyOrganDraft, movePipe, type OrganDraft, removePipe, toDraft} from './organ-draft';
+
+const mm = (n: number) => millimetres(n) as Millimetres;
+
+function organWith(tapePerCrankTurn?: Millimetres): Organ {
+  return asValidOrgan({
+    id: newOrganId(),
+    name: 'Street organ',
+    tapeBed: {tapeWidth: mm(120), holeDiameter: mm(2.5), rowSpacing: mm(3.5)},
+    minimumGap: mm(1.5),
+    leadIn: mm(20),
+    pipes: [{note: midiNoteNumber(60) as MidiNoteNumber}],
+    ...(tapePerCrankTurn === undefined ? {} : {tapePerCrankTurn}),
+  });
+}
 
 function draftWithNotes(...notes: number[]): OrganDraft {
   return {...emptyOrganDraft(), pipes: notes.map((note) => ({note}))};
@@ -16,14 +30,22 @@ describe('emptyOrganDraft', () => {
       tapeBed: {tapeWidth: null, holeDiameter: null, rowSpacing: null},
       minimumGap: null,
       leadIn: null,
+      tapePerCrankTurn: null,
       pipes: [],
     });
   });
 });
 
 describe('toDraft', () => {
+  it('copies the Tape per Crank turn of an Organ', () => {
+    expect(toDraft(organWith(mm(100))).tapePerCrankTurn).toBe(100);
+  });
+
+  it('gives null as the Tape per Crank turn of an Organ without one', () => {
+    expect(toDraft(organWith()).tapePerCrankTurn).toBeNull();
+  });
+
   it('copies all fields of a valid Organ', () => {
-    const mm = (n: number) => millimetres(n) as Millimetres;
     const id = newOrganId();
     const organ = asValidOrgan({
       id,
@@ -40,6 +62,7 @@ describe('toDraft', () => {
       tapeBed: {tapeWidth: 120, holeDiameter: 2.5, rowSpacing: 3.5},
       minimumGap: 1.5,
       leadIn: 20,
+      tapePerCrankTurn: null,
       pipes: [{note: 60}],
     });
   });

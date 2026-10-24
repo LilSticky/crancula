@@ -20,6 +20,7 @@ function songSnapshot(id = SONG_A) {
   };
 }
 
+/** A Tape as stored in version 2, with its Crank speed. */
 function tapeSnapshot(overrides: Record<string, unknown> = {}) {
   return {
     id: TAPE_A,
@@ -29,14 +30,22 @@ function tapeSnapshot(overrides: Record<string, unknown> = {}) {
     selectedParts: [0, 1],
     transposition: -2,
     columnLength: 2.5,
+    crankSpeed: 60,
     length: 10,
     holes: [[60, 0, 2], [60, 4, 1], [64, 2, 3]],
     ...overrides,
   };
 }
 
+/** A Tape as stored in version 1, which has no Crank speed. */
+function tapeSnapshotV1(overrides: Record<string, unknown> = {}): Record<string, unknown> {
+  const tape: Record<string, unknown> = {...tapeSnapshot(overrides)};
+  delete tape['crankSpeed'];
+  return tape;
+}
+
 function snapshot(overrides: Record<string, unknown> = {}) {
-  return {version: 1, songs: [songSnapshot()], tapes: [tapeSnapshot()], ...overrides};
+  return {version: 2, songs: [songSnapshot()], tapes: [tapeSnapshot()], ...overrides};
 }
 
 function withSong(song: Record<string, unknown>) {
@@ -78,8 +87,45 @@ describe('parseTapeLibrarySnapshot', () => {
     ]);
   });
 
+  it('reads the Crank speed of each Tape', () => {
+    const result = parseTapeLibrarySnapshot(snapshot({tapes: [tapeSnapshot({crankSpeed: 72.5})]}));
+
+    expect(result.ok && result.value.tapes[0].crankSpeed).toBe(72.5);
+  });
+
+  it('reads a version 1 snapshot with every Tape at the default Crank speed of 60', () => {
+    const result = parseTapeLibrarySnapshot({
+      version: 1,
+      songs: [songSnapshot()],
+      tapes: [tapeSnapshotV1(), tapeSnapshotV1({id: TAPE_B, name: 'Second'})],
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value.tapes.map((tape) => tape.crankSpeed)).toEqual([60, 60]);
+  });
+
+  it('reads a version 1 Tape exactly as a version 2 Tape with Crank speed 60', () => {
+    const fromVersion1 = parseTapeLibrarySnapshot({version: 1, songs: [songSnapshot()], tapes: [tapeSnapshotV1()]});
+    const fromVersion2 = parseTapeLibrarySnapshot(snapshot());
+
+    expect(fromVersion1).toEqual(fromVersion2);
+  });
+
+  it.each([
+    ['missing', undefined],
+    ['0', 0],
+    ['301', 301],
+    ['a string', '60'],
+  ])('rejects a version 2 Tape whose Crank speed is %s', (_, crankSpeedInput) => {
+    const result = parseTapeLibrarySnapshot(snapshot({tapes: [tapeSnapshot({crankSpeed: crankSpeedInput})]}));
+
+    expect(result.ok).toBe(false);
+    expect(result.ok ? '' : result.error).toContain('crankSpeed');
+  });
+
   it('reads an empty library', () => {
-    const result = parseTapeLibrarySnapshot({version: 1, songs: [], tapes: []});
+    const result = parseTapeLibrarySnapshot({version: 2, songs: [], tapes: []});
     expect(result).toEqual({ok: true, value: {songs: [], tapes: []}});
   });
 
@@ -104,7 +150,7 @@ describe('parseTapeLibrarySnapshot', () => {
     ['not an object', 'oops'],
     ['null', null],
     ['a missing version', {songs: [], tapes: []}],
-    ['an unknown version', {version: 2, songs: [], tapes: []}],
+    ['an unknown version', {version: 3, songs: [], tapes: []}],
     ['songs that are not a list', snapshot({songs: {}})],
     ['tapes that are not a list', snapshot({tapes: 'none'})],
     ['a Tape that is not an object', snapshot({tapes: [42]})],
@@ -173,6 +219,28 @@ describe('toTapeLibrarySnapshot', () => {
 
     expect(written).toEqual(snapshot());
     expect(parseTapeLibrarySnapshot(JSON.parse(JSON.stringify(written)))).toEqual(parsed);
+  });
+
+  it('writes version 2 with the Crank speed of each Tape', () => {
+    const parsed = parseTapeLibrarySnapshot(snapshot({tapes: [tapeSnapshot({crankSpeed: 72.5})]}));
+    expect(parsed.ok).toBe(true);
+    if (!parsed.ok) return;
+
+    const written = toTapeLibrarySnapshot(parsed.value.tapes, parsed.value.songs);
+
+    expect(written.version).toBe(2);
+    expect(written.tapes[0].crankSpeed).toBe(72.5);
+  });
+
+  it('upgrades a version 1 snapshot: the next save writes version 2 with Crank speed 60', () => {
+    const parsed = parseTapeLibrarySnapshot({version: 1, songs: [songSnapshot()], tapes: [tapeSnapshotV1()]});
+    expect(parsed.ok).toBe(true);
+    if (!parsed.ok) return;
+
+    const written = toTapeLibrarySnapshot(parsed.value.tapes, parsed.value.songs);
+
+    expect(written.version).toBe(2);
+    expect(written.tapes[0].crankSpeed).toBe(60);
   });
 
   it('writes only the Songs that a Tape references, and Tapes in their order', () => {

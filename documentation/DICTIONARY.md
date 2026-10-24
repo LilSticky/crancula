@@ -3,6 +3,7 @@
 * Has a Tape Bed
 * Defines the Minimum Hole Length and Minimum Gap its tapes must respect
 * Defines the length of the Lead-in its tapes start with
+* Defines its Tape per Crank turn
 * Defines the physical characteristics and capabilities of a barrel organ
 * Plays punched tape
   * tape is drawn through a pneumatic system
@@ -25,7 +26,7 @@
 * Defines the physical length of one Column in mm
 * Always editable in Crancula; the tool does not track whether it has been punched
 * Can be exported for the Plotter only when every Hole has a Pipe on its Organ and respects the Minimum Hole Length and Minimum Gap; exporting does not change the Tape
-* Holds no tempo: playing speed is set by the Crank
+* Keeps a Crank speed, the tempo its Preview plays at; changing it is an edit like the Column length
 * German: Lochband (plural Lochbänder); compounds keep "Band": Bandbett, Bandbreite
 * Effectively a table
   * each row represents one pipe
@@ -155,7 +156,22 @@
 
 # Crank
 * Turned by the musician to draw the Tape through the Organ
-* Its speed sets the tempo; in Crancula's preview the crank speed is adjustable
+* Its speed sets the tempo; in Crancula's Preview the Crank speed is adjustable
+
+# Crank speed
+* Crank turns per minute
+* Kept by each Tape
+* Together with the Organ's Tape per Crank turn and the Tape's Column length it sets how long a Column plays
+* German: Kurbelgeschwindigkeit
+
+# Tape per Crank turn
+* How far one Crank turn draws the Tape through the Organ, in mm
+* Defined by the Organ
+* German: Bandvorschub pro Umdrehung
+
+# Preview
+* Playing a Tape in Crancula at a Crank speed, to hear it before it is cut
+* Changes nothing: no Hole, not the Organ (only the Tape's Crank speed can be changed while it plays)
 
 # Punch
 * Cutting a Hole into a physical Tape; irreversible

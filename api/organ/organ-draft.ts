@@ -17,6 +17,8 @@ export interface OrganDraft {
   };
   readonly minimumGap: number | null;
   readonly leadIn: number | null;
+  /** `null` when the Organ has none. */
+  readonly tapePerCrankTurn: number | null;
   readonly pipes: readonly PipeDraft[];
 }
 
@@ -26,6 +28,7 @@ export function emptyOrganDraft(): OrganDraft {
     tapeBed: {tapeWidth: null, holeDiameter: null, rowSpacing: null},
     minimumGap: null,
     leadIn: null,
+    tapePerCrankTurn: null,
     pipes: [],
   };
 }
@@ -37,6 +40,7 @@ export function toDraft(organ: Organ): OrganDraft {
     tapeBed: {...organ.tapeBed},
     minimumGap: organ.minimumGap,
     leadIn: organ.leadIn,
+    tapePerCrankTurn: organ.tapePerCrankTurn ?? null,
     pipes: organ.pipes.map((pipe) => ({note: pipe.note})),
   };
 }

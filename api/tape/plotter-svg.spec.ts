@@ -117,6 +117,7 @@ describe('plotterSvg', () => {
       tapeBed: {tapeWidth: 120, holeDiameter: 2.5, rowSpacing: 3.5},
       minimumGap: 1.5,
       leadIn: 20,
+      tapePerCrankTurn: null,
       pipes: [{note: 60}, {note: 62}, {note: 64}],
     });
     if (!organ.ok) throw new Error('invalid test Organ');
@@ -179,6 +180,7 @@ describe('plotterSvg', () => {
       tapeBed: {tapeWidth: 120, holeDiameter: 2.5, rowSpacing: 3.5},
       minimumGap: 1.5,
       leadIn: 20,
+      tapePerCrankTurn: null,
       pipes: [{note: 60}, {note: 62}],
     });
     if (!organ.ok) throw new Error('invalid test Organ');
@@ -209,6 +211,7 @@ describe('plotterSvg', () => {
       tapeBed: {tapeWidth: 120, holeDiameter: 2.5, rowSpacing: 3.5},
       minimumGap: 1.5,
       leadIn: 20,
+      tapePerCrankTurn: null,
       pipes,
     });
     if (!organ.ok) throw new Error('invalid test Organ');

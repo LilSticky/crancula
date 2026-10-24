@@ -87,6 +87,7 @@ flowchart LR
 - [x] **Bring a song onto a tape**: import a MIDI file onto a Tape, with automatic Transposition ([#2](https://github.com/LilSticky/crancula/issues/2))
 - [x] **Punch a tape**: export the Tape as an SVG for a vinyl cutter ([#3](https://github.com/LilSticky/crancula/issues/3))
 - [x] **Edit a tape**: place Holes by hand, transpose Holes, change the Column length, with undo and redo ([#103](https://github.com/LilSticky/crancula/issues/103))
+- [x] **Crank a tape**: hear a Tape at an adjustable Crank speed, with a playhead, before cutting it ([#149](https://github.com/LilSticky/crancula/issues/149))
 - [x] Downloadable releases for Windows, macOS and Linux ([#11](https://github.com/LilSticky/crancula/issues/11))
 
 What changed in each version is under [Releases](#releases).
@@ -94,7 +95,6 @@ What changed in each version is under [Releases](#releases).
 <details>
 <summary><b>Ideas for later</b></summary>
 
-- **Crank a Tape**: hear a preview at an adjustable crank speed
 - More Song Sources: MusicXML, PDF, printed Scores
 - More Plotter formats: DXF, HPGL; splitting long Tapes into pieces
 - Export a Song as audio or as Scores

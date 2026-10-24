@@ -235,6 +235,19 @@
       "NOTHING_LEFT": "Nothing is left of the chosen Holes.",
       "APPLY": "Transpose",
       "CANCEL": "Cancel"
+    },
+    "PREVIEW": {
+      "PLAY": "Preview",
+      "STOP": "Stop preview",
+      "SECTION_TITLE": "Preview",
+      "CRANK_SPEED": "Crank speed",
+      "CRANK_SPEED_APPLY": "Apply",
+      "CRANK_SPEED_INVALID": "Enter {{min}} to {{max}} turns per minute",
+      "START_COLUMN": "Start at Column",
+      "LENGTH": "Plays for {{time}}",
+      "EDITING_PAUSED": "Editing is paused while the Preview plays",
+      "UNAVAILABLE": "Set the Organ's Tape per Crank turn to hear this Tape",
+      "OPEN_ORGAN": "Open the Organ"
     }
   },
   "ORGAN": {
@@ -305,7 +318,9 @@
       "PROBLEM_ONE": "1 problem prevents saving",
       "SAVE": "Save",
       "SAVE_BLOCKED": "Your Tapes couldn't be loaded, so Pipes with Holes can't be removed for now.",
-      "REMOVE_PIPES_HOLES": "Removing these Pipes also removes their Holes ({{holes}}) from Tapes ({{tapes}}) of this Organ."
+      "REMOVE_PIPES_HOLES": "Removing these Pipes also removes their Holes ({{holes}}) from Tapes ({{tapes}}) of this Organ.",
+      "TAPE_PER_CRANK_TURN": "Tape per Crank turn",
+      "TAPE_PER_CRANK_TURN_HINT": "How far one Crank turn draws the Tape; needed to hear a Tape"
     },
     "LEAVE": {
       "TITLE": "Unsaved changes",
@@ -325,7 +340,8 @@
       "MUST_BE_POSITIVE": "Must be greater than 0.",
       "MUST_NOT_BE_NEGATIVE": "Must not be negative.",
       "ROW_SPACING_BELOW_HOLE_DIAMETER": "Must be at least the hole diameter ({{holeDiameter}} mm), or neighbouring holes overlap.",
-      "PIPES_EXCEED_TAPE_WIDTH": "The Pipes need {{requiredWidth}} mm, but the tape is only {{availableWidth}} mm wide."
+      "PIPES_EXCEED_TAPE_WIDTH": "The Pipes need {{requiredWidth}} mm, but the tape is only {{availableWidth}} mm wide.",
+      "TAPE_PER_CRANK_TURN_NOT_POSITIVE": "Must be greater than 0."
     },
     "STORAGE": {
       "LOAD_PROBLEM": "Your Organs couldn't be loaded. The file was kept at {{backupPath}}.",

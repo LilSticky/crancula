@@ -32,10 +32,11 @@ const documentScrolls = (window: Page): Promise<boolean> =>
 async function expectInViewport(page: Page, locator: Locator): Promise<void> {
   const viewport = await page.evaluate(() => ({width: window.innerWidth, height: window.innerHeight}));
   await expect(locator).toBeVisible();
+  // The layout follows a resize asynchronously, so wait until the box has settled inside the viewport.
+  await expect.poll(async () => (await boxOf(locator)).bottom, {message: JSON.stringify(viewport)}).toBeLessThanOrEqual(viewport.height + 0.5);
   const box = await boxOf(locator);
   expect(box.top).toBeGreaterThanOrEqual(0);
   expect(box.left).toBeGreaterThanOrEqual(0);
-  expect(box.bottom, JSON.stringify({box, viewport})).toBeLessThanOrEqual(viewport.height + 0.5);
   expect(box.right).toBeLessThanOrEqual(viewport.width + 0.5);
 }
 

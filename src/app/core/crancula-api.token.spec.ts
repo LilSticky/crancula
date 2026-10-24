@@ -3,7 +3,7 @@ import type {CranculaApi, OrganLibrarySnapshot, SvgSaveRequest, TapeLibrarySnaps
 import {CRANCULA_API, createInMemoryCranculaApi} from './crancula-api.token';
 
 const snapshot: OrganLibrarySnapshot = {
-  version: 3,
+  version: 4,
   organs: [
     {
       id: '3f2b8c1e-9d4a-4f6b-8e2c-1a2b3c4d5e6f',
@@ -17,7 +17,7 @@ const snapshot: OrganLibrarySnapshot = {
 };
 
 const tapeSnapshot: TapeLibrarySnapshot = {
-  version: 1,
+  version: 2,
   songs: [
     {
       id: '3f2b8c1e-9d4a-4f6b-8e2c-1a2b3c4d5e6f',
@@ -35,6 +35,7 @@ const tapeSnapshot: TapeLibrarySnapshot = {
       selectedParts: [0],
       transposition: 0,
       columnLength: 2.5,
+      crankSpeed: 60,
       length: 10,
       holes: [[60, 0, 2]],
     },

@@ -1,3 +1,4 @@
+import {crankSpeed, type CrankSpeed} from './crank-speed';
 import type {MidiNoteNumber} from '../organ/midi-note-number';
 import type {Millimetres, OrganId} from '../organ/organ';
 import type {PartIndex, SongId} from '../song/song';
@@ -38,6 +39,8 @@ export interface Tape {
   readonly selectedParts: readonly PartIndex[] | undefined;
   readonly transposition: Transposition;
   readonly columnLength: Millimetres;
+  /** Turns per minute of the Crank; sets the speed of the Preview. */
+  readonly crankSpeed: CrankSpeed;
   /** Stored, because removing Holes must not change it. */
   readonly length: ColumnCount;
   /** Sorted by pipe, then start. May be empty. */
@@ -95,7 +98,8 @@ export type TapeRuleViolationCode =
   | 'hole-beyond-end'
   | 'holes-not-sorted'
   | 'holes-overlap'
-  | 'column-length-not-positive';
+  | 'column-length-not-positive'
+  | 'crank-speed-out-of-range';
 
 /** The first Tape rule that fields break; only `hole-beyond-end` names the Hole. */
 export type TapeRuleViolation =
@@ -112,6 +116,7 @@ export function validTape(fields: TapeFields): Result<Tape, TapeRuleViolation> {
   if (!(Number.isFinite(fields.columnLength) && fields.columnLength > 0)) {
     return err({code: 'column-length-not-positive'});
   }
+  if (crankSpeed(fields.crankSpeed) === undefined) return err({code: 'crank-speed-out-of-range'});
   if ((fields.songId === undefined) !== (fields.selectedParts === undefined)) {
     return err({code: 'song-reference-incomplete'});
   }

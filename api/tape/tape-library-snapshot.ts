@@ -1,4 +1,5 @@
 import {err, ok, type Result} from '../result';
+import {crankSpeed, DEFAULT_CRANK_SPEED, type CrankSpeed} from './crank-speed';
 import {midiNoteNumber} from '../organ/midi-note-number';
 import {millimetres, organId} from '../organ/organ';
 import {
@@ -47,14 +48,15 @@ export interface TapeSnapshot {
   readonly selectedParts?: readonly number[];
   readonly transposition: number;
   readonly columnLength: number;
+  readonly crankSpeed: number;
   readonly length: number;
   /** `[pipe, start, length]`, sorted by pipe, then start. */
   readonly holes: readonly (readonly [number, number, number])[];
 }
 
-/** Snapshot file format, version 1, stored at `<userData>/snapshots/tapes.json` (ADR 8). */
+/** Snapshot file format, version 2, stored at `<userData>/snapshots/tapes.json` (ADR 8, ADR 20). */
 export interface TapeLibrarySnapshot {
-  readonly version: 1;
+  readonly version: 2;
   readonly songs: readonly SongSnapshot[];
   readonly tapes: readonly TapeSnapshot[];
 }
@@ -69,7 +71,7 @@ export interface TapeLibrary {
 export function toTapeLibrarySnapshot(tapes: readonly Tape[], songs: readonly Song[]): TapeLibrarySnapshot {
   const referenced = new Set(tapes.map((tape) => tape.songId));
   return {
-    version: 1,
+    version: 2,
     songs: songs.filter((candidate) => referenced.has(candidate.id)).map(toSongSnapshot),
     tapes: tapes.map(toTapeSnapshot),
   };
@@ -97,6 +99,7 @@ function toTapeSnapshot(tape: Tape): TapeSnapshot {
     ...(tape.selectedParts === undefined ? {} : {selectedParts: [...tape.selectedParts]}),
     transposition: tape.transposition,
     columnLength: tape.columnLength,
+    crankSpeed: tape.crankSpeed,
     length: tape.length,
     holes: [...tape.holes]
       .sort((a, b) => a.pipe - b.pipe || a.start - b.start)
@@ -110,7 +113,9 @@ function toTapeSnapshot(tape: Tape): TapeSnapshot {
  */
 export function parseTapeLibrarySnapshot(input: unknown): Result<TapeLibrary, string> {
   if (!isRecord(input)) return err('snapshot is not an object');
-  if (input['version'] !== 1) return err(`unsupported snapshot version ${String(input['version'])}`);
+  // Version 1 stored no Crank speed; its Tapes read at the default (ADR 20).
+  const version = input['version'];
+  if (version !== 1 && version !== 2) return err(`unsupported snapshot version ${String(version)}`);
   const {songs, tapes} = input;
   if (!Array.isArray(songs)) return err('songs is not a list');
   if (!Array.isArray(tapes)) return err('tapes is not a list');
@@ -127,7 +132,7 @@ export function parseTapeLibrarySnapshot(input: unknown): Result<TapeLibrary, st
 
   const parsedTapes: Tape[] = [];
   for (const [index, entry] of (tapes as unknown[]).entries()) {
-    const parsed = parseTape(entry, parsedSongs);
+    const parsed = parseTape(entry, parsedSongs, version === 2);
     if (!parsed.ok) return err(`Tape ${index}: ${parsed.error}`);
     if (parsedTapes.some((other) => other.id === parsed.value.id)) {
       return err(`Tape ${index}: duplicate id ${parsed.value.id}`);
@@ -186,7 +191,7 @@ function parsePart(input: unknown): Result<Part, string> {
   return result ? ok(result) : err('name is blank, there are no Notes, or the Notes are not sorted');
 }
 
-function parseTape(input: unknown, songs: readonly Song[]): Result<Tape, string> {
+function parseTape(input: unknown, songs: readonly Song[], hasCrankSpeed: boolean): Result<Tape, string> {
   if (!isRecord(input)) return err('not an object');
   const {id, name, songId: songIdInput, selectedParts, holes} = input;
   const brandedId = typeof id === 'string' ? tapeId(id) : undefined;
@@ -202,6 +207,8 @@ function parseTape(input: unknown, songs: readonly Song[]): Result<Tape, string>
   if (shift === undefined) return err('transposition is not an integer from -127 to 127');
   const columnLength = typeof input['columnLength'] === 'number' ? millimetres(input['columnLength']) : undefined;
   if (columnLength === undefined || columnLength <= 0) return err('columnLength is not a number > 0');
+  const speed = hasCrankSpeed ? parseCrankSpeed(input['crankSpeed']) : DEFAULT_CRANK_SPEED;
+  if (speed === undefined) return err('crankSpeed is not a finite number from 1 to 300');
   const length = typeof input['length'] === 'number' ? columnCount(input['length']) : undefined;
   if (length === undefined) return err('length is not an integer >= 1');
 
@@ -216,10 +223,15 @@ function parseTape(input: unknown, songs: readonly Song[]): Result<Tape, string>
     selectedParts: source.value.selectedParts,
     transposition: shift,
     columnLength,
+    crankSpeed: speed,
     length,
     holes: parsedHoles.value,
   });
   return tape.ok ? tape : err(reasonOf(tape.error));
+}
+
+function parseCrankSpeed(value: unknown): CrankSpeed | undefined {
+  return typeof value === 'number' ? crankSpeed(value) : undefined;
 }
 
 function reasonOf(violation: TapeRuleViolation): string {
@@ -232,6 +244,8 @@ function reasonOf(violation: TapeRuleViolation): string {
       return 'selectedParts is not sorted and unique';
     case 'column-length-not-positive':
       return 'columnLength is not a finite number above 0';
+    case 'crank-speed-out-of-range':
+      return 'crankSpeed is not a finite number from 1 to 300';
     case 'hole-beyond-end':
       return 'a Hole ends beyond the end of the Tape';
     case 'holes-not-sorted':

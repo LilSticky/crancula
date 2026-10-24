@@ -59,6 +59,27 @@ describe('validateOrgan', () => {
     });
   });
 
+  describe('the Tape per Crank turn', () => {
+    it('is absent on the Organ when the draft has none', () => {
+      const result = validateOrgan(validDraft({tapePerCrankTurn: null}));
+
+      expect(result.ok).toBe(true);
+      expect(result.ok && result.value.tapePerCrankTurn).toBeUndefined();
+    });
+
+    it('keeps a given Tape per Crank turn', () => {
+      const result = validateOrgan(validDraft({tapePerCrankTurn: 120.5}));
+
+      expect(result.ok && result.value.tapePerCrankTurn).toBe(120.5);
+    });
+
+    it.each([0, -1, Number.NaN, Number.POSITIVE_INFINITY])('rejects the Tape per Crank turn %d', (tapePerCrankTurn) => {
+      expect(violationsOf(validDraft({tapePerCrankTurn}))).toEqual([
+        {code: 'tape-per-crank-turn-not-positive', path: 'tapePerCrankTurn'},
+      ]);
+    });
+  });
+
   describe('rule violations', () => {
     it('requires a name', () => {
       expect(violationsOf(validDraft({name: '   '}))).toEqual([{code: 'name-required', path: 'name'}]);

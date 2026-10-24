@@ -35,14 +35,41 @@ describe('parseOrganLibrarySnapshot', () => {
   });
 
   it('reads an empty library', () => {
-    expect(parseOrganLibrarySnapshot({version: 3, organs: []})).toEqual({ok: true, value: []});
+    expect(parseOrganLibrarySnapshot({version: 4, organs: []})).toEqual({ok: true, value: []});
+  });
+
+  it('reads version 4 and keeps the Tape per Crank turn', () => {
+    const result = parseOrganLibrarySnapshot({version: 4, organs: [{...organSnapshot(ID_A), tapePerCrankTurn: 100}]});
+
+    expect(result.ok && result.value[0].tapePerCrankTurn).toBe(100);
+  });
+
+  it('reads version 4 without a Tape per Crank turn', () => {
+    const result = parseOrganLibrarySnapshot({version: 4, organs: [organSnapshot(ID_A)]});
+
+    expect(result.ok).toBe(true);
+    expect(result.ok && result.value[0].tapePerCrankTurn).toBeUndefined();
+  });
+
+  it.each([0, -1])('rejects a version 4 Tape per Crank turn of %d', (tapePerCrankTurn) => {
+    const result = parseOrganLibrarySnapshot({version: 4, organs: [{...organSnapshot(ID_A), tapePerCrankTurn}]});
+
+    expect(result.ok).toBe(false);
+    expect(result.ok ? '' : result.error).toContain('tape-per-crank-turn-not-positive');
+  });
+
+  it('rejects a version 4 Tape per Crank turn that is not a number', () => {
+    const result = parseOrganLibrarySnapshot({version: 4, organs: [{...organSnapshot(ID_A), tapePerCrankTurn: '100'}]});
+
+    expect(result.ok).toBe(false);
+    expect(result.ok ? '' : result.error).toContain('tapePerCrankTurn');
   });
 
   it.each([
     ['not an object', 'oops'],
     ['null', null],
     ['a missing version', {organs: []}],
-    ['an unknown version', {version: 4, organs: []}],
+    ['an unknown version', {version: 5, organs: []}],
     ['version 0', {version: 0, organs: []}],
     ['organs that are not a list', {version: 3, organs: {}}],
     ['an Organ that is not an object', {version: 3, organs: [42]}],
@@ -89,23 +116,48 @@ describe('version 1 migration', () => {
   });
 });
 
+describe('versions 1 to 3 without a Tape per Crank turn', () => {
+  it.each([1, 2, 3])('reads a version %i Organ with no Tape per Crank turn', (version) => {
+    const organs = version === 3 ? [organSnapshot(ID_A)] : [organSnapshotV2(ID_A)];
+    const result = parseOrganLibrarySnapshot({version, organs});
+
+    expect(result.ok).toBe(true);
+    expect(result.ok && result.value[0].tapePerCrankTurn).toBeUndefined();
+  });
+});
+
 describe('toSnapshot', () => {
-  it('writes version 3 and no border', () => {
+  it('writes version 4 and no border', () => {
     const parsed = parseOrganLibrarySnapshot({version: 1, organs: [{...organSnapshot(ID_A), tapeBed: {tapeWidth: 120, holeDiameter: 2.5, rowSpacing: 3.5, border: 6}}]});
     const snapshot = toSnapshot(parsed.ok ? parsed.value : []);
 
-    expect(snapshot.version).toBe(3);
+    expect(snapshot.version).toBe(4);
     expect(JSON.stringify(snapshot)).not.toContain('border');
   });
 
   it('round-trips through the parser', () => {
-    const parsed = parseOrganLibrarySnapshot({version: 3, organs: [organSnapshot(ID_A)]});
+    const parsed = parseOrganLibrarySnapshot({version: 4, organs: [organSnapshot(ID_A)]});
     const organs: readonly Organ[] = parsed.ok ? parsed.value : [];
 
     const snapshot = toSnapshot(organs);
 
-    expect(snapshot).toEqual({version: 3, organs: [organSnapshot(ID_A)]});
+    expect(snapshot).toEqual({version: 4, organs: [organSnapshot(ID_A)]});
     expect(parseOrganLibrarySnapshot(JSON.parse(JSON.stringify(snapshot)))).toEqual(parsed);
+  });
+
+  it('writes the Tape per Crank turn when the Organ has one', () => {
+    const parsed = parseOrganLibrarySnapshot({version: 4, organs: [{...organSnapshot(ID_A), tapePerCrankTurn: 100}]});
+    const snapshot = toSnapshot(parsed.ok ? parsed.value : []);
+
+    expect(snapshot).toEqual({version: 4, organs: [{...organSnapshot(ID_A), tapePerCrankTurn: 100}]});
+  });
+
+  it('leaves the Tape per Crank turn out when the Organ has none', () => {
+    const parsed = parseOrganLibrarySnapshot({version: 3, organs: [organSnapshot(ID_A)]});
+    const snapshot = toSnapshot(parsed.ok ? parsed.value : []);
+
+    expect(snapshot.version).toBe(4);
+    expect('tapePerCrankTurn' in snapshot.organs[0]).toBe(false);
   });
 
   it('writes Organs created by validateOrgan', () => {
@@ -114,6 +166,7 @@ describe('toSnapshot', () => {
       tapeBed: {tapeWidth: 50, holeDiameter: 2, rowSpacing: 3},
       minimumGap: 1,
       leadIn: 15,
+      tapePerCrankTurn: null,
       pipes: [{note: 60}],
     });
     expect(result.ok).toBe(true);

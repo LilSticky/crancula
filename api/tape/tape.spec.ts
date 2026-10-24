@@ -1,6 +1,7 @@
 import {describe, expect, it} from 'vitest';
 import {midiNoteNumber} from '../organ/midi-note-number';
 import {millimetres, organId, type Millimetres} from '../organ/organ';
+import type {CrankSpeed} from './crank-speed';
 import {
   column,
   columnCount,
@@ -218,7 +219,29 @@ describe('validTape', () => {
     },
   );
 
-  it('names exactly the seven rule codes', () => {
+  // Same for the Crank speed: the brand cannot hold what crankSpeed() refuses.
+  const uncheckedSpeed = (value: number): CrankSpeed => value as CrankSpeed;
+
+  it.each([1, 60, 300])('accepts the Crank speed %d and carries it over', (value) => {
+    const result = validTape(fields({crankSpeed: uncheckedSpeed(value)}));
+    expect(result.ok && result.value.crankSpeed).toBe(value);
+  });
+
+  it.each([0, 0.99, 301, -5, Number.NaN, Number.POSITIVE_INFINITY])(
+    'rejects the Crank speed %d with crank-speed-out-of-range',
+    (value) => {
+      expect(violationOf(fields({crankSpeed: uncheckedSpeed(value)}))).toEqual({code: 'crank-speed-out-of-range'});
+    },
+  );
+
+  it('rejects a Tape without a Crank speed with crank-speed-out-of-range', () => {
+    const {crankSpeed: _speed, ...withoutSpeed} = fields({crankSpeed: uncheckedSpeed(60)});
+    void _speed;
+    const input: Omit<TapeFields, 'crankSpeed'> = withoutSpeed;
+    expect(violationOf(input as TapeFields)).toEqual({code: 'crank-speed-out-of-range'});
+  });
+
+  it('names exactly the eight rule codes', () => {
     const codes: Record<TapeRuleViolationCode, true> = {
       'name-blank': true,
       'song-reference-incomplete': true,
@@ -227,7 +250,17 @@ describe('validTape', () => {
       'holes-not-sorted': true,
       'holes-overlap': true,
       'column-length-not-positive': true,
+      'crank-speed-out-of-range': true,
     };
-    expect(Object.keys(codes)).toHaveLength(7);
+    expect(Object.keys(codes)).toHaveLength(8);
+  });
+});
+
+describe('tapeOf fixture', () => {
+  it('gives a Tape the default Crank speed of 60 when the fields leave it out', () => {
+    const {crankSpeed: _speed, ...withoutSpeed} = aTape([aHole(60, 0, 2)], 10, 2);
+    void _speed;
+    const input: Omit<TapeFields, 'crankSpeed'> = withoutSpeed;
+    expect(tapeOf(input).crankSpeed).toBe(60);
   });
 });

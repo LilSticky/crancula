@@ -17,13 +17,17 @@
     </mat-button-toggle-group>
     @if (compact()) {<button pageHeadActions mat-stroked-button type="button" data-testid="side-panel-toggle" [attr.aria-expanded]="sidePanelOpen()" (click)="toggleSidePanel()">{{ 'TAPE.VIEW.DETAILS' | translate }}</button>}
     <ng-container ngProjectAs="[pageHeadActions]">
-      <button mat-icon-button type="button" data-testid="undo" [attr.aria-label]="'TAPE.EDIT.UNDO_TOOLTIP' | translate: {shortcut: shortcuts.undo}" [matTooltip]="'TAPE.EDIT.UNDO_TOOLTIP' | translate: {shortcut: shortcuts.undo}" [disabled]="!editor.canUndo()" (click)="undo()">
+      <button mat-stroked-button type="button" data-testid="preview-toggle" [disabled]="!previewAvailable()" disabledInteractive [attr.aria-describedby]="previewAvailable() ? null : 'preview-unavailable-reason'" (click)="togglePreview()">
+        <mat-icon aria-hidden="true">{{ preview.playing() ? 'stop' : 'play_arrow' }}</mat-icon>
+        {{ (preview.playing() ? 'TAPE.PREVIEW.STOP' : 'TAPE.PREVIEW.PLAY') | translate }}
+      </button>
+      <button mat-icon-button type="button" data-testid="undo" [attr.aria-label]="'TAPE.EDIT.UNDO_TOOLTIP' | translate: {shortcut: shortcuts.undo}" [matTooltip]="'TAPE.EDIT.UNDO_TOOLTIP' | translate: {shortcut: shortcuts.undo}" [disabled]="!editor.canUndo() || editingPaused()" (click)="undo()">
         <mat-icon aria-hidden="true">undo</mat-icon>
       </button>
-      <button mat-icon-button type="button" data-testid="redo" [attr.aria-label]="'TAPE.EDIT.REDO_TOOLTIP' | translate: {shortcut: shortcuts.redo}" [matTooltip]="'TAPE.EDIT.REDO_TOOLTIP' | translate: {shortcut: shortcuts.redo}" [disabled]="!editor.canRedo()" (click)="redo()">
+      <button mat-icon-button type="button" data-testid="redo" [attr.aria-label]="'TAPE.EDIT.REDO_TOOLTIP' | translate: {shortcut: shortcuts.redo}" [matTooltip]="'TAPE.EDIT.REDO_TOOLTIP' | translate: {shortcut: shortcuts.redo}" [disabled]="!editor.canRedo() || editingPaused()" (click)="redo()">
         <mat-icon aria-hidden="true">redo</mat-icon>
       </button>
-      <button mat-stroked-button type="button" data-testid="transpose" [disabled]="!canTranspose()" (click)="transpose()">{{ 'TAPE.TRANSPOSE.BUTTON' | translate }}</button>
+      <button mat-stroked-button type="button" data-testid="transpose" [disabled]="!canTranspose() || editingPaused()" (click)="transpose()">{{ 'TAPE.TRANSPOSE.BUTTON' | translate }}</button>
       @if (compact()) {
         <button mat-icon-button type="button" data-testid="export" [attr.aria-label]="'TAPE.VIEW.EXPORT' | translate" [matTooltip]="'TAPE.VIEW.EXPORT' | translate" [disabled]="plotterExport.saving()" (click)="exportTape()">
           <mat-icon aria-hidden="true">content_cut</mat-icon>
@@ -45,7 +49,7 @@
         <li data-testid="row-label" [class.sharp]="label.sharp" [style.top.px]="label.y">{{ label.name }}</li>
       }
     </ul>
-    <div class="scroll" #scroll data-testid="tape-scroll" (scroll)="onScroll(scroll)">
+    <div class="scroll" #scroll data-testid="tape-scroll" (scroll)="onScroll(scroll)" (wheel)="onWheel()">
       <svg #tapeSvg role="application" [attr.aria-label]="'TAPE.VIEW.DRAWING' | translate: drawing.drawingParams" [attr.width]="drawing.width" [attr.height]="drawing.totalHeight" tabindex="0" [attr.aria-describedby]="inspection() ? 'hole-keys-help' : null" (keydown)="onKeydown($event)" (pointerdown)="onPointerDown($event, tapeSvg)" (dblclick)="onDoubleClick($event, tapeSvg)" [class.grabbing]="dragging()" (pointermove)="onPointerMove($event, tapeSvg)" (pointerup)="onPointerUp($event, tapeSvg)" (pointercancel)="onPointerCancel()" (pointerleave)="onPointerLeave()">
         <defs>
           <pattern id="ruler-ticks" patternUnits="userSpaceOnUse" [attr.x]="drawing.leadIn" [attr.width]="5 * scale()" height="8">
@@ -54,7 +58,7 @@
             }
           </pattern>
         </defs>
-        <rect [attr.x]="drawing.leadIn" [attr.y]="rulerHeight - 8" [attr.width]="drawing.bodyWidth" height="8" fill="url(#ruler-ticks)" />
+        <rect data-testid="ruler" [attr.x]="drawing.leadIn" [attr.y]="rulerHeight - 8" [attr.width]="drawing.bodyWidth" height="8" fill="url(#ruler-ticks)" (click)="onRulerClick($event, tapeSvg)" />
         @for (number of drawing.rulerNumbers; track number.mm) {
           <text class="ruler-number" data-testid="ruler-number" aria-hidden="true" [attr.x]="number.x" [attr.y]="rulerHeight - 12" [attr.dx]="number.x > drawing.width - 12 ? -2 : null" [attr.text-anchor]="number.x > drawing.width - 12 ? 'end' : number.x < 12 ? 'start' : 'middle'">{{ number.mm }}</text>
         }
@@ -107,10 +111,14 @@
           @for (number of drawing.numbers; track number.column) {
             <text class="column-number" data-testid="column-number" aria-hidden="true" [attr.x]="number.x" [attr.y]="drawing.numbersY">{{ number.number }}</text>
           }
+          @if (playheadLine(); as line) {
+            <rect class="playhead" data-testid="playhead" aria-hidden="true" [attr.x]="line.x" y="0" width="2" [attr.height]="drawing.height" [attr.data-column]="line.column" />
+          }
         </g>
       </svg>
     </div>
   </div>
+  <span id="preview-unavailable-reason" class="cdk-visually-hidden" data-testid="preview-unavailable-reason">{{ 'TAPE.PREVIEW.UNAVAILABLE' | translate }}</span>
   @if (overview(); as overview) {
     <svg
       #overviewSvg
@@ -141,9 +149,18 @@
     <cranc-cutting-problems [holes]="holesWithProblems()" (chosen)="chooseProblem($event)" />
     @if (tape(); as tape) {
       @if (organ(); as organ) {
-        <cranc-add-hole [organ]="organ" [tape]="tape" [selected]="selectedHoleRef()" (added)="addFromForm($event)" />
+        <cranc-add-hole [organ]="organ" [tape]="tape" [selected]="selectedHoleRef()" [editingPaused]="editingPaused()" (added)="addFromForm($event)" />
       }
-      <cranc-tape-section [view]="drawing.section" [tape]="tape" [organ]="drawing.organ" (columnLengthChange)="onColumnLengthChange($event)" />
+      <cranc-tape-section [view]="drawing.section" [tape]="tape" [organ]="drawing.organ" [editingPaused]="editingPaused()" (columnLengthChange)="onColumnLengthChange($event)" />
+      @if (!previewAvailable()) {
+        <p class="preview-unavailable" data-testid="preview-unavailable">
+          {{ 'TAPE.PREVIEW.UNAVAILABLE' | translate }}
+          <a data-testid="preview-open-organ" [routerLink]="['/organs', drawing.organ.id]">{{ 'TAPE.PREVIEW.OPEN_ORGAN' | translate }}</a>
+        </p>
+      }
+      @if (organ(); as organ) {
+        <cranc-preview-section [tape]="tape" [organ]="organ" [playing]="preview.playing()" [playhead]="preview.playhead()" (crankSpeedChange)="onCrankSpeedChange($event)" (startColumnChange)="onStartColumnChange($event)" />
+      }
     }
     @if (importSummary(); as summary) {
       <cranc-import-summary data-testid="import-summary" [importSummary]="summary" (dismissed)="importSummary.set(null)" />

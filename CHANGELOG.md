@@ -8,6 +8,16 @@ as its GitHub Release notes.
 
 ## [Unreleased]
 
+### Added
+- Hear a Tape before you cut it: Preview (toolbar button or Space) plays it with an organ-like tone
+  per Pipe while a playhead moves along the Tape. Start from any Column by clicking the ruler or
+  entering a Column; editing waits until the Preview stops.
+- Each Tape keeps a Crank speed in turns per minute (60 to begin with). Change it in the Preview
+  section of the side panel, also while it plays; one Undo takes it back. The section shows how long
+  the Tape plays.
+- An Organ can describe its Tape per Crank turn in mm, in the Tape Bed part of the Organ editor. An
+  Organ needs it before its Tapes can be heard; Organs saved before keep working without it.
+
 ## [0.1.1] - 2026-10-23
 
 ### Added

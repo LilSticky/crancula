@@ -13,7 +13,7 @@ const ORGAN = 'bbbbbbbb-cccc-4ddd-8eee-ffffffffffff';
 
 function snapshot(name: string): TapeLibrarySnapshot {
   return {
-    version: 1,
+    version: 2,
     songs: [{id: SONG, name: 'Fur Elise', ticksPerQuarter: 480, parts: [{percussion: false, notes: [[64, 0, 240]]}]}],
     tapes: [
       {
@@ -24,6 +24,7 @@ function snapshot(name: string): TapeLibrarySnapshot {
         selectedParts: [0],
         transposition: 0,
         columnLength: 2.5,
+        crankSpeed: 60,
         length: 10,
         holes: [[64, 0, 2]],
       },
@@ -57,7 +58,7 @@ describe('load', () => {
 
   it.each([
     ['broken JSON', '{oops'],
-    ['an unknown version', JSON.stringify({version: 2, songs: [], tapes: []})],
+    ['an unknown version', JSON.stringify({version: 3, songs: [], tapes: []})],
     ['an invalid Tape', JSON.stringify(INVALID)],
   ])('moves a snapshot with %s aside untouched', async (_, content) => {
     await writeFile(tapesFile(), content);

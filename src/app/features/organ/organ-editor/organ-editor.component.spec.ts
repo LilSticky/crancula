@@ -1784,6 +1784,91 @@ describe('OrganEditorComponent', () => {
     });
   });
 
+  describe('the Tape per Crank turn', () => {
+    it('is a field of the Tape Bed sheet', async () => {
+      const {open: openEditor} = render();
+      const {element} = await openEditor();
+
+      expect(element.querySelector('[data-testid="tape-bed-sheet"] [data-testid="tape-per-crank-turn"]')).not.toBeNull();
+    });
+
+    it('is empty for a new Organ and stays absent when the Organ is saved without it', async () => {
+      const {open: openEditor, library} = render();
+      const {field, fillValidOrgan, save} = await openEditor();
+      await fillValidOrgan();
+
+      expect(field('tape-per-crank-turn').value).toBe('');
+      await save();
+
+      expect(library.entities()[0]?.tapePerCrankTurn).toBeUndefined();
+    });
+
+    it('stores the typed Tape per Crank turn with the Organ and shows it again when reopened', async () => {
+      const {open: openEditor, library} = render();
+      const {field, fillValidOrgan, type, save} = await openEditor();
+      await fillValidOrgan();
+      await type(field('tape-per-crank-turn'), '120');
+      await save();
+
+      const [stored] = library.entities();
+      expect(stored?.tapePerCrankTurn).toBe(120);
+      const reopened = await open(stored?.id);
+      expect(reopened.field('tape-per-crank-turn').value).toBe('120');
+    });
+
+    it('stores "2,5" typed as 2.5', async () => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 2);
+      await library.put(organ);
+      const {field, type, save} = await openEditor(organ.id);
+
+      await type(field('tape-per-crank-turn'), '2,5');
+      await save();
+
+      expect(library.entities()[0]?.tapePerCrankTurn).toBe(2.5);
+    });
+
+    it('shows a stored Tape per Crank turn of 100 as 100 in English', async () => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 2, {tapePerCrankTurn: 100});
+      await library.put(organ);
+      const {field} = await openEditor(organ.id);
+
+      expect(field('tape-per-crank-turn').value).toBe('100');
+    });
+
+    it('shows a stored 12.5 as 12,5 in German', async () => {
+      TestBed.configureTestingModule({providers: [provideRouter([]), provideTestTranslations('de')]});
+      vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+      const organ = testOrgan('Street organ', 2, {tapePerCrankTurn: 12.5});
+      await TestBed.inject(OrganLibrary).put(organ);
+      const {field} = await open(organ.id);
+
+      expect(field('tape-per-crank-turn').value).toBe('12,5');
+    });
+
+    it.each(['0', '-1'])('refuses %s with a message under the field', async (value) => {
+      const {open: openEditor} = render();
+      const {field, type, violationAt} = await openEditor();
+
+      await type(field('tape-per-crank-turn'), value);
+
+      expect(violationAt('tapePerCrankTurn')).toEqual(['Must be greater than 0.']);
+    });
+
+    it('names a changed Tape per Crank turn in the action bar', async () => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 2);
+      await library.put(organ);
+      const {element, field, type} = await openEditor(organ.id);
+
+      await type(field('tape-per-crank-turn'), '25');
+
+      const state = element.querySelector('[data-testid="action-bar-state"]')?.textContent?.replace(/\s+/g, ' ').trim();
+      expect(state).toBe('Unsaved changes: Tape per Crank turn');
+    });
+  });
+
   describe('the two sheets', () => {
     const sheet = (element: HTMLElement, testId: string) => {
       const found = element.querySelector<HTMLElement>(`[data-testid="${testId}"]`);

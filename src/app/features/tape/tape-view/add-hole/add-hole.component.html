@@ -4,7 +4,7 @@
     <div class="fields">
       <mat-form-field>
         <mat-label>{{ 'TAPE.ADD_HOLE.PIPE' | translate }}</mat-label>
-        <mat-select data-testid="add-hole-pipe" [value]="pipe()" (selectionChange)="pickPipe($event.value)">
+        <mat-select data-testid="add-hole-pipe" [value]="pipe()" [disabled]="editingPaused()" (selectionChange)="pickPipe($event.value)">
           @for (option of pipes(); track option.note) {
             <mat-option [value]="option.note">{{ option.name }}</mat-option>
           }
@@ -25,6 +25,6 @@
         }
       </p>
     }
-    <button matButton="filled" type="submit" data-testid="add-hole-submit">{{ 'TAPE.ADD_HOLE.SUBMIT' | translate }}</button>
+    <button matButton="filled" type="submit" data-testid="add-hole-submit" [disabled]="editingPaused()">{{ 'TAPE.ADD_HOLE.SUBMIT' | translate }}</button>
   </form>
 </section>
