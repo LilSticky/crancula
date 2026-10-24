@@ -3,7 +3,7 @@ import {column, columnCount, type Column, type ColumnCount, type Hole, type Midi
 /** The pointer travel that turns a press into a drag, in px. */
 const DRAG_THRESHOLD_PX = 4;
 /** The smallest hit area of a grip on screen, in px (WCAG 2.5.5). */
-const MIN_GRIP_PX = 44;
+export const MIN_GRIP_PX = 44;
 /** The width of a grip's visible bar, in px. */
 const GRIP_BAR_PX = 6;
 

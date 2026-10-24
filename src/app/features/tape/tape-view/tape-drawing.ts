@@ -1,6 +1,6 @@
 import {addHole, noteName, tapeGeometry, type Hole, type Organ, type Tape, type TapeGeometry} from '@api/index';
 import {formatNumber} from '../../shared/format-number';
-import {gripBars, gripRects, type Rect} from './hole-drag';
+import {gripBars, gripRects, MIN_GRIP_PX, type Rect} from './hole-drag';
 import {pixelsPerMillimetre} from './pixels-per-millimetre';
 import {columnLines, columnNumbers, rulerNumbers} from './tape-marks';
 import type {HoleSelection, SelectableHole} from './hole-selection';
@@ -202,6 +202,15 @@ export function columnMarks(tape: Tape, geometry: TapeGeometry, scale: number, r
       geometry.totalLength * scale,
     ).filter(({mm}) => mm >= firstMm && mm <= lastMm),
   };
+}
+
+/**
+ * The width of the drawing in px: the Tape, and with `endGrip` room past its last Column for the end grip of a Hole there,
+ * which reaches out a grip's width beyond the Hole's end.
+ */
+export function drawingWidth(geometry: TapeGeometry, scale: number, endGrip: boolean): number {
+  const tape = geometry.totalLength * scale;
+  return endGrip ? Math.max(tape, (geometry.leadIn + geometry.length) * scale + MIN_GRIP_PX) : tape;
 }
 
 /** The shape of the Tape in px: Lead-in, body, borders and the total height with ruler and Column numbers. */

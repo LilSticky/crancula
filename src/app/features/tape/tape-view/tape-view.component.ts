@@ -67,7 +67,7 @@ import {stageMetrics} from './stage-metrics';
 import {TapeEditor} from './tape-editor';
 import {TapePreview} from '../preview/tape-preview';
 import {PreviewSectionComponent} from '../preview/preview-section/preview-section.component';
-import {columnMarks, drawingParams, ghostRect, gripsOf, holeMarks, holeRects, outline, overviewOf, rowLabels, RULER_HEIGHT, sectionView, spotRect} from './tape-drawing';
+import {columnMarks, drawingParams, drawingWidth, ghostRect, gripsOf, holeMarks, holeRects, outline, overviewOf, rowLabels, RULER_HEIGHT, sectionView, spotRect} from './tape-drawing';
 import {TapeSectionComponent} from './tape-section/tape-section.component';
 import {TapeStatusLineComponent, type PointerText} from './tape-status-line/tape-status-line.component';
 import {overviewFrame, scrollLeftFor} from './overview-frame';
@@ -367,6 +367,8 @@ export class TapeViewComponent {
       ),
       ...columnMarks(tape, geometry, scale, range),
       ...outline(geometry, scale),
+      // The Whole Tape fills the stage without a scroll, so only the other zooms leave room for the end grip.
+      svgWidth: drawingWidth(geometry, scale, this.zoom() !== 'whole'),
       drawingParams: drawingParams(tape, organ, language),
     };
   });

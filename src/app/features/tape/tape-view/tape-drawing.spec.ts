@@ -2,7 +2,7 @@ import {type Millimetres, type Organ, type Tape, midiNoteNumber, tapeGeometry} f
 import {type Column, type ColumnCount} from '../../../../../api/tape/tape';
 import {tapeOf} from '../../../../../api/tape/tape-fixture';
 import {testOrgan} from '../../../../testing/organs';
-import {columnMarks, gripsOf, holeMarks, holeRects, outline, rowLabels, sectionView, spotRect, RULER_HEIGHT} from './tape-drawing';
+import {columnMarks, drawingWidth, gripsOf, holeMarks, holeRects, outline, rowLabels, sectionView, spotRect, RULER_HEIGHT} from './tape-drawing';
 import {gripBars, gripRects} from './hole-drag';
 import type {Spot} from './spot';
 
@@ -220,5 +220,19 @@ describe('outline', () => {
     expect(result.totalHeight).toBe(RULER_HEIGHT + geometry.width * 2 + 20);
     expect(result.leadIn).toBe(geometry.leadIn * 2);
     expect(result.borders).toEqual([geometry.border * 2, (geometry.width - geometry.border) * 2]);
+  });
+
+});
+
+describe('drawingWidth', () => {
+  it('is the Tape alone without the end grip', () => {
+    expect(drawingWidth(geometry, 2, false)).toBe(geometry.totalLength * 2);
+  });
+
+  it('leaves room for the end grip of a Hole at the last Column, inside the drawing', () => {
+    const lastColumnEnd = (geometry.leadIn + geometry.length) * 2;
+    const endGrip = gripRects({x: lastColumnEnd, y: 0, width: 0, height: 10}, 1).end;
+
+    expect(drawingWidth(geometry, 2, true)).toBeGreaterThanOrEqual(endGrip.x + endGrip.width);
   });
 });
