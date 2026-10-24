@@ -175,3 +175,40 @@ test.describe('The Pipe rack header cells do not run together', () => {
     });
   }
 });
+
+test.describe('The Tape Bed fields at 1440 x 900 (#151)', () => {
+  const fieldOf = (window: Page, testId: string) => window.locator('mat-form-field').filter({has: window.getByTestId(testId)});
+
+  test('an empty Tape per Crank turn: its label does not overlap the mm suffix', async () => {
+    const launched = await launchApp();
+    const {app, window} = launched;
+    await resizeWindowOrSkip(launched, 1440, 900, true);
+    await window.getByTestId('new-organ').click();
+
+    const field = fieldOf(window, 'tape-per-crank-turn');
+    const label = await field.locator('.mdc-floating-label').evaluate((element) => {
+      const {left, top, right, bottom} = element.getBoundingClientRect();
+      return {left, top, right, bottom};
+    });
+    const suffix = await field.locator('.mat-mdc-form-field-text-suffix').evaluate((element) => {
+      const {left, top, right, bottom} = element.getBoundingClientRect();
+      return {left, top, right, bottom};
+    });
+    const overlaps = label.left < suffix.right - 0.5 && suffix.left < label.right - 0.5 && label.top < suffix.bottom - 0.5 && suffix.top < label.bottom - 0.5;
+    expect(overlaps, `label ${JSON.stringify(label)} overlaps suffix ${JSON.stringify(suffix)}`).toBe(false);
+    await app.close();
+  });
+
+  test('an empty Lead-in is no taller than the Minimum gap field beside it', async () => {
+    const launched = await launchApp();
+    const {app, window} = launched;
+    await resizeWindowOrSkip(launched, 1440, 900, true);
+    await window.getByTestId('new-organ').click();
+
+    const height = (testId: string) =>
+      fieldOf(window, testId).evaluate((element) => element.getBoundingClientRect().height);
+    const [leadIn, minimumGap] = await Promise.all([height('lead-in'), height('minimum-gap')]);
+    expect(leadIn, `Lead-in ${leadIn}px vs Minimum gap ${minimumGap}px`).toBeLessThanOrEqual(minimumGap + 0.5);
+    await app.close();
+  });
+});
