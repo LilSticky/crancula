@@ -60,8 +60,9 @@ Hole of Minimum Hole Length is there, selected, and survives a restart.
    selected Spot and nothing is added.
 4. **Given** a selected Spot, **When** the owner opens Add a Hole, **Then** its Pipe and Column are
    filled in from the Spot.
-5. **Given** a selected Spot and no selected Hole, **When** the owner uses the arrow keys, **Then** the
-   Spot moves by one Column or one row; **When** they press Enter, **Then** a Hole is added at the Spot.
+5. **Given** a selected Spot, **When** the owner uses the arrow keys, **Then** the Spot moves by one
+   Column or one row; **When** they press Enter, **Then** a Hole is added at the Spot; **When** they
+   press Escape, **Then** the Spot is cleared.
 6. **Given** a Hole was just added by a tap, **When** the owner taps it once more quickly, **Then** it
    stays (a tap that added a Hole never counts as the first tap of a double-tap).
 
@@ -190,8 +191,8 @@ to 90; slide it to 70 and let go; the Crank speed is 70; Ctrl+Z brings back the 
 - **FR-002**: A tap or click on the selected Spot, a double-click on an empty place, or Enter with a
   selected Spot MUST add a Hole of Minimum Hole Length there as one undo step and select it.
 - **FR-003**: The Spot selection and the Hole selection MUST be exclusive; selecting one clears the other.
-- **FR-004**: Add a Hole MUST be prefilled from the selected Spot; the arrow keys MUST move the Spot
-  when no Hole is selected.
+- **FR-004**: Add a Hole MUST be prefilled from the selected Spot; the arrow keys MUST move a selected
+  Spot and Escape MUST clear it.
 - **FR-005**: A selected Hole MUST show a grip beside each end, outside the Hole, with a hit area of at
   least 44 × 44 px; dragging a grip changes the Hole's length at that end as one undo step.
 - **FR-006**: A drag anywhere on a Hole MUST move it as one undo step.
@@ -235,6 +236,7 @@ to 90; slide it to 70 and let go; the Crank speed is 70; Ctrl+Z brings back the 
 - The double-tap time is a fixed constant (about 400 ms), since the system's double-click time can't
   be read from the app.
 - Pen input behaves like the mouse.
+- The slider moves in whole turns per minute; the number field still takes decimals.
 - Pinch zoom and long-press menus are out of scope.
 - The 30–120 default range is a reasonable span for hand-cranked barrel Organs; the owner can change it.
 - The pointer rules of spec 004 (`contracts/tape-view-ui.md`) are superseded by this slice's contract.
