@@ -4021,6 +4021,26 @@ describe('TapeViewComponent', () => {
         expect(update).not.toHaveBeenCalled();
       });
 
+      it('cancels a Hole drag when a second finger lands after the capture moved from the Hole to the drawing (F03)', async () => {
+        const {tape, view, svg, at, down, move, up, update, settle} = await setup({holes, platform: 'win32'});
+        const before = storedHoles(tape.id);
+        const second: Gesture = {pointerType: 'touch', pointerId: 2};
+
+        await down(holeAt(view(), 24, 10), at(11, 24), touch);
+        await move(at(16, 24), touch);
+        // The capture moves while the first finger is still down: a Hole that is still drawn loses it, then the drawing gets it.
+        required(drawn(view()).at(0), 'a drawn Hole').dispatchEvent(new PointerEvent('lostpointercapture', {pointerId: 1, pointerType: 'touch', bubbles: true}));
+        svg.dispatchEvent(new PointerEvent('gotpointercapture', {pointerId: 1, pointerType: 'touch', bubbles: true}));
+        await settle();
+        await down(svg, at(30, 25), second);
+        await move(at(20, 24), touch);
+        await up(at(20, 24), touch);
+        await up(at(30, 25), second);
+
+        expect(storedHoles(tape.id)).toEqual(before);
+        expect(update).not.toHaveBeenCalled();
+      });
+
       it('lets a touch pan the drawing: its touch-action is pan-x pan-y', async () => {
         const {view} = await setup({holes, platform: 'win32'});
 

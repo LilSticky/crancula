@@ -183,6 +183,8 @@ export class TapeViewComponent {
   private framing: Framing | undefined;
   /** The touch pointers down on the drawing. */
   private readonly touches = new Set<number>();
+  /** The touches whose capture was lost without a pointerup: forgotten at the next touch down, unless the capture came back first. */
+  private readonly lostTouches = new Set<number>();
   /** Set once a second touch goes down: the touches change nothing until all of them are up. */
   private touchesIgnored = false;
   /** A drag of the playhead grip; `wasPlaying` tells whether the Preview played at the press and goes on from the release. */
@@ -661,11 +663,13 @@ export class TapeViewComponent {
 
   /**
    * Tracks the touch pointers on the drawing. A second touch ends the gestures in progress, and the touches change nothing
-   * until all are up. Mouse and pen pass. @returns whether the event is to be ignored
+   * until all are up. A touch whose capture moved without a pointerup is forgotten once a new touch goes down. Mouse and pen
+   * pass. @returns whether the event is to be ignored
    */
   private trackTouch(event: PointerEvent): boolean {
     if (event.pointerType !== 'touch') return false;
     if (event.type === 'pointerdown') {
+      this.forgetLostTouches();
       this.touches.add(event.pointerId);
       if (this.touches.size > 1) {
         this.touchesIgnored = true;
@@ -674,11 +678,23 @@ export class TapeViewComponent {
       return this.touchesIgnored;
     }
     const ignored = this.touchesIgnored;
-    if (event.type === 'pointerup' || event.type === 'pointercancel' || event.type === 'lostpointercapture') {
+    if (event.type === 'lostpointercapture') {
+      if (this.touches.has(event.pointerId)) this.lostTouches.add(event.pointerId);
+    } else if (event.type === 'gotpointercapture') {
+      this.lostTouches.delete(event.pointerId);
+    } else if (event.type === 'pointerup' || event.type === 'pointercancel') {
+      this.lostTouches.delete(event.pointerId);
       this.touches.delete(event.pointerId);
       if (this.touches.size === 0) this.touchesIgnored = false;
     }
     return ignored;
+  }
+
+  /** Forgets the touches whose capture was lost and never came back: the browser ended them without a pointerup. */
+  private forgetLostTouches(): void {
+    for (const pointerId of this.lostTouches) this.touches.delete(pointerId);
+    this.lostTouches.clear();
+    if (this.touches.size === 0) this.touchesIgnored = false;
   }
 
   /** Starts a selection frame at an empty spot of the Tape; it only shows once the press travels. */
@@ -920,8 +936,13 @@ export class TapeViewComponent {
     this.cancelGesture();
   }
 
-  /** Forgets a touch the browser ended without a pointerup (the pointerup of a normal release has already done so). */
+  /** Marks a touch the browser ended without a pointerup (the pointerup of a normal release has already done so). */
   protected onPointerLostCapture(event: PointerEvent): void {
+    this.trackTouch(event);
+  }
+
+  /** Unmarks a touch whose capture came back to the drawing, so it stays down. */
+  protected onPointerGotCapture(event: PointerEvent): void {
     this.trackTouch(event);
   }
 
