@@ -74,12 +74,12 @@ real Electron touch, restart and migration.
 
 ## Phase 7: US5 A Crank speed range for each Organ (P2)
 
-- [ ] T026 [P] [US5] Red: Organ editor specs (`tape-bed-sheet` / `organ-editor.component.spec.ts`): fields `slowest-crank-speed` and `fastest-crank-speed` after Tape per Crank turn, 30/120 for a new Organ, comma input in German, the two violations shown under the fields and in the error summary, saved with the Organ.
-- [ ] T027 [US5] Green: `organ-form.ts`, `tape-bed-sheet.component.html`.
-- [ ] T028 [P] [US5] Red: `preview-section.component.spec.ts`: `crank-speed-slider` spans the Organ's range, step 1; input emits `crankSpeedTrial` without `crankSpeedChange`; release emits one `crankSpeedChange`; a Tape speed outside the range shows the slider at the nearest end and `crank-speed-outside-range`; the field still accepts 1–300.
-- [ ] T029 [US5] Green: `preview-section.component.ts`/`.html` with `mat-slider`.
-- [ ] T030 [US5] Red: Tape view spec: `crankSpeedTrial` changes the playing tempo without a save or undo step; the release is one undo step (Ctrl+Z restores).
-- [ ] T031 [US5] Green: Tape view wiring (`preview.changeTape` with an uncommitted Tape).
+- [x] T026 [P] [US5] Red: Organ editor specs (`tape-bed-sheet` / `organ-editor.component.spec.ts`): fields `slowest-crank-speed` and `fastest-crank-speed` after Tape per Crank turn, 30/120 for a new Organ, comma input in German, the two violations shown under the fields and in the error summary, saved with the Organ.
+- [x] T027 [US5] Green: `organ-form.ts`, `tape-bed-sheet.component.html`.
+- [x] T028 [P] [US5] Red: `preview-section.component.spec.ts`: `crank-speed-slider` spans the Organ's range, step 1; input emits `crankSpeedTrial` without `crankSpeedChange`; release emits one `crankSpeedChange`; a Tape speed outside the range shows the slider at the nearest end and `crank-speed-outside-range`; the field still accepts 1–300.
+- [x] T029 [US5] Green: `preview-section.component.ts`/`.html` with `mat-slider`.
+- [x] T030 [US5] Red: Tape view spec: `crankSpeedTrial` changes the playing tempo without a save or undo step; the release is one undo step (Ctrl+Z restores).
+- [x] T031 [US5] Green: Tape view wiring (`preview.changeTape` with an uncommitted Tape).
 
 **Checkpoint**: all stories; commit, STATUS.
 
