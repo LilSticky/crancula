@@ -5,7 +5,7 @@ import type {PreviewVoice} from './preview-sound';
 /** Attack of the envelope, seconds (research R5). */
 const ATTACK_SECONDS = 0.015;
 /** Release of the envelope, seconds (research R5). */
-const RELEASE_SECONDS = 0.03;
+export const RELEASE_SECONDS = 0.03;
 /** Level of the envelope at its peak; the master gain sets the loudness. */
 const PEAK_GAIN = 1;
 /** Master gain of all voices together (research R5). */
