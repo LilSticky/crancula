@@ -17,8 +17,12 @@ scheduler on the audio clock. Review findings fixed; accepted test gaps in
 and 1270 Angular unit tests, lint, i18n (309 keys); e2e in CI. Sound itself is not tested automatically: listen
 once by hand on Windows ([quickstart](../specs/007-crank-a-tape/quickstart.md)).
 
-**Next step:** listen to a Preview by hand, then release v0.2.0 (`/release`), or start Record a tape
-([discovery/later.md](discovery/later.md), section 1, slice 2).
+**Next step:** listen to a Preview by hand, fix the UX findings in [#151](https://github.com/LilSticky/crancula/issues/151)
+(then retake the README screenshots), or start Record a tape ([discovery/later.md](discovery/later.md), section 1, slice 2).
+
+**Done:** v0.2.0 released (2026-10-24, [CHANGELOG](../CHANGELOG.md#020---2026-10-24)): Crank a tape (Preview, Crank
+speed, Tape per Crank turn). README describes v0.2.0 but keeps the v0.1.1 screenshots: the retaken ones showed the
+layout bugs listed in #151.
 
 **Done:** [Adjust a tape](../specs/006-adjust-a-tape/spec.md) ([#107](https://github.com/LilSticky/crancula/issues/107),
 2026-10-23, branch `006-adjust-a-tape`, PR #143), the last part of Edit a tape

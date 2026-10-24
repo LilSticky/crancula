@@ -8,6 +8,8 @@ as its GitHub Release notes.
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-24
+
 ### Added
 - Hear a Tape before you cut it: Preview (toolbar button or Space) plays it with an organ-like tone
   per Pipe while a playhead moves along the Tape. Start from any Column by clicking the ruler or
@@ -84,7 +86,8 @@ as its GitHub Release notes.
   application menu.
 - Downloads for Windows (portable `.exe`), macOS (`.dmg`, Apple silicon) and Linux (`.AppImage`).
 
-[Unreleased]: https://github.com/LilSticky/crancula/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/LilSticky/crancula/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/LilSticky/crancula/releases/tag/v0.2.0
 [0.1.1]: https://github.com/LilSticky/crancula/releases/tag/v0.1.1
 [0.1.0]: https://github.com/LilSticky/crancula/releases/tag/v0.1.0
 [0.0.1]: https://github.com/LilSticky/crancula/releases/tag/v0.0.1

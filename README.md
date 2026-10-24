@@ -8,7 +8,7 @@
 
 <p align="center">
   <a href="https://github.com/LilSticky/crancula/actions/workflows/ci.yml"><img src="https://github.com/LilSticky/crancula/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-  <img src="https://img.shields.io/badge/version-0.1.1-b08fd8" alt="Version 0.1.1">
+  <img src="https://img.shields.io/badge/version-0.2.0-b08fd8" alt="Version 0.2.0">
   <img src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-1a1426" alt="Platforms: Windows, macOS, Linux">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-efe4c8" alt="MIT license"></a>
 </p>
@@ -27,9 +27,10 @@ out as a Tape that fits your Pipes. You then export the Tape as an SVG that a vi
 other Plotter can punch. Feed the Tape into your Organ, turn the Crank, and it plays.
 
 > [!NOTE]
-> **v0.1.1 is out.** Describe your Organ, bring a MIDI Song onto a Tape, edit its Holes by hand
-> and export it for your Plotter: the whole way from music to a cuttable Tape works. Crancula is
-> a hobby project, so expect rough edges. [Download it](#download) for Windows, macOS or Linux.
+> **v0.2.0 is out.** Describe your Organ, bring a MIDI Song onto a Tape, edit its Holes by hand,
+> hear it at your Crank speed and export it for your Plotter: the whole way from music to a
+> cuttable Tape works. Crancula is a hobby project, so expect rough edges.
+> [Download it](#download) for Windows, macOS or Linux.
 
 <p align="center">
   <img src="documentation/images/screenshots/tape.png" alt="A Tape for a 31-Pipe street organ: rows labelled F3 to B5, Holes as dark slots along a ruler in millimetres, the angled Lead-in on the left, and beside it the side panel to select and add Holes, see Cutting Problems and change the Column length; Undo, Redo and Transpose above" width="100%">
@@ -58,7 +59,9 @@ flowchart LR
    (Transposition) so that it fits the Pipes your Organ has.
 3. **Edit the Tape.** Add, move, lengthen and remove Holes, transpose them or change the
    Column length. Cutting Problems show as you go, and Undo takes any edit back.
-4. **Punch the Tape.** Export the Tape as a true-to-scale SVG and cut it with your Plotter.
+4. **Hear the Tape.** Preview plays it with a tone per Pipe at the Crank speed you choose, while
+   a playhead runs along the Tape. Your Organ needs its Tape per Crank turn for this.
+5. **Punch the Tape.** Export the Tape as a true-to-scale SVG and cut it with your Plotter.
    A Tape that can't be cut (a Hole too short, or too close to the next) is not exported;
    Crancula names every problem Hole instead.
 
@@ -81,7 +84,7 @@ flowchart LR
   </tr>
 </table>
 
-## What's in v0.1.1
+## What's in v0.2.0
 
 - [x] **Describe my organ**: create, edit, reorder and delete Organs, kept across restarts, in English and German
 - [x] **Bring a song onto a tape**: import a MIDI file onto a Tape, with automatic Transposition ([#2](https://github.com/LilSticky/crancula/issues/2))
@@ -118,6 +121,8 @@ Crancula uses the same words everywhere: in the app, in the code and here.
 | **Lead-in** | The blank Tape before the first Column, with an angled start; 0 if your Organ needs none |
 | **Minimum Hole Length / Minimum Gap** | The shortest Hole, and the smallest space between two Holes, that your Organ can tell apart |
 | **Crank** | You turn it to draw the Tape through the Organ. Its speed sets the tempo |
+| **Crank speed / Tape per Crank turn** | How fast you turn the Crank (turns per minute), and how much Tape one turn draws (mm) |
+| **Preview** | Hearing a Tape in Crancula, as the Organ would play it, before you cut it |
 | **Plotter** | The machine that cuts the Holes, such as a vinyl cutter |
 
 All terms, with their German names, are in the [dictionary](documentation/DICTIONARY.md).
@@ -126,6 +131,7 @@ All terms, with their German names, are in the [dictionary](documentation/DICTIO
 
 | Version | Date | Highlights |
 |---------|------|------------|
+| [0.2.0](https://github.com/LilSticky/crancula/releases/tag/v0.2.0) | 2026-10-24 | Hear a Tape before cutting it: Preview with a playhead; Crank speed per Tape; Tape per Crank turn for the Organ |
 | [0.1.1](https://github.com/LilSticky/crancula/releases/tag/v0.1.1) | 2026-10-23 | Edit a Tape's Holes by hand; transpose Holes; change the Column length; undo and redo |
 | [0.1.0](https://github.com/LilSticky/crancula/releases/tag/v0.1.0) | 2026-10-18 | Export a Tape for the Plotter as SVG; Lead-in; derived Border; a new look |
 | [0.0.1](https://github.com/LilSticky/crancula/releases/tag/v0.0.1) | 2026-10-14 | Describe your Organ; bring a MIDI Song onto a Tape; English and German |
