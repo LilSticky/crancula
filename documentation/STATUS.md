@@ -6,16 +6,20 @@ Issues: [GitHub](https://github.com/LilSticky/crancula/issues)
 
 ## Current slice
 
-**In progress:** [Edit a tape by touch](../specs/008-edit-a-tape-by-touch/spec.md)
-([#152](https://github.com/LilSticky/crancula/issues/152), branch `008-edit-a-tape-by-touch`, PR #155). All five
-stories done: tap selects a Spot and a second tap adds a Hole; grips outside the selected Hole, double-tap removes; a
-finger drag on empty Tape scrolls, two fingers edit nothing; drag the playhead; a Crank speed range per Organ (Organ
-snapshot v5, older Organs 30–120) with a Crank speed slider. [ADR 25](adr/0025-one-gesture-model-for-all-pointer-types.md):
-one gesture model for all pointer types. Reviewed (angular, UX, spec audit) and fixed; open follow-ups in
-[#156](https://github.com/LilSticky/crancula/issues/156), notes in [audit.md](../specs/008-edit-a-tape-by-touch/audit.md).
-Gate: 879 node and 1369 Angular unit tests, lint, i18n (317 keys); e2e in CI.
+No slice in progress.
 
-**Next step:** merge PR #155 once CI is green; then the UX findings in #151 or Record a tape.
+**Next step:** the UX findings in [#151](https://github.com/LilSticky/crancula/issues/151) (then retake the README
+screenshots), or Record a tape ([discovery/later.md](discovery/later.md), section 1, slice 2).
+
+**Done:** [Edit a tape by touch](../specs/008-edit-a-tape-by-touch/spec.md)
+([#152](https://github.com/LilSticky/crancula/issues/152), v0.2, merged 2026-10-24, branch `008-edit-a-tape-by-touch`,
+PR [#155](https://github.com/LilSticky/crancula/pull/155)): all five stories. Tap selects a Spot and a second tap adds
+a Hole; grips outside the selected Hole, double-tap removes; a finger drag on empty Tape scrolls, two fingers edit
+nothing; drag the playhead; a Crank speed range per Organ (Organ snapshot v5, older Organs 30–120) with a Crank speed
+slider. [ADR 25](adr/0025-one-gesture-model-for-all-pointer-types.md): one gesture model for all pointer types.
+Reviewed (angular, UX, spec audit) and fixed; open follow-ups in
+[#156](https://github.com/LilSticky/crancula/issues/156), notes in [audit.md](../specs/008-edit-a-tape-by-touch/audit.md).
+Gate: 879 node and 1369 Angular unit tests, lint, i18n (317 keys); e2e green in CI on Linux, Windows and macOS.
 
 **Done:** [Crank a tape](../specs/007-crank-a-tape/spec.md) ([#149](https://github.com/LilSticky/crancula/issues/149),
 v0.2, 2026-10-24, branch `007-crank-a-tape`, PR #150): Preview a Tape with a synthesised tone per Pipe and a
