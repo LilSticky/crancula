@@ -24,6 +24,12 @@ From [the discovery](../../documentation/discovery/later.md), section 1, decisio
 - Q: What are the action and the file called? → A: Record (German: Aufnehmen); the file is a Recording
   (German: Aufnahme). Dictionary entry proposed with this spec.
 
+### Session 2026-10-25
+
+- Q: Are the dictionary entries Recording and Record approved? → A: Yes, as worded in Key Entities.
+- Q: Can a Tape with Cutting Problems be recorded? → A: Yes, as drawn, like the Preview.
+- Q: Which sound quality? → A: Mono, 44.1 kHz, 16-bit WAV; MP3 at 128 kbit/s.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Save the Tape as a Recording (Priority: P1)
@@ -117,9 +123,9 @@ the reason with the way to the Organ editor is shown.
 
 ### Key Entities
 
-- **Recording** (proposed term): an audio file of a Tape played through at its Crank speed, as the
+- **Recording**: an audio file of a Tape played through at its Crank speed, as the
   Preview sounds; German: Aufnahme. Written once, never read back by Crancula.
-- **Record** (proposed term): the action of saving a Recording; changes nothing; German: Aufnehmen.
+- **Record**: the action of saving a Recording; changes nothing; German: Aufnehmen.
 - **Performance** (read model from spec 007): which Pipe sounds from when to when; the Recording is
   the performance of the whole Tape rendered to sound.
 
@@ -137,7 +143,7 @@ the reason with the way to the Organ editor is shown.
 
 ## Assumptions
 
-- WAV is 16-bit PCM; sample rate, channels (mono is enough) and MP3 bit rate are chosen in the plan.
+- WAV is 16-bit PCM, mono, 44.1 kHz; MP3 is mono at 128 kbit/s (user, 2026-10-25).
 - The MP3 encoder is a library chosen in the plan (licence fitting the project); WAV needs none.
 - Where Record sits (beside Export in the Tape view's page head, or in a menu) follows the design
   guide and is chosen in the plan.
