@@ -333,6 +333,25 @@ test.describe('The Tape view with the Preview toggles and the Tape section at 14
     await app.close();
   });
 
+  test('German: the Crank speed field label is not cut off inside its outline', async () => {
+    const launched = await launchApp();
+    const {app, window} = launched;
+    await resizeWindowOrSkip(launched, 1440, 900, true);
+    await defineOrganWithLeadIn(window);
+    await createTapeFromSong(window, 'Scale', melodyC3ToC5(), {columnLength: '5'});
+    await window.getByTestId('language-switch').locator('[data-language="de"]').click();
+
+    const field = window.locator('mat-form-field', {has: window.getByTestId('crank-speed-input')});
+    const label = field.locator('.mdc-floating-label');
+    await expect(label).toHaveText('Kurbelgeschwindigkeit');
+    const cut = await label.evaluate((element) => element.scrollWidth - element.clientWidth);
+    expect(cut, 'label overflow in px (scrollWidth - clientWidth)').toBeLessThanOrEqual(1);
+    const labelBox = await boxOf(label);
+    const fieldBox = await boxOf(field);
+    expect(labelBox.right, `label right ${labelBox.right} vs field right ${fieldBox.right}`).toBeLessThanOrEqual(fieldBox.right + 0.5);
+    await app.close();
+  });
+
   for (const language of ['en', 'de'] as const) {
     test(`${language === 'en' ? 'English' : 'German'}: every page head action renders on one line`, async () => {
       const launched = await launchApp();
@@ -366,4 +385,40 @@ test.describe('The Tape view with the Preview toggles and the Tape section at 14
       await app.close();
     });
   }
+});
+
+test.describe('The Tape view at 1024 x 700 (#156)', () => {
+  test('keeps every level of the zoom segment fully visible inside the page head', async () => {
+    const launched = await launchApp();
+    const {app, window} = launched;
+    await resizeWindowOrSkip(launched, 1024, 700, true);
+    await defineOrganWithLeadIn(window);
+    await createTapeFromSong(window, 'Layout', melodyC3ToC5(), {columnLength: '5'});
+
+    const group = window.getByTestId('zoom');
+    const groupBox = await boxOf(group);
+    const viewport = await window.evaluate(() => ({width: globalThis.innerWidth}));
+    for (const name of ['Whole Tape', '1:1', '2:1']) {
+      const toggle = await boxOf(group.locator('mat-button-toggle').filter({has: window.getByRole('radio', {name, exact: true})}));
+      expect(toggle.left, `${name} left edge ${toggle.left} vs zoom group left edge ${groupBox.left}`).toBeGreaterThanOrEqual(groupBox.left - 0.5);
+      expect(toggle.right, `${name} right edge ${toggle.right} vs zoom group right edge ${groupBox.right}`).toBeLessThanOrEqual(groupBox.right + 0.5);
+    }
+    expect(groupBox.right, `zoom group right edge ${groupBox.right} vs viewport width ${viewport.width}`).toBeLessThanOrEqual(viewport.width + 0.5);
+    expect(await group.evaluate((element) => element.scrollWidth - element.clientWidth), 'zoom group overflow').toBeLessThanOrEqual(1);
+    await app.close();
+  });
+
+  test('the side panel has no horizontal overflow', async () => {
+    const launched = await launchApp();
+    const {app, window} = launched;
+    await resizeWindowOrSkip(launched, 1024, 700, true);
+    await defineOrganWithLeadIn(window);
+    await createTapeFromSong(window, 'Layout', melodyC3ToC5(), {columnLength: '5'});
+
+    const panel = window.getByTestId('side-panel');
+    await expect(panel).toBeVisible();
+    const overflow = await panel.evaluate((element) => element.scrollWidth - element.clientWidth);
+    expect(overflow, 'side panel horizontal overflow in px (scrollWidth - clientWidth)').toBeLessThanOrEqual(1);
+    await app.close();
+  });
 });
