@@ -216,9 +216,9 @@ export type ChangedField =
   | `tapeBed.${TapeBedField}`
   | 'minimumGap'
   | 'leadIn'
+  | 'tapePerCrankTurn'
   | 'slowestCrankSpeed'
   | 'fastestCrankSpeed'
-  | 'tapePerCrankTurn'
   | 'pipes';
 
 /** The fields of `draft` that differ from the `saved` draft, in reading order; `pipes` once for any Pipe change. */
@@ -230,9 +230,9 @@ export function changedFields(saved: OrganDraft, draft: OrganDraft): readonly Ch
   }
   if (saved.minimumGap !== draft.minimumGap) changed.push('minimumGap');
   if (saved.leadIn !== draft.leadIn) changed.push('leadIn');
+  if (saved.tapePerCrankTurn !== draft.tapePerCrankTurn) changed.push('tapePerCrankTurn');
   if (saved.slowestCrankSpeed !== draft.slowestCrankSpeed) changed.push('slowestCrankSpeed');
   if (saved.fastestCrankSpeed !== draft.fastestCrankSpeed) changed.push('fastestCrankSpeed');
-  if (saved.tapePerCrankTurn !== draft.tapePerCrankTurn) changed.push('tapePerCrankTurn');
   const pipesChanged =
     saved.pipes.length !== draft.pipes.length || saved.pipes.some((pipe, row) => pipe.note !== draft.pipes[row]?.note);
   if (pipesChanged) changed.push('pipes');
