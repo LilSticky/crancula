@@ -131,6 +131,7 @@ test.describe('Changing the Crank speed of a Tape', () => {
     await first.app.close();
 
     const second = await launchApp(first.userDataDir);
+    await resizeWindowOrSkip(second, 1280, 800);
     await openOnlyTape(second.window);
     await expect(second.window.getByTestId('crank-speed-input')).toHaveValue('120');
     await second.app.close();
@@ -146,6 +147,7 @@ test.describe('Changing the Crank speed of a Tape', () => {
     await first.app.close();
 
     const second = await launchApp(first.userDataDir);
+    await resizeWindowOrSkip(second, 1280, 800);
     await second.window.getByRole('link', {name: 'Lochbänder'}).click();
     await second.window.getByTestId('open-tape').click();
     await expect(second.window.getByTestId('crank-speed-input')).toHaveValue('72,5');
