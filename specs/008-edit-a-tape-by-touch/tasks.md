@@ -99,3 +99,16 @@ real Electron touch, restart and migration.
 - Phase 2 before US5; US1 (T011 TapeSelection) before US2–US4 in the Tape view component.
 - US2's T016–T019 can run beside US1's T008/T014 (different files).
 - Polish after all stories.
+
+## Phase 9: Follow-ups from the reviews ([#156](https://github.com/LilSticky/crancula/issues/156))
+
+Branch `156-touch-review-follow-ups`. Details in `review.md` (items 2–5), `ux-review.md` (items 5, 7, 8) and `audit.md`.
+
+- [ ] F01 Red/green: `spot.ts` `holeAt` looks the Hole up in the Tape instead of deriving its length from the slot width (review 2).
+- [ ] F02 Refactor (behaviour unchanged, existing specs green): `holeSelection` returns a module constant `NO_HOLES`; the Spot `<rect>` gets `aria-hidden="true"` (spec asserts it); name the `framing` type (`interface Framing`) (review 3–5).
+- [ ] F03 Red/green: a touch whose `pointerup` never reaches the drawing (`pointercancel`, `lostpointercapture`) leaves the touch set, so touch edits work again (audit).
+- [ ] F04 Red/green: the toast after a Crank speed change names the speed (en/de keys) (ux-review 5).
+- [ ] F05 Red/green (layout e2e): the Crank speed field's outlined label is not clipped (German, 1440×900); the zoom segment is not clipped at 1024 px and the side panel does not scroll sideways (ux-review 7, #156 comment).
+- [ ] F06 Dark theme: grips and playhead use a lighter blue with at least 4.5:1 against the Tape (ux-review 8).
+- [ ] F07 `npm run ux:screens` also captures a selected Spot, the Crank speed slider and the playing state.
+- [ ] F08 Reviews (angular-reviewer), STATUS, full gate, PR "Closes #156".
