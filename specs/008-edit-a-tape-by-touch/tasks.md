@@ -64,13 +64,13 @@ real Electron touch, restart and migration.
 
 ## Phase 5: US3 Scroll the Tape with a finger (P2)
 
-- [ ] T022 [US3] Red: component spec: a touch `pointerdown` + move on empty Tape draws no frame and selects no Spot; `pointercancel` after it changes nothing; a mouse or pen drag still draws the frame; the drawing has `touch-action: pan-x pan-y`, Holes and grips `none` (computed from the stylesheet classes).
-- [ ] T023 [US3] Green: `tape-view.component.ts` (`pointerType` check) and `.scss`.
+- [x] T022 [US3] Red: component spec: a touch `pointerdown` + move on empty Tape draws no frame and selects no Spot; `pointercancel` after it changes nothing; a mouse or pen drag still draws the frame; the drawing has `touch-action: pan-x pan-y`, Holes and grips `none` (computed from the stylesheet classes).
+- [x] T023 [US3] Green: `tape-view.component.ts` (`pointerType` check) and `.scss`.
 
 ## Phase 6: US4 Drag the playhead (P2)
 
-- [ ] T024 [US4] Red: component spec with the fake `PreviewSound` and clock: dragging `playhead-grip` moves the playhead by Columns (clamped to the Tape); while playing, the press stops the sound and the release plays from the drop Column; the Tape and the undo history are unchanged.
-- [ ] T025 [US4] Green: playhead grip in the ruler (44 px hit area, `touch-action: none`), pointer capture, `preview.stop()` / `preview.play()`.
+- [x] T024 [US4] Red: component spec with the fake `PreviewSound` and clock: dragging `playhead-grip` moves the playhead by Columns (clamped to the Tape); while playing, the press stops the sound and the release plays from the drop Column; the Tape and the undo history are unchanged.
+- [x] T025 [US4] Green: playhead grip in the ruler (44 px hit area, `touch-action: none`), pointer capture, `preview.stop()` / `preview.play()`.
 
 ## Phase 7: US5 A Crank speed range for each Organ (P2)
 
