@@ -17,7 +17,7 @@ import {BreakpointObserver} from '@angular/cdk/layout';
 import {toSignal} from '@angular/core/rxjs-interop';
 import {ActivatedRoute, Router, RouterLink} from '@angular/router';
 import {map} from 'rxjs';
-import {column, columnDuration, cuttingProblems, holesWithCuttingProblems, noteName, type HoleRef, type ImportSummary, type Tape, tapeGeometry, type TapeGeometry, type Transposed} from '@api/index';
+import {column, columnDuration, cuttingProblems, holesWithCuttingProblems, noteName, type HoleRef, type ImportSummary, type Organ, type Tape, tapeGeometry, type TapeGeometry, type Transposed} from '@api/index';
 import {canTranspose, holeRefsOf, selectionOfRefs} from './transpose-selection';
 import {crankSpeedChangeTo} from './crank-speed-change';
 import {holeAt, moveSpot, sameSpot, spotAt, type Spot, type TapeSelection} from './spot';
@@ -119,6 +119,18 @@ interface Point {
   readonly y: number;
 }
 
+/** An empty spot pressed on the Tape: where (client px and drawing px), in which cell, whether it adds to the selection, and whether a touch pressed it. */
+interface Framing {
+  readonly press: Point;
+  readonly origin: Point;
+  readonly cell: GridCell;
+  readonly additive: boolean;
+  readonly touch: boolean;
+}
+
+/** The selection of no Holes, shared so that an unchanged selection keeps its identity. */
+const NO_HOLES: HoleSelection = [];
+
 /** How long after the owner last scrolled or wheeled the stage the playhead leaves the stage alone, in ms. */
 const OWNER_SCROLL_PAUSE = 2000;
 
@@ -167,15 +179,12 @@ export class TapeViewComponent {
   /** The last pointer position of a drag, so the Column follows when the stage scrolls under a resting pointer. */
   private lastPointer: {readonly clientX: number; readonly clientY: number; readonly pointerId: number; readonly svg: Element} | undefined;
   private edgeScrollFrame: number | undefined;
-  /**
-   * An empty spot pressed on the Tape: where (client px and drawing px), in which cell, whether it adds to the selection,
-   * and whether a touch pressed it (a touch that travels pans the drawing instead of framing).
-   */
-  private framing:
-    | {readonly press: Point; readonly origin: Point; readonly cell: GridCell; readonly additive: boolean; readonly touch: boolean}
-    | undefined;
+  /** The press that may frame a selection; a touch that travels pans the drawing instead of framing. */
+  private framing: Framing | undefined;
   /** The touch pointers down on the drawing. */
   private readonly touches = new Set<number>();
+  /** The touches whose capture was lost without a pointerup: forgotten at the next touch down, unless the capture came back first. */
+  private readonly lostTouches = new Set<number>();
   /** Set once a second touch goes down: the touches change nothing until all of them are up. */
   private touchesIgnored = false;
   /** A drag of the playhead grip; `wasPlaying` tells whether the Preview played at the press and goes on from the release. */
@@ -228,7 +237,7 @@ export class TapeViewComponent {
   /** The Holes selected, or none while a Spot is. */
   private readonly holeSelection = computed((): HoleSelection => {
     const selection = this.selection();
-    return 'holes' in selection ? selection.holes : [];
+    return 'holes' in selection ? selection.holes : NO_HOLES;
   });
   /** The Spot selected, if any. */
   protected readonly spotSelected = computed((): Spot | undefined => {
@@ -262,11 +271,14 @@ export class TapeViewComponent {
   /** The Holes the selection works on: row (from 1), start and length in Columns. */
   private readonly selectable = computed((): readonly SpanningHole[] => {
     const tape = this.shownTape();
-    return (this.geometry()?.slots ?? []).map(({row, start, width}) => ({
-      row,
-      start,
-      length: tape === undefined ? 0 : width / tape.columnLength,
-    }));
+    const organ = this.organ();
+    if (tape === undefined || organ === undefined) return [];
+    return tape.holes
+      .flatMap(({pipe, start, length}): readonly SpanningHole[] => {
+        const index = organ.pipes.findIndex((candidate) => candidate.note === pipe);
+        return index === -1 ? [] : [{row: index + 1, start, length}];
+      })
+      .sort((a, b) => a.start - b.start || a.row - b.row);
   });
 
   protected readonly organ = computed(() => {
@@ -630,11 +642,11 @@ export class TapeViewComponent {
       return true;
     }
     const direction = ARROW_DIRECTIONS[event.key];
-    const rows = this.organ()?.pipes.length;
-    const geometry = this.geometry();
-    if (direction === undefined || rows === undefined || geometry === undefined) return false;
+    const tape = this.shownTape();
+    const organ = this.organ();
+    if (direction === undefined || tape === undefined || organ === undefined) return false;
     event.preventDefault();
-    this.selection.set({spot: moveSpot(spot, direction, rows, geometry)});
+    this.selection.set({spot: moveSpot(spot, direction, organ.pipes.length, tape, organ)});
     return true;
   }
 
@@ -651,11 +663,13 @@ export class TapeViewComponent {
 
   /**
    * Tracks the touch pointers on the drawing. A second touch ends the gestures in progress, and the touches change nothing
-   * until all are up. Mouse and pen pass. @returns whether the event is to be ignored
+   * until all are up. A touch whose capture moved without a pointerup is forgotten once a new touch goes down. Mouse and pen
+   * pass. @returns whether the event is to be ignored
    */
   private trackTouch(event: PointerEvent): boolean {
     if (event.pointerType !== 'touch') return false;
     if (event.type === 'pointerdown') {
+      this.forgetLostTouches();
       this.touches.add(event.pointerId);
       if (this.touches.size > 1) {
         this.touchesIgnored = true;
@@ -664,11 +678,23 @@ export class TapeViewComponent {
       return this.touchesIgnored;
     }
     const ignored = this.touchesIgnored;
-    if (event.type === 'pointerup' || event.type === 'pointercancel') {
+    if (event.type === 'lostpointercapture') {
+      if (this.touches.has(event.pointerId)) this.lostTouches.add(event.pointerId);
+    } else if (event.type === 'gotpointercapture') {
+      this.lostTouches.delete(event.pointerId);
+    } else if (event.type === 'pointerup' || event.type === 'pointercancel') {
+      this.lostTouches.delete(event.pointerId);
       this.touches.delete(event.pointerId);
       if (this.touches.size === 0) this.touchesIgnored = false;
     }
     return ignored;
+  }
+
+  /** Forgets the touches whose capture was lost and never came back: the browser ended them without a pointerup. */
+  private forgetLostTouches(): void {
+    for (const pointerId of this.lostTouches) this.touches.delete(pointerId);
+    this.lostTouches.clear();
+    if (this.touches.size === 0) this.touchesIgnored = false;
   }
 
   /** Starts a selection frame at an empty spot of the Tape; it only shows once the press travels. */
@@ -723,11 +749,13 @@ export class TapeViewComponent {
   private finishFrame(event: PointerEvent, svg: Element): void {
     const framing = this.framing;
     const geometry = this.geometry();
+    const tape = this.shownTape();
+    const organ = this.organ();
     const travelled = this.frameRect() !== undefined;
     this.cancelFrame();
-    if (framing === undefined || geometry === undefined) return;
+    if (framing === undefined || geometry === undefined || tape === undefined || organ === undefined) return;
     if (!travelled) {
-      this.tap(framing, geometry);
+      this.tap(framing, geometry, tape, organ);
       return;
     }
     const box = svg.getBoundingClientRect();
@@ -740,15 +768,15 @@ export class TapeViewComponent {
    * A tap on empty Tape: selects the Spot under it; on the selected Spot it adds a Hole there. The Lead-in and a cell
    * covered by a Hole clear the selection. An additive tap changes nothing.
    */
-  private tap(framing: NonNullable<typeof this.framing>, geometry: TapeGeometry): void {
+  private tap(framing: Framing, geometry: TapeGeometry, tape: Tape, organ: Organ): void {
     if (framing.additive) return;
     const onLeadIn = framing.origin.x < geometry.leadIn * this.scale();
-    const hole = onLeadIn ? undefined : holeAt(framing.cell, geometry);
+    const hole = onLeadIn ? undefined : holeAt(framing.cell, tape, organ);
     if (hole !== undefined) {
       this.tapHole(hole, false);
       return;
     }
-    const spot = onLeadIn ? undefined : spotAt(framing.cell, geometry);
+    const spot = onLeadIn ? undefined : spotAt(framing.cell, tape, organ);
     if (spot === undefined) {
       this.tapMemory = undefined;
       this.selection.set({holes: []});
@@ -906,6 +934,16 @@ export class TapeViewComponent {
   protected onPointerCancel(event: PointerEvent): void {
     this.trackTouch(event);
     this.cancelGesture();
+  }
+
+  /** Marks a touch the browser ended without a pointerup (the pointerup of a normal release has already done so). */
+  protected onPointerLostCapture(event: PointerEvent): void {
+    this.trackTouch(event);
+  }
+
+  /** Unmarks a touch whose capture came back to the drawing, so it stays down. */
+  protected onPointerGotCapture(event: PointerEvent): void {
+    this.trackTouch(event);
   }
 
   /** Ends the gestures of the drawing in progress: a Hole drag, a frame or a pending tap, and the edge scroll. */

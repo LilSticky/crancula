@@ -84,9 +84,13 @@ function minutesAndSeconds(seconds: number): string {
       align-items: center;
       gap: 0.5rem;
     }
-    .start-column mat-form-field,
-    .crank-speed mat-form-field {
+    .start-column mat-form-field {
       width: 9rem;
+      min-width: 0;
+    }
+    /* The label is German-long: the field takes the free width of the row so the outlined label fits. */
+    .crank-speed mat-form-field {
+      flex: 1 1 12rem;
       min-width: 0;
     }
     /* The thumb's input reaches past the track on both sides; the margin keeps it inside the side panel. */

@@ -2289,8 +2289,8 @@ describe('TapeViewComponent', () => {
       });
       const update = vi.spyOn(TestBed.inject(TapeLibrary), 'update');
       /** One tap: a press and a release at the same place, by the pointer of `pointerType`. */
-      const tap = async (position: {clientX: number; clientY: number}, pointerType: 'mouse' | 'touch' = 'mouse') => {
-        const init = {...position, pointerId: 1, pointerType, button: 0, bubbles: true, cancelable: true};
+      const tap = async (position: {clientX: number; clientY: number}, pointerType: 'mouse' | 'touch' = 'mouse', pointerId = 1) => {
+        const init = {...position, pointerId, pointerType, button: 0, bubbles: true, cancelable: true};
         svg.dispatchEvent(new PointerEvent('pointerdown', init));
         svg.dispatchEvent(new PointerEvent('pointerup', init));
         await rendered.settle();
@@ -2350,6 +2350,15 @@ describe('TapeViewComponent', () => {
       expect(spots(view())[0]?.hasAttribute('aria-live')).toBe(false);
     });
 
+    it('hides the drawn Spot from assistive technology, like the ghost and the marks', async () => {
+      const {view, at, tap} = await setup();
+
+      await tap(at(20, 25));
+
+      expect(spots(view())).toHaveLength(1);
+      expect(spots(view())[0]?.getAttribute('aria-hidden')).toBe('true');
+    });
+
     it('a tap on the selected Spot adds a Hole of Minimum Hole Length, selects it, removes the Spot, with one save', async () => {
       const {tape, view, at, tap, update} = await setup();
 
@@ -2404,6 +2413,23 @@ describe('TapeViewComponent', () => {
 
       expect(update).toHaveBeenCalledTimes(1);
       expect(storedHoles(tape.id).filter((hole) => hole.startsWith('25:20+'))).toEqual(['25:20+1']);
+    });
+
+    describe('after a touch whose pointerup never reaches the drawing (F03)', () => {
+      it('a fresh tap–tap on empty Tape still adds a Hole after a touch whose lostpointercapture reaches the drawing without a pointerup', async () => {
+        const {tape, svg, at, tap, update, settle} = await setup();
+        // The first touch goes down on empty Tape; the browser then ends it with lostpointercapture, and no pointerup follows.
+        svg.dispatchEvent(new PointerEvent('pointerdown', {...at(5, 24), pointerId: 1, pointerType: 'touch', button: 0, bubbles: true, cancelable: true}));
+        svg.dispatchEvent(new PointerEvent('lostpointercapture', {pointerId: 1, pointerType: 'touch', bubbles: true}));
+        await settle();
+
+        // A fresh touch is a new pointer, so it has its own pointerId.
+        await tap(at(20, 25), 'touch', 2);
+        await tap(at(20, 25), 'touch', 2);
+
+        expect(update).toHaveBeenCalledTimes(1);
+        expect(storedHoles(tape.id)).toContain('25:20+1');
+      });
     });
 
     describe('while the Preview plays', () => {
@@ -3989,6 +4015,26 @@ describe('TapeViewComponent', () => {
         await down(svg, at(30, 25), second);
         await move(at(16, 24), touch);
         await up(at(16, 24), touch);
+        await up(at(30, 25), second);
+
+        expect(storedHoles(tape.id)).toEqual(before);
+        expect(update).not.toHaveBeenCalled();
+      });
+
+      it('cancels a Hole drag when a second finger lands after the capture moved from the Hole to the drawing (F03)', async () => {
+        const {tape, view, svg, at, down, move, up, update, settle} = await setup({holes, platform: 'win32'});
+        const before = storedHoles(tape.id);
+        const second: Gesture = {pointerType: 'touch', pointerId: 2};
+
+        await down(holeAt(view(), 24, 10), at(11, 24), touch);
+        await move(at(16, 24), touch);
+        // The capture moves while the first finger is still down: a Hole that is still drawn loses it, then the drawing gets it.
+        required(drawn(view()).at(0), 'a drawn Hole').dispatchEvent(new PointerEvent('lostpointercapture', {pointerId: 1, pointerType: 'touch', bubbles: true}));
+        svg.dispatchEvent(new PointerEvent('gotpointercapture', {pointerId: 1, pointerType: 'touch', bubbles: true}));
+        await settle();
+        await down(svg, at(30, 25), second);
+        await move(at(20, 24), touch);
+        await up(at(20, 24), touch);
         await up(at(30, 25), second);
 
         expect(storedHoles(tape.id)).toEqual(before);

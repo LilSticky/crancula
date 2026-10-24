@@ -99,3 +99,16 @@ real Electron touch, restart and migration.
 - Phase 2 before US5; US1 (T011 TapeSelection) before US2–US4 in the Tape view component.
 - US2's T016–T019 can run beside US1's T008/T014 (different files).
 - Polish after all stories.
+
+## Phase 9: Follow-ups from the reviews ([#156](https://github.com/LilSticky/crancula/issues/156))
+
+Branch `156-touch-review-follow-ups`. Details in `review.md` (items 2–5), `ux-review.md` (items 5, 7, 8) and `audit.md`.
+
+- [x] F01 Red/green: `spot.ts` `holeAt` looks the Hole up in the Tape instead of deriving its length from the slot width (review 2).
+- [x] F02 Refactor (behaviour unchanged, existing specs green): `holeSelection` returns a module constant `NO_HOLES`; the Spot `<rect>` gets `aria-hidden="true"` (spec asserts it); name the `framing` type (`interface Framing`) (review 3–5).
+- [x] F03 Red/green: a touch whose `pointerup` never reaches the drawing (`pointercancel`, `lostpointercapture`) leaves the touch set, so touch edits work again (audit).
+- [x] F04 Dropped (user, 2026-10-24): the Crank speed is an undoable Tape edit like the others, which show no toast; the "Organ saved" toast in the review shots was a leftover of the screenshot script (F07).
+- [x] F05 Red/green (layout e2e): the Crank speed field's outlined label is not clipped (German, 1440×900); the zoom segment is not clipped at 1024 px and the side panel does not scroll sideways (ux-review 7, #156 comment). Note: the zoom segment and side-panel overflow already passed since #151 (now regression e2e); only the Crank speed label was red.
+- [x] F06 Dark theme: grips and playhead on the Tape already at 4.78:1 (`--cr-select`); the playhead grip on the dark page was 2.15:1 (needs 3:1). Added `--cr-select-on-page` (`#4a7cc4` in dark, 4.14:1 on the bench; light `#1d4f91`) for the grip mark only (ux-review 8).
+- [x] F07 `npm run ux:screens` also captures a selected Spot, the Crank speed slider and the playing state, without the leftover "Organ saved" toast. New: 08h (selected Spot), 08i (Crank speed slider), 08j (playing, playhead mid-Tape on an Organ with 10 mm Tape per Crank turn). Tape view shots wait for snackbars to clear; 09 lost its toast the same way.
+- [x] F08 Reviews (angular-reviewer), STATUS, full gate, PR "Closes #156".

@@ -1,14 +1,15 @@
 // API: `Spot` = {row: number (from 1, a Pipe's row), start: Column}; `sameSpot(a, b): boolean`;
-// `spotAt(cell: GridCell, geometry: TapeGeometry): Spot | undefined` (undefined where a Hole covers the cell; the Spot may
-// lie after the Tape's last Column); `moveSpot(spot: Spot, direction: Direction, rows: number, geometry: TapeGeometry): Spot`
-// (one Column or row, skipping the cells a Hole covers in that direction; stays put when no free cell is left, clamped to
-// Column 0 and rows 1..rows).
-import {column, columnCount, midiNoteNumber, millimetres, organId, tapeGeometry, tapeId, transposition, type Column, type Hole, type Tape, type TapeGeometry} from '@api/index';
+// `holeAt(cell: GridCell, tape: Tape, organ: Organ): SelectableHole | undefined` (the Hole covering the cell, as its row and
+// start; the row is the Pipe's position in `organ.pipes` plus 1); `spotAt(cell: GridCell, tape: Tape, organ: Organ): Spot | undefined`
+// (undefined where a Hole covers the cell; the Spot may lie after the Tape's last Column);
+// `moveSpot(spot: Spot, direction: Direction, rows: number, tape: Tape, organ: Organ): Spot` (one Column or row, skipping the
+// cells a Hole covers in that direction; stays put when no free cell is left, clamped to Column 0 and rows 1..rows).
+import {column, columnCount, midiNoteNumber, millimetres, organId, tapeId, transposition, type Column, type Hole, type Tape} from '@api/index';
 import {tapeOf} from '../../../../../api/tape/tape-fixture';
 import {partIndex, songId} from '../../../../../api/song/song';
 import {testOrgan} from '../../../../testing/organs';
 import type {Direction, GridCell} from './hole-selection';
-import {moveSpot, sameSpot, spotAt, type Spot} from './spot';
+import {holeAt, moveSpot, sameSpot, spotAt, type Spot} from './spot';
 
 function defined<T>(value: T | undefined, what: string): T {
   if (value === undefined) throw new Error(`invalid test value: ${what}`);
@@ -36,7 +37,7 @@ function tapeWith(holes: readonly Hole[]): Tape {
 
 /** A Hole on row 2 (the Pipe of note 62) over Columns 5, 6 and 7. */
 const TAPE = tapeWith([{pipe: defined(midiNoteNumber(62), 'pipe'), start: col(5), length: defined(columnCount(3), 'length')}]);
-const GEOMETRY: TapeGeometry = tapeGeometry(TAPE, ORGAN);
+const at = (column: number, row: number): GridCell => ({column, row});
 
 describe('sameSpot', () => {
   it('is true for the same row and Column', () => {
@@ -49,32 +50,43 @@ describe('sameSpot', () => {
   });
 });
 
-describe('spotAt', () => {
-  const at = (column: number, row: number): GridCell => ({column, row});
+describe('holeAt', () => {
+  it('gives the Hole covering the cell, as its row and start', () => {
+    expect(holeAt(at(6, 2), TAPE, ORGAN)).toEqual({row: 2, start: col(5)});
+  });
 
+  it('gives nothing on an empty cell', () => {
+    expect(holeAt(at(8, 2), TAPE, ORGAN)).toBeUndefined();
+  });
+
+  it('gives nothing on the row of another Pipe', () => {
+    expect(holeAt(at(6, 1), TAPE, ORGAN)).toBeUndefined();
+  });
+});
+
+describe('spotAt', () => {
   it('gives the Spot of an empty cell, on its row and Column', () => {
-    expect(spotAt(at(10, 2), GEOMETRY)).toEqual({row: 2, start: col(10)});
-    expect(spotAt(at(4, 1), GEOMETRY)).toEqual({row: 1, start: col(4)});
+    expect(spotAt(at(10, 2), TAPE, ORGAN)).toEqual({row: 2, start: col(10)});
+    expect(spotAt(at(4, 1), TAPE, ORGAN)).toEqual({row: 1, start: col(4)});
   });
 
   it('gives no Spot on a cell covered by a Hole', () => {
-    expect(spotAt(at(5, 2), GEOMETRY)).toBeUndefined();
-    expect(spotAt(at(7, 2), GEOMETRY)).toBeUndefined();
+    expect(spotAt(at(5, 2), TAPE, ORGAN)).toBeUndefined();
+    expect(spotAt(at(7, 2), TAPE, ORGAN)).toBeUndefined();
   });
 
   it('gives a Spot on the first Column after a Hole of its row', () => {
-    expect(spotAt(at(8, 2), GEOMETRY)).toEqual({row: 2, start: col(8)});
+    expect(spotAt(at(8, 2), TAPE, ORGAN)).toEqual({row: 2, start: col(8)});
   });
 
   it('gives a Spot after the last Column of the Tape', () => {
-    expect(spotAt(at(103, 2), GEOMETRY)).toEqual({row: 2, start: col(103)});
+    expect(spotAt(at(103, 2), TAPE, ORGAN)).toEqual({row: 2, start: col(103)});
   });
 });
 
 describe('moveSpot', () => {
   const spot: Spot = {row: 2, start: col(4)};
-  const move = (direction: Direction, from: Spot = spot, rows = 3, geometry: TapeGeometry = GEOMETRY): Spot =>
-    moveSpot(from, direction, rows, geometry);
+  const move = (direction: Direction, from: Spot = spot, rows = 3, tape: Tape = TAPE): Spot => moveSpot(from, direction, rows, tape, ORGAN);
 
   it('moves one Column left or right', () => {
     expect(move('right', {row: 1, start: col(4)})).toEqual({row: 1, start: col(5)});
@@ -101,14 +113,14 @@ describe('moveSpot', () => {
   });
 
   it('skips the rows a Hole covers in its Column', () => {
-    const above = tapeGeometry(tapeWith([{pipe: defined(midiNoteNumber(60), 'pipe'), start: col(4), length: defined(columnCount(3), 'length')}]), ORGAN);
+    const above = tapeWith([{pipe: defined(midiNoteNumber(60), 'pipe'), start: col(4), length: defined(columnCount(3), 'length')}]);
 
     expect(move('up', spot, 3, above)).toEqual({row: 2, start: col(4)});
     expect(move('down', spot, 3, above)).toEqual({row: 3, start: col(4)});
   });
 
   it('stays put when every cell that way is covered', () => {
-    const walled = tapeGeometry(tapeWith([{pipe: defined(midiNoteNumber(62), 'pipe'), start: col(0), length: defined(columnCount(4), 'length')}]), ORGAN);
+    const walled = tapeWith([{pipe: defined(midiNoteNumber(62), 'pipe'), start: col(0), length: defined(columnCount(4), 'length')}]);
 
     expect(move('left', spot, 3, walled)).toEqual(spot);
   });

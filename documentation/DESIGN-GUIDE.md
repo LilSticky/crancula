@@ -44,6 +44,7 @@ Holes, a brass rule for measuring. Craft, not costume: no wood grain, scrolls or
 | Manila | `#e8d6a4` | `#d8c593` | The Tape only (and the logo) |
 | Hole | `#1e1a16` | `#1e1a16` | Holes, in both schemes: the Tape is a physical object |
 | Select | `#1d4f91` | `#1d4f91` | Ring around the selected Hole (on manila, 5.6:1) |
+| Select on bench | `#1d4f91` | `#4a7cc4` | `--cr-select-on-page`: selection marks drawn on the bench, e.g. the playhead grip (5.3:1 / 4.1:1) |
 
 No other hues. Never colour alone: errors carry an icon and text, unsaved carries a label, the
 selected Hole has a ring and an inspector entry.

@@ -2,7 +2,7 @@ import type {MidiNoteNumber} from '../organ/midi-note-number';
 import type {Organ} from '../organ/organ';
 import {err, ok, type Result} from '../result';
 import {holeLimitsOf} from './hole-fixes';
-import {columnCount, validTape, type Column, type ColumnCount, type Hole, type Tape} from './tape';
+import {column, columnCount, validTape, type Column, type ColumnCount, type Hole, type Tape} from './tape';
 
 /** Names a Hole of a Tape: a Pipe has at most one Hole at a start. */
 export type HoleRef = Pick<Hole, 'pipe' | 'start'>;
@@ -96,13 +96,20 @@ export function addHole(
   return replaceHole(tape, undefined, {pipe, start, length});
 }
 
+/** The Hole of `pipe` that covers the Column (from its start to its last Column), or `undefined` on a free Column. */
+export function holeCovering(tape: Tape, pipe: MidiNoteNumber, at: Column): Hole | undefined {
+  return tape.holes.find((hole) => hole.pipe === pipe && hole.start <= at && at < hole.start + hole.length);
+}
+
 /** The first Column after the selected Hole that no Hole of its Pipe covers; Column 0 without a selected Hole. */
 export function firstFreeColumnAfter(tape: Tape, selected: HoleRef | undefined): Column {
   const hole = selected && find(tape, selected);
   if (hole === undefined) return 0 as Column;
   let free = hole.start + hole.length;
-  const covering = (): Hole | undefined =>
-    tape.holes.find((other) => other.pipe === hole.pipe && other.start <= free && free < other.start + other.length);
+  const covering = (): Hole | undefined => {
+    const at = column(free);
+    return at === undefined ? undefined : holeCovering(tape, hole.pipe, at);
+  };
   for (let next = covering(); next !== undefined; next = covering()) free = next.start + next.length;
   return free as Column;
 }
