@@ -64,6 +64,7 @@ html {
   --cr-tape-guide-strong: rgb(90 70 30 / 40%);       // natural rows, every 24th Column, borders
   --cr-hole: #1e1a16;                                // ink-black Holes, both schemes
   --cr-select: #1d4f91;                              // selected Hole ring on manila, 5.6:1
+  --cr-select-on-page: light-dark(#1d4f91, #4a7cc4); // selection marks on the bench, 5.3:1 / 4.1:1
   --cr-problem: #7a2a24;                             // oxblood: Cutting Problem and refused Hole ring on manila
   --cr-brass: light-dark(#8c6a23, #c9a45a);          // rulers, dimensions, focus ring
   --cr-brass-on-walnut: #c9a45a;                     // focus ring inside the rail (6:1)
