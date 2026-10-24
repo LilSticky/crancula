@@ -89,10 +89,10 @@ real Electron touch, restart and migration.
 - [x] T033 [P] Red/green: e2e for the playhead drag while playing and the slider (release, then Ctrl+Z) in the existing crank e2e file; Organ range fields across a restart and a v4 snapshot migration in the Organ e2e.
 - [x] T034 [P] ADR 25 "One gesture model for all pointer types" (`adr` skill) and the index.
 - [x] T035 [P] DESIGN-GUIDE "The Tape visualisation" and "Accessibility commitments" (grips, Spot, 44 px targets).
-- [ ] T036 `npm run ux:screens` + `ux-review` of the Tape view and the Organ editor; fix or file findings.
-- [ ] T037 `angular-reviewer` over the slice; fix findings.
-- [ ] T038 `spec-auditor` against spec.md; write `audit.md`.
-- [ ] T039 STATUS, ROADMAP, CHANGELOG `[Unreleased]`; full gate (`npm run test`, `lint`, `i18n:check`, `e2e`); PR "Closes #152".
+- [x] T036 `npm run ux:screens` + `ux-review` of the Tape view and the Organ editor; fix or file findings.
+- [x] T037 `angular-reviewer` over the slice; fix findings.
+- [x] T038 `spec-auditor` against spec.md; write `audit.md`.
+- [x] T039 STATUS, ROADMAP, CHANGELOG `[Unreleased]`; full gate (`npm run test`, `lint`, `i18n:check`, `e2e`); PR "Closes #152".
 
 ## Dependencies
 
