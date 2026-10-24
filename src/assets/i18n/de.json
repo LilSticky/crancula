@@ -275,6 +275,8 @@
     },
     "EDITOR": {
       "TITLE_NEW": "Neue Drehorgel",
+      "PRESETS": "Mit einer Vorlage beginnen",
+      "PRESET_LABEL": "Mit der Vorlage {{name}} beginnen",
       "TITLE": "Drehorgel",
       "NAME": "Name",
       "TAPE_BED": "Bandbett",

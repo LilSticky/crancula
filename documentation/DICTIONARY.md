@@ -12,6 +12,12 @@
   * those pipes produce a note
 * German: Drehorgel
 
+# Preset
+* A ready-made Organ the user starts from when describing a new Organ; a starting point, not an Organ of the library
+* Choosing one fills the Organ editor, which the user then adapts and saves as an ordinary Organ
+* Shipped with Crancula: the 20er-Drehorgel (Carl Frei scale) and the 31er-Drehorgel (Raffin scale)
+* German: Vorlage (approved by the user, 2026-10-24, #162)
+
 # Pipe
 * Can play one musical note
 * Identified by the MIDI note number of the note it plays

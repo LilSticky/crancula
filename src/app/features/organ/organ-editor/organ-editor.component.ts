@@ -14,6 +14,8 @@ import {
   emptyOrganDraft,
   movePipe,
   newOrganId,
+  ORGAN_PRESETS,
+  type OrganPreset,
   type Organ,
   type OrganDraft,
   removePipe,
@@ -61,6 +63,12 @@ const FIELD_TEST_IDS: Readonly<Record<string, string>> = {
   styles: `
     .delete-organ {
       --mat-button-text-label-text-color: var(--mat-sys-error);
+    }
+
+    .presets {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
     }
 
     .unsaved-dot {
@@ -256,6 +264,13 @@ export class OrganEditorComponent implements UnsavedChangesCheck {
   unsavedChanges(): UnsavedChanges | null {
     if (this.deleted || !this.changed()) return null;
     return {problems: organProblems(this.organ).map(toProblem)};
+  }
+
+  protected readonly presets = ORGAN_PRESETS;
+
+  /** Fills a new Organ from a preset, keeping its id. */
+  protected usePreset(preset: OrganPreset): void {
+    this.draft.update((draft) => ({...preset.draft, id: draft.id}));
   }
 
   /** Resets the draft to the last saved version (empty for a new Organ), without writing. */
