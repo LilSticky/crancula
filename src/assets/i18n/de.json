@@ -326,7 +326,7 @@
       "TAPE_PER_CRANK_TURN_HINT": "Wie weit eine Umdrehung das Lochband zieht; nötig, um ein Lochband anzuhören",
       "SLOWEST_CRANK_SPEED": "Langsamste Kurbelgeschwindigkeit",
       "FASTEST_CRANK_SPEED": "Schnellste Kurbelgeschwindigkeit",
-      "CRANK_SPEED_UNIT": "Umdrehungen pro Minute"
+      "CRANK_SPEED_UNIT": "U/min"
     },
     "LEAVE": {
       "TITLE": "Nicht gespeicherte Änderungen",

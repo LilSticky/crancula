@@ -14,6 +14,7 @@ interface Inputs {
   readonly minimumHoleLength?: string;
   readonly fit?: TapeBedFitText | null;
   readonly drawing?: TapeBedDrawing | null;
+  readonly lang?: 'en' | 'de';
 }
 
 const FIT: TapeBedFitText = {
@@ -28,10 +29,17 @@ const FIT: TapeBedFitText = {
 
 const DRAWING: TapeBedDrawing = {tapeWidth: 120, length: 240, border: 58.25, bottomBorderTop: 61.75, rows: [59.5, 63]};
 
-async function render({draft = toDraft(testOrgan('Positive')), border = '', minimumHoleLength = '', fit = null, drawing = null}: Inputs = {}) {
+async function render({
+  draft = toDraft(testOrgan('Positive')),
+  border = '',
+  minimumHoleLength = '',
+  fit = null,
+  drawing = null,
+  lang = 'en',
+}: Inputs = {}) {
   TestBed.resetTestingModule();
   TestBed.configureTestingModule({
-    providers: [provideTestTranslations(), SaveAttempt, {provide: ErrorStateMatcher, useClass: ShownViolationMatcher}],
+    providers: [provideTestTranslations(lang), SaveAttempt, {provide: ErrorStateMatcher, useClass: ShownViolationMatcher}],
   });
   const organ: FieldTree<OrganDraft> = TestBed.runInInjectionContext(() => form(signal(draft), organFormSchema));
   const fixture = TestBed.createComponent(TapeBedSheetComponent);
@@ -206,6 +214,23 @@ describe('TapeBedSheetComponent', () => {
       await fixture.whenStable();
 
       expect(violationsAt(element, 'fastestCrankSpeed')).toEqual(['The fastest Crank speed must be above the slowest.']);
+    });
+  });
+
+  describe('the long fields of the Tape Bed card', () => {
+    it.each(['tape-per-crank-turn', 'slowest-crank-speed', 'fastest-crank-speed'])(
+      'spans the full row of the field grid, as the Name field does (%s)',
+      async (testId) => {
+        const {field} = await render();
+
+        expect(field(testId).closest('mat-form-field')?.classList.contains('full-width')).toBe(true);
+      },
+    );
+
+    it.each(['slowest-crank-speed', 'fastest-crank-speed'])('shows the German Crank speed unit "U/min" (%s)', async (testId) => {
+      const {field} = await render({lang: 'de'});
+
+      expect(field(testId).closest('mat-form-field')?.querySelector('[matTextSuffix]')?.textContent?.trim()).toBe('U/min');
     });
   });
 });
