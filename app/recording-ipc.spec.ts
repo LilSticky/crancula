@@ -31,19 +31,27 @@ let documents: string;
 let dialogAnswers: SaveDialogReturnValue[];
 let dialogCalls: SaveDialogOptions[];
 let written: {filePath: string; bytes: Uint8Array}[];
+let writeOptions: {exclusive: boolean}[];
+let existingFiles: Set<string>;
 let failWritesWith: string | undefined;
+let dialogGate: Promise<void>;
 let targetCount: number;
 let handlers: Map<string, Handler>;
 const window = {} as BrowserWindow;
 
 const effects: RecordingEffects = {
-  showSaveDialog: (_window, options) => {
+  showSaveDialog: async (_window, options) => {
     dialogCalls.push(options);
-    return Promise.resolve(dialogAnswers.shift() ?? {canceled: true, filePath: ''});
+    await dialogGate;
+    return dialogAnswers.shift() ?? {canceled: true, filePath: ''};
   },
-  writeFile: (filePath, bytes) => {
+  writeFile: (filePath, bytes, options) => {
+    writeOptions.push(options);
     if (failWritesWith !== undefined) {
       return Promise.reject(Object.assign(new Error('denied'), {code: failWritesWith}));
+    }
+    if (options.exclusive && existingFiles.has(filePath)) {
+      return Promise.reject(Object.assign(new Error('exists'), {code: 'EEXIST'}));
     }
     written.push({filePath, bytes});
     return Promise.resolve();
@@ -76,7 +84,10 @@ beforeEach(() => {
   dialogAnswers = [];
   dialogCalls = [];
   written = [];
+  writeOptions = [];
+  existingFiles = new Set<string>();
   failWritesWith = undefined;
+  dialogGate = Promise.resolve();
   targetCount = 0;
   handlers = new Map<string, Handler>();
   const ipcMain: IpcHandlerRegistry = {handle: (channel, handler) => void handlers.set(channel, handler)};
@@ -191,6 +202,64 @@ describe('registerRecordingHandlers', () => {
     const reply = await write({target, bytes: WAV_BYTES});
 
     expect(reply).toEqual({status: 'failed', reason: 'EACCES'});
+  });
+
+  it('writes an appended .wav exclusively, so that an existing file is never overwritten', async () => {
+    const target = await chooseFile(join(documents, 'x.ogg'));
+
+    await write({target, bytes: WAV_BYTES});
+
+    expect(writeOptions).toEqual([{exclusive: true}]);
+  });
+
+  it('writes a chosen .wav without the exclusive flag', async () => {
+    const target = await chooseFile(join(documents, 'x.wav'));
+
+    await write({target, bytes: WAV_BYTES});
+
+    expect(writeOptions).toEqual([{exclusive: false}]);
+  });
+
+  it('answers failed with EEXIST and writes nothing when the appended .wav path already exists', async () => {
+    existingFiles.add(join(documents, 'x.ogg.wav'));
+    const target = await chooseFile(join(documents, 'x.ogg'));
+
+    const reply = await write({target, bytes: WAV_BYTES});
+
+    expect(reply).toEqual({status: 'failed', reason: 'EEXIST'});
+    expect(written).toEqual([]);
+  });
+
+  it('closes the target when the bytes do not match its format, so a correct write is rejected', async () => {
+    const target = await chooseFile(join(documents, 'x.mp3'));
+
+    expect(await write({target, bytes: WAV_BYTES})).toEqual({status: 'rejected', reason: expect.any(String)});
+    expect(await write({target, bytes: MP3_BYTES})).toEqual({status: 'rejected', reason: expect.any(String)});
+    expect(written).toEqual([]);
+  });
+
+  it('keeps the open target when a write names an unknown target', async () => {
+    const target = await chooseFile(join(documents, 'x.wav'));
+
+    expect(await write({target: uuid(99), bytes: WAV_BYTES})).toEqual({status: 'rejected', reason: expect.any(String)});
+    expect(await write({target, bytes: WAV_BYTES})).toEqual({status: 'saved', filePath: join(documents, 'x.wav')});
+  });
+
+  it('closes the open target before the dialog of the next choose is answered', async () => {
+    const first = await chooseFile(join(documents, 'first.wav'));
+    let releaseDialog: () => void = () => undefined;
+    dialogGate = new Promise<void>((resolve) => {
+      releaseDialog = resolve;
+    });
+    dialogAnswers.push({canceled: true, filePath: ''});
+    const pendingChoose = choose(chooseRequest);
+
+    const reply = await write({target: first, bytes: WAV_BYTES});
+
+    releaseDialog();
+    await pendingChoose;
+    expect(reply).toEqual({status: 'rejected', reason: expect.any(String)});
+    expect(written).toEqual([]);
   });
 
   it('closes a second chosen target when a second choose replaces the first', async () => {

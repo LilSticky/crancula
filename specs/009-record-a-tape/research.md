@@ -45,7 +45,7 @@
   `.wav` appended. Main keeps the path under a random single-use target id and returns
   `{status: 'chosen', target, format, fileName}`. `recording:write-file` takes `{target, bytes}`,
   checks the target is open and the bytes start with `RIFF....WAVE` (wav) or an ID3 tag or MPEG frame
-  sync (mp3), size ≤ 512 MB, writes, and closes the target. A target expires when used or after the
+  sync (mp3), size ≤ 128 MiB, writes, and closes the target. A target expires when used or after the
   next choose.
 - **Rationale**: the renderer never sends a path (ADR 4), the format is known before encoding, and the
   owner chooses the format in the system dialog (FR-004).

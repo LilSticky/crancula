@@ -34,7 +34,8 @@ export type RecordingWriteResult =
 const CHOOSE_FIELDS = ['suggestedFileName', 'dialogTitle', 'wavFilterName', 'mp3FilterName'] as const;
 const WRITE_FIELDS = ['target', 'bytes'] as const;
 const MAXIMUM_TEXT_LENGTH = 200;
-const MAXIMUM_BYTES = 512 * 2 ** 20;
+/** The largest Recording the renderer may send: about 20 minutes of WAV is 106 MB. */
+export const MAXIMUM_RECORDING_BYTES = 128 * 2 ** 20;
 // eslint-disable-next-line no-control-regex
 const CONTROL = /[\u0000-\u001f\u007f]/;
 const PATH_SEPARATOR = /[\\/]/;
@@ -71,8 +72,8 @@ export function parseRecordingWriteRequest(input: unknown): Result<RecordingWrit
   const {target, bytes} = fields.value;
   if (typeof target !== 'string' || !UUID.test(target)) return err('target is not a UUID');
   if (!(bytes instanceof Uint8Array)) return err('bytes is not a Uint8Array');
-  if (bytes.length < 1 || bytes.length > MAXIMUM_BYTES) {
-    return err(`bytes must be 1 to ${MAXIMUM_BYTES} bytes`);
+  if (bytes.length < 1 || bytes.length > MAXIMUM_RECORDING_BYTES) {
+    return err(`bytes must be 1 to ${MAXIMUM_RECORDING_BYTES} bytes`);
   }
   return ok({target, bytes});
 }

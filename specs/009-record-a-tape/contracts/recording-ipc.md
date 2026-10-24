@@ -21,6 +21,8 @@ Channels, allow-listed in `app/recording-ipc.ts` and `app/preload.ts`, exposed a
 
 - Parsed with `parseRecordingWriteRequest`; unknown or used target → `rejected`.
 - Bytes must match the target's format: `RIFF` + 4 bytes + `WAVE`, or `ID3` / `0xFF 0xE?` frame sync.
+- Size 1 B to 128 MiB (`MAXIMUM_RECORDING_BYTES`); a file name whose `.wav` was appended is written
+  exclusively, so an existing file is never replaced (EEXIST → `failed`).
 - Write; the target is closed in every case. OS error → `failed` with the error code; success →
   `saved` with the full path, and the folder is remembered for the next dialog.
 

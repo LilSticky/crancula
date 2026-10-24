@@ -41,7 +41,8 @@ registerRecordingHandlers(
   {
     // Looked up at call time, like the Plotter's dialog.
     showSaveDialog: (window, options) => dialog.showSaveDialog(window, options),
-    writeFile: (filePath, bytes) => fs.promises.writeFile(filePath, bytes),
+    // An appended .wav name is created exclusively: an existing file at that path is never replaced.
+    writeFile: (filePath, bytes, options) => fs.promises.writeFile(filePath, bytes, {flag: options.exclusive ? 'wx' : 'w'}),
     documentsFolder: () => app.getPath('documents'),
     newTarget: () => randomUUID(),
   },

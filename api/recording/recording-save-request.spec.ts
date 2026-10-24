@@ -1,5 +1,9 @@
 import {describe, expect, it} from 'vitest';
-import {parseRecordingChooseRequest, parseRecordingWriteRequest} from './recording-save-request';
+import {
+  MAXIMUM_RECORDING_BYTES,
+  parseRecordingChooseRequest,
+  parseRecordingWriteRequest,
+} from './recording-save-request';
 
 const TARGET = '00000000-0000-4000-8000-000000000001';
 
@@ -117,6 +121,12 @@ describe('parseRecordingWriteRequest', () => {
 
   it('rejects empty bytes', () => {
     expect(writeErrorOf({...validWrite, bytes: new Uint8Array(0)})).toContain('bytes');
+  });
+
+  it('accepts the maximum of 128 MiB and rejects one byte more', () => {
+    expect(MAXIMUM_RECORDING_BYTES).toBe(128 * 2 ** 20);
+    expect(parseRecordingWriteRequest({...validWrite, bytes: new Uint8Array(MAXIMUM_RECORDING_BYTES)}).ok).toBe(true);
+    expect(writeErrorOf({...validWrite, bytes: new Uint8Array(MAXIMUM_RECORDING_BYTES + 1)})).toContain('bytes');
   });
 
   it('accepts one byte', () => {

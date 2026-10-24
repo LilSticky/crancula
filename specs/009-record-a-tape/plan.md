@@ -35,7 +35,7 @@ e2e (real Electron: record a WAV and an MP3 with a stubbed dialog, check header 
 **Constraints**: mono, 44.1 kHz, 16-bit WAV; MP3 mono 128 kbit/s (clarification 2026-10-25); no
 sound aloud while recording; ADR 4 boundary (validated payloads, allow-listed channels)
 
-**Scale/Scope**: Tapes up to ~20 minutes (≈ 106 MB WAV, ≈ 19 MB MP3); payload limit 512 MB
+**Scale/Scope**: Tapes up to ~20 minutes (≈ 106 MB WAV, ≈ 19 MB MP3); payload limit 128 MiB
 
 ## Constitution Check
 

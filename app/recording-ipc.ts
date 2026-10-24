@@ -15,7 +15,8 @@ export const RECORDING_CHANNELS = {chooseFile: 'recording:choose-file', writeFil
 /** The side effects of saving a Recording; Electron and Node in `main.ts`, fakes in tests. */
 export interface RecordingEffects {
   showSaveDialog(window: BrowserWindow, options: SaveDialogOptions): Promise<SaveDialogReturnValue>;
-  writeFile(filePath: string, bytes: Uint8Array): Promise<void>;
+  /** `exclusive` fails with EEXIST instead of replacing a file that is already there. */
+  writeFile(filePath: string, bytes: Uint8Array, options: {readonly exclusive: boolean}): Promise<void>;
   documentsFolder(): string;
   /** A random token the renderer must present to write to the file the owner chose. */
   newTarget(): string;
@@ -26,6 +27,8 @@ interface OpenTarget {
   readonly id: string;
   readonly filePath: string;
   readonly format: RecordingFormat;
+  /** True when .wav was appended by main, so the file name was never confirmed by the dialog. */
+  readonly appendedExtension: boolean;
 }
 
 /** The OS error code such as ENOENT or EACCES; it tells the reason without naming the path. */
@@ -72,6 +75,8 @@ export function registerRecordingHandlers(
     const window = windowOf(event as IpcMainInvokeEvent);
     if (!window) return {status: 'rejected', reason: 'no window to show the save dialog for'};
 
+    // The target chosen before is closed as soon as a new dialog opens, whatever it answers.
+    openTarget = undefined;
     const answer = await effects.showSaveDialog(window, {
       title: request.dialogTitle,
       defaultPath: join(lastFolder ?? effects.documentsFolder(), `${request.suggestedFileName}.wav`),
@@ -81,15 +86,13 @@ export function registerRecordingHandlers(
       ],
       properties: ['showOverwriteConfirmation', 'createDirectory'],
     });
-    // The target chosen before is closed by any answer: a cancelled dialog leaves nothing pending.
-    openTarget = undefined;
     if (answer.canceled || !answer.filePath) return {status: 'cancelled'};
 
     // A file name without a known extension gets .wav appended, as the dialog's default does.
     const knownFormat = recordingFormatOf(basename(answer.filePath));
     const filePath = knownFormat ? answer.filePath : `${answer.filePath}.wav`;
     const format = knownFormat ?? 'wav';
-    const target: OpenTarget = {id: effects.newTarget(), filePath, format};
+    const target: OpenTarget = {id: effects.newTarget(), filePath, format, appendedExtension: knownFormat === undefined};
     openTarget = target;
     return {status: 'chosen', target: target.id, format, fileName: basename(filePath)};
   });
@@ -100,14 +103,14 @@ export function registerRecordingHandlers(
     const request = parsed.value;
     const target = openTarget;
     if (!target || target.id !== request.target) return {status: 'rejected', reason: 'unknown or used target'};
+    // Closed by every write that names the open target, so that no second write can use it.
+    openTarget = undefined;
     if (!matchesFormat(request.bytes, target.format)) {
       return {status: 'rejected', reason: `the bytes are not a ${target.format} file`};
     }
 
-    // Closed before the write, so that no second write can use the same target.
-    openTarget = undefined;
     try {
-      await effects.writeFile(target.filePath, request.bytes);
+      await effects.writeFile(target.filePath, request.bytes, {exclusive: target.appendedExtension});
     } catch (error: unknown) {
       console.error('Could not write the Recording', error);
       return {status: 'failed', reason: errorCode(error)};

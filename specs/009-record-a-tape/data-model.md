@@ -44,7 +44,7 @@ type RecordingWriteResult =
 ```
 
 Validation as for `SvgSaveRequest` (exact fields, string limits, no control characters); `target` is a
-UUID; `bytes` is a `Uint8Array` of 1 B to 512 MB.
+UUID; `bytes` is a `Uint8Array` of 1 B to 128 MiB.
 
 ## TapeRecorder state (renderer, `src/`)
 
