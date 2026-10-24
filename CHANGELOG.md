@@ -8,6 +8,18 @@ as its GitHub Release notes.
 
 ## [Unreleased]
 
+### Added
+- Edit a Tape by touch: tap an empty place to select a Spot, tap it again to add a Hole. A selected
+  Hole has grips beside its ends to lengthen or shorten it; drag a Hole to move it, double-tap it to
+  remove it. A finger drag on empty Tape scrolls; the mouse still draws a selection frame.
+- Drag the playhead along the ruler; while the Preview plays it goes on from where you let go.
+- Each Organ has a Crank speed range, its slowest and fastest Crank speed (30–120 turns per minute
+  to begin with). A slider in the Preview sets the Crank speed within it; the number field still
+  takes 1–300.
+
+### Changed
+- A double-click on a Hole now removes it (two taps on one Hole).
+
 ## [0.2.0] - 2026-10-24
 
 ### Added

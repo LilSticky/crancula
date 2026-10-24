@@ -50,8 +50,8 @@ Decisions for [plan.md](plan.md). Facts about today's code were gathered on 2026
 ## R5. Touch drag on empty Tape scrolls
 
 - **Decision**: `.scroll svg` gets `touch-action: pan-x pan-y` (today `none`); Holes, grips and the
-  playhead grip get `touch-action: none`. `onPointerDown` starts no frame when `pointerType ===
-  'touch'`. When the browser takes the gesture over for panning it fires `pointercancel`, which
+  playhead grip get `touch-action: none`. A touch press is still recorded, so a touch tap
+  selects a Spot, but once it travels (`pointerType === 'touch'`) no frame is drawn. When the browser takes the gesture over for panning it fires `pointercancel`, which
   `onPointerCancel` already handles (no tap, no edit).
 - **Rationale**: browsers decide panning at `pointerdown` from the target's effective `touch-action`
   (the intersection with its ancestors), so per-element values are enough; no JS scrolling needed.
