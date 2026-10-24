@@ -27,8 +27,8 @@ Playwright e2e only for what needs real Electron (offline rendering, LAME in a W
 
 ## Phase 1: Setup
 
-- [ ] T001 Add the keys of contracts/recording-ui.md with en and de texts to `src/assets/i18n/en.json` and `de.json`: `TAPE.RECORD.BUTTON` ("Record" / "Aufnehmen"), `PROGRESS` (with `{{percent}}`; "Recording… {{percent}} %" / "Aufnahme… {{percent}} %"), `SAVED` (with `{{name}}`), `FAILED` (with `{{reason}}`), `RETRY`, `DIALOG_TITLE`, `WAV_FILTER` ("WAV audio"), `MP3_FILTER` ("MP3 audio"), `NO_TAPE_PER_TURN`, `WHILE_PREVIEW`; `TAPE.PREVIEW.WHILE_RECORDING`; `npm run i18n:check` green.
-- [ ] T002 Add `@breezystack/lamejs` at exactly `1.2.7` to `dependencies` in `package.json` (`npm install --save-exact`); add its licence to the third-party notices (find where electron-builder/README lists them; create `THIRD-PARTY-NOTICES.md` if none) stating LGPL-3.0, unmodified, source link `https://github.com/shijinyu/lamejs`.
+- [x] T001 Add the keys of contracts/recording-ui.md with en and de texts to `src/assets/i18n/en.json` and `de.json`: `TAPE.RECORD.BUTTON` ("Record" / "Aufnehmen"), `PROGRESS` (with `{{percent}}`; "Recording… {{percent}} %" / "Aufnahme… {{percent}} %"), `SAVED` (with `{{name}}`), `FAILED` (with `{{reason}}`), `RETRY`, `DIALOG_TITLE`, `WAV_FILTER` ("WAV audio"), `MP3_FILTER` ("MP3 audio"), `NO_TAPE_PER_TURN`, `WHILE_PREVIEW`; `TAPE.PREVIEW.WHILE_RECORDING`; `npm run i18n:check` green.
+- [x] T002 Add `@breezystack/lamejs` at exactly `1.2.7` to `dependencies` in `package.json` (`npm install --save-exact`); add its licence to the third-party notices (find where electron-builder/README lists them; create `THIRD-PARTY-NOTICES.md` if none) stating LGPL-3.0, unmodified, source link `https://github.com/shijinyu/lamejs`.
 
 ## Phase 2: Foundational (domain, pure)
 
