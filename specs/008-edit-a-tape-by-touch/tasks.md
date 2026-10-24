@@ -25,16 +25,16 @@ real Electron touch, restart and migration.
 
 ## Phase 1: Setup
 
-- [ ] T001 Add the keys of contracts/tape-view-ui.md "Messages" to `src/assets/i18n/en.json` and `de.json`, aligned with the existing namespaces and the existing German unit for turns per minute; `npm run i18n:check` green.
+- [x] T001 Add the keys of contracts/tape-view-ui.md "Messages" to `src/assets/i18n/en.json` and `de.json`, aligned with the existing namespaces and the existing German unit for turns per minute; `npm run i18n:check` green.
 
 ## Phase 2: Foundational (Crank speed range in the domain)
 
-- [ ] T002 [P] Red: `api/organ/crank-speed-range.spec.ts`: `crankSpeedRange(30, 120)` is a range; `undefined` for slowest ≥ fastest (90/40, 60/60), values outside 1–300, NaN; `DEFAULT_CRANK_SPEED_RANGE` is 30–120; `nearestInRange` returns the value and `outside: false` inside, the nearest end and `outside: true` below/above.
-- [ ] T003 Green: `api/organ/crank-speed-range.ts`, exported from `api/index.ts`.
-- [ ] T004 Red: `api/organ/validate-organ.spec.ts` and `organ-draft.spec.ts`: `emptyOrganDraft()` has 30/120; `toDraft` copies the range; `validateOrgan` gives `crankSpeedRange`, and the violations of data-model.md (`value-required`, `crank-speed-out-of-range` with min/max, `slowest-not-below-fastest` on `fastestCrankSpeed`).
-- [ ] T005 Green: `Organ.crankSpeedRange` (`api/organ/organ.ts`), draft fields (`organ-draft.ts`), validation (`validate-organ.ts`); every Organ fixture/builder in `api/` and `src/` gets the default range; `npm run test` green.
-- [ ] T006 Red: `api/organ/organ-library-snapshot.spec.ts`: writes version 5 with `crankSpeedRange`; v1–v4 entries read with 30–120; a v5 entry with 90/40 is refused like other invalid entries.
-- [ ] T007 Green: `api/organ/organ-library-snapshot.ts` version 5.
+- [x] T002 [P] Red: `api/organ/crank-speed-range.spec.ts`: `crankSpeedRange(30, 120)` is a range; `undefined` for slowest ≥ fastest (90/40, 60/60), values outside 1–300, NaN; `DEFAULT_CRANK_SPEED_RANGE` is 30–120; `nearestInRange` returns the value and `outside: false` inside, the nearest end and `outside: true` below/above.
+- [x] T003 Green: `api/organ/crank-speed-range.ts`, exported from `api/index.ts`.
+- [x] T004 Red: `api/organ/validate-organ.spec.ts` and `organ-draft.spec.ts`: `emptyOrganDraft()` has 30/120; `toDraft` copies the range; `validateOrgan` gives `crankSpeedRange`, and the violations of data-model.md (`value-required`, `crank-speed-out-of-range` with min/max, `slowest-not-below-fastest` on `fastestCrankSpeed`).
+- [x] T005 Green: `Organ.crankSpeedRange` (`api/organ/organ.ts`), draft fields (`organ-draft.ts`), validation (`validate-organ.ts`); every Organ fixture/builder in `api/` and `src/` gets the default range; `npm run test` green.
+- [x] T006 Red: `api/organ/organ-library-snapshot.spec.ts`: writes version 5 with `crankSpeedRange`; v1–v4 entries read with 30–120; a v5 entry with 90/40 is refused like other invalid entries.
+- [x] T007 Green: `api/organ/organ-library-snapshot.ts` version 5.
 
 **Checkpoint**: domain ready; commit, STATUS.
 
