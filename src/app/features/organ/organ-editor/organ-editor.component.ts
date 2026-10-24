@@ -48,6 +48,8 @@ const FIELD_TEST_IDS: Readonly<Record<string, string>> = {
   minimumGap: 'minimum-gap',
   leadIn: 'lead-in',
   tapePerCrankTurn: 'tape-per-crank-turn',
+  slowestCrankSpeed: 'slowest-crank-speed',
+  fastestCrankSpeed: 'fastest-crank-speed',
 };
 
 @Component({
