@@ -175,10 +175,16 @@ Roboto goes once nothing uses it. Add each licence text next to the font files.
 - **Transpose dialog:** opened from the page head. Scope is all Holes or the selected ones; the
   semitones field accepts only values within the allowed range, and the outcome (moved, merged,
   removed Holes) is shown before applying. Apply is one undo step.
-- **Handles:** only the selected Hole has two resize handles, one at each end: transparent
-  rectangles as high as the Hole and up to 8 px wide (at most a third of the Hole), so the Hole's
-  look does not change. The cursor is `ew-resize` over a handle, `grab` over a Hole body and
-  `grabbing` during a drag.
+- **Grips** (slice 008, ADR 25): only the selected Hole has two grips, one beside each end and
+  outside the Hole: a visible 6 px bar in the accent colour, with a hit area of at least 44 × 44 px
+  that never covers the Hole body, so even a 1-Column Hole can be moved and resized by finger. The
+  cursor is `ew-resize` over a grip, `grab` over a Hole body and `grabbing` during a drag.
+- **Spot:** a tap or click on empty Tape selects a Spot, drawn as the outline of the Hole that would
+  be added (Minimum Hole Length long); a second tap there adds it. Spot and Hole selection exclude
+  each other.
+- **Touch:** a finger drag on empty Tape scrolls; mouse and pen draw the selection frame. Two taps
+  on a Hole within 400 ms remove it. The playhead has a grip in the ruler (44 px wide, ruler high)
+  that can be dragged, also while the Preview plays.
 - **Cutting Problem marks:** every Hole that cannot be cut (no Pipe on the Organ, shorter than the
   Minimum Hole Length, or closer than the Minimum Gap to its neighbour, both Holes of a pair) gets a
   dashed oxblood ring, 2 px outside the Hole, drawn only for the visible Columns and ignoring the
@@ -190,7 +196,8 @@ Roboto goes once nothing uses it. Add each licence text next to the font files.
   pointer, while the Hole being dragged stays unchanged where it was, for as long as the pointer is on the refused cell. Releasing
   there changes nothing and opens a snackbar that names the Hole in the way: "The Hole would
   overlap the Hole of C4 at Column 16."
-- Double-clicking an empty spot of a row adds a Hole of that row's Pipe at that Column.
+- Double-clicking an empty place of a row is two taps on one Spot, so it adds a Hole of that row's
+  Pipe at that Column.
 
 ## States
 - **Empty:** one sentence of what to do plus the primary button ("No Organs yet. Describe your
@@ -217,7 +224,10 @@ Roboto goes once nothing uses it. Add each licence text next to the font files.
   it with `aria-describedby` while a Hole is selected, so the keys are spoken, not only shown.
 - **Undo and redo:** Ctrl+Z, Ctrl+Y and Ctrl+Shift+Z (⌘Z and ⇧⌘Z on macOS), anywhere in the Tape
   view except text fields, which keep their own undo. The page head buttons do the same.
-- **Adding without a pointer:** the Add a Hole form does what a double-click does.
+- **Adding without a pointer:** the Add a Hole form does what two taps do, prefilled from the Spot;
+  with a Spot selected, arrow keys move it, Enter adds there and Escape clears it. The Spot is
+  announced in a visually hidden live region.
+- **Touch targets:** grips and the playhead grip are at least 44 × 44 px (24 px tall in the ruler).
 - The Selected Hole section is `aria-live="polite"`, so a changed position or length is announced;
   the edit keys line is outside that live region. The snackbar of a refused edit announces itself.
 - The Tape SVG has a text alternative (rows, Columns, Holes); the Import Summary is text.
