@@ -79,6 +79,12 @@ export {
   type Transposition,
 } from './tape/tape';
 export {DEFAULT_CRANK_SPEED, MAX_CRANK_SPEED, MIN_CRANK_SPEED, crankSpeed, type CrankSpeed} from './tape/crank-speed';
+export {
+  DEFAULT_CRANK_SPEED_RANGE,
+  crankSpeedRange,
+  nearestInRange,
+  type CrankSpeedRange,
+} from './organ/crank-speed-range';
 export {allowedTranspositions, proposeTransposition} from './tape/transposition';
 export {fitAndNotesOf, fitNotesOf, fitOf, type Fit, type FitNotes} from './tape/fit';
 export {
