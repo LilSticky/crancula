@@ -1,4 +1,6 @@
 import {type ComponentFixture, TestBed} from '@angular/core/testing';
+import {TestbedHarnessEnvironment} from '@angular/cdk/testing/testbed';
+import {MatSliderHarness} from '@angular/material/slider/testing';
 import {columnCount, millimetres, type Organ, organId, tapeId, transposition, type Tape} from '@api/index';
 import {tapeOf} from '@api/tape/tape-fixture';
 import {partIndex, songId} from '@api/song/song';
@@ -11,9 +13,9 @@ function defined<T>(value: T | undefined, what: string): T {
   return value;
 }
 
-/** An Organ with one Pipe (note 60) and `tapePerCrankTurn` mm of Tape per Crank turn. */
-function organWith(tapePerCrankTurn: number): Organ {
-  return testOrgan('Fairground', 1, {tapePerCrankTurn});
+/** An Organ with one Pipe (note 60), `tapePerCrankTurn` mm of Tape per Crank turn and the Crank speed range given (30 to 120 by default). */
+function organWith(tapePerCrankTurn: number, range: {readonly slowest: number; readonly fastest: number} = {slowest: 30, fastest: 120}): Organ {
+  return testOrgan('Fairground', 1, {tapePerCrankTurn, slowestCrankSpeed: range.slowest, fastestCrankSpeed: range.fastest});
 }
 
 /**
@@ -251,6 +253,79 @@ describe('PreviewSectionComponent', () => {
       await typeStartColumn(element, fixture, typed);
 
       expect(emitted).toEqual([]);
+    });
+  });
+
+  describe('the Crank speed slider (T028)', () => {
+    /** The Crank speed slider, found as a Material slider harness finds it. */
+    const sliderOf = (fixture: ComponentFixture<PreviewSectionComponent>) =>
+      TestbedHarnessEnvironment.loader(fixture).getHarness(MatSliderHarness.with({selector: '[data-testid="crank-speed-slider"]'}));
+    /** The native input of the slider's thumb, for a move the user has not released yet. */
+    const thumbOf = (element: HTMLElement): HTMLInputElement => {
+      const input = element.querySelector<HTMLInputElement>('[data-testid="crank-speed-slider"] input');
+      if (input === null) throw new Error('no thumb in the Crank speed slider');
+      return input;
+    };
+
+    it('spans the Crank speed range of the Organ, from its slowest to its fastest', async () => {
+      const {fixture} = await render({organ: organWith(10, {slowest: 40, fastest: 200})});
+
+      const slider = await sliderOf(fixture);
+
+      expect(await slider.getMinValue()).toBe(40);
+      expect(await slider.getMaxValue()).toBe(200);
+    });
+
+    it('steps by 1 turn per minute', async () => {
+      const {fixture} = await render();
+
+      expect(await (await sliderOf(fixture)).getStep()).toBe(1);
+    });
+
+    it('emits crankSpeedTrial while the slider moves, and no crankSpeedChange', async () => {
+      const {element, fixture, component, emitted} = await render();
+      const trials: number[] = [];
+      component.crankSpeedTrial.subscribe((speed: number) => trials.push(speed));
+
+      const thumb = thumbOf(element);
+      thumb.value = '90';
+      thumb.dispatchEvent(new Event('input', {bubbles: true}));
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(trials).toEqual([90]);
+      expect(emitted).toEqual([]);
+    });
+
+    it('emits one crankSpeedChange with the Tape at the Crank speed the slider is released at', async () => {
+      const {fixture, emitted} = await render();
+
+      await (await (await sliderOf(fixture)).getEndThumb()).setValue(90);
+
+      expect(emitted).toHaveLength(1);
+      expect(emitted[0]?.crankSpeed).toBe(90);
+    });
+
+    it('puts the slider at the nearest end of the range for a Tape speed outside it', async () => {
+      // The Tape runs at 60 turns per minute, below the slowest of 70.
+      const {fixture} = await render({organ: organWith(10, {slowest: 70, fastest: 120})});
+
+      expect(await (await (await sliderOf(fixture)).getEndThumb()).getValue()).toBe(70);
+    });
+
+    it('names the range in a hint for a Tape speed outside it', async () => {
+      const {text} = await render({organ: organWith(10, {slowest: 70, fastest: 120})});
+
+      expect(text('crank-speed-outside-range')).toBe("Outside this Organ's Crank speed range (70–120 turns/min).");
+    });
+
+    it('still accepts a typed Crank speed from 1 to 300 beyond the range of the Organ', async () => {
+      const {apply, type, text} = await render({organ: organWith(10, {slowest: 40, fastest: 200})});
+
+      await type('250');
+
+      expect(text('crank-speed-error')).toBeUndefined();
+      expect(apply().disabled).toBe(false);
     });
   });
 });

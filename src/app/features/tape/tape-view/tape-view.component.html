@@ -121,7 +121,7 @@
           }
         </g>
         @if (playheadGrip(); as grip) {
-          <rect class="playhead-grip ew-resize" data-testid="playhead-grip" aria-hidden="true" [attr.x]="grip.x" y="0" [attr.width]="grip.size" [attr.height]="grip.size" (pointerdown)="onPlayheadGripDown($event)" (pointermove)="onPlayheadGripMove($event, tapeSvg)" (pointerup)="onPlayheadGripUp($event, tapeSvg)" (pointercancel)="onPlayheadGripCancel()" />
+          <rect class="playhead-grip ew-resize" data-testid="playhead-grip" aria-hidden="true" [attr.x]="grip.x" y="0" [attr.width]="grip.width" [attr.height]="grip.height" (pointerdown)="onPlayheadGripDown($event)" (pointermove)="onPlayheadGripMove($event, tapeSvg)" (pointerup)="onPlayheadGripUp($event, tapeSvg)" (pointercancel)="onPlayheadGripCancel()" />
           <path class="playhead-grip-mark" aria-hidden="true" [attr.d]="grip.mark" />
         }
       </svg>
@@ -173,7 +173,7 @@
         </p>
       }
       @if (organ(); as organ) {
-        <cranc-preview-section [tape]="tape" [organ]="organ" [playing]="preview.playing()" [playhead]="preview.playhead()" (crankSpeedChange)="onCrankSpeedChange($event)" (startColumnChange)="onStartColumnChange($event)" />
+        <cranc-preview-section [tape]="tape" [organ]="organ" [playing]="preview.playing()" [playhead]="preview.playhead()" (crankSpeedTrial)="onCrankSpeedTrial($event)" (crankSpeedChange)="onCrankSpeedChange($event)" (startColumnChange)="onStartColumnChange($event)" />
       }
     }
     @if (importSummary(); as summary) {

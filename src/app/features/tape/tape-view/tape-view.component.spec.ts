@@ -1743,7 +1743,7 @@ describe('TapeViewComponent', () => {
       await open(`/tapes/${tape.id}`);
 
       const controls = all(view(), 'button, input, select, textarea, [contenteditable]').filter(
-        (control) => control.closest('[data-testid="zoom"], [data-testid="add-hole"]') === null && !['export', 'side-panel-toggle', 'undo', 'redo', 'transpose', 'tape-section-toggle', 'import-summary-toggle', 'column-length-input', 'column-length-apply', 'crank-speed-input', 'crank-speed-apply', 'preview-toggle', 'preview-start-column'].includes(control.getAttribute('data-testid') ?? ''),
+        (control) => control.closest('[data-testid="zoom"], [data-testid="add-hole"], [data-testid="crank-speed-slider"]') === null && !['export', 'side-panel-toggle', 'undo', 'redo', 'transpose', 'tape-section-toggle', 'import-summary-toggle', 'column-length-input', 'column-length-apply', 'crank-speed-input', 'crank-speed-apply', 'preview-toggle', 'preview-start-column'].includes(control.getAttribute('data-testid') ?? ''),
       );
       expect(controls).toHaveLength(0);
     });
@@ -4638,6 +4638,93 @@ describe('TapeViewComponent', () => {
       await settle();
 
       expect(button(view(), 'undo').disabled).toBe(false);
+    });
+  });
+
+  describe('the Crank speed slider (T030)', () => {
+    // A Hole at Column 0, so the Preview has a voice; at 100 mm per Crank turn and 2.5 mm Columns, 60 turns per minute is 0.025 s per Column.
+    const sounding = [{row: 1, start: 0, length: 10}];
+    const tapePerCrankTurn = 100;
+    const toggle = (view: HTMLElement | null) => view?.querySelector<HTMLButtonElement>('[data-testid="preview-toggle"]') ?? null;
+    const playhead = (view: HTMLElement | null) => view?.querySelector('[data-testid="playhead"]') ?? null;
+    const storedTape = (tapeId: string) => TestBed.inject(TapeLibrary).tapeEntities().find((candidate) => candidate.id === tapeId);
+
+    const setup = async () => {
+      const rendered = await render({holes: sounding, tapePerCrankTurn});
+      await rendered.open(`/tapes/${rendered.tape.id}`);
+      const update = vi.spyOn(TestBed.inject(TapeLibrary), 'update');
+      const button = (testId: string): HTMLButtonElement =>
+        required(rendered.view()?.querySelector<HTMLButtonElement>(`[data-testid="${testId}"]`), testId);
+      /** Moves the slider thumb to `speed`, the way a drag does; `release` ends the drag as letting go does. */
+      const slide = async (speed: number, release: boolean): Promise<void> => {
+        const thumb = required(rendered.view()?.querySelector<HTMLInputElement>('[data-testid="crank-speed-slider"] input'), 'Crank speed slider');
+        thumb.value = String(speed);
+        thumb.dispatchEvent(new Event('input', {bubbles: true}));
+        if (release) thumb.dispatchEvent(new Event('change', {bubbles: true}));
+        await rendered.settle();
+      };
+      const startPreview = async (): Promise<void> => {
+        toggle(rendered.view())?.click();
+        await rendered.settle();
+      };
+      const pressOnDrawing = async (init: KeyboardEventInit): Promise<void> => {
+        const svg = required(rendered.view()?.querySelector('[data-testid="tape-scroll"] svg'), 'Tape drawing');
+        svg.dispatchEvent(new KeyboardEvent('keydown', {...init, bubbles: true, cancelable: true}));
+        await rendered.settle();
+      };
+      return {...rendered, update, button, slide, startPreview, pressOnDrawing, storedTape};
+    };
+
+    it('moves the playhead at the tempo of the slider while the Preview plays', async () => {
+      const {startPreview, slide, previewSound, settle, view} = await setup();
+      await startPreview();
+
+      // 40 Columns at 60 turns per minute, then 0.5 s at 120 turns per minute: 40 more Columns, so Column 80.
+      previewSound.advance(1);
+      await slide(120, false);
+      previewSound.advance(0.5);
+      await pause(100);
+      await settle();
+
+      expect(Number(required(playhead(view()), 'playhead').getAttribute('data-column'))).toBeCloseTo(80, 0);
+    });
+
+    it('saves nothing while the slider moves', async () => {
+      const {slide, update, storedTape, tape} = await setup();
+
+      await slide(120, false);
+
+      expect(update).not.toHaveBeenCalled();
+      expect(storedTape(tape.id)?.crankSpeed).toBe(60);
+    });
+
+    it('adds no undo step for a move of the slider', async () => {
+      const {slide, button, settle, view, storedTape, tape} = await setup();
+      // An edit to undo: a Column length of 5 mm.
+      const field = required(view()?.querySelector<HTMLInputElement>('[data-testid="column-length-input"]'), 'Column length field');
+      field.value = '5';
+      field.dispatchEvent(new Event('input', {bubbles: true}));
+      await settle();
+      button('column-length-apply').click();
+      await settle();
+
+      await slide(120, false);
+      button('undo').click();
+      await settle();
+
+      expect(storedTape(tape.id)?.columnLength).toBe(2.5);
+    });
+
+    it('saves a release as one Crank speed change that one Ctrl+Z restores', async () => {
+      const {slide, pressOnDrawing, update, storedTape, tape} = await setup();
+
+      await slide(120, true);
+
+      expect(update).toHaveBeenCalledTimes(1);
+      expect(storedTape(tape.id)?.crankSpeed).toBe(120);
+      await pressOnDrawing({key: 'z', ctrlKey: true});
+      expect(update).toHaveBeenCalledTimes(2);
+      expect(storedTape(tape.id)?.crankSpeed).toBe(60);
     });
   });
 });

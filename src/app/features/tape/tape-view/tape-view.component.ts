@@ -19,6 +19,7 @@ import {ActivatedRoute, Router, RouterLink} from '@angular/router';
 import {map} from 'rxjs';
 import {column, columnDuration, cuttingProblems, holesWithCuttingProblems, noteName, type HoleRef, type ImportSummary, type Tape, tapeGeometry, type TapeGeometry, type Transposed} from '@api/index';
 import {canTranspose, holeRefsOf, selectionOfRefs} from './transpose-selection';
+import {crankSpeedChangeTo} from './crank-speed-change';
 import {holeAt, moveSpot, sameSpot, spotAt, type Spot, type TapeSelection} from './spot';
 import {MatDialog} from '@angular/material/dialog';
 import {TransposeDialogComponent, type TransposeDialogData} from './transpose-dialog/transpose-dialog.component';
@@ -127,8 +128,8 @@ const FOLLOW_LEAD = 0.2;
 /** Where Space is left to the element it lands on: fields, controls, links, list options and editable text. */
 const SPACE_IS_KEPT_BY = 'input, textarea, button, a, select, [role=combobox], [role=option], [contenteditable]';
 
-/** The playhead grip's hit area, a square of screen px whose top sits on the top of the drawing. */
-const PLAYHEAD_GRIP_PX = 44;
+/** The playhead grip's hit area in screen px: as wide as this, and as tall as the ruler band, so it does not cover the Tape. */
+const PLAYHEAD_GRIP_WIDTH = 44;
 
 /** The shell's query: below this width the side panel gives way to a toggle. */
 const COMPACT_QUERY = '(max-width: 1179.98px)';
@@ -430,12 +431,12 @@ export class TapeViewComponent {
     return {x: (geometry.leadIn + playhead * tape.columnLength) * this.scale(), column: Math.round(playhead * 100) / 100};
   });
 
-  /** The playhead grip: its square hit area in px of the drawing, and its triangle in the ruler; `undefined` without a playhead. */
+  /** The playhead grip: its hit area in px of the drawing, inside the ruler band, and its triangle; `undefined` without a playhead. */
   protected readonly playheadGrip = computed(() => {
     const line = this.playheadLine();
     if (line === undefined) return undefined;
     const centre = line.x + 1;
-    return {x: centre - PLAYHEAD_GRIP_PX / 2, size: PLAYHEAD_GRIP_PX, mark: `M${centre - 5} 0H${centre + 5}L${centre} 7Z`};
+    return {x: centre - PLAYHEAD_GRIP_WIDTH / 2, width: PLAYHEAD_GRIP_WIDTH, height: RULER_HEIGHT, mark: `M${centre - 5} 0H${centre + 5}L${centre} 7Z`};
   });
 
   /** Whether editing is paused: the Preview plays, and the Tape must not change except by its Crank speed. */
@@ -892,6 +893,15 @@ export class TapeViewComponent {
   /** Saves the Tape with a new Column length as one edit; the Holes and the selection stay. */
   protected onColumnLengthChange(tape: Tape): void {
     this.commit({kind: 'applied', tape, selection: this.holeSelection()});
+  }
+
+  /** Plays the Tape at a Crank speed the slider moves to, without saving it or adding an undo step. */
+  protected onCrankSpeedTrial(speed: number): void {
+    const tape = this.tape();
+    const organ = this.organ();
+    if (tape === undefined || organ === undefined) return;
+    const change = crankSpeedChangeTo(tape, speed);
+    if (change.state !== 'invalid') this.preview.changeTape(change.state === 'ready' ? change.tape : tape, organ);
   }
 
   /** Saves the Tape with a new Crank speed as one edit, and re-anchors a Preview that plays; the Holes and the selection stay. */

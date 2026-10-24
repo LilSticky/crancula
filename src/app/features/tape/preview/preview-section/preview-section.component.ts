@@ -3,8 +3,9 @@ import {type Field, form, FormField, validate} from '@angular/forms/signals';
 import {ErrorStateMatcher} from '@angular/material/core';
 import {MatButton} from '@angular/material/button';
 import {MatError, MatFormField, MatInput, MatLabel} from '@angular/material/input';
+import {MatSlider, MatSliderThumb} from '@angular/material/slider';
 import {TranslatePipe} from '@ngx-translate/core';
-import {MAX_CRANK_SPEED, MIN_CRANK_SPEED, previewLength, type Organ, type Tape} from '@api/index';
+import {MAX_CRANK_SPEED, MIN_CRANK_SPEED, nearestInRange, previewLength, type Organ, type Tape} from '@api/index';
 import {DecimalInputDirective} from '../../../shared/decimal-input.directive';
 import {type CrankSpeedChange, crankSpeedChangeTo} from '../../tape-view/crank-speed-change';
 
@@ -14,6 +15,14 @@ class CrankSpeedErrorMatcher extends ErrorStateMatcher {
   override isSignalErrorState(field: Field<unknown> | null): boolean {
     return field?.().invalid() ?? false;
   }
+}
+
+/** The Crank speed the slider's thumb is at, from its native input; `undefined` if the input is not a number. */
+function sliderSpeed(event: Event): number | undefined {
+  const input = event.target;
+  if (!(input instanceof HTMLInputElement)) return undefined;
+  const speed = Number(input.value);
+  return Number.isFinite(speed) ? speed : undefined;
 }
 
 /** Seconds as "m:ss", with the seconds padded to two digits. */
@@ -29,7 +38,7 @@ function minutesAndSeconds(seconds: number): string {
 @Component({
   selector: 'cranc-preview-section',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MatButton, MatError, MatFormField, MatInput, MatLabel, DecimalInputDirective, FormField, TranslatePipe],
+  imports: [MatButton, MatError, MatFormField, MatInput, MatLabel, MatSlider, MatSliderThumb, DecimalInputDirective, FormField, TranslatePipe],
   providers: [{provide: ErrorStateMatcher, useClass: CrankSpeedErrorMatcher}],
   template: `
     <section data-testid="preview-section">
@@ -48,6 +57,12 @@ function minutesAndSeconds(seconds: number): string {
         </mat-form-field>
         <button matButton type="button" data-testid="crank-speed-apply" [disabled]="changed() === undefined" (click)="apply()" #applyButton>{{ 'TAPE.PREVIEW.CRANK_SPEED_APPLY' | translate }}</button>
       </div>
+      <mat-slider class="crank-speed-slider" data-testid="crank-speed-slider" [min]="range().slowest" [max]="range().fastest" [step]="1">
+        <input matSliderThumb [value]="sliderValue()" [attr.aria-label]="'TAPE.PREVIEW.CRANK_SPEED_SLIDER' | translate" (input)="onSliderInput($event)" (change)="onSliderRelease($event)" />
+      </mat-slider>
+      @if (outsideRange()) {
+        <p data-testid="crank-speed-outside-range">{{ 'TAPE.PREVIEW.OUTSIDE_RANGE' | translate: {slowest: range().slowest, fastest: range().fastest} }}</p>
+      }
       @if (length(); as length) {
         <p data-testid="preview-length">{{ 'TAPE.PREVIEW.LENGTH' | translate: {time: length} }}</p>
       }
@@ -74,6 +89,9 @@ function minutesAndSeconds(seconds: number): string {
       width: 9rem;
       min-width: 0;
     }
+    .crank-speed-slider {
+      width: 100%;
+    }
     p {
       margin: 0.5rem 0 0;
     }
@@ -91,9 +109,17 @@ export class PreviewSectionComponent {
   readonly crankSpeedChange = output<Tape>();
   /** The 0-based Column the typed start Column counts to; the Tape view moves the playhead there. */
   readonly startColumnChange = output<number>();
+  /** The Crank speed while the slider moves: the Tape view plays it, and saves nothing. */
+  readonly crankSpeedTrial = output<number>();
 
   protected readonly minimum = MIN_CRANK_SPEED;
   protected readonly maximum = MAX_CRANK_SPEED;
+  /** The Crank speed range of the Organ, which the slider spans. */
+  protected readonly range = computed(() => this.organ().crankSpeedRange);
+  /** Where the Crank speed of the Tape sits on the slider: the nearest end of the range when it is outside. */
+  private readonly sliderPlacement = computed(() => nearestInRange(this.tape().crankSpeed, this.range()));
+  protected readonly sliderValue = computed(() => this.sliderPlacement().value);
+  protected readonly outsideRange = computed(() => this.sliderPlacement().outside);
   private readonly applyButton = viewChild<string, ElementRef<HTMLButtonElement>>('applyButton', {read: ElementRef});
 
   /** The Crank speed as typed; starts with, and goes back to, the Crank speed of the Tape. */
@@ -129,6 +155,20 @@ export class PreviewSectionComponent {
   protected apply(): void {
     const changed = this.changed();
     if (changed !== undefined) this.crankSpeedChange.emit(changed);
+  }
+
+  /** A move of the slider, before it is released: the Tape view plays the Crank speed; nothing is saved. */
+  protected onSliderInput(event: Event): void {
+    const speed = sliderSpeed(event);
+    if (speed !== undefined) this.crankSpeedTrial.emit(speed);
+  }
+
+  /** The slider is released at a Crank speed: that is one change of the Tape, saved as one edit. */
+  protected onSliderRelease(event: Event): void {
+    const speed = sliderSpeed(event);
+    if (speed === undefined) return;
+    const change = crankSpeedChangeTo(this.tape(), speed);
+    if (change.state === 'ready') this.crankSpeedChange.emit(change.tape);
   }
 
   /** Enter moves the playhead to the typed Column, if it is a Column of the Tape; other keys are left alone. */
