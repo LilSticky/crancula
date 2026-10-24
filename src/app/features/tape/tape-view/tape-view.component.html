@@ -50,7 +50,7 @@
       }
     </ul>
     <div class="scroll" #scroll data-testid="tape-scroll" (scroll)="onScroll(scroll)" (wheel)="onWheel()">
-      <svg #tapeSvg role="application" [attr.aria-label]="'TAPE.VIEW.DRAWING' | translate: drawing.drawingParams" [attr.width]="drawing.width" [attr.height]="drawing.totalHeight" tabindex="0" [attr.aria-describedby]="inspection() ? 'hole-keys-help' : null" (keydown)="onKeydown($event)" (pointerdown)="onPointerDown($event, tapeSvg)" (dblclick)="onDoubleClick($event, tapeSvg)" [class.grabbing]="dragging()" (pointermove)="onPointerMove($event, tapeSvg)" (pointerup)="onPointerUp($event, tapeSvg)" (pointercancel)="onPointerCancel()" (pointerleave)="onPointerLeave()">
+      <svg #tapeSvg role="application" [attr.aria-label]="'TAPE.VIEW.DRAWING' | translate: drawing.drawingParams" [attr.width]="drawing.width" [attr.height]="drawing.totalHeight" tabindex="0" [attr.aria-describedby]="inspection() ? 'hole-keys-help' : null" (keydown)="onKeydown($event)" (pointerdown)="onPointerDown($event, tapeSvg)" [class.grabbing]="dragging()" (pointermove)="onPointerMove($event, tapeSvg)" (pointerup)="onPointerUp($event, tapeSvg)" (pointercancel)="onPointerCancel()" (pointerleave)="onPointerLeave()">
         <defs>
           <pattern id="ruler-ticks" patternUnits="userSpaceOnUse" [attr.x]="drawing.leadIn" [attr.width]="5 * scale()" height="8">
             @for (tick of rulerTicks; track tick) {
@@ -105,6 +105,9 @@
             <rect class="cutting-problem" data-testid="hole-mark" aria-hidden="true" [attr.x]="mark.x" [attr.y]="mark.y" [attr.width]="mark.width" [attr.height]="mark.height" [attr.rx]="mark.radius" [attr.ry]="mark.radius" />
             <text class="cutting-problem-glyph" aria-hidden="true" [attr.x]="mark.glyph.x" [attr.y]="mark.glyph.y" [attr.font-size]="mark.glyph.size">!</text>
           }
+          @if (spotView(); as spot) {
+            <rect class="spot" data-testid="spot" aria-live="polite" [attr.aria-label]="'TAPE.EDIT.SPOT_LABEL' | translate: spot.label" [attr.data-row]="spot.row" [attr.data-start]="spot.start" [attr.x]="spot.x" [attr.y]="spot.y" [attr.width]="spot.width" [attr.height]="spot.height" [attr.rx]="spot.radius" [attr.ry]="spot.radius" />
+          }
           @if (frameRect(); as frame) {
             <rect class="selection-frame" data-testid="selection-frame" aria-hidden="true" [attr.x]="frame.x" [attr.y]="frame.y" [attr.width]="frame.width" [attr.height]="frame.height" />
           }
@@ -149,7 +152,7 @@
     <cranc-cutting-problems [holes]="holesWithProblems()" (chosen)="chooseProblem($event)" />
     @if (tape(); as tape) {
       @if (organ(); as organ) {
-        <cranc-add-hole [organ]="organ" [tape]="tape" [selected]="selectedHoleRef()" [editingPaused]="editingPaused()" (added)="addFromForm($event)" />
+        <cranc-add-hole [organ]="organ" [tape]="tape" [selected]="selectedHoleRef()" [spot]="spotSelected()" [editingPaused]="editingPaused()" (added)="addFromForm($event)" />
       }
       <cranc-tape-section [view]="drawing.section" [tape]="tape" [organ]="drawing.organ" [editingPaused]="editingPaused()" (columnLengthChange)="onColumnLengthChange($event)" />
       @if (!previewAvailable()) {

@@ -2188,10 +2188,15 @@ describe('TapeViewComponent', () => {
     });
 
     it('adds a Hole of the row\'s Pipe at the Column of a double-click on an empty spot, with one save, and selects it', async () => {
-      const {tape, view, svg, at, update, settle} = await setup();
+      const {tape, view, svg, at, down, up, click, update} = await setup();
 
-      svg.dispatchEvent(new MouseEvent('dblclick', {...at(20, 25), bubbles: true, cancelable: true}));
-      await settle();
+      // A double-click sends two presses, each released and then clicked.
+      await down(svg, at(20, 25));
+      await up(at(20, 25));
+      await click(svg);
+      await down(svg, at(20, 25));
+      await up(at(20, 25));
+      await click(svg);
 
       expect(update).toHaveBeenCalledTimes(1);
       expect(storedHoles(tape.id).filter((hole) => hole.startsWith('25:20+'))).toHaveLength(1);
@@ -2199,14 +2204,228 @@ describe('TapeViewComponent', () => {
     });
 
     it('adds nothing on a double-click on a Hole', async () => {
-      const {tape, view, at, update, settle} = await setup();
+      const {tape, view, at, down, up, click, update} = await setup();
       const before = storedHoles(tape.id);
+      const hole = rectAt(view(), 24, 10) as Element;
 
-      (rectAt(view(), 24, 10) as Element).dispatchEvent(new MouseEvent('dblclick', {...at(11, 24), bubbles: true, cancelable: true}));
-      await settle();
+      // A double-click sends two presses, each released and then clicked.
+      await down(hole, at(11, 24));
+      await up(at(11, 24));
+      await click(hole);
+      await down(hole, at(11, 24));
+      await up(at(11, 24));
+      await click(hole);
 
       expect(update).not.toHaveBeenCalled();
       expect(storedHoles(tape.id)).toEqual(before);
+    });
+  });
+
+  describe('adding a Hole by tapping (US1, Spot)', () => {
+    const RULER_PX = 24;
+    // Row 24 is E5, row 25 F5. Starts count from 0.
+    const holes = [
+      {row: 24, start: 10, length: 3},
+      {row: 24, start: 30, length: 3},
+    ];
+    const rectAt = (view: HTMLElement | null, row: number, start: number) =>
+      view?.querySelector(`[data-testid="tape-scroll"] rect[data-testid="hole"][data-row="${row - 1}"][data-start="${start}"]`) ?? null;
+    const selected = (view: HTMLElement | null) =>
+      all(view, '[data-testid="tape-scroll"] rect[data-testid="hole"].selected').map(
+        (rect) => `${Number(rect.getAttribute('data-row')) + 1}:${rect.getAttribute('data-start')}`,
+      );
+    const spots = (view: HTMLElement | null) => all(view, '[data-testid="tape-scroll"] [data-testid="spot"]');
+    const storedHoles = (tapeId: string) =>
+      (TestBed.inject(TapeLibrary).tapeEntities().find((candidate) => candidate.id === tapeId)?.holes ?? []).map(
+        (hole) => `${hole.pipe - 52}:${hole.start}+${hole.length}`,
+      );
+
+    const setup = async (options: RenderOptions = {holes, platform: 'win32'}) => {
+      const rendered = await render(options);
+      await rendered.open(`/tapes/${rendered.tape.id}`);
+      const svg = required(rendered.view()?.querySelector<SVGSVGElement>('[data-testid="tape-scroll"] svg'), 'Tape drawing');
+      Object.defineProperty(svg, 'getBoundingClientRect', {value: () => new DOMRect(0, 0, 4000, 300), configurable: true});
+      const geometry = tapeGeometry(rendered.tape, rendered.organ);
+      /** A position in the middle of a Column (from 0) and a row (from 1), in client px. */
+      const at = (column: number, row: number) => ({
+        clientX: (geometry.leadIn + (column + 0.5) * geometry.columnLength) * SCALE,
+        clientY: (geometry.rowCentres[row - 1] ?? 0) * SCALE + RULER_PX,
+      });
+      const update = vi.spyOn(TestBed.inject(TapeLibrary), 'update');
+      /** One tap: a press and a release at the same place, by the pointer of `pointerType`. */
+      const tap = async (position: {clientX: number; clientY: number}, pointerType: 'mouse' | 'touch' = 'mouse') => {
+        const init = {...position, pointerId: 1, pointerType, button: 0, bubbles: true, cancelable: true};
+        svg.dispatchEvent(new PointerEvent('pointerdown', init));
+        svg.dispatchEvent(new PointerEvent('pointerup', init));
+        await rendered.settle();
+      };
+      /** What a mouse double-click delivers before its dblclick: two presses, each followed by its click. */
+      const doubleClick = async (position: {clientX: number; clientY: number}) => {
+        await tap(position);
+        svg.dispatchEvent(new MouseEvent('click', {...position, bubbles: true}));
+        await tap(position);
+        svg.dispatchEvent(new MouseEvent('click', {...position, bubbles: true}));
+        await rendered.settle();
+      };
+      const press = async (init: KeyboardEventInit): Promise<void> => {
+        svg.dispatchEvent(new KeyboardEvent('keydown', {...init, bubbles: true, cancelable: true}));
+        await rendered.settle();
+      };
+      const click = async (target: Element) => {
+        target.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+        await rendered.settle();
+      };
+      return {...rendered, svg, geometry, at, tap, doubleClick, press, click, update};
+    };
+
+    it.each(['mouse', 'touch'] as const)('a %s tap on an empty place draws a Spot there, Minimum Hole Length wide, and clears the Hole selection', async (pointerType) => {
+      const {view, geometry, at, tap, click} = await setup();
+      await click(rectAt(view(), 24, 10) as Element);
+      expect(selected(view())).toEqual(['24:10']);
+
+      await tap(at(20, 25), pointerType);
+
+      expect(spots(view())).toHaveLength(1);
+      expect(spots(view())[0]?.getAttribute('data-row')).toBe('24');
+      expect(spots(view())[0]?.getAttribute('data-start')).toBe('20');
+      expect(Number(spots(view())[0]?.getAttribute('width'))).toBeCloseTo(geometry.columnLength * SCALE);
+      expect(selected(view())).toEqual([]);
+    });
+
+    it('a tap on the selected Spot adds a Hole of Minimum Hole Length, selects it, removes the Spot, with one save', async () => {
+      const {tape, view, at, tap, update} = await setup();
+
+      await tap(at(20, 25));
+      await tap(at(20, 25));
+
+      expect(update).toHaveBeenCalledTimes(1);
+      expect(storedHoles(tape.id)).toContain('25:20+1');
+      expect(selected(view())).toEqual(['25:20']);
+      expect(spots(view())).toHaveLength(0);
+    });
+
+    it('undoes the Hole added by tapping in one step', async () => {
+      const {tape, view, at, tap, press} = await setup();
+      const before = storedHoles(tape.id);
+      await tap(at(20, 25));
+      await tap(at(20, 25));
+      expect(storedHoles(tape.id)).toContain('25:20+1');
+
+      await press({key: 'z', ctrlKey: true});
+
+      expect(storedHoles(tape.id)).toEqual(before);
+      expect(rectAt(view(), 25, 20)).toBeNull();
+    });
+
+    it('a tap on another empty place moves the Spot there, without a save', async () => {
+      const {view, at, tap, update} = await setup();
+      await tap(at(20, 25));
+
+      await tap(at(40, 10));
+
+      expect(spots(view())).toHaveLength(1);
+      expect(spots(view())[0]?.getAttribute('data-row')).toBe('9');
+      expect(spots(view())[0]?.getAttribute('data-start')).toBe('40');
+      expect(update).not.toHaveBeenCalled();
+    });
+
+    it('a tap on the Lead-in clears the Spot', async () => {
+      const {view, at, tap, geometry} = await setup({holes, leadIn: 10, platform: 'win32'});
+      await tap(at(20, 25));
+      expect(spots(view())).toHaveLength(1);
+
+      await tap({clientX: (geometry.leadIn / 2) * SCALE, clientY: at(0, 25).clientY});
+
+      expect(spots(view())).toHaveLength(0);
+    });
+
+    it('two mouse clicks on one empty place, as a double-click sends them, add exactly one Hole', async () => {
+      const {tape, at, doubleClick, update} = await setup();
+
+      await doubleClick(at(20, 25));
+
+      expect(update).toHaveBeenCalledTimes(1);
+      expect(storedHoles(tape.id).filter((hole) => hole.startsWith('25:20+'))).toEqual(['25:20+1']);
+    });
+
+    describe('while the Preview plays', () => {
+      const toggle = (view: HTMLElement | null) => view?.querySelector<HTMLButtonElement>('[data-testid="preview-toggle"]') ?? null;
+
+      it('a second tap adds nothing, and the Tape view shows that editing is paused', async () => {
+        const {tape, view, at, tap, update, settle} = await setup({holes, tapePerCrankTurn: 100, platform: 'win32'});
+        toggle(view())?.click();
+        await settle();
+        const before = storedHoles(tape.id);
+
+        await tap(at(20, 25));
+        await tap(at(20, 25));
+
+        expect(update).not.toHaveBeenCalled();
+        expect(storedHoles(tape.id)).toEqual(before);
+        expect(required(view()?.querySelector('[data-testid="editing-paused"]'), 'editing-paused notice').textContent?.trim()).toBe(
+          'Editing is paused while the Preview plays',
+        );
+      });
+    });
+
+    describe('moving the Spot with the keyboard (US1)', () => {
+      it('moves the Spot one Column or one row per arrow key', async () => {
+        const {view, at, tap, press} = await setup();
+        await tap(at(20, 25));
+
+        await press({key: 'ArrowRight'});
+        expect(spots(view())[0]?.getAttribute('data-start')).toBe('21');
+        await press({key: 'ArrowLeft'});
+        expect(spots(view())[0]?.getAttribute('data-start')).toBe('20');
+        await press({key: 'ArrowUp'});
+        expect(spots(view())[0]?.getAttribute('data-row')).toBe('23');
+        await press({key: 'ArrowDown'});
+        expect(spots(view())[0]?.getAttribute('data-row')).toBe('24');
+      });
+
+      it('keeps the Spot on Column 0 and on the first row', async () => {
+        const {view, at, tap, press} = await setup();
+        await tap(at(0, 1));
+
+        await press({key: 'ArrowLeft'});
+        await press({key: 'ArrowUp'});
+
+        expect(spots(view())[0]?.getAttribute('data-start')).toBe('0');
+        expect(spots(view())[0]?.getAttribute('data-row')).toBe('0');
+      });
+
+      it('adds a Hole of Minimum Hole Length at the Spot on Enter, selects it, and removes the Spot', async () => {
+        const {tape, view, at, tap, press, update} = await setup();
+        await tap(at(20, 25));
+
+        await press({key: 'Enter'});
+
+        expect(update).toHaveBeenCalledTimes(1);
+        expect(storedHoles(tape.id)).toContain('25:20+1');
+        expect(selected(view())).toEqual(['25:20']);
+        expect(spots(view())).toHaveLength(0);
+      });
+
+      it('clears the Spot on Escape', async () => {
+        const {view, at, tap, press, update} = await setup();
+        await tap(at(20, 25));
+
+        await press({key: 'Escape'});
+
+        expect(spots(view())).toHaveLength(0);
+        expect(selected(view())).toEqual([]);
+        expect(update).not.toHaveBeenCalled();
+      });
+
+      it('moves the Hole selection by arrows as before, with no Spot drawn', async () => {
+        const {view, click, press} = await setup();
+        await click(rectAt(view(), 24, 10) as Element);
+
+        await press({key: 'ArrowRight'});
+
+        expect(selected(view())).toEqual(['24:30']);
+        expect(spots(view())).toHaveLength(0);
+      });
     });
   });
 

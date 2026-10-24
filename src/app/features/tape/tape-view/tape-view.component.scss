@@ -103,6 +103,12 @@ cranc-page-head button[mat-icon-button] {
   stroke: var(--cr-select);
   stroke-width: 2;
 }
+.spot {
+  fill: none;
+  stroke: var(--cr-select);
+  stroke-width: 2;
+  pointer-events: none;
+}
 .cutting-problem {
   fill: none;
   stroke: var(--cr-problem);
