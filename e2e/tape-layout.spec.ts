@@ -40,8 +40,8 @@ async function expectInViewport(page: Page, locator: Locator): Promise<void> {
   expect(box.right).toBeLessThanOrEqual(viewport.width + 0.5);
 }
 
-/** The Street organ's Pipes, but 25 of them (C4 to C6) and a Lead-in of 30 mm. */
-async function defineOrganWithLeadIn(window: Page): Promise<void> {
+/** The Street organ's Pipes, but 25 of them (C4 to C6) and a Lead-in of 30 mm; optionally with a Tape per Crank turn, so a Tape can be previewed. */
+async function defineOrganWithLeadIn(window: Page, options: {readonly tapePerCrankTurn?: string} = {}): Promise<void> {
   await window.getByRole('link', {name: 'Organs'}).click();
   await window.getByTestId('new-organ').click();
   await window.getByTestId('name').fill(STREET_ORGAN.name);
@@ -54,8 +54,30 @@ async function defineOrganWithLeadIn(window: Page): Promise<void> {
     await window.getByTestId('add-pipe').click();
     await window.getByTestId('pipe-note').nth(row).fill(String(60 + row));
   }
+  if (options.tapePerCrankTurn !== undefined) await window.getByTestId('tape-per-crank-turn').fill(options.tapePerCrankTurn);
   await saveOrgan(window);
   await expect(window).toHaveURL(/#?\/organs\/[0-9a-f-]{36}$/);
+}
+
+/**
+ * Measures each element: its height, the text it shows and how many text lines that text spans (icons are not counted).
+ * Passed to `evaluateAll`, so it refers to nothing outside its own body.
+ */
+function measureTextLines(elements: Element[]) {
+  return elements.map((button) => {
+    const {height} = button.getBoundingClientRect();
+    const rows: number[] = [];
+    const walker = document.createTreeWalker(button, NodeFilter.SHOW_TEXT);
+    for (let node = walker.nextNode(); node !== null; node = walker.nextNode()) {
+      if (!node.textContent?.trim() || node.parentElement?.closest('mat-icon')) continue;
+      const range = document.createRange();
+      range.selectNodeContents(node);
+      for (const rect of range.getClientRects()) rows.push(rect.top);
+    }
+    rows.sort((a, b) => a - b);
+    const lines = rows.filter((top, index) => index === 0 || top - (rows[index - 1] ?? top) > 4).length;
+    return {text: button.textContent?.trim(), height, lines};
+  });
 }
 
 test.describe('The Tape view in true millimetres on one screen', () => {
@@ -361,27 +383,42 @@ test.describe('The Tape view with the Preview toggles and the Tape section at 14
       await createTapeFromSong(window, 'Scale', melodyC3ToC5(), {columnLength: '5'});
       await window.getByTestId('language-switch').locator(`[data-language="${language}"]`).click();
 
-      const buttons = await window.getByTestId('page-head-actions').locator('button').evaluateAll((elements) =>
-        elements.map((button) => {
-          const {height} = button.getBoundingClientRect();
-          const rows: number[] = [];
-          const walker = document.createTreeWalker(button, NodeFilter.SHOW_TEXT);
-          for (let node = walker.nextNode(); node !== null; node = walker.nextNode()) {
-            if (!node.textContent?.trim() || node.parentElement?.closest('mat-icon')) continue;
-            const range = document.createRange();
-            range.selectNodeContents(node);
-            for (const rect of range.getClientRects()) rows.push(rect.top);
-          }
-          rows.sort((a, b) => a - b);
-          const lines = rows.filter((top, index) => index === 0 || top - (rows[index - 1] ?? top) > 4).length;
-          return {text: button.textContent?.trim(), height, lines};
-        }),
-      );
+      const buttons = await window.getByTestId('page-head-actions').locator('button').evaluateAll(measureTextLines);
       expect(buttons.length).toBeGreaterThan(1);
       for (const {text, height, lines} of buttons) {
         expect(height, `${text} height`).toBeLessThanOrEqual(40.5);
         expect(lines, `${text} lines`).toBeLessThanOrEqual(1);
       }
+      await app.close();
+    });
+  }
+});
+
+test.describe('The Tape view with a Preview playing at 1280 x 800 (#159)', () => {
+  for (const language of ['en', 'de'] as const) {
+    const stopLabel = language === 'en' ? 'Stop preview' : 'Anhören beenden';
+    test(`${language === 'en' ? 'English' : 'German'}: the "${stopLabel}" toggle renders on one line at 1280 px while a Preview plays`, async () => {
+      const launched = await launchApp();
+      const {app, window} = launched;
+      await resizeWindowOrSkip(launched, 1280, 800, true);
+      await defineOrganWithLeadIn(window, {tapePerCrankTurn: '100'});
+      await createTapeFromSong(window, 'Scale', melodyC3ToC5(), {columnLength: '5'});
+      await window.getByTestId('language-switch').locator(`[data-language="${language}"]`).click();
+
+      const toggle = window.getByTestId('preview-toggle');
+      await toggle.click();
+      await expect(toggle).toContainText(stopLabel);
+
+      const toggles = await toggle.evaluateAll(measureTextLines);
+      expect(toggles).toHaveLength(1);
+      for (const {text, height, lines} of toggles) {
+        expect(height, `${text} height`).toBeLessThanOrEqual(40.5);
+        expect(lines, `${text} lines`).toBeLessThanOrEqual(1);
+      }
+      expect(await window.getByTestId('page-head-actions').evaluate((element) => element.scrollWidth - element.clientWidth), 'page head overflow').toBeLessThanOrEqual(1);
+
+      await toggle.click();
+      await expect(toggle).not.toContainText(stopLabel);
       await app.close();
     });
   }
