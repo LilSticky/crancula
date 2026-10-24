@@ -146,6 +146,10 @@ cranc-page-head button[mat-icon-button] {
 .handle {
   fill: transparent;
 }
+.grip {
+  fill: var(--cr-select);
+  pointer-events: none;
+}
 .ew-resize {
   cursor: ew-resize;
 }

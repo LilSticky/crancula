@@ -93,10 +93,12 @@
               [attr.rx]="hole.radius"
               [attr.ry]="hole.radius"
             />
-            @if (hole.handles; as handles) {
-              <rect class="handle ew-resize hole-part" data-testid="hole-handle" data-end="start" [attr.x]="handles.start.hit.x" [attr.y]="handles.start.hit.y" [attr.width]="handles.start.hit.width" [attr.height]="handles.start.hit.height" (pointerdown)="onHolePointerDown($event, hole, tapeSvg, 'start')" />
-              <rect class="handle ew-resize hole-part" data-testid="hole-handle" data-end="end" [attr.x]="handles.end.hit.x" [attr.y]="handles.end.hit.y" [attr.width]="handles.end.hit.width" [attr.height]="handles.end.hit.height" (pointerdown)="onHolePointerDown($event, hole, tapeSvg, 'end')" />
-            }
+          }
+          @if (drawing.grips; as grips) {
+            <rect class="grip" aria-hidden="true" rx="3" [attr.x]="grips.bars.start.x" [attr.y]="grips.bars.start.y" [attr.width]="grips.bars.start.width" [attr.height]="grips.bars.start.height" />
+            <rect class="grip" aria-hidden="true" rx="3" [attr.x]="grips.bars.end.x" [attr.y]="grips.bars.end.y" [attr.width]="grips.bars.end.width" [attr.height]="grips.bars.end.height" />
+            <rect class="handle ew-resize hole-part" data-testid="hole-handle" data-end="start" [attr.x]="grips.hits.start.x" [attr.y]="grips.hits.start.y" [attr.width]="grips.hits.start.width" [attr.height]="grips.hits.start.height" (pointerdown)="onHolePointerDown($event, grips.hole, tapeSvg, 'start')" />
+            <rect class="handle ew-resize hole-part" data-testid="hole-handle" data-end="end" [attr.x]="grips.hits.end.x" [attr.y]="grips.hits.end.y" [attr.width]="grips.hits.end.width" [attr.height]="grips.hits.end.height" (pointerdown)="onHolePointerDown($event, grips.hole, tapeSvg, 'end')" />
           }
           @if (drawing.ghost; as ghost) {
             <rect class="hole-ghost refused" data-testid="hole-ghost" aria-hidden="true" [attr.data-row]="ghost.row" [attr.data-start]="ghost.start" [attr.x]="ghost.x" [attr.y]="ghost.y" [attr.width]="ghost.width" [attr.height]="ghost.height" [attr.rx]="ghost.radius" [attr.ry]="ghost.radius" />

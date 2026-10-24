@@ -2055,6 +2055,24 @@ describe('TapeViewComponent', () => {
       expect(storedHoles(tape.id)).toContain('24:11+2');
     });
 
+    it('draws the handles of a selected Hole outside its body, so a press on the body near an end moves it', async () => {
+      const {view, click} = await setup();
+      await click(rectAt(view(), 24, 10) as Element);
+      const body = required(rectAt(view(), 24, 10), 'selected Hole');
+      const bodyX = Number(body.getAttribute('x'));
+      const bodyEnd = bodyX + Number(body.getAttribute('width'));
+      const handles = all(view(), '[data-testid="hole-handle"]');
+      expect(handles).toHaveLength(2);
+
+      const insideBody = handles
+        .filter((handle) => {
+          const x = Number(handle.getAttribute('x'));
+          return x < bodyEnd && x + Number(handle.getAttribute('width')) > bodyX;
+        })
+        .map((handle) => handle.getAttribute('data-end'));
+      expect(insideBody).toEqual([]);
+    });
+
     it('marks and counts the Hole whose would-be result has a Cutting Problem while the end handle is dragged, before release', async () => {
       // Columns of 1.5 mm: a Hole of 1 Column is 1.5 mm, below the Minimum Hole Length of 2.5 mm.
       const {view, at, down, move, click, handle, update} = await setup({holes: [{row: 24, start: 10, length: 2}], columnLength: 1.5});
@@ -2203,7 +2221,7 @@ describe('TapeViewComponent', () => {
       expect(selected(view())).toEqual(['25:20']);
     });
 
-    it('adds nothing on a double-click on a Hole', async () => {
+    it('removes a Hole on a double-click and adds nothing (spec 008: two taps on a Hole)', async () => {
       const {tape, view, at, down, up, click, update} = await setup();
       const before = storedHoles(tape.id);
       const hole = rectAt(view(), 24, 10) as Element;
@@ -2216,8 +2234,8 @@ describe('TapeViewComponent', () => {
       await up(at(11, 24));
       await click(hole);
 
-      expect(update).not.toHaveBeenCalled();
-      expect(storedHoles(tape.id)).toEqual(before);
+      expect(update).toHaveBeenCalledTimes(1);
+      expect(storedHoles(tape.id)).toHaveLength(before.length - 1);
     });
   });
 
@@ -2425,6 +2443,64 @@ describe('TapeViewComponent', () => {
 
         expect(selected(view())).toEqual(['24:30']);
         expect(spots(view())).toHaveLength(0);
+      });
+    });
+
+    describe('double-tapping a Hole (US2)', () => {
+      it.each(['mouse', 'touch'] as const)(
+        'a %s double-tap on a Hole removes it with one save, and selects the next Hole of its row as Delete does',
+        async (pointerType) => {
+          const {tape, view, at, tap, update} = await setup();
+
+          await tap(at(11, 24), pointerType);
+          await tap(at(11, 24), pointerType);
+
+          expect(update).toHaveBeenCalledTimes(1);
+          expect(storedHoles(tape.id)).not.toContain('24:10+3');
+          expect(rectAt(view(), 24, 10)).toBeNull();
+          expect(selected(view())).toEqual(['24:30']);
+        },
+      );
+
+      it('undoes the removal by a double-tap in one step', async () => {
+        const {tape, view, at, tap, press} = await setup();
+        const before = storedHoles(tape.id);
+        await tap(at(11, 24));
+        await tap(at(11, 24));
+        expect(storedHoles(tape.id)).not.toContain('24:10+3');
+
+        await press({key: 'z', ctrlKey: true});
+
+        expect(storedHoles(tape.id)).toEqual(before);
+        expect(rectAt(view(), 24, 10)).not.toBeNull();
+      });
+
+      it('a third tap on the Hole that the first two taps added keeps it, with one save', async () => {
+        const {tape, view, at, tap, update} = await setup();
+
+        await tap(at(20, 25));
+        await tap(at(20, 25));
+        await tap(at(20, 25));
+
+        expect(update).toHaveBeenCalledTimes(1);
+        expect(storedHoles(tape.id).filter((hole) => hole.startsWith('25:20+'))).toEqual(['25:20+1']);
+        expect(selected(view())).toEqual(['25:20']);
+      });
+
+      it('a double-tap on a Hole removes nothing while the Preview plays', async () => {
+        const {tape, view, at, tap, update, settle} = await setup({holes, tapePerCrankTurn: 100, platform: 'win32'});
+        required(view()?.querySelector<HTMLButtonElement>('[data-testid="preview-toggle"]'), 'preview toggle').click();
+        await settle();
+        const before = storedHoles(tape.id);
+
+        await tap(at(11, 24));
+        await tap(at(11, 24));
+
+        expect(update).not.toHaveBeenCalled();
+        expect(storedHoles(tape.id)).toEqual(before);
+        expect(required(view()?.querySelector('[data-testid="editing-paused"]'), 'editing-paused notice').textContent?.trim()).toBe(
+          'Editing is paused while the Preview plays',
+        );
       });
     });
   });

@@ -19,7 +19,7 @@ import {ActivatedRoute, Router, RouterLink} from '@angular/router';
 import {map} from 'rxjs';
 import {column, columnDuration, cuttingProblems, holesWithCuttingProblems, noteName, type HoleRef, type ImportSummary, type Tape, tapeGeometry, type TapeGeometry, type Transposed} from '@api/index';
 import {canTranspose, holeRefsOf, selectionOfRefs} from './transpose-selection';
-import {moveSpot, sameSpot, spotAt, type Spot, type TapeSelection} from './spot';
+import {holeAt, moveSpot, sameSpot, spotAt, type Spot, type TapeSelection} from './spot';
 import {MatDialog} from '@angular/material/dialog';
 import {TransposeDialogComponent, type TransposeDialogData} from './transpose-dialog/transpose-dialog.component';
 import {MatButton, MatIconButton} from '@angular/material/button';
@@ -38,7 +38,8 @@ import {EditCommandRouter} from '../../shared/edit-command-router';
 import {editIntent, historyIntent, type Platform} from './edit-keys';
 import {PLATFORM} from './platform.token';
 import {gridAt} from './grid-at';
-import {isDrag, type HolePart} from './hole-drag';
+import {gripBars, gripRects, isDrag, type HolePart, type Rect} from './hole-drag';
+import {nextTap, type TapMemory} from './double-tap';
 import {HoleDragSession} from './hole-drag-session';
 import {addEdit, keyEdit, type EditOutcome} from './hole-edit-commands';
 import {
@@ -129,6 +130,15 @@ const SPACE_IS_KEPT_BY = 'input, textarea, button, a, select, [role=combobox], [
 /** The shell's query: below this width the side panel gives way to a toggle. */
 const COMPACT_QUERY = '(max-width: 1179.98px)';
 
+/** The grips of the one selected Hole in view, in px: visible bars and hit areas; `undefined` unless exactly one is selected. */
+function gripsOf(holes: readonly (SelectableHole & Rect & {readonly selected: boolean})[]) {
+  const selected = holes.filter((hole) => hole.selected);
+  const only = selected.length === 1 ? selected[0] : undefined;
+  if (only === undefined) return undefined;
+  // The drawing is in px already, so one unit is one screen px.
+  return {hole: {row: only.row, start: only.start}, bars: gripBars(only), hits: gripRects(only, 1)};
+}
+
 /** One Tape. Right after an import, the navigation state carries the Import Summary. */
 @Component({
   selector: 'cranc-tape-view',
@@ -157,6 +167,8 @@ export class TapeViewComponent {
   /** Set after a drag so the click that may follow it does not select. */
   private dragJustEnded = false;
   private dragEndedTimer: ReturnType<typeof setTimeout> | undefined;
+  /** The last tap on a Hole or a Spot, which the next tap may pair with as a double-tap. */
+  private tapMemory: TapMemory | undefined;
   /** The last pointer position of a drag, so the Column follows when the stage scrolls under a resting pointer. */
   private lastPointer: {readonly clientX: number; readonly clientY: number; readonly pointerId: number; readonly svg: Element} | undefined;
   private edgeScrollFrame: number | undefined;
@@ -346,12 +358,14 @@ export class TapeViewComponent {
     if (tape === undefined || organ === undefined || geometry === undefined || range === undefined) return undefined;
     const scale = this.scale();
     const language = this.language();
+    const holes = holeRects(tape, geometry, scale, range, this.shownSelection());
     return {
       tape,
       organ,
       section: sectionView(tape, organ, geometry, language, this.partNames(tape)),
       ...rowLabels(organ, geometry, scale),
-      holes: holeRects(tape, geometry, scale, range, this.shownSelection()),
+      holes,
+      grips: gripsOf(holes),
       ghost: attempted === undefined ? undefined : ghostRect(tape, organ, attempted, scale),
       holeMarks: holeMarks(
         tape,
@@ -639,8 +653,14 @@ export class TapeViewComponent {
   private tap(framing: NonNullable<typeof this.framing>, geometry: TapeGeometry): void {
     if (framing.additive) return;
     const onLeadIn = framing.origin.x < geometry.leadIn * this.scale();
+    const hole = onLeadIn ? undefined : holeAt(framing.cell, geometry);
+    if (hole !== undefined) {
+      this.tapHole(hole, false);
+      return;
+    }
     const spot = onLeadIn ? undefined : spotAt(framing.cell, geometry);
     if (spot === undefined) {
+      this.tapMemory = undefined;
       this.selection.set({holes: []});
       return;
     }
@@ -649,6 +669,7 @@ export class TapeViewComponent {
       this.addAtSpot(spot);
       return;
     }
+    this.tapMemory = undefined;
     this.selection.set({spot});
   }
 
@@ -658,7 +679,25 @@ export class TapeViewComponent {
     const organ = this.organ();
     const pipe = organ?.pipes[spot.row - 1]?.note;
     if (tape === undefined || organ === undefined || pipe === undefined) return;
+    this.tapMemory = nextTap(this.tapMemory, {hole: {row: spot.row, start: spot.start}, at: performance.now(), added: true, modifier: false}).memory;
     this.commit(addEdit(tape, organ, pipe, spot.start));
+  }
+
+  /**
+   * A tap on a Hole: a plain tap selects it; a second tap on the same Hole within the double-tap time removes it, as the
+   * Delete key does. A tap with a modifier key leaves the selection to the click that follows it.
+   */
+  private tapHole(hole: SelectableHole, modifier: boolean): void {
+    const result = nextTap(this.tapMemory, {hole, at: performance.now(), added: false, modifier});
+    this.tapMemory = result.memory;
+    if (modifier) return;
+    this.selection.set({holes: [hole]});
+    if (!result.double) return;
+    const tape = this.tape();
+    const organ = this.organ();
+    this.endGesture();
+    if (tape === undefined || organ === undefined) return;
+    this.commit(keyEdit(tape, organ, hole, {kind: 'remove'}));
   }
 
   private cancelFrame(): void {
@@ -746,13 +785,23 @@ export class TapeViewComponent {
     }
     const geometry = this.geometry();
     if (geometry === undefined) return;
+    const pressed = this.holeDrag.grabbed;
     const box = svg.getBoundingClientRect();
     const outcome = this.holeDrag.finish(gridAt(event.clientX - box.left, event.clientY - box.top - RULER_HEIGHT, this.scale(), geometry));
-    if (outcome === undefined) return;
+    if (outcome === undefined) {
+      if (pressed !== undefined) this.tapHole({row: pressed.row, start: pressed.start}, event.shiftKey || this.isAdditive(event));
+      return;
+    }
+    this.tapMemory = undefined;
+    this.endGesture();
+    this.commit(outcome);
+  }
+
+  /** Ignores the click that follows a press which just changed the Tape, so the click does not select again. */
+  private endGesture(): void {
     this.dragJustEnded = true;
     clearTimeout(this.dragEndedTimer);
     this.dragEndedTimer = setTimeout(() => (this.dragJustEnded = false));
-    this.commit(outcome);
   }
 
   protected onPointerCancel(): void {
