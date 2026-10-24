@@ -15,6 +15,7 @@ import {
   type Organ,
   type Tape,
 } from '@api/index';
+import type {Spot} from '../spot';
 
 /** The Column as typed, counted from 1. */
 interface AddHoleDraft {
@@ -33,6 +34,8 @@ export class AddHoleComponent {
   readonly organ = input.required<Organ>();
   readonly tape = input.required<Tape>();
   readonly selected = input.required<HoleRef | undefined>();
+  /** The Spot the Tape view has selected: its Pipe and the Column after it are prefilled. */
+  readonly spot = input<Spot | undefined>(undefined);
   /** Whether editing is paused (the Preview plays): the Hole can't be added meanwhile. */
   readonly editingPaused = input(false);
   /** The Pipe and the 0-based Column of the Hole to add. */
@@ -59,6 +62,16 @@ export class AddHoleComponent {
         if (!tape.holes.some((hole) => hole.pipe === selected.pipe && hole.start === selected.start)) return;
         this.pipe.set(selected.pipe);
         this.draft.set({column: String(firstFreeColumnAfter(tape, selected) + 1)});
+      });
+    });
+    effect(() => {
+      const spot = this.spot();
+      if (spot === undefined) return;
+      untracked(() => {
+        const pipe = this.organ().pipes[spot.row - 1]?.note;
+        if (pipe === undefined) return;
+        this.pipe.set(pipe);
+        this.draft.set({column: String(spot.start + 1)});
       });
     });
     effect(() => {

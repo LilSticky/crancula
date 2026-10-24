@@ -1,10 +1,11 @@
-// API: AddHoleComponent (selector-free, standalone); inputs `organ: Organ`, `tape: Tape`, `selected: HoleRef | undefined`; output `added: OutputEmitterRef<HoleRef>` ({pipe, start: Column 0-based}); test ids on the section, the select, the input and the button.
+// API: AddHoleComponent (selector-free, standalone); inputs `organ: Organ`, `tape: Tape`, `selected: HoleRef | undefined`, `spot: {row: number (from 1), start: Column} | undefined`; output `added: OutputEmitterRef<HoleRef>` ({pipe, start: Column 0-based}); test ids on the section, the select, the input and the button.
 import {TestbedHarnessEnvironment} from '@angular/cdk/testing/testbed';
 import {TestBed, type ComponentFixture} from '@angular/core/testing';
 import {MatSelectHarness} from '@angular/material/select/testing';
 import {
   column,
   columnCount,
+  type Column,
   midiNoteNumber,
   millimetres,
   organId,
@@ -62,12 +63,19 @@ function tapeWith(holes: readonly Hole[]): Tape {
 /** D4 on Columns 5-8 and C4 on Columns 3-4. */
 const TAPE = tapeWith([hole(c4, 3, 4), hole(d4, 5, 8)]);
 
-async function render(options: {readonly tape?: Tape; readonly selected?: HoleRef} = {}) {
+/** A Spot as the Tape view hands it over: a row (from 1) and the Column it starts at. */
+interface SpotInput {
+  readonly row: number;
+  readonly start: Column;
+}
+
+async function render(options: {readonly tape?: Tape; readonly selected?: HoleRef; readonly spot?: SpotInput} = {}) {
   TestBed.configureTestingModule({providers: [provideTestTranslations()]});
   const fixture: ComponentFixture<AddHoleComponent> = TestBed.createComponent(AddHoleComponent);
   fixture.componentRef.setInput('organ', ORGAN);
   fixture.componentRef.setInput('tape', options.tape ?? TAPE);
   fixture.componentRef.setInput('selected', options.selected);
+  if (options.spot !== undefined) fixture.componentRef.setInput('spot', options.spot);
   const added: HoleRef[] = [];
   fixture.componentInstance.added.subscribe((value) => added.push(value));
   fixture.autoDetectChanges();
@@ -95,6 +103,10 @@ async function render(options: {readonly tape?: Tape; readonly selected?: HoleRe
     pipeSelect: () => loader.getHarness(MatSelectHarness.with({selector: '[data-testid="add-hole-pipe"]'})),
     changeTape: async (tape: Tape) => {
       fixture.componentRef.setInput('tape', tape);
+      await fixture.whenStable();
+    },
+    changeSpot: async (spot: SpotInput) => {
+      fixture.componentRef.setInput('spot', spot);
       await fixture.whenStable();
     },
     text: () => element.textContent?.replace(/\s+/g, ' ').trim() ?? '',
@@ -176,6 +188,24 @@ describe('AddHoleComponent', () => {
     await clickSubmit();
 
     expect(added).toEqual([{pipe: c4, start: 0}]);
+  });
+
+  describe('when a Spot is given (Tape view)', () => {
+    it('is prefilled with the Pipe of the Spot row and the Column after the Spot', async () => {
+      const {pipeSelect, columnInput} = await render({spot: {row: 2, start: defined(column(7), 'column')}});
+
+      expect(await (await pipeSelect()).getValueText()).toBe('D4');
+      expect(columnInput().value).toBe('8');
+    });
+
+    it('follows the Spot when it moves', async () => {
+      const {pipeSelect, columnInput, changeSpot} = await render({spot: {row: 1, start: defined(column(2), 'column')}});
+
+      await changeSpot({row: 3, start: defined(column(0), 'column')});
+
+      expect(await (await pipeSelect()).getValueText()).toBe('E4');
+      expect(columnInput().value).toBe('1');
+    });
   });
 
   describe('when the Tape changes under the form', () => {
