@@ -3709,7 +3709,7 @@ describe('TapeViewComponent', () => {
       {row: 25, start: 40, length: 2},
     ];
     type Modifiers = Pick<MouseEventInit, 'ctrlKey' | 'metaKey'>;
-    type Gesture = Modifiers & {readonly pointerType?: 'mouse' | 'touch' | 'pen'};
+    type Gesture = Modifiers & {readonly pointerType?: 'mouse' | 'touch' | 'pen'; readonly pointerId?: number};
     type Position = {readonly clientX: number; readonly clientY: number};
     const drawn = (view: HTMLElement | null) => all(view, '[data-testid="tape-scroll"] rect[data-testid="hole"]') as SVGRectElement[];
     const selected = (view: HTMLElement | null) =>
@@ -3743,7 +3743,7 @@ describe('TapeViewComponent', () => {
         clientY: (geometry.rowCentres[row - 1] ?? 0) * SCALE + RULER_PX,
       });
       const pointer = (type: string, position: Position, gesture: Gesture = {}) =>
-        new PointerEvent(type, {...position, ...gesture, pointerId: 1, button: 0, bubbles: true, cancelable: true});
+        new PointerEvent(type, {pointerId: 1, ...position, ...gesture, button: 0, bubbles: true, cancelable: true});
       const down = async (target: Element, position: Position, gesture: Gesture = {}) => {
         target.dispatchEvent(pointer('pointerdown', position, gesture));
         await rendered.settle();
@@ -3757,6 +3757,11 @@ describe('TapeViewComponent', () => {
         svg.dispatchEvent(pointer('pointerup', position, gesture));
         await rendered.settle();
       };
+      /** The system takes a drag over as a scroll: the pointer is cancelled, and no release follows. */
+      const cancel = async (gesture: Gesture = {}) => {
+        svg.dispatchEvent(pointer('pointercancel', {clientX: 0, clientY: 0}, gesture));
+        await rendered.settle();
+      };
       const click = async (row: number, start: number, modifiers: Modifiers = {}) => {
         rectAt(rendered.view(), row, start).dispatchEvent(new MouseEvent('click', {bubbles: true, ...modifiers}));
         await rendered.settle();
@@ -3766,7 +3771,7 @@ describe('TapeViewComponent', () => {
         await rendered.settle();
       };
       const update = vi.spyOn(TestBed.inject(TapeLibrary), 'update');
-      return {...rendered, svg, at, down, move, up, click, press, update};
+      return {...rendered, svg, at, down, move, up, cancel, click, press, update};
     };
 
     it('adds a Hole to the selection with Ctrl-click and takes it out again with a second Ctrl-click', async () => {
@@ -3931,6 +3936,63 @@ describe('TapeViewComponent', () => {
 
         expect(selected(view())).toEqual([]);
         expect(spots(view())).toHaveLength(0);
+      });
+
+      it('changes nothing when the system takes a touch drag over as a scroll (pointercancel)', async () => {
+        const {tape, view, svg, at, down, move, cancel, click, update} = await setup({holes, platform: 'win32'});
+        await click(24, 10);
+        const before = storedHoles(tape.id);
+
+        await down(svg, at(5, 24), touch);
+        await move(at(16, 25), touch);
+        await cancel(touch);
+
+        expect(view()?.querySelector('[data-testid="selection-frame"]')).toBeNull();
+        expect(selected(view())).toEqual(['24:10']);
+        expect(spots(view())).toHaveLength(0);
+        expect(update).not.toHaveBeenCalled();
+        expect(storedHoles(tape.id)).toEqual(before);
+      });
+
+      it('draws a selection frame when a pen drags over empty Tape, as a mouse does', async () => {
+        const {view, svg, at, down, move} = await setup({holes, platform: 'win32'});
+        const pen: Gesture = {pointerType: 'pen'};
+
+        await down(svg, at(5, 24), pen);
+        await move(at(16, 25), pen);
+
+        expect(view()?.querySelector('[data-testid="selection-frame"]')).not.toBeNull();
+      });
+
+      it('adds no Hole, selects no Spot and saves nothing when two fingers press empty Tape at once', async () => {
+        const {tape, view, svg, at, down, up, update} = await setup({holes, platform: 'win32'});
+        const before = storedHoles(tape.id);
+        const second: Gesture = {pointerType: 'touch', pointerId: 2};
+
+        await down(svg, at(5, 24), touch);
+        await down(svg, at(20, 25), second);
+        await up(at(5, 24), touch);
+        await up(at(20, 25), second);
+
+        expect(storedHoles(tape.id)).toEqual(before);
+        expect(spots(view())).toHaveLength(0);
+        expect(view()?.querySelector('[data-testid="selection-frame"]')).toBeNull();
+        expect(update).not.toHaveBeenCalled();
+      });
+
+      it('does not move a Hole that a first finger holds while a second finger lands on empty Tape', async () => {
+        const {tape, view, svg, at, down, move, up, update} = await setup({holes, platform: 'win32'});
+        const before = storedHoles(tape.id);
+        const second: Gesture = {pointerType: 'touch', pointerId: 2};
+
+        await down(holeAt(view(), 24, 10), at(11, 24), touch);
+        await down(svg, at(30, 25), second);
+        await move(at(16, 24), touch);
+        await up(at(16, 24), touch);
+        await up(at(30, 25), second);
+
+        expect(storedHoles(tape.id)).toEqual(before);
+        expect(update).not.toHaveBeenCalled();
       });
 
       it('lets a touch pan the drawing: its touch-action is pan-x pan-y', async () => {

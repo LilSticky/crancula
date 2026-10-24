@@ -174,6 +174,10 @@ export class TapeViewComponent {
   private framing:
     | {readonly press: Point; readonly origin: Point; readonly cell: GridCell; readonly additive: boolean; readonly touch: boolean}
     | undefined;
+  /** The touch pointers down on the drawing. */
+  private readonly touches = new Set<number>();
+  /** Set once a second touch goes down: the touches change nothing until all of them are up. */
+  private touchesIgnored = false;
   /** A drag of the playhead grip; `wasPlaying` tells whether the Preview played at the press and goes on from the release. */
   private playheadDrag: {readonly wasPlaying: boolean} | undefined;
   /** The selection frame as dragged, in px of the drawing; `undefined` until the press has travelled. */
@@ -645,8 +649,31 @@ export class TapeViewComponent {
     this.scrollToSelection = true;
   }
 
+  /**
+   * Tracks the touch pointers on the drawing. A second touch ends the gestures in progress, and the touches change nothing
+   * until all are up. Mouse and pen pass. @returns whether the event is to be ignored
+   */
+  private trackTouch(event: PointerEvent): boolean {
+    if (event.pointerType !== 'touch') return false;
+    if (event.type === 'pointerdown') {
+      this.touches.add(event.pointerId);
+      if (this.touches.size > 1) {
+        this.touchesIgnored = true;
+        this.cancelGesture();
+      }
+      return this.touchesIgnored;
+    }
+    const ignored = this.touchesIgnored;
+    if (event.type === 'pointerup' || event.type === 'pointercancel') {
+      this.touches.delete(event.pointerId);
+      if (this.touches.size === 0) this.touchesIgnored = false;
+    }
+    return ignored;
+  }
+
   /** Starts a selection frame at an empty spot of the Tape; it only shows once the press travels. */
   protected onPointerDown(event: PointerEvent, svg: Element): void {
+    if (this.trackTouch(event)) return;
     const target = event.target;
     if (event.button !== 0 || (target instanceof Element && target.closest('.hole-part') !== null)) return;
     const geometry = this.geometry();
@@ -769,6 +796,7 @@ export class TapeViewComponent {
   }
 
   protected onPointerMove(event: PointerEvent, svg: Element): void {
+    if (this.trackTouch(event)) return;
     this.stretchFrame(event, svg);
     this.lastPointer = {clientX: event.clientX, clientY: event.clientY, pointerId: event.pointerId, svg};
     this.followPointer(this.lastPointer);
@@ -822,6 +850,7 @@ export class TapeViewComponent {
 
   /** Presses a Hole, or one of the grips of the selected Hole; a press that travels turns into a drag. */
   protected onHolePointerDown(event: PointerEvent, hole: {readonly row: number; readonly start: number}, svg: Element, part: HolePart = 'body'): void {
+    if (this.trackTouch(event)) return;
     const tape = this.tape();
     const organ = this.organ();
     const geometry = this.geometry();
@@ -841,6 +870,7 @@ export class TapeViewComponent {
   }
 
   protected onPointerUp(event: PointerEvent, svg: Element): void {
+    if (this.trackTouch(event)) return;
     this.stopEdgeScroll();
     if (this.framing !== undefined) {
       this.finishFrame(event, svg);
@@ -873,7 +903,13 @@ export class TapeViewComponent {
     this.dragEndedTimer = setTimeout(() => (this.dragJustEnded = false));
   }
 
-  protected onPointerCancel(): void {
+  protected onPointerCancel(event: PointerEvent): void {
+    this.trackTouch(event);
+    this.cancelGesture();
+  }
+
+  /** Ends the gestures of the drawing in progress: a Hole drag, a frame or a pending tap, and the edge scroll. */
+  private cancelGesture(): void {
     this.stopEdgeScroll();
     this.cancelFrame();
     this.holeDrag.cancel();

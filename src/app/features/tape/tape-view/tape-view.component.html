@@ -50,7 +50,7 @@
       }
     </ul>
     <div class="scroll" #scroll data-testid="tape-scroll" (scroll)="onScroll(scroll)" (wheel)="onWheel()">
-      <svg #tapeSvg role="application" [attr.aria-label]="'TAPE.VIEW.DRAWING' | translate: drawing.drawingParams" [attr.width]="drawing.svgWidth" [attr.height]="drawing.totalHeight" tabindex="0" [attr.aria-describedby]="inspection() ? 'hole-keys-help' : null" (keydown)="onKeydown($event)" (pointerdown)="onPointerDown($event, tapeSvg)" [class.grabbing]="dragging()" (pointermove)="onPointerMove($event, tapeSvg)" (pointerup)="onPointerUp($event, tapeSvg)" (pointercancel)="onPointerCancel()" (pointerleave)="onPointerLeave()">
+      <svg #tapeSvg role="application" [attr.aria-label]="'TAPE.VIEW.DRAWING' | translate: drawing.drawingParams" [attr.width]="drawing.svgWidth" [attr.height]="drawing.totalHeight" tabindex="0" [attr.aria-describedby]="inspection() ? 'hole-keys-help' : null" (keydown)="onKeydown($event)" (pointerdown)="onPointerDown($event, tapeSvg)" [class.grabbing]="dragging()" (pointermove)="onPointerMove($event, tapeSvg)" (pointerup)="onPointerUp($event, tapeSvg)" (pointercancel)="onPointerCancel($event)" (pointerleave)="onPointerLeave()">
         <defs>
           <pattern id="ruler-ticks" patternUnits="userSpaceOnUse" [attr.x]="drawing.leadIn" [attr.width]="5 * scale()" height="8">
             @for (tick of rulerTicks; track tick) {
