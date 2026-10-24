@@ -10,6 +10,15 @@ No slice in progress.
 
 **Next step:** Record a tape ([discovery/later.md](discovery/later.md), section 1, slice 2).
 
+**Done:** [Ready-made Organs (#162)](https://github.com/LilSticky/crancula/issues/162) (2026-10-24, branch
+`claude/issue-162-20261024-2112`): the term is Preset (German Vorlage); a new Organ offers the Presets as starting
+points (buttons in the Organ editor's page head). `api/organ/organ-preset.ts` holds the 20er-Drehorgel (Carl Frei,
+F-based, 110 mm, 3 mm holes, 3.85 mm rows) and the 31er-Drehorgel (Raffin, 140 mm, 2.5 mm holes, 3.86 mm rows). Notes
+and Tape Bed come from Wally Venable's MIDIBoek gamma files. **Guessed** (user-approved): Minimum Gap 3 mm, Lead-in
+30 mm, Tape per Crank turn 70 mm, Crank speed 40–90. The real 20er rows are off-centre; the Preset is centred until
+[#163](https://github.com/LilSticky/crancula/issues/163). Kept small: no `specs/` folder and no new e2e (unit and
+component tests cover it). Gate: 1378 Vitest tests and lint green locally.
+
 **Done:** [Stop preview label wraps at 1280 px (#159)](https://github.com/LilSticky/crancula/issues/159) (2026-10-24,
 branch `159-stop-preview-label`): the Preview toggle no longer wraps, in English and German (`white-space: nowrap`, as
 Export). New e2e in `e2e/tape-layout.spec.ts` measures the toggle while a Preview plays at 1280×800. Gate: 1375 Angular

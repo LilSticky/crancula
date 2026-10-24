@@ -16,6 +16,7 @@ export {
   type TapeBed,
 } from './organ/organ';
 export {addPipe, emptyOrganDraft, movePipe, removePipe, toDraft, type OrganDraft, type PipeDraft} from './organ/organ-draft';
+export {ORGAN_PRESETS, organPreset, type OrganPreset} from './organ/organ-preset';
 export {validateOrgan, type OrganViolation, type OrganViolationCode} from './organ/validate-organ';
 export {
   parseOrganLibrarySnapshot,

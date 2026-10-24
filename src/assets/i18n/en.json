@@ -275,6 +275,8 @@
     },
     "EDITOR": {
       "TITLE_NEW": "New Organ",
+      "PRESETS": "Start from a preset",
+      "PRESET_LABEL": "Start from the preset {{name}}",
       "TITLE": "Organ",
       "NAME": "Name",
       "TAPE_BED": "Tape Bed",

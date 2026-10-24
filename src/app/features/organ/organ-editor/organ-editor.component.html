@@ -6,6 +6,18 @@
           <mat-icon>delete</mat-icon>
           {{ 'ORGAN.EDITOR.DELETE' | translate }}
         </button>
+      } @else {
+        <div class="presets-head">
+          <span id="organ-presets-label" class="presets-label">{{ 'ORGAN.EDITOR.PRESETS' | translate }}</span>
+          <span class="presets" role="group" aria-labelledby="organ-presets-label">
+            @for (preset of presets; track preset.id) {
+              <button matButton="outlined" type="button" [attr.data-testid]="'preset-' + preset.id"
+                      [attr.aria-label]="'ORGAN.EDITOR.PRESET_LABEL' | translate: {name: preset.name}" (click)="usePreset(preset)">
+                {{ preset.name }}
+              </button>
+            }
+          </span>
+        </div>
       }
     </ng-container>
   </cranc-page-head>

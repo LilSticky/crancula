@@ -14,6 +14,8 @@ import {
   emptyOrganDraft,
   movePipe,
   newOrganId,
+  ORGAN_PRESETS,
+  type OrganPreset,
   type Organ,
   type OrganDraft,
   removePipe,
@@ -61,6 +63,23 @@ const FIELD_TEST_IDS: Readonly<Record<string, string>> = {
   styles: `
     .delete-organ {
       --mat-button-text-label-text-color: var(--mat-sys-error);
+    }
+
+    .presets-head {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .presets-label {
+      color: var(--mat-sys-on-surface-variant);
+      font-size: 0.875rem;
+    }
+
+    .presets {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
     }
 
     .unsaved-dot {
@@ -256,6 +275,20 @@ export class OrganEditorComponent implements UnsavedChangesCheck {
   unsavedChanges(): UnsavedChanges | null {
     if (this.deleted || !this.changed()) return null;
     return {problems: organProblems(this.organ).map(toProblem)};
+  }
+
+  protected readonly presets = ORGAN_PRESETS;
+
+  /** Fills a new Organ from a preset, keeping its id; asks first when the draft has unsaved changes. */
+  protected async usePreset(preset: OrganPreset): Promise<void> {
+    if (this.changed()) {
+      const {id, name} = this.draft();
+      const confirmed = await firstValueFrom(
+        this.dialog.open(ConfirmDialogComponent, {data: {action: ConfirmableAction.DISCARD, entity: {id, name}}}).afterClosed(),
+      );
+      if (confirmed !== true) return;
+    }
+    this.draft.update((draft) => ({...structuredClone(preset.draft), id: draft.id}));
   }
 
   /** Resets the draft to the last saved version (empty for a new Organ), without writing. */
