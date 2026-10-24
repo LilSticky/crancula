@@ -119,6 +119,18 @@ interface Point {
   readonly y: number;
 }
 
+/** An empty spot pressed on the Tape: where (client px and drawing px), in which cell, whether it adds to the selection, and whether a touch pressed it. */
+interface Framing {
+  readonly press: Point;
+  readonly origin: Point;
+  readonly cell: GridCell;
+  readonly additive: boolean;
+  readonly touch: boolean;
+}
+
+/** The selection of no Holes, shared so that an unchanged selection keeps its identity. */
+const NO_HOLES: HoleSelection = [];
+
 /** How long after the owner last scrolled or wheeled the stage the playhead leaves the stage alone, in ms. */
 const OWNER_SCROLL_PAUSE = 2000;
 
@@ -167,13 +179,8 @@ export class TapeViewComponent {
   /** The last pointer position of a drag, so the Column follows when the stage scrolls under a resting pointer. */
   private lastPointer: {readonly clientX: number; readonly clientY: number; readonly pointerId: number; readonly svg: Element} | undefined;
   private edgeScrollFrame: number | undefined;
-  /**
-   * An empty spot pressed on the Tape: where (client px and drawing px), in which cell, whether it adds to the selection,
-   * and whether a touch pressed it (a touch that travels pans the drawing instead of framing).
-   */
-  private framing:
-    | {readonly press: Point; readonly origin: Point; readonly cell: GridCell; readonly additive: boolean; readonly touch: boolean}
-    | undefined;
+  /** The press that may frame a selection; a touch that travels pans the drawing instead of framing. */
+  private framing: Framing | undefined;
   /** The touch pointers down on the drawing. */
   private readonly touches = new Set<number>();
   /** Set once a second touch goes down: the touches change nothing until all of them are up. */
@@ -228,7 +235,7 @@ export class TapeViewComponent {
   /** The Holes selected, or none while a Spot is. */
   private readonly holeSelection = computed((): HoleSelection => {
     const selection = this.selection();
-    return 'holes' in selection ? selection.holes : [];
+    return 'holes' in selection ? selection.holes : NO_HOLES;
   });
   /** The Spot selected, if any. */
   protected readonly spotSelected = computed((): Spot | undefined => {
@@ -262,11 +269,14 @@ export class TapeViewComponent {
   /** The Holes the selection works on: row (from 1), start and length in Columns. */
   private readonly selectable = computed((): readonly SpanningHole[] => {
     const tape = this.shownTape();
-    return (this.geometry()?.slots ?? []).map(({row, start, width}) => ({
-      row,
-      start,
-      length: tape === undefined ? 0 : width / tape.columnLength,
-    }));
+    const organ = this.organ();
+    if (tape === undefined || organ === undefined) return [];
+    return tape.holes
+      .flatMap(({pipe, start, length}): readonly SpanningHole[] => {
+        const index = organ.pipes.findIndex((candidate) => candidate.note === pipe);
+        return index === -1 ? [] : [{row: index + 1, start, length}];
+      })
+      .sort((a, b) => a.start - b.start || a.row - b.row);
   });
 
   protected readonly organ = computed(() => {
@@ -742,7 +752,7 @@ export class TapeViewComponent {
    * A tap on empty Tape: selects the Spot under it; on the selected Spot it adds a Hole there. The Lead-in and a cell
    * covered by a Hole clear the selection. An additive tap changes nothing.
    */
-  private tap(framing: NonNullable<typeof this.framing>, geometry: TapeGeometry, tape: Tape, organ: Organ): void {
+  private tap(framing: Framing, geometry: TapeGeometry, tape: Tape, organ: Organ): void {
     if (framing.additive) return;
     const onLeadIn = framing.origin.x < geometry.leadIn * this.scale();
     const hole = onLeadIn ? undefined : holeAt(framing.cell, tape, organ);
