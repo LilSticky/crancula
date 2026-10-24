@@ -1,5 +1,6 @@
 import {app, BrowserWindow, dialog, ipcMain, Menu, screen} from 'electron';
 import * as fs from 'fs';
+import {randomUUID} from 'node:crypto';
 import * as path from 'path';
 import type {Language} from '../api';
 import {registerAppHandlers} from './app-ipc';
@@ -7,6 +8,7 @@ import {menuTemplate, SOURCE_I18N_DIRECTORY} from './application-menu';
 import {createOrganLibraryFile} from './organ-library-file';
 import {registerOrganLibraryHandlers} from './organ-library-ipc';
 import {registerPlotterHandlers} from './plotter-ipc';
+import {registerRecordingHandlers} from './recording-ipc';
 import {createTapeLibraryFile} from './tape-library-file';
 import {registerTapeLibraryHandlers} from './tape-library-ipc';
 import {windowOptions} from './window-options';
@@ -31,6 +33,17 @@ registerPlotterHandlers(
     showSaveDialog: (window, options) => dialog.showSaveDialog(window, options),
     writeFile: (filePath, text) => fs.promises.writeFile(filePath, text, 'utf8'),
     documentsFolder: () => app.getPath('documents'),
+  },
+  (event) => BrowserWindow.fromWebContents(event.sender),
+);
+registerRecordingHandlers(
+  ipcMain,
+  {
+    // Looked up at call time, like the Plotter's dialog.
+    showSaveDialog: (window, options) => dialog.showSaveDialog(window, options),
+    writeFile: (filePath, bytes) => fs.promises.writeFile(filePath, bytes),
+    documentsFolder: () => app.getPath('documents'),
+    newTarget: () => randomUUID(),
   },
   (event) => BrowserWindow.fromWebContents(event.sender),
 );
