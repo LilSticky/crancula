@@ -4,7 +4,7 @@ Validation guide. Contracts: [recording-ipc](contracts/recording-ipc.md), [recor
 
 ## Automated
 
-- `npm run test`: WAV writer, PCM conversion, file names, request parsers, IPC handlers, voice windows,
+- `npm run test`: WAV writer, PCM conversion, file names, request parsers, IPC handlers, preview note windows,
   TapeRecorder and the Record button.
 - `npm run e2e -- record-a-tape`: in real Electron with the save dialog stubbed, Record a Tape as WAV
   and as MP3; the WAV has a valid header, mono 44.1 kHz 16 bit, the expected length (Columns × Column

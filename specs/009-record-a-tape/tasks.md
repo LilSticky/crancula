@@ -32,18 +32,18 @@ Playwright e2e only for what needs real Electron (offline rendering, LAME in a W
 
 ## Phase 2: Foundational (domain, pure)
 
-- [ ] T003 [P] Red: `api/recording/recording-format.spec.ts`: `RECORDING_SAMPLE_RATE` 44100, `RECORDING_CHANNELS` 1, `MP3_BIT_RATE` 128; `recordingFormatOf('a.wav')` → `'wav'`, `'A.MP3'` → `'mp3'`, `'a.ogg'`, `'a'`, `'wav'` → `undefined`.
-- [ ] T004 Green: `api/recording/recording-format.ts`, exported from `api/index.ts`.
-- [ ] T005 [P] Red: `api/recording/recording-file-name.spec.ts`: `recordingFileName` cleans like `plotterFileName` (forbidden characters → `_`, trailing dots/spaces removed, `CON` → `_CON`, empty → `Tape`, at most 200 characters without splitting a surrogate pair) and has no extension.
-- [ ] T006 Green: move the cleaning out of `api/tape/plotter-file-name.ts` into one shared helper (e.g. `api/app/safe-file-name.ts`) and build `recordingFileName` in `api/recording/recording-file-name.ts` on it; `plotter-file-name.spec.ts` stays green.
-- [ ] T007 [P] Red: `api/recording/pcm.spec.ts`: `pcm16(Float32Array)` maps 0 → 0, 1 → 32767, -1 → -32767, 0.5 → 16384 (rounded), 2 → 32767, -3 → -32767, NaN → 0; length kept.
-- [ ] T008 Green: `api/recording/pcm.ts`.
-- [ ] T009 [P] Red: `api/recording/wav-file.spec.ts`: `wavFile(new Int16Array([0, 1, -1]), 44100)` is 50 bytes: `RIFF`, size 42 (LE u32), `WAVE`, `fmt `, 16, format 1, channels 1, rate 44100, byte rate 88200, block align 2, bits 16, `data`, 6, then the samples little endian; an empty PCM gives a 44-byte header with data size 0.
-- [ ] T010 Green: `api/recording/wav-file.ts`.
-- [ ] T011 [P] Red: `api/preview/voice-windows.spec.ts`: `voiceWindows(notes, columnSeconds, windowSeconds)` turns PreviewNotes into `{pipe, startSeconds, stopSeconds}` (start = startColumn × columnSeconds, stop = endColumn × columnSeconds) grouped by `floor(startSeconds / windowSeconds)` in order, with empty windows present up to the last note's window; no notes → `[]`.
-- [ ] T012 Green: `api/preview/voice-windows.ts`, exported.
-- [ ] T013 [P] Red: `api/recording/recording-save-request.spec.ts`: `parseRecordingChooseRequest` accepts exactly `suggestedFileName`, `dialogTitle`, `wavFilterName`, `mp3FilterName` (strings, 1–200 characters, no control characters; file name without path separators and not only dots), rejects extra fields, non-objects, arrays; `parseRecordingWriteRequest` accepts exactly `target` (UUID string) and `bytes` (`Uint8Array`, 1 B to 512 MB) and rejects other types, empty bytes, extra fields.
-- [ ] T014 Green: `api/recording/recording-save-request.ts` with the request/result types of data-model.md; `recording` methods `chooseFile` and `writeFile` added to `api/app/crancula-api.ts`.
+- [x] T003 [P] Red: `api/recording/recording-format.spec.ts`: `RECORDING_SAMPLE_RATE` 44100, `RECORDING_CHANNELS` 1, `MP3_BIT_RATE` 128; `recordingFormatOf('a.wav')` → `'wav'`, `'A.MP3'` → `'mp3'`, `'a.ogg'`, `'a'`, `'wav'` → `undefined`.
+- [x] T004 Green: `api/recording/recording-format.ts`, exported from `api/index.ts`.
+- [x] T005 [P] Red: `api/recording/recording-file-name.spec.ts`: `recordingFileName` cleans like `plotterFileName` (forbidden characters → `_`, trailing dots/spaces removed, `CON` → `_CON`, empty → `Tape`, at most 200 characters without splitting a surrogate pair) and has no extension.
+- [x] T006 Green: move the cleaning out of `api/tape/plotter-file-name.ts` into one shared helper (e.g. `api/app/safe-file-name.ts`) and build `recordingFileName` in `api/recording/recording-file-name.ts` on it; `plotter-file-name.spec.ts` stays green.
+- [x] T007 [P] Red: `api/recording/pcm.spec.ts`: `pcm16(Float32Array)` maps 0 → 0, 1 → 32767, -1 → -32767, 0.5 → 16384 (rounded), 2 → 32767, -3 → -32767, NaN → 0; length kept.
+- [x] T008 Green: `api/recording/pcm.ts`.
+- [x] T009 [P] Red: `api/recording/wav-file.spec.ts`: `wavFile(new Int16Array([0, 1, -1]), 44100)` is 50 bytes: `RIFF`, size 42 (LE u32), `WAVE`, `fmt `, 16, format 1, channels 1, rate 44100, byte rate 88200, block align 2, bits 16, `data`, 6, then the samples little endian; an empty PCM gives a 44-byte header with data size 0.
+- [x] T010 Green: `api/recording/wav-file.ts`.
+- [x] T011 [P] Red: `api/preview/preview-note-windows.spec.ts`: `previewNoteWindows(notes, columnSeconds, windowSeconds)` turns PreviewNotes into `{pipe, startSeconds, stopSeconds}` (start = startColumn × columnSeconds, stop = endColumn × columnSeconds) grouped by `floor(startSeconds / windowSeconds)` in order, with empty windows present up to the last note's window; no notes → `[]`.
+- [x] T012 Green: `api/preview/preview-note-windows.ts`, exported.
+- [x] T013 [P] Red: `api/recording/recording-save-request.spec.ts`: `parseRecordingChooseRequest` accepts exactly `suggestedFileName`, `dialogTitle`, `wavFilterName`, `mp3FilterName` (strings, 1–200 characters, no control characters; file name without path separators and not only dots), rejects extra fields, non-objects, arrays; `parseRecordingWriteRequest` accepts exactly `target` (UUID string) and `bytes` (`Uint8Array`, 1 B to 512 MB) and rejects other types, empty bytes, extra fields.
+- [x] T014 Green: `api/recording/recording-save-request.ts` with the request/result types of data-model.md; `recording` methods `chooseFile` and `writeFile` added to `api/app/crancula-api.ts`.
 
 **Checkpoint**: `npm run test:node` green; commit; STATUS.
 
@@ -64,7 +64,7 @@ Playwright e2e only for what needs real Electron (offline rendering, LAME in a W
 - [ ] T018 [US1] Green: extract `src/app/features/tape/preview/preview-voices.ts` (harmonics, attack, release, master gain, compressor) from `web-audio-preview-sound.ts`; the Preview uses it unchanged.
 - [ ] T019 [US1] Red: `src/app/features/tape/recording/tape-recorder.spec.ts` with fake `RecordingRenderer` (returns a Float32Array, reports progress), fake `Mp3Encoder` and the fake API: Record calls `chooseFile` with `recordingFileName(tape.name)` and the translated texts; cancelled → nothing rendered, no snackbar; chosen wav → renders the whole Tape (`performance`, `columnDuration`, sample rate 44100), `wavFile(pcm16(...))` written with the target, snackbar `TAPE.RECORD.SAVED` 6 s; chosen mp3 → encoder called with the samples, its bytes written; write `failed`/`rejected` or a thrown error → snackbar `TAPE.RECORD.FAILED` with Retry; `state()` goes idle → choosing → rendering(progress) → (encoding) → writing → idle; `recording()` true while not idle; a second Record while recording does nothing; the Tape store and undo history are untouched.
 - [ ] T020 [US1] Green: `src/app/features/tape/recording/tape-recorder.ts` (root service), ports `RecordingRenderer` and `Mp3Encoder` with injection tokens in `recording-renderer.ts` and `mp3-encoder.ts` (adapters stubbed until T021/T022).
-- [ ] T021 [US1] Green (proven in e2e T025): `OfflineAudioContext` adapter in `src/app/features/tape/recording/recording-renderer.ts`: 1 channel, 44100 Hz, length `ceil((previewLength + release) × 44100)`, voices from `voiceWindows` scheduled window by window (10 s) with `suspend`/`resume` through `previewVoices`, progress per window, returns channel 0.
+- [ ] T021 [US1] Green (proven in e2e T025): `OfflineAudioContext` adapter in `src/app/features/tape/recording/recording-renderer.ts`: 1 channel, 44100 Hz, length `ceil((previewLength + release) × 44100)`, voices from `previewNoteWindows` scheduled window by window (10 s) with `suspend`/`resume` through `previewVoices`, progress per window, returns channel 0.
 - [ ] T022 [US1] Green (proven in e2e T025): `src/app/features/tape/recording/mp3-encoder.worker.ts` (LAME `Mp3Encoder(1, 44100, 128)`, Int16 blocks of 1152, `flush`, progress messages) and the Worker adapter in `mp3-encoder.ts`; Angular worker config (`tsconfig.worker.json`, `webWorkerTsConfig` in `angular.json`); `npm run build` green.
 
 ### UI

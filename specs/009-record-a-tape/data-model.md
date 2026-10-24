@@ -21,9 +21,9 @@ The shared cleaning moves into one helper used by both.
   chunk (16 bytes: format 1, channels 1, sample rate, byte rate = rate × 2, block align 2, 16 bits),
   `data` chunk. Little endian.
 
-## Voice schedule (renderer, pure, in `api/preview/`)
+## Preview note windows (renderer, pure, in `api/preview/`)
 
-`voiceWindows(notes: readonly PreviewNote[], columnSeconds, windowSeconds)`: the PreviewNotes as
+`previewNoteWindows(notes: readonly PreviewNote[], columnSeconds, windowSeconds)`: the PreviewNotes as
 `{pipe, startSeconds, stopSeconds}` grouped by the window their start falls into, in order. Used by the
 offline renderer to schedule window by window.
 
