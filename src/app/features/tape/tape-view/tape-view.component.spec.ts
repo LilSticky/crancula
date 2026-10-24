@@ -2289,8 +2289,8 @@ describe('TapeViewComponent', () => {
       });
       const update = vi.spyOn(TestBed.inject(TapeLibrary), 'update');
       /** One tap: a press and a release at the same place, by the pointer of `pointerType`. */
-      const tap = async (position: {clientX: number; clientY: number}, pointerType: 'mouse' | 'touch' = 'mouse') => {
-        const init = {...position, pointerId: 1, pointerType, button: 0, bubbles: true, cancelable: true};
+      const tap = async (position: {clientX: number; clientY: number}, pointerType: 'mouse' | 'touch' = 'mouse', pointerId = 1) => {
+        const init = {...position, pointerId, pointerType, button: 0, bubbles: true, cancelable: true};
         svg.dispatchEvent(new PointerEvent('pointerdown', init));
         svg.dispatchEvent(new PointerEvent('pointerup', init));
         await rendered.settle();
@@ -2413,6 +2413,23 @@ describe('TapeViewComponent', () => {
 
       expect(update).toHaveBeenCalledTimes(1);
       expect(storedHoles(tape.id).filter((hole) => hole.startsWith('25:20+'))).toEqual(['25:20+1']);
+    });
+
+    describe('after a touch whose pointerup never reaches the drawing (F03)', () => {
+      it('a fresh tap–tap on empty Tape still adds a Hole after a touch whose lostpointercapture reaches the drawing without a pointerup', async () => {
+        const {tape, svg, at, tap, update, settle} = await setup();
+        // The first touch goes down on empty Tape; the browser then ends it with lostpointercapture, and no pointerup follows.
+        svg.dispatchEvent(new PointerEvent('pointerdown', {...at(5, 24), pointerId: 1, pointerType: 'touch', button: 0, bubbles: true, cancelable: true}));
+        svg.dispatchEvent(new PointerEvent('lostpointercapture', {pointerId: 1, pointerType: 'touch', bubbles: true}));
+        await settle();
+
+        // A fresh touch is a new pointer, so it has its own pointerId.
+        await tap(at(20, 25), 'touch', 2);
+        await tap(at(20, 25), 'touch', 2);
+
+        expect(update).toHaveBeenCalledTimes(1);
+        expect(storedHoles(tape.id)).toContain('25:20+1');
+      });
     });
 
     describe('while the Preview plays', () => {

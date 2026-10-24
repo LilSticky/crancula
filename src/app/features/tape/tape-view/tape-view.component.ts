@@ -674,7 +674,7 @@ export class TapeViewComponent {
       return this.touchesIgnored;
     }
     const ignored = this.touchesIgnored;
-    if (event.type === 'pointerup' || event.type === 'pointercancel') {
+    if (event.type === 'pointerup' || event.type === 'pointercancel' || event.type === 'lostpointercapture') {
       this.touches.delete(event.pointerId);
       if (this.touches.size === 0) this.touchesIgnored = false;
     }
@@ -918,6 +918,11 @@ export class TapeViewComponent {
   protected onPointerCancel(event: PointerEvent): void {
     this.trackTouch(event);
     this.cancelGesture();
+  }
+
+  /** Forgets a touch the browser ended without a pointerup (the pointerup of a normal release has already done so). */
+  protected onPointerLostCapture(event: PointerEvent): void {
+    this.trackTouch(event);
   }
 
   /** Ends the gestures of the drawing in progress: a Hole drag, a frame or a pending tap, and the edge scroll. */
