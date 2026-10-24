@@ -58,7 +58,7 @@ function minutesAndSeconds(seconds: number): string {
         <button matButton type="button" data-testid="crank-speed-apply" [disabled]="changed() === undefined" (click)="apply()" #applyButton>{{ 'TAPE.PREVIEW.CRANK_SPEED_APPLY' | translate }}</button>
       </div>
       <mat-slider class="crank-speed-slider" data-testid="crank-speed-slider" [min]="range().slowest" [max]="range().fastest" [step]="1">
-        <input matSliderThumb [value]="sliderValue()" [attr.aria-label]="'TAPE.PREVIEW.CRANK_SPEED_SLIDER' | translate" (input)="onSliderInput($event)" (change)="onSliderRelease($event)" />
+        <input matSliderThumb [value]="sliderValue()" [attr.aria-label]="'TAPE.PREVIEW.CRANK_SPEED_SLIDER' | translate" (input)="onSliderInput($event)" (change)="onSliderRelease()" />
       </mat-slider>
       @if (outsideRange()) {
         <p data-testid="crank-speed-outside-range">{{ 'TAPE.PREVIEW.OUTSIDE_RANGE' | translate: {slowest: range().slowest, fastest: range().fastest} }}</p>
@@ -118,9 +118,12 @@ export class PreviewSectionComponent {
   protected readonly range = computed(() => this.organ().crankSpeedRange);
   /** Where the Crank speed of the Tape sits on the slider: the nearest end of the range when it is outside. */
   private readonly sliderPlacement = computed(() => nearestInRange(this.tape().crankSpeed, this.range()));
-  protected readonly sliderValue = computed(() => this.sliderPlacement().value);
+  /** The thumb's value: the slider steps by whole turns, so the placement rounded to one (the field keeps the exact speed). */
+  protected readonly sliderValue = computed(() => Math.round(this.sliderPlacement().value));
   protected readonly outsideRange = computed(() => this.sliderPlacement().outside);
   private readonly applyButton = viewChild<string, ElementRef<HTMLButtonElement>>('applyButton', {read: ElementRef});
+  /** The Crank speed the slider moved to since it was last released; `undefined` while it has not moved. */
+  private movedTo: number | undefined;
 
   /** The Crank speed as typed; starts with, and goes back to, the Crank speed of the Tape. */
   private readonly draft = linkedSignal<number | null>(() => this.tape().crankSpeed);
@@ -160,12 +163,15 @@ export class PreviewSectionComponent {
   /** A move of the slider, before it is released: the Tape view plays the Crank speed; nothing is saved. */
   protected onSliderInput(event: Event): void {
     const speed = sliderSpeed(event);
-    if (speed !== undefined) this.crankSpeedTrial.emit(speed);
+    if (speed === undefined) return;
+    this.movedTo = speed;
+    this.crankSpeedTrial.emit(speed);
   }
 
-  /** The slider is released at a Crank speed: that is one change of the Tape, saved as one edit. */
-  protected onSliderRelease(event: Event): void {
-    const speed = sliderSpeed(event);
+  /** The slider is released after it moved: that is one change of the Tape, saved as one edit. A release without a move changes nothing. */
+  protected onSliderRelease(): void {
+    const speed = this.movedTo;
+    this.movedTo = undefined;
     if (speed === undefined) return;
     const change = crankSpeedChangeTo(this.tape(), speed);
     if (change.state === 'ready') this.crankSpeedChange.emit(change.tape);

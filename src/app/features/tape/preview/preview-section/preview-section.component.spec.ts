@@ -1,7 +1,7 @@
 import {type ComponentFixture, TestBed} from '@angular/core/testing';
 import {TestbedHarnessEnvironment} from '@angular/cdk/testing/testbed';
 import {MatSliderHarness} from '@angular/material/slider/testing';
-import {columnCount, millimetres, type Organ, organId, tapeId, transposition, type Tape} from '@api/index';
+import {columnCount, crankSpeed, millimetres, type Organ, organId, tapeId, transposition, type Tape} from '@api/index';
 import {tapeOf} from '@api/tape/tape-fixture';
 import {partIndex, songId} from '@api/song/song';
 import {testOrgan} from '../../../../../testing/organs';
@@ -304,6 +304,24 @@ describe('PreviewSectionComponent', () => {
 
       expect(emitted).toHaveLength(1);
       expect(emitted[0]?.crankSpeed).toBe(90);
+    });
+
+    it('emits no crankSpeedChange for a press and release that did not move the slider', async () => {
+      // The Tape runs at 60, below the slowest of 70: the thumb sits at 70 without anyone moving it.
+      const {element, fixture, emitted} = await render({organ: organWith(10, {slowest: 70, fastest: 120})});
+
+      thumbOf(element).dispatchEvent(new Event('change', {bubbles: true}));
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(emitted).toEqual([]);
+    });
+
+    it('puts the slider on the nearest whole turn for a fractional Crank speed of the Tape', async () => {
+      const tape = {...tapeWith(10), crankSpeed: defined(crankSpeed(60.4), 'crank speed')};
+      const {fixture} = await render({tape});
+
+      expect(await (await (await sliderOf(fixture)).getEndThumb()).getValue()).toBe(60);
     });
 
     it('puts the slider at the nearest end of the range for a Tape speed outside it', async () => {
