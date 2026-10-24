@@ -127,6 +127,9 @@ const FOLLOW_LEAD = 0.2;
 /** Where Space is left to the element it lands on: fields, controls, links, list options and editable text. */
 const SPACE_IS_KEPT_BY = 'input, textarea, button, a, select, [role=combobox], [role=option], [contenteditable]';
 
+/** The playhead grip's hit area, a square of screen px whose top sits on the top of the drawing. */
+const PLAYHEAD_GRIP_PX = 44;
+
 /** The shell's query: below this width the side panel gives way to a toggle. */
 const COMPACT_QUERY = '(max-width: 1179.98px)';
 
@@ -163,10 +166,15 @@ export class TapeViewComponent {
   /** The last pointer position of a drag, so the Column follows when the stage scrolls under a resting pointer. */
   private lastPointer: {readonly clientX: number; readonly clientY: number; readonly pointerId: number; readonly svg: Element} | undefined;
   private edgeScrollFrame: number | undefined;
-  /** An empty spot pressed on the Tape: where (client px and drawing px), in which cell, and whether it adds to the selection. */
+  /**
+   * An empty spot pressed on the Tape: where (client px and drawing px), in which cell, whether it adds to the selection,
+   * and whether a touch pressed it (a touch that travels pans the drawing instead of framing).
+   */
   private framing:
-    | {readonly press: Point; readonly origin: Point; readonly cell: GridCell; readonly additive: boolean}
+    | {readonly press: Point; readonly origin: Point; readonly cell: GridCell; readonly additive: boolean; readonly touch: boolean}
     | undefined;
+  /** A drag of the playhead grip; `wasPlaying` tells whether the Preview played at the press and goes on from the release. */
+  private playheadDrag: {readonly wasPlaying: boolean} | undefined;
   /** The selection frame as dragged, in px of the drawing; `undefined` until the press has travelled. */
   protected readonly frameRect = signal<{readonly x: number; readonly y: number; readonly width: number; readonly height: number} | undefined>(undefined);
   protected readonly dragging = this.holeDrag.dragging;
@@ -422,17 +430,73 @@ export class TapeViewComponent {
     return {x: (geometry.leadIn + playhead * tape.columnLength) * this.scale(), column: Math.round(playhead * 100) / 100};
   });
 
+  /** The playhead grip: its square hit area in px of the drawing, and its triangle in the ruler; `undefined` without a playhead. */
+  protected readonly playheadGrip = computed(() => {
+    const line = this.playheadLine();
+    if (line === undefined) return undefined;
+    const centre = line.x + 1;
+    return {x: centre - PLAYHEAD_GRIP_PX / 2, size: PLAYHEAD_GRIP_PX, mark: `M${centre - 5} 0H${centre + 5}L${centre} 7Z`};
+  });
+
   /** Whether editing is paused: the Preview plays, and the Tape must not change except by its Crank speed. */
   protected readonly editingPaused = computed(() => this.preview.playing());
 
   /** A click on the ruler moves the playhead to the Column under it, rounded down; nothing happens while the Preview plays. */
   protected onRulerClick(event: MouseEvent, svg: Element): void {
+    if (this.editingPaused()) return;
+    this.setPlayheadAt(event, svg);
+  }
+
+  /** Moves the playhead to the Column under the pointer, rounded down and clamped to the Tape. */
+  private setPlayheadAt(event: {readonly clientX: number}, svg: Element): void {
     const tape = this.shownTape();
     const geometry = this.geometry();
-    if (tape === undefined || geometry === undefined || this.editingPaused()) return;
+    if (tape === undefined || geometry === undefined) return;
     const x = event.clientX - svg.getBoundingClientRect().left;
     const picked = column(Math.min(gridAt(x, 0, this.scale(), geometry).column, tape.length - 1));
     if (picked !== undefined) this.preview.setPlayhead(picked);
+  }
+
+  /**
+   * Presses the playhead grip: a playing Preview stops at once, and the drag moves the playhead. The grip takes the pointer,
+   * so the drag reaches it; the press is not a press on the drawing.
+   */
+  protected onPlayheadGripDown(event: PointerEvent): void {
+    if (event.button !== 0 || this.playheadDrag !== undefined) return;
+    event.stopPropagation();
+    const grip = event.currentTarget;
+    try {
+      if (grip instanceof Element) grip.setPointerCapture(event.pointerId);
+    } catch {
+      // No active pointer to capture (a synthetic event): the drag still follows the moves over the grip.
+    }
+    const wasPlaying = this.preview.playing();
+    if (wasPlaying) this.preview.stop();
+    this.playheadDrag = {wasPlaying};
+  }
+
+  protected onPlayheadGripMove(event: PointerEvent, svg: Element): void {
+    if (this.playheadDrag === undefined) return;
+    event.stopPropagation();
+    this.setPlayheadAt(event, svg);
+  }
+
+  protected onPlayheadGripUp(event: PointerEvent, svg: Element): void {
+    if (this.playheadDrag === undefined) return;
+    event.stopPropagation();
+    this.setPlayheadAt(event, svg);
+    this.endPlayheadDrag();
+  }
+
+  /** A cancelled drag keeps the playhead where it was last moved, and goes on from there if the Preview played at the press. */
+  protected onPlayheadGripCancel(): void {
+    this.endPlayheadDrag();
+  }
+
+  private endPlayheadDrag(): void {
+    const drag = this.playheadDrag;
+    this.playheadDrag = undefined;
+    if (drag?.wasPlaying) this.playFromPlayhead();
   }
 
   /** The start Column the Preview section typed (0-based): moves the playhead there. */
@@ -447,6 +511,11 @@ export class TapeViewComponent {
       this.preview.stop();
       return;
     }
+    this.playFromPlayhead();
+  }
+
+  /** Plays the Tape from the Column under the playhead, or from the first Column when the playhead is at the end. */
+  private playFromPlayhead(): void {
     const tape = this.shownTape();
     const organ = this.organ();
     if (tape === undefined || organ === undefined) return;
@@ -584,6 +653,7 @@ export class TapeViewComponent {
       origin: {x, y},
       cell: gridAt(x, y, this.scale(), geometry),
       additive: this.isAdditive(event),
+      touch: event.pointerType === 'touch',
     };
   }
 
@@ -591,6 +661,11 @@ export class TapeViewComponent {
     const framing = this.framing;
     if (framing === undefined) return;
     const travelled = isDrag(framing.press, {x: event.clientX, y: event.clientY});
+    if (framing.touch && travelled) {
+      // A touch that travels is a pan of the drawing: no frame, and the press is no tap.
+      this.cancelFrame();
+      return;
+    }
     if (!travelled && this.frameRect() === undefined) return;
     if (this.frameRect() === undefined) {
       try {

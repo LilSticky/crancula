@@ -138,10 +138,15 @@ cranc-page-head button[mat-icon-button] {
 }
 .scroll svg {
   user-select: none;
-  touch-action: none;
+  touch-action: pan-x pan-y;
 }
 .grab {
   cursor: grab;
+}
+.hole,
+.handle,
+.playhead-grip {
+  touch-action: none;
 }
 .handle {
   fill: transparent;
@@ -168,6 +173,13 @@ svg.grabbing .ew-resize {
   stroke: var(--cr-tape-guide-strong);
 }
 .playhead {
+  fill: var(--cr-select);
+  pointer-events: none;
+}
+.playhead-grip {
+  fill: transparent;
+}
+.playhead-grip-mark {
   fill: var(--cr-select);
   pointer-events: none;
 }
