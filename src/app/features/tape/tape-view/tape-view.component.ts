@@ -17,7 +17,7 @@ import {BreakpointObserver} from '@angular/cdk/layout';
 import {toSignal} from '@angular/core/rxjs-interop';
 import {ActivatedRoute, Router, RouterLink} from '@angular/router';
 import {map} from 'rxjs';
-import {column, columnDuration, cuttingProblems, holesWithCuttingProblems, noteName, type HoleRef, type ImportSummary, type Tape, tapeGeometry, type TapeGeometry, type Transposed} from '@api/index';
+import {column, columnDuration, cuttingProblems, holesWithCuttingProblems, noteName, type HoleRef, type ImportSummary, type Organ, type Tape, tapeGeometry, type TapeGeometry, type Transposed} from '@api/index';
 import {canTranspose, holeRefsOf, selectionOfRefs} from './transpose-selection';
 import {crankSpeedChangeTo} from './crank-speed-change';
 import {holeAt, moveSpot, sameSpot, spotAt, type Spot, type TapeSelection} from './spot';
@@ -630,11 +630,11 @@ export class TapeViewComponent {
       return true;
     }
     const direction = ARROW_DIRECTIONS[event.key];
-    const rows = this.organ()?.pipes.length;
-    const geometry = this.geometry();
-    if (direction === undefined || rows === undefined || geometry === undefined) return false;
+    const tape = this.shownTape();
+    const organ = this.organ();
+    if (direction === undefined || tape === undefined || organ === undefined) return false;
     event.preventDefault();
-    this.selection.set({spot: moveSpot(spot, direction, rows, geometry)});
+    this.selection.set({spot: moveSpot(spot, direction, organ.pipes.length, tape, organ)});
     return true;
   }
 
@@ -723,11 +723,13 @@ export class TapeViewComponent {
   private finishFrame(event: PointerEvent, svg: Element): void {
     const framing = this.framing;
     const geometry = this.geometry();
+    const tape = this.shownTape();
+    const organ = this.organ();
     const travelled = this.frameRect() !== undefined;
     this.cancelFrame();
-    if (framing === undefined || geometry === undefined) return;
+    if (framing === undefined || geometry === undefined || tape === undefined || organ === undefined) return;
     if (!travelled) {
-      this.tap(framing, geometry);
+      this.tap(framing, geometry, tape, organ);
       return;
     }
     const box = svg.getBoundingClientRect();
@@ -740,15 +742,15 @@ export class TapeViewComponent {
    * A tap on empty Tape: selects the Spot under it; on the selected Spot it adds a Hole there. The Lead-in and a cell
    * covered by a Hole clear the selection. An additive tap changes nothing.
    */
-  private tap(framing: NonNullable<typeof this.framing>, geometry: TapeGeometry): void {
+  private tap(framing: NonNullable<typeof this.framing>, geometry: TapeGeometry, tape: Tape, organ: Organ): void {
     if (framing.additive) return;
     const onLeadIn = framing.origin.x < geometry.leadIn * this.scale();
-    const hole = onLeadIn ? undefined : holeAt(framing.cell, geometry);
+    const hole = onLeadIn ? undefined : holeAt(framing.cell, tape, organ);
     if (hole !== undefined) {
       this.tapHole(hole, false);
       return;
     }
-    const spot = onLeadIn ? undefined : spotAt(framing.cell, geometry);
+    const spot = onLeadIn ? undefined : spotAt(framing.cell, tape, organ);
     if (spot === undefined) {
       this.tapMemory = undefined;
       this.selection.set({holes: []});

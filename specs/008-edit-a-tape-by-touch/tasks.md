@@ -104,7 +104,7 @@ real Electron touch, restart and migration.
 
 Branch `156-touch-review-follow-ups`. Details in `review.md` (items 2–5), `ux-review.md` (items 5, 7, 8) and `audit.md`.
 
-- [ ] F01 Red/green: `spot.ts` `holeAt` looks the Hole up in the Tape instead of deriving its length from the slot width (review 2).
+- [x] F01 Red/green: `spot.ts` `holeAt` looks the Hole up in the Tape instead of deriving its length from the slot width (review 2).
 - [ ] F02 Refactor (behaviour unchanged, existing specs green): `holeSelection` returns a module constant `NO_HOLES`; the Spot `<rect>` gets `aria-hidden="true"` (spec asserts it); name the `framing` type (`interface Framing`) (review 3–5).
 - [ ] F03 Red/green: a touch whose `pointerup` never reaches the drawing (`pointercancel`, `lostpointercapture`) leaves the touch set, so touch edits work again (audit).
 - [ ] F04 Red/green: the toast after a Crank speed change names the speed (en/de keys) (ux-review 5).

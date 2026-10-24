@@ -54,6 +54,7 @@ export {
   addHole,
   changeHoleLength,
   firstFreeColumnAfter,
+  holeCovering,
   moveHole,
   removeHole,
   type HoleEdit,

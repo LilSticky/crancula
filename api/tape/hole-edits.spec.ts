@@ -4,7 +4,7 @@ import {millimetres, organId, type Organ} from '../organ/organ';
 import {validateOrgan} from '../organ/validate-organ';
 import {partIndex, songId} from '../song/song';
 import {cuttingProblems, holesWithCuttingProblems} from './cutting-problems';
-import {addHole, changeHoleLength, firstFreeColumnAfter, moveHole, removeHole, type HoleRef} from './hole-edits';
+import {addHole, changeHoleLength, firstFreeColumnAfter, holeCovering, moveHole, removeHole, type HoleRef} from './hole-edits';
 import {tapeGeometry} from './tape-geometry';
 import {tapeOf} from './tape-fixture';
 import {column, columnCount, tapeId, transposition, type Column, type Hole, type Tape} from './tape';
@@ -395,6 +395,27 @@ describe('firstFreeColumnAfter', () => {
     const tape = aTape([hole(c4, 3, 4), hole(d4, 5, 8)]);
 
     expect(firstFreeColumnAfter(tape, ref(c4, 3))).toBe(col(4));
+  });
+});
+
+describe('holeCovering', () => {
+  const tape = aTape([hole(c4, 3, 4)]);
+
+  it('gives the Hole of the Pipe that covers the Column, first and last', () => {
+    expect(holeCovering(tape, c4, col(2))).toEqual(hole(c4, 3, 4));
+    expect(holeCovering(tape, c4, col(3))).toEqual(hole(c4, 3, 4));
+  });
+
+  it('is undefined on the Column right after the Hole', () => {
+    expect(holeCovering(tape, c4, col(4))).toBeUndefined();
+  });
+
+  it('is undefined on a Column the Hole does not reach', () => {
+    expect(holeCovering(tape, c4, col(1))).toBeUndefined();
+  });
+
+  it('ignores Holes of other Pipes', () => {
+    expect(holeCovering(tape, d4, col(2))).toBeUndefined();
   });
 });
 
