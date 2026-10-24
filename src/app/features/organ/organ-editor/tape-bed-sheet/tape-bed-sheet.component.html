@@ -61,7 +61,7 @@
         }
       </ng-container>
     </mat-form-field>
-    <mat-form-field>
+    <mat-form-field class="full-width">
       <mat-label>{{ 'ORGAN.EDITOR.TAPE_PER_CRANK_TURN' | translate }}</mat-label>
       <input matInput crancDecimalInput inputmode="decimal" data-testid="tape-per-crank-turn" [formField]="organ().tapePerCrankTurn"/>
       <span matTextSuffix>mm</span>
@@ -69,6 +69,26 @@
       <ng-container ngProjectAs="mat-error">
         @for (message of messagesAt(organ().tapePerCrankTurn); track message.key) {
           <mat-error data-testid="violation" data-path="tapePerCrankTurn">{{ message.key | translate: message.params }}</mat-error>
+        }
+      </ng-container>
+    </mat-form-field>
+    <mat-form-field class="full-width">
+      <mat-label>{{ 'ORGAN.EDITOR.SLOWEST_CRANK_SPEED' | translate }}</mat-label>
+      <input matInput crancDecimalInput inputmode="decimal" data-testid="slowest-crank-speed" [formField]="organ().slowestCrankSpeed"/>
+      <span matTextSuffix>{{ 'ORGAN.EDITOR.CRANK_SPEED_UNIT' | translate }}</span>
+      <ng-container ngProjectAs="mat-error">
+        @for (message of messagesAt(organ().slowestCrankSpeed); track message.key) {
+          <mat-error data-testid="violation" data-path="slowestCrankSpeed">{{ message.key | translate: message.params }}</mat-error>
+        }
+      </ng-container>
+    </mat-form-field>
+    <mat-form-field class="full-width">
+      <mat-label>{{ 'ORGAN.EDITOR.FASTEST_CRANK_SPEED' | translate }}</mat-label>
+      <input matInput crancDecimalInput inputmode="decimal" data-testid="fastest-crank-speed" [formField]="organ().fastestCrankSpeed"/>
+      <span matTextSuffix>{{ 'ORGAN.EDITOR.CRANK_SPEED_UNIT' | translate }}</span>
+      <ng-container ngProjectAs="mat-error">
+        @for (message of messagesAt(organ().fastestCrankSpeed); track message.key) {
+          <mat-error data-testid="violation" data-path="fastestCrankSpeed">{{ message.key | translate: message.params }}</mat-error>
         }
       </ng-container>
     </mat-form-field>

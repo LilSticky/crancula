@@ -1,7 +1,7 @@
 import {signal} from '@angular/core';
 import type {Organ, Tape} from '@api/index';
 import {dragEdit, type EditOutcome} from './hole-edit-commands';
-import {dragTarget, isDrag, type HoleDrag} from './hole-drag';
+import {dragTarget, isDrag, type HoleDrag, type HolePart} from './hole-drag';
 
 interface Cell {
   readonly column: number;
@@ -37,6 +37,11 @@ export class HoleDragSession {
   /** The Hole as it was pressed, while a press or drag is going on. */
   get grabbed(): HoleDrag['hole'] | undefined {
     return this.drag?.hole.hole;
+  }
+
+  /** The part of the Hole that was pressed, while a press or drag is going on. */
+  get grabbedPart(): HolePart | undefined {
+    return this.drag?.hole.part;
   }
 
   start(hole: HoleDrag, press: Point, subject: DragSubject): void {

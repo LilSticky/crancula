@@ -1,3 +1,4 @@
+import {DEFAULT_CRANK_SPEED_RANGE} from './crank-speed-range';
 import {describe, expect, it} from 'vitest';
 import {
   asValidOrgan,
@@ -64,6 +65,7 @@ describe('border', () => {
       tapeBed: bed,
       minimumGap: mm(1.5),
       leadIn: mm(20),
+      crankSpeedRange: DEFAULT_CRANK_SPEED_RANGE,
       pipes: Array.from({length: pipeCount}, (_, row) => ({note: midiNoteNumber(53 + row) as MidiNoteNumber})),
     });
   }

@@ -30,3 +30,4 @@ with a new one and update both statuses here.
 | 22 | [Tape edits are domain commands over one Tape factory; undo is a history of Tapes](0022-tape-edits-as-domain-commands.md) | Accepted |
 | 23 | [ESM main process, CommonJS preload](0023-esm-main-process-commonjs-preload.md) | Accepted |
 | 24 | [Preview synthesised with Web Audio in the renderer](0024-preview-synthesised-with-web-audio.md) | Accepted |
+| 25 | [One gesture model for all pointer types](0025-one-gesture-model-for-all-pointer-types.md) | Accepted |

@@ -6,7 +6,7 @@ import {launchApp, type LaunchedApp} from './support/launch-app';
 import {saveOrgan} from './support/organ-editor';
 import {melodyC3ToC5, type MidiFilePayload} from './support/midi-file';
 import {createTapeFromSong, defineOctaveOrgan, songRepeatingC4} from './support/tape-creation';
-import {dragHole, drawnHoles, holeAt, openOnlyTape, type DrawnHole} from './support/tape-edit';
+import {columnWidth, dragHole, drawnHoles, holeAt, openOnlyTape, pressOnDrawing, type DrawnHole} from './support/tape-edit';
 import {resizeWindowOrSkip} from './support/window-size';
 
 /** Tape per Crank turn of 1000 mm with a Column length of 5 mm: 5 ms per Column at 60 turns per minute. */
@@ -191,6 +191,74 @@ test.describe('Editing a Tape while its Preview plays', () => {
     await expect(holeAt(window, originalHole.row, originalHole.start)).toHaveCount(1);
     await expect(holeAt(window, originalHole.row, movedStart)).toHaveCount(0);
     await expect.poll(() => readFile(tapesFile, 'utf8')).not.toBe(storedEdited);
+    await app.close();
+  });
+});
+
+test.describe('Moving the playhead of a Preview', () => {
+  test('dragging the playhead while the Preview plays stops the sound, and the release plays on from the drop Column', async () => {
+    // A long Tape, so that the Preview keeps playing well after the drop.
+    const {app, window, userDataDir} = await openTapeOfOrganWithTapePerCrankTurn(LONG_PREVIEW_TAPE_PER_CRANK_TURN, songRepeatingC4('long.mid', 40));
+    const tapesFile = join(userDataDir, 'snapshots', 'tapes.json');
+    const storedBefore = await readFile(tapesFile, 'utf8');
+    const preview = window.getByTestId('preview-toggle');
+    await preview.click();
+    await expect(preview).toContainText('Stop preview');
+    await expect.poll(() => playheadColumn(window)).toBeGreaterThan(0);
+    const grabbed = await playheadColumn(window);
+
+    // Press the grip while the Preview plays (the grip moves with the playhead, so its box is read as it is), then drag six Columns later and hold.
+    const gripBox = await window.getByTestId('playhead-grip').boundingBox();
+    if (!gripBox) throw new Error('the playhead grip is not shown');
+    const grip = {x: gripBox.x + gripBox.width / 2, y: gripBox.y + gripBox.height / 2};
+    const dragged = 6 * (await columnWidth(window));
+    await window.mouse.move(grip.x, grip.y);
+    await window.mouse.down();
+    await window.mouse.move(grip.x + dragged / 2, grip.y, {steps: 4});
+    await window.mouse.move(grip.x + dragged, grip.y, {steps: 4});
+    const dropped = await playheadColumn(window);
+    expect(dropped).toBeGreaterThanOrEqual(grabbed + 5);
+    // While the finger holds the grip the sound is stopped, so the playhead stays on the drop Column.
+    await window.waitForTimeout(200);
+    expect(await playheadColumn(window)).toBe(dropped);
+    await window.mouse.up();
+
+    // The release plays on from the drop Column; the Tape is unchanged.
+    await expect(preview).toContainText('Stop preview');
+    await expect.poll(() => playheadColumn(window)).toBeGreaterThan(dropped);
+    expect(await readFile(tapesFile, 'utf8')).toBe(storedBefore);
+    await expect(window.getByTestId('undo')).toBeDisabled();
+    await app.close();
+  });
+});
+
+test.describe('Setting the Crank speed on the slider', () => {
+  test('releasing the slider is one edit: Undo brings the Crank speed back', async () => {
+    const {app, window} = await openTapeOfOrganWithTapePerCrankTurn(SHORT_PREVIEW_TAPE_PER_CRANK_TURN);
+    const crankSpeed = window.getByTestId('crank-speed-input');
+    await expect(crankSpeed).toHaveValue('60');
+
+    // The slider sits below the fold of the side panel: bring it into view, then read where its thumb is.
+    const slider = window.getByTestId('crank-speed-slider');
+    await slider.evaluate((element) => element.scrollIntoView({block: 'center'}));
+    const track = await slider.locator('input').boundingBox();
+    const knob = await slider.locator('.mdc-slider__thumb-knob').boundingBox();
+    if (!track || !knob) throw new Error('the Crank speed slider is not shown');
+    // The Organ spans 30 to 120 and the Tape runs at 60: the thumb is a third along, and a third of the track is 30 turns per minute.
+    const from = {x: knob.x + knob.width / 2, y: knob.y + knob.height / 2};
+    await window.mouse.move(from.x, from.y);
+    await window.mouse.down();
+    await window.mouse.move(from.x + track.width / 6, from.y, {steps: 4});
+    await window.mouse.move(from.x + track.width / 3, from.y, {steps: 4});
+    await window.mouse.up();
+
+    await expect.poll(async () => Number(await crankSpeed.inputValue())).toBeGreaterThan(80);
+    await expect.poll(async () => Number(await crankSpeed.inputValue())).toBeLessThan(100);
+    await expect(window.getByTestId('undo')).toBeEnabled();
+
+    await pressOnDrawing(window, 'ControlOrMeta+Z');
+    await expect(crankSpeed).toHaveValue('60');
+    await expect(window.getByTestId('undo')).toBeDisabled();
     await app.close();
   });
 });

@@ -138,7 +138,15 @@ test.describe('Adjust the Column length of a Tape within the side panel', () => 
         await expect(window.getByTestId('column-length-hint')).toBeVisible();
 
         const panel = window.getByTestId('side-panel');
-        const overflow = await panel.evaluate((element) => ({scrollWidth: element.scrollWidth, clientWidth: element.clientWidth}));
+        // Names the elements that stick out past the panel's right edge, so a failure says where to look.
+        const overflow = await panel.evaluate((element) => {
+          const right = element.getBoundingClientRect().left + element.clientWidth;
+          const outside = [...element.querySelectorAll('*')]
+            .filter((child) => child.getBoundingClientRect().right > right + 0.5)
+            .map((child) => `${child.tagName.toLowerCase()}.${[...child.classList].join('.')}`)
+            .slice(0, 5);
+          return {scrollWidth: element.scrollWidth, clientWidth: element.clientWidth, outside};
+        });
         expect(overflow.scrollWidth, JSON.stringify(overflow)).toBeLessThanOrEqual(overflow.clientWidth);
 
         const visible = await visibleBoxOf(panel);

@@ -1,8 +1,10 @@
-import {noteName, tapeGeometry, type Hole, type Organ, type Tape, type TapeGeometry} from '@api/index';
+import {addHole, noteName, tapeGeometry, type Hole, type Organ, type Tape, type TapeGeometry} from '@api/index';
 import {formatNumber} from '../../shared/format-number';
+import {gripBars, gripRects, MIN_GRIP_PX, type Rect} from './hole-drag';
 import {pixelsPerMillimetre} from './pixels-per-millimetre';
-import {columnLines, columnNumbers, hitSpan, rulerNumbers} from './tape-marks';
+import {columnLines, columnNumbers, rulerNumbers} from './tape-marks';
 import type {HoleSelection, SelectableHole} from './hole-selection';
+import type {Spot} from './spot';
 import type {ColumnRange} from './visible-columns';
 import type {TapeSectionView} from './tape-section/tape-section.component';
 
@@ -19,9 +21,6 @@ const MINIMUM_LABEL_PITCH_PX = 12;
 
 /** Largest font size of the glyph in a Cutting Problem ring, in px. */
 const MAX_GLYPH_PX = 12;
-
-/** Widest a resize handle of the selected Hole gets, in px. */
-const HANDLE_PX = 8;
 
 /** What the Tape section of the side panel tells. */
 export function sectionView(
@@ -86,7 +85,7 @@ function selectedList(selected: Selected): HoleSelection {
 }
 
 /**
- * The Holes to draw for `range`, in px; every selected one is flagged, and only a sole selected Hole gets handles.
+ * The Holes to draw for `range`, in px; every selected one is flagged.
  * Rows count from 0 here, from 1 in `selected`.
  */
 export function holeRects(tape: Tape, geometry: TapeGeometry, scale: number, range: ColumnRange, selected: Selected) {
@@ -98,28 +97,15 @@ export function holeRects(tape: Tape, geometry: TapeGeometry, scale: number, ran
         (slot.start < range.first && slot.start + slot.width / tape.columnLength > range.first),
     )
     .map((slot) => {
-      const isSelected = selection.some((hole) => hole.row === slot.row && hole.start === slot.start);
-      const x = slot.x * scale;
-      const width = slot.width * scale;
-      const handleWidth = Math.min(HANDLE_PX, width / 3);
-      const y = slot.y * scale;
-      const height = slot.height * scale;
-      const hitY = hitSpan(y, height);
-      const centre = x + width / 2;
-      const handle = (handleX: number, limits: {readonly min?: number; readonly max?: number}) => {
-        const hitX = hitSpan(handleX, handleWidth, limits);
-        return {x: handleX, width: handleWidth, hit: {x: hitX.start, y: hitY.start, width: hitX.size, height: hitY.size}};
-      };
       return {
         row: slot.row - 1,
-        selected: isSelected,
+        selected: selection.some((hole) => hole.row === slot.row && hole.start === slot.start),
         start: slot.start,
-        x,
-        y,
-        width,
-        height,
+        x: slot.x * scale,
+        y: slot.y * scale,
+        width: slot.width * scale,
+        height: slot.height * scale,
         radius: slot.radius * scale,
-        handles: isSelected && selection.length === 1 ? {start: handle(x, {max: centre}), end: handle(x + width - handleWidth, {min: centre})} : undefined,
       };
     });
 }
@@ -137,6 +123,23 @@ export function ghostRect(tape: Tape, organ: Organ, attempted: Hole, scale: numb
     height: slot.height * scale,
     radius: slot.radius * scale,
   };
+}
+
+/** The Spot as drawn: the rectangle, in px, of the Hole that a tap there would add; `undefined` if that Hole cannot be added. */
+export function spotRect(tape: Tape, organ: Organ, spot: Spot, scale: number) {
+  const pipe = organ.pipes[spot.row - 1]?.note;
+  if (pipe === undefined) return undefined;
+  const added = addHole(tape, organ, pipe, spot.start);
+  return added.ok ? ghostRect(tape, organ, added.value.hole, scale) : undefined;
+}
+
+/** The grips of the one selected Hole in view, in px: visible bars and hit areas; `undefined` unless exactly one is selected. */
+export function gripsOf(holes: readonly (SelectableHole & Rect & {readonly selected: boolean})[]) {
+  const selected = holes.filter((hole) => hole.selected);
+  const only = selected.length === 1 ? selected[0] : undefined;
+  if (only === undefined) return undefined;
+  // The drawing is in px already, so one unit is one screen px.
+  return {hole: {row: only.row, start: only.start}, bars: gripBars(only), hits: gripRects(only, 1)};
 }
 
 /** Space between a Hole and its Cutting Problem ring, in px. */
@@ -199,6 +202,15 @@ export function columnMarks(tape: Tape, geometry: TapeGeometry, scale: number, r
       geometry.totalLength * scale,
     ).filter(({mm}) => mm >= firstMm && mm <= lastMm),
   };
+}
+
+/**
+ * The width of the drawing in px: the Tape, and with `endGrip` room past its last Column for the end grip of a Hole there,
+ * which reaches out a grip's width beyond the Hole's end.
+ */
+export function drawingWidth(geometry: TapeGeometry, scale: number, endGrip: boolean): number {
+  const tape = geometry.totalLength * scale;
+  return endGrip ? Math.max(tape, (geometry.leadIn + geometry.length) * scale + MIN_GRIP_PX) : tape;
 }
 
 /** The shape of the Tape in px: Lead-in, body, borders and the total height with ruler and Column numbers. */

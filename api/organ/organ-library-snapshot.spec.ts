@@ -11,6 +11,11 @@ function organSnapshot(id: string, name = 'Street organ') {
   return {...organSnapshotV2(id, name), leadIn: 20};
 }
 
+/** An Organ as stored in version 5, with its Crank speed range. */
+function organSnapshotV5(id: string, slowest: number, fastest: number) {
+  return {...organSnapshot(id), crankSpeedRange: {slowest, fastest}};
+}
+
 /** An Organ as stored in versions 1 and 2, without a Lead-in. */
 function organSnapshotV2(id: string, name = 'Street organ') {
   return {
@@ -69,7 +74,7 @@ describe('parseOrganLibrarySnapshot', () => {
     ['not an object', 'oops'],
     ['null', null],
     ['a missing version', {organs: []}],
-    ['an unknown version', {version: 5, organs: []}],
+    ['an unknown version', {version: 6, organs: []}],
     ['version 0', {version: 0, organs: []}],
     ['organs that are not a list', {version: 3, organs: {}}],
     ['an Organ that is not an object', {version: 3, organs: [42]}],
@@ -116,6 +121,35 @@ describe('version 1 migration', () => {
   });
 });
 
+describe('version 5 Crank speed range', () => {
+  it('reads version 5 and keeps the Crank speed range', () => {
+    const result = parseOrganLibrarySnapshot({version: 5, organs: [organSnapshotV5(ID_A, 40, 90)]});
+
+    expect(result.ok && result.value[0].crankSpeedRange).toEqual({slowest: 40, fastest: 90});
+  });
+
+  it.each([1, 2, 3, 4])('reads a version %i Organ with the default Crank speed range of 30 to 120', (version) => {
+    const organs = version === 1 || version === 2 ? [organSnapshotV2(ID_A)] : [organSnapshot(ID_A)];
+    const result = parseOrganLibrarySnapshot({version, organs});
+
+    expect(result.ok && result.value[0].crankSpeedRange).toEqual({slowest: 30, fastest: 120});
+  });
+
+  it('refuses a version 5 Crank speed range whose slowest is not below its fastest', () => {
+    const result = parseOrganLibrarySnapshot({version: 5, organs: [organSnapshotV5(ID_A, 90, 40)]});
+
+    expect(result.ok).toBe(false);
+    expect(result.ok ? '' : result.error).toContain('slowest-not-below-fastest');
+  });
+
+  it('refuses a version 5 Crank speed range outside 1 to 300', () => {
+    const result = parseOrganLibrarySnapshot({version: 5, organs: [organSnapshotV5(ID_A, 0, 120)]});
+
+    expect(result.ok).toBe(false);
+    expect(result.ok ? '' : result.error).toContain('crank-speed-out-of-range');
+  });
+});
+
 describe('versions 1 to 3 without a Tape per Crank turn', () => {
   it.each([1, 2, 3])('reads a version %i Organ with no Tape per Crank turn', (version) => {
     const organs = version === 3 ? [organSnapshot(ID_A)] : [organSnapshotV2(ID_A)];
@@ -127,36 +161,36 @@ describe('versions 1 to 3 without a Tape per Crank turn', () => {
 });
 
 describe('toSnapshot', () => {
-  it('writes version 4 and no border', () => {
+  it('writes version 5 and no border', () => {
     const parsed = parseOrganLibrarySnapshot({version: 1, organs: [{...organSnapshot(ID_A), tapeBed: {tapeWidth: 120, holeDiameter: 2.5, rowSpacing: 3.5, border: 6}}]});
     const snapshot = toSnapshot(parsed.ok ? parsed.value : []);
 
-    expect(snapshot.version).toBe(4);
+    expect(snapshot.version).toBe(5);
     expect(JSON.stringify(snapshot)).not.toContain('border');
   });
 
   it('round-trips through the parser', () => {
-    const parsed = parseOrganLibrarySnapshot({version: 4, organs: [organSnapshot(ID_A)]});
+    const parsed = parseOrganLibrarySnapshot({version: 5, organs: [organSnapshotV5(ID_A, 30, 120)]});
     const organs: readonly Organ[] = parsed.ok ? parsed.value : [];
 
     const snapshot = toSnapshot(organs);
 
-    expect(snapshot).toEqual({version: 4, organs: [organSnapshot(ID_A)]});
+    expect(snapshot).toEqual({version: 5, organs: [organSnapshotV5(ID_A, 30, 120)]});
     expect(parseOrganLibrarySnapshot(JSON.parse(JSON.stringify(snapshot)))).toEqual(parsed);
   });
 
   it('writes the Tape per Crank turn when the Organ has one', () => {
-    const parsed = parseOrganLibrarySnapshot({version: 4, organs: [{...organSnapshot(ID_A), tapePerCrankTurn: 100}]});
+    const parsed = parseOrganLibrarySnapshot({version: 5, organs: [{...organSnapshotV5(ID_A, 30, 120), tapePerCrankTurn: 100}]});
     const snapshot = toSnapshot(parsed.ok ? parsed.value : []);
 
-    expect(snapshot).toEqual({version: 4, organs: [{...organSnapshot(ID_A), tapePerCrankTurn: 100}]});
+    expect(snapshot).toEqual({version: 5, organs: [{...organSnapshotV5(ID_A, 30, 120), tapePerCrankTurn: 100}]});
   });
 
   it('leaves the Tape per Crank turn out when the Organ has none', () => {
     const parsed = parseOrganLibrarySnapshot({version: 3, organs: [organSnapshot(ID_A)]});
     const snapshot = toSnapshot(parsed.ok ? parsed.value : []);
 
-    expect(snapshot.version).toBe(4);
+    expect(snapshot.version).toBe(5);
     expect('tapePerCrankTurn' in snapshot.organs[0]).toBe(false);
   });
 
@@ -166,6 +200,8 @@ describe('toSnapshot', () => {
       tapeBed: {tapeWidth: 50, holeDiameter: 2, rowSpacing: 3},
       minimumGap: 1,
       leadIn: 15,
+      slowestCrankSpeed: 30,
+      fastestCrankSpeed: 120,
       tapePerCrankTurn: null,
       pipes: [{note: 60}],
     });
@@ -177,6 +213,7 @@ describe('toSnapshot', () => {
       tapeBed: {tapeWidth: 50, holeDiameter: 2, rowSpacing: 3},
       minimumGap: 1,
       leadIn: 15,
+      crankSpeedRange: {slowest: 30, fastest: 120},
       pipes: [{note: 60}],
     });
   });

@@ -1,7 +1,7 @@
 import {midiNoteNumber, type MidiNoteNumber, type Organ} from '@api/index';
 import type {Column, ColumnCount} from '../../../../../api/tape/tape';
 import {testOrgan} from '../../../../testing/organs';
-import {dragTarget, holePartAt, isDrag, type HoleDrag} from './hole-drag';
+import {dragTarget, gripRects, isDrag, type HoleDrag} from './hole-drag';
 
 function note(value: number): MidiNoteNumber {
   const result = midiNoteNumber(value);
@@ -20,34 +20,47 @@ function drag(part: HoleDrag['part'], start: number, length: number, row = 2): H
   };
 }
 
-describe('holePartAt', () => {
-  const rect = {x: 100, width: 60};
+describe('gripRects', () => {
+  /** A Hole in SVG units, one row high; `width` is its length in SVG units. */
+  const hole = (width: number) => ({x: 100, y: 40, width, height: 10});
+  /** The Hole of 3 Columns and the Hole of 1 Column at 1:1 (2.5 mm Columns, about 9.45 px each). */
+  const widths = [3 * 9.45, 1 * 9.45];
+  const scales = [0.5, 1, 2];
 
-  it('grabs the start handle at the first 8 px of the selected Hole', () => {
-    expect(holePartAt(100, rect, true)).toBe('start');
-    expect(holePartAt(107.9, rect, true)).toBe('start');
+  it.each(scales)('gives each grip a hit area of at least 44 × 44 screen px at scale %s', (scale) => {
+    for (const width of widths) {
+      const {start, end} = gripRects(hole(width), scale);
+      expect(start.width * scale).toBeGreaterThanOrEqual(44);
+      expect(start.height * scale).toBeGreaterThanOrEqual(44);
+      expect(end.width * scale).toBeGreaterThanOrEqual(44);
+      expect(end.height * scale).toBeGreaterThanOrEqual(44);
+    }
   });
 
-  it('grabs the end handle at the last 8 px of the selected Hole', () => {
-    expect(holePartAt(152.1, rect, true)).toBe('end');
-    expect(holePartAt(159.9, rect, true)).toBe('end');
+  it.each(scales)('puts the grips outside the Hole, beside its start and its end, at scale %s', (scale) => {
+    for (const width of widths) {
+      const outline = hole(width);
+      const {start, end} = gripRects(outline, scale);
+      expect(start.x + start.width).toBeLessThanOrEqual(outline.x);
+      expect(end.x).toBeGreaterThanOrEqual(outline.x + outline.width);
+    }
   });
 
-  it('grabs the body between the handles', () => {
-    expect(holePartAt(130, rect, true)).toBe('body');
+  it.each(scales)('keeps the grips level with the Hole, so the row is reachable at scale %s', (scale) => {
+    const outline = hole(widths[0] ?? 0);
+    const {start, end} = gripRects(outline, scale);
+    const middle = outline.y + outline.height / 2;
+    for (const grip of [start, end]) {
+      expect(grip.y).toBeLessThanOrEqual(middle);
+      expect(grip.y + grip.height).toBeGreaterThanOrEqual(middle);
+    }
   });
 
-  it('makes each handle only a third of the width wide in a short Hole', () => {
-    const short = {x: 100, width: 12};
-    expect(holePartAt(103.9, short, true)).toBe('start');
-    expect(holePartAt(104.1, short, true)).toBe('body');
-    expect(holePartAt(107.9, short, true)).toBe('body');
-    expect(holePartAt(108.1, short, true)).toBe('end');
-  });
-
-  it('grabs the body everywhere on a Hole that is not selected', () => {
-    expect(holePartAt(101, rect, false)).toBe('body');
-    expect(holePartAt(159, rect, false)).toBe('body');
+  it.each(scales)('does not let the two grips overlap, also on a 1-Column Hole, at scale %s', (scale) => {
+    for (const width of widths) {
+      const {start, end} = gripRects(hole(width), scale);
+      expect(start.x + start.width).toBeLessThanOrEqual(end.x);
+    }
   });
 });
 

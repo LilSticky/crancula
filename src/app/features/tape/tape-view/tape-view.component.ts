@@ -17,8 +17,10 @@ import {BreakpointObserver} from '@angular/cdk/layout';
 import {toSignal} from '@angular/core/rxjs-interop';
 import {ActivatedRoute, Router, RouterLink} from '@angular/router';
 import {map} from 'rxjs';
-import {column, columnDuration, cuttingProblems, holesWithCuttingProblems, noteName, type HoleRef, type ImportSummary, type Tape, tapeGeometry, type Transposed} from '@api/index';
+import {column, columnDuration, cuttingProblems, holesWithCuttingProblems, noteName, type HoleRef, type ImportSummary, type Tape, tapeGeometry, type TapeGeometry, type Transposed} from '@api/index';
 import {canTranspose, holeRefsOf, selectionOfRefs} from './transpose-selection';
+import {crankSpeedChangeTo} from './crank-speed-change';
+import {holeAt, moveSpot, sameSpot, spotAt, type Spot, type TapeSelection} from './spot';
 import {MatDialog} from '@angular/material/dialog';
 import {TransposeDialogComponent, type TransposeDialogData} from './transpose-dialog/transpose-dialog.component';
 import {MatButton, MatIconButton} from '@angular/material/button';
@@ -38,6 +40,7 @@ import {editIntent, historyIntent, type Platform} from './edit-keys';
 import {PLATFORM} from './platform.token';
 import {gridAt} from './grid-at';
 import {isDrag, type HolePart} from './hole-drag';
+import {nextTap, type TapMemory} from './double-tap';
 import {HoleDragSession} from './hole-drag-session';
 import {addEdit, keyEdit, type EditOutcome} from './hole-edit-commands';
 import {
@@ -64,7 +67,7 @@ import {stageMetrics} from './stage-metrics';
 import {TapeEditor} from './tape-editor';
 import {TapePreview} from '../preview/tape-preview';
 import {PreviewSectionComponent} from '../preview/preview-section/preview-section.component';
-import {columnMarks, drawingParams, ghostRect, holeMarks, holeRects, outline, overviewOf, rowLabels, RULER_HEIGHT, sectionView} from './tape-drawing';
+import {columnMarks, drawingParams, drawingWidth, ghostRect, gripsOf, holeMarks, holeRects, outline, overviewOf, rowLabels, RULER_HEIGHT, sectionView, spotRect} from './tape-drawing';
 import {TapeSectionComponent} from './tape-section/tape-section.component';
 import {TapeStatusLineComponent, type PointerText} from './tape-status-line/tape-status-line.component';
 import {overviewFrame, scrollLeftFor} from './overview-frame';
@@ -125,6 +128,9 @@ const FOLLOW_LEAD = 0.2;
 /** Where Space is left to the element it lands on: fields, controls, links, list options and editable text. */
 const SPACE_IS_KEPT_BY = 'input, textarea, button, a, select, [role=combobox], [role=option], [contenteditable]';
 
+/** The playhead grip's hit area in screen px: as wide as this, and as tall as the ruler band, so it does not cover the Tape. */
+const PLAYHEAD_GRIP_WIDTH = 44;
+
 /** The shell's query: below this width the side panel gives way to a toggle. */
 const COMPACT_QUERY = '(max-width: 1179.98px)';
 
@@ -156,13 +162,24 @@ export class TapeViewComponent {
   /** Set after a drag so the click that may follow it does not select. */
   private dragJustEnded = false;
   private dragEndedTimer: ReturnType<typeof setTimeout> | undefined;
+  /** The last tap on a Hole or a Spot, which the next tap may pair with as a double-tap. */
+  private tapMemory: TapMemory | undefined;
   /** The last pointer position of a drag, so the Column follows when the stage scrolls under a resting pointer. */
   private lastPointer: {readonly clientX: number; readonly clientY: number; readonly pointerId: number; readonly svg: Element} | undefined;
   private edgeScrollFrame: number | undefined;
-  /** An empty spot pressed on the Tape: where (client px and drawing px), in which cell, and whether it adds to the selection. */
+  /**
+   * An empty spot pressed on the Tape: where (client px and drawing px), in which cell, whether it adds to the selection,
+   * and whether a touch pressed it (a touch that travels pans the drawing instead of framing).
+   */
   private framing:
-    | {readonly press: Point; readonly origin: Point; readonly cell: GridCell; readonly additive: boolean}
+    | {readonly press: Point; readonly origin: Point; readonly cell: GridCell; readonly additive: boolean; readonly touch: boolean}
     | undefined;
+  /** The touch pointers down on the drawing. */
+  private readonly touches = new Set<number>();
+  /** Set once a second touch goes down: the touches change nothing until all of them are up. */
+  private touchesIgnored = false;
+  /** A drag of the playhead grip; `wasPlaying` tells whether the Preview played at the press and goes on from the release. */
+  private playheadDrag: {readonly wasPlaying: boolean} | undefined;
   /** The selection frame as dragged, in px of the drawing; `undefined` until the press has travelled. */
   protected readonly frameRect = signal<{readonly x: number; readonly y: number; readonly width: number; readonly height: number} | undefined>(undefined);
   protected readonly dragging = this.holeDrag.dragging;
@@ -207,7 +224,17 @@ export class TapeViewComponent {
   private readonly scrollElement = viewChild<ElementRef<HTMLElement>>('scroll');
   private readonly stage = stageMetrics(this.scrollElement);
   private readonly drawingSvg = viewChild<ElementRef<SVGSVGElement>>('tapeSvg');
-  private readonly selection = signal<HoleSelection>([]);
+  private readonly selection = signal<TapeSelection>({holes: []});
+  /** The Holes selected, or none while a Spot is. */
+  private readonly holeSelection = computed((): HoleSelection => {
+    const selection = this.selection();
+    return 'holes' in selection ? selection.holes : [];
+  });
+  /** The Spot selected, if any. */
+  protected readonly spotSelected = computed((): Spot | undefined => {
+    const selection = this.selection();
+    return 'spot' in selection ? selection.spot : undefined;
+  });
   private scrollToSelection = false;
 
   protected readonly importSummary = signal(importSummaryOf(this.router.currentNavigation()?.extras.state));
@@ -227,7 +254,7 @@ export class TapeViewComponent {
 
   protected readonly shownSelection = computed((): HoleSelection => {
     const preview = this.holeDrag.preview();
-    return preview?.kind === 'applied' ? preview.selection : this.selection();
+    return preview?.kind === 'applied' ? preview.selection : this.holeSelection();
   });
 
   private readonly shownSoleHole = computed(() => soleOf(this.shownSelection()));
@@ -265,6 +292,18 @@ export class TapeViewComponent {
     const pipe = selected === undefined ? undefined : this.organ()?.pipes[selected.row - 1]?.note;
     const start = selected === undefined ? undefined : column(selected.start);
     return selected === undefined || pipe === undefined || start === undefined ? undefined : {pipe, start};
+  });
+
+  /** The selected Spot as drawn: the Hole a tap there would add, in px, with the label its live region reads. */
+  protected readonly spotView = computed(() => {
+    const spot = this.spotSelected();
+    const tape = this.shownTape();
+    const organ = this.organ();
+    if (spot === undefined || tape === undefined || organ === undefined) return undefined;
+    const rect = spotRect(tape, organ, spot, this.scale());
+    const pipe = organ.pipes[spot.row - 1]?.note;
+    if (rect === undefined || pipe === undefined) return undefined;
+    return {...rect, label: {pipe: noteName(pipe), column: formatNumber(spot.start + 1, this.language())}};
   });
 
   /** The Holes of the shown Tape (the would-be Tape while dragging) that can't be cut. */
@@ -312,12 +351,14 @@ export class TapeViewComponent {
     if (tape === undefined || organ === undefined || geometry === undefined || range === undefined) return undefined;
     const scale = this.scale();
     const language = this.language();
+    const holes = holeRects(tape, geometry, scale, range, this.shownSelection());
     return {
       tape,
       organ,
       section: sectionView(tape, organ, geometry, language, this.partNames(tape)),
       ...rowLabels(organ, geometry, scale),
-      holes: holeRects(tape, geometry, scale, range, this.shownSelection()),
+      holes,
+      grips: gripsOf(holes),
       ghost: attempted === undefined ? undefined : ghostRect(tape, organ, attempted, scale),
       holeMarks: holeMarks(
         tape,
@@ -330,6 +371,8 @@ export class TapeViewComponent {
       ),
       ...columnMarks(tape, geometry, scale, range),
       ...outline(geometry, scale),
+      // The Whole Tape fills the stage without a scroll, so only the other zooms leave room for the end grip.
+      svgWidth: drawingWidth(geometry, scale, this.zoom() !== 'whole'),
       drawingParams: drawingParams(tape, organ, language),
     };
   });
@@ -351,7 +394,7 @@ export class TapeViewComponent {
     const tape = this.tape();
     const organ = this.organ();
     if (tape === undefined || organ === undefined) return;
-    const selected = holeRefsOf(this.selection(), organ);
+    const selected = holeRefsOf(this.holeSelection(), organ);
     const dialog = this.dialog.open<TransposeDialogComponent, TransposeDialogData, Transposed>(TransposeDialogComponent, {data: {tape, organ, selected}});
     dialog.beforeClosed().subscribe((result) => {
       if (result !== undefined) this.commit({kind: 'applied', tape: result.tape, selection: selectionOfRefs(result.outcome.resulting, organ)});
@@ -366,7 +409,7 @@ export class TapeViewComponent {
   protected select(hole: {readonly row: number; readonly start: number}, event: MouseEvent): void {
     if (this.dragJustEnded) return;
     const clicked = {row: hole.row + 1, start: hole.start};
-    this.selection.set(this.isAdditive(event) ? toggled(this.selection(), clicked) : [clicked]);
+    this.selection.set({holes: this.isAdditive(event) ? toggled(this.holeSelection(), clicked) : [clicked]});
     this.scrollToSelection = true;
   }
 
@@ -374,7 +417,7 @@ export class TapeViewComponent {
   protected chooseProblem(hole: HoleRef): void {
     const row = this.organ()?.pipes.findIndex((pipe) => pipe.note === hole.pipe);
     if (row === undefined || row < 0) return;
-    this.selection.set([{row: row + 1, start: hole.start}]);
+    this.selection.set({holes: [{row: row + 1, start: hole.start}]});
     this.scrollToSelection = true;
   }
 
@@ -394,17 +437,77 @@ export class TapeViewComponent {
     return {x: (geometry.leadIn + playhead * tape.columnLength) * this.scale(), column: Math.round(playhead * 100) / 100};
   });
 
+  /** The playhead grip: its hit area in px of the drawing, inside the ruler band, and its triangle; `undefined` without a playhead. */
+  protected readonly playheadGrip = computed(() => {
+    const line = this.playheadLine();
+    if (line === undefined) return undefined;
+    const centre = line.x + 1;
+    return {x: centre - PLAYHEAD_GRIP_WIDTH / 2, width: PLAYHEAD_GRIP_WIDTH, height: RULER_HEIGHT, mark: `M${centre - 5} 0H${centre + 5}L${centre} 7Z`};
+  });
+
   /** Whether editing is paused: the Preview plays, and the Tape must not change except by its Crank speed. */
   protected readonly editingPaused = computed(() => this.preview.playing());
 
   /** A click on the ruler moves the playhead to the Column under it, rounded down; nothing happens while the Preview plays. */
   protected onRulerClick(event: MouseEvent, svg: Element): void {
+    if (this.editingPaused()) return;
+    this.setPlayheadAt(event, svg);
+  }
+
+  /** Moves the playhead to the Column under the pointer, rounded down and clamped to the Tape. */
+  private setPlayheadAt(event: {readonly clientX: number}, svg: Element): void {
     const tape = this.shownTape();
     const geometry = this.geometry();
-    if (tape === undefined || geometry === undefined || this.editingPaused()) return;
+    if (tape === undefined || geometry === undefined) return;
     const x = event.clientX - svg.getBoundingClientRect().left;
     const picked = column(Math.min(gridAt(x, 0, this.scale(), geometry).column, tape.length - 1));
     if (picked !== undefined) this.preview.setPlayhead(picked);
+  }
+
+  /**
+   * Presses the playhead grip: a playing Preview stops at once, and the drag moves the playhead. The grip takes the pointer,
+   * so the drag reaches it; the press is not a press on the drawing.
+   */
+  protected onPlayheadGripDown(event: PointerEvent): void {
+    if (event.button !== 0 || this.playheadDrag !== undefined) return;
+    event.stopPropagation();
+    const grip = event.currentTarget;
+    try {
+      if (grip instanceof Element) grip.setPointerCapture(event.pointerId);
+    } catch {
+      // No active pointer to capture (a synthetic event): the drag still follows the moves over the grip.
+    }
+    const wasPlaying = this.preview.playing();
+    if (wasPlaying) this.preview.stop();
+    this.playheadDrag = {wasPlaying};
+  }
+
+  protected onPlayheadGripMove(event: PointerEvent, svg: Element): void {
+    if (this.playheadDrag === undefined) return;
+    event.stopPropagation();
+    this.setPlayheadAt(event, svg);
+  }
+
+  protected onPlayheadGripUp(event: PointerEvent, svg: Element): void {
+    if (this.playheadDrag === undefined) return;
+    event.stopPropagation();
+    this.setPlayheadAt(event, svg);
+    this.endPlayheadDrag();
+  }
+
+  /**
+   * A cancelled drag, or one whose pointer capture was lost, keeps the playhead where it was last moved, and goes on from
+   * there if the Preview played at the press. After a release the drag is over already, so the lost capture changes nothing.
+   */
+  protected onPlayheadGripCancel(event: PointerEvent): void {
+    event.stopPropagation();
+    this.endPlayheadDrag();
+  }
+
+  private endPlayheadDrag(): void {
+    const drag = this.playheadDrag;
+    this.playheadDrag = undefined;
+    if (drag?.wasPlaying) this.playFromPlayhead();
   }
 
   /** The start Column the Preview section typed (0-based): moves the playhead there. */
@@ -419,6 +522,11 @@ export class TapeViewComponent {
       this.preview.stop();
       return;
     }
+    this.playFromPlayhead();
+  }
+
+  /** Plays the Tape from the Column under the playhead, or from the first Column when the playhead is at the end. */
+  private playFromPlayhead(): void {
     const tape = this.shownTape();
     const organ = this.organ();
     if (tape === undefined || organ === undefined) return;
@@ -440,7 +548,7 @@ export class TapeViewComponent {
   }
 
   private restoreSelection(): void {
-    this.selection.set(this.editor.selection());
+    this.selection.set({holes: this.editor.selection()});
     this.scrollToSelection = true;
   }
 
@@ -468,14 +576,15 @@ export class TapeViewComponent {
     if (event.key === 'Escape') {
       if (this.holeDrag.dragging()) this.holeDrag.cancel();
       else if (this.framing !== undefined) this.cancelFrame();
-      else this.selection.set([]);
+      else this.selection.set({holes: []});
       return;
     }
+    if (this.spotKey(event)) return;
     if (this.isAdditive(event) && !event.altKey) {
       const direction = ARROW_DIRECTIONS[event.key];
       if (direction !== undefined) {
         event.preventDefault();
-        this.setSelection(extended(this.selection(), this.selectable(), direction));
+        this.setSelection(extended(this.holeSelection(), this.selectable(), direction));
         return;
       }
       if (event.key.toLowerCase() === 'a') {
@@ -489,7 +598,7 @@ export class TapeViewComponent {
       if (this.editingPaused()) return;
       const tape = this.tape();
       const organ = this.organ();
-      const selected = soleOf(this.selection());
+      const selected = soleOf(this.holeSelection());
       if (tape === undefined || organ === undefined || selected === undefined) return;
       event.preventDefault();
       this.commit(keyEdit(tape, organ, selected, intent));
@@ -497,7 +606,7 @@ export class TapeViewComponent {
     }
     const slots = this.geometry()?.slots;
     if (slots === undefined) return;
-    const current = soleOf(this.selection());
+    const current = soleOf(this.holeSelection());
     if (event.key === 'Enter' && current === undefined) {
       event.preventDefault();
       this.moveSelection(nextHole(slots, undefined, 'right'));
@@ -511,19 +620,60 @@ export class TapeViewComponent {
     this.moveSelection(target);
   }
 
+  /** While a Spot is selected: an arrow moves it, Enter adds a Hole there. @returns whether the key was taken */
+  private spotKey(event: KeyboardEvent): boolean {
+    const spot = this.spotSelected();
+    if (spot === undefined) return false;
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      this.addAtSpot(spot);
+      return true;
+    }
+    const direction = ARROW_DIRECTIONS[event.key];
+    const rows = this.organ()?.pipes.length;
+    const geometry = this.geometry();
+    if (direction === undefined || rows === undefined || geometry === undefined) return false;
+    event.preventDefault();
+    this.selection.set({spot: moveSpot(spot, direction, rows, geometry)});
+    return true;
+  }
+
   private moveSelection(target: SelectableHole | undefined): void {
     if (target === undefined) return;
-    this.selection.set([{row: target.row, start: target.start}]);
+    this.selection.set({holes: [{row: target.row, start: target.start}]});
     this.scrollToSelection = true;
   }
 
   private setSelection(holes: HoleSelection): void {
-    this.selection.set(holes.map(({row, start}) => ({row, start})));
+    this.selection.set({holes: holes.map(({row, start}) => ({row, start}))});
     this.scrollToSelection = true;
+  }
+
+  /**
+   * Tracks the touch pointers on the drawing. A second touch ends the gestures in progress, and the touches change nothing
+   * until all are up. Mouse and pen pass. @returns whether the event is to be ignored
+   */
+  private trackTouch(event: PointerEvent): boolean {
+    if (event.pointerType !== 'touch') return false;
+    if (event.type === 'pointerdown') {
+      this.touches.add(event.pointerId);
+      if (this.touches.size > 1) {
+        this.touchesIgnored = true;
+        this.cancelGesture();
+      }
+      return this.touchesIgnored;
+    }
+    const ignored = this.touchesIgnored;
+    if (event.type === 'pointerup' || event.type === 'pointercancel') {
+      this.touches.delete(event.pointerId);
+      if (this.touches.size === 0) this.touchesIgnored = false;
+    }
+    return ignored;
   }
 
   /** Starts a selection frame at an empty spot of the Tape; it only shows once the press travels. */
   protected onPointerDown(event: PointerEvent, svg: Element): void {
+    if (this.trackTouch(event)) return;
     const target = event.target;
     if (event.button !== 0 || (target instanceof Element && target.closest('.hole-part') !== null)) return;
     const geometry = this.geometry();
@@ -537,6 +687,7 @@ export class TapeViewComponent {
       origin: {x, y},
       cell: gridAt(x, y, this.scale(), geometry),
       additive: this.isAdditive(event),
+      touch: event.pointerType === 'touch',
     };
   }
 
@@ -544,6 +695,11 @@ export class TapeViewComponent {
     const framing = this.framing;
     if (framing === undefined) return;
     const travelled = isDrag(framing.press, {x: event.clientX, y: event.clientY});
+    if (framing.touch && travelled) {
+      // A touch that travels is a pan of the drawing: no frame, and the press is no tap.
+      this.cancelFrame();
+      return;
+    }
     if (!travelled && this.frameRect() === undefined) return;
     if (this.frameRect() === undefined) {
       try {
@@ -563,7 +719,7 @@ export class TapeViewComponent {
     });
   }
 
-  /** Ends the frame: a frame selects the Holes it overlaps (adding to the selection when additive); a press without travel clears. */
+  /** Ends the frame: a frame selects the Holes it overlaps (adding to the selection when additive); a press without travel is a tap. */
   private finishFrame(event: PointerEvent, svg: Element): void {
     const framing = this.framing;
     const geometry = this.geometry();
@@ -571,13 +727,67 @@ export class TapeViewComponent {
     this.cancelFrame();
     if (framing === undefined || geometry === undefined) return;
     if (!travelled) {
-      if (!framing.additive) this.selection.set([]);
+      this.tap(framing, geometry);
       return;
     }
     const box = svg.getBoundingClientRect();
     const end = gridAt(event.clientX - box.left, Math.max(0, event.clientY - box.top - RULER_HEIGHT), this.scale(), geometry);
     const inside = framed(this.selectable(), frameBetween(framing.cell, end));
-    this.setSelection(framing.additive ? united(this.selection(), inside) : inside);
+    this.setSelection(framing.additive ? united(this.holeSelection(), inside) : inside);
+  }
+
+  /**
+   * A tap on empty Tape: selects the Spot under it; on the selected Spot it adds a Hole there. The Lead-in and a cell
+   * covered by a Hole clear the selection. An additive tap changes nothing.
+   */
+  private tap(framing: NonNullable<typeof this.framing>, geometry: TapeGeometry): void {
+    if (framing.additive) return;
+    const onLeadIn = framing.origin.x < geometry.leadIn * this.scale();
+    const hole = onLeadIn ? undefined : holeAt(framing.cell, geometry);
+    if (hole !== undefined) {
+      this.tapHole(hole, false);
+      return;
+    }
+    const spot = onLeadIn ? undefined : spotAt(framing.cell, geometry);
+    if (spot === undefined) {
+      this.tapMemory = undefined;
+      this.selection.set({holes: []});
+      return;
+    }
+    const selection = this.selection();
+    if ('spot' in selection && sameSpot(selection.spot, spot)) {
+      this.addAtSpot(spot);
+      return;
+    }
+    this.tapMemory = undefined;
+    this.selection.set({spot});
+  }
+
+  /** Adds a Hole of the Spot's Pipe at its Column, as one edit; the Spot's Hole becomes the selection. */
+  private addAtSpot(spot: Spot): void {
+    const tape = this.tape();
+    const organ = this.organ();
+    const pipe = organ?.pipes[spot.row - 1]?.note;
+    if (tape === undefined || organ === undefined || pipe === undefined) return;
+    const memory = nextTap(this.tapMemory, {hole: {row: spot.row, start: spot.start}, at: performance.now(), added: true, modifier: false}).memory;
+    if (this.commit(addEdit(tape, organ, pipe, spot.start))) this.tapMemory = memory;
+  }
+
+  /**
+   * A tap on a Hole: a plain tap selects it; a second tap on the same Hole within the double-tap time removes it, as the
+   * Delete key does. A tap with a modifier key leaves the selection to the click that follows it.
+   */
+  private tapHole(hole: SelectableHole, modifier: boolean): void {
+    const result = nextTap(this.tapMemory, {hole, at: performance.now(), added: false, modifier});
+    this.tapMemory = result.memory;
+    if (modifier) return;
+    this.selection.set({holes: [hole]});
+    if (!result.double) return;
+    const tape = this.tape();
+    const organ = this.organ();
+    this.endGesture();
+    if (tape === undefined || organ === undefined) return;
+    this.commit(keyEdit(tape, organ, hole, {kind: 'remove'}));
   }
 
   private cancelFrame(): void {
@@ -586,6 +796,7 @@ export class TapeViewComponent {
   }
 
   protected onPointerMove(event: PointerEvent, svg: Element): void {
+    if (this.trackTouch(event)) return;
     this.stretchFrame(event, svg);
     this.lastPointer = {clientX: event.clientX, clientY: event.clientY, pointerId: event.pointerId, svg};
     this.followPointer(this.lastPointer);
@@ -637,8 +848,9 @@ export class TapeViewComponent {
     this.scheduleEdgeScroll();
   }
 
-  /** Presses a Hole, or one of the handles of the selected Hole; a press that travels turns into a drag. */
+  /** Presses a Hole, or one of the grips of the selected Hole; a press that travels turns into a drag. */
   protected onHolePointerDown(event: PointerEvent, hole: {readonly row: number; readonly start: number}, svg: Element, part: HolePart = 'body'): void {
+    if (this.trackTouch(event)) return;
     const tape = this.tape();
     const organ = this.organ();
     const geometry = this.geometry();
@@ -658,6 +870,7 @@ export class TapeViewComponent {
   }
 
   protected onPointerUp(event: PointerEvent, svg: Element): void {
+    if (this.trackTouch(event)) return;
     this.stopEdgeScroll();
     if (this.framing !== undefined) {
       this.finishFrame(event, svg);
@@ -665,16 +878,38 @@ export class TapeViewComponent {
     }
     const geometry = this.geometry();
     if (geometry === undefined) return;
+    const pressed = this.holeDrag.grabbed;
+    const pressedPart = this.holeDrag.grabbedPart;
     const box = svg.getBoundingClientRect();
     const outcome = this.holeDrag.finish(gridAt(event.clientX - box.left, event.clientY - box.top - RULER_HEIGHT, this.scale(), geometry));
-    if (outcome === undefined) return;
-    this.dragJustEnded = true;
-    clearTimeout(this.dragEndedTimer);
-    this.dragEndedTimer = setTimeout(() => (this.dragJustEnded = false));
+    if (outcome === undefined) {
+      if (pressed === undefined) return;
+      if (pressedPart !== 'body') {
+        this.tapMemory = undefined;
+        return;
+      }
+      this.tapHole({row: pressed.row, start: pressed.start}, event.shiftKey || this.isAdditive(event));
+      return;
+    }
+    this.tapMemory = undefined;
+    this.endGesture();
     this.commit(outcome);
   }
 
-  protected onPointerCancel(): void {
+  /** Ignores the click that follows a press which just changed the Tape, so the click does not select again. */
+  private endGesture(): void {
+    this.dragJustEnded = true;
+    clearTimeout(this.dragEndedTimer);
+    this.dragEndedTimer = setTimeout(() => (this.dragJustEnded = false));
+  }
+
+  protected onPointerCancel(event: PointerEvent): void {
+    this.trackTouch(event);
+    this.cancelGesture();
+  }
+
+  /** Ends the gestures of the drawing in progress: a Hole drag, a frame or a pending tap, and the edge scroll. */
+  private cancelGesture(): void {
     this.stopEdgeScroll();
     this.cancelFrame();
     this.holeDrag.cancel();
@@ -695,9 +930,9 @@ export class TapeViewComponent {
       });
       this.snackBar.open(String(text), undefined, {duration: REFUSAL_DURATION});
     } else if (outcome.kind === 'applied') {
-      this.editor.remember(this.selection());
+      this.editor.remember(this.holeSelection());
       void this.editor.apply({tape: outcome.tape, selection: outcome.selection});
-      this.selection.set(outcome.selection);
+      this.selection.set({holes: outcome.selection});
       this.scrollToSelection = true;
     }
     return outcome.kind === 'applied';
@@ -705,32 +940,23 @@ export class TapeViewComponent {
 
   /** Saves the Tape with a new Column length as one edit; the Holes and the selection stay. */
   protected onColumnLengthChange(tape: Tape): void {
-    this.commit({kind: 'applied', tape, selection: this.selection()});
+    this.commit({kind: 'applied', tape, selection: this.holeSelection()});
+  }
+
+  /** Plays the Tape at a Crank speed the slider moves to, without saving it or adding an undo step. */
+  protected onCrankSpeedTrial(speed: number): void {
+    const tape = this.tape();
+    const organ = this.organ();
+    if (tape === undefined || organ === undefined) return;
+    const change = crankSpeedChangeTo(tape, speed);
+    if (change.state !== 'invalid') this.preview.changeTape(change.state === 'ready' ? change.tape : tape, organ);
   }
 
   /** Saves the Tape with a new Crank speed as one edit, and re-anchors a Preview that plays; the Holes and the selection stay. */
   protected onCrankSpeedChange(tape: Tape): void {
-    this.save({kind: 'applied', tape, selection: this.selection()});
+    this.save({kind: 'applied', tape, selection: this.holeSelection()});
     const organ = this.organ();
     if (organ !== undefined) this.preview.changeTape(tape, organ);
-  }
-
-  /** A double-click on an empty spot of a row adds a Hole of that row's Pipe at that Column. */
-  protected onDoubleClick(event: MouseEvent, svg: Element): void {
-    const target = event.target;
-    if (target instanceof Element && target.closest('.hole-part') !== null) return;
-    const tape = this.tape();
-    const organ = this.organ();
-    const geometry = this.geometry();
-    if (tape === undefined || organ === undefined || geometry === undefined) return;
-    const box = svg.getBoundingClientRect();
-    const y = event.clientY - box.top - RULER_HEIGHT;
-    if (y < 0) return;
-    const cell = gridAt(event.clientX - box.left, y, this.scale(), geometry);
-    const pipe = organ.pipes[cell.row - 1]?.note;
-    const start = column(cell.column);
-    if (pipe === undefined || start === undefined) return;
-    this.commit(addEdit(tape, organ, pipe, start));
   }
 
   /** Adds the Hole the form asks for, then returns the focus to the drawing. */
@@ -812,7 +1038,7 @@ export class TapeViewComponent {
         selected.scrollIntoView({block: 'nearest', inline: 'nearest'});
         return;
       }
-      const current = soleOf(this.selection());
+      const current = soleOf(this.holeSelection());
       const geometry = this.geometry();
       const slot = geometry?.slots.find((candidate) => candidate.row === current?.row && candidate.start === current?.start);
       if (geometry === undefined || slot === undefined) return;

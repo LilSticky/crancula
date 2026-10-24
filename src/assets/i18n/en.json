@@ -23,7 +23,8 @@
       "REFUSED_OVERLAP": "The Hole would overlap the Hole of {{note}} at Column {{column}}.",
       "UNDO_TOOLTIP": "Undo ({{shortcut}})",
       "REDO_TOOLTIP": "Redo ({{shortcut}})",
-      "KEYS": "Alt+arrows move it, Shift+arrows move its end, Alt+Shift+arrows its start, Delete removes it."
+      "KEYS": "Alt+arrows move it, Shift+arrows move its end, Alt+Shift+arrows its start, Delete removes it.",
+      "SPOT_LABEL": "Spot: {{pipe}}, Column {{column}}. Tap again or press Enter to add a Hole."
     },
     "RENAME": {
       "TITLE": "Rename Tape",
@@ -247,7 +248,9 @@
       "LENGTH": "Plays for {{time}}",
       "EDITING_PAUSED": "Editing is paused while the Preview plays",
       "UNAVAILABLE": "Set the Organ's Tape per Crank turn to hear this Tape",
-      "OPEN_ORGAN": "Open the Organ"
+      "OPEN_ORGAN": "Open the Organ",
+      "CRANK_SPEED_SLIDER": "Crank speed",
+      "OUTSIDE_RANGE": "Outside this Organ's Crank speed range ({{slowest}}–{{fastest}} turns/min)."
     }
   },
   "ORGAN": {
@@ -320,7 +323,10 @@
       "SAVE_BLOCKED": "Your Tapes couldn't be loaded, so Pipes with Holes can't be removed for now.",
       "REMOVE_PIPES_HOLES": "Removing these Pipes also removes their Holes ({{holes}}) from Tapes ({{tapes}}) of this Organ.",
       "TAPE_PER_CRANK_TURN": "Tape per Crank turn",
-      "TAPE_PER_CRANK_TURN_HINT": "How far one Crank turn draws the Tape; needed to hear a Tape"
+      "TAPE_PER_CRANK_TURN_HINT": "How far one Crank turn draws the Tape; needed to hear a Tape",
+      "SLOWEST_CRANK_SPEED": "Slowest Crank speed",
+      "FASTEST_CRANK_SPEED": "Fastest Crank speed",
+      "CRANK_SPEED_UNIT": "turns/min"
     },
     "LEAVE": {
       "TITLE": "Unsaved changes",
@@ -341,7 +347,9 @@
       "MUST_NOT_BE_NEGATIVE": "Must not be negative.",
       "ROW_SPACING_BELOW_HOLE_DIAMETER": "Must be at least the hole diameter ({{holeDiameter}} mm), or neighbouring holes overlap.",
       "PIPES_EXCEED_TAPE_WIDTH": "The Pipes need {{requiredWidth}} mm, but the tape is only {{availableWidth}} mm wide.",
-      "TAPE_PER_CRANK_TURN_NOT_POSITIVE": "Must be greater than 0."
+      "TAPE_PER_CRANK_TURN_NOT_POSITIVE": "Must be greater than 0.",
+      "CRANK_SPEED_OUT_OF_RANGE": "Enter {{min}} to {{max}} turns per minute.",
+      "SLOWEST_NOT_BELOW_FASTEST": "The fastest Crank speed must be above the slowest."
     },
     "STORAGE": {
       "LOAD_PROBLEM": "Your Organs couldn't be loaded. The file was kept at {{backupPath}}.",

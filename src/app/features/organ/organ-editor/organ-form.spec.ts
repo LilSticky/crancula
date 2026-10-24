@@ -107,6 +107,14 @@ describe('changedFields', () => {
     expect(changedFields(saved, {...saved, tapePerCrankTurn: 120})).toEqual(['tapePerCrankTurn']);
   });
 
+  it('names the Crank speed range after the Tape per Crank turn', () => {
+    expect(changedFields(saved, {...saved, slowestCrankSpeed: 40, fastestCrankSpeed: 200, tapePerCrankTurn: 120})).toEqual([
+      'tapePerCrankTurn',
+      'slowestCrankSpeed',
+      'fastestCrankSpeed',
+    ]);
+  });
+
   it('names pipes once for a note edit', () => {
     const pipes = saved.pipes.map((pipe, row) => (row === 1 ? {...pipe, note: 99} : pipe));
 

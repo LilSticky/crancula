@@ -1869,6 +1869,64 @@ describe('OrganEditorComponent', () => {
     });
   });
 
+  describe('the Crank speed range', () => {
+    it('is 30 to 120 turns per minute for a new Organ', async () => {
+      const {open: openEditor} = render();
+      const {field} = await openEditor();
+
+      expect(field('slowest-crank-speed').value).toBe('30');
+      expect(field('fastest-crank-speed').value).toBe('120');
+    });
+
+    it('stores the typed slowest and fastest Crank speed with the Organ', async () => {
+      const {open: openEditor, library} = render();
+      const {field, fillValidOrgan, type, save} = await openEditor();
+      await fillValidOrgan();
+      await type(field('slowest-crank-speed'), '40');
+      await type(field('fastest-crank-speed'), '200');
+      await save();
+
+      expect(library.entities()[0]?.crankSpeedRange).toEqual({slowest: 40, fastest: 200});
+    });
+
+    it('shows a stored Crank speed range when reopened', async () => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 2, {slowestCrankSpeed: 40, fastestCrankSpeed: 200});
+      await library.put(organ);
+
+      const {field} = await openEditor(organ.id);
+
+      expect(field('slowest-crank-speed').value).toBe('40');
+      expect(field('fastest-crank-speed').value).toBe('200');
+    });
+
+    it('shows a stored slowest Crank speed of 12.5 as 12,5 in German', async () => {
+      TestBed.configureTestingModule({providers: [provideRouter([]), provideTestTranslations('de')]});
+      vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+      const organ = testOrgan('Street organ', 2, {slowestCrankSpeed: 12.5});
+      await TestBed.inject(OrganLibrary).put(organ);
+
+      const {field} = await open(organ.id);
+
+      expect(field('slowest-crank-speed').value).toBe('12,5');
+    });
+
+    it('lists both Crank speeds in the error summary when both are out of range', async () => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 2);
+      await library.put(organ);
+      const {element, field, type, save} = await openEditor(organ.id);
+      await type(field('slowest-crank-speed'), '0');
+      await type(field('fastest-crank-speed'), '400');
+
+      await save();
+
+      const entries = [...element.querySelectorAll<HTMLElement>('[data-testid="error-summary-entry"]')].map((entry) => entry.textContent?.trim());
+      expect(entries).toEqual(['Slowest Crank speed', 'Fastest Crank speed']);
+      expect(library.entities()).toEqual([organ]);
+    });
+  });
+
   describe('the two sheets', () => {
     const sheet = (element: HTMLElement, testId: string) => {
       const found = element.querySelector<HTMLElement>(`[data-testid="${testId}"]`);

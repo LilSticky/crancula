@@ -2,7 +2,7 @@ import {TestBed} from '@angular/core/testing';
 import {signal} from '@angular/core';
 import {type FieldTree, form} from '@angular/forms/signals';
 import {ErrorStateMatcher} from '@angular/material/core';
-import {type OrganDraft, toDraft} from '@api/index';
+import {emptyOrganDraft, type OrganDraft, toDraft} from '@api/index';
 import {provideTestTranslations} from '../../../../../testing/test-translations';
 import {testOrgan} from '../../../../../testing/organs';
 import {organFormSchema, SaveAttempt, ShownViolationMatcher} from '../organ-form';
@@ -14,6 +14,7 @@ interface Inputs {
   readonly minimumHoleLength?: string;
   readonly fit?: TapeBedFitText | null;
   readonly drawing?: TapeBedDrawing | null;
+  readonly lang?: 'en' | 'de';
 }
 
 const FIT: TapeBedFitText = {
@@ -28,10 +29,17 @@ const FIT: TapeBedFitText = {
 
 const DRAWING: TapeBedDrawing = {tapeWidth: 120, length: 240, border: 58.25, bottomBorderTop: 61.75, rows: [59.5, 63]};
 
-async function render({draft = toDraft(testOrgan('Positive')), border = '', minimumHoleLength = '', fit = null, drawing = null}: Inputs = {}) {
+async function render({
+  draft = toDraft(testOrgan('Positive')),
+  border = '',
+  minimumHoleLength = '',
+  fit = null,
+  drawing = null,
+  lang = 'en',
+}: Inputs = {}) {
   TestBed.resetTestingModule();
   TestBed.configureTestingModule({
-    providers: [provideTestTranslations(), SaveAttempt, {provide: ErrorStateMatcher, useClass: ShownViolationMatcher}],
+    providers: [provideTestTranslations(lang), SaveAttempt, {provide: ErrorStateMatcher, useClass: ShownViolationMatcher}],
   });
   const organ: FieldTree<OrganDraft> = TestBed.runInInjectionContext(() => form(signal(draft), organFormSchema));
   const fixture = TestBed.createComponent(TapeBedSheetComponent);
@@ -148,6 +156,81 @@ describe('TapeBedSheetComponent', () => {
         error.textContent?.trim(),
       );
       expect(messages).toEqual(['Must be greater than 0.']);
+    });
+  });
+
+  describe('the Crank speed range fields', () => {
+    const violationsAt = (element: HTMLElement, path: string) =>
+      [...element.querySelectorAll(`[data-testid="violation"][data-path="${path}"]`)].map((error) => error.textContent?.trim());
+
+    it('are the slowest and the fastest Crank speed, after the Tape per Crank turn', async () => {
+      const {element} = await render();
+
+      const ids = [...element.querySelectorAll('[data-testid]')].map((node) => node.getAttribute('data-testid'));
+      expect(ids).toContain('slowest-crank-speed');
+      expect(ids).toContain('fastest-crank-speed');
+      expect(ids.indexOf('slowest-crank-speed')).toBeGreaterThan(ids.indexOf('tape-per-crank-turn'));
+      expect(ids.indexOf('fastest-crank-speed')).toBeGreaterThan(ids.indexOf('slowest-crank-speed'));
+    });
+
+    it('shows 30 and 120 turns per minute for a new Organ', async () => {
+      const {field} = await render({draft: emptyOrganDraft()});
+
+      expect(field('slowest-crank-speed').value).toBe('30');
+      expect(field('fastest-crank-speed').value).toBe('120');
+    });
+
+    it('writes a typed decimal comma into the form as a number', async () => {
+      const {field, organ, fixture} = await render();
+
+      const input = field('slowest-crank-speed');
+      input.value = '2,5';
+      input.dispatchEvent(new Event('input'));
+      await fixture.whenStable();
+
+      expect(organ.slowestCrankSpeed().value()).toBe(2.5);
+    });
+
+    it.each([
+      {testId: 'slowest-crank-speed', path: 'slowestCrankSpeed', typed: '0'},
+      {testId: 'fastest-crank-speed', path: 'fastestCrankSpeed', typed: '301'},
+    ])('shows "Enter 1 to 300 turns per minute." under $path for $typed', async ({testId, path, typed}) => {
+      const {field, fixture, element} = await render();
+
+      const input = field(testId);
+      input.value = typed;
+      input.dispatchEvent(new Event('input'));
+      await fixture.whenStable();
+
+      expect(violationsAt(element, path)).toEqual(['Enter 1 to 300 turns per minute.']);
+    });
+
+    it('shows "The fastest Crank speed must be above the slowest." under the fastest field when the slowest is not below it', async () => {
+      const {field, fixture, element} = await render();
+
+      const input = field('slowest-crank-speed');
+      input.value = '130';
+      input.dispatchEvent(new Event('input'));
+      await fixture.whenStable();
+
+      expect(violationsAt(element, 'fastestCrankSpeed')).toEqual(['The fastest Crank speed must be above the slowest.']);
+    });
+  });
+
+  describe('the long fields of the Tape Bed card', () => {
+    it.each(['tape-per-crank-turn', 'slowest-crank-speed', 'fastest-crank-speed'])(
+      'spans the full row of the field grid, as the Name field does (%s)',
+      async (testId) => {
+        const {field} = await render();
+
+        expect(field(testId).closest('mat-form-field')?.classList.contains('full-width')).toBe(true);
+      },
+    );
+
+    it.each(['slowest-crank-speed', 'fastest-crank-speed'])('shows the German Crank speed unit "U/min" (%s)', async (testId) => {
+      const {field} = await render({lang: 'de'});
+
+      expect(field(testId).closest('mat-form-field')?.querySelector('[matTextSuffix]')?.textContent?.trim()).toBe('U/min');
     });
   });
 });

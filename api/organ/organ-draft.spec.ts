@@ -2,8 +2,15 @@ import {describe, expect, it} from 'vitest';
 import {midiNoteNumber, type MidiNoteNumber} from './midi-note-number';
 import {asValidOrgan, millimetres, type Millimetres, newOrganId, type Organ} from './organ';
 import {addPipe, emptyOrganDraft, movePipe, type OrganDraft, removePipe, toDraft} from './organ-draft';
+import {crankSpeedRange, type CrankSpeedRange} from './crank-speed-range';
 
 const mm = (n: number) => millimetres(n) as Millimetres;
+
+function rangeOf(slowest: number, fastest: number): CrankSpeedRange {
+  const range = crankSpeedRange(slowest, fastest);
+  if (range === undefined) throw new Error(`${slowest}–${fastest} is not a Crank speed range`);
+  return range;
+}
 
 function organWith(tapePerCrankTurn?: Millimetres): Organ {
   return asValidOrgan({
@@ -12,6 +19,7 @@ function organWith(tapePerCrankTurn?: Millimetres): Organ {
     tapeBed: {tapeWidth: mm(120), holeDiameter: mm(2.5), rowSpacing: mm(3.5)},
     minimumGap: mm(1.5),
     leadIn: mm(20),
+    crankSpeedRange: rangeOf(40, 90),
     pipes: [{note: midiNoteNumber(60) as MidiNoteNumber}],
     ...(tapePerCrankTurn === undefined ? {} : {tapePerCrankTurn}),
   });
@@ -30,6 +38,8 @@ describe('emptyOrganDraft', () => {
       tapeBed: {tapeWidth: null, holeDiameter: null, rowSpacing: null},
       minimumGap: null,
       leadIn: null,
+      slowestCrankSpeed: 30,
+      fastestCrankSpeed: 120,
       tapePerCrankTurn: null,
       pipes: [],
     });
@@ -37,6 +47,13 @@ describe('emptyOrganDraft', () => {
 });
 
 describe('toDraft', () => {
+  it('copies the Crank speed range of an Organ', () => {
+    const draft = toDraft(organWith());
+
+    expect(draft.slowestCrankSpeed).toBe(40);
+    expect(draft.fastestCrankSpeed).toBe(90);
+  });
+
   it('copies the Tape per Crank turn of an Organ', () => {
     expect(toDraft(organWith(mm(100))).tapePerCrankTurn).toBe(100);
   });
@@ -53,6 +70,7 @@ describe('toDraft', () => {
       tapeBed: {tapeWidth: mm(120), holeDiameter: mm(2.5), rowSpacing: mm(3.5)},
       minimumGap: mm(1.5),
       leadIn: mm(20),
+      crankSpeedRange: rangeOf(30, 120),
       pipes: [{note: midiNoteNumber(60) as MidiNoteNumber}],
     });
 
@@ -62,6 +80,8 @@ describe('toDraft', () => {
       tapeBed: {tapeWidth: 120, holeDiameter: 2.5, rowSpacing: 3.5},
       minimumGap: 1.5,
       leadIn: 20,
+      slowestCrankSpeed: 30,
+      fastestCrankSpeed: 120,
       tapePerCrankTurn: null,
       pipes: [{note: 60}],
     });

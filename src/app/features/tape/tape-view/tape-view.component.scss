@@ -103,6 +103,12 @@ cranc-page-head button[mat-icon-button] {
   stroke: var(--cr-select);
   stroke-width: 2;
 }
+.spot {
+  fill: none;
+  stroke: var(--cr-select);
+  stroke-width: 2;
+  pointer-events: none;
+}
 .cutting-problem {
   fill: none;
   stroke: var(--cr-problem);
@@ -132,13 +138,22 @@ cranc-page-head button[mat-icon-button] {
 }
 .scroll svg {
   user-select: none;
-  touch-action: none;
+  touch-action: pan-x pan-y;
 }
 .grab {
   cursor: grab;
 }
+.hole,
+.handle,
+.playhead-grip {
+  touch-action: none;
+}
 .handle {
   fill: transparent;
+}
+.grip {
+  fill: var(--cr-select);
+  pointer-events: none;
 }
 .ew-resize {
   cursor: ew-resize;
@@ -158,6 +173,13 @@ svg.grabbing .ew-resize {
   stroke: var(--cr-tape-guide-strong);
 }
 .playhead {
+  fill: var(--cr-select);
+  pointer-events: none;
+}
+.playhead-grip {
+  fill: transparent;
+}
+.playhead-grip-mark {
   fill: var(--cr-select);
   pointer-events: none;
 }

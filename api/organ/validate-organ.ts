@@ -1,4 +1,6 @@
+import {crankSpeed, type CrankSpeed, MAX_CRANK_SPEED, MIN_CRANK_SPEED} from '../tape/crank-speed';
 import {err, ok, type Result} from '../result';
+import {crankSpeedRange, type CrankSpeedRange} from './crank-speed-range';
 import {midiNoteNumber, type MidiNoteNumber, noteName} from './midi-note-number';
 import {asValidOrgan, type Millimetres, millimetres, newOrganId, type Organ, rowSpan, type TapeBed} from './organ';
 import type {OrganDraft} from './organ-draft';
@@ -10,6 +12,8 @@ export type OrganViolationCode =
   | 'pipe-note-out-of-range'
   | 'duplicate-pipe'
   | 'value-required'
+  | 'crank-speed-out-of-range'
+  | 'slowest-not-below-fastest'
   | 'must-be-positive'
   | 'must-not-be-negative'
   | 'row-spacing-below-hole-diameter'
@@ -45,6 +49,7 @@ export function validateOrgan(draft: OrganDraft): Result<Organ, OrganViolation[]
   const minimumGap = measurement(draft.minimumGap, 'minimumGap', add);
   const leadIn = measurement(draft.leadIn, 'leadIn', add, true);
   const tapePerCrankTurn = optionalPositive(draft.tapePerCrankTurn, add);
+  const crankSpeeds = validateCrankSpeedRange(draft, add);
 
   if (tapeBed && draft.pipes.length > 0) {
     const required = rowSpan(tapeBed, draft.pipes.length);
@@ -57,7 +62,9 @@ export function validateOrgan(draft: OrganDraft): Result<Organ, OrganViolation[]
     }
   }
 
-  if (violations.length > 0 || !notes || !tapeBed || minimumGap === undefined || leadIn === undefined) return err(violations);
+  if (violations.length > 0 || !notes || !tapeBed || minimumGap === undefined || leadIn === undefined || crankSpeeds === undefined) {
+    return err(violations);
+  }
   return ok(
     asValidOrgan({
       id: draft.id ?? newOrganId(),
@@ -65,6 +72,7 @@ export function validateOrgan(draft: OrganDraft): Result<Organ, OrganViolation[]
       tapeBed,
       minimumGap,
       leadIn,
+      crankSpeedRange: crankSpeeds,
       ...(tapePerCrankTurn === undefined ? {} : {tapePerCrankTurn}),
       pipes: notes.map((note) => ({note})),
     }),
@@ -132,6 +140,30 @@ function measurement(
     return undefined;
   }
   return millimetres(value);
+}
+
+/** Both Crank speeds are required; the slowest must be below the fastest. */
+function validateCrankSpeedRange(draft: OrganDraft, add: AddViolation): CrankSpeedRange | undefined {
+  const slowest = crankSpeedMeasure(draft.slowestCrankSpeed, 'slowestCrankSpeed', add);
+  const fastest = crankSpeedMeasure(draft.fastestCrankSpeed, 'fastestCrankSpeed', add);
+  if (slowest === undefined || fastest === undefined) return undefined;
+  if (slowest >= fastest) {
+    add({code: 'slowest-not-below-fastest', path: 'fastestCrankSpeed'});
+    return undefined;
+  }
+  return crankSpeedRange(slowest, fastest);
+}
+
+function crankSpeedMeasure(value: number | null, path: string, add: AddViolation): CrankSpeed | undefined {
+  if (value === null) {
+    add({code: 'value-required', path});
+    return undefined;
+  }
+  const valid = crankSpeed(value);
+  if (valid === undefined) {
+    add({code: 'crank-speed-out-of-range', path, params: {min: MIN_CRANK_SPEED, max: MAX_CRANK_SPEED}});
+  }
+  return valid;
 }
 
 /** Absent (`null`, or missing from untyped input) is valid; a given value must be finite and above 0. */
