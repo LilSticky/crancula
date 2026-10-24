@@ -8,8 +8,17 @@ Issues: [GitHub](https://github.com/LilSticky/crancula/issues)
 
 No slice in progress.
 
-**Next step:** the review follow-ups in [#156](https://github.com/LilSticky/crancula/issues/156) (incl. the clipped
-Crank speed label noted there), or Record a tape ([discovery/later.md](discovery/later.md), section 1, slice 2).
+**Next step:** Record a tape ([discovery/later.md](discovery/later.md), section 1, slice 2), or the new issue
+[#159](https://github.com/LilSticky/crancula/issues/159) (preview label wraps at 1280 px).
+
+**Done:** [Touch review follow-ups (#156)](https://github.com/LilSticky/crancula/issues/156) (2026-10-24, branch
+`156-touch-review-follow-ups`): a Hole under a cell is looked up in the Tape (`holeCovering` in `api`); the Spot is
+`aria-hidden` and the review nits are fixed; a touch ended by `lostpointercapture` no longer blocks touch edits, and a
+moved capture keeps the touch (review finding). The Crank speed toast is dropped (user decision, 2026-10-24). The
+Crank speed label fits in German. The zoom segment and side panel at 1024 px were already fine since #151 and now have
+regression e2e. Dark-mode playhead grip on the page raised from 2.15:1 to 4.1:1 via `--cr-select-on-page` (grips and
+playhead on the Tape were already 4.8:1). `ux:screens` captures 08h, 08i and 08j, with no leftover toast. Gate: 883
+node and 1375 Angular unit tests, lint, i18n (317 keys); e2e in CI.
 
 **Done:** [UX findings in #151](https://github.com/LilSticky/crancula/issues/151) (2026-10-24, branch
 `151-preview-ux-findings`): the German page head no longer clips the 2:1 zoom toggle; the Export button stays on one
@@ -38,9 +47,6 @@ scheduler on the audio clock. Review findings fixed; accepted test gaps in
 [audit.md](../specs/007-crank-a-tape/audit.md). T044 (ux-review) not done: [#151](https://github.com/LilSticky/crancula/issues/151). Gate: 844 node
 and 1270 Angular unit tests, lint, i18n (309 keys); e2e in CI. Sound itself is not tested automatically; the user
 listened to a Preview by hand on Windows on 2026-10-24 and it works ([quickstart](../specs/007-crank-a-tape/quickstart.md)).
-
-Open after it: the review follow-ups in [#156](https://github.com/LilSticky/crancula/issues/156), or Record a tape
-([discovery/later.md](discovery/later.md), section 1, slice 2).
 
 **Done:** v0.2.0 released (2026-10-24, [CHANGELOG](../CHANGELOG.md#020---2026-10-24)): Crank a tape (Preview, Crank
 speed, Tape per Crank turn). README describes v0.2.0 but keeps the v0.1.1 screenshots: the retaken ones showed the
