@@ -237,6 +237,18 @@
       "APPLY": "Transpose",
       "CANCEL": "Cancel"
     },
+    "RECORD": {
+      "BUTTON": "Record",
+      "PROGRESS": "Recording… {{percent}} %",
+      "SAVED": "Saved: {{name}}",
+      "FAILED": "Recording failed: {{reason}}",
+      "RETRY": "Retry",
+      "DIALOG_TITLE": "Record to a file",
+      "WAV_FILTER": "WAV audio",
+      "MP3_FILTER": "MP3 audio",
+      "NO_TAPE_PER_TURN": "Set the Organ's Tape per Crank turn to record this Tape",
+      "WHILE_PREVIEW": "Stop the Preview to record this Tape"
+    },
     "PREVIEW": {
       "PLAY": "Preview",
       "STOP": "Stop preview",
@@ -248,6 +260,7 @@
       "LENGTH": "Plays for {{time}}",
       "EDITING_PAUSED": "Editing is paused while the Preview plays",
       "UNAVAILABLE": "Set the Organ's Tape per Crank turn to hear this Tape",
+      "WHILE_RECORDING": "Wait for the Recording to finish",
       "OPEN_ORGAN": "Open the Organ",
       "CRANK_SPEED_SLIDER": "Crank speed",
       "OUTSIDE_RANGE": "Outside this Organ's Crank speed range ({{slowest}}–{{fastest}} turns/min)."
