@@ -39,7 +39,7 @@ Decisions for [plan.md](plan.md). Facts about today's code were gathered on 2026
 
 - **Decision**: the selected Hole's handles move outside its rect: the visible grip is a 6 px wide bar
   with rounded ends just beyond each end (accent colour from the theme), and its hit area is a
-  transparent rect at least 44 × 44 screen px centred on the grip, converted to SVG units with the
+  transparent rect at least 44 × 44 screen px that starts at the Hole's end and reaches outward (centred vertically, never over the Hole body), converted to SVG units with the
   current scale. The whole Hole body is "move"; `holePartAt` and `HANDLE_PX` go. Grips draw above all
   Holes, so a hit area that overlaps a neighbour row wins there while a Hole is selected.
 - **Rationale**: SC-003 (44 px, WCAG 2.5.5 target size); the inside handles of spec 004 (≤ 8 px, ≤ a

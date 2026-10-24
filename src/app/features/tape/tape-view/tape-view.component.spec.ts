@@ -2297,7 +2297,8 @@ describe('TapeViewComponent', () => {
     };
 
     it.each(['mouse', 'touch'] as const)('a %s tap on an empty place draws a Spot there, Minimum Hole Length wide, and clears the Hole selection', async (pointerType) => {
-      const {view, geometry, at, tap, click} = await setup();
+      // 2.5 mm Minimum Hole Length over 1 mm Columns: the Hole a tap adds spans 3 Columns.
+      const {view, geometry, at, tap, click} = await setup({holes, columnLength: 1, platform: 'win32'});
       await click(rectAt(view(), 24, 10) as Element);
       expect(selected(view())).toEqual(['24:10']);
 
@@ -2306,8 +2307,29 @@ describe('TapeViewComponent', () => {
       expect(spots(view())).toHaveLength(1);
       expect(spots(view())[0]?.getAttribute('data-row')).toBe('24');
       expect(spots(view())[0]?.getAttribute('data-start')).toBe('20');
-      expect(Number(spots(view())[0]?.getAttribute('width'))).toBeCloseTo(geometry.columnLength * SCALE);
+      expect(Number(spots(view())[0]?.getAttribute('width'))).toBeCloseTo(3 * geometry.columnLength * SCALE);
       expect(selected(view())).toEqual([]);
+    });
+
+    it('draws a Spot as wide as the Hole a tap adds, cut short before the next Hole of its Pipe', async () => {
+      const {view, geometry, at, tap} = await setup({holes, columnLength: 1, platform: 'win32'});
+
+      await tap(at(8, 24));
+
+      expect(spots(view())[0]?.getAttribute('data-start')).toBe('8');
+      expect(Number(spots(view())[0]?.getAttribute('width'))).toBeCloseTo(2 * geometry.columnLength * SCALE);
+    });
+
+    it('announces the Spot in a live region outside the drawing, and not on the Spot itself', async () => {
+      const {view, at, tap} = await setup();
+      const live = () => view()?.querySelector('[data-testid="spot-live"]');
+      expect(live()?.getAttribute('aria-live')).toBe('polite');
+
+      await tap(at(20, 25));
+
+      expect(live()?.textContent?.trim()).toBe('Spot: F5, Column 21. Tap again or press Enter to add a Hole.');
+      expect(live()?.closest('svg')).toBeNull();
+      expect(spots(view())[0]?.hasAttribute('aria-live')).toBe(false);
     });
 
     it('a tap on the selected Spot adds a Hole of Minimum Hole Length, selects it, removes the Spot, with one save', async () => {
@@ -2399,6 +2421,15 @@ describe('TapeViewComponent', () => {
         expect(spots(view())[0]?.getAttribute('data-row')).toBe('23');
         await press({key: 'ArrowDown'});
         expect(spots(view())[0]?.getAttribute('data-row')).toBe('24');
+      });
+
+      it('moves the Spot over the Columns of a Hole to the next free one, never onto the Hole', async () => {
+        const {view, at, tap, press} = await setup();
+        await tap(at(9, 24));
+
+        await press({key: 'ArrowRight'});
+
+        expect(spots(view())[0]?.getAttribute('data-start')).toBe('13');
       });
 
       it('keeps the Spot on Column 0 and on the first row', async () => {

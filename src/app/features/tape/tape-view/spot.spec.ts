@@ -1,7 +1,8 @@
 // API: `Spot` = {row: number (from 1, a Pipe's row), start: Column}; `sameSpot(a, b): boolean`;
 // `spotAt(cell: GridCell, geometry: TapeGeometry): Spot | undefined` (undefined where a Hole covers the cell; the Spot may
-// lie after the Tape's last Column); `moveSpot(spot: Spot, direction: Direction, rows: number): Spot` (one Column or row,
-// clamped to Column 0 and rows 1..rows).
+// lie after the Tape's last Column); `moveSpot(spot: Spot, direction: Direction, rows: number, geometry: TapeGeometry): Spot`
+// (one Column or row, skipping the cells a Hole covers in that direction; stays put when no free cell is left, clamped to
+// Column 0 and rows 1..rows).
 import {column, columnCount, midiNoteNumber, millimetres, organId, tapeGeometry, tapeId, transposition, type Column, type Hole, type Tape, type TapeGeometry} from '@api/index';
 import {tapeOf} from '../../../../../api/tape/tape-fixture';
 import {partIndex, songId} from '../../../../../api/song/song';
@@ -72,10 +73,11 @@ describe('spotAt', () => {
 
 describe('moveSpot', () => {
   const spot: Spot = {row: 2, start: col(4)};
-  const move = (direction: Direction, from: Spot = spot, rows = 3): Spot => moveSpot(from, direction, rows);
+  const move = (direction: Direction, from: Spot = spot, rows = 3, geometry: TapeGeometry = GEOMETRY): Spot =>
+    moveSpot(from, direction, rows, geometry);
 
   it('moves one Column left or right', () => {
-    expect(move('right')).toEqual({row: 2, start: col(5)});
+    expect(move('right', {row: 1, start: col(4)})).toEqual({row: 1, start: col(5)});
     expect(move('left')).toEqual({row: 2, start: col(3)});
   });
 
@@ -91,5 +93,23 @@ describe('moveSpot', () => {
 
   it('stays on the last row', () => {
     expect(move('down', {row: 3, start: col(4)}, 3)).toEqual({row: 3, start: col(4)});
+  });
+
+  it('skips the Columns a Hole covers in the direction of travel', () => {
+    expect(move('right')).toEqual({row: 2, start: col(8)});
+    expect(move('left', {row: 2, start: col(8)})).toEqual({row: 2, start: col(4)});
+  });
+
+  it('skips the rows a Hole covers in its Column', () => {
+    const above = tapeGeometry(tapeWith([{pipe: defined(midiNoteNumber(60), 'pipe'), start: col(4), length: defined(columnCount(3), 'length')}]), ORGAN);
+
+    expect(move('up', spot, 3, above)).toEqual({row: 2, start: col(4)});
+    expect(move('down', spot, 3, above)).toEqual({row: 3, start: col(4)});
+  });
+
+  it('stays put when every cell that way is covered', () => {
+    const walled = tapeGeometry(tapeWith([{pipe: defined(midiNoteNumber(62), 'pipe'), start: col(0), length: defined(columnCount(4), 'length')}]), ORGAN);
+
+    expect(move('left', spot, 3, walled)).toEqual(spot);
   });
 });

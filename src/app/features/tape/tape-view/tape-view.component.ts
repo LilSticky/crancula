@@ -38,7 +38,7 @@ import {EditCommandRouter} from '../../shared/edit-command-router';
 import {editIntent, historyIntent, type Platform} from './edit-keys';
 import {PLATFORM} from './platform.token';
 import {gridAt} from './grid-at';
-import {gripBars, gripRects, isDrag, type HolePart, type Rect} from './hole-drag';
+import {isDrag, type HolePart} from './hole-drag';
 import {nextTap, type TapMemory} from './double-tap';
 import {HoleDragSession} from './hole-drag-session';
 import {addEdit, keyEdit, type EditOutcome} from './hole-edit-commands';
@@ -66,7 +66,7 @@ import {stageMetrics} from './stage-metrics';
 import {TapeEditor} from './tape-editor';
 import {TapePreview} from '../preview/tape-preview';
 import {PreviewSectionComponent} from '../preview/preview-section/preview-section.component';
-import {columnMarks, drawingParams, ghostRect, holeMarks, holeRects, outline, overviewOf, rowLabels, RULER_HEIGHT, sectionView} from './tape-drawing';
+import {columnMarks, drawingParams, ghostRect, gripsOf, holeMarks, holeRects, outline, overviewOf, rowLabels, RULER_HEIGHT, sectionView, spotRect} from './tape-drawing';
 import {TapeSectionComponent} from './tape-section/tape-section.component';
 import {TapeStatusLineComponent, type PointerText} from './tape-status-line/tape-status-line.component';
 import {overviewFrame, scrollLeftFor} from './overview-frame';
@@ -129,15 +129,6 @@ const SPACE_IS_KEPT_BY = 'input, textarea, button, a, select, [role=combobox], [
 
 /** The shell's query: below this width the side panel gives way to a toggle. */
 const COMPACT_QUERY = '(max-width: 1179.98px)';
-
-/** The grips of the one selected Hole in view, in px: visible bars and hit areas; `undefined` unless exactly one is selected. */
-function gripsOf(holes: readonly (SelectableHole & Rect & {readonly selected: boolean})[]) {
-  const selected = holes.filter((hole) => hole.selected);
-  const only = selected.length === 1 ? selected[0] : undefined;
-  if (only === undefined) return undefined;
-  // The drawing is in px already, so one unit is one screen px.
-  return {hole: {row: only.row, start: only.start}, bars: gripBars(only), hits: gripRects(only, 1)};
-}
 
 /** One Tape. Right after an import, the navigation state carries the Import Summary. */
 @Component({
@@ -290,27 +281,16 @@ export class TapeViewComponent {
     return selected === undefined || pipe === undefined || start === undefined ? undefined : {pipe, start};
   });
 
-  /** The selected Spot as drawn: a Hole outline one Column wide in px of the drawing, with the label its aria-live region reads. */
+  /** The selected Spot as drawn: the Hole a tap there would add, in px, with the label its live region reads. */
   protected readonly spotView = computed(() => {
     const spot = this.spotSelected();
-    const geometry = this.geometry();
+    const tape = this.shownTape();
     const organ = this.organ();
-    if (spot === undefined || geometry === undefined || organ === undefined) return undefined;
-    const centre = geometry.rowCentres[spot.row - 1];
+    if (spot === undefined || tape === undefined || organ === undefined) return undefined;
+    const rect = spotRect(tape, organ, spot, this.scale());
     const pipe = organ.pipes[spot.row - 1]?.note;
-    if (centre === undefined || pipe === undefined) return undefined;
-    const scale = this.scale();
-    const radius = organ.tapeBed.holeDiameter / 2;
-    return {
-      row: spot.row - 1,
-      start: spot.start,
-      x: (geometry.leadIn + spot.start * geometry.columnLength) * scale,
-      y: (centre - radius) * scale,
-      width: geometry.columnLength * scale,
-      height: 2 * radius * scale,
-      radius: radius * scale,
-      label: {pipe: noteName(pipe), column: formatNumber(spot.start + 1, this.language())},
-    };
+    if (rect === undefined || pipe === undefined) return undefined;
+    return {...rect, label: {pipe: noteName(pipe), column: formatNumber(spot.start + 1, this.language())}};
   });
 
   /** The Holes of the shown Tape (the would-be Tape while dragging) that can't be cut. */
@@ -571,9 +551,10 @@ export class TapeViewComponent {
     }
     const direction = ARROW_DIRECTIONS[event.key];
     const rows = this.organ()?.pipes.length;
-    if (direction === undefined || rows === undefined) return false;
+    const geometry = this.geometry();
+    if (direction === undefined || rows === undefined || geometry === undefined) return false;
     event.preventDefault();
-    this.selection.set({spot: moveSpot(spot, direction, rows)});
+    this.selection.set({spot: moveSpot(spot, direction, rows, geometry)});
     return true;
   }
 
@@ -679,8 +660,8 @@ export class TapeViewComponent {
     const organ = this.organ();
     const pipe = organ?.pipes[spot.row - 1]?.note;
     if (tape === undefined || organ === undefined || pipe === undefined) return;
-    this.tapMemory = nextTap(this.tapMemory, {hole: {row: spot.row, start: spot.start}, at: performance.now(), added: true, modifier: false}).memory;
-    this.commit(addEdit(tape, organ, pipe, spot.start));
+    const memory = nextTap(this.tapMemory, {hole: {row: spot.row, start: spot.start}, at: performance.now(), added: true, modifier: false}).memory;
+    if (this.commit(addEdit(tape, organ, pipe, spot.start))) this.tapMemory = memory;
   }
 
   /**
@@ -757,7 +738,7 @@ export class TapeViewComponent {
     this.scheduleEdgeScroll();
   }
 
-  /** Presses a Hole, or one of the handles of the selected Hole; a press that travels turns into a drag. */
+  /** Presses a Hole, or one of the grips of the selected Hole; a press that travels turns into a drag. */
   protected onHolePointerDown(event: PointerEvent, hole: {readonly row: number; readonly start: number}, svg: Element, part: HolePart = 'body'): void {
     const tape = this.tape();
     const organ = this.organ();

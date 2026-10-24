@@ -2,7 +2,9 @@ import {type Millimetres, type Organ, type Tape, midiNoteNumber, tapeGeometry} f
 import {type Column, type ColumnCount} from '../../../../../api/tape/tape';
 import {tapeOf} from '../../../../../api/tape/tape-fixture';
 import {testOrgan} from '../../../../testing/organs';
-import {columnMarks, holeMarks, holeRects, outline, rowLabels, sectionView, RULER_HEIGHT} from './tape-drawing';
+import {columnMarks, gripsOf, holeMarks, holeRects, outline, rowLabels, sectionView, spotRect, RULER_HEIGHT} from './tape-drawing';
+import {gripBars, gripRects} from './hole-drag';
+import type {Spot} from './spot';
 
 const organ: Organ = testOrgan('Street organ', 31, {pipes: Array.from({length: 31}, (_, row) => ({note: 58 + 2 * (row + 1)}))});
 
@@ -100,66 +102,40 @@ describe('holeRects', () => {
 
     expect(rects[0]?.selected).toBe(true);
   });
+});
 
-  it('gives handles at both ends of the selected Hole only', () => {
-    const slot = geometry.slots[0];
-    const rects = holeRects(tape, geometry, 2, {first: 0, last: 60}, slot && {row: slot.row, start: slot.start});
+describe('spotRect', () => {
+  /** A Tape of 1 mm Columns, so the 2.5 mm Minimum Hole Length spans 3 Columns. */
+  const fine = {...tapeWith([]), columnLength: 1 as Millimetres};
+  const at = (start: number): Spot => ({row: 1, start: start as Column});
 
-    expect(rects[1]?.handles).toBeUndefined();
-    expect(rects[0]?.handles).toBeDefined();
+  it('is the Hole a tap would add: the Minimum Hole Length from the Spot, in px', () => {
+    expect(spotRect(fine, organ, at(10), 2)).toMatchObject({row: 0, start: 10, width: 6});
   });
 
-  it('makes each handle 8 px wide inside the Hole', () => {
-    const slot = geometry.slots[0];
-    const [rect] = holeRects(tape, geometry, 20, {first: 0, last: 10}, slot && {row: slot.row, start: slot.start});
-
-    expect(rect?.width).toBeGreaterThan(24);
-    expect(rect?.handles).toMatchObject({
-      start: {x: rect?.x, width: 8},
-      end: {x: (rect?.x ?? 0) + (rect?.width ?? 0) - 8, width: 8},
-    });
+  it('is cut short before the next Hole of its Pipe', () => {
+    expect(spotRect({...tapeWith([4]), columnLength: 1 as Millimetres}, organ, at(2), 2)).toMatchObject({start: 2, width: 4});
   });
 
-  it('makes each handle a third of the Hole wide when the Hole is narrow', () => {
-    const slot = geometry.slots[0];
-    const [rect] = holeRects(tape, geometry, 2, {first: 0, last: 10}, slot && {row: slot.row, start: slot.start});
-    const width = (rect?.width ?? 0) / 3;
-
-    expect(width).toBeLessThan(8);
-    expect(rect?.handles?.start.width).toBeCloseTo(width);
-    expect(rect?.handles?.end.width).toBeCloseTo(width);
-    expect(rect?.handles?.end.x).toBeCloseTo((rect?.x ?? 0) + (rect?.width ?? 0) - width);
+  it('is undefined on a row without a Pipe', () => {
+    expect(spotRect(fine, organ, {row: 40, start: 10 as Column}, 2)).toBeUndefined();
   });
 });
 
-describe('holeRects handle hit areas', () => {
-  it('gives each handle of a wide Hole a hit area of at least 24 px by 24 px around the handle', () => {
-    const slot = geometry.slots[0];
-    const [rect] = holeRects(tape, geometry, 20, {first: 0, last: 10}, slot && {row: slot.row, start: slot.start});
-    const handles = rect?.handles;
+describe('gripsOf', () => {
+  const hole = {row: 1, start: 5, x: 100, y: 40, width: 30, height: 10};
 
-    for (const handle of [handles?.start, handles?.end]) {
-      expect(handle?.hit.width).toBeGreaterThanOrEqual(24);
-      expect(handle?.hit.height).toBeGreaterThanOrEqual(24);
-      expect(handle?.hit.x).toBeLessThanOrEqual(handle?.x ?? -Infinity);
-      expect(handle?.hit.x ?? 0).toBeCloseTo((handle?.x ?? 0) + (handle?.width ?? 0) / 2 - (handle?.hit.width ?? 0) / 2);
-      expect(handle?.hit.y ?? 0).toBeCloseTo((rect?.y ?? 0) + (rect?.height ?? 0) / 2 - (handle?.hit.height ?? 0) / 2);
-    }
+  it('gives the grips of the one selected Hole, in px', () => {
+    const grips = gripsOf([{...hole, selected: true}, {...hole, row: 2, start: 50, x: 300, selected: false}]);
+
+    expect(grips?.hole).toEqual({row: 1, start: 5});
+    expect(grips?.bars).toEqual(gripBars(hole));
+    expect(grips?.hits).toEqual(gripRects(hole, 1));
   });
-});
 
-describe('holeRects handle hit areas on a short Hole', () => {
-  it('lets the start hit area stop at the Hole centre and the end hit area start there, so they do not overlap', () => {
-    const slot = geometry.slots[0];
-    const [rect] = holeRects(tape, geometry, 2, {first: 0, last: 10}, slot && {row: slot.row, start: slot.start});
-    const handles = rect?.handles;
-    const centre = (rect?.x ?? 0) + (rect?.width ?? 0) / 2;
-
-    expect(rect?.width).toBeLessThan(24);
-    expect((handles?.start.hit.x ?? 0) + (handles?.start.hit.width ?? 0)).toBeLessThanOrEqual(centre + 1e-9);
-    expect(handles?.end.hit.x ?? 0).toBeGreaterThanOrEqual(centre - 1e-9);
-    expect(handles?.start.hit.width).toBeGreaterThanOrEqual(24);
-    expect(handles?.end.hit.width).toBeGreaterThanOrEqual(24);
+  it('gives no grips while no Hole or several Holes are selected', () => {
+    expect(gripsOf([{...hole, selected: false}])).toBeUndefined();
+    expect(gripsOf([{...hole, selected: true}, {...hole, row: 2, selected: true}])).toBeUndefined();
   });
 });
 

@@ -108,7 +108,7 @@
             <text class="cutting-problem-glyph" aria-hidden="true" [attr.x]="mark.glyph.x" [attr.y]="mark.glyph.y" [attr.font-size]="mark.glyph.size">!</text>
           }
           @if (spotView(); as spot) {
-            <rect class="spot" data-testid="spot" aria-live="polite" [attr.aria-label]="'TAPE.EDIT.SPOT_LABEL' | translate: spot.label" [attr.data-row]="spot.row" [attr.data-start]="spot.start" [attr.x]="spot.x" [attr.y]="spot.y" [attr.width]="spot.width" [attr.height]="spot.height" [attr.rx]="spot.radius" [attr.ry]="spot.radius" />
+            <rect class="spot" data-testid="spot" [attr.data-row]="spot.row" [attr.data-start]="spot.start" [attr.x]="spot.x" [attr.y]="spot.y" [attr.width]="spot.width" [attr.height]="spot.height" [attr.rx]="spot.radius" [attr.ry]="spot.radius" />
           }
           @if (frameRect(); as frame) {
             <rect class="selection-frame" data-testid="selection-frame" aria-hidden="true" [attr.x]="frame.x" [attr.y]="frame.y" [attr.width]="frame.width" [attr.height]="frame.height" />
@@ -123,6 +123,11 @@
       </svg>
     </div>
   </div>
+  <span class="cdk-visually-hidden" aria-live="polite" data-testid="spot-live">
+    @if (spotView(); as spot) {
+      {{ 'TAPE.EDIT.SPOT_LABEL' | translate: spot.label }}
+    }
+  </span>
   <span id="preview-unavailable-reason" class="cdk-visually-hidden" data-testid="preview-unavailable-reason">{{ 'TAPE.PREVIEW.UNAVAILABLE' | translate }}</span>
   @if (overview(); as overview) {
     <svg

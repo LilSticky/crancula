@@ -30,9 +30,27 @@ export function spotAt(cell: GridCell, geometry: TapeGeometry): Spot | undefined
   return {row: cell.row, start};
 }
 
-/** The Spot one Column or row away in `direction`, clamped to Column 0 and to rows 1 to `rows`. */
-export function moveSpot(spot: Spot, direction: Direction, rows: number): Spot {
-  const row = direction === 'up' ? Math.max(1, spot.row - 1) : direction === 'down' ? Math.min(rows, spot.row + 1) : spot.row;
-  const start = direction === 'left' ? Math.max(0, spot.start - 1) : direction === 'right' ? spot.start + 1 : spot.start;
-  return {row, start: column(start) ?? spot.start};
+/** The step of each arrow in rows and Columns. */
+const STEPS: Record<Direction, {readonly row: number; readonly column: number}> = {
+  up: {row: -1, column: 0},
+  down: {row: 1, column: 0},
+  left: {row: 0, column: -1},
+  right: {row: 0, column: 1},
+};
+
+/**
+ * The Spot one Column or row away in `direction`. Cells a Hole covers are skipped in that direction, so a Spot never lands
+ * on a Hole; the Spot stays put when no free cell is left before Column 0 or rows 1 to `rows`.
+ */
+export function moveSpot(spot: Spot, direction: Direction, rows: number, geometry: TapeGeometry): Spot {
+  const step = STEPS[direction];
+  let row = spot.row + step.row;
+  let start = spot.start + step.column;
+  while (row >= 1 && row <= rows && start >= 0) {
+    const free = column(start);
+    if (free !== undefined && holeAt({row, column: start}, geometry) === undefined) return {row, start: free};
+    row += step.row;
+    start += step.column;
+  }
+  return spot;
 }
