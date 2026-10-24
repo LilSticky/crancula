@@ -40,14 +40,14 @@ real Electron touch, restart and migration.
 
 ## Phase 3: US1 Add a Hole by tapping (P1) MVP
 
-- [ ] T008 [P] [US1] Red: `src/app/features/tape/tape-view/spot.spec.ts`: `sameSpot`; `spotAt(cell, tape)` is `undefined` on a cell covered by a Hole, a Spot otherwise (also after the last Column); `moveSpot` by direction, clamped to Column 0 and rows 1…n.
-- [ ] T009 [US1] Green: `spot.ts` (`Spot`, `TapeSelection`, `sameSpot`, `spotAt`, `moveSpot`).
-- [ ] T010 [US1] Red: `tape-view.component.spec.ts`: a tap (pointerdown+pointerup, < 4 px, mouse and touch) on empty Tape draws `spot` (outlined, Minimum Hole Length wide) and clears the Hole selection; a tap on the selected Spot adds a Hole of Minimum Hole Length, selected, one undo step; a tap on another empty place moves the Spot; a tap on the Lead-in clears; two mouse clicks on one empty place (as a `dblclick` delivers them) add exactly one Hole; while the Preview plays a second tap adds nothing and shows editing paused.
-- [ ] T011 [US1] Green: Tape view `selection` as `TapeSelection` with a computed `holeSelection` (research R1); tap handling in `onPointerDown`/`onPointerUp`; remove `(dblclick)` and `onDoubleClick`; draw the Spot in `tape-view.component.html`/`.scss` with an `aria-live` label (`TAPE.EDIT.SPOT_LABEL`). Existing spec 004 tests stay green (adjust only those that dispatch a bare `dblclick` to dispatch the two clicks a real double-click sends).
-- [ ] T012 [US1] Red: component spec: with a Spot, arrows move it, Enter adds a Hole there, Escape clears it; with a Hole selected, arrows behave as before.
-- [ ] T013 [US1] Green: `onKeydown` in `tape-view.component.ts`.
-- [ ] T014 [P] [US1] Red: `add-hole/add-hole.component.spec.ts`: a `spot` input fills Pipe (its row's Pipe) and Column (start + 1).
-- [ ] T015 [US1] Green: `add-hole.component.ts` input and effect; the Tape view passes the Spot.
+- [x] T008 [P] [US1] Red: `src/app/features/tape/tape-view/spot.spec.ts`: `sameSpot`; `spotAt(cell, tape)` is `undefined` on a cell covered by a Hole, a Spot otherwise (also after the last Column); `moveSpot` by direction, clamped to Column 0 and rows 1…n.
+- [x] T009 [US1] Green: `spot.ts` (`Spot`, `TapeSelection`, `sameSpot`, `spotAt`, `moveSpot`).
+- [x] T010 [US1] Red: `tape-view.component.spec.ts`: a tap (pointerdown+pointerup, < 4 px, mouse and touch) on empty Tape draws `spot` (outlined, Minimum Hole Length wide) and clears the Hole selection; a tap on the selected Spot adds a Hole of Minimum Hole Length, selected, one undo step; a tap on another empty place moves the Spot; a tap on the Lead-in clears; two mouse clicks on one empty place (as a `dblclick` delivers them) add exactly one Hole; while the Preview plays a second tap adds nothing and shows editing paused.
+- [x] T011 [US1] Green: Tape view `selection` as `TapeSelection` with a computed `holeSelection` (research R1); tap handling in `onPointerDown`/`onPointerUp`; remove `(dblclick)` and `onDoubleClick`; draw the Spot in `tape-view.component.html`/`.scss` with an `aria-live` label (`TAPE.EDIT.SPOT_LABEL`). Existing spec 004 tests stay green (adjust only those that dispatch a bare `dblclick` to dispatch the two clicks a real double-click sends).
+- [x] T012 [US1] Red: component spec: with a Spot, arrows move it, Enter adds a Hole there, Escape clears it; with a Hole selected, arrows behave as before.
+- [x] T013 [US1] Green: `onKeydown` in `tape-view.component.ts`.
+- [x] T014 [P] [US1] Red: `add-hole/add-hole.component.spec.ts`: a `spot` input fills Pipe (its row's Pipe) and Column (start + 1).
+- [x] T015 [US1] Green: `add-hole.component.ts` input and effect; the Tape view passes the Spot.
 
 **Checkpoint**: tap-tap adds; commit, STATUS.
 

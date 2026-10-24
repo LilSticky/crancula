@@ -40,7 +40,7 @@
 | `row` | number | from 1, a Pipe's row |
 | `start` | `Column` | from 0; may be after the Tape's last Column |
 
-- `sameSpot(a, b)`; `spotAt(cell, tape)`: a Spot only if no Hole covers that cell, else `undefined`.
+- `sameSpot(a, b)`; `spotAt(cell, geometry)`: a Spot only if no Hole covers that cell, else `undefined`.
 - `moveSpot(spot, direction, rows)`: one Column or row, clamped to Column 0 and the rows.
 - Not stored, not in the undo history.
 
