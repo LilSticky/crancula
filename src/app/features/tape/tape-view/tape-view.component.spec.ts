@@ -2350,6 +2350,15 @@ describe('TapeViewComponent', () => {
       expect(spots(view())[0]?.hasAttribute('aria-live')).toBe(false);
     });
 
+    it('hides the drawn Spot from assistive technology, like the ghost and the marks', async () => {
+      const {view, at, tap} = await setup();
+
+      await tap(at(20, 25));
+
+      expect(spots(view())).toHaveLength(1);
+      expect(spots(view())[0]?.getAttribute('aria-hidden')).toBe('true');
+    });
+
     it('a tap on the selected Spot adds a Hole of Minimum Hole Length, selects it, removes the Spot, with one save', async () => {
       const {tape, view, at, tap, update} = await setup();
 
