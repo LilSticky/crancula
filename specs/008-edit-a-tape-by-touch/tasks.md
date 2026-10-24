@@ -85,10 +85,10 @@ real Electron touch, restart and migration.
 
 ## Phase 8: Polish and e2e
 
-- [ ] T032 Red/green: `e2e/tape-touch.spec.ts` in Electron with touch (`hasTouch`, `touchscreen.tap`, CDP touch drags): tap–tap adds a Minimum-Hole-Length Hole that survives a restart; grip drag lengthens; double-tap removes; a finger drag on empty Tape scrolls.
-- [ ] T033 [P] Red/green: e2e for the playhead drag while playing and the slider (release, then Ctrl+Z) in the existing crank e2e file; Organ range fields across a restart and a v4 snapshot migration in the Organ e2e.
-- [ ] T034 [P] ADR 25 "One gesture model for all pointer types" (`adr` skill) and the index.
-- [ ] T035 [P] DESIGN-GUIDE "The Tape visualisation" and "Accessibility commitments" (grips, Spot, 44 px targets).
+- [x] T032 Red/green: `e2e/tape-touch.spec.ts` in Electron with touch (`hasTouch`, `touchscreen.tap`, CDP touch drags): tap–tap adds a Minimum-Hole-Length Hole that survives a restart; grip drag lengthens; double-tap removes; a finger drag on empty Tape scrolls.
+- [x] T033 [P] Red/green: e2e for the playhead drag while playing and the slider (release, then Ctrl+Z) in the existing crank e2e file; Organ range fields across a restart and a v4 snapshot migration in the Organ e2e.
+- [x] T034 [P] ADR 25 "One gesture model for all pointer types" (`adr` skill) and the index.
+- [x] T035 [P] DESIGN-GUIDE "The Tape visualisation" and "Accessibility commitments" (grips, Spot, 44 px targets).
 - [ ] T036 `npm run ux:screens` + `ux-review` of the Tape view and the Organ editor; fix or file findings.
 - [ ] T037 `angular-reviewer` over the slice; fix findings.
 - [ ] T038 `spec-auditor` against spec.md; write `audit.md`.
