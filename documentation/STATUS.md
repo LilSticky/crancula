@@ -22,6 +22,15 @@ follow-ups [#172](https://github.com/LilSticky/crancula/issues/172) and [#173](h
 Gate: 1009 node and 1435 Angular unit tests, lint, i18n; e2e `record-a-tape`, `boundary` and `tape-layout` green locally,
 full e2e in CI. **Sound not checked by hand yet**: the user has not listened to a Recording (WAV or MP3).
 
+**Done:** Discovery of the later slices (2026-10-25, branch `docs/later-slices-discovery`): user decisions 15–28 in
+[discovery/later.md](discovery/later.md), their terms in the dictionary, slice issues
+[#167](https://github.com/LilSticky/crancula/issues/167) (Bring Scores onto a tape),
+[#168](https://github.com/LilSticky/crancula/issues/168) (Cut a tape in pieces),
+[#169](https://github.com/LilSticky/crancula/issues/169) (Read a tape as Scores) and
+[#170](https://github.com/LilSticky/crancula/issues/170) (Cut several tapes side by side, discovery still to do).
+The specs 010–012 are written on their own branches, each with a draft pull request. The Project board now holds
+every issue (29 were missing); its built-in auto-add workflow still has to be enabled in the GitHub UI.
+
 **Done:** [Ready-made Organs (#162)](https://github.com/LilSticky/crancula/issues/162) (2026-10-24, branch
 `claude/issue-162-20261024-2112`): the term is Preset (German Vorlage); a new Organ offers the Presets as starting
 points (buttons in the Organ editor's page head). `api/organ/organ-preset.ts` holds the 20er-Drehorgel (Carl Frei,
