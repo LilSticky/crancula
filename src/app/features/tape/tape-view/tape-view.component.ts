@@ -491,8 +491,12 @@ export class TapeViewComponent {
     this.endPlayheadDrag();
   }
 
-  /** A cancelled drag keeps the playhead where it was last moved, and goes on from there if the Preview played at the press. */
-  protected onPlayheadGripCancel(): void {
+  /**
+   * A cancelled drag, or one whose pointer capture was lost, keeps the playhead where it was last moved, and goes on from
+   * there if the Preview played at the press. After a release the drag is over already, so the lost capture changes nothing.
+   */
+  protected onPlayheadGripCancel(event: PointerEvent): void {
+    event.stopPropagation();
     this.endPlayheadDrag();
   }
 

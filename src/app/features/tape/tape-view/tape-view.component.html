@@ -121,7 +121,7 @@
           }
         </g>
         @if (playheadGrip(); as grip) {
-          <rect class="playhead-grip ew-resize" data-testid="playhead-grip" aria-hidden="true" [attr.x]="grip.x" y="0" [attr.width]="grip.width" [attr.height]="grip.height" (pointerdown)="onPlayheadGripDown($event)" (pointermove)="onPlayheadGripMove($event, tapeSvg)" (pointerup)="onPlayheadGripUp($event, tapeSvg)" (pointercancel)="onPlayheadGripCancel()" />
+          <rect class="playhead-grip ew-resize" data-testid="playhead-grip" aria-hidden="true" [attr.x]="grip.x" y="0" [attr.width]="grip.width" [attr.height]="grip.height" (pointerdown)="onPlayheadGripDown($event)" (pointermove)="onPlayheadGripMove($event, tapeSvg)" (pointerup)="onPlayheadGripUp($event, tapeSvg)" (pointercancel)="onPlayheadGripCancel($event)" (lostpointercapture)="onPlayheadGripCancel($event)" />
           <path class="playhead-grip-mark" aria-hidden="true" [attr.d]="grip.mark" />
         }
       </svg>

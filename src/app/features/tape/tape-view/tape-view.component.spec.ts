@@ -4024,6 +4024,33 @@ describe('TapeViewComponent', () => {
       expect(playheadColumn(view())).toBe(37);
     });
 
+    it('resumes a Preview that was playing when the grip loses its pointer, from the Column last moved to', async () => {
+      const {onColumn, columnX, clickToggle, down, move, view, settle} = await setup();
+      await clickToggle();
+      await down(onColumn(0));
+      await move({clientX: columnX(37.5), clientY: RULER_Y});
+
+      grip(view()).dispatchEvent(new PointerEvent('lostpointercapture', {pointerId: 1, bubbles: true}));
+      await settle();
+
+      expect(isPreviewing(view())).toBe(true);
+      expect(playheadColumn(view())).toBe(37);
+    });
+
+    it('does not pass the lost pointer capture of the grip on to the drawing', async () => {
+      const {onColumn, clickToggle, down, view, settle} = await setup();
+      await clickToggle();
+      await down(onColumn(0));
+      const onDrawing = vi.fn();
+      const svg = required(view()?.querySelector('[data-testid="tape-scroll"] svg'), 'Tape drawing');
+      svg.addEventListener('lostpointercapture', onDrawing);
+
+      grip(view()).dispatchEvent(new PointerEvent('lostpointercapture', {pointerId: 1, bubbles: true}));
+      await settle();
+
+      expect(onDrawing).not.toHaveBeenCalled();
+    });
+
     it('leaves the Tape and the undo history unchanged by a playhead drag while the Preview plays', async () => {
       const {onColumn, columnX, clickToggle, drag, update, undoButton, view, tape} = await setup();
       const storedHoles = () => TestBed.inject(TapeLibrary).tapeEntities().find((candidate) => candidate.id === tape.id)?.holes;
