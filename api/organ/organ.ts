@@ -1,3 +1,4 @@
+import type {CrankSpeedRange} from './crank-speed-range';
 import type {MidiNoteNumber} from './midi-note-number';
 
 declare const organIdBrand: unique symbol;
@@ -31,6 +32,8 @@ export interface Organ {
   readonly minimumGap: Millimetres;
   /** Blank Tape before Column 1, with an angled start; 0 means none. */
   readonly leadIn: Millimetres;
+  /** The Crank speeds the Organ's Preview and Crank slider cover. */
+  readonly crankSpeedRange: CrankSpeedRange;
   /** Tape that passes the Tape Bed per turn of the Crank; absent until the Organ is set up for a Preview. */
   readonly tapePerCrankTurn?: Millimetres;
   readonly pipes: readonly Pipe[];

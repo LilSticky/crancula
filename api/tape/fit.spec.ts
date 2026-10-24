@@ -1,3 +1,4 @@
+import {DEFAULT_CRANK_SPEED_RANGE} from '../organ/crank-speed-range';
 import {describe, expect, it} from 'vitest';
 import {midiNoteNumber, type MidiNoteNumber} from '../organ/midi-note-number';
 import {asValidOrgan, millimetres, organId, type Organ} from '../organ/organ';
@@ -58,6 +59,7 @@ function anOrgan(pipeNotes: readonly number[]): Organ {
     tapeBed: {tapeWidth: one, holeDiameter: one, rowSpacing: one},
     minimumGap: one,
     leadIn: one,
+    crankSpeedRange: DEFAULT_CRANK_SPEED_RANGE,
     pipes: pipeNotes.map((each) => ({
       note: defined(midiNoteNumber(each), 'pipe'),
     })),

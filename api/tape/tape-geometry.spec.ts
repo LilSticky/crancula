@@ -13,6 +13,8 @@ function testOrgan(name: string, pipeCount: number, leadIn: number): Organ {
     tapeBed: {tapeWidth: 120, holeDiameter: 2.5, rowSpacing: 3.5},
     minimumGap: 1.5,
     leadIn,
+    slowestCrankSpeed: 30,
+    fastestCrankSpeed: 120,
     tapePerCrankTurn: null,
     pipes: Array.from({length: pipeCount}, (_, row) => ({note: 60 + 2 * row})),
   });
@@ -97,6 +99,8 @@ describe('tapeGeometry', () => {
       tapeBed: streetOrgan.tapeBed,
       minimumGap: streetOrgan.minimumGap,
       leadIn: streetOrgan.leadIn,
+      slowestCrankSpeed: 30,
+      fastestCrankSpeed: 120,
       tapePerCrankTurn: null,
       pipes: [...streetOrgan.pipes].reverse().map((pipe) => ({note: pipe.note})),
     });
@@ -125,6 +129,8 @@ describe('tapeGeometry', () => {
         tapeBed: streetOrgan.tapeBed,
         minimumGap: streetOrgan.minimumGap,
         leadIn: streetOrgan.leadIn,
+        slowestCrankSpeed: 30,
+        fastestCrankSpeed: 120,
         tapePerCrankTurn: null,
         pipes: [...streetOrgan.pipes].reverse().map((pipe) => ({note: pipe.note})),
       });
@@ -147,6 +153,8 @@ describe('tapeGeometry', () => {
           : {tapeWidth: 100, holeDiameter: 3, rowSpacing: 12},
         minimumGap,
         leadIn,
+        slowestCrankSpeed: 30,
+        fastestCrankSpeed: 120,
         tapePerCrankTurn: null,
         pipes: Array.from({length: 4}, (_, row) => ({note: 60 + 2 * row})),
       });

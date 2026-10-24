@@ -22,6 +22,8 @@ function organWith(holeDiameter: number): Organ {
     tapeBed: {tapeWidth: 120, holeDiameter, rowSpacing: holeDiameter + 1},
     minimumGap: 1.5,
     leadIn: 20,
+    slowestCrankSpeed: 30,
+    fastestCrankSpeed: 120,
     tapePerCrankTurn: null,
     pipes: [{note: 60}, {note: 62}],
   });

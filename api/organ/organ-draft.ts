@@ -1,3 +1,4 @@
+import {DEFAULT_CRANK_SPEED_RANGE} from './crank-speed-range';
 import type {Organ, OrganId} from './organ';
 
 /** A Pipe as entered in the editor; the note may still be missing or out of range. */
@@ -17,6 +18,9 @@ export interface OrganDraft {
   };
   readonly minimumGap: number | null;
   readonly leadIn: number | null;
+  /** Turns per minute; the slowest and fastest Crank speed of the Organ's range. */
+  readonly slowestCrankSpeed: number | null;
+  readonly fastestCrankSpeed: number | null;
   /** `null` when the Organ has none. */
   readonly tapePerCrankTurn: number | null;
   readonly pipes: readonly PipeDraft[];
@@ -28,6 +32,8 @@ export function emptyOrganDraft(): OrganDraft {
     tapeBed: {tapeWidth: null, holeDiameter: null, rowSpacing: null},
     minimumGap: null,
     leadIn: null,
+    slowestCrankSpeed: DEFAULT_CRANK_SPEED_RANGE.slowest,
+    fastestCrankSpeed: DEFAULT_CRANK_SPEED_RANGE.fastest,
     tapePerCrankTurn: null,
     pipes: [],
   };
@@ -40,6 +46,8 @@ export function toDraft(organ: Organ): OrganDraft {
     tapeBed: {...organ.tapeBed},
     minimumGap: organ.minimumGap,
     leadIn: organ.leadIn,
+    slowestCrankSpeed: organ.crankSpeedRange.slowest,
+    fastestCrankSpeed: organ.crankSpeedRange.fastest,
     tapePerCrankTurn: organ.tapePerCrankTurn ?? null,
     pipes: organ.pipes.map((pipe) => ({note: pipe.note})),
   };

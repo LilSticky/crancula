@@ -28,6 +28,8 @@ const organ: Organ = (() => {
     tapeBed: {tapeWidth: 120, holeDiameter: 3, rowSpacing: 4},
     minimumGap: 1,
     leadIn: 20,
+    slowestCrankSpeed: 30,
+    fastestCrankSpeed: 120,
     tapePerCrankTurn: null,
     pipes: [{note: 60}, {note: 62}],
   });
@@ -42,6 +44,8 @@ const wideHoleOrgan: Organ = (() => {
     tapeBed: {tapeWidth: 120, holeDiameter: 6.5, rowSpacing: 8},
     minimumGap: 1,
     leadIn: 20,
+    slowestCrankSpeed: 30,
+    fastestCrankSpeed: 120,
     tapePerCrankTurn: null,
     pipes: [{note: 60}, {note: 62}],
   });
@@ -402,6 +406,8 @@ describe('performance on a 2,000-Column Tape (SC-002, research R10)', () => {
       tapeBed: {tapeWidth: 160, holeDiameter: 3, rowSpacing: 4},
       minimumGap: 1,
       leadIn: 20,
+      slowestCrankSpeed: 30,
+      fastestCrankSpeed: 120,
       tapePerCrankTurn: null,
       pipes: notes.map((note) => ({note})),
     });

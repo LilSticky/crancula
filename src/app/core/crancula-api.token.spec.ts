@@ -3,7 +3,7 @@ import type {CranculaApi, OrganLibrarySnapshot, SvgSaveRequest, TapeLibrarySnaps
 import {CRANCULA_API, createInMemoryCranculaApi} from './crancula-api.token';
 
 const snapshot: OrganLibrarySnapshot = {
-  version: 4,
+  version: 5,
   organs: [
     {
       id: '3f2b8c1e-9d4a-4f6b-8e2c-1a2b3c4d5e6f',
@@ -11,6 +11,7 @@ const snapshot: OrganLibrarySnapshot = {
       tapeBed: {tapeWidth: 120, holeDiameter: 2.5, rowSpacing: 3.5},
       minimumGap: 1.5,
       leadIn: 20,
+      crankSpeedRange: {slowest: 30, fastest: 120},
       pipes: [{note: 60}],
     },
   ],

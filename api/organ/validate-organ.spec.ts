@@ -80,6 +80,62 @@ describe('validateOrgan', () => {
     });
   });
 
+  describe('the Crank speed range', () => {
+    it('gives the Organ the slowest and fastest Crank speed of the draft', () => {
+      const result = validateOrgan(validDraft({slowestCrankSpeed: 40, fastestCrankSpeed: 90}));
+
+      expect(result.ok && result.value.crankSpeedRange).toEqual({slowest: 40, fastest: 90});
+    });
+
+    it('gives a new Organ the default range of 30 to 120 when the draft has it', () => {
+      const result = validateOrgan(validDraft());
+
+      expect(result.ok && result.value.crankSpeedRange).toEqual({slowest: 30, fastest: 120});
+    });
+
+    it('requires the slowest Crank speed', () => {
+      expect(violationsOf(validDraft({slowestCrankSpeed: null}))).toEqual([
+        {code: 'value-required', path: 'slowestCrankSpeed'},
+      ]);
+    });
+
+    it('requires the fastest Crank speed', () => {
+      expect(violationsOf(validDraft({fastestCrankSpeed: null}))).toEqual([
+        {code: 'value-required', path: 'fastestCrankSpeed'},
+      ]);
+    });
+
+    it.each([0, 301, Number.NaN])('rejects the slowest Crank speed %d as outside 1 to 300', (slowestCrankSpeed) => {
+      expect(violationsOf(validDraft({slowestCrankSpeed, fastestCrankSpeed: 120}))).toEqual([
+        {code: 'crank-speed-out-of-range', path: 'slowestCrankSpeed', params: {min: 1, max: 300}},
+      ]);
+    });
+
+    it.each([0, 301, Number.POSITIVE_INFINITY])('rejects the fastest Crank speed %d as outside 1 to 300', (fastestCrankSpeed) => {
+      expect(violationsOf(validDraft({slowestCrankSpeed: 30, fastestCrankSpeed}))).toEqual([
+        {code: 'crank-speed-out-of-range', path: 'fastestCrankSpeed', params: {min: 1, max: 300}},
+      ]);
+    });
+
+    it.each([
+      [1, 2],
+      [299, 300],
+    ])('accepts the Crank speed range %d–%d at a bound', (slowestCrankSpeed, fastestCrankSpeed) => {
+      const result = validateOrgan(validDraft({slowestCrankSpeed, fastestCrankSpeed}));
+
+      expect(result.ok).toBe(true);
+    });
+
+    it.each([
+      [90, 40],
+      [60, 60],
+    ])('rejects a slowest Crank speed %d that is not below the fastest %d', (slowestCrankSpeed, fastestCrankSpeed) => {
+      expect(violationsOf(validDraft({slowestCrankSpeed, fastestCrankSpeed}))).toEqual([
+        {code: 'slowest-not-below-fastest', path: 'fastestCrankSpeed'},
+      ]);
+    });
+  });
+
   describe('rule violations', () => {
     it('requires a name', () => {
       expect(violationsOf(validDraft({name: '   '}))).toEqual([{code: 'name-required', path: 'name'}]);
