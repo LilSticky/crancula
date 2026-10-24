@@ -14,10 +14,10 @@ playhead (toolbar button or Space), from any Column (ruler or field); each Tape 
 plays. [ADR 24](adr/0024-preview-synthesised-with-web-audio.md): Web Audio in the renderer behind a port, look-ahead
 scheduler on the audio clock. Review findings fixed; accepted test gaps in
 [audit.md](../specs/007-crank-a-tape/audit.md). T044 (ux-review) not done: [#151](https://github.com/LilSticky/crancula/issues/151). Gate: 844 node
-and 1270 Angular unit tests, lint, i18n (309 keys); e2e in CI. Sound itself is not tested automatically: listen
-once by hand on Windows ([quickstart](../specs/007-crank-a-tape/quickstart.md)).
+and 1270 Angular unit tests, lint, i18n (309 keys); e2e in CI. Sound itself is not tested automatically; the user
+listened to a Preview by hand on Windows on 2026-10-24 and it works ([quickstart](../specs/007-crank-a-tape/quickstart.md)).
 
-**Next step:** listen to a Preview by hand, fix the UX findings in [#151](https://github.com/LilSticky/crancula/issues/151)
+**Next step:** fix the UX findings in [#151](https://github.com/LilSticky/crancula/issues/151)
 (then retake the README screenshots), or start Record a tape ([discovery/later.md](discovery/later.md), section 1, slice 2).
 
 **Done:** v0.2.0 released (2026-10-24, [CHANGELOG](../CHANGELOG.md#020---2026-10-24)): Crank a tape (Preview, Crank
