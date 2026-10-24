@@ -2090,6 +2090,24 @@ describe('TapeViewComponent', () => {
       expect(count()).toBe("1 Hole can't be cut");
     });
 
+    it('a tap on a Hole and then a still tap on its grip within the double-tap window keeps the Hole, with no save', async () => {
+      const {tape, view, at, down, up, click, handle, update} = await setup();
+      const hole = rectAt(view(), 24, 10) as Element;
+
+      await down(hole, at(11, 24));
+      await up(at(11, 24));
+      await click(hole);
+      const endHandle = handle('end') as Element;
+      await down(endHandle, at(13, 24, -1));
+      await up(at(13, 24, -1));
+      await click(endHandle);
+
+      expect(update).not.toHaveBeenCalled();
+      expect(storedHoles(tape.id)).toContain('24:10+3');
+      expect(rectAt(view(), 24, 10)).not.toBeNull();
+      expect(selected(view())).toEqual(['24:10']);
+    });
+
     it('offers handles for the selected Hole only', async () => {
       const {view, click, handle} = await setup();
       expect(handle('start')).toBeNull();

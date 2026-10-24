@@ -849,10 +849,16 @@ export class TapeViewComponent {
     const geometry = this.geometry();
     if (geometry === undefined) return;
     const pressed = this.holeDrag.grabbed;
+    const pressedPart = this.holeDrag.grabbedPart;
     const box = svg.getBoundingClientRect();
     const outcome = this.holeDrag.finish(gridAt(event.clientX - box.left, event.clientY - box.top - RULER_HEIGHT, this.scale(), geometry));
     if (outcome === undefined) {
-      if (pressed !== undefined) this.tapHole({row: pressed.row, start: pressed.start}, event.shiftKey || this.isAdditive(event));
+      if (pressed === undefined) return;
+      if (pressedPart !== 'body') {
+        this.tapMemory = undefined;
+        return;
+      }
+      this.tapHole({row: pressed.row, start: pressed.start}, event.shiftKey || this.isAdditive(event));
       return;
     }
     this.tapMemory = undefined;
