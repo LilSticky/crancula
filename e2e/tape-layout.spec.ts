@@ -267,3 +267,103 @@ test.describe('The Tape view in true millimetres on one screen', () => {
     await expect(window.getByTestId('side-panel')).toBeVisible();
   });
 });
+
+/** The value shown next to a label of the Tape section (`dt` followed by its `dd`). */
+function sectionValue(window: Page, label: string): Locator {
+  return window.getByTestId('tape-section').getByText(label, {exact: true}).locator('xpath=following-sibling::dd[1]');
+}
+
+/** The vertical position of the text baseline of an element, found with a zero-height marker placed on the baseline. */
+const baselineOf = (locator: Locator): Promise<number> =>
+  locator.evaluate((element) => {
+    const marker = document.createElement('span');
+    marker.style.cssText = 'display: inline-block; width: 0; height: 0; vertical-align: baseline;';
+    element.appendChild(marker);
+    const {top} = marker.getBoundingClientRect();
+    marker.remove();
+    return top;
+  });
+
+test.describe('The Tape view with the Preview toggles and the Tape section at 1440 x 900 (#151)', () => {
+  test('German: the 2:1 zoom toggle is fully visible inside the page head', async () => {
+    const launched = await launchApp();
+    const {app, window} = launched;
+    await resizeWindowOrSkip(launched, 1440, 900, true);
+    await defineOrganWithLeadIn(window);
+    await createTapeFromSong(window, 'Scale', melodyC3ToC5(), {columnLength: '5'});
+    await window.getByTestId('language-switch').locator('[data-language="de"]').click();
+
+    const toggle = await boxOf(window.getByTestId('zoom').getByRole('radio', {name: '2:1'}));
+    const group = window.getByTestId('zoom');
+    const groupBox = await boxOf(group);
+    const head = window.getByTestId('page-head-actions');
+    const headBox = await boxOf(head);
+    const viewport = await window.evaluate(() => ({width: globalThis.innerWidth, height: globalThis.innerHeight}));
+    expect(toggle.right, `2:1 right edge ${toggle.right} vs zoom group right edge ${groupBox.right}`).toBeLessThanOrEqual(groupBox.right + 0.5);
+    expect(toggle.right, `2:1 right edge ${toggle.right} vs page head right edge ${headBox.right}`).toBeLessThanOrEqual(headBox.right + 0.5);
+    expect(toggle.right, `2:1 right edge ${toggle.right} vs viewport width ${viewport.width}`).toBeLessThanOrEqual(viewport.width);
+    expect(await group.evaluate((element) => element.scrollWidth - element.clientWidth), 'zoom group overflow').toBeLessThanOrEqual(1);
+    expect(await head.evaluate((element) => element.scrollWidth - element.clientWidth), 'page head overflow').toBeLessThanOrEqual(1);
+    await app.close();
+  });
+
+  test('the Organ row label and value share a baseline', async () => {
+    const launched = await launchApp();
+    const {app, window} = launched;
+    await resizeWindowOrSkip(launched, 1440, 900, true);
+    await defineOrganWithLeadIn(window);
+    await createTapeFromSong(window, 'Scale', melodyC3ToC5(), {columnLength: '5'});
+
+    const label = await baselineOf(window.getByTestId('tape-section').getByText('Organ', {exact: true}));
+    const value = await baselineOf(sectionValue(window, 'Organ'));
+    expect(Math.abs(label - value), `label baseline ${label} vs value baseline ${value}`).toBeLessThanOrEqual(1);
+    await app.close();
+  });
+
+  test('at least 8 px between the Holes row and the Parts on the Tape heading', async () => {
+    const launched = await launchApp();
+    const {app, window} = launched;
+    await resizeWindowOrSkip(launched, 1440, 900, true);
+    await defineOrganWithLeadIn(window);
+    await createTapeFromSong(window, 'Scale', melodyC3ToC5(), {columnLength: '5'});
+
+    const holes = await boxOf(sectionValue(window, 'Holes'));
+    const parts = await boxOf(window.getByTestId('tape-section').getByRole('heading', {level: 3, name: 'Parts on the Tape'}));
+    expect(parts.top - holes.bottom, `gap between Holes (${holes.bottom}) and Parts heading (${parts.top})`).toBeGreaterThanOrEqual(8);
+    await app.close();
+  });
+
+  for (const language of ['en', 'de'] as const) {
+    test(`${language === 'en' ? 'English' : 'German'}: every page head action renders on one line`, async () => {
+      const launched = await launchApp();
+      const {app, window} = launched;
+      await resizeWindowOrSkip(launched, 1440, 900, true);
+      await defineOrganWithLeadIn(window);
+      await createTapeFromSong(window, 'Scale', melodyC3ToC5(), {columnLength: '5'});
+      await window.getByTestId('language-switch').locator(`[data-language="${language}"]`).click();
+
+      const buttons = await window.getByTestId('page-head-actions').locator('button').evaluateAll((elements) =>
+        elements.map((button) => {
+          const {height} = button.getBoundingClientRect();
+          const rows: number[] = [];
+          const walker = document.createTreeWalker(button, NodeFilter.SHOW_TEXT);
+          for (let node = walker.nextNode(); node !== null; node = walker.nextNode()) {
+            if (!node.textContent?.trim() || node.parentElement?.closest('mat-icon')) continue;
+            const range = document.createRange();
+            range.selectNodeContents(node);
+            for (const rect of range.getClientRects()) rows.push(rect.top);
+          }
+          rows.sort((a, b) => a - b);
+          const lines = rows.filter((top, index) => index === 0 || top - (rows[index - 1] ?? top) > 4).length;
+          return {text: button.textContent?.trim(), height, lines};
+        }),
+      );
+      expect(buttons.length).toBeGreaterThan(1);
+      for (const {text, height, lines} of buttons) {
+        expect(height, `${text} height`).toBeLessThanOrEqual(40.5);
+        expect(lines, `${text} lines`).toBeLessThanOrEqual(1);
+      }
+      await app.close();
+    });
+  }
+});
