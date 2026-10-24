@@ -6,9 +6,17 @@ Issues: [GitHub](https://github.com/LilSticky/crancula/issues)
 
 ## Current slice
 
-No slice in progress.
+[Record a tape](../specs/009-record-a-tape/spec.md) ([#165](https://github.com/LilSticky/crancula/issues/165), v0.2, branch
+`009-record-a-tape`, draft PR [#166](https://github.com/LilSticky/crancula/pull/166)): save the whole Tape at its Crank speed as a
+WAV or MP3 Recording. Spec, clarifications (Recording/Record approved, Cutting Problems recorded as drawn, mono
+44.1 kHz, MP3 128 kbit/s), plan and [ADR 26](adr/0026-recording-rendered-offline-saved-by-main.md) done. Done: T001–T016
+(i18n, lamejs dependency, domain: WAV writer, PCM, file name, Preview note windows, save requests; main-process IPC).
 
-**Next step:** Record a tape ([discovery/later.md](discovery/later.md), section 1, slice 2).
+**Next step:** T017–T020 in [tasks.md](../specs/009-record-a-tape/tasks.md): extract the Preview voices, then the
+TapeRecorder service (red specs written).
+
+**Known:** `npm install` could not refresh `node_modules` (EBUSY: Electron processes from 2026-10-24 were running);
+lamejs is in `package-lock.json` only. Run `npm install` before T022.
 
 **Done:** [Ready-made Organs (#162)](https://github.com/LilSticky/crancula/issues/162) (2026-10-24, branch
 `claude/issue-162-20261024-2112`): the term is Preset (German Vorlage); a new Organ offers the Presets as starting

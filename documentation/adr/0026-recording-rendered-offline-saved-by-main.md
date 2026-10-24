@@ -24,8 +24,8 @@ encoder is LAME or Shine, both LGPL; the app is MIT. Details: `specs/009-record-
   as its own unmodified chunk and listed in the third-party notices.
 - We will save in two IPC calls: `recording:choose-file` shows the save dialog in the main process and
   returns a single-use target id and the format from the chosen extension; `recording:write-file` takes
-  the target and the bytes, checks the format's magic bytes and size, and writes. The path never leaves
-  the main process.
+  the target and the bytes, checks the format's magic bytes and size, and writes. The renderer never
+  names a path; it only learns the saved path to show it to the owner.
 
 ## Consequences
 
