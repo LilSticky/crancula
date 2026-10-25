@@ -1,5 +1,5 @@
 import {midiNoteNumber, type MidiNoteNumber} from '../../organ/midi-note-number';
-import {beatTypeOf, tick, ticksPerQuarter, type Key, type Tick, type TicksPerQuarter, type TimeSignature} from '../song';
+import {beatTypeOf, fifthsOf, tick, ticksPerQuarter, type Key, type Tick, type TicksPerQuarter, type TimeSignature} from '../song';
 import type {LeftOut} from '../read-song-source';
 import type {ScoreKey, ScoreMeasure, ScoreNote, ScorePart, ScoreTime, ScoreTranspose} from './score-measures';
 
@@ -40,8 +40,6 @@ const FALLBACK_TICKS_PER_QUARTER = 960;
 const MAXIMUM_TICKS_PER_QUARTER = 32767;
 /** The most beats a Bar of a Song may have (song.ts). */
 const MAXIMUM_BEATS = 99;
-/** The most fifths a Key of a Song may have (song.ts). */
-const MAXIMUM_FIFTHS = 7;
 const SEMITONES_PER_OCTAVE = 12;
 const MINIMUM_MIDI_NOTE = 0;
 const MAXIMUM_MIDI_NOTE = 127;
@@ -197,7 +195,9 @@ function barLengthOf(time: Omit<TimeSignature, 'start'>, perQuarter: TicksPerQua
 
 /** A Key as a Song keeps it, or `undefined` when the Score writes one a Song cannot keep. */
 function keyOf(key: ScoreKey | undefined): Omit<Key, 'start'> | undefined {
-  return key === undefined || Math.abs(key.fifths) > MAXIMUM_FIFTHS ? undefined : {fifths: key.fifths, mode: key.mode};
+  if (key === undefined) return undefined;
+  const fifths = fifthsOf(key.fifths);
+  return fifths === undefined ? undefined : {fifths, mode: key.mode};
 }
 
 /** The Time signatures, Keys and upbeat kept so far, of the first part, in played-out order (research R9). */

@@ -61,11 +61,20 @@ export interface TimeSignature {
   readonly beatType: BeatType;
 }
 
+const FIFTHS = [-7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7] as const;
+
+/** An integer −7…7: the sharps (positive) or flats (negative) of a Key. */
+export type Fifths = (typeof FIFTHS)[number];
+
+/** @returns the fifths, or `undefined` if `value` is not an integer −7…7 */
+export function fifthsOf(value: number): Fifths | undefined {
+  return FIFTHS.find((candidate) => candidate === value);
+}
+
 /** From `start`, the Key has `fifths` sharps (positive) or flats (negative) in `mode`. */
 export interface Key {
   readonly start: Tick;
-  /** An integer −7…7. */
-  readonly fifths: number;
+  readonly fifths: Fifths;
   readonly mode: Mode;
 }
 
@@ -152,7 +161,6 @@ function startsIncrease(starts: readonly Tick[]): boolean {
 }
 
 const MAXIMUM_BEATS = 99;
-const MAXIMUM_FIFTHS = 7;
 
 function timeSignaturesValid(timeSignatures: readonly TimeSignature[]): boolean {
   return (
@@ -170,12 +178,7 @@ function timeSignaturesValid(timeSignatures: readonly TimeSignature[]): boolean 
 function keysValid(keys: readonly Key[]): boolean {
   return (
     startsIncrease(keys.map((each) => each.start)) &&
-    keys.every(
-      (each) =>
-        Number.isInteger(each.fifths) &&
-        Math.abs(each.fifths) <= MAXIMUM_FIFTHS &&
-        modeOf(each.mode) !== undefined,
-    )
+    keys.every((each) => fifthsOf(each.fifths) !== undefined && modeOf(each.mode) !== undefined)
   );
 }
 

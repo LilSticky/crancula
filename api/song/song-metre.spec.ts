@@ -11,7 +11,7 @@
 import {describe, expect, it} from 'vitest';
 import {midiNoteNumber} from '../organ/midi-note-number';
 import {note, part, song, songId, tick, ticksPerQuarter, type Key, type Part, type Song, type TimeSignature} from './song';
-import {songMetre} from './song-metre';
+import {songMetre, type SongMetre} from './song-metre';
 
 const UUID = '3f2b8c1e-9d4a-4f6b-8e2c-1a2b3c4d5e6f';
 const QUARTER = 480;
@@ -101,5 +101,11 @@ describe('songMetre gives the first Time signature, the first Key and the upbeat
     const metre = songMetre(songWith({keys: [{start: defined(tick(0), 'start'), fifths: -3, mode: 'minor'}]}));
 
     expect(metre).toStrictEqual({key: {fifths: -3, mode: 'minor'}});
+  });
+
+  it('types the key of a SongMetre with −7…7 fifths, so a key with 8 fifths does not type', () => {
+    // @ts-expect-error: a SongMetre key has −7…7 fifths, so 8 does not type
+    const metre: SongMetre = {key: {fifths: 8, mode: 'major'}};
+    expect(metre.key?.fifths).toBe(8);
   });
 });

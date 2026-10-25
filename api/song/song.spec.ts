@@ -9,6 +9,7 @@ import {
   songId,
   tick,
   ticksPerQuarter,
+  type Fifths,
   type Key,
   type Note,
   type Part,
@@ -168,8 +169,9 @@ function timeSignatureAt(start: number, beats: number, beatType: TimeSignature['
   return {start: defined(tick(start), 'start'), beats, beatType};
 }
 
+/** The rejection cases pass fifths outside −7…7 on purpose; the runtime rule must reject them too. */
 function keyAt(start: number, fifths: number, mode: Key['mode'] = 'major'): Key {
-  return {start: defined(tick(start), 'start'), fifths, mode};
+  return {start: defined(tick(start), 'start'), fifths: fifths as Fifths, mode};
 }
 
 const QUARTER_TICKS = 480;
@@ -256,6 +258,12 @@ describe('song, Time signatures, upbeat and Keys', () => {
 
   it.each([-7, 0, 7])('accepts a Key with %d fifths', (fifths) => {
     expect(aSongWith({keys: [keyAt(0, fifths)]})).toBeDefined();
+  });
+
+  it('types a Key with 8 fifths as an error, since no key has that many', () => {
+    // @ts-expect-error: a Key has −7…7 fifths, so 8 does not type
+    const eightSharps: Key = {start: defined(tick(0), 'start'), fifths: 8, mode: 'major'};
+    expect(eightSharps.fifths).toBe(8);
   });
 
   it('rejects a mode that is neither major nor minor', () => {

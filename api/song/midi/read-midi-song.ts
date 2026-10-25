@@ -2,6 +2,7 @@ import {midiNoteNumber, type MidiNoteNumber} from '../../organ/midi-note-number'
 import {err, ok, type Result} from '../../result';
 import {
   beatTypeOf,
+  fifthsOf,
   newSongId,
   note,
   type Key,
@@ -27,8 +28,6 @@ const META_TIME_SIGNATURE = 0x58;
 const META_KEY_SIGNATURE = 0x59;
 /** The most beats a Bar of a Song may have (song.ts). */
 const MAXIMUM_BEATS = 99;
-/** The most fifths a Key of a Song may have (song.ts). */
-const MAXIMUM_FIFTHS = 7;
 /** Above this, a signed byte is negative. */
 const SIGNED_BYTE_LIMIT = 0x80;
 const SIGNED_BYTE_RANGE = 0x100;
@@ -133,8 +132,8 @@ function timeSignatureEvent(text: Uint8Array, start: Tick): TimeSignature | unde
 function keyEvent(text: Uint8Array, start: Tick): Key | undefined {
   if (text.length < 2) return undefined;
   const [sharpsOrFlats = 0, mode = 0] = text;
-  const fifths = sharpsOrFlats < SIGNED_BYTE_LIMIT ? sharpsOrFlats : sharpsOrFlats - SIGNED_BYTE_RANGE;
-  return Math.abs(fifths) <= MAXIMUM_FIFTHS ? {start, fifths, mode: mode === 1 ? 'minor' : 'major'} : undefined;
+  const fifths = fifthsOf(sharpsOrFlats < SIGNED_BYTE_LIMIT ? sharpsOrFlats : sharpsOrFlats - SIGNED_BYTE_RANGE);
+  return fifths === undefined ? undefined : {start, fifths, mode: mode === 1 ? 'minor' : 'major'};
 }
 
 /** UTF-8 when valid, otherwise Latin-1; trimmed, and empty counts as absent. */

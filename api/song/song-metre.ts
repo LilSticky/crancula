@@ -1,9 +1,9 @@
-import type {BeatType, Mode, Song} from './song';
+import type {Key, Song, TimeSignature} from './song';
 
 /** The first Time signature, Key and upbeat of a Song, as shown read-only next to it (US4). */
 export interface SongMetre {
-  readonly timeSignature?: {readonly beats: number; readonly beatType: BeatType};
-  readonly key?: {readonly fifths: number; readonly mode: Mode};
+  readonly timeSignature?: Pick<TimeSignature, 'beats' | 'beatType'>;
+  readonly key?: Pick<Key, 'fifths' | 'mode'>;
   /** The upbeat as a fraction of a whole note in lowest terms: 1 quarter is 1/4. */
   readonly upbeat?: {readonly numerator: number; readonly denominator: number};
 }

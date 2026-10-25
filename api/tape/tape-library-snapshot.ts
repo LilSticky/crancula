@@ -4,6 +4,7 @@ import {midiNoteNumber} from '../organ/midi-note-number';
 import {millimetres, organId} from '../organ/organ';
 import {
   beatTypeOf,
+  fifthsOf,
   type Key,
   type Mode,
   modeOf,
@@ -234,7 +235,7 @@ function parseKeys(input: unknown): Result<Key[], string> {
   for (const entry of input as unknown[]) {
     const fields = Array.isArray(entry) && entry.length === 3 ? (entry as unknown[]) : undefined;
     const start = typeof fields?.[0] === 'number' ? tick(fields[0]) : undefined;
-    const fifths = typeof fields?.[1] === 'number' ? fields[1] : undefined;
+    const fifths = typeof fields?.[1] === 'number' ? fifthsOf(fields[1]) : undefined;
     const mode = modeOf(fields?.[2]);
     if (start === undefined || fifths === undefined || mode === undefined) {
       return err('a Key is not [start, fifths, "major" or "minor"]');
