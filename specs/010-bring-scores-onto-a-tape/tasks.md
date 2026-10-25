@@ -70,6 +70,7 @@ Blocks every story: the Song gains its new fields and the import has one entry p
 - [x] T022 [US1] Green: `api/song/musicxml/read-score-song.ts`; wire it into `readSongSource` for XML and (via `mxl.ts`) archive input.
 - [x] T023 [P] [US1] Red: SC-001 in `api/song/musicxml/read-score-song.spec.ts` (or `api/tape/create-tape.spec.ts`): the same two-staff music built as MusicXML and as SMF gives, through `createTape` with the same Organ and Transposition, identical Holes; the `.mxl` of that Score gives the same Song as the `.musicxml` (scenario 5).
 - [x] T024 [US1] Green (needed no change: SC-001 passed on the T022 reader): fix whatever T023 shows (Tick rounding to Columns stays in `createTape`, FR-011).
+- [ ] T024a [US1] Red→Green: `api/song/musicxml/score-measures.spec.ts`: an unpitched Note takes the `<midi-unpitched>` of its instrument (`<instrument id>` → `<score-instrument>`/`<midi-instrument>`), else its display pitch (research R8); found missing after T022.
 
 ### UI
 
