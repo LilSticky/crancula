@@ -8,14 +8,19 @@ Issues: [GitHub](https://github.com/LilSticky/crancula/issues)
 
 **In progress:** v0.3 [Bring Scores onto a tape](https://github.com/LilSticky/crancula/issues/167) (#167, branch
 `010-bring-scores-onto-a-tape`, [spec](../specs/010-bring-scores-onto-a-tape/spec.md)): MusicXML only, one Part per staff,
-repeats played out. Spec clarified, [plan](../specs/010-bring-scores-onto-a-tape/plan.md) written
-([ADR 27](adr/0027-own-musicxml-reader-in-the-domain.md): own MusicXML reader in the domain, fflate 0.8.3 for `.mxl`; Tape
-snapshot v3), and [tasks.md](../specs/010-bring-scores-onto-a-tape/tasks.md) lists 64 tasks. Nothing implemented yet.
+repeats played out. [Plan](../specs/010-bring-scores-onto-a-tape/plan.md) ([ADR 27](adr/0027-own-musicxml-reader-in-the-domain.md):
+own MusicXML reader in the domain, fflate 0.8.3 for `.mxl`; Tape snapshot v3) and [tasks.md](../specs/010-bring-scores-onto-a-tape/tasks.md)
+(64 tasks). US1 (MVP) done: Phases 1–3 implemented, full e2e 158/158 green locally.
+- Song keeps Time signatures, upbeat and Keys (Tape snapshot v3); `readSongSource` picks MIDI or MusicXML by first bytes.
+- Own XML reader, `.mxl` unzip, score-measures, lay-out and `readScoreSong`; the import page takes MIDI or MusicXML (Song Source); `e2e/score-import` green.
+- Decision: a sounding pitch outside MIDI 0–127 is folded by octaves ([research.md](../specs/010-bring-scores-onto-a-tape/research.md)).
+- Known: one Angular test skipped until T039 (grace notes are left out of the Import Summary). `api/` is not covered by
+  `npm run lint` (`ng lint` only covers `src/` and `e2e/`, pre-existing; [#175](https://github.com/LilSticky/crancula/issues/175)).
 
 **Decisions (2026-10-25):** Keys stay at each Tick (dictionary updated); the import button reads "Choose a Song Source"
 (German "Notenquelle wählen"); German term for Song Source is Notenquelle.
 
-**Next step:** `/speckit-implement` for slice 010, starting with Phase 1–2 of `tasks.md`, then US1 (MVP).
+**Next step:** Phase 4 US2 of slice 010 (repeats played out, T028) in `tasks.md`.
 
 **Done:** [Record a tape](../specs/009-record-a-tape/spec.md) ([#165](https://github.com/LilSticky/crancula/issues/165), v0.2,
 branch `009-record-a-tape`, PR [#166](https://github.com/LilSticky/crancula/pull/166)): save the whole Tape at its Crank speed as a
