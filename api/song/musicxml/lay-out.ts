@@ -1,7 +1,7 @@
 import {midiNoteNumber, type MidiNoteNumber} from '../../organ/midi-note-number';
-import {tick, ticksPerQuarter, type Tick, type TicksPerQuarter} from '../song';
+import {beatTypeOf, tick, ticksPerQuarter, type Key, type Tick, type TicksPerQuarter, type TimeSignature} from '../song';
 import type {LeftOut} from '../read-song-source';
-import type {ScoreMeasure, ScoreNote, ScorePart, ScoreTranspose} from './score-measures';
+import type {ScoreKey, ScoreMeasure, ScoreNote, ScorePart, ScoreTime, ScoreTranspose} from './score-measures';
 
 export interface LaidOutNote {
   /** The sounding pitch; `'unpitched'` for a Note without pitch. */
@@ -28,10 +28,20 @@ export interface LaidOut {
   readonly ticksPerQuarter: TicksPerQuarter;
   /** One entry per part and staff that has Notes, in part then staff order. */
   readonly staves: readonly LaidOutStaff[];
+  /** From the first part: each Time signature at the Tick where its Bar starts, sorted; `[]` for free time. */
+  readonly timeSignatures: readonly TimeSignature[];
+  /** The length of the first played measure when it is a shorter upbeat; `undefined` when it is not. */
+  readonly upbeat: Tick | undefined;
+  /** From the first part: each Key at its Tick, sorted; equal Keys in a row are kept once. */
+  readonly keys: readonly Key[];
 }
 
 const FALLBACK_TICKS_PER_QUARTER = 960;
 const MAXIMUM_TICKS_PER_QUARTER = 32767;
+/** The most beats a Bar of a Song may have (song.ts). */
+const MAXIMUM_BEATS = 99;
+/** The most fifths a Key of a Song may have (song.ts). */
+const MAXIMUM_FIFTHS = 7;
 const SEMITONES_PER_OCTAVE = 12;
 const MINIMUM_MIDI_NOTE = 0;
 const MAXIMUM_MIDI_NOTE = 127;
@@ -183,15 +193,88 @@ function addNote(
   if (note.tie.start) build.waiting = build.notes.length - 1;
 }
 
+/** A Time signature as a Song keeps it, or `undefined` when the Score writes one a Song cannot keep. */
+function timeSignatureOf(time: ScoreTime | undefined): Omit<TimeSignature, 'start'> | undefined {
+  if (time === undefined || time.beats > MAXIMUM_BEATS) return undefined;
+  const beatType = beatTypeOf(time.beatType);
+  return beatType === undefined ? undefined : {beats: time.beats, beatType};
+}
+
+/** The length of a Bar in Ticks, exact as in song.ts. */
+function barLengthOf(time: Omit<TimeSignature, 'start'>, perQuarter: TicksPerQuarter): number {
+  return (time.beats * perQuarter * 4) / time.beatType;
+}
+
+/** A Key as a Song keeps it, or `undefined` when the Score writes one a Song cannot keep. */
+function keyOf(key: ScoreKey | undefined): Omit<Key, 'start'> | undefined {
+  return key === undefined || Math.abs(key.fifths) > MAXIMUM_FIFTHS ? undefined : {fifths: key.fifths, mode: key.mode};
+}
+
+/** The Time signatures, Keys and upbeat kept so far, of the first part, in played-out order (research R9). */
+interface MetreBuild {
+  readonly timeSignatures: TimeSignature[];
+  readonly keys: Key[];
+  upbeat: Tick | undefined;
+  /** The Time signature of the measure before, `undefined` for free time. */
+  timeInForce: Omit<TimeSignature, 'start'> | undefined;
+  /** The Key of the measure before, `undefined` before the first Key. */
+  keyInForce: Omit<Key, 'start'> | undefined;
+  /** Whether the measure before is of irregular length, so that the Bar after it starts with its Time signature again. */
+  afterIrregular: boolean;
+}
+
+/** Replaces the last entry when it starts at the same Tick, as a later one in the same place is the one in force. */
+function setAt<T extends {readonly start: Tick}>(entries: T[], entry: T): void {
+  if (entries.at(-1)?.start === entry.start) entries[entries.length - 1] = entry;
+  else entries.push(entry);
+}
+
+function sameTimeSignature(a: Omit<TimeSignature, 'start'>, b: Omit<TimeSignature, 'start'> | undefined): boolean {
+  return b !== undefined && a.beats === b.beats && a.beatType === b.beatType;
+}
+
+function sameKey(a: Omit<Key, 'start'>, b: Omit<Key, 'start'> | undefined): boolean {
+  return b !== undefined && a.fifths === b.fifths && a.mode === b.mode;
+}
+
+/** Adds the metre of a measure of the first part, which starts at `start` Ticks; `first` when it is the first played. */
+function addMetre(build: MetreBuild, measure: ScoreMeasure, start: number, first: boolean, perQuarter: TicksPerQuarter): void {
+  const length = ticksOf(measure.length, measure.divisions, perQuarter);
+  const time = timeSignatureOf(measure.time);
+  const startTick = knownTick(start);
+  if (time !== undefined) {
+    if (!sameTimeSignature(time, build.timeInForce) || build.afterIrregular) {
+      setAt(build.timeSignatures, {start: startTick, ...time});
+    }
+    if (first && length > 0 && length < barLengthOf(time, perQuarter)) build.upbeat = knownTick(length);
+  }
+  build.afterIrregular = time !== undefined && length !== barLengthOf(time, perQuarter);
+  build.timeInForce = time;
+
+  const key = keyOf(measure.key);
+  if (key !== undefined && !sameKey(key, build.keyInForce)) setAt(build.keys, {start: startTick, ...key});
+  build.keyInForce = key;
+}
+
 /**
  * Lays the parts out on one timeline, the measures in the order given (repeats are played out by the caller).
  * Each measure starts where the one before it ends; its length is the longest of its parts (research R6).
+ * The Time signatures, upbeat and Keys come from the first part (research R9).
  */
 export function layOut(parts: readonly ScorePart[], playedOrder: readonly number[]): LaidOut {
   const perQuarter = ticksPerQuarterOf(parts);
   const staves = new Map<string, StaffBuild>();
+  const lead = parts[0];
+  const metre: MetreBuild = {
+    timeSignatures: [],
+    keys: [],
+    upbeat: undefined,
+    timeInForce: undefined,
+    keyInForce: undefined,
+    afterIrregular: false,
+  };
   let measureStart = 0;
-  for (const index of playedOrder) {
+  for (const [position, index] of playedOrder.entries()) {
     let measureLength = 0;
     for (const [partIndex, part] of parts.entries()) {
       const measure = part.measures[index];
@@ -199,6 +282,8 @@ export function layOut(parts: readonly ScorePart[], playedOrder: readonly number
       addMeasure(staves, partIndex, measure, measureStart, perQuarter);
       measureLength = Math.max(measureLength, ticksOf(measure.length, measure.divisions, perQuarter));
     }
+    const leadMeasure = lead?.measures[index];
+    if (leadMeasure !== undefined) addMetre(metre, leadMeasure, measureStart, position === 0, perQuarter);
     measureStart += measureLength;
   }
   return {
@@ -211,5 +296,8 @@ export function layOut(parts: readonly ScorePart[], playedOrder: readonly number
         notes: build.notes.sort(byStartThenNoteNumber),
         leftOut: {graceNotes: build.graceNotes, ornaments: build.ornaments},
       })),
+    timeSignatures: metre.timeSignatures,
+    upbeat: metre.upbeat,
+    keys: metre.keys,
   };
 }

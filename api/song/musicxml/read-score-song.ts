@@ -120,6 +120,9 @@ export function readScoreSong(bytes: Uint8Array, fileName: string): Result<SongR
     name: songNameOf(root, fileName),
     ticksPerQuarter: laidOut.ticksPerQuarter,
     parts: songParts,
+    timeSignatures: laidOut.timeSignatures,
+    upbeat: laidOut.upbeat,
+    keys: laidOut.keys,
   });
   return built === undefined ? err('not-a-score') : ok({song: built, leftOut: leftOutByPart(leftOuts)});
 }

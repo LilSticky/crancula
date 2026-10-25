@@ -788,3 +788,128 @@ describe('readScoreSong gives leftOut per Part, keyed by its PartIndex (US3, R8)
     expect(leftOut.get(partAt(1, 2))).toEqual({graceNotes: 0, ornaments: 0});
   });
 });
+
+/** A one-Part Score written by hand, its first measure carrying the given attributes and a whole Bar of 3 quarters. */
+function scoreWithAttributes(attributes: string): Uint8Array {
+  return utf8(`<?xml version="1.0" encoding="UTF-8"?>
+<score-partwise version="4.0">
+  <part-list><score-part id="P1"><part-name>Flute</part-name></score-part></part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes><divisions>1</divisions>${attributes}</attributes>
+      <note><pitch><step>C</step><octave>5</octave></pitch><duration>3</duration></note>
+    </measure>
+  </part>
+</score-partwise>`);
+}
+
+function songOfBytes(bytes: Uint8Array): Song {
+  return readingOf(readScoreSong(bytes, 'score.musicxml')).song;
+}
+
+describe('readScoreSong keeps the Time signatures, the upbeat and the Keys (US4, R9)', () => {
+  it('keeps 3/4 from Tick 0 and a change to 2/4 at the Tick where its Bar starts', () => {
+    const song = songOf({
+      parts: [
+        {
+          name: 'Flute',
+          measures: [
+            measure({kind: 'attributes', divisions: DIVISIONS, time: {beats: 3, beatType: 4}}, note('C', 5, 12)),
+            measure({kind: 'attributes', time: {beats: 2, beatType: 4}}, note('C', 5, 8)),
+          ],
+        },
+      ],
+    });
+    const quarter = song.ticksPerQuarter;
+
+    expect(song.timeSignatures).toEqual([
+      {start: 0, beats: 3, beatType: 4},
+      {start: 3 * quarter, beats: 2, beatType: 4},
+    ]);
+  });
+
+  it('keeps the upbeat of a first Bar of one quarter in 3/4', () => {
+    const song = songOf({
+      parts: [
+        {
+          name: 'Flute',
+          measures: [
+            measure({kind: 'attributes', divisions: DIVISIONS, time: {beats: 3, beatType: 4}}, note('C', 5, 4)),
+            measure(note('C', 5, 12)),
+          ],
+        },
+      ],
+    });
+
+    expect(song.upbeat).toBe(song.ticksPerQuarter);
+  });
+
+  it('reads 3+2 as 5 beats', () => {
+    const song = songOfBytes(
+      scoreWithAttributes('<time><beats>3+2</beats><beat-type>8</beat-type></time>'),
+    );
+
+    expect(song.timeSignatures).toEqual([{start: 0, beats: 5, beatType: 8}]);
+  });
+
+  it('keeps no Time signature for senza-misura (free time)', () => {
+    const song = songOfBytes(scoreWithAttributes('<time><senza-misura/></time>'));
+
+    expect(song.timeSignatures).toEqual([]);
+  });
+
+  it('keeps G major as fifths 1 in major', () => {
+    const song = songOf({
+      parts: [
+        {
+          name: 'Flute',
+          measures: [measure({kind: 'attributes', divisions: DIVISIONS, key: {fifths: 1, mode: 'major'}}, note('C', 5, 4))],
+        },
+      ],
+    });
+
+    expect(song.keys).toEqual([{start: 0, fifths: 1, mode: 'major'}]);
+  });
+
+  it('keeps E minor as fifths 1 in minor', () => {
+    const song = songOf({
+      parts: [
+        {
+          name: 'Flute',
+          measures: [measure({kind: 'attributes', divisions: DIVISIONS, key: {fifths: 1, mode: 'minor'}}, note('E', 5, 4))],
+        },
+      ],
+    });
+
+    expect(song.keys).toEqual([{start: 0, fifths: 1, mode: 'minor'}]);
+  });
+
+  it('reads the aeolian mode as minor', () => {
+    const song = songOfBytes(scoreWithAttributes('<key><fifths>0</fifths><mode>aeolian</mode></key>'));
+
+    expect(song.keys).toEqual([{start: 0, fifths: 0, mode: 'minor'}]);
+  });
+
+  it('reads the dorian mode as major with its fifths', () => {
+    const song = songOfBytes(scoreWithAttributes('<key><fifths>-1</fifths><mode>dorian</mode></key>'));
+
+    expect(song.keys).toEqual([{start: 0, fifths: -1, mode: 'major'}]);
+  });
+
+  it('keeps the Time signatures of the first Part only (polymetre)', () => {
+    const song = songOf({
+      parts: [
+        {
+          name: 'Flute',
+          measures: [measure({kind: 'attributes', divisions: DIVISIONS, time: {beats: 3, beatType: 4}}, note('C', 5, 12))],
+        },
+        {
+          name: 'Piano',
+          measures: [measure({kind: 'attributes', divisions: DIVISIONS, time: {beats: 2, beatType: 4}}, note('C', 4, 8))],
+        },
+      ],
+    });
+
+    expect(song.timeSignatures).toEqual([{start: 0, beats: 3, beatType: 4}]);
+  });
+});

@@ -11,6 +11,13 @@
  *     ticksPerQuarter: the least common multiple of every divisions value in force in the parts when it is
  *     at most 32767; otherwise 960, and every start and length is rounded to the nearest Tick (research R6).
  *     staves: one entry per part and staff that has Notes, in part then staff order.
+ *     timeSignatures (NEW, T042): from the first part only, every change of its Time signature at the Tick where
+ *       its Bar starts, sorted; a Time signature equal to the one in force is not kept again, except the one in
+ *       force at the start of the Bar after a measure of irregular length (R9). `[]` when none (free time).
+ *     upbeat (NEW, T042): the length in Ticks of the first played measure when it is shorter than its Time
+ *       signature, else `undefined`.
+ *     keys (NEW, T042): from the first part, every Key change at its Tick, sorted; equal consecutive Keys dropped.
+ *     ScoreMeasure.time and ScoreMeasure.key are the attributes in force in each measure (`undefined` for none).
  *   LaidOutStaff { part: number (index in parts); staff: number; notes: readonly LaidOutNote[];
  *                  leftOut: { graceNotes: number; ornaments: number } }                       (NEW, T038)
  *     notes: all the Notes of the staff, the voices of the staff together, sorted by start, then note number.
@@ -95,6 +102,7 @@ interface MeasureFields {
   readonly length?: number;
   readonly notes?: readonly ScoreNote[];
   readonly time?: ScoreMeasure['time'];
+  readonly key?: ScoreMeasure['key'];
   readonly transpose?: ScoreMeasure['transpose'];
   readonly staves?: number;
 }
@@ -121,7 +129,7 @@ function measure(fields: MeasureFields): ScoreMeasure {
     divisions: fields.divisions ?? QUARTER,
     transpose: fields.transpose ?? { chromatic: 0, octaveChange: 0 },
     time: fields.time,
-    key: undefined,
+    key: fields.key,
     staves: fields.staves ?? 1,
     length: fields.length ?? furthest,
     notes,
@@ -546,5 +554,117 @@ describe('layOut leaves grace notes and ornaments in, and counts them (R8, scena
     );
 
     expect(staffOf(layout, 0, 1).leftOut).toEqual({graceNotes: 2, ornaments: 2});
+  });
+});
+
+const THREE_FOUR = {beats: 3, beatType: 4} as const;
+const TWO_FOUR = {beats: 2, beatType: 4} as const;
+const G_MAJOR = {fifths: 1, mode: 'major'} as const;
+const D_MAJOR = {fifths: 2, mode: 'major'} as const;
+
+describe('layOut keeps the Time signatures, the upbeat and the Keys in played-out order (US4, R9)', () => {
+  it('keeps the Time signature of the first Bar from Tick 0', () => {
+    const layout = layOutStraight([part(measure({time: THREE_FOUR, length: 3 * QUARTER}))]);
+
+    expect(layout.timeSignatures).toEqual([{start: 0, beats: 3, beatType: 4}]);
+  });
+
+  it('keeps the upbeat of a first Bar shorter than its Time signature, as its length in Ticks', () => {
+    const layout = layOutStraight([
+      part(measure({time: THREE_FOUR, length: QUARTER}), measure({time: THREE_FOUR, length: 3 * QUARTER})),
+    ]);
+
+    expect(layout.upbeat).toBe(QUARTER);
+  });
+
+  it('keeps a change of Time signature at the Tick where its Bar starts', () => {
+    const layout = layOutStraight([
+      part(measure({time: THREE_FOUR, length: 3 * QUARTER}), measure({time: TWO_FOUR, length: 2 * QUARTER})),
+    ]);
+
+    expect(layout.timeSignatures).toEqual([
+      {start: 0, beats: 3, beatType: 4},
+      {start: 3 * QUARTER, beats: 2, beatType: 4},
+    ]);
+  });
+
+  it('keeps a Time signature change inside a repeated section on every pass, at its played-out Tick', () => {
+    const layout = layOut(
+      [
+        part(
+          measure({time: THREE_FOUR, length: 3 * QUARTER}),
+          measure({time: TWO_FOUR, length: 2 * QUARTER}),
+          measure({time: THREE_FOUR, length: 3 * QUARTER}),
+        ),
+      ],
+      [0, 1, 2, 1, 2],
+    );
+
+    expect(layout.timeSignatures).toEqual([
+      {start: 0, beats: 3, beatType: 4},
+      {start: 3 * QUARTER, beats: 2, beatType: 4},
+      {start: 5 * QUARTER, beats: 3, beatType: 4},
+      {start: 8 * QUARTER, beats: 2, beatType: 4},
+      {start: 10 * QUARTER, beats: 3, beatType: 4},
+    ]);
+  });
+
+  it('keeps every Key change at its Tick, as Time signatures are', () => {
+    const layout = layOutStraight([
+      part(
+        measure({key: G_MAJOR, length: 2 * QUARTER}),
+        measure({key: D_MAJOR, length: 2 * QUARTER}),
+        measure({key: G_MAJOR, length: 2 * QUARTER}),
+      ),
+    ]);
+
+    expect(layout.keys).toEqual([
+      {start: 0, fifths: 1, mode: 'major'},
+      {start: 2 * QUARTER, fifths: 2, mode: 'major'},
+      {start: 4 * QUARTER, fifths: 1, mode: 'major'},
+    ]);
+  });
+
+  it('does not keep a Time signature or a Key equal to the one in force a second time', () => {
+    const layout = layOutStraight([
+      part(
+        measure({time: THREE_FOUR, key: G_MAJOR, length: 3 * QUARTER}),
+        measure({time: THREE_FOUR, key: G_MAJOR, length: 3 * QUARTER}),
+      ),
+    ]);
+
+    expect(layout.timeSignatures).toEqual([{start: 0, beats: 3, beatType: 4}]);
+    expect(layout.keys).toEqual([{start: 0, fifths: 1, mode: 'major'}]);
+  });
+
+  it('records the Time signature in force again at the start of the Bar after an irregular measure', () => {
+    const layout = layOutStraight([
+      part(
+        measure({time: THREE_FOUR, length: 3 * QUARTER}),
+        measure({time: THREE_FOUR, length: 2 * QUARTER}),
+        measure({time: THREE_FOUR, length: 3 * QUARTER}),
+      ),
+    ]);
+
+    expect(layout.timeSignatures).toEqual([
+      {start: 0, beats: 3, beatType: 4},
+      {start: 5 * QUARTER, beats: 3, beatType: 4},
+    ]);
+  });
+
+  it('keeps no Time signature and no upbeat for measures without a Time signature (free time)', () => {
+    const layout = layOutStraight([part(measure({length: QUARTER}), measure({length: 3 * QUARTER}))]);
+
+    expect(layout.timeSignatures).toEqual([]);
+    expect(layout.upbeat).toBeUndefined();
+  });
+
+  it('takes the Time signatures from the first part only (polymetre)', () => {
+    const layout = layOutStraight([
+      part(measure({time: THREE_FOUR, length: 3 * QUARTER})),
+      part(measure({time: TWO_FOUR, length: 3 * QUARTER})),
+    ]);
+
+    expect(layout.timeSignatures).toEqual([{start: 0, beats: 3, beatType: 4}]);
   });
 });

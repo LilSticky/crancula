@@ -1,6 +1,6 @@
 import {midiNoteNumber, type MidiNoteNumber} from '../../organ/midi-note-number';
 import {err, ok, type Result} from '../../result';
-import {modeOf, type Mode} from '../song';
+import type {Mode} from '../song';
 import type {XmlElement} from './xml';
 
 export type ScoreRejection = 'not-a-score';
@@ -188,16 +188,27 @@ function decimalIn(parent: XmlElement, name: string): number | undefined {
   return DECIMAL.test(text) ? Number(text) : notAScore();
 }
 
-function timeOf(element: XmlElement): ScoreTime {
-  return {beats: requiredInteger(element, 'beats', 1), beatType: requiredInteger(element, 'beat-type', 1)};
+/** The beats of a Time signature: an integer, or a sum such as `3+2` (5). */
+const BEATS_SUM = /^\d+(\+\d+)*$/;
+
+/** A Time signature; `senza-misura` (free time) gives none, which is `undefined`. */
+function timeOf(element: XmlElement): ScoreTime | undefined {
+  if (childNamed(element, 'senza-misura') !== undefined) return undefined;
+  const beatsText = textOf(requiredChild(element, 'beats'));
+  const beats = BEATS_SUM.test(beatsText)
+    ? beatsText.split('+').reduce((sum, part) => sum + Number(part), 0)
+    : notAScore();
+  return {beats: beats >= 1 ? beats : notAScore(), beatType: requiredInteger(element, 'beat-type', 1)};
 }
 
-/** A key with a mode other than major or minor leaves no Key in force; a key without a mode is major. */
-function keyOf(element: XmlElement): ScoreKey | undefined {
+/** The minor modes; every other mode, and no mode, is read as major with its fifths (research R9). */
+const MINOR_MODES: ReadonlySet<string> = new Set(['minor', 'aeolian']);
+
+function keyOf(element: XmlElement): ScoreKey {
   const fifths = requiredInteger(element, 'fifths');
   const modeElement = childNamed(element, 'mode');
-  const mode = modeOf(modeElement === undefined ? 'major' : textOf(modeElement));
-  return mode === undefined ? undefined : {fifths, mode};
+  const mode: Mode = modeElement !== undefined && MINOR_MODES.has(textOf(modeElement)) ? 'minor' : 'major';
+  return {fifths, mode};
 }
 
 function transposeOf(element: XmlElement): ScoreTranspose {
