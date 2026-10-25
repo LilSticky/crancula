@@ -1,4 +1,6 @@
 import {expect, test, type Page} from '@playwright/test';
+import {mkdtemp} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {encodeSmf} from '../../api/song/midi/smf-test-helper';
 import {launchApp, type LaunchedApp} from '../support/launch-app';
@@ -212,7 +214,7 @@ test.describe('UX screens', () => {
 
     // Very last, as it changes the Organ: a Tape whose Hole became too short for the raised hole diameter.
     // Export never opens a save dialog here, because the problems dialog stops it first; stub it anyway.
-    await stubSaveDialog(launched.app);
+    const saveDialog = await stubSaveDialog(launched.app);
     await resizeWindow(launched, 1280, 800);
     const blip = encodeSmf({
       format: 1,
@@ -327,5 +329,36 @@ test.describe('UX screens', () => {
     await expect.poll(async () => Number(await window.getByTestId('playhead').getAttribute('data-column'))).toBeGreaterThan(2);
     await window.mouse.move(640, 400);
     await captureTapeView(window, '08j-tape-view-playing');
+
+    // The Record button next to the Preview, at the largest and the smallest window, in English and German.
+    await window.getByTestId('preview-toggle').click();
+    await expect(window.getByTestId('preview-toggle')).toContainText('Preview');
+    await expect(window.getByTestId('record')).toBeEnabled();
+    await resizeWindow(launched, 1440, 900);
+    await window.mouse.move(700, 450);
+    await captureTapeView(window, '18-tape-view-record');
+    await window.getByTestId('language-switch').locator('[data-language="de"]').click();
+    await window.mouse.move(700, 450);
+    await captureTapeView(window, '18b-tape-view-record-german');
+    await resizeWindow(launched, 1024, 700);
+    await window.mouse.move(640, 400);
+    await captureTapeView(window, '18c-tape-view-record-german-compact');
+    await window.getByTestId('language-switch').locator('[data-language="en"]').click();
+    await window.mouse.move(640, 400);
+    await captureTapeView(window, '18d-tape-view-record-compact');
+
+    // Very last: a Recording held mid-render. The offline context never resumes from its first suspend, so progress stays put.
+    await resizeWindow(launched, 1440, 900);
+    await window.evaluate(() => {
+      OfflineAudioContext.prototype.resume = () => new Promise<void>(() => undefined);
+    });
+    await saveDialog.answerWith(join(await mkdtemp(join(tmpdir(), 'crancula-ux-')), 'Scale.wav'));
+    await window.getByTestId('record').click();
+    await expect(window.getByTestId('record')).toContainText(/Recording… \d+ %/);
+    await window.mouse.move(700, 450);
+    await captureTapeView(window, '19-tape-view-recording');
+    await resizeWindow(launched, 1024, 700);
+    await window.mouse.move(640, 400);
+    await captureTapeView(window, '19b-tape-view-recording-compact');
   });
 });

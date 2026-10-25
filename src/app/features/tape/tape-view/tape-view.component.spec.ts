@@ -1,5 +1,5 @@
 import {BreakpointObserver, type BreakpointState} from '@angular/cdk/layout';
-import {ApplicationRef, Component, signal} from '@angular/core';
+import {ApplicationRef, Component, computed, signal} from '@angular/core';
 import {type Observable, of} from 'rxjs';
 import {TestBed} from '@angular/core/testing';
 import {MatDialog} from '@angular/material/dialog';
@@ -40,6 +40,9 @@ import {PLATFORM} from './platform.token';
 import {TapeViewComponent} from './tape-view.component';
 import {TapeSectionComponent} from './tape-section/tape-section.component';
 import {By} from '@angular/platform-browser';
+import {TestbedHarnessEnvironment} from '@angular/cdk/testing/testbed';
+import {MatTooltipHarness} from '@angular/material/tooltip/testing';
+import {TapeRecorder, type RecordingState} from '../recording/tape-recorder';
 import {PREVIEW_SOUND, type PreviewSound, type PreviewVoice} from '../preview/preview-sound';
 
 /** The scale the Tape opens at: 1:1, true size on screen. */
@@ -199,10 +202,17 @@ async function render(options: RenderOptions = {}) {
   };
   const plotterExport = {export: vi.fn((): Promise<void> => Promise.resolve()), saving: signal(false)};
   const previewSound = new FakePreviewSound();
+  const recordingState = signal<RecordingState>({status: 'idle'});
+  const recorder = {
+    state: recordingState.asReadonly(),
+    recording: computed(() => recordingState().status !== 'idle'),
+    record: vi.fn((): Promise<void> => Promise.resolve()),
+  } satisfies Pick<TapeRecorder, 'state' | 'recording' | 'record'>;
   TestBed.configureTestingModule({
     providers: [
       ...(options.realExport ? [] : [{provide: PlotterExport, useValue: plotterExport}]),
       {provide: PREVIEW_SOUND, useValue: (): PreviewSound => previewSound},
+      {provide: TapeRecorder, useValue: recorder},
       provideRouter([
         {path: 'tapes', component: TapeListStubComponent},
         {path: 'tapes/:id', component: TapeViewComponent},
@@ -331,6 +341,9 @@ async function render(options: RenderOptions = {}) {
     sendEditCommand,
     tapeSection,
     previewSound,
+    recorder,
+    recordingState,
+    loader: () => TestbedHarnessEnvironment.loader(harness.fixture),
   };
 }
 
@@ -1018,7 +1031,7 @@ describe('TapeViewComponent', () => {
 
       await open(`/tapes/${tape.id}`);
 
-      expect(toggle(view())?.textContent?.trim()).toBe('Tape details');
+      expect(toggle(view())?.getAttribute('aria-label')).toBe('Tape details');
       expect(toggle(view())?.getAttribute('aria-expanded')).toBe('false');
       expect(panel(view())).toBeNull();
     });
@@ -1036,6 +1049,24 @@ describe('TapeViewComponent', () => {
       await settle();
       expect(toggle(view())?.getAttribute('aria-expanded')).toBe('false');
       expect(panel(view())).toBeNull();
+    });
+
+    it('shows the page head actions as icons below 1180 px, with their labels as accessible names', async () => {
+      const {tape, open, view} = await render({windowWidth: 1100, tapePerCrankTurn: 100});
+      await open(`/tapes/${tape.id}`);
+
+      const names: Record<string, string> = {
+        'preview-toggle': 'Preview',
+        transpose: 'Transpose…',
+        record: 'Record',
+        'side-panel-toggle': 'Tape details',
+      };
+      for (const [testId, name] of Object.entries(names)) {
+        const button = required(view()?.querySelector<HTMLButtonElement>(`[data-testid="page-head-actions"] [data-testid="${testId}"]`), testId);
+        expect(button.classList.contains('icon-only'), testId).toBe(true);
+        expect(button.getAttribute('aria-label'), testId).toBe(name);
+        expect(button.textContent, testId).not.toContain(name);
+      }
     });
 
     it('closes the open side panel on Escape', async () => {
@@ -1743,7 +1774,7 @@ describe('TapeViewComponent', () => {
       await open(`/tapes/${tape.id}`);
 
       const controls = all(view(), 'button, input, select, textarea, [contenteditable]').filter(
-        (control) => control.closest('[data-testid="zoom"], [data-testid="add-hole"], [data-testid="crank-speed-slider"]') === null && !['export', 'side-panel-toggle', 'undo', 'redo', 'transpose', 'tape-section-toggle', 'import-summary-toggle', 'column-length-input', 'column-length-apply', 'crank-speed-input', 'crank-speed-apply', 'preview-toggle', 'preview-start-column'].includes(control.getAttribute('data-testid') ?? ''),
+        (control) => control.closest('[data-testid="zoom"], [data-testid="add-hole"], [data-testid="crank-speed-slider"]') === null && !['export', 'side-panel-toggle', 'undo', 'redo', 'transpose', 'tape-section-toggle', 'import-summary-toggle', 'column-length-input', 'column-length-apply', 'crank-speed-input', 'crank-speed-apply', 'preview-toggle', 'preview-start-column', 'record'].includes(control.getAttribute('data-testid') ?? ''),
       );
       expect(controls).toHaveLength(0);
     });
@@ -4429,6 +4460,196 @@ describe('TapeViewComponent', () => {
 
         expect(previewSound.stops.length).toBeGreaterThan(stopsBefore);
       });
+    });
+  });
+
+  describe('recording a Tape (T023)', () => {
+    it('shows a Record button with its text left of Export in the page head', async () => {
+      const {tape, open, view} = await render();
+      await open(`/tapes/${tape.id}`);
+
+      const record = required(view()?.querySelector<HTMLButtonElement>('[data-testid="page-head-actions"] [data-testid="record"]'), 'record button');
+      const exportButton = required(view()?.querySelector<HTMLButtonElement>('[data-testid="page-head-actions"] [data-testid="export"]'), 'export button');
+      expect(record.textContent).toContain('Record');
+      expect(record.compareDocumentPosition(exportButton) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0);
+    });
+
+    it('records the shown Tape with its Organ when Record is pressed', async () => {
+      const {tape, organ, open, view, settle, recorder} = await render({tapePerCrankTurn: 100});
+      await open(`/tapes/${tape.id}`);
+
+      required(view()?.querySelector<HTMLButtonElement>('[data-testid="record"]'), 'record button').click();
+      await settle();
+
+      expect(recorder.record).toHaveBeenCalledTimes(1);
+      expect(recorder.record).toHaveBeenCalledWith(tape, organ);
+    });
+
+    it('is disabled, and shows the percent of the Recording, while it runs', async () => {
+      const {tape, open, view, settle, recordingState} = await render({tapePerCrankTurn: 100});
+      await open(`/tapes/${tape.id}`);
+
+      recordingState.set({status: 'rendering', progress: 0.42});
+      await settle();
+
+      const record = required(view()?.querySelector<HTMLButtonElement>('[data-testid="record"]'), 'record button');
+      expect(record.getAttribute('aria-disabled')).toBe('true');
+      expect(record.textContent?.replace(/\s+/g, ' ')).toContain('Recording… 42 %');
+    });
+
+    it('shows a spinner and the Record text, without a percent, while the file is chosen and while writing', async () => {
+      const {tape, open, view, settle, recordingState} = await render({tapePerCrankTurn: 100});
+      await open(`/tapes/${tape.id}`);
+
+      for (const status of ['choosing', 'writing'] as const) {
+        recordingState.set({status});
+        await settle();
+
+        const record = required(view()?.querySelector<HTMLButtonElement>('[data-testid="record"]'), 'record button');
+        const spinner = required(record.querySelector('mat-progress-spinner'), 'spinner');
+        expect(spinner.getAttribute('aria-valuenow')).toBeNull();
+        expect(record.textContent?.replace(/\s+/g, ' ')).toContain('Record');
+        expect(record.textContent).not.toContain('%');
+      }
+    });
+
+    describe('while it records (UX review 1 to 3)', () => {
+      const recordButton = (view: HTMLElement | null) => view?.querySelector<HTMLButtonElement>('[data-testid="record"]') ?? null;
+
+      it('replaces the record icon with a determinate spinner that shows the percent, on the label line', async () => {
+        const {tape, open, view, settle, recordingState} = await render({tapePerCrankTurn: 100});
+        await open(`/tapes/${tape.id}`);
+
+        recordingState.set({status: 'rendering', progress: 0.2});
+        await settle();
+
+        const record = required(recordButton(view()), 'record button');
+        expect(record.querySelector('mat-icon')).toBeNull();
+        const spinner = required(record.querySelector('mat-progress-spinner'), 'spinner');
+        expect(spinner.getAttribute('aria-valuenow')).toBe('20');
+        expect(record.textContent?.replace(/\s+/g, ' ')).toContain('Recording… 20 %');
+      });
+
+      it('keeps the normal colours of the button: not disabled, but aria-disabled and aria-busy', async () => {
+        const {tape, open, view, settle, recordingState} = await render({tapePerCrankTurn: 100});
+        await open(`/tapes/${tape.id}`);
+
+        recordingState.set({status: 'encoding', progress: 0.5});
+        await settle();
+
+        const record = required(recordButton(view()), 'record button');
+        expect(record.classList.contains('mat-mdc-button-disabled')).toBe(false);
+        expect(record.getAttribute('aria-disabled')).toBe('true');
+        expect(record.getAttribute('aria-busy')).toBe('true');
+      });
+
+      it('does not record when pressed while it records', async () => {
+        const {tape, open, view, settle, recordingState, recorder} = await render({tapePerCrankTurn: 100});
+        await open(`/tapes/${tape.id}`);
+
+        recordingState.set({status: 'writing'});
+        await settle();
+        required(recordButton(view()), 'record button').click();
+        await settle();
+
+        expect(recorder.record).not.toHaveBeenCalled();
+      });
+
+      it('shows the spinner instead of the dot below 1180 px, and the percent as tooltip and accessible name', async () => {
+        const {tape, open, view, settle, recordingState, loader} = await render({windowWidth: 1100, tapePerCrankTurn: 100});
+        await open(`/tapes/${tape.id}`);
+
+        recordingState.set({status: 'rendering', progress: 0.2});
+        await settle();
+
+        const record = required(recordButton(view()), 'record button');
+        expect(record.querySelector('mat-icon')).toBeNull();
+        expect(record.querySelector('mat-progress-spinner')).not.toBeNull();
+        expect(record.getAttribute('aria-label')).toBe('Recording… 20 %');
+        const tooltip = await loader().getHarness(MatTooltipHarness.with({selector: '[data-testid="record"]'}));
+        await tooltip.show();
+        expect(await tooltip.getTooltipText()).toBe('Recording… 20 %');
+      });
+    });
+
+    it('does not record when Record is clicked while the Preview plays', async () => {
+      const {tape, open, view, settle, recorder} = await render({holes: [{row: 1, start: 0, length: 10}], tapePerCrankTurn: 100});
+      await open(`/tapes/${tape.id}`);
+      required(view()?.querySelector<HTMLButtonElement>('[data-testid="preview-toggle"]'), 'preview toggle').click();
+      await settle();
+
+      required(view()?.querySelector<HTMLButtonElement>('[data-testid="record"]'), 'record button').click();
+      await settle();
+
+      expect(recorder.record).not.toHaveBeenCalled();
+    });
+
+    it('does not start the Preview when its button is clicked for a Tape without a Tape per Crank turn', async () => {
+      const {tape, open, view, settle, previewSound} = await render({holes: [{row: 1, start: 0, length: 10}]});
+      await open(`/tapes/${tape.id}`);
+
+      required(view()?.querySelector<HTMLButtonElement>('[data-testid="preview-toggle"]'), 'preview toggle').click();
+      await settle();
+
+      expect(isPreviewing(view())).toBe(false);
+      expect(previewSound.starts).toHaveLength(0);
+    });
+  });
+
+  describe('recording and the Preview (T026)', () => {
+    const sounding = [{row: 1, start: 0, length: 10}];
+    const tapePerCrankTurn = 100;
+    const toggle = (view: HTMLElement | null) => view?.querySelector<HTMLButtonElement>('[data-testid="preview-toggle"]') ?? null;
+    const recordButton = (view: HTMLElement | null) => view?.querySelector<HTMLButtonElement>('[data-testid="record"]') ?? null;
+    const tapeSvg = (view: HTMLElement | null) => view?.querySelector('[data-testid="tape-scroll"] svg') as SVGSVGElement;
+
+    it('disables Record with the tooltip for a Tape per Crank turn when the Organ has none', async () => {
+      const {tape, open, view, loader} = await render();
+      await open(`/tapes/${tape.id}`);
+
+      expect(recordButton(view())?.getAttribute('aria-disabled')).toBe('true');
+      const tooltip = await loader().getHarness(MatTooltipHarness.with({selector: '[data-testid="record"]'}));
+      await tooltip.show();
+      expect(await tooltip.getTooltipText()).toBe("Set the Organ's Tape per Crank turn to record this Tape");
+    });
+
+    it('disables Record with the tooltip to stop the Preview while the Preview plays', async () => {
+      const {tape, open, view, settle, loader} = await render({holes: sounding, tapePerCrankTurn});
+      await open(`/tapes/${tape.id}`);
+
+      toggle(view())?.click();
+      await settle();
+
+      expect(recordButton(view())?.getAttribute('aria-disabled')).toBe('true');
+      const tooltip = await loader().getHarness(MatTooltipHarness.with({selector: '[data-testid="record"]'}));
+      await tooltip.show();
+      expect(await tooltip.getTooltipText()).toBe('Stop the Preview to record this Tape');
+    });
+
+    it('disables the Preview button with the tooltip to wait for the Recording while recording', async () => {
+      const {tape, open, view, settle, recordingState, loader} = await render({holes: sounding, tapePerCrankTurn});
+      await open(`/tapes/${tape.id}`);
+
+      recordingState.set({status: 'writing'});
+      await settle();
+
+      expect(toggle(view())?.getAttribute('aria-disabled')).toBe('true');
+      const tooltip = await loader().getHarness(MatTooltipHarness.with({selector: '[data-testid="preview-toggle"]'}));
+      await tooltip.show();
+      expect(await tooltip.getTooltipText()).toBe('Wait for the Recording to finish');
+    });
+
+    it('does not start the Preview on Space while recording', async () => {
+      const {tape, open, view, settle, recordingState, previewSound} = await render({holes: sounding, tapePerCrankTurn});
+      await open(`/tapes/${tape.id}`);
+
+      recordingState.set({status: 'writing'});
+      await settle();
+      tapeSvg(view()).dispatchEvent(new KeyboardEvent('keydown', {key: ' ', bubbles: true, cancelable: true}));
+      await settle();
+
+      expect(isPreviewing(view())).toBe(false);
+      expect(previewSound.starts).toHaveLength(0);
     });
   });
 

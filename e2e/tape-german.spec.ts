@@ -247,7 +247,7 @@ test.describe('I can transpose Holes in German', () => {
       await holeAt(window, second.row, second.start).click({modifiers: [process.platform === 'darwin' ? 'Meta' : 'Control']});
       await expect(window.getByTestId('selection-count')).toHaveText('2 Löcher ausgewählt');
 
-      await expect(window.getByTestId('transpose')).toHaveText(germanTapeText('TRANSPOSE', 'BUTTON'));
+      await expect(window.getByTestId('transpose')).toHaveAccessibleName(germanTapeText('TRANSPOSE', 'BUTTON'));
       await window.getByTestId('transpose').click();
       const dialog = window.getByRole('dialog');
       await expect(window.getByTestId('transpose-dialog')).toBeVisible();

@@ -14,6 +14,7 @@ module.exports = tseslint.config(
           './tsconfig.serve.json',
           './src/tsconfig.app.json',
           './src/tsconfig.spec.json',
+          './tsconfig.worker.json',
           './e2e/tsconfig.e2e.json',
         ],
       },

@@ -73,11 +73,23 @@ cranc-page-head button[mat-icon-button] {
   flex: none;
 }
 [data-testid='preview-toggle'],
+[data-testid='record'],
 [data-testid='export'] {
   white-space: nowrap;
 }
+/* Below the compact breakpoint the page head actions show their icon; the label is the accessible name and tooltip. */
+.icon-only {
+  width: 40px;
+  min-width: 40px;
+  padding: 0;
+  justify-content: center;
+}
+.icon-only mat-icon {
+  margin: 0;
+}
 .zoom,
 [data-testid='preview-toggle'],
+[data-testid='record'],
 [data-testid='export'],
 [data-testid='transpose'],
 [data-testid='side-panel-toggle'] {

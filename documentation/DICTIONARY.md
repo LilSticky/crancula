@@ -191,6 +191,16 @@
 * Playing a Tape in Crancula at a Crank speed, to hear it before it is cut
 * Changes nothing: no Hole, not the Organ (only the Tape's Crank speed can be changed while it plays)
 
+# Recording
+* An audio file (WAV or MP3) of a whole Tape played through at its Crank speed, sounding like its Preview
+* Written once by Crancula, never read back
+* German: Aufnahme
+
+# Record
+* Saving a Recording of a Tape; changes nothing
+* A Tape with Cutting Problems can be recorded; it plays as drawn
+* German: Aufnehmen
+
 # Punch
 * Cutting a Hole into a physical Tape; irreversible
 * Done by a Plotter from an exported Tape (or by hand)

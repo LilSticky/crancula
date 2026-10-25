@@ -8,7 +8,19 @@ Issues: [GitHub](https://github.com/LilSticky/crancula/issues)
 
 No slice in progress.
 
-**Next step:** Record a tape ([discovery/later.md](discovery/later.md), section 1, slice 2).
+**Next step:** start v0.3 [Bring Scores onto a tape](https://github.com/LilSticky/crancula/issues/167) (#167) with Spec Kit
+(`/speckit-specify`): MusicXML only, one Part per staff, repeats played out.
+
+**Done:** [Record a tape](../specs/009-record-a-tape/spec.md) ([#165](https://github.com/LilSticky/crancula/issues/165), v0.2,
+branch `009-record-a-tape`, PR [#166](https://github.com/LilSticky/crancula/pull/166)): save the whole Tape at its Crank speed as a
+WAV or MP3 Recording. WAV is mono 44.1 kHz 16 bit; MP3 is 128 kbit/s via LAME (LGPL, unmodified) in a Worker. The
+Recording is rendered offline with the Preview voices; two IPC calls (`recording.chooseFile`, `recording.writeFile`)
+with a single-use target, [ADR 26](adr/0026-recording-rendered-offline-saved-by-main.md). Record is disabled without a
+Tape per Crank turn or while the Preview plays; the page head actions are icon-only below 1180 px so Record fits at
+1024 px. Reviews (electron, angular, UX, spec audit, [audit.md](../specs/009-record-a-tape/audit.md)) fixed; open
+follow-ups [#172](https://github.com/LilSticky/crancula/issues/172) and [#173](https://github.com/LilSticky/crancula/issues/173).
+Gate: 1009 node and 1435 Angular unit tests, lint, i18n; e2e `record-a-tape`, `boundary` and `tape-layout` green locally,
+full e2e in CI. **Sound not checked by hand yet**: the user has not listened to a Recording (WAV or MP3).
 
 **Done:** [Ready-made Organs (#162)](https://github.com/LilSticky/crancula/issues/162) (2026-10-24, branch
 `claude/issue-162-20261024-2112`): the term is Preset (German Vorlage); a new Organ offers the Presets as starting

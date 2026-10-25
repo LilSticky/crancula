@@ -26,6 +26,7 @@ import {TransposeDialogComponent, type TransposeDialogData} from './transpose-di
 import {MatButton, MatIconButton} from '@angular/material/button';
 import {MatButtonToggle, MatButtonToggleGroup} from '@angular/material/button-toggle';
 import {MatIcon} from '@angular/material/icon';
+import {MatProgressSpinner} from '@angular/material/progress-spinner';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {MatTooltip} from '@angular/material/tooltip';
 import {TranslatePipe, TranslateService} from '@ngx-translate/core';
@@ -66,6 +67,7 @@ import {selectedHoleView} from './selected-hole/selected-hole-view';
 import {stageMetrics} from './stage-metrics';
 import {TapeEditor} from './tape-editor';
 import {TapePreview} from '../preview/tape-preview';
+import {TapeRecorder} from '../recording/tape-recorder';
 import {PreviewSectionComponent} from '../preview/preview-section/preview-section.component';
 import {columnMarks, drawingParams, drawingWidth, ghostRect, gripsOf, holeMarks, holeRects, outline, overviewOf, rowLabels, RULER_HEIGHT, sectionView, spotRect} from './tape-drawing';
 import {TapeSectionComponent} from './tape-section/tape-section.component';
@@ -151,7 +153,7 @@ const COMPACT_QUERY = '(max-width: 1179.98px)';
   selector: 'cranc-tape-view',
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [TapeEditor, TapePreview],
-  imports: [ImportSummaryComponent, TranslatePipe, RouterLink, PageHeadComponent, MatButton, MatIconButton, MatTooltip, MatButtonToggle, MatButtonToggleGroup, MatIcon, AddHoleComponent, CuttingProblemsComponent, SelectedHoleComponent, TapeSectionComponent, PreviewSectionComponent, TapeStatusLineComponent],
+  imports: [ImportSummaryComponent, TranslatePipe, RouterLink, PageHeadComponent, MatButton, MatIconButton, MatTooltip, MatButtonToggle, MatButtonToggleGroup, MatIcon, MatProgressSpinner, AddHoleComponent, CuttingProblemsComponent, SelectedHoleComponent, TapeSectionComponent, PreviewSectionComponent, TapeStatusLineComponent],
   templateUrl: './tape-view.component.html',
   styleUrl: './tape-view.component.scss',
   host: {'(keydown)': 'onViewKeydown($event)'},
@@ -162,6 +164,7 @@ export class TapeViewComponent {
   private readonly router = inject(Router);
   protected readonly editor = inject(TapeEditor);
   protected readonly preview = inject(TapePreview);
+  protected readonly recorder = inject(TapeRecorder);
   private readonly platform = inject(PLATFORM);
   /** The shortcuts of Undo and Redo as the tooltips name them. */
   protected readonly shortcuts = shortcutsOf(this.platform);
@@ -389,6 +392,29 @@ export class TapeViewComponent {
     };
   });
 
+  /** The translation key of why Record is unavailable, or `undefined` when the Tape can be recorded now. */
+  protected readonly recordBlockedBy = computed((): string | undefined => {
+    const tape = this.tape();
+    const organ = this.organ();
+    if (tape === undefined || organ === undefined || columnDuration(tape, organ) === undefined) return 'TAPE.RECORD.NO_TAPE_PER_TURN';
+    if (this.preview.playing()) return 'TAPE.RECORD.WHILE_PREVIEW';
+    return undefined;
+  });
+
+  /** The percent of a Recording that is rendering or encoding; `undefined` in the other steps. */
+  protected readonly recordPercent = computed((): number | undefined => {
+    const state = this.recorder.state();
+    return state.status === 'rendering' || state.status === 'encoding' ? Math.round(state.progress * 100) : undefined;
+  });
+
+  protected record(): void {
+    // The button stays focusable with its reason, so a click reaches here while it is blocked: it does nothing then.
+    if (this.recordBlockedBy() !== undefined || this.recorder.recording()) return;
+    const tape = this.tape();
+    const organ = this.organ();
+    if (tape !== undefined && organ !== undefined) void this.recorder.record(tape, organ);
+  }
+
   protected exportTape(): void {
     const tape = this.tape();
     const organ = this.organ();
@@ -534,6 +560,9 @@ export class TapeViewComponent {
       this.preview.stop();
       return;
     }
+    // The button stays focusable with its reason, so a click reaches here while it is unavailable: it does nothing then.
+    // A Recording renders the Tape on its own; the Preview waits for it.
+    if (!this.previewAvailable() || this.recorder.recording()) return;
     this.playFromPlayhead();
   }
 
