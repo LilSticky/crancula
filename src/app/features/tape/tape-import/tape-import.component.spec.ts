@@ -672,6 +672,24 @@ describe('TapeImportComponent', () => {
       expect(textOf('song-metre')).toBe('3/4, G major');
     });
 
+    it('separates the Notes count from the metre in the song facts with a middle dot', async () => {
+      const {choose, query} = await render({organs: [testOrgan('Street organ', 3)]});
+
+      await choose(midiFile(metreBytes(), 'metre.mid'));
+
+      const separator = query('song-facts')?.querySelector<HTMLElement>('[data-testid="song-facts-separator"]');
+      expect(separator?.textContent?.trim()).toBe('·');
+      expect(separator?.nextElementSibling?.tagName).toBe('CRANC-SONG-METRE');
+    });
+
+    it('shows no separator in the song facts of a Song without metre', async () => {
+      const {choose, query} = await render({organs: [testOrgan('Street organ', 3)]});
+
+      await choose(midiFile(threePartBytes(), 'three-parts.mid'));
+
+      expect(query('song-facts')?.querySelector('[data-testid="song-facts-separator"]')).toBeNull();
+    });
+
     it('shows the upbeat of a Score in 3/4 that starts with a quarter, in G major', async () => {
       const {choose, textOf} = await render({organs: [testOrgan('Street organ', 3)]});
       const upbeat: ScoreSpec = {

@@ -50,7 +50,7 @@ import {
 } from './tape-import-form';
 import {TapeFitCardComponent} from './tape-fit-card/tape-fit-card.component';
 import {TapePreviewComponent} from './tape-preview/tape-preview.component';
-import {SongMetreComponent} from '../song-metre/song-metre.component';
+import {keepsMetre, SongMetreComponent} from '../song-metre/song-metre.component';
 import {ScoreHowToDialogComponent} from './score-how-to-dialog/score-how-to-dialog.component';
 
 /** A translation key and its parameters. */
@@ -114,6 +114,9 @@ export class TapeImportComponent {
     const song = this.song();
     return song ? songMetre(song) : {};
   });
+
+  /** Whether the song facts show the metre, after a middle dot that separates it from the counts. */
+  protected readonly metreShown = computed(() => keepsMetre(this.metre()));
 
   /** The selected Parts; a new Song starts with its default Parts. */
   protected readonly selectedParts = linkedSignal<Song | null, ReadonlySet<PartIndex>>({

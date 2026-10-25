@@ -58,6 +58,11 @@ mat-card {
   flex-wrap: wrap;
 }
 
+/* The metre host has the same 8 px in front of it, so the dot sits centred between the counts and the metre. */
+.facts-separator {
+  margin-inline-start: 8px;
+}
+
 .parts {
   list-style: none;
   margin: 0;
