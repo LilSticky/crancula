@@ -47,10 +47,10 @@ Each finding has an ID; the fix tasks name them. Status: open until ticked.
 
 ## Dictionary (user decisions, 2026-10-26)
 
-- [ ] W1 New term **Metre**: a Song's first Time signature, Key and upbeat, shown read-only next to it; German
+- [x] W1 New term **Metre**: a Song's first Time signature, Key and upbeat, shown read-only next to it; German
   "Takt und Tonart".
-- [ ] W2 **Part**: "One staff or instrument" instead of "One voice or instrument".
-- [ ] W3 **Scores**: the singular "Score" names one Song Source in MusicXML (German: Noten). **Import Summary**:
+- [x] W2 **Part**: "One staff or instrument" instead of "One voice or instrument".
+- [x] W3 **Scores**: the singular "Score" names one Song Source in MusicXML (German: Noten). **Import Summary**:
   German "Vorschlagsnoten", "Verzierungen", "weggelassen".
 
 ## Accepted

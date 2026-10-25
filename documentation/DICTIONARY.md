@@ -67,10 +67,11 @@
 * Not exported itself; its Tape can be exported as Scores (see Tape)
 * Made of Parts
 * Keeps its Time signatures and Keys (each at its Tick) and its upbeat from its Song Source, where the Song Source has them
+* Shows its Metre (read-only)
 * German: Stück
 
 # Part
-* One voice or instrument of a Song, such as melody, bass or drums
+* One staff or instrument of a Song, such as melody, bass or drums
 * Has an optional name and its Notes; may be percussion (German: Schlagwerk)
 * From Scores: one Part per staff (a piano's right and left hand are two Parts)
 * The user chooses which Parts go onto a Tape
@@ -82,6 +83,7 @@
 * Can be printed on paper and read by most musicians
 * One possible Song Source (printed, PDF, MusicXML); a MIDI file is not Scores
 * Crancula reads and writes Scores as MusicXML
+* The singular "Score" names one Song Source written in MusicXML (German: Noten)
 * German: Noten
 
 # Note
@@ -138,6 +140,12 @@
 * A key signature a Song keeps from its Song Source, from its Tick on
 * German: Tonart
 
+# Metre
+* A Song's first Time signature, Key and upbeat, e.g. "3/4, G major, upbeat 1/4"
+* Shows only what the Song keeps; read-only
+* Shown next to the Song on the import screen and in the Tape details
+* German: Takt und Tonart
+
 # Transposition
 * Transposing Holes moves each of them by a number of semitones to another Pipe (all Holes of a Tape or the selected ones)
 * The Tape's Transposition is the one it was created with
@@ -160,7 +168,7 @@
 * What the user sees after a Song is brought onto a Tape
 * Shows the Transposition, the Notes moved by octaves, the Unplayable Notes, the Holes fixed and, for Scores, how many grace notes and ornaments were left out; nothing else
 * "Holes fixed" is its name for the Holes changed to respect the Minimum Hole Length and Minimum Gap (not "Changed Holes")
-* German: Importübersicht; Holes fixed: Angepasste Löcher
+* German: Importübersicht; Holes fixed: Angepasste Löcher; grace notes: Vorschlagsnoten; ornaments: Verzierungen; left out: weggelassen
 * Shown once; not stored with the Tape
 
 # Minimum Hole Length
