@@ -140,6 +140,13 @@ Problem and every piece file share one geometry (FR-014).
 - **A removed or unknown picked Plotter** reads as "No Plotter"; the stored id is cleared on the next pick (R8).
 - **Plotter list order**: by name, like the Organ list (`byName`).
 
+## Coordination with slice 010
+
+Slice 010 (Bring Scores onto a tape, branch `010-bring-scores-onto-a-tape`) also changes
+`src/app/features/tape/` at implementation time. The Tape view side-panel (`plotter-section/`,
+`cutting-problems/`) and drawing (`tape-drawing.ts`, `tape-view.component.*`) changes of this slice will need
+a rebase onto 010 once it is merged into `main`. ADR 27 is 010's; this slice uses ADR 28.
+
 ## Open questions
 
 None blocking. For the user to confirm while reviewing (no new term): the corrected Columns of Story 3
