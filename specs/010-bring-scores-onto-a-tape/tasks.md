@@ -122,8 +122,8 @@ Blocks every story: the Song gains its new fields and the import has one entry p
 - [x] T043 [US4] Green: Time signatures, upbeat and Keys in `lay-out.ts` and `read-score-song.ts`.
 - [x] T044 [P] [US4] Red: `api/song/midi/read-midi-song.spec.ts`: meta event `0x58` → Time signature at its Tick (denominator as a power of two), `0x59` → Key (`sf` signed, `mi` 0/1) at its Tick (scenario 5); no `0x58` → no Time signature (Q4 A); a Song from MIDI never keeps an upbeat; repeated equal events are kept once.
 - [x] T045 [US4] Green: meta events in `api/song/midi/read-midi-song.ts`.
-- [ ] T046 [P] [US4] Red: `api/song/song-metre.spec.ts`: `songMetre(song)` gives the first Time signature, the first Key and the upbeat as a reduced fraction of a whole note (1 quarter → 1/4, 3 eighths → 3/8); fields absent when the Song keeps none.
-- [ ] T047 [US4] Green: `api/song/song-metre.ts`, exported from `api/index.ts`.
+- [x] T046 [P] [US4] Red: `api/song/song-metre.spec.ts`: `songMetre(song)` gives the first Time signature, the first Key and the upbeat as a reduced fraction of a whole note (1 quarter → 1/4, 3 eighths → 3/8); fields absent when the Song keeps none.
+- [x] T047 [US4] Green: `api/song/song-metre.ts`, exported from `api/index.ts`.
 - [ ] T048 [P] [US4] Red: `src/app/features/tape/song-metre/song-metre.component.spec.ts`: renders "3/4, G major, upbeat 1/4" in English and "3/4, G-Dur, Auftakt 1/4" in German from `TAPE.METRE.*`; only the parts the Song keeps; nothing when it keeps none.
 - [ ] T049 [US4] Green: `src/app/features/tape/song-metre/song-metre.component.ts` (standalone, OnPush, signal input, presentational).
 - [ ] T050 [US4] Red: `tape-import.component.spec.ts` shows `song-metre` in `song-facts` for a Song that keeps any; `src/app/features/tape/tape-view/` spec shows it in the Tape details for the Tape's Song.
