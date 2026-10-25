@@ -108,6 +108,10 @@ another from Tick 0. Per Note: sounding pitch = `step`/`alter`/`octave` as a MID
 `<midi-unpitched>` of their instrument, else their display pitch. Notes go to their `<staff>` (default 1)
 of their part.
 
+- **Out of range** (SC-003): a sounding pitch outside MIDI 0 to 127 is folded by whole octaves into that range
+  and kept, never dropped (decided with the orchestrator, T022/T024); the Organ's own Unplayable Note report
+  then shows it if no Pipe plays it.
+
 - **Ties** (FR-008): per staff, a Note with `<tie type="start">` waits; the next Note of the same note number
   in the same staff, in played-out order, joins it if it starts exactly where the first ends; any other next
   Note, a rest in between, or the end of the Song ends the waiting Note as written.

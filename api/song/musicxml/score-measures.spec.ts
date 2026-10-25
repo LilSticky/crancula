@@ -440,6 +440,64 @@ describe('scoreMeasures reads a score-timewise as the same parts as its score-pa
   });
 });
 
+describe('scoreMeasures gives the percussion staves of a part', () => {
+  it('gives a staff with a percussion clef in force as percussion, and no other staff', () => {
+    const parts = partsOf({
+      parts: [
+        {
+          staves: 2,
+          measures: [
+            {
+              entries: [
+                { kind: 'attributes', clef: { sign: 'percussion', staff: 2 } },
+                { kind: 'note', pitch: C4, duration: 1, staff: 1 },
+                { kind: 'note', pitch: C4, duration: 1, staff: 2 },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+
+    expect([...nth(parts, 0).percussionStaves]).toEqual([2]);
+  });
+
+  it('gives a staff of only unpitched Notes as percussion, and a staff with a pitched Note as not', () => {
+    const parts = partsOf({
+      parts: [
+        {
+          staves: 2,
+          measures: [
+            {
+              entries: [
+                { kind: 'note', pitch: 'unpitched', duration: 1, staff: 1 },
+                { kind: 'note', pitch: C4, duration: 1, staff: 2 },
+                { kind: 'note', pitch: 'unpitched', duration: 1, staff: 2 },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+
+    expect([...nth(parts, 0).percussionStaves]).toEqual([1]);
+  });
+
+  it('gives an unpitched Note its display pitch when it has one, and its staff stays percussion', () => {
+    const root = elementOf(
+      '<score-partwise version="4.0"><part-list><score-part id="P1"><part-name>Drums</part-name></score-part></part-list>' +
+        '<part id="P1"><measure number="1"><attributes><divisions>1</divisions></attributes>' +
+        '<note><unpitched><display-step>E</display-step><display-octave>4</display-octave></unpitched><duration>1</duration></note>' +
+        '</measure></part></score-partwise>',
+    );
+    const result = scoreMeasures(root);
+    if (!result.ok) throw new Error(`expected the measures of a score, got ${result.error}`);
+
+    expect(measureAt(result.value, 0).notes).toMatchObject([{ pitch: 64 }]);
+    expect([...nth(result.value, 0).percussionStaves]).toEqual([1]);
+  });
+});
+
 describe('scoreMeasures rejects a root that is not a score-partwise or score-timewise', () => {
   it.each([
     ['an opus', '<opus xmlns="http://www.musicxml.org/ns"/>'],

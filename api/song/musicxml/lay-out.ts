@@ -27,6 +27,8 @@ export interface LaidOut {
 const FALLBACK_TICKS_PER_QUARTER = 960;
 const MAXIMUM_TICKS_PER_QUARTER = 32767;
 const SEMITONES_PER_OCTAVE = 12;
+const MINIMUM_MIDI_NOTE = 0;
+const MAXIMUM_MIDI_NOTE = 127;
 const UNPITCHED_KEY = -1;
 
 /** A staff being filled, keyed by part and staff. */
@@ -74,13 +76,28 @@ function ticksOf(divisionsValue: number, divisions: number, perQuarter: TicksPer
   return Math.round((divisionsValue * perQuarter) / divisions);
 }
 
-/** The sounding pitch: the written pitch plus the transposition in force; `undefined` when it is no MIDI note. */
-function soundingPitchOf(
-  written: MidiNoteNumber | 'unpitched',
-  transpose: ScoreTranspose,
-): MidiNoteNumber | 'unpitched' | undefined {
+/** Folds a sounding pitch by whole octaves into the MIDI range, so that no written Note is lost (SC-003). */
+function foldIntoMidiRange(sounding: number): MidiNoteNumber {
+  let folded = sounding;
+  if (folded > MAXIMUM_MIDI_NOTE) {
+    folded -= SEMITONES_PER_OCTAVE * Math.ceil((folded - MAXIMUM_MIDI_NOTE) / SEMITONES_PER_OCTAVE);
+  }
+  if (folded < MINIMUM_MIDI_NOTE) {
+    folded += SEMITONES_PER_OCTAVE * Math.ceil((MINIMUM_MIDI_NOTE - folded) / SEMITONES_PER_OCTAVE);
+  }
+  return knownMidiNoteNumber(folded);
+}
+
+function knownMidiNoteNumber(value: number): MidiNoteNumber {
+  const checked = midiNoteNumber(value);
+  if (checked === undefined) throw new RangeError(`${value} is not a MIDI note number`);
+  return checked;
+}
+
+/** The sounding pitch: the written pitch plus the transposition in force, folded into the MIDI range. */
+function soundingPitchOf(written: MidiNoteNumber | 'unpitched', transpose: ScoreTranspose): MidiNoteNumber | 'unpitched' {
   if (written === 'unpitched') return 'unpitched';
-  return midiNoteNumber(written + transpose.chromatic + SEMITONES_PER_OCTAVE * transpose.octaveChange);
+  return foldIntoMidiRange(written + transpose.chromatic + SEMITONES_PER_OCTAVE * transpose.octaveChange);
 }
 
 function noteKey(note: LaidOutNote): number {
@@ -122,8 +139,6 @@ function addNote(
   perQuarter: TicksPerQuarter,
 ): void {
   const noteNumber = soundingPitchOf(note.pitch, measure.transpose);
-  // A written pitch that sounds outside the MIDI range has no Pipe to play it and is left out.
-  if (noteNumber === undefined) return;
   staffFor(staves, partIndex, note.staff).notes.push({
     noteNumber,
     start: knownTick(measureStart + ticksOf(note.start, measure.divisions, perQuarter)),

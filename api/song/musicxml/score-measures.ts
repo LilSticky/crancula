@@ -10,7 +10,10 @@ export interface ScoreNote {
   readonly staff: number;
   readonly start: number;
   readonly length: number;
-  /** The written pitch, before the transposition of its measure; `'unpitched'` for a Note without pitch. */
+  /**
+   * The written pitch, before the transposition of its measure. An unpitched Note has its display pitch, where
+   * the notation puts it; `'unpitched'` when it has none.
+   */
   readonly pitch: MidiNoteNumber | 'unpitched';
 }
 
@@ -45,6 +48,11 @@ export interface ScoreMeasure {
 export interface ScorePart {
   readonly id: string;
   readonly measures: readonly ScoreMeasure[];
+  /**
+   * The staves that are percussion: a percussion clef was in force on them in some measure, or all their
+   * Notes are unpitched (research R8).
+   */
+  readonly percussionStaves: ReadonlySet<number>;
 }
 
 /** Thrown inside the reader for any structure it cannot read; never leaves {@link scoreMeasures}. */
@@ -70,6 +78,7 @@ const NO_TRANSPOSE: ScoreTranspose = {chromatic: 0, octaveChange: 0};
 /** MusicXML requires divisions in the first measure; without them a quarter is read as one division. */
 const DEFAULT_DIVISIONS = 1;
 const DEFAULT_STAVES = 1;
+const NO_STAVES: ReadonlySet<number> = new Set();
 
 /** What the attributes of a part give in force. */
 interface Attributes {
@@ -78,6 +87,8 @@ interface Attributes {
   readonly time: ScoreTime | undefined;
   readonly key: ScoreKey | undefined;
   readonly staves: number;
+  /** The staves whose clef in force is a percussion clef. */
+  readonly percussionStaves: ReadonlySet<number>;
 }
 
 const NOTHING_IN_FORCE: Attributes = {
@@ -86,6 +97,7 @@ const NOTHING_IN_FORCE: Attributes = {
   time: undefined,
   key: undefined,
   staves: DEFAULT_STAVES,
+  percussionStaves: NO_STAVES,
 };
 
 /** A measure as read from the tree: its number and the elements it is made of. */
@@ -172,28 +184,72 @@ function withAttributes(inForce: Attributes, attributes: XmlElement): Attributes
     time: time === undefined ? inForce.time : timeOf(time),
     key: key === undefined ? inForce.key : keyOf(key),
     staves: integerIn(attributes, 'staves', 1) ?? inForce.staves,
+    percussionStaves: percussionStavesAfter(inForce.percussionStaves, attributes),
   };
 }
 
-/** The MIDI note number of a written pitch: C4 is 60, and an alter is rounded to the nearest semitone. */
+/** The MIDI note number of a step, octave and alter: C4 is 60, and an alter is rounded to the nearest semitone. */
+function midiOf(stepName: string, octave: number, alter: number): MidiNoteNumber | undefined {
+  const step = STEP_SEMITONES.get(stepName);
+  if (step === undefined) return undefined;
+  return midiNoteNumber(Math.round((octave + 1) * SEMITONES_PER_OCTAVE + step + alter));
+}
+
 function pitchOf(pitch: XmlElement): MidiNoteNumber {
-  const step = STEP_SEMITONES.get(textOf(requiredChild(pitch, 'step'))) ?? notAScore();
+  const stepName = textOf(requiredChild(pitch, 'step'));
   const octave = requiredInteger(pitch, 'octave');
-  const alter = decimalIn(pitch, 'alter') ?? 0;
-  return midiNoteNumber(Math.round((octave + 1) * SEMITONES_PER_OCTAVE + step + alter)) ?? notAScore();
+  return midiOf(stepName, octave, decimalIn(pitch, 'alter') ?? 0) ?? notAScore();
+}
+
+/** The display pitch of an unpitched Note, where the notation puts its notehead; `'unpitched'` when none is written. */
+function displayPitchOf(unpitched: XmlElement): MidiNoteNumber | 'unpitched' {
+  const step = childNamed(unpitched, 'display-step');
+  const octave = integerIn(unpitched, 'display-octave');
+  if (step === undefined || octave === undefined) return 'unpitched';
+  return midiOf(textOf(step), octave, 0) ?? 'unpitched';
 }
 
 function writtenPitchOf(note: XmlElement): MidiNoteNumber | 'unpitched' {
-  return childNamed(note, 'unpitched') === undefined ? pitchOf(requiredChild(note, 'pitch')) : 'unpitched';
+  const unpitched = childNamed(note, 'unpitched');
+  return unpitched === undefined ? pitchOf(requiredChild(note, 'pitch')) : displayPitchOf(unpitched);
+}
+
+/** The staff a clef belongs to: its number, 1 when it has none. */
+function clefStaffOf(clef: XmlElement): number {
+  const number = clef.attributes.get('number');
+  if (number === undefined) return DEFAULT_STAVES;
+  const staff = Number(number);
+  return INTEGER.test(number) && Number.isSafeInteger(staff) && staff >= 1 ? staff : notAScore();
+}
+
+/** The staves that are percussion after the clefs of one attributes element: each clef sets its own staff. */
+function percussionStavesAfter(inForce: ReadonlySet<number>, attributes: XmlElement): ReadonlySet<number> {
+  return childrenNamed(attributes, 'clef').reduce<ReadonlySet<number>>((staves, clef) => {
+    const next = new Set(staves);
+    const staff = clefStaffOf(clef);
+    if (textOf(requiredChild(clef, 'sign')) === 'percussion') next.add(staff);
+    else next.delete(staff);
+    return next;
+  }, inForce);
 }
 
 function staffOf(note: XmlElement): number {
   return integerIn(note, 'staff', 1) ?? 1;
 }
 
+/** What one measure holds: its Notes, its length, and which staves have pitched or unpitched Notes in it. */
+interface MeasureBody {
+  readonly notes: ScoreNote[];
+  readonly length: number;
+  readonly pitchedStaves: Set<number>;
+  readonly unpitchedStaves: Set<number>;
+}
+
 /** The Notes and the length of one measure. The cursor moves with notes, rests, backup and forward. */
-function bodyOf(content: readonly XmlElement[]): {readonly notes: ScoreNote[]; readonly length: number} {
+function bodyOf(content: readonly XmlElement[]): MeasureBody {
   const notes: ScoreNote[] = [];
+  const pitchedStaves = new Set<number>();
+  const unpitchedStaves = new Set<number>();
   let position = 0;
   let noteStart = 0;
   let length = 0;
@@ -208,7 +264,10 @@ function bodyOf(content: readonly XmlElement[]): {readonly notes: ScoreNote[]; r
         position += duration;
       }
       if (childNamed(element, 'rest') === undefined) {
-        notes.push({staff: staffOf(element), start: noteStart, length: duration, pitch: writtenPitchOf(element)});
+        const staff = staffOf(element);
+        if (childNamed(element, 'unpitched') === undefined) pitchedStaves.add(staff);
+        else unpitchedStaves.add(staff);
+        notes.push({staff, start: noteStart, length: duration, pitch: writtenPitchOf(element)});
       }
       length = Math.max(length, noteStart + duration, position);
     } else if (element.name === 'backup') {
@@ -219,18 +278,24 @@ function bodyOf(content: readonly XmlElement[]): {readonly notes: ScoreNote[]; r
       length = Math.max(length, position);
     }
   }
-  return {notes, length};
+  return {notes, length, pitchedStaves, unpitchedStaves};
 }
 
 /** One part: its measures in order, each with the attributes in force at it. */
 function partOf(source: PartSource): ScorePart {
   const measures: ScoreMeasure[] = [];
+  const percussionStaves = new Set<number>();
+  const pitchedStaves = new Set<number>();
+  const unpitchedStaves = new Set<number>();
   let inForce = NOTHING_IN_FORCE;
   for (const measure of source.measures) {
     inForce = measure.content
       .filter((element) => element.name === 'attributes')
       .reduce(withAttributes, inForce);
     const body = bodyOf(measure.content);
+    for (const staff of inForce.percussionStaves) percussionStaves.add(staff);
+    for (const staff of body.pitchedStaves) pitchedStaves.add(staff);
+    for (const staff of body.unpitchedStaves) unpitchedStaves.add(staff);
     measures.push({
       number: measure.number,
       divisions: inForce.divisions,
@@ -242,7 +307,10 @@ function partOf(source: PartSource): ScorePart {
       notes: body.notes,
     });
   }
-  return {id: source.id, measures};
+  for (const staff of unpitchedStaves) {
+    if (!pitchedStaves.has(staff)) percussionStaves.add(staff);
+  }
+  return {id: source.id, measures, percussionStaves};
 }
 
 function partwiseSources(root: XmlElement): readonly PartSource[] {

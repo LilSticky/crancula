@@ -1,5 +1,7 @@
 import {err, ok, type Result} from '../result';
 import {MAXIMUM_MIDI_FILE_SIZE, readMidiSong, type MidiRejection} from './midi/read-midi-song';
+import {unzipScore} from './musicxml/mxl';
+import {readScoreSong} from './musicxml/read-score-song';
 import type {PartIndex, Song} from './song';
 
 /** Every Song Source is read only up to this size: MIDI, zipped Score and XML alike. */
@@ -54,9 +56,11 @@ export function readSongSource(bytes: Uint8Array, fileName: string): Result<Song
     const midi = readMidiSong(bytes, fileName);
     return midi.ok ? ok({song: midi.value}) : midi;
   }
-  // Until US1: the archive and the MusicXML reader are not written yet.
-  if (startsWith(bytes, ZIP_MAGIC)) return err('damaged-archive');
+  if (startsWith(bytes, ZIP_MAGIC)) {
+    const score = unzipScore(bytes);
+    return score.ok ? readScoreSong(score.value, fileName) : err(score.error);
+  }
   if (startsWith(bytes, PDF_MAGIC)) return err('pdf');
-  if (looksLikeXml(bytes)) return err('not-a-score');
+  if (looksLikeXml(bytes)) return readScoreSong(bytes, fileName);
   return err('not-a-song-source');
 }

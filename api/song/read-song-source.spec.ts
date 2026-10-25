@@ -1,7 +1,9 @@
+import {strToU8, zipSync} from 'fflate';
 import {describe, expect, it} from 'vitest';
 import type {Result} from '../result';
 import {readMidiSong} from './midi/read-midi-song';
 import {encodeSmf, type SmfTimedEvent, type SmfTrack} from './midi/smf-test-helper';
+import {scoreXml, type ScoreSpec} from './musicxml/score-test-helper';
 import {readSongSource, type SongReading, type SongRejection} from './read-song-source';
 import type {Song} from './song';
 
@@ -104,5 +106,44 @@ describe('readSongSource, the file name', () => {
   it('names a MIDI Song by its track name before the file name', () => {
     const reading = readingOf(readSongSource(aMidiFile('Fugue'), 'other.mid'));
     expect(reading.song.name).toBe('Fugue');
+  });
+});
+
+describe('readSongSource, MusicXML and compressed MusicXML', () => {
+  const flute: ScoreSpec = {
+    parts: [
+      {
+        name: 'Flute',
+        measures: [
+          {
+            entries: [
+              {kind: 'attributes', divisions: 1},
+              {kind: 'note', pitch: {step: 'C', octave: 4}, duration: 1},
+            ],
+          },
+        ],
+      },
+    ],
+  };
+
+  it('reads an uncompressed MusicXML file as a Song, not as not-a-score', () => {
+    const reading = readingOf(readSongSource(utf8(scoreXml(flute)), 'flute.musicxml'));
+    expect(reading.song.parts.map((part) => part.name)).toEqual(['Flute']);
+  });
+
+  it('reads a compressed MusicXML file as the same Song as its uncompressed Score, not as damaged-archive', () => {
+    const score = scoreXml(flute);
+    const container = `<?xml version="1.0" encoding="UTF-8"?>
+<container version="1.0"><rootfiles><rootfile full-path="flute.musicxml"/></rootfiles></container>`;
+    const archive = zipSync({
+      'META-INF/container.xml': strToU8(container),
+      'flute.musicxml': strToU8(score),
+    });
+
+    const reading = readingOf(readSongSource(archive, 'flute.mxl'));
+    const uncompressed = readingOf(readSongSource(utf8(score), 'flute.musicxml'));
+
+    expect(reading.song.name).toBe(uncompressed.song.name);
+    expect(reading.song.parts).toEqual(uncompressed.song.parts);
   });
 });

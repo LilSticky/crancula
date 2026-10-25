@@ -69,7 +69,7 @@ function measure(fields: MeasureFields): ScoreMeasure {
 }
 
 function part(...measures: readonly ScoreMeasure[]): ScorePart {
-  return { id: 'P1', measures };
+  return { id: 'P1', measures, percussionStaves: new Set() };
 }
 
 function straight(count: number): readonly number[] {
@@ -187,6 +187,32 @@ describe('layOut places the Notes of each measure one after another', () => {
     ]);
 
     expect(notesOf(layout, 0, 1)).toMatchObject([{ noteNumber: 46 }]);
+  });
+
+  it('folds a sounding pitch above 127 down by whole octaves, so the Note is kept', () => {
+    const layout = layOutStraight([
+      part(
+        measure({
+          transpose: { chromatic: 2, octaveChange: 0 },
+          notes: [scoreNote({ start: 0, length: QUARTER, pitch: 127 })],
+        }),
+      ),
+    ]);
+
+    expect(notesOf(layout, 0, 1)).toMatchObject([{ noteNumber: 117 }]);
+  });
+
+  it('folds a sounding pitch below 0 up by whole octaves, so the Note is kept', () => {
+    const layout = layOutStraight([
+      part(
+        measure({
+          transpose: { chromatic: 0, octaveChange: -1 },
+          notes: [scoreNote({ start: 0, length: QUARTER, pitch: 2 })],
+        }),
+      ),
+    ]);
+
+    expect(notesOf(layout, 0, 1)).toMatchObject([{ noteNumber: 2 }]);
   });
 
   it('plays the measures in the played order it is given', () => {
