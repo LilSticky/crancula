@@ -40,11 +40,9 @@
       </button>
       @let recordBlocked = recordBlockedBy();
       @let recordLabel = (recordPercent() === undefined ? 'TAPE.RECORD.BUTTON' : 'TAPE.RECORD.PROGRESS') | translate: {percent: recordPercent()};
-      <button mat-stroked-button type="button" data-testid="record" [class.icon-only]="compact()" [disabled]="recordBlocked !== undefined || recorder.recording()" [disabledInteractive]="true" [attr.aria-label]="compact() ? recordLabel : null" [matTooltip]="recordBlocked !== undefined ? (recordBlocked | translate) : compact() ? recordLabel : ''" (click)="record()">
-        <mat-icon aria-hidden="true">fiber_manual_record</mat-icon>
-        @if (recorder.recording()) {
-          <mat-spinner diameter="18" aria-hidden="true" />
-        }
+      <button mat-stroked-button type="button" data-testid="record" [class.icon-only]="compact()" [disabled]="recordBlocked !== undefined" [disabledInteractive]="true" [attr.aria-disabled]="recordBlocked !== undefined || recorder.recording() ? 'true' : null" [attr.aria-busy]="recorder.recording() ? 'true' : null" [attr.aria-label]="compact() ? recordLabel : null" [matTooltip]="recordBlocked !== undefined ? (recordBlocked | translate) : compact() ? recordLabel : ''" (click)="record()">
+        @if (!recorder.recording()) {<mat-icon aria-hidden="true">fiber_manual_record</mat-icon>}
+        @if (recorder.recording()) {<mat-progress-spinner diameter="18" [mode]="recordPercent() === undefined ? 'indeterminate' : 'determinate'" [value]="recordPercent() ?? 0" aria-hidden="true" />}
         @if (!compact()) {
           {{ recordLabel }}
         }

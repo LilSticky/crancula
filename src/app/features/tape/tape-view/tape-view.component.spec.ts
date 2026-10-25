@@ -4506,10 +4506,70 @@ describe('TapeViewComponent', () => {
         await settle();
 
         const record = required(view()?.querySelector<HTMLButtonElement>('[data-testid="record"]'), 'record button');
-        expect(record.querySelector('mat-spinner')).not.toBeNull();
+        const spinner = required(record.querySelector('mat-progress-spinner'), 'spinner');
+        expect(spinner.getAttribute('aria-valuenow')).toBeNull();
         expect(record.textContent?.replace(/\s+/g, ' ')).toContain('Record');
         expect(record.textContent).not.toContain('%');
       }
+    });
+
+    describe('while it records (UX review 1 to 3)', () => {
+      const recordButton = (view: HTMLElement | null) => view?.querySelector<HTMLButtonElement>('[data-testid="record"]') ?? null;
+
+      it('replaces the record icon with a determinate spinner that shows the percent, on the label line', async () => {
+        const {tape, open, view, settle, recordingState} = await render({tapePerCrankTurn: 100});
+        await open(`/tapes/${tape.id}`);
+
+        recordingState.set({status: 'rendering', progress: 0.2});
+        await settle();
+
+        const record = required(recordButton(view()), 'record button');
+        expect(record.querySelector('mat-icon')).toBeNull();
+        const spinner = required(record.querySelector('mat-progress-spinner'), 'spinner');
+        expect(spinner.getAttribute('aria-valuenow')).toBe('20');
+        expect(record.textContent?.replace(/\s+/g, ' ')).toContain('Recording… 20 %');
+      });
+
+      it('keeps the normal colours of the button: not disabled, but aria-disabled and aria-busy', async () => {
+        const {tape, open, view, settle, recordingState} = await render({tapePerCrankTurn: 100});
+        await open(`/tapes/${tape.id}`);
+
+        recordingState.set({status: 'encoding', progress: 0.5});
+        await settle();
+
+        const record = required(recordButton(view()), 'record button');
+        expect(record.classList.contains('mat-mdc-button-disabled')).toBe(false);
+        expect(record.getAttribute('aria-disabled')).toBe('true');
+        expect(record.getAttribute('aria-busy')).toBe('true');
+      });
+
+      it('does not record when pressed while it records', async () => {
+        const {tape, open, view, settle, recordingState, recorder} = await render({tapePerCrankTurn: 100});
+        await open(`/tapes/${tape.id}`);
+
+        recordingState.set({status: 'writing'});
+        await settle();
+        required(recordButton(view()), 'record button').click();
+        await settle();
+
+        expect(recorder.record).not.toHaveBeenCalled();
+      });
+
+      it('shows the spinner instead of the dot below 1180 px, and the percent as tooltip and accessible name', async () => {
+        const {tape, open, view, settle, recordingState, loader} = await render({windowWidth: 1100, tapePerCrankTurn: 100});
+        await open(`/tapes/${tape.id}`);
+
+        recordingState.set({status: 'rendering', progress: 0.2});
+        await settle();
+
+        const record = required(recordButton(view()), 'record button');
+        expect(record.querySelector('mat-icon')).toBeNull();
+        expect(record.querySelector('mat-progress-spinner')).not.toBeNull();
+        expect(record.getAttribute('aria-label')).toBe('Recording… 20 %');
+        const tooltip = await loader().getHarness(MatTooltipHarness.with({selector: '[data-testid="record"]'}));
+        await tooltip.show();
+        expect(await tooltip.getTooltipText()).toBe('Recording… 20 %');
+      });
     });
 
     it('does not record when Record is clicked while the Preview plays', async () => {
