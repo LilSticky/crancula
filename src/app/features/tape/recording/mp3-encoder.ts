@@ -1,4 +1,5 @@
 import {InjectionToken} from '@angular/core';
+import type {Mp3EncoderMessage} from './mp3-encoder-message';
 
 /** Encodes rendered samples to MP3 bytes. */
 export interface Mp3Encoder {
@@ -6,10 +7,32 @@ export interface Mp3Encoder {
   encode(samples: Float32Array, onProgress: (fraction: number) => void): Promise<Uint8Array>;
 }
 
-/** The encoder a Recording uses; the MP3 adapter is not written yet, so it fails every encode. */
+/** Encodes in a Web Worker, one worker per encode, terminated when the encode ends. LAME is loaded only here. */
+export class WorkerMp3Encoder implements Mp3Encoder {
+  encode(samples: Float32Array, onProgress: (fraction: number) => void): Promise<Uint8Array> {
+    const worker = new Worker(new URL('./mp3-encoder.worker', import.meta.url), {type: 'module'});
+    return new Promise((resolve, reject) => {
+      worker.onmessage = (event: MessageEvent<Mp3EncoderMessage>) => {
+        const message = event.data;
+        if ('progress' in message) {
+          onProgress(message.progress);
+          return;
+        }
+        worker.terminate();
+        if ('bytes' in message) resolve(message.bytes);
+        else reject(new Error(message.error));
+      };
+      worker.onerror = (event: ErrorEvent) => {
+        worker.terminate();
+        reject(new Error(event.message));
+      };
+      worker.postMessage(samples, [samples.buffer]);
+    });
+  }
+}
+
+/** The encoder a Recording uses: the LAME worker. */
 export const MP3_ENCODER = new InjectionToken<Mp3Encoder>('Mp3Encoder', {
   providedIn: 'root',
-  factory: () => ({
-    encode: () => Promise.reject(new Error('not implemented')),
-  }),
+  factory: () => new WorkerMp3Encoder(),
 });
