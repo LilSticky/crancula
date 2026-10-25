@@ -62,4 +62,4 @@ Spec: Story 5, FR-021. Decision 7 left "README or import screen" open.
 
 All answered with the recommended option: Q1 A (repeats skipped after D.C./D.S.), Q2 A (every Key change kept), Q3 A (first Time signature and Key shown read-only), Q4 A (MIDI without a time signature event: none kept), Q5 A (in-app how-to dialog).
 
-Not yet folded into spec.md: the [NEEDS CLARIFICATION] markers still stand.
+Folded into spec.md (Clarifications, Session 2026-10-25); no [NEEDS CLARIFICATION] markers remain.

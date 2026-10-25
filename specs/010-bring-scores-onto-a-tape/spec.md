@@ -4,7 +4,7 @@
 
 **Created**: 2026-10-25
 
-**Status**: Draft (5 open questions in [open-questions.md](open-questions.md))
+**Status**: Draft, clarified 2026-10-25
 
 **Input**: User description: "Bring Scores onto a tape (#167, v0.3): import a Song from Scores. MusicXML
 (.musicxml/.mxl) is read into the existing Song model, one Part per staff, repeats, voltas and da capo played
@@ -41,6 +41,15 @@ Decisions 15–18 (user, on the domain-modeler's proposal of 2026-10-25):
 - Q: What does the Song keep of the Time signature, and is it added now? → A: Now, from MusicXML and from MIDI:
   every Time signature change at its Tick, the upbeat (a first Bar shorter than its Time signature), and the
   Key (FR-016 to FR-019).
+- Q: Repeats after a da capo or dal segno jump? → A: Skipped on the second pass; first and second endings then
+  take the last ending (FR-007).
+- Q: A Key change in the middle of the Song? → A: Every Key change is kept at its Tick, like Time signatures
+  (FR-018).
+- Q: Are Time signature and Key shown in this slice? → A: Yes, read-only: the first Time signature, the Key and
+  the upbeat next to the Song on the import screen and in the Tape details (FR-020).
+- Q: A MIDI file without a time signature event? → A: The Song keeps no Time signature.
+- Q: Where does the how-to for PDF and printed Scores live? → A: A one-line hint on the import screen opens a
+  short how-to dialog in the app, in English and German (FR-021).
 - Rules carried over, confirmed as proposed: Notes no Pipe plays follow the existing Unplayable Note and Fit
   rules unchanged; several voices on one staff stay in that staff's Part and equal pitches that overlap are
   merged by the existing overlap merge; a percussion staff becomes a percussion Part, not selected by default;
@@ -124,8 +133,8 @@ Bar 4 and a second ending on Bar 5, and check the order of the Holes on the Tape
    mark the Tape continues from the start (or the segno) and ends at "fine".
 5. **Given** a Score with "da capo al coda" (or "dal segno al coda"), **Then** the second pass jumps from the
    "to coda" mark to the coda and the Tape ends with the coda.
-6. **Given** a repeat after a da capo or dal segno jump, **Then** it is [NEEDS CLARIFICATION: Q1 in
-   open-questions.md, taken again or skipped on the second pass].
+6. **Given** a repeat after a da capo or dal segno jump, **Then** the repeat is
+   skipped on the second pass, and a first and second ending then take the last ending.
 
 ---
 
@@ -164,7 +173,9 @@ Hole, and that the Import Summary counts 2 grace notes and 1 ornament left out.
 
 A Song brought in from Scores or MIDI keeps its Time signatures, where each one starts, a shorter first Bar
 (an upbeat) and its Key, so that "Read a tape as Scores" can later write bar lines and the right sharps or
-flats. [NEEDS CLARIFICATION: Q3 in open-questions.md, whether I see them in this slice.]
+flats. I see the first Time signature, the Key and the upbeat read-only, next to the Song on the import
+screen and in the Tape details of the Tape view (e.g. "3/4, G major, upbeat 1/4"), so that I can spot a
+recognition error.
 
 **Why this priority**: it doesn't change the Tape of this slice, but it is information that is lost for good
 if it isn't kept at import: the Song Source file is not stored.
@@ -205,8 +216,8 @@ program and the steps from a PDF to a MusicXML file.
 **Acceptance Scenarios**:
 
 1. **Given** I am on the import screen, **Then** I see that MIDI and MusicXML files can be chosen and that
-   PDF and printed Scores first go through a music recognition program, with a way to the how-to
-   [NEEDS CLARIFICATION: Q5 in open-questions.md, where the how-to lives].
+   PDF and printed Scores first go through a music recognition program, with a one-line hint
+   that opens the how-to in the app, a dialog in English and German.
 2. **Given** I choose a PDF file, **Then** I'm told that Crancula reads PDF Scores only through a music
    recognition program, with the same way to the how-to, and no Tape is created.
 
@@ -258,8 +269,8 @@ are available in German and English.
   signature again from the start of the next Bar.
 - A Score whose parts have different Time signatures at the same time (polymetre): the Song keeps the Time
   signatures of the first part.
-- A Key change in the middle of the Song: [NEEDS CLARIFICATION: Q2 in open-questions.md].
-- A MIDI file without a time signature event: [NEEDS CLARIFICATION: Q4 in open-questions.md]. A MIDI file has
+- A Key change in the middle of the Song: every Key change is kept at its Tick, like Time signature changes.
+- A MIDI file without a time signature event: the Song keeps no Time signature. A MIDI file has
   no upbeat mark, so a Song from MIDI keeps no upbeat; a short first Bar written as its own Time signature is
   kept as a Time signature change.
 - A Score in "free time" (no Time signature): the Song keeps no Time signature.
@@ -291,8 +302,8 @@ are available in German and English.
   articulations, fermatas, lyrics, chord symbols, instruments and layout MUST NOT affect the Tape.
 - **FR-007**: Before the Song is made, the system MUST play the Score out into one straight sequence: repeats
   (including how many times they are played), first, second and further endings, da capo, dal segno, fine and
-  coda, in the order a musician plays them. [NEEDS CLARIFICATION: Q1 in open-questions.md, repeats after a da
-  capo or dal segno jump.]
+  coda, in the order a musician plays them. Repeats MUST be skipped on the pass after a da capo or dal segno
+  jump, and first and second endings then take the last ending.
 - **FR-008**: A tie MUST join two Notes into one only when, in the played-out order, the next Note of the same
   MIDI note number in the same staff starts exactly where the first one ends. Otherwise the first Note MUST end
   where it is written.
@@ -315,15 +326,17 @@ are available in German and English.
   each with the Tick where the Bar it starts in begins, in played-out order.
 - **FR-017**: A Song MUST keep the length of its upbeat when its first Bar is shorter than its Time
   signature. A Bar of irregular length later in the Song MUST NOT shift the Bars after it.
-- **FR-018**: A Song MUST keep its Key (number of sharps or flats, major or minor) from its Song Source.
-  [NEEDS CLARIFICATION: Q2 in open-questions.md, Key changes.]
+- **FR-018**: A Song MUST keep its Key (number of sharps or flats, major or minor) from its Song Source,
+  and every Key change at its Tick.
 - **FR-019**: Time signatures, upbeat and Key MUST survive an app restart with the Song. Songs stored before
   this slice MUST load unchanged and keep none of them; no stored Tape or Song may be lost by the change.
 - **FR-020**: Time signatures, upbeat and Key MUST NOT change the Tape: its Holes, length and Import Summary
-  are the same as without them. [NEEDS CLARIFICATION: Q3 in open-questions.md, whether they are shown.]
+  are the same as without them. The import screen and the Tape details MUST show the first Time signature, the Key and the
+  upbeat of the Song read-only.
 - **FR-021**: The import screen MUST say that PDF and printed Scores reach Crancula as MusicXML through an
   outside music recognition program and MUST lead to a short how-to that names one such program (Audiveris)
-  and the steps from a PDF to a MusicXML file. [NEEDS CLARIFICATION: Q5 in open-questions.md.]
+  and the steps from a PDF to a MusicXML file. The import screen MUST show a one-line hint that opens this how-to in the app, as a dialog
+  in English and German.
 - **FR-022**: All new texts of this feature MUST be available in English and German.
 
 ### Key Entities
