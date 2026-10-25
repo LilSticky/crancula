@@ -19,7 +19,7 @@
               <span data-testid="song-file-name">{{ fileName() }}</span>
             </mat-chip>
             @if (songFacts(); as facts) {
-              <span data-testid="song-facts">{{ (facts.parts === 1 ? 'TAPE.IMPORT.PARTS_COUNT_ONE' : 'TAPE.IMPORT.PARTS_COUNT') | translate: {count: facts.parts} }}, {{ (facts.notes === 1 ? 'TAPE.IMPORT.NOTES_COUNT_ONE' : 'TAPE.IMPORT.NOTES_COUNT') | translate: {count: facts.notes} }}</span>
+              <span data-testid="song-facts">{{ (facts.parts === 1 ? 'TAPE.IMPORT.PARTS_COUNT_ONE' : 'TAPE.IMPORT.PARTS_COUNT') | translate: {count: facts.parts} }}, {{ (facts.notes === 1 ? 'TAPE.IMPORT.NOTES_COUNT_ONE' : 'TAPE.IMPORT.NOTES_COUNT') | translate: {count: facts.notes} }}<cranc-song-metre [metre]="metre()" /></span>
             }
           }
           <button [matButton]="song() ? 'text' : 'tonal'" type="button" data-testid="choose-song" (click)="songFile.click()">

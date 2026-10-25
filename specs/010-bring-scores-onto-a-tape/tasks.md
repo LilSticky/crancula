@@ -124,10 +124,10 @@ Blocks every story: the Song gains its new fields and the import has one entry p
 - [x] T045 [US4] Green: meta events in `api/song/midi/read-midi-song.ts`.
 - [x] T046 [P] [US4] Red: `api/song/song-metre.spec.ts`: `songMetre(song)` gives the first Time signature, the first Key and the upbeat as a reduced fraction of a whole note (1 quarter → 1/4, 3 eighths → 3/8); fields absent when the Song keeps none.
 - [x] T047 [US4] Green: `api/song/song-metre.ts`, exported from `api/index.ts`.
-- [ ] T048 [P] [US4] Red: `src/app/features/tape/song-metre/song-metre.component.spec.ts`: renders "3/4, G major, upbeat 1/4" in English and "3/4, G-Dur, Auftakt 1/4" in German from `TAPE.METRE.*`; only the parts the Song keeps; nothing when it keeps none.
-- [ ] T049 [US4] Green: `src/app/features/tape/song-metre/song-metre.component.ts` (standalone, OnPush, signal input, presentational).
-- [ ] T050 [US4] Red: `tape-import.component.spec.ts` shows `song-metre` in `song-facts` for a Song that keeps any; `src/app/features/tape/tape-view/` spec shows it in the Tape details for the Tape's Song.
-- [ ] T051 [US4] Green: place `song-metre` in `tape-import.component.html` and the Tape details of the Tape view.
+- [x] T048 [P] [US4] Red: `src/app/features/tape/song-metre/song-metre.component.spec.ts`: renders "3/4, G major, upbeat 1/4" in English and "3/4, G-Dur, Auftakt 1/4" in German from `TAPE.METRE.*`; only the parts the Song keeps; nothing when it keeps none.
+- [x] T049 [US4] Green: `src/app/features/tape/song-metre/song-metre.component.ts` (standalone, OnPush, signal input, presentational).
+- [x] T050 [US4] Red: `tape-import.component.spec.ts` shows `song-metre` in `song-facts` for a Song that keeps any; `src/app/features/tape/tape-view/` spec shows it in the Tape details for the Tape's Song.
+- [x] T051 [US4] Green: place `song-metre` in `tape-import.component.html` and the Tape details of the Tape view.
 - [ ] T052 [US4] Red→Green: extend `e2e/score-import.spec.ts`: a 3/4 Score with a quarter upbeat and G major shows "3/4, G major, upbeat 1/4" on the import screen and, after a restart, in the Tape details (scenarios 1, 7).
 
 **Checkpoint**: commit; STATUS.

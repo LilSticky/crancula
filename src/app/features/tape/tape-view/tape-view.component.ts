@@ -17,7 +17,8 @@ import {BreakpointObserver} from '@angular/cdk/layout';
 import {toSignal} from '@angular/core/rxjs-interop';
 import {ActivatedRoute, Router, RouterLink} from '@angular/router';
 import {map} from 'rxjs';
-import {column, columnDuration, cuttingProblems, holesWithCuttingProblems, noteName, type HoleRef, type ImportSummary, type Organ, type Tape, tapeGeometry, type TapeGeometry, type Transposed} from '@api/index';
+import {column, columnDuration, cuttingProblems, holesWithCuttingProblems, noteName, type HoleRef, type ImportSummary, type Organ, type SongMetre, songMetre, type Tape, tapeGeometry, type TapeGeometry, type Transposed} from '@api/index';
+import {SongMetreComponent} from '../song-metre/song-metre.component';
 import {canTranspose, holeRefsOf, selectionOfRefs} from './transpose-selection';
 import {crankSpeedChangeTo} from './crank-speed-change';
 import {holeAt, moveSpot, sameSpot, spotAt, type Spot, type TapeSelection} from './spot';
@@ -153,7 +154,7 @@ const COMPACT_QUERY = '(max-width: 1179.98px)';
   selector: 'cranc-tape-view',
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [TapeEditor, TapePreview],
-  imports: [ImportSummaryComponent, TranslatePipe, RouterLink, PageHeadComponent, MatButton, MatIconButton, MatTooltip, MatButtonToggle, MatButtonToggleGroup, MatIcon, MatProgressSpinner, AddHoleComponent, CuttingProblemsComponent, SelectedHoleComponent, TapeSectionComponent, PreviewSectionComponent, TapeStatusLineComponent],
+  imports: [ImportSummaryComponent, TranslatePipe, RouterLink, PageHeadComponent, MatButton, MatIconButton, MatTooltip, MatButtonToggle, MatButtonToggleGroup, MatIcon, MatProgressSpinner, AddHoleComponent, CuttingProblemsComponent, SelectedHoleComponent, TapeSectionComponent, PreviewSectionComponent, TapeStatusLineComponent, SongMetreComponent],
   templateUrl: './tape-view.component.html',
   styleUrl: './tape-view.component.scss',
   host: {'(keydown)': 'onViewKeydown($event)'},
@@ -256,6 +257,13 @@ export class TapeViewComponent {
   protected readonly tape = computed(() => {
     const id = this.id();
     return id === null ? undefined : this.library.tapeEntities().find((tape) => tape.id === id);
+  });
+
+  /** The metre of the Tape's Song: its first Time signature, Key and upbeat; nothing while the Song is not found. */
+  protected readonly metre = computed<SongMetre>(() => {
+    const songId = this.tape()?.songId;
+    const song = this.library.songEntities().find((candidate) => candidate.id === songId);
+    return song ? songMetre(song) : {};
   });
 
   /** The Tape as drawn: the would-be Tape while a Hole is dragged. */

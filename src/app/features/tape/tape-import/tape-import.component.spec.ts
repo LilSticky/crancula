@@ -72,6 +72,24 @@ function percussionOnlyBytes(): Uint8Array {
   });
 }
 
+/** A Lead in 3/4 and G major from its meta events (scenario 5 of US4), one quarter Note. */
+function metreBytes(): Uint8Array {
+  return encodeSmf({
+    format: 1,
+    division: {ticksPerQuarterNote: TICKS_PER_QUARTER},
+    tracks: [
+      {
+        events: [
+          {delta: 0, event: {type: 'timeSignature', beats: 3, beatType: 4}},
+          {delta: 0, event: {type: 'keySignature', fifths: 1, mode: 'major'}},
+          {delta: 0, event: {type: 'noteOn', channel: 0, note: 61, velocity: 80}},
+          {delta: TICKS_PER_QUARTER, event: {type: 'noteOff', channel: 0, note: 61, velocity: 0}},
+        ],
+      },
+    ],
+  });
+}
+
 function midiFile(bytes: Uint8Array, name = 'melody.mid'): File {
   return new File([new Uint8Array(bytes)], name, {type: 'audio/midi'});
 }
@@ -629,6 +647,39 @@ describe('TapeImportComponent', () => {
       expect(query('song-rejection')?.querySelector('mat-icon')).not.toBeNull();
       expect(query('song-file-name')).toBeNull();
       expect(query('song-facts')).toBeNull();
+    });
+
+    it('shows the Time signature and the Key of a MIDI Song inside the song facts', async () => {
+      const {choose, query, textOf} = await render({organs: [testOrgan('Street organ', 3)]});
+
+      await choose(midiFile(metreBytes(), 'metre.mid'));
+
+      expect(query('song-facts')?.querySelector('[data-testid="song-metre"]')).not.toBeNull();
+      expect(textOf('song-metre')).toBe('3/4, G major');
+    });
+
+    it('shows the upbeat of a Score in 3/4 that starts with a quarter, in G major', async () => {
+      const {choose, textOf} = await render({organs: [testOrgan('Street organ', 3)]});
+      const upbeat: ScoreSpec = {
+        parts: [
+          {
+            name: 'Flute',
+            measures: [
+              {
+                entries: [
+                  {kind: 'attributes', divisions: 1, time: {beats: 3, beatType: 4}, key: {fifths: 1, mode: 'major'}},
+                  {kind: 'note', pitch: C4, duration: 1},
+                ],
+              },
+              {entries: [{kind: 'note', pitch: C4, duration: 3}]},
+            ],
+          },
+        ],
+      };
+
+      await choose(scoreFile(upbeat, 'upbeat.musicxml'));
+
+      expect(textOf('song-metre')).toBe('3/4, G major, upbeat 1/4');
     });
   });
 

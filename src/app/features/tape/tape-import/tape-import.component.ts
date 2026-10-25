@@ -20,7 +20,9 @@ import {
   prefilledColumnLength,
   proposeTransposition,
   readSongSource,
+  type SongMetre,
   type SongReading,
+  songMetre,
   tapeLengthInMillimetres,
   transposition,
   type Song,
@@ -45,6 +47,7 @@ import {
 } from './tape-import-form';
 import {TapeFitCardComponent} from './tape-fit-card/tape-fit-card.component';
 import {TapePreviewComponent} from './tape-preview/tape-preview.component';
+import {SongMetreComponent} from '../song-metre/song-metre.component';
 
 /** A translation key and its parameters. */
 interface Readiness {
@@ -61,7 +64,7 @@ const NO_SONG_DRAFT: TapeImportDraft = {name: '', columnLength: null, transposit
 @Component({
   selector: 'cranc-tape-import',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslatePipe, RouterLink, MatFormField, MatLabel, MatInput, MatError, MatButton, MatIconButton, MatCheckbox, MatIcon, MatCard, MatChip, MatTooltip, MatSuffix, FormField, DecimalInputDirective, PageHeadComponent, ActionBarComponent, TapeFitCardComponent, TapePreviewComponent],
+  imports: [TranslatePipe, RouterLink, MatFormField, MatLabel, MatInput, MatError, MatButton, MatIconButton, MatCheckbox, MatIcon, MatCard, MatChip, MatTooltip, MatSuffix, FormField, DecimalInputDirective, PageHeadComponent, ActionBarComponent, TapeFitCardComponent, TapePreviewComponent, SongMetreComponent],
   templateUrl: './tape-import.component.html',
   providers: [{provide: ErrorStateMatcher, useClass: ShownViolationMatcher}],
   styleUrl: './tape-import.component.scss',
@@ -99,6 +102,12 @@ export class TapeImportComponent {
     return song
       ? {parts: song.parts.length, notes: song.parts.reduce((total, part) => total + part.notes.length, 0)}
       : null;
+  });
+
+  /** The metre the Song keeps: its first Time signature, Key and upbeat; nothing without a Song. */
+  protected readonly metre = computed<SongMetre>(() => {
+    const song = this.song();
+    return song ? songMetre(song) : {};
   });
 
   /** The selected Parts; a new Song starts with its default Parts. */
