@@ -51,8 +51,8 @@ const PIANO: ScoreSpec = {
 };
 
 /**
- * A waltz in G major: 3/4 with a quarter upbeat (an implicit first measure of one quarter), then a full Bar of three
- * quarters. One Part on one staff, its Notes within the Pipes C4 to C6.
+ * A waltz in G major: 3/4 with a first Bar of one quarter (the upbeat), then a full Bar of three quarters. One Part on
+ * one staff, its Notes within the Pipes C4 to C6.
  */
 const WALTZ: ScoreSpec = {
   workTitle: 'Waltz with upbeat',
