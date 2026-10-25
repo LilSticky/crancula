@@ -29,7 +29,7 @@ full e2e in CI. **Sound not checked by hand yet**: the user has not listened to 
 [#169](https://github.com/LilSticky/crancula/issues/169) (Read a tape as Scores) and
 [#170](https://github.com/LilSticky/crancula/issues/170) (Cut several tapes side by side, discovery still to do).
 The specs 010–012 are written on their own branches, each with a draft pull request. The Project board now holds
-every issue (29 were missing); its built-in auto-add workflow still has to be enabled in the GitHub UI.
+every issue (29 were missing); its built-in auto-add workflow is on (it adds only new issues, so the older ones had to be added by hand).
 
 **Done:** [Ready-made Organs (#162)](https://github.com/LilSticky/crancula/issues/162) (2026-10-24, branch
 `claude/issue-162-20261024-2112`): the term is Preset (German Vorlage); a new Organ offers the Presets as starting
