@@ -66,7 +66,7 @@
 * Converted to tape format for playback on barrel organs
 * Not exported itself; its Tape can be exported as Scores (see Tape)
 * Made of Parts
-* Keeps its Time signatures (each at its Tick), its upbeat and its Key from its Song Source, where the Song Source has them
+* Keeps its Time signatures and Keys (each at its Tick) and its upbeat from its Song Source, where the Song Source has them
 * German: Stück
 
 # Part
@@ -134,7 +134,7 @@
 * German: Takt
 
 # Key
-* The key signature a Song keeps from its Song Source
+* A key signature a Song keeps from its Song Source, from its Tick on
 * German: Tonart
 
 # Transposition
