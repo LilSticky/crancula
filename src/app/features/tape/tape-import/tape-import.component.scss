@@ -124,6 +124,11 @@ mat-card {
   color: var(--mat-sys-error);
 }
 
+/* Centred on the first line of the message, not on the baseline above it. */
+.rejection mat-icon {
+  vertical-align: middle;
+}
+
 cranc-action-bar {
   grid-column: 1 / -1;
 }
