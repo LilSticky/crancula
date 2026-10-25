@@ -90,3 +90,9 @@ adds nothing.
 |--------|-------------|
 | A | The save dialog of spec 003 with "<Tape name>.svg" |
 | B | The folder dialog with "<Tape name> 1 of 1.svg", so a picked sheet Plotter always exports the same way |
+
+## Answers (user, 2026-10-25)
+
+Q1 A (one remembered Plotter choice for all Tapes), Q2 A (own Plotter screen like Organs), Q3 B (Minimum Gap kept from a Join and from the end of an Overlap), Q4 A (Joins and Overlaps drawn, piece count in the side panel). Q5 still open.
+
+Not yet folded into spec.md: the [NEEDS CLARIFICATION] markers still stand.
