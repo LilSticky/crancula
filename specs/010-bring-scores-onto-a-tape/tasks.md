@@ -138,8 +138,8 @@ Blocks every story: the Song gains its new fields and the import has one entry p
 
 **Independent Test**: the hint on the import screen opens the how-to; choosing a PDF is rejected with the same link.
 
-- [ ] T053 [P] [US5] Red: `src/app/features/tape/tape-import/score-how-to-dialog/score-how-to-dialog.component.spec.ts`: title `TAPE.SCORE_HOW_TO.TITLE`, five numbered steps `STEP_1`…`STEP_5`, a Close button that closes the dialog.
-- [ ] T054 [US5] Green: `score-how-to-dialog.component.ts` / `.html` (Angular Material dialog, standalone, OnPush).
+- [x] T053 [P] [US5] Red: `src/app/features/tape/tape-import/score-how-to-dialog/score-how-to-dialog.component.spec.ts`: title `TAPE.SCORE_HOW_TO.TITLE`, five numbered steps `STEP_1`…`STEP_5`, a Close button that closes the dialog.
+- [x] T054 [US5] Green: `score-how-to-dialog.component.ts` / `.html` (Angular Material dialog, standalone, OnPush).
 - [ ] T055 [US5] Red: `tape-import.component.spec.ts`: the hint `score-how-to-hint` with `TAPE.IMPORT.SONG_SOURCES` and `SCORE_HINT`, its link button `score-how-to-open` opens the dialog (scenario 1); the `pdf` rejection holds the same `score-how-to-open` link (scenario 2).
 - [ ] T056 [US5] Green: hint and link in `tape-import.component.html` / `.ts`.
 - [ ] T057 [US5] Red→Green: extend `e2e/score-import.spec.ts`: choosing a `.pdf` shows the `pdf` rejection, no Tape is created, the link opens the how-to dialog.
