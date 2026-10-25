@@ -941,4 +941,26 @@ describe('readScoreSong keeps the Time signatures, the upbeat and the Keys (US4,
 
     expect(song.timeSignatures).toEqual([{start: 0, beats: 3, beatType: 4}]);
   });
+
+  it('keeps the upbeat of a short first played measure when the Time signature in force was written in a measure not played', () => {
+    // The first measure, which writes 3/4, is in ending 2 and is not played; the short measure in ending 1 is played first.
+    const song = songOf({
+      parts: [
+        {
+          name: 'Flute',
+          measures: [
+            measure(
+              {kind: 'attributes', divisions: DIVISIONS, time: {beats: 3, beatType: 4}},
+              {kind: 'barline', ending: {number: '2', type: 'start'}},
+              note('C', 5, 12),
+            ),
+            measure({kind: 'barline', ending: {number: '1', type: 'stop'}}, note('C', 5, 4)),
+            measure(note('C', 5, 12)),
+          ],
+        },
+      ],
+    });
+
+    expect(song.upbeat).toBe(song.ticksPerQuarter);
+  });
 });

@@ -29,7 +29,7 @@ export interface Note {
   readonly [validNoteBrand]: true;
 }
 
-/** The Notes of one voice of a Song, sorted by start, then note number. */
+/** The Notes of one staff or instrument of a Song, sorted by start, then note number. */
 export interface Part {
   readonly name: string | undefined;
   readonly percussion: boolean;

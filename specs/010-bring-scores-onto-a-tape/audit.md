@@ -19,12 +19,12 @@ Each finding has an ID; the fix tasks name them. Status: open until ticked.
 - [x] D5 The played order comes from the first part in part-list order, the Time signatures, Keys and upbeat from the
   first part in document order. Use the same lead part (part-list order) for both; test a Score whose document order
   differs from its part-list order.
-- [ ] D6 Upbeat only when the lead measure 1 writes `<time>`: check that the Time signature in force is used, so a
+- [x] D6 (already right; test added) Upbeat only when the lead measure 1 writes `<time>`: check that the Time signature in force is used, so a
   short first measure is an upbeat whenever a Time signature is in force at Tick 0 (FR-017). Test it.
 - [x] D7 `SongMetre` drops the domain rules (`fifths: number`, `beats: number`): reuse the `Key` and `TimeSignature`
   field types (`Pick<…>`) and type Key fifths as a −7…7 union in `api/song/song.ts`, so `tonicKey()` cannot build a key
   that does not exist (ADR 2).
-- [ ] D8 Wording: `api/song/song-metre.ts:22` "a part the Song does not keep" → "whatever the Song does not keep";
+- [x] D8 Wording: `api/song/song-metre.ts:22` "a part the Song does not keep" → "whatever the Song does not keep";
   `api/song/song.ts:32` Part doc "one voice" → "one staff or instrument" (dictionary, user decision 2026-10-26).
 
 ## UI (src/)

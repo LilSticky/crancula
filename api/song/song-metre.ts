@@ -19,7 +19,7 @@ function fractionOfWhole(upbeat: number, ticksPerQuarter: number): {numerator: n
   return {numerator: upbeat / divisor, denominator: whole / divisor};
 }
 
-/** The first Time signature, the first Key and the upbeat of a Song; a part the Song does not keep is left out. */
+/** The first Time signature, the first Key and the upbeat of a Song; whatever the Song does not keep is left out. */
 export function songMetre(song: Song): SongMetre {
   const [timeSignature] = song.timeSignatures;
   const [key] = song.keys;
