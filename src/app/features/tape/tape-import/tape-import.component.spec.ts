@@ -820,8 +820,7 @@ describe('TapeImportComponent', () => {
       });
     });
 
-    // un-skip in T039
-    it.skip('puts the grace notes that a Score leaves out into the Import Summary', async () => {
+    it('puts the grace notes that a Score leaves out into the Import Summary', async () => {
       const {choose, create, navigate} = await render({organs: [testOrgan('Street organ', 3)]});
       const grace: ScoreSpec = {
         parts: [
