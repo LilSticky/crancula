@@ -26,7 +26,7 @@
  *
  *   ScoreMeasure also has (T028, the marks of the measure, from its own barlines, sounds and words; R7):
  *     marks: MeasureMarks
- *   The MeasureMarks type is the one defined in the header of play-out.spec.ts:
+ *   The MeasureMarks type is exported from score-measures.ts (the type of ScoreMeasure.marks):
  *     repeatForward: a forward repeat barline on the measure.
  *     repeatBackward: { times } for a backward repeat barline, times as written, 2 when none is written
  *       (the MusicXML default); undefined when there is none.

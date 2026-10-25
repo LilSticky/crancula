@@ -15,6 +15,16 @@ export interface ScoreNote {
    * instrument, else its display pitch, where the notation puts it; `'unpitched'` when it has neither.
    */
   readonly pitch: MidiNoteNumber | 'unpitched';
+  /** A grace Note: no duration, so length 0; its start is where it is written. */
+  readonly grace: boolean;
+  /** A Note with `<chord/>`: it sounds with the Note before it. */
+  readonly chord: boolean;
+  /** From its `<tie type="start"/>` and `<tie type="stop"/>`. */
+  readonly tie: {readonly start: boolean; readonly stop: boolean};
+  /** Anything in its `<ornaments>` (trill, mordent, turn, tremolo, …). */
+  readonly ornament: boolean;
+  /** An `<arpeggiate/>`; written on each Note of an arpeggiated chord. */
+  readonly arpeggiate: boolean;
 }
 
 export interface ScoreTranspose {
@@ -290,6 +300,24 @@ function staffOf(note: XmlElement): number {
   return integerIn(note, 'staff', 1) ?? 1;
 }
 
+/** The `<notations>` of a note: a note may have several. */
+function notationsOf(note: XmlElement): readonly XmlElement[] {
+  return childrenNamed(note, 'notations');
+}
+
+/** The tie types of a note, from its `<tie>` elements (its sound, not its notation). */
+function tieOf(note: XmlElement): {readonly start: boolean; readonly stop: boolean} {
+  const types = childrenNamed(note, 'tie').map((tie) => tie.attributes.get('type'));
+  return {start: types.includes('start'), stop: types.includes('stop')};
+}
+
+/** A note has an ornament when its `<ornaments>` has anything in it. */
+function ornamentOf(note: XmlElement): boolean {
+  return notationsOf(note)
+    .flatMap((notation) => childrenNamed(notation, 'ornaments'))
+    .some((ornaments) => ornaments.children.length > 0);
+}
+
 /** What one measure holds: its Notes, its length, and which staves have pitched or unpitched Notes in it. */
 interface MeasureBody {
   readonly notes: ScoreNote[];
@@ -311,11 +339,13 @@ function bodyOf(
   let length = 0;
   for (const element of content) {
     if (element.name === 'note') {
-      // Grace notes have no duration and are not read yet.
-      if (childNamed(element, 'grace') !== undefined) continue;
-      const duration = requiredInteger(element, 'duration', 0);
+      const isGrace = childNamed(element, 'grace') !== undefined;
       const isChord = childNamed(element, 'chord') !== undefined;
-      if (!isChord) {
+      // A grace Note has no duration and takes no time: it starts where the cursor is and does not move it.
+      const duration = isGrace ? 0 : requiredInteger(element, 'duration', 0);
+      if (isGrace) {
+        noteStart = position;
+      } else if (!isChord) {
         noteStart = position;
         position += duration;
       }
@@ -323,7 +353,17 @@ function bodyOf(
         const staff = staffOf(element);
         if (childNamed(element, 'unpitched') === undefined) pitchedStaves.add(staff);
         else unpitchedStaves.add(staff);
-        notes.push({staff, start: noteStart, length: duration, pitch: writtenPitchOf(element, instruments)});
+        notes.push({
+          staff,
+          start: noteStart,
+          length: duration,
+          pitch: writtenPitchOf(element, instruments),
+          grace: isGrace,
+          chord: isChord,
+          tie: tieOf(element),
+          ornament: ornamentOf(element),
+          arpeggiate: notationsOf(element).some((notation) => childNamed(notation, 'arpeggiate') !== undefined),
+        });
       }
       length = Math.max(length, noteStart + duration, position);
     } else if (element.name === 'backup') {

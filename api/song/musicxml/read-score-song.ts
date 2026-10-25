@@ -1,6 +1,6 @@
 import {err, ok, type Result} from '../../result';
-import {note, newSongId, part, song, type Note, type Part, type Song} from '../song';
-import type {SongReading, SongRejection} from '../read-song-source';
+import {note, newSongId, part, partIndex, song, type Note, type Part, type PartIndex, type Song} from '../song';
+import type {LeftOut, SongReading, SongRejection} from '../read-song-source';
 import {layOut, type LaidOutStaff} from './lay-out';
 import {playOut} from './play-out';
 import {scoreMeasures, type ScorePart} from './score-measures';
@@ -60,6 +60,16 @@ function notesOf(staff: LaidOutStaff): readonly Note[] | undefined {
   return notes;
 }
 
+/** The left-out counts of the Parts of a Song, in the order of their PartIndex. */
+function leftOutByPart(counts: readonly LeftOut[]): ReadonlyMap<PartIndex, LeftOut> {
+  const byPart = new Map<PartIndex, LeftOut>();
+  counts.forEach((count, index) => {
+    const key = partIndex(index, counts.length);
+    if (key !== undefined) byPart.set(key, count);
+  });
+  return byPart;
+}
+
 /**
  * Reads an uncompressed MusicXML Score (score-partwise or score-timewise) as a Song: one Part per staff with
  * Notes, in part-list then staff order (FR-004, FR-005). Never throws.
@@ -84,6 +94,8 @@ export function readScoreSong(bytes: Uint8Array, fileName: string): Result<SongR
   const laidOut = layOut(parts, playOut(leadMeasures.map((measure) => measure.marks)));
 
   const songParts: Part[] = [];
+  // A staff of only grace notes has no Notes, so part() gives it no Part and its counts are left out with it.
+  const leftOuts: LeftOut[] = [];
   for (const {scorePart, index} of byPartList) {
     const partName = listed.find((candidate) => candidate.id === scorePart.id)?.name;
     const staves = staffCountOf(scorePart);
@@ -95,7 +107,10 @@ export function readScoreSong(bytes: Uint8Array, fileName: string): Result<SongR
         percussion: scorePart.percussionStaves.has(staff.staff),
         notes,
       });
-      if (built !== undefined) songParts.push(built);
+      if (built !== undefined) {
+        songParts.push(built);
+        leftOuts.push(staff.leftOut);
+      }
     }
   }
   if (songParts.length === 0) return err('no-notes');
@@ -106,5 +121,5 @@ export function readScoreSong(bytes: Uint8Array, fileName: string): Result<SongR
     ticksPerQuarter: laidOut.ticksPerQuarter,
     parts: songParts,
   });
-  return built === undefined ? err('not-a-score') : ok({song: built});
+  return built === undefined ? err('not-a-score') : ok({song: built, leftOut: leftOutByPart(leftOuts)});
 }

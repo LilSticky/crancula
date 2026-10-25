@@ -8,6 +8,15 @@
  *     Never throws. Malformed XML, or a root other than score-partwise/score-timewise: 'not-a-score'.
  *     No Part with Notes: 'no-notes'.
  *
+ *   SongReading.leftOut (NEW, T039; the type is LeftOut in read-song-source.ts): for a Score, a Map keyed by the
+ *     PartIndex of each Part, one entry per Part (0 and 0 when none), counting grace notes and ornaments in
+ *     played-out order (R8). A staff that gives no Part has no entry.
+ *
+ *   Ties (FR-008, NEW, T036): a tie joins a Note with the next Note of its pitch in its staff, in played-out order,
+ *     when that starts exactly where the tied Note ends; the joined Note is one Note of the Part (lay-out.spec.ts).
+ *   Grace notes and ornaments (FR-009, FR-010, NEW, T038): a grace note is no Note; a Note with an ornament is one
+ *     plain Note as long as it is written; an arpeggiated chord starts together. Each is counted in leftOut.
+ *
  *   Parts (FR-004, FR-005, R8): one per staff with Notes, of each part, in part-list then staff order.
  *     name: the part name, plus ' n' (the staff number) when the part has several staves; an empty part
  *     name gives an unnamed Part (name undefined). A staff with a percussion clef, or with only unpitched
@@ -30,7 +39,7 @@ import {createTape, type CreateTapeInput} from '../../tape/create-tape';
 import {transposition, type Transposition} from '../../tape/tape';
 import {readMidiSong} from '../midi/read-midi-song';
 import {encodeSmf, type SmfTimedEvent, type SmfTrack} from '../midi/smf-test-helper';
-import type {SongReading, SongRejection} from '../read-song-source';
+import type {LeftOut, SongReading, SongRejection} from '../read-song-source';
 import {partIndex, type Part, type PartIndex, type Song} from '../song';
 import {readScoreSong} from './read-score-song';
 import {
@@ -38,6 +47,7 @@ import {
   type MeasureEntry,
   type MeasureSpec,
   type NoteSpec,
+  type Ornament,
   type PitchSpec,
   type ScoreSpec,
 } from './score-test-helper';
@@ -532,5 +542,249 @@ describe('readScoreSong reads a long Score in time (SC-005)', () => {
     expect(song.parts).toHaveLength(STAVES);
     expect(endOf(song)).toBe(FIVE_MINUTE_QUARTERS * song.ticksPerQuarter);
     expect(elapsed).toBeLessThan(READ_BOUND_MS);
+  });
+});
+
+/*
+ * US3, ties, grace notes and ornaments (T036, T038, T040 is the Import Summary): the Score is read with its ties
+ * joined, its grace notes and ornaments left out, and each Part's counts in leftOut keyed by its PartIndex.
+ */
+
+function firstPartOf(song: Song): Part {
+  return defined(song.parts[0], 'the first Part');
+}
+
+function timingOf(songPart: Part): {noteNumber: number; start: number; duration: number}[] {
+  return songPart.notes.map(({noteNumber, start, duration}) => ({noteNumber, start, duration}));
+}
+
+function readingOfScore(spec: ScoreSpec): SongReading {
+  return readingOf(readScoreSong(utf8(scoreXml(spec)), 'score.musicxml'));
+}
+
+function leftOutIn(reading: SongReading): ReadonlyMap<PartIndex, LeftOut> {
+  return defined(reading.leftOut, 'leftOut of a Score');
+}
+
+function partAt(index: number, partCount: number): PartIndex {
+  return defined(partIndex(index, partCount), `Part ${index}`);
+}
+
+/** The same Note, with the tie elements of the given types. */
+function tied(spec: NoteSpec, tie: readonly ('start' | 'stop')[]): NoteSpec {
+  return {...spec, tie};
+}
+
+/** A grace Note: it has no duration, so it takes no time in its measure. */
+function graceNote(step: PitchSpec['step'], octave: number, staff?: number): NoteSpec {
+  return {kind: 'note', pitch: {step, octave}, grace: true, staff};
+}
+
+describe('readScoreSong joins a tie into one Note (US3, R8)', () => {
+  it('joins a half Note tied over the bar line to a quarter of the same pitch into one Note of 3 quarters', () => {
+    const song = songOf({
+      parts: [
+        {
+          name: 'Flute',
+          measures: [
+            measure(...attributesAt(0), rest(8), tied(note('C', 4, 8), ['start'])),
+            measure(tied(note('C', 4, 4), ['stop']), rest(12)),
+          ],
+        },
+      ],
+    });
+    const quarter = song.ticksPerQuarter;
+
+    expect(timingOf(firstPartOf(song))).toEqual([{noteNumber: 60, start: 2 * quarter, duration: 3 * quarter}]);
+  });
+
+  it('joins a G sharp tied to an A flat, which sound the same Note', () => {
+    const song = songOf({
+      parts: [
+        {
+          name: 'Flute',
+          measures: [
+            measure(
+              ...attributesAt(0),
+              rest(12),
+              tied({kind: 'note', pitch: {step: 'G', octave: 4, alter: 1}, duration: DIVISIONS}, ['start']),
+            ),
+            measure(
+              tied({kind: 'note', pitch: {step: 'A', octave: 4, alter: -1}, duration: DIVISIONS}, ['stop']),
+              rest(12),
+            ),
+          ],
+        },
+      ],
+    });
+
+    const quarter = song.ticksPerQuarter;
+
+    expect(timingOf(firstPartOf(song))).toEqual([{noteNumber: 68, start: 3 * quarter, duration: 2 * quarter}]);
+  });
+
+  it('joins a tie at the end of a repeat to the Note of its pitch at the repeat start, in played-out order', () => {
+    const song = songOf({
+      parts: [
+        {
+          name: 'Flute',
+          measures: [
+            measure(
+              ...attributesAt(0),
+              {kind: 'barline', location: 'left', repeat: 'forward'},
+              tied(note('C', 4, 8), ['stop']),
+            ),
+            measure(tied(note('C', 4, 8), ['start']), {kind: 'barline', location: 'right', repeat: 'backward'}),
+          ],
+        },
+      ],
+    });
+    const half = 2 * song.ticksPerQuarter;
+
+    expect(timingOf(firstPartOf(song))).toEqual([
+      {noteNumber: 60, start: 0, duration: half},
+      {noteNumber: 60, start: half, duration: 2 * half},
+      {noteNumber: 60, start: 3 * half, duration: half},
+    ]);
+  });
+});
+
+describe('readScoreSong leaves grace notes and ornaments out and counts them (US3, R8)', () => {
+  it('leaves a grace note out, so the main Note starts where it is written, and counts it', () => {
+    const reading = readingOfScore({
+      parts: [{name: 'Flute', measures: [measure(...attributesAt(0), rest(4), graceNote('E', 5), note('D', 5, 4), rest(8))]}],
+    });
+    const quarter = reading.song.ticksPerQuarter;
+
+    expect(timingOf(firstPartOf(reading.song))).toEqual([{noteNumber: 74, start: quarter, duration: quarter}]);
+    expect(leftOutIn(reading).get(partAt(0, 1))).toEqual({graceNotes: 1, ornaments: 0});
+  });
+
+  it.each<Ornament>(['trill-mark', 'mordent', 'turn', 'tremolo'])(
+    'keeps a Note with a %s as one plain Note as long as it is written, and counts it',
+    (ornament) => {
+      const reading = readingOfScore({
+        parts: [{name: 'Flute', measures: [measure(...attributesAt(0), {...note('C', 5, 8), ornaments: [ornament]}, rest(8))]}],
+      });
+
+      expect(timingOf(firstPartOf(reading.song))).toEqual([
+        {noteNumber: 72, start: 0, duration: 2 * reading.song.ticksPerQuarter},
+      ]);
+      expect(leftOutIn(reading).get(partAt(0, 1))).toEqual({graceNotes: 0, ornaments: 1});
+    },
+  );
+
+  it('keeps the Notes of an arpeggiated chord starting together, and counts the chord once', () => {
+    const reading = readingOfScore({
+      parts: [
+        {
+          name: 'Piano',
+          measures: [
+            measure(
+              ...attributesAt(0),
+              {...note('C', 4, 8), arpeggiate: true},
+              {...note('E', 4, 8), chord: true, arpeggiate: true},
+              {...note('G', 4, 8), chord: true, arpeggiate: true},
+            ),
+          ],
+        },
+      ],
+    });
+    const half = 2 * reading.song.ticksPerQuarter;
+
+    expect(timingOf(firstPartOf(reading.song))).toEqual([
+      {noteNumber: 60, start: 0, duration: half},
+      {noteNumber: 64, start: 0, duration: half},
+      {noteNumber: 67, start: 0, duration: half},
+    ]);
+    expect(leftOutIn(reading).get(partAt(0, 1))).toEqual({graceNotes: 0, ornaments: 1});
+  });
+});
+
+describe('readScoreSong gives leftOut per Part, keyed by its PartIndex (US3, R8)', () => {
+  it('counts the grace notes and ornaments of each Part under its own PartIndex, zero included', () => {
+    const leftOut = leftOutIn(
+      readingOfScore({
+        parts: [
+          {
+            name: 'Flute',
+            measures: [
+              measure(
+                ...attributesAt(0),
+                graceNote('E', 5),
+                graceNote('F', 5),
+                {...note('C', 5, 4), ornaments: ['trill-mark']},
+                rest(12),
+              ),
+            ],
+          },
+          {name: 'Piano', measures: [measure(...attributesAt(0), note('C', 4, 16))]},
+        ],
+      }),
+    );
+
+    expect(leftOut.get(partAt(0, 2))).toEqual({graceNotes: 2, ornaments: 1});
+    expect(leftOut.get(partAt(1, 2))).toEqual({graceNotes: 0, ornaments: 0});
+  });
+
+  it('counts the grace notes and ornaments of a repeated measure once for each time it is played', () => {
+    const leftOut = leftOutIn(
+      readingOfScore({
+        parts: [
+          {
+            name: 'Flute',
+            measures: [
+              measure(
+                ...attributesAt(0),
+                {kind: 'barline', location: 'left', repeat: 'forward'},
+                graceNote('E', 5),
+                {...note('C', 5, 4), ornaments: ['trill-mark']},
+                rest(12),
+              ),
+              measure(note('D', 5, 16), {kind: 'barline', location: 'right', repeat: 'backward'}),
+            ],
+          },
+        ],
+      }),
+    );
+
+    expect(leftOut.get(partAt(0, 1))).toEqual({graceNotes: 2, ornaments: 2});
+  });
+
+  it('gives no Part to a staff of only a grace note, and no leftOut entry for it', () => {
+    const reading = readingOfScore({
+      parts: [
+        {
+          name: 'Piano',
+          staves: 2,
+          measures: [
+            measure(
+              ...attributesAt(0),
+              note('C', 4, 4, 1),
+              {kind: 'backup', duration: 4},
+              graceNote('E', 4, 2),
+              rest(4, 2),
+            ),
+          ],
+        },
+      ],
+    });
+
+    expect(namesOf(reading.song)).toEqual(['Piano 1']);
+    expect([...leftOutIn(reading).keys()]).toEqual([partAt(0, 1)]);
+  });
+
+  it('gives every Part zero grace notes and zero ornaments for a Score with neither', () => {
+    const leftOut = leftOutIn(
+      readingOfScore({
+        parts: [
+          {name: 'Flute', measures: [measure(...attributesAt(0), note('E', 5, 16))]},
+          {name: 'Violin', measures: [measure(...attributesAt(0), note('A', 5, 16))]},
+        ],
+      }),
+    );
+
+    expect(leftOut.get(partAt(0, 2))).toEqual({graceNotes: 0, ornaments: 0});
+    expect(leftOut.get(partAt(1, 2))).toEqual({graceNotes: 0, ornaments: 0});
   });
 });

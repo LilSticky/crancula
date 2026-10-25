@@ -1,5 +1,6 @@
 import {midiNoteNumber, type MidiNoteNumber} from '../../organ/midi-note-number';
 import {tick, ticksPerQuarter, type Tick, type TicksPerQuarter} from '../song';
+import type {LeftOut} from '../read-song-source';
 import type {ScoreMeasure, ScoreNote, ScorePart, ScoreTranspose} from './score-measures';
 
 export interface LaidOutNote {
@@ -16,6 +17,11 @@ export interface LaidOutStaff {
   readonly staff: number;
   /** Sorted by start, then note number; unpitched Notes first among equal starts. */
   readonly notes: readonly LaidOutNote[];
+  /**
+   * The grace notes and ornaments of the staff, counted in played-out order (research R8): each grace note once,
+   * each Note with an ornament once, each arpeggiated chord once. `0` and `0` when there are none.
+   */
+  readonly leftOut: LeftOut;
 }
 
 export interface LaidOut {
@@ -36,6 +42,10 @@ interface StaffBuild {
   readonly part: number;
   readonly staff: number;
   readonly notes: LaidOutNote[];
+  /** The index in `notes` of the Note that waits for the next Note of the staff to join it through a tie. */
+  waiting: number | undefined;
+  graceNotes: number;
+  ornaments: number;
 }
 
 function greatestCommonDivisor(a: number, b: number): number {
@@ -112,7 +122,7 @@ function staffFor(staves: Map<string, StaffBuild>, part: number, staff: number):
   const key = `${part}/${staff}`;
   const existing = staves.get(key);
   if (existing !== undefined) return existing;
-  const created: StaffBuild = {part, staff, notes: []};
+  const created: StaffBuild = {part, staff, notes: [], waiting: undefined, graceNotes: 0, ornaments: 0};
   staves.set(key, created);
   return created;
 }
@@ -130,6 +140,18 @@ function addMeasure(
   }
 }
 
+/**
+ * Whether the Note that waits for a tie joins the next Note of its staff: the same MIDI note number, starting
+ * exactly where the waiting Note ends. An unpitched Note joins nothing.
+ */
+function tieJoins(waiting: LaidOutNote, noteNumber: MidiNoteNumber | 'unpitched', start: Tick): boolean {
+  return noteNumber !== 'unpitched' && waiting.noteNumber === noteNumber && waiting.start + waiting.duration === start;
+}
+
+/**
+ * Adds a Note to its staff. A grace note is no Note (research R8). A Note that waits for a tie is joined with the
+ * next Note of its staff when that one joins it; any other next Note ends the waiting Note as written.
+ */
 function addNote(
   staves: Map<string, StaffBuild>,
   partIndex: number,
@@ -138,12 +160,27 @@ function addNote(
   measureStart: number,
   perQuarter: TicksPerQuarter,
 ): void {
+  const build = staffFor(staves, partIndex, note.staff);
+  if (note.grace) {
+    build.graceNotes += 1;
+    return;
+  }
+  if (note.ornament) build.ornaments += 1;
+  // An arpeggiate is written on each Note of a chord; the chord is counted once, at its first Note.
+  if (note.arpeggiate && !note.chord) build.ornaments += 1;
   const noteNumber = soundingPitchOf(note.pitch, measure.transpose);
-  staffFor(staves, partIndex, note.staff).notes.push({
-    noteNumber,
-    start: knownTick(measureStart + ticksOf(note.start, measure.divisions, perQuarter)),
-    duration: knownTick(ticksOf(note.length, measure.divisions, perQuarter)),
-  });
+  const start = knownTick(measureStart + ticksOf(note.start, measure.divisions, perQuarter));
+  const duration = knownTick(ticksOf(note.length, measure.divisions, perQuarter));
+  const waitingIndex = build.waiting;
+  const waiting = waitingIndex === undefined ? undefined : build.notes[waitingIndex];
+  build.waiting = undefined;
+  if (waitingIndex !== undefined && waiting !== undefined && tieJoins(waiting, noteNumber, start)) {
+    build.notes[waitingIndex] = {noteNumber, start: waiting.start, duration: knownTick(waiting.duration + duration)};
+    build.waiting = note.tie.start ? waitingIndex : undefined;
+    return;
+  }
+  build.notes.push({noteNumber, start, duration});
+  if (note.tie.start) build.waiting = build.notes.length - 1;
 }
 
 /**
@@ -168,6 +205,11 @@ export function layOut(parts: readonly ScorePart[], playedOrder: readonly number
     ticksPerQuarter: perQuarter,
     staves: [...staves.values()]
       .sort((a, b) => a.part - b.part || a.staff - b.staff)
-      .map((build) => ({part: build.part, staff: build.staff, notes: build.notes.sort(byStartThenNoteNumber)})),
+      .map((build) => ({
+        part: build.part,
+        staff: build.staff,
+        notes: build.notes.sort(byStartThenNoteNumber),
+        leftOut: {graceNotes: build.graceNotes, ornaments: build.ornaments},
+      })),
   };
 }

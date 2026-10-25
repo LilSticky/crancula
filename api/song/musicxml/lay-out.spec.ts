@@ -11,14 +11,34 @@
  *     ticksPerQuarter: the least common multiple of every divisions value in force in the parts when it is
  *     at most 32767; otherwise 960, and every start and length is rounded to the nearest Tick (research R6).
  *     staves: one entry per part and staff that has Notes, in part then staff order.
- *   LaidOutStaff { part: number (index in parts); staff: number; notes: readonly LaidOutNote[] }
+ *   LaidOutStaff { part: number (index in parts); staff: number; notes: readonly LaidOutNote[];
+ *                  leftOut: { graceNotes: number; ornaments: number } }                       (NEW, T038)
  *     notes: all the Notes of the staff, the voices of the staff together, sorted by start, then note number.
+ *       A grace note is no Note; a tied Note joined with the next one is one Note (see below).
+ *     leftOut: the grace notes and ornaments of the staff, counted in played-out order (research R8): each
+ *       grace note once, each Note with an ornament once, each arpeggiated chord once; 0 and 0 when none.
+ *     One entry per part and staff that has Notes, or a grace note, or an ornament. A staff of only a grace
+ *     note therefore has an entry with notes []; the reader gives it no Part (read-score-song.spec.ts).
  *   LaidOutNote { noteNumber: MidiNoteNumber | 'unpitched'; start: Tick; duration: Tick }
  *     noteNumber: the sounding pitch, the written pitch plus the transposition in force in its measure
  *     (chromatic + 12 × octaveChange); unpitched Notes are kept as 'unpitched'.
  *
+ * Ties (research R8, NEW, T036): per staff, a Note with `tie.start` waits; the next Note of the same note number
+ * in the same staff, in played-out order, joins it when it starts exactly where the waiting Note ends. The joined
+ * Note starts with the first and lasts the sum of both. Any other next Note ends the waiting Note as written.
+ *
  * Types from score-measures.ts: ScorePart, ScoreMeasure, ScoreNote (see its header). Types from song.ts:
- * Tick, TicksPerQuarter. MidiNoteNumber from api/organ/midi-note-number.ts.
+ * Tick, TicksPerQuarter. MidiNoteNumber from api/organ/midi-note-number.ts. LeftOut is the shape
+ * { graceNotes, ornaments } of read-song-source.ts; these tests write it structurally.
+ *
+ * ScoreNote gains the following fields (NEW, T036/T038; the reader fills them in T037/T039). They are
+ * written as the tests build ScoreNote values, so a Note without them is a type error:
+ *   grace: boolean               a <grace/> Note: no duration, so length 0 here; its start is where it is written.
+ *   chord: boolean               a Note with <chord/>, sounding with the Note before it.
+ *   tie: { start: boolean; stop: boolean }   from its <tie type="start"/> and <tie type="stop"/>.
+ *   ornament: boolean            anything in <ornaments> (trill, mordent, turn, tremolo, …).
+ *   arpeggiate: boolean          an <arpeggiate/>; written on each Note of an arpeggiated chord.
+ * The reader includes a grace Note in ScoreMeasure.notes with grace: true; lay-out leaves it out.
  */
 import {describe, expect, it} from 'vitest';
 import {midiNoteNumber, type MidiNoteNumber} from '../../organ/midi-note-number';
@@ -39,8 +59,35 @@ function nth<T>(items: readonly T[], index: number): T {
   return item;
 }
 
-function scoreNote(fields: { readonly start: number; readonly length: number; readonly pitch: number }): ScoreNote {
-  return { staff: 1, start: fields.start, length: fields.length, pitch: pitch(fields.pitch) };
+interface ScoreNoteFields {
+  readonly staff?: number;
+  readonly start: number;
+  readonly length: number;
+  readonly pitch: number;
+  readonly grace?: boolean;
+  readonly chord?: boolean;
+  readonly tie?: ScoreNote['tie'];
+  readonly ornament?: boolean;
+  readonly arpeggiate?: boolean;
+}
+
+const NO_TIE: ScoreNote['tie'] = { start: false, stop: false };
+const TIE_START: ScoreNote['tie'] = { start: true, stop: false };
+const TIE_STOP: ScoreNote['tie'] = { start: false, stop: true };
+
+/** A Note of staff 1 that is no grace note, chord, tie, ornament or arpeggio, unless the fields say otherwise. */
+function scoreNote(fields: ScoreNoteFields): ScoreNote {
+  return {
+    staff: fields.staff ?? 1,
+    start: fields.start,
+    length: fields.length,
+    pitch: pitch(fields.pitch),
+    grace: fields.grace ?? false,
+    chord: fields.chord ?? false,
+    tie: fields.tie ?? NO_TIE,
+    ornament: fields.ornament ?? false,
+    arpeggiate: fields.arpeggiate ?? false,
+  };
 }
 
 interface MeasureFields {
@@ -96,7 +143,7 @@ function layOutStraight(parts: readonly ScorePart[]): LaidOut {
 
 function staffOf(layout: LaidOut, partIndex: number, staff: number): LaidOutStaff {
   const found = layout.staves.find((entry) => entry.part === partIndex && entry.staff === staff);
-  if (found === undefined) throw new Error(`no Notes for part ${partIndex} staff ${staff}`);
+  if (found === undefined) throw new Error(`no staff ${staff} for part ${partIndex}`);
   return found;
 }
 
@@ -289,5 +336,215 @@ describe('layOut advances by the actual length of a measure, not by its Time sig
       { noteNumber: 60, start: 0 },
       { noteNumber: 62, start: 5 * QUARTER },
     ]);
+  });
+});
+
+describe('layOut joins a tied Note with the next Note of its pitch, in played-out order (R8)', () => {
+  it('joins a half Note tied over the bar line to a quarter of the same pitch into one Note of 3 quarters', () => {
+    const layout = layOutStraight([
+      part(
+        measure({notes: [scoreNote({start: 2 * QUARTER, length: 2 * QUARTER, pitch: 60, tie: TIE_START})]}),
+        measure({notes: [scoreNote({start: 0, length: QUARTER, pitch: 60, tie: TIE_STOP})]}),
+      ),
+    ]);
+
+    expect(notesOf(layout, 0, 1)).toMatchObject([{noteNumber: 60, start: 2 * QUARTER, duration: 3 * QUARTER}]);
+  });
+
+  it('joins a tie at the end of a repeat to the Note of its pitch at the repeat start, where the tied Note ends', () => {
+    const layout = layOut(
+      [
+        part(
+          measure({notes: [scoreNote({start: 0, length: 2 * QUARTER, pitch: 60, tie: TIE_STOP})]}),
+          measure({notes: [scoreNote({start: 0, length: 2 * QUARTER, pitch: 60, tie: TIE_START})]}),
+        ),
+      ],
+      [0, 1, 0],
+    );
+
+    expect(notesOf(layout, 0, 1)).toMatchObject([
+      {noteNumber: 60, start: 0, duration: 2 * QUARTER},
+      {noteNumber: 60, start: 2 * QUARTER, duration: 4 * QUARTER},
+    ]);
+  });
+
+  it('joins a G sharp tied to an A flat, since both sound as MIDI note 68', () => {
+    const layout = layOutStraight([
+      part(
+        measure({notes: [scoreNote({start: 0, length: QUARTER, pitch: 68, tie: TIE_START})]}),
+        measure({notes: [scoreNote({start: 0, length: QUARTER, pitch: 68, tie: TIE_STOP})]}),
+      ),
+    ]);
+
+    expect(notesOf(layout, 0, 1)).toMatchObject([{noteNumber: 68, start: 0, duration: 2 * QUARTER}]);
+  });
+
+  it('does not join a tie whose next Note has another pitch, and still joins on another staff of the same pitch', () => {
+    const layout = layOut(
+      [
+        part(
+          measure({notes: [scoreNote({start: 0, length: 2 * QUARTER, pitch: 60, tie: TIE_STOP})]}),
+          measure({
+            notes: [
+              scoreNote({start: 0, length: 2 * QUARTER, pitch: 60, tie: TIE_START}),
+              scoreNote({staff: 2, start: 0, length: 2 * QUARTER, pitch: 64, tie: TIE_START}),
+            ],
+          }),
+          measure({
+            notes: [
+              scoreNote({start: 0, length: 2 * QUARTER, pitch: 62, tie: TIE_STOP}),
+              scoreNote({staff: 2, start: 0, length: 2 * QUARTER, pitch: 64, tie: TIE_STOP}),
+            ],
+          }),
+        ),
+      ],
+      [0, 1, 2],
+    );
+
+    expect(notesOf(layout, 0, 1)).toMatchObject([
+      {noteNumber: 60, start: 0, duration: 2 * QUARTER},
+      {noteNumber: 60, start: 2 * QUARTER, duration: 2 * QUARTER},
+      {noteNumber: 62, start: 4 * QUARTER, duration: 2 * QUARTER},
+    ]);
+    expect(notesOf(layout, 0, 2)).toMatchObject([{noteNumber: 64, start: 2 * QUARTER, duration: 4 * QUARTER}]);
+  });
+
+  it('does not join a tie whose next Note starts later, and still joins on another staff that starts at its end', () => {
+    const layout = layOutStraight([
+      part(
+        measure({
+          notes: [
+            scoreNote({start: 0, length: 2 * QUARTER, pitch: 60, tie: TIE_START}),
+            scoreNote({staff: 2, start: 0, length: 2 * QUARTER, pitch: 64, tie: TIE_START}),
+          ],
+        }),
+        measure({
+          notes: [
+            scoreNote({start: QUARTER, length: QUARTER, pitch: 60, tie: TIE_STOP}),
+            scoreNote({staff: 2, start: 0, length: QUARTER, pitch: 64, tie: TIE_STOP}),
+          ],
+        }),
+      ),
+    ]);
+
+    expect(notesOf(layout, 0, 1)).toMatchObject([
+      {noteNumber: 60, start: 0, duration: 2 * QUARTER},
+      {noteNumber: 60, start: 3 * QUARTER, duration: QUARTER},
+    ]);
+    expect(notesOf(layout, 0, 2)).toMatchObject([{noteNumber: 64, start: 0, duration: 3 * QUARTER}]);
+  });
+
+  it('does not join a tie whose next Note starts earlier than the tied Note ends, and still joins on another staff', () => {
+    const layout = layOutStraight([
+      part(
+        measure({
+          length: QUARTER,
+          notes: [
+            scoreNote({start: 0, length: 2 * QUARTER, pitch: 60, tie: TIE_START}),
+            scoreNote({staff: 2, start: 0, length: QUARTER, pitch: 64, tie: TIE_START}),
+          ],
+        }),
+        measure({
+          notes: [
+            scoreNote({start: 0, length: QUARTER, pitch: 60, tie: TIE_STOP}),
+            scoreNote({staff: 2, start: 0, length: QUARTER, pitch: 64, tie: TIE_STOP}),
+          ],
+        }),
+      ),
+    ]);
+
+    expect(notesOf(layout, 0, 1)).toMatchObject([
+      {noteNumber: 60, start: 0, duration: 2 * QUARTER},
+      {noteNumber: 60, start: QUARTER, duration: QUARTER},
+    ]);
+    expect(notesOf(layout, 0, 2)).toMatchObject([{noteNumber: 64, start: 0, duration: 2 * QUARTER}]);
+  });
+});
+
+describe('layOut leaves grace notes and ornaments in, and counts them (R8, scenarios 3 to 5)', () => {
+  it('leaves a grace note out, so the main Note starts where it is written, and counts it', () => {
+    const layout = layOutStraight([
+      part(
+        measure({
+          notes: [
+            scoreNote({start: 0, length: QUARTER, pitch: 62}),
+            scoreNote({start: QUARTER, length: 0, pitch: 61, grace: true}),
+            scoreNote({start: QUARTER, length: QUARTER, pitch: 60}),
+          ],
+        }),
+      ),
+    ]);
+
+    expect(staffOf(layout, 0, 1)).toMatchObject({
+      notes: [
+        {noteNumber: 62, start: 0, duration: QUARTER},
+        {noteNumber: 60, start: QUARTER, duration: QUARTER},
+      ],
+      leftOut: {graceNotes: 1, ornaments: 0},
+    });
+  });
+
+  it('keeps a Note with an ornament as one plain Note as long as it is written, and counts it once', () => {
+    const layout = layOutStraight([
+      part(measure({notes: [scoreNote({start: 0, length: 2 * QUARTER, pitch: 60, ornament: true})]})),
+    ]);
+
+    expect(staffOf(layout, 0, 1)).toMatchObject({
+      notes: [{noteNumber: 60, start: 0, duration: 2 * QUARTER}],
+      leftOut: {graceNotes: 0, ornaments: 1},
+    });
+  });
+
+  it('starts the Notes of an arpeggiated chord together, and counts the chord once', () => {
+    const layout = layOutStraight([
+      part(
+        measure({
+          notes: [
+            scoreNote({start: 0, length: QUARTER, pitch: 60, arpeggiate: true}),
+            scoreNote({start: 0, length: QUARTER, pitch: 64, chord: true, arpeggiate: true}),
+            scoreNote({start: 0, length: QUARTER, pitch: 67, chord: true, arpeggiate: true}),
+          ],
+        }),
+      ),
+    ]);
+
+    expect(staffOf(layout, 0, 1)).toMatchObject({
+      notes: [
+        {noteNumber: 60, start: 0, duration: QUARTER},
+        {noteNumber: 64, start: 0, duration: QUARTER},
+        {noteNumber: 67, start: 0, duration: QUARTER},
+      ],
+      leftOut: {graceNotes: 0, ornaments: 1},
+    });
+  });
+
+  it('gives a staff of only a grace note an entry with no Notes and the grace note counted', () => {
+    const layout = layOutStraight([part(measure({notes: [scoreNote({start: 0, length: 0, pitch: 61, grace: true})]}))]);
+
+    expect(staffOf(layout, 0, 1)).toMatchObject({notes: [], leftOut: {graceNotes: 1, ornaments: 0}});
+  });
+
+  it('counts zero grace notes and zero ornaments for a staff with Notes and neither', () => {
+    const layout = layOutStraight([part(measure({notes: [scoreNote({start: 0, length: QUARTER, pitch: 60})]}))]);
+
+    expect(staffOf(layout, 0, 1).leftOut).toEqual({graceNotes: 0, ornaments: 0});
+  });
+
+  it('counts a grace note and an ornament once for each pass when their measure is played twice', () => {
+    const layout = layOut(
+      [
+        part(
+          measure({
+            notes: [
+              scoreNote({start: 0, length: 0, pitch: 61, grace: true}),
+              scoreNote({start: 0, length: QUARTER, pitch: 60, ornament: true}),
+            ],
+          }),
+        ),
+      ],
+      [0, 0],
+    );
+
+    expect(staffOf(layout, 0, 1).leftOut).toEqual({graceNotes: 2, ornaments: 2});
   });
 });
