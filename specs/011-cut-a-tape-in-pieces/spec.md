@@ -169,7 +169,7 @@ try to export.
 saves a round trip, and it is the only way the user learns where to change the Tape.
 
 **Independent Test**: on the reference Tape add a Hole in row 1 from Column 1, 100 Columns long
-(300 mm), pick the 300 mm Plotter, and see a Cutting Problem for Columns 1–100; shorten the Hole to
+(300 mm), pick the 300 mm Plotter, and see a Cutting Problem for Columns 1–101 (the Hole and one Minimum Gap after it); shorten the Hole to
 70 Columns and see it gone.
 
 **Acceptance Scenarios**:
@@ -178,7 +178,7 @@ saves a round trip, and it is the only way the user learns where to change the T
    described Plotter and "No Plotter"; the pick is one choice for all Tapes, remembered across
    restarts, and picking changes no Tape.
 2. **Given** the reference Tape with a Hole in row 1 from Column 1 that is 100 Columns long, and the
-   300 mm Plotter picked, **Then** the Tape has a Cutting Problem naming Columns 1–100 and the
+   300 mm Plotter picked, **Then** the Tape has a Cutting Problem naming Columns 1–101 and the
    Plotter: longer than its working length, with no place for a Join.
 3. **Given** such a Cutting Problem, **Then** it is in the side panel's list of Cutting Problems, the
    stretch is marked in the Tape view, and choosing the entry scrolls the stretch into view.
