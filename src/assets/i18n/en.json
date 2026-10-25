@@ -104,7 +104,7 @@
       "NEW_ORGAN": "Describe an Organ",
       "ORGAN": "Organ",
       "CHOOSE_ORGAN": "Choose an Organ",
-      "CHOOSE_SONG": "Choose a MIDI file",
+      "CHOOSE_SONG": "Choose a Song Source",
       "NAME": "Name of the Tape",
       "COLUMN_LENGTH": "Column length",
       "TRANSPOSITION": "Semitones",
@@ -123,7 +123,10 @@
       "STATE_PROBLEMS": "{{count}} problems prevent creating the Tape",
       "STATE_PROBLEM_ONE": "1 problem prevents creating the Tape",
       "STATE_READY": "{{columns}} Columns, {{length}} mm of Tape",
-      "STATE_READY_ONE": "1 Column, {{length}} mm of Tape"
+      "STATE_READY_ONE": "1 Column, {{length}} mm of Tape",
+      "SONG_SOURCES": "MIDI or MusicXML",
+      "SCORE_HINT": "Only a PDF or printed Scores?",
+      "SCORE_HINT_LINK": "How to get MusicXML"
     },
     "TRANSPOSITION": {
       "USE_PROPOSAL": "Use proposal",
@@ -137,7 +140,13 @@
       "NOT_A_MIDI_FILE": "This file is not a MIDI file, or it is damaged or larger than 16 MiB.",
       "FORMAT_2": "This MIDI file has several independent sequences (format 2). Save it as format 0 or 1 and try again.",
       "NOT_TIMED_IN_BEATS": "This MIDI file is timed in clock time (SMPTE) rather than in beats, so its Notes can't be placed on Columns.",
-      "NO_NOTES": "This MIDI file has no Notes in any Part that can go onto a Tape."
+      "NO_NOTES": "This MIDI file has no Notes in any Part that can go onto a Tape.",
+      "TOO_LARGE": "This file, or the Score inside it, is larger than 16 MiB.",
+      "NOT_A_SONG_SOURCE": "This file is neither a MIDI file nor a MusicXML Score.",
+      "PDF": "A PDF can't be read directly. Recognise its Notes with an outside tool and export them as MusicXML.",
+      "NOT_A_SCORE": "This file is not a readable MusicXML Score.",
+      "DAMAGED_ARCHIVE": "This compressed Score can't be read; it may be damaged.",
+      "NO_SCORE_IN_ARCHIVE": "This compressed Score contains no MusicXML Score."
     },
     "PARTS": {
       "TITLE": "Parts",
@@ -180,7 +189,9 @@
         "SHORTENED": "Hole on Pipe {{pipe}} at Column {{column}} shortened from {{from}} to {{to}} Columns",
         "REPETITION_MERGED": "Repeated Holes on Pipe {{pipe}} at Column {{column}} merged, Column {{lost}} lost"
       },
-      "MOVED_NOTE_ONE": "{{note}} moved by 1 octave to Pipe {{pipe}} (Part {{part}}, Column {{column}})"
+      "MOVED_NOTE_ONE": "{{note}} moved by 1 octave to Pipe {{pipe}} (Part {{part}}, Column {{column}})",
+      "GRACE_NOTES_LEFT_OUT": "Grace notes left out",
+      "ORNAMENTS_LEFT_OUT": "Ornaments left out"
     },
     "SECTION": {
       "TOGGLE": "Show or hide the Tape details",
@@ -265,6 +276,57 @@
       "OPEN_ORGAN": "Open the Organ",
       "CRANK_SPEED_SLIDER": "Crank speed",
       "OUTSIDE_RANGE": "Outside this Organ's Crank speed range ({{slowest}}–{{fastest}} turns/min)."
+    },
+    "SCORE_HOW_TO": {
+      "TITLE": "How to get MusicXML from printed Scores",
+      "STEP_1": "Install Audiveris, a music recognition tool.",
+      "STEP_2": "Open the PDF or the scan of your Score in Audiveris and let it recognise the Notes.",
+      "STEP_3": "Check and correct the result in a notation program such as MuseScore.",
+      "STEP_4": "Export the Score as MusicXML (.musicxml, .xml or .mxl).",
+      "STEP_5": "Choose the MusicXML file here.",
+      "CLOSE": "Close"
+    },
+    "METRE": {
+      "TIME_SIGNATURE": "{{beats}}/{{beatType}}",
+      "MAJOR": "{{key}} major",
+      "MINOR": "{{key}} minor",
+      "UPBEAT": "upbeat {{fraction}}",
+      "TONIC": {
+        "MAJOR": {
+          "0": "C",
+          "1": "G",
+          "2": "D",
+          "3": "A",
+          "4": "E",
+          "5": "B",
+          "6": "F♯",
+          "7": "C♯",
+          "M7": "C♭",
+          "M6": "G♭",
+          "M5": "D♭",
+          "M4": "A♭",
+          "M3": "E♭",
+          "M2": "B♭",
+          "M1": "F"
+        },
+        "MINOR": {
+          "0": "A",
+          "1": "E",
+          "2": "B",
+          "3": "F♯",
+          "4": "C♯",
+          "5": "G♯",
+          "6": "D♯",
+          "7": "A♯",
+          "M7": "A♭",
+          "M6": "E♭",
+          "M5": "B♭",
+          "M4": "F",
+          "M3": "C",
+          "M2": "G",
+          "M1": "D"
+        }
+      }
     }
   },
   "ORGAN": {

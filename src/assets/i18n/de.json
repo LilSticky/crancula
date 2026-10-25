@@ -104,7 +104,7 @@
       "NEW_ORGAN": "Drehorgel beschreiben",
       "ORGAN": "Drehorgel",
       "CHOOSE_ORGAN": "Drehorgel wählen",
-      "CHOOSE_SONG": "MIDI-Datei wählen",
+      "CHOOSE_SONG": "Notenquelle wählen",
       "NAME": "Name des Lochbandes",
       "COLUMN_LENGTH": "Spaltenlänge",
       "TRANSPOSITION": "Halbtöne",
@@ -123,7 +123,10 @@
       "STATE_PROBLEMS": "{{count}} Probleme verhindern das Erstellen des Lochbandes",
       "STATE_PROBLEM_ONE": "1 Problem verhindert das Erstellen des Lochbandes",
       "STATE_READY": "{{columns}} Spalten, {{length}} mm Lochband",
-      "STATE_READY_ONE": "1 Spalte, {{length}} mm Lochband"
+      "STATE_READY_ONE": "1 Spalte, {{length}} mm Lochband",
+      "SONG_SOURCES": "MIDI oder MusicXML",
+      "SCORE_HINT": "Nur ein PDF oder gedruckte Noten?",
+      "SCORE_HINT_LINK": "So kommst du zu MusicXML"
     },
     "TRANSPOSITION": {
       "USE_PROPOSAL": "Vorschlag verwenden",
@@ -137,7 +140,13 @@
       "NOT_A_MIDI_FILE": "Diese Datei ist keine MIDI-Datei, sie ist beschädigt oder größer als 16 MiB.",
       "FORMAT_2": "Diese MIDI-Datei enthält mehrere unabhängige Sequenzen (Format 2). Speichere sie als Format 0 oder 1 und versuche es erneut.",
       "NOT_TIMED_IN_BEATS": "Diese MIDI-Datei ist in Uhrzeit (SMPTE) statt in Schlägen getaktet, daher lassen sich ihre Noten nicht auf Spalten legen.",
-      "NO_NOTES": "Diese MIDI-Datei enthält in keiner Stimme Noten, die auf ein Lochband kommen können."
+      "NO_NOTES": "Diese MIDI-Datei enthält in keiner Stimme Noten, die auf ein Lochband kommen können.",
+      "TOO_LARGE": "Diese Datei oder die Noten darin sind größer als 16 MiB.",
+      "NOT_A_SONG_SOURCE": "Diese Datei ist weder eine MIDI-Datei noch MusicXML-Noten.",
+      "PDF": "Ein PDF kann nicht direkt gelesen werden. Erkenne die Noten mit einem externen Programm und exportiere sie als MusicXML.",
+      "NOT_A_SCORE": "Diese Datei ist keine lesbare MusicXML-Datei.",
+      "DAMAGED_ARCHIVE": "Diese komprimierte Notendatei lässt sich nicht lesen; sie ist vielleicht beschädigt.",
+      "NO_SCORE_IN_ARCHIVE": "Diese komprimierte Notendatei enthält keine MusicXML-Noten."
     },
     "PARTS": {
       "TITLE": "Stimmen",
@@ -180,7 +189,9 @@
         "SHORTENED": "Loch auf Pfeife {{pipe}} in Spalte {{column}} von {{from}} auf {{to}} Spalten verkürzt",
         "REPETITION_MERGED": "Wiederholte Löcher auf Pfeife {{pipe}} in Spalte {{column}} zusammengeführt, Spalte {{lost}} entfällt"
       },
-      "MOVED_NOTE_ONE": "{{note}} um 1 Oktave auf Pfeife {{pipe}} verschoben (Stimme {{part}}, Spalte {{column}})"
+      "MOVED_NOTE_ONE": "{{note}} um 1 Oktave auf Pfeife {{pipe}} verschoben (Stimme {{part}}, Spalte {{column}})",
+      "GRACE_NOTES_LEFT_OUT": "Vorschlagsnoten weggelassen",
+      "ORNAMENTS_LEFT_OUT": "Verzierungen weggelassen"
     },
     "SECTION": {
       "TOGGLE": "Lochband-Details ein- oder ausblenden",
@@ -265,6 +276,57 @@
       "OPEN_ORGAN": "Drehorgel öffnen",
       "CRANK_SPEED_SLIDER": "Kurbelgeschwindigkeit",
       "OUTSIDE_RANGE": "Außerhalb des Kurbelbereichs dieser Drehorgel ({{slowest}}–{{fastest}} Umdrehungen pro Minute)."
+    },
+    "SCORE_HOW_TO": {
+      "TITLE": "So kommst du von gedruckten Noten zu MusicXML",
+      "STEP_1": "Installiere Audiveris, ein Programm zur Notenerkennung.",
+      "STEP_2": "Öffne das PDF oder den Scan deiner Noten in Audiveris und lass die Noten erkennen.",
+      "STEP_3": "Prüfe und korrigiere das Ergebnis in einem Notensatzprogramm wie MuseScore.",
+      "STEP_4": "Exportiere die Noten als MusicXML (.musicxml, .xml oder .mxl).",
+      "STEP_5": "Wähle hier die MusicXML-Datei aus.",
+      "CLOSE": "Schließen"
+    },
+    "METRE": {
+      "TIME_SIGNATURE": "{{beats}}/{{beatType}}",
+      "MAJOR": "{{key}}-Dur",
+      "MINOR": "{{key}}-Moll",
+      "UPBEAT": "Auftakt {{fraction}}",
+      "TONIC": {
+        "MAJOR": {
+          "0": "C",
+          "1": "G",
+          "2": "D",
+          "3": "A",
+          "4": "E",
+          "5": "H",
+          "6": "Fis",
+          "7": "Cis",
+          "M7": "Ces",
+          "M6": "Ges",
+          "M5": "Des",
+          "M4": "As",
+          "M3": "Es",
+          "M2": "B",
+          "M1": "F"
+        },
+        "MINOR": {
+          "0": "a",
+          "1": "e",
+          "2": "h",
+          "3": "fis",
+          "4": "cis",
+          "5": "gis",
+          "6": "dis",
+          "7": "ais",
+          "M7": "as",
+          "M6": "es",
+          "M5": "b",
+          "M4": "f",
+          "M3": "c",
+          "M2": "g",
+          "M1": "d"
+        }
+      }
     }
   },
   "ORGAN": {
