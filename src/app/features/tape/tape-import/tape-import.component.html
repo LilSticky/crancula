@@ -30,7 +30,7 @@
         @if (song() === null && rejection() === null) {
           <p class="score-hint" data-testid="score-how-to-hint">
             <mat-icon aria-hidden="true">info</mat-icon>
-            <span>{{ 'TAPE.IMPORT.SONG_SOURCES' | translate }}. {{ 'TAPE.IMPORT.SCORE_HINT' | translate }}</span>
+            <span>{{ 'TAPE.IMPORT.SCORE_HINT' | translate }}</span>
             <button matButton type="button" data-testid="score-how-to-open" (click)="openScoreHowTo()">{{ 'TAPE.IMPORT.SCORE_HINT_LINK' | translate }}</button>
           </p>
         }

@@ -124,8 +124,7 @@
       "STATE_PROBLEM_ONE": "1 Problem verhindert das Erstellen des Lochbandes",
       "STATE_READY": "{{columns}} Spalten, {{length}} mm Lochband",
       "STATE_READY_ONE": "1 Spalte, {{length}} mm Lochband",
-      "SONG_SOURCES": "MIDI oder MusicXML",
-      "SCORE_HINT": "Nur ein PDF oder gedruckte Noten?",
+      "SCORE_HINT": "MIDI oder MusicXML. Nur ein PDF oder gedruckte Noten?",
       "SCORE_HINT_LINK": "So kommst du zu MusicXML"
     },
     "TRANSPOSITION": {
@@ -288,6 +287,7 @@
       "CLOSE": "Schließen"
     },
     "METRE": {
+      "SEPARATOR": ", ",
       "TIME_SIGNATURE": "{{beats}}/{{beatType}}",
       "MAJOR": "{{key}}-Dur",
       "MINOR": "{{key}}-Moll",

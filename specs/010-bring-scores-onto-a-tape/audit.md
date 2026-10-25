@@ -34,10 +34,10 @@ Each finding has an ID; the fix tasks name them. Status: open until ticked.
 - [x] U2 `tape-view.component.html:188`: `cranc-song-metre` sits loose in the side panel. Spec US4: in the Tape
   details. Pass the metre into `TapeSectionComponent` and show it there as a labelled row (new en/de key, label
   "Metre" / "Takt und Tonart").
-- [ ] U3 `tape-import.component.html:33`: two keys joined with a hard-coded `". "`. Make it one key.
-- [ ] U4 `song-metre.component.ts:17`: one-line template, hard-coded `", "`, a method called from the template. Use a
+- [x] U3 `tape-import.component.html:33`: two keys joined with a hard-coded `". "`. Make it one key.
+- [x] U4 `song-metre.component.ts:17`: one-line template, hard-coded `", "`, a method called from the template. Use a
   `computed` list rendered with `@for`.
-- [ ] U5 `tape-import.component.scss:61`: `cranc-song-metre:not(:empty)` styles the child from the parent. Give the
+- [x] U5 `tape-import.component.scss:61`: `cranc-song-metre:not(:empty)` styles the child from the parent. Give the
   component its own spacing when shown.
 - [ ] U6 en/de `NOT_A_MIDI_FILE` still says "or larger than 16 MiB"; `too-large` covers that. Drop the clause.
 - [ ] U7 de.json: "Notendatei" is not a dictionary word; use "komprimierte MusicXML-Noten" (or similar with Noten).

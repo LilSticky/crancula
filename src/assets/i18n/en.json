@@ -124,8 +124,7 @@
       "STATE_PROBLEM_ONE": "1 problem prevents creating the Tape",
       "STATE_READY": "{{columns}} Columns, {{length}} mm of Tape",
       "STATE_READY_ONE": "1 Column, {{length}} mm of Tape",
-      "SONG_SOURCES": "MIDI or MusicXML",
-      "SCORE_HINT": "Only a PDF or printed Scores?",
+      "SCORE_HINT": "MIDI or MusicXML. Only a PDF or printed Scores?",
       "SCORE_HINT_LINK": "How to get MusicXML"
     },
     "TRANSPOSITION": {
@@ -288,6 +287,7 @@
       "CLOSE": "Close"
     },
     "METRE": {
+      "SEPARATOR": ", ",
       "TIME_SIGNATURE": "{{beats}}/{{beatType}}",
       "MAJOR": "{{key}} major",
       "MINOR": "{{key}} minor",
