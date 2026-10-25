@@ -9,8 +9,11 @@ import {
   songId,
   tick,
   ticksPerQuarter,
+  type Key,
   type Note,
   type Part,
+  type Tick,
+  type TimeSignature,
 } from './song';
 
 const MAX_TICK = 2 ** 31 - 1;
@@ -158,5 +161,138 @@ describe('defaultSelectedParts', () => {
 
   it('is empty for a Song with only percussion Parts', () => {
     expect(defaultSelectedParts(aSong([aPart(true), aPart(true)])).size).toBe(0);
+  });
+});
+
+function timeSignatureAt(start: number, beats: number, beatType: TimeSignature['beatType'] = 4): TimeSignature {
+  return {start: defined(tick(start), 'start'), beats, beatType};
+}
+
+function keyAt(start: number, fifths: number, mode: Key['mode'] = 'major'): Key {
+  return {start: defined(tick(start), 'start'), fifths, mode};
+}
+
+const QUARTER_TICKS = 480;
+/** The Bar of 3/4 at 480 Ticks per quarter: 3 × 480 × 4 / 4. */
+const BAR_3_4 = 1440;
+const BEAT_TYPES: readonly TimeSignature['beatType'][] = [1, 2, 4, 8, 16, 32, 64];
+
+function aSongWith(fields: {
+  readonly timeSignatures?: readonly TimeSignature[];
+  readonly upbeat?: Tick;
+  readonly keys?: readonly Key[];
+}) {
+  return song({
+    id: defined(songId(UUID), 'id'),
+    name: 'Fugue',
+    ticksPerQuarter: defined(ticksPerQuarter(QUARTER_TICKS), 'tpq'),
+    parts: [aPart(false)],
+    ...fields,
+  });
+}
+
+describe('song, Time signatures, upbeat and Keys', () => {
+  it('keeps the Time signatures, upbeat and Keys it is given', () => {
+    const result = aSongWith({
+      timeSignatures: [timeSignatureAt(0, 3), timeSignatureAt(11520, 2)],
+      upbeat: defined(tick(QUARTER_TICKS), 'upbeat'),
+      keys: [keyAt(0, 1)],
+    });
+
+    expect(result?.timeSignatures).toEqual([timeSignatureAt(0, 3), timeSignatureAt(11520, 2)]);
+    expect(result?.upbeat).toBe(QUARTER_TICKS);
+    expect(result?.keys).toEqual([keyAt(0, 1)]);
+  });
+
+  it('gives a Song without them no Time signatures, no upbeat and no Keys', () => {
+    const result = song({
+      id: defined(songId(UUID), 'id'),
+      name: 'Fugue',
+      ticksPerQuarter: defined(ticksPerQuarter(QUARTER_TICKS), 'tpq'),
+      parts: [aPart(false)],
+    });
+
+    expect(result?.timeSignatures).toEqual([]);
+    expect(result?.upbeat).toBeUndefined();
+    expect(result?.keys).toEqual([]);
+  });
+
+  it('rejects Time signatures not sorted by start', () => {
+    expect(aSongWith({timeSignatures: [timeSignatureAt(BAR_3_4, 2), timeSignatureAt(0, 3)]})).toBeUndefined();
+  });
+
+  it('rejects two Time signatures with the same start', () => {
+    expect(aSongWith({timeSignatures: [timeSignatureAt(0, 3), timeSignatureAt(0, 2)]})).toBeUndefined();
+  });
+
+  it.each([0, 100, 1.5])('rejects a Time signature of %d beats', (beats) => {
+    expect(aSongWith({timeSignatures: [timeSignatureAt(0, beats)]})).toBeUndefined();
+  });
+
+  it.each([1, 99])('accepts a Time signature of %d beats', (beats) => {
+    expect(aSongWith({timeSignatures: [timeSignatureAt(0, beats)]})).toBeDefined();
+  });
+
+  it.each(BEAT_TYPES)('accepts a beat type of %d', (beatType) => {
+    expect(aSongWith({timeSignatures: [timeSignatureAt(0, 3, beatType)]})).toBeDefined();
+  });
+
+  it('rejects a beat type that is no power of two from 1 to 64', () => {
+    // @ts-expect-error a beat type of 3 is outside the type, the rule must reject it at runtime too
+    expect(aSongWith({timeSignatures: [timeSignatureAt(0, 3, 3)]})).toBeUndefined();
+  });
+
+  it('rejects Keys not sorted by start', () => {
+    expect(aSongWith({keys: [keyAt(BAR_3_4, 1), keyAt(0, 0)]})).toBeUndefined();
+  });
+
+  it('rejects two Keys with the same start', () => {
+    expect(aSongWith({keys: [keyAt(0, 1), keyAt(0, 2)]})).toBeUndefined();
+  });
+
+  it.each([-8, 8, 1.5])('rejects a Key with %d fifths', (fifths) => {
+    expect(aSongWith({keys: [keyAt(0, fifths)]})).toBeUndefined();
+  });
+
+  it.each([-7, 0, 7])('accepts a Key with %d fifths', (fifths) => {
+    expect(aSongWith({keys: [keyAt(0, fifths)]})).toBeDefined();
+  });
+
+  it('rejects a mode that is neither major nor minor', () => {
+    // @ts-expect-error a mode of 'dorian' is outside the type, the rule must reject it at runtime too
+    expect(aSongWith({keys: [keyAt(0, 0, 'dorian')]})).toBeUndefined();
+  });
+
+  it('rejects an upbeat of 0 Ticks', () => {
+    expect(
+      aSongWith({timeSignatures: [timeSignatureAt(0, 3)], upbeat: defined(tick(0), 'upbeat')}),
+    ).toBeUndefined();
+  });
+
+  it.each([
+    [3, 4],
+    [6, 8],
+  ] as const)('rejects an upbeat as long as the first Bar of %d/%d', (beats, beatType) => {
+    // Bar = beats × ticksPerQuarter × 4 / beatType: 1440 Ticks for both 3/4 and 6/8 at 480.
+    expect(
+      aSongWith({
+        timeSignatures: [timeSignatureAt(0, beats, beatType)],
+        upbeat: defined(tick(BAR_3_4), 'upbeat'),
+      }),
+    ).toBeUndefined();
+  });
+
+  it('keeps an upbeat shorter than the first Bar', () => {
+    const result = aSongWith({
+      timeSignatures: [timeSignatureAt(0, 3)],
+      upbeat: defined(tick(QUARTER_TICKS), 'upbeat'),
+    });
+    expect(result?.upbeat).toBe(QUARTER_TICKS);
+  });
+
+  it('rejects an upbeat without a Time signature at Tick 0', () => {
+    const upbeat = defined(tick(QUARTER_TICKS), 'upbeat');
+    expect(aSongWith({timeSignatures: [timeSignatureAt(BAR_3_4, 3)], upbeat})).toBeUndefined();
+    expect(aSongWith({timeSignatures: [], upbeat})).toBeUndefined();
   });
 });

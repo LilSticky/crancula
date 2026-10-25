@@ -42,6 +42,9 @@ export {isEditCommand, type EditCommand} from './app/edit-command';
 export {
   defaultSelectedParts,
   songId,
+  type BeatType,
+  type Key,
+  type Mode,
   type Note,
   type Part,
   type PartIndex,
@@ -49,6 +52,7 @@ export {
   type SongId,
   type Tick,
   type TicksPerQuarter,
+  type TimeSignature,
 } from './song/song';
 export {MAXIMUM_MIDI_FILE_SIZE, readMidiSong, type SongRejection} from './song/midi/read-midi-song';
 export {

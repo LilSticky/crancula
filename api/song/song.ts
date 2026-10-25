@@ -37,14 +37,59 @@ export interface Part {
   readonly [validPartBrand]: true;
 }
 
+export type BeatType = 1 | 2 | 4 | 8 | 16 | 32 | 64;
+
+export type Mode = 'major' | 'minor';
+
+const BEAT_TYPES = [1, 2, 4, 8, 16, 32, 64] as const;
+
+/** @returns the beat type, or `undefined` if `value` is not 1, 2, 4, 8, 16, 32 or 64 */
+export function beatTypeOf(value: number): BeatType | undefined {
+  return BEAT_TYPES.find((candidate) => candidate === value);
+}
+
+/** @returns the mode, or `undefined` if `value` is neither `'major'` nor `'minor'` */
+export function modeOf(value: unknown): Mode | undefined {
+  return value === 'major' || value === 'minor' ? value : undefined;
+}
+
+/** From `start`, the Bars have `beats` beats of `beatType`. */
+export interface TimeSignature {
+  readonly start: Tick;
+  /** An integer 1–99. `3+2` is read as 5. */
+  readonly beats: number;
+  readonly beatType: BeatType;
+}
+
+/** From `start`, the Key has `fifths` sharps (positive) or flats (negative) in `mode`. */
+export interface Key {
+  readonly start: Tick;
+  /** An integer −7…7. */
+  readonly fifths: number;
+  readonly mode: Mode;
+}
+
 /** A valid Song. Obtain one only through {@link song}. */
 export interface Song {
   readonly id: SongId;
   readonly name: string;
   readonly ticksPerQuarter: TicksPerQuarter;
   readonly parts: readonly Part[];
+  /** Sorted by start, starts distinct; empty when the Song Source gives none. */
+  readonly timeSignatures: readonly TimeSignature[];
+  /** Shorter than the first Bar, only with a Time signature at Tick 0; `undefined` when none. */
+  readonly upbeat: Tick | undefined;
+  /** Sorted by start, starts distinct; empty when none. */
+  readonly keys: readonly Key[];
   readonly [validSongBrand]: true;
 }
+
+/** The fields of a Song; the Time signatures, upbeat and Keys may be left out. */
+export type SongFields = Omit<Song, typeof validSongBrand | 'timeSignatures' | 'upbeat' | 'keys'> & {
+  readonly timeSignatures?: readonly TimeSignature[];
+  readonly upbeat?: Tick;
+  readonly keys?: readonly Key[];
+};
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const TICK_LIMIT = 2 ** 31;
@@ -98,11 +143,64 @@ export function part(fields: Omit<Part, typeof validPartBrand>): Part | undefine
   return {...fields, name} as Part;
 }
 
+/** True when each start is later than the one before it. */
+function startsIncrease(starts: readonly Tick[]): boolean {
+  return starts.every((start, index) => {
+    const previous = starts[index - 1];
+    return previous === undefined || previous < start;
+  });
+}
+
+const MAXIMUM_BEATS = 99;
+const MAXIMUM_FIFTHS = 7;
+
+function timeSignaturesValid(timeSignatures: readonly TimeSignature[]): boolean {
+  return (
+    startsIncrease(timeSignatures.map((each) => each.start)) &&
+    timeSignatures.every(
+      (each) =>
+        Number.isInteger(each.beats) &&
+        each.beats >= 1 &&
+        each.beats <= MAXIMUM_BEATS &&
+        beatTypeOf(each.beatType) !== undefined,
+    )
+  );
+}
+
+function keysValid(keys: readonly Key[]): boolean {
+  return (
+    startsIncrease(keys.map((each) => each.start)) &&
+    keys.every(
+      (each) =>
+        Number.isInteger(each.fifths) &&
+        Math.abs(each.fifths) <= MAXIMUM_FIFTHS &&
+        modeOf(each.mode) !== undefined,
+    )
+  );
+}
+
+/** The length of a Bar in Ticks: `beats × ticksPerQuarter × 4 / beatType`. */
+function barLength(timeSignature: TimeSignature, perQuarter: TicksPerQuarter): number {
+  return (timeSignature.beats * perQuarter * 4) / timeSignature.beatType;
+}
+
+/** An upbeat is a Bar shorter than the first Bar, which starts at Tick 0 with a Time signature. */
+function upbeatValid(upbeat: Tick | undefined, timeSignatures: readonly TimeSignature[], perQuarter: TicksPerQuarter): boolean {
+  if (upbeat === undefined) return true;
+  const first = timeSignatures[0];
+  return upbeat > 0 && first !== undefined && first.start === 0 && upbeat < barLength(first, perQuarter);
+}
+
 /** @returns the Song with a trimmed name, or `undefined` if a rule of the data model is broken */
-export function song(fields: Omit<Song, typeof validSongBrand>): Song | undefined {
+export function song(fields: SongFields): Song | undefined {
   const name = fields.name.trim();
+  const timeSignatures = fields.timeSignatures ?? [];
+  const keys = fields.keys ?? [];
+  const upbeat = fields.upbeat;
   if (name === '' || fields.parts.length === 0) return undefined;
-  return {...fields, name} as Song;
+  if (!timeSignaturesValid(timeSignatures) || !keysValid(keys)) return undefined;
+  if (!upbeatValid(upbeat, timeSignatures, fields.ticksPerQuarter)) return undefined;
+  return {...fields, name, timeSignatures, upbeat, keys} as Song;
 }
 
 /** Every non-percussion Part. */
