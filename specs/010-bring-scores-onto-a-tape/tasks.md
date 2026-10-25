@@ -142,7 +142,7 @@ Blocks every story: the Song gains its new fields and the import has one entry p
 - [x] T054 [US5] Green: `score-how-to-dialog.component.ts` / `.html` (Angular Material dialog, standalone, OnPush).
 - [x] T055 [US5] Red: `tape-import.component.spec.ts`: the hint `score-how-to-hint` with `TAPE.IMPORT.SONG_SOURCES` and `SCORE_HINT`, its link button `score-how-to-open` opens the dialog (scenario 1); the `pdf` rejection holds the same `score-how-to-open` link (scenario 2).
 - [x] T056 [US5] Green: hint and link in `tape-import.component.html` / `.ts`.
-- [ ] T057 [US5] Red→Green: extend `e2e/score-import.spec.ts`: choosing a `.pdf` shows the `pdf` rejection, no Tape is created, the link opens the how-to dialog.
+- [x] T057 [US5] Red→Green: extend `e2e/score-import.spec.ts`: choosing a `.pdf` shows the `pdf` rejection, no Tape is created, the link opens the how-to dialog.
 
 **Checkpoint**: commit; STATUS.
 

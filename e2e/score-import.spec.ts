@@ -169,4 +169,32 @@ test.describe('A Score with its Time signature, Key and upbeat on the import scr
     await rm(folder, {recursive: true, force: true});
   });
 
+  test('rejects a PDF, creates no Tape, and the rejection opens the how-to dialog', async () => {
+    test.setTimeout(120_000);
+    const folder = await mkdtemp(join(tmpdir(), 'crancula-pdf-'));
+    const pdfPath = join(folder, 'score.pdf');
+    await writeFile(pdfPath, '%PDF-1.7\n');
+
+    const {app, window} = await launchApp();
+    await defineOctaveOrgan(window, 'Octave organ');
+    await window.getByTestId('rail-nav').getByRole('link', {name: 'Tapes'}).click();
+    await window.getByTestId('new-tape').click();
+    await window.getByTestId('song-file').setInputFiles(pdfPath);
+
+    const rejection = window.getByTestId('song-rejection');
+    await expect(rejection).toHaveAttribute('data-code', 'pdf');
+    await expect(rejection).toContainText("A PDF can't be read directly");
+    await rejection.getByTestId('score-how-to-open').click();
+
+    const dialog = window.getByRole('dialog');
+    await expect(dialog.getByRole('heading', {name: 'How to get MusicXML from printed Scores'})).toBeVisible();
+    await expect(dialog.getByRole('listitem')).toHaveCount(5);
+    await dialog.getByRole('button', {name: 'Close'}).click();
+    await expect(dialog).toHaveCount(0);
+
+    await window.getByTestId('rail-nav').getByRole('link', {name: 'Tapes'}).click();
+    await expect(window.getByTestId('tape')).toHaveCount(0);
+    await app.close();
+    await rm(folder, {recursive: true, force: true});
+  });
 });
