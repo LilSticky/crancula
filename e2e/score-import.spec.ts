@@ -50,6 +50,33 @@ const PIANO: ScoreSpec = {
   ],
 };
 
+/**
+ * A waltz in G major: 3/4 with a quarter upbeat (an implicit first measure of one quarter), then a full Bar of three
+ * quarters. One Part on one staff, its Notes within the Pipes C4 to C6.
+ */
+const WALTZ: ScoreSpec = {
+  workTitle: 'Waltz with upbeat',
+  parts: [
+    {
+      name: 'Piano',
+      measures: [
+        {
+          number: 1,
+          implicit: true,
+          entries: [
+            {kind: 'attributes', divisions: 1, time: {beats: 3, beatType: 4}, key: {fifths: 1, mode: 'major'}, clef: {sign: 'G', line: 2}},
+            quarter('G', 4, 1, 1),
+          ] satisfies MeasureEntry[],
+        },
+        {
+          number: 2,
+          entries: [quarter('G', 4, 1, 1), quarter('A', 4, 1, 1), quarter('B', 4, 1, 1)] satisfies MeasureEntry[],
+        },
+      ],
+    },
+  ],
+};
+
 async function importScore(window: Page, path: string, tapeName: string): Promise<void> {
   await window.getByTestId('rail-nav').getByRole('link', {name: 'Tapes'}).click();
   await window.getByTestId('new-tape').click();
@@ -114,4 +141,32 @@ test.describe('A Score brought onto a Tape is still there after a restart', () =
     expect(await readFile(join(first.userDataDir, 'snapshots', 'tapes.json'), 'utf8')).toBe(stored);
     await rm(folder, {recursive: true, force: true});
   });
+});
+
+test.describe('A Score with its Time signature, Key and upbeat on the import screen and the Tape details', () => {
+  test('shows 3/4, G major, upbeat 1/4 on the import screen and in the Tape details after a restart', async () => {
+    test.setTimeout(120_000);
+    const folder = await mkdtemp(join(tmpdir(), 'crancula-metre-'));
+    const musicXmlPath = join(folder, 'waltz.musicxml');
+    await writeFile(musicXmlPath, scoreXml(WALTZ));
+
+    const first = await launchApp();
+    await defineOctaveOrgan(first.window, 'Octave organ');
+    await first.window.getByTestId('rail-nav').getByRole('link', {name: 'Tapes'}).click();
+    await first.window.getByTestId('new-tape').click();
+    await first.window.getByTestId('song-file').setInputFiles(musicXmlPath);
+    await expect(first.window.getByTestId('song-metre')).toHaveText('3/4, G major, upbeat 1/4');
+    await first.window.getByTestId('name').fill('Waltz from score');
+    await first.window.getByTestId('create-tape').click();
+    await expect(first.window).toHaveURL(/#?\/tapes\/[0-9a-f-]{36}$/);
+    await first.app.close();
+
+    const second = await launchApp(first.userDataDir);
+    await second.window.getByTestId('rail-nav').getByRole('link', {name: 'Tapes'}).click();
+    await second.window.getByTestId('tape').filter({hasText: 'Waltz from score'}).getByTestId('open-tape').click();
+    await expect(second.window.getByTestId('side-panel').getByTestId('song-metre')).toHaveText('3/4, G major, upbeat 1/4');
+    await second.app.close();
+    await rm(folder, {recursive: true, force: true});
+  });
+
 });
