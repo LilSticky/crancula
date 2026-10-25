@@ -11,8 +11,8 @@ export interface ScoreNote {
   readonly start: number;
   readonly length: number;
   /**
-   * The written pitch, before the transposition of its measure. An unpitched Note has its display pitch, where
-   * the notation puts it; `'unpitched'` when it has none.
+   * The written pitch, before the transposition of its measure. An unpitched Note has the `midi-unpitched` of its
+   * instrument, else its display pitch, where the notation puts it; `'unpitched'` when it has neither.
    */
   readonly pitch: MidiNoteNumber | 'unpitched';
 }
@@ -209,9 +209,38 @@ function displayPitchOf(unpitched: XmlElement): MidiNoteNumber | 'unpitched' {
   return midiOf(textOf(step), octave, 0) ?? 'unpitched';
 }
 
-function writtenPitchOf(note: XmlElement): MidiNoteNumber | 'unpitched' {
+/**
+ * The MIDI note number of each instrument of the part-list that has a `midi-unpitched`. MusicXML counts them from 1,
+ * MIDI note numbers from 0.
+ */
+function instrumentNumbersOf(root: XmlElement): ReadonlyMap<string, MidiNoteNumber> {
+  const numbers = new Map<string, MidiNoteNumber>();
+  const partList = childNamed(root, 'part-list');
+  if (partList === undefined) return numbers;
+  for (const scorePart of childrenNamed(partList, 'score-part')) {
+    for (const midiInstrument of childrenNamed(scorePart, 'midi-instrument')) {
+      const unpitched = childNamed(midiInstrument, 'midi-unpitched');
+      if (unpitched === undefined) continue;
+      const number = midiNoteNumber(integerOf(unpitched, 1) - 1) ?? notAScore();
+      numbers.set(attributeOf(midiInstrument, 'id'), number);
+    }
+  }
+  return numbers;
+}
+
+/**
+ * The written pitch of a Note: a pitched Note has its pitch; an unpitched one its instrument's number, else its
+ * display pitch.
+ */
+function writtenPitchOf(
+  note: XmlElement,
+  instruments: ReadonlyMap<string, MidiNoteNumber>,
+): MidiNoteNumber | 'unpitched' {
   const unpitched = childNamed(note, 'unpitched');
-  return unpitched === undefined ? pitchOf(requiredChild(note, 'pitch')) : displayPitchOf(unpitched);
+  if (unpitched === undefined) return pitchOf(requiredChild(note, 'pitch'));
+  const instrumentId = childNamed(note, 'instrument')?.attributes.get('id');
+  const instrumentNumber = instrumentId === undefined ? undefined : instruments.get(instrumentId);
+  return instrumentNumber ?? displayPitchOf(unpitched);
 }
 
 /** The staff a clef belongs to: its number, 1 when it has none. */
@@ -246,7 +275,10 @@ interface MeasureBody {
 }
 
 /** The Notes and the length of one measure. The cursor moves with notes, rests, backup and forward. */
-function bodyOf(content: readonly XmlElement[]): MeasureBody {
+function bodyOf(
+  content: readonly XmlElement[],
+  instruments: ReadonlyMap<string, MidiNoteNumber>,
+): MeasureBody {
   const notes: ScoreNote[] = [];
   const pitchedStaves = new Set<number>();
   const unpitchedStaves = new Set<number>();
@@ -267,7 +299,7 @@ function bodyOf(content: readonly XmlElement[]): MeasureBody {
         const staff = staffOf(element);
         if (childNamed(element, 'unpitched') === undefined) pitchedStaves.add(staff);
         else unpitchedStaves.add(staff);
-        notes.push({staff, start: noteStart, length: duration, pitch: writtenPitchOf(element)});
+        notes.push({staff, start: noteStart, length: duration, pitch: writtenPitchOf(element, instruments)});
       }
       length = Math.max(length, noteStart + duration, position);
     } else if (element.name === 'backup') {
@@ -282,7 +314,7 @@ function bodyOf(content: readonly XmlElement[]): MeasureBody {
 }
 
 /** One part: its measures in order, each with the attributes in force at it. */
-function partOf(source: PartSource): ScorePart {
+function partOf(source: PartSource, instruments: ReadonlyMap<string, MidiNoteNumber>): ScorePart {
   const measures: ScoreMeasure[] = [];
   const percussionStaves = new Set<number>();
   const pitchedStaves = new Set<number>();
@@ -292,7 +324,7 @@ function partOf(source: PartSource): ScorePart {
     inForce = measure.content
       .filter((element) => element.name === 'attributes')
       .reduce(withAttributes, inForce);
-    const body = bodyOf(measure.content);
+    const body = bodyOf(measure.content, instruments);
     for (const staff of inForce.percussionStaves) percussionStaves.add(staff);
     for (const staff of body.pitchedStaves) pitchedStaves.add(staff);
     for (const staff of body.unpitchedStaves) unpitchedStaves.add(staff);
@@ -355,7 +387,8 @@ function sourcesOf(root: XmlElement): readonly PartSource[] {
  */
 export function scoreMeasures(root: XmlElement): Result<readonly ScorePart[], ScoreRejection> {
   try {
-    return ok(sourcesOf(root).map(partOf));
+    const instruments = instrumentNumbersOf(root);
+    return ok(sourcesOf(root).map((source) => partOf(source, instruments)));
   } catch (error) {
     if (error instanceof NotAScore) return err('not-a-score');
     throw error;

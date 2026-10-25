@@ -498,6 +498,43 @@ describe('scoreMeasures gives the percussion staves of a part', () => {
   });
 });
 
+describe('scoreMeasures gives an unpitched Note the MIDI note number of its instrument', () => {
+  /** A drum Part whose one instrument is `midi-unpitched` 39: MusicXML counts MIDI note numbers from 1, so 38. */
+  function drumsXml(noteXml: string): string {
+    return (
+      '<score-partwise version="4.0"><part-list><score-part id="P1"><part-name>Drums</part-name>' +
+      '<score-instrument id="P1-I1"><instrument-name>Snare drum</instrument-name></score-instrument>' +
+      '<midi-instrument id="P1-I1"><midi-unpitched>39</midi-unpitched></midi-instrument>' +
+      '</score-part></part-list><part id="P1"><measure number="1"><attributes><divisions>1</divisions></attributes>' +
+      noteXml +
+      '</measure></part></score-partwise>'
+    );
+  }
+
+  it('gives an unpitched Note with a display pitch the midi-unpitched of its instrument, not the display pitch', () => {
+    const result = scoreMeasures(
+      elementOf(
+        drumsXml(
+          '<note><unpitched><display-step>E</display-step><display-octave>4</display-octave></unpitched>' +
+            '<duration>1</duration><instrument id="P1-I1"/></note>',
+        ),
+      ),
+    );
+    if (!result.ok) throw new Error(`expected the measures of a score, got ${result.error}`);
+
+    expect(measureAt(result.value, 0).notes).toMatchObject([{ pitch: 38 }]);
+  });
+
+  it('gives an unpitched Note without a display pitch the midi-unpitched of its instrument', () => {
+    const result = scoreMeasures(
+      elementOf(drumsXml('<note><unpitched/><duration>1</duration><instrument id="P1-I1"/></note>')),
+    );
+    if (!result.ok) throw new Error(`expected the measures of a score, got ${result.error}`);
+
+    expect(measureAt(result.value, 0).notes).toMatchObject([{ pitch: 38 }]);
+  });
+});
+
 describe('scoreMeasures rejects a root that is not a score-partwise or score-timewise', () => {
   it.each([
     ['an opus', '<opus xmlns="http://www.musicxml.org/ns"/>'],
