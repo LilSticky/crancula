@@ -39,8 +39,8 @@ Each finding has an ID; the fix tasks name them. Status: open until ticked.
   `computed` list rendered with `@for`.
 - [x] U5 `tape-import.component.scss:61`: `cranc-song-metre:not(:empty)` styles the child from the parent. Give the
   component its own spacing when shown.
-- [ ] U6 en/de `NOT_A_MIDI_FILE` still says "or larger than 16 MiB"; `too-large` covers that. Drop the clause.
-- [ ] U7 de.json: "Notendatei" is not a dictionary word; use "komprimierte MusicXML-Noten" (or similar with Noten).
+- [x] U6 en/de `NOT_A_MIDI_FILE` still says "or larger than 16 MiB"; `too-large` covers that. Drop the clause.
+- [x] U7 de.json: "Notendatei" is not a dictionary word; use "komprimierte MusicXML-Noten" (or similar with Noten).
 - [ ] U8 `score-how-to-dialog.component.ts:15`: use `mat-dialog-close` on the button, drop `dialogRef` and `close()`.
 - [ ] U9 `e2e/score-import.spec.ts:54` prose: "an implicit first measure … then a full Bar" → "a first Bar of one
   quarter (the upbeat)".

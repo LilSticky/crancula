@@ -136,7 +136,7 @@
       "PROPOSAL_ONE": "Der Vorschlag ist {{semitones}} Halbton: Er legt die meisten Noten direkt auf eine Pfeife."
     },
     "SONG_REJECTION": {
-      "NOT_A_MIDI_FILE": "Diese Datei ist keine MIDI-Datei, sie ist beschädigt oder größer als 16 MiB.",
+      "NOT_A_MIDI_FILE": "Diese Datei ist keine MIDI-Datei, sie ist beschädigt.",
       "FORMAT_2": "Diese MIDI-Datei enthält mehrere unabhängige Sequenzen (Format 2). Speichere sie als Format 0 oder 1 und versuche es erneut.",
       "NOT_TIMED_IN_BEATS": "Diese MIDI-Datei ist in Uhrzeit (SMPTE) statt in Schlägen getaktet, daher lassen sich ihre Noten nicht auf Spalten legen.",
       "NO_NOTES": "Diese MIDI-Datei enthält in keiner Stimme Noten, die auf ein Lochband kommen können.",
@@ -144,8 +144,8 @@
       "NOT_A_SONG_SOURCE": "Diese Datei ist weder eine MIDI-Datei noch MusicXML-Noten.",
       "PDF": "Ein PDF kann nicht direkt gelesen werden. Erkenne die Noten mit einem externen Programm und exportiere sie als MusicXML.",
       "NOT_A_SCORE": "Diese Datei ist keine lesbare MusicXML-Datei.",
-      "DAMAGED_ARCHIVE": "Diese komprimierte Notendatei lässt sich nicht lesen; sie ist vielleicht beschädigt.",
-      "NO_SCORE_IN_ARCHIVE": "Diese komprimierte Notendatei enthält keine MusicXML-Noten."
+      "DAMAGED_ARCHIVE": "Diese komprimierten MusicXML-Noten lassen sich nicht lesen; sie sind vielleicht beschädigt.",
+      "NO_SCORE_IN_ARCHIVE": "Dieses komprimierte Archiv enthält keine MusicXML-Noten."
     },
     "PARTS": {
       "TITLE": "Stimmen",

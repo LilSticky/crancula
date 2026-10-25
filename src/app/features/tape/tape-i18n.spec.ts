@@ -199,6 +199,23 @@ describe('Song wording in German', () => {
   });
 });
 
+describe('Song Source rejection texts (U6, U7)', () => {
+  const notAMidiFile = 'TAPE.SONG_REJECTION.NOT_A_MIDI_FILE';
+
+  for (const [language, tree] of [['English', en], ['German', de]] as const) {
+    it(`${language} NOT_A_MIDI_FILE does not mention a size or 16 MiB, since too-large says that`, () => {
+      expect(textAt(tree as TranslationTree, notAMidiFile)).toBeTruthy();
+      expect(textAt(tree as TranslationTree, notAMidiFile)).not.toMatch(/MiB|larger|größer/i);
+    });
+  }
+
+  it('the German texts under TAPE.SONG_REJECTION say "Notendatei" nowhere', () => {
+    const german = leavesUnder(de, 'TAPE.SONG_REJECTION').map((key) => textAt(de, key) ?? '');
+
+    expect(german.filter((text) => /Notendatei/.test(text))).toEqual([]);
+  });
+});
+
 describe('Score import texts (US6)', () => {
   for (const key of scoreHowToKeys) {
     const path = `TAPE.SCORE_HOW_TO.${key}`;
