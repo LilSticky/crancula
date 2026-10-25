@@ -184,8 +184,7 @@
       @if (organ(); as organ) {
         <cranc-add-hole [organ]="organ" [tape]="tape" [selected]="selectedHoleRef()" [spot]="spotSelected()" [editingPaused]="editingPaused()" (added)="addFromForm($event)" />
       }
-      <cranc-tape-section [view]="drawing.section" [tape]="tape" [organ]="drawing.organ" [editingPaused]="editingPaused()" (columnLengthChange)="onColumnLengthChange($event)" />
-      <cranc-song-metre [metre]="metre()" />
+      <cranc-tape-section [view]="drawing.section" [tape]="tape" [organ]="drawing.organ" [metre]="metre()" [editingPaused]="editingPaused()" (columnLengthChange)="onColumnLengthChange($event)" />
       @if (!previewAvailable()) {
         <p class="preview-unavailable" data-testid="preview-unavailable">
           {{ 'TAPE.PREVIEW.UNAVAILABLE' | translate }}

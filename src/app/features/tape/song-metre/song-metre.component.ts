@@ -4,6 +4,11 @@ import type {SongMetre} from '@api/index';
 
 type KeyOfMetre = NonNullable<SongMetre['key']>;
 
+/** Whether a metre keeps any of its parts: a Time signature, a Key or an upbeat. */
+export function keepsMetre(metre: SongMetre): boolean {
+  return metre.timeSignature !== undefined || metre.key !== undefined || metre.upbeat !== undefined;
+}
+
 /**
  * The Time signature, the Key and the upbeat a Song keeps, read-only, as "3/4, G major, upbeat 1/4". Shows nothing
  * for a Song that keeps none of them.
@@ -21,10 +26,7 @@ type KeyOfMetre = NonNullable<SongMetre['key']>;
 export class SongMetreComponent {
   readonly metre = input.required<SongMetre>();
 
-  protected readonly shown = computed(() => {
-    const metre = this.metre();
-    return metre.timeSignature !== undefined || metre.key !== undefined || metre.upbeat !== undefined;
-  });
+  protected readonly shown = computed(() => keepsMetre(this.metre()));
 
   /** The translation key of the tonic of a Key: the major or minor name for its fifths, flats counted as `M` and their number. */
   protected tonicKey(key: KeyOfMetre): string {

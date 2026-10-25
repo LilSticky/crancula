@@ -611,13 +611,15 @@ describe('TapeViewComponent', () => {
   });
 
   describe('the song metre in the Tape details (US4)', () => {
-    it("shows the Time signature and the Key of the Tape's Song in the side panel, read-only", async () => {
+    it("shows the Time signature and the Key of the Tape's Song in the Tape details, read-only, and nowhere else in the side panel", async () => {
       const {tape, open, view} = await render({metre: true});
 
       await open(`/tapes/${tape.id}`);
 
-      const metre = view()?.querySelector('[data-testid="side-panel"] [data-testid="song-metre"]');
+      const metre = view()?.querySelector('[data-testid="tape-section"] [data-testid="song-metre"]');
       expect(metre?.textContent?.replace(/\s+/g, ' ').trim()).toBe('3/4, G major');
+      expect(view()?.querySelectorAll('[data-testid="song-metre"]')).toHaveLength(1);
+      expect(view()?.querySelector('[data-testid="side-panel"] > cranc-song-metre')).toBeNull();
     });
   });
 
