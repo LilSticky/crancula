@@ -15,11 +15,14 @@
         <mat-button-toggle [value]="option.zoom">{{ option.label | translate }}</mat-button-toggle>
       }
     </mat-button-toggle-group>
-    @if (compact()) {<button pageHeadActions mat-stroked-button type="button" data-testid="side-panel-toggle" [attr.aria-expanded]="sidePanelOpen()" (click)="toggleSidePanel()">{{ 'TAPE.VIEW.DETAILS' | translate }}</button>}
+    @if (compact()) {<button pageHeadActions mat-stroked-button type="button" class="icon-only" data-testid="side-panel-toggle" [attr.aria-label]="'TAPE.VIEW.DETAILS' | translate" [matTooltip]="'TAPE.VIEW.DETAILS' | translate" [attr.aria-expanded]="sidePanelOpen()" (click)="toggleSidePanel()"><mat-icon aria-hidden="true">view_sidebar</mat-icon></button>}
     <ng-container ngProjectAs="[pageHeadActions]">
-      <button mat-stroked-button type="button" data-testid="preview-toggle" [disabled]="!previewAvailable() || recorder.recording()" [disabledInteractive]="true" [matTooltip]="(recorder.recording() ? 'TAPE.PREVIEW.WHILE_RECORDING' : '') | translate" [attr.aria-describedby]="previewAvailable() ? null : 'preview-unavailable-reason'" (click)="togglePreview()">
+      @let previewLabel = (preview.playing() ? 'TAPE.PREVIEW.STOP' : 'TAPE.PREVIEW.PLAY') | translate;
+      <button mat-stroked-button type="button" data-testid="preview-toggle" [class.icon-only]="compact()" [disabled]="!previewAvailable() || recorder.recording()" [disabledInteractive]="true" [attr.aria-label]="compact() ? previewLabel : null" [matTooltip]="recorder.recording() ? ('TAPE.PREVIEW.WHILE_RECORDING' | translate) : compact() ? previewLabel : ''" [attr.aria-describedby]="previewAvailable() ? null : 'preview-unavailable-reason'" (click)="togglePreview()">
         <mat-icon aria-hidden="true">{{ preview.playing() ? 'stop' : 'play_arrow' }}</mat-icon>
-        {{ (preview.playing() ? 'TAPE.PREVIEW.STOP' : 'TAPE.PREVIEW.PLAY') | translate }}
+        @if (!compact()) {
+          {{ previewLabel }}
+        }
       </button>
       <button mat-icon-button type="button" data-testid="undo" [attr.aria-label]="'TAPE.EDIT.UNDO_TOOLTIP' | translate: {shortcut: shortcuts.undo}" [matTooltip]="'TAPE.EDIT.UNDO_TOOLTIP' | translate: {shortcut: shortcuts.undo}" [disabled]="!editor.canUndo() || editingPaused()" (click)="undo()">
         <mat-icon aria-hidden="true">undo</mat-icon>
@@ -27,13 +30,24 @@
       <button mat-icon-button type="button" data-testid="redo" [attr.aria-label]="'TAPE.EDIT.REDO_TOOLTIP' | translate: {shortcut: shortcuts.redo}" [matTooltip]="'TAPE.EDIT.REDO_TOOLTIP' | translate: {shortcut: shortcuts.redo}" [disabled]="!editor.canRedo() || editingPaused()" (click)="redo()">
         <mat-icon aria-hidden="true">redo</mat-icon>
       </button>
-      <button mat-stroked-button type="button" data-testid="transpose" [disabled]="!canTranspose() || editingPaused()" (click)="transpose()">{{ 'TAPE.TRANSPOSE.BUTTON' | translate }}</button>
-      <button mat-stroked-button type="button" data-testid="record" [disabled]="recordBlockedBy() !== undefined || recorder.recording()" [disabledInteractive]="true" [matTooltip]="(recordBlockedBy() ?? '') | translate" (click)="record()">
+      @let transposeLabel = 'TAPE.TRANSPOSE.BUTTON' | translate;
+      <button mat-stroked-button type="button" data-testid="transpose" [class.icon-only]="compact()" [disabled]="!canTranspose() || editingPaused()" [attr.aria-label]="compact() ? transposeLabel : null" [matTooltip]="compact() ? transposeLabel : ''" (click)="transpose()">
+        @if (compact()) {
+          <mat-icon aria-hidden="true">swap_vert</mat-icon>
+        } @else {
+          {{ transposeLabel }}
+        }
+      </button>
+      @let recordBlocked = recordBlockedBy();
+      @let recordLabel = (recordPercent() === undefined ? 'TAPE.RECORD.BUTTON' : 'TAPE.RECORD.PROGRESS') | translate: {percent: recordPercent()};
+      <button mat-stroked-button type="button" data-testid="record" [class.icon-only]="compact()" [disabled]="recordBlocked !== undefined || recorder.recording()" [disabledInteractive]="true" [attr.aria-label]="compact() ? recordLabel : null" [matTooltip]="recordBlocked !== undefined ? (recordBlocked | translate) : compact() ? recordLabel : ''" (click)="record()">
         <mat-icon aria-hidden="true">fiber_manual_record</mat-icon>
         @if (recorder.recording()) {
           <mat-spinner diameter="18" aria-hidden="true" />
         }
-        {{ (recordPercent() === undefined ? 'TAPE.RECORD.BUTTON' : 'TAPE.RECORD.PROGRESS') | translate: {percent: recordPercent()} }}
+        @if (!compact()) {
+          {{ recordLabel }}
+        }
       </button>
       @if (compact()) {
         <button mat-icon-button type="button" data-testid="export" [attr.aria-label]="'TAPE.VIEW.EXPORT' | translate" [matTooltip]="'TAPE.VIEW.EXPORT' | translate" [disabled]="plotterExport.saving()" (click)="exportTape()">

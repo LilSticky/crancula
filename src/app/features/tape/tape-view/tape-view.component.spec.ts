@@ -1031,7 +1031,7 @@ describe('TapeViewComponent', () => {
 
       await open(`/tapes/${tape.id}`);
 
-      expect(toggle(view())?.textContent?.trim()).toBe('Tape details');
+      expect(toggle(view())?.getAttribute('aria-label')).toBe('Tape details');
       expect(toggle(view())?.getAttribute('aria-expanded')).toBe('false');
       expect(panel(view())).toBeNull();
     });
@@ -1049,6 +1049,24 @@ describe('TapeViewComponent', () => {
       await settle();
       expect(toggle(view())?.getAttribute('aria-expanded')).toBe('false');
       expect(panel(view())).toBeNull();
+    });
+
+    it('shows the page head actions as icons below 1180 px, with their labels as accessible names', async () => {
+      const {tape, open, view} = await render({windowWidth: 1100, tapePerCrankTurn: 100});
+      await open(`/tapes/${tape.id}`);
+
+      const names: Record<string, string> = {
+        'preview-toggle': 'Preview',
+        transpose: 'Transpose…',
+        record: 'Record',
+        'side-panel-toggle': 'Tape details',
+      };
+      for (const [testId, name] of Object.entries(names)) {
+        const button = required(view()?.querySelector<HTMLButtonElement>(`[data-testid="page-head-actions"] [data-testid="${testId}"]`), testId);
+        expect(button.classList.contains('icon-only'), testId).toBe(true);
+        expect(button.getAttribute('aria-label'), testId).toBe(name);
+        expect(button.textContent, testId).not.toContain(name);
+      }
     });
 
     it('closes the open side panel on Escape', async () => {
