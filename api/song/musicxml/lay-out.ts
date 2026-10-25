@@ -171,9 +171,9 @@ function addNote(
     build.graceNotes += 1;
     return;
   }
-  if (note.ornament) build.ornaments += 1;
-  // An arpeggiate is written on each Note of a chord; the chord is counted once, at its first Note.
-  if (note.arpeggiate && !note.chord) build.ornaments += 1;
+  // A Note counts once, for an ornament or an arpeggiate. An arpeggiate is written on each Note of a chord; the
+  // chord is counted once, at its first Note.
+  if (note.ornament || (note.arpeggiate && !note.chord)) build.ornaments += 1;
   const noteNumber = soundingPitchOf(note.pitch, measure.transpose);
   const start = knownTick(measureStart + ticksOf(note.start, measure.divisions, perQuarter));
   const duration = knownTick(ticksOf(note.length, measure.divisions, perQuarter));

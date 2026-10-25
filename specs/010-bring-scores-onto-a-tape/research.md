@@ -119,7 +119,7 @@ of their part.
 - **Grace notes** (FR-009): a `<grace/>` Note is not kept and is counted for its staff.
 - **Ornaments** (FR-010): a Note with anything in `<ornaments>` (trill, mordent, inverted mordent, turn,
   shake, wavy line, tremolo, …) is kept plainly and counted once; an `<arpeggiate>` chord is kept with all
-  starts together and counted once per chord.
+  starts together and counted once per chord. A Note with both an ornament and an arpeggiate is counted once.
 - Counts are taken in played-out order, like the Notes on the Tape: a grace note in a repeated Bar that is
   played twice is left out twice.
 - A staff is a percussion Part when its clef is `percussion` or all its Notes are unpitched.

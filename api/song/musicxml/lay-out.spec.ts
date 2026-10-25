@@ -553,6 +553,18 @@ describe('layOut leaves grace notes and ornaments in, and counts them (R8, scena
     });
   });
 
+  it('counts a Note with an ornament and an arpeggiate once, as one Note', () => {
+    const layout = layOutStraight([
+      part(
+        measure({
+          notes: [scoreNote({start: 0, length: 2 * QUARTER, pitch: 60, ornament: true, arpeggiate: true})],
+        }),
+      ),
+    ]);
+
+    expect(staffOf(layout, 0, 1).leftOut).toEqual({graceNotes: 0, ornaments: 1});
+  });
+
   it('starts the Notes of an arpeggiated chord together, and counts the chord once', () => {
     const layout = layOutStraight([
       part(
