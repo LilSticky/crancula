@@ -31,7 +31,7 @@
           <p class="score-hint" data-testid="score-how-to-hint">
             <mat-icon aria-hidden="true">info</mat-icon>
             <span>{{ 'TAPE.IMPORT.SCORE_HINT' | translate }}</span>
-            <button matButton type="button" data-testid="score-how-to-open" (click)="openScoreHowTo()">{{ 'TAPE.IMPORT.SCORE_HINT_LINK' | translate }}</button>
+            <button matButton type="button" data-testid="score-how-to-open" (click)="openScoreHowTo()"><mat-icon aria-hidden="true">help</mat-icon>{{ 'TAPE.IMPORT.SCORE_HINT_LINK' | translate }}</button>
           </p>
         }
         @if (rejection(); as code) {
@@ -39,7 +39,7 @@
             <mat-icon>error</mat-icon>
             {{ 'TAPE.SONG_REJECTION.' + code.toUpperCase().replaceAll('-', '_') | translate }}
             @if (code === 'pdf') {
-              <button matButton type="button" data-testid="score-how-to-open" (click)="openScoreHowTo()">{{ 'TAPE.IMPORT.SCORE_HINT_LINK' | translate }}</button>
+              <button matButton type="button" data-testid="score-how-to-open" (click)="openScoreHowTo()"><mat-icon aria-hidden="true">help</mat-icon>{{ 'TAPE.IMPORT.SCORE_HINT_LINK' | translate }}</button>
             }
           </p>
         }

@@ -724,7 +724,8 @@ describe('TapeImportComponent', () => {
       expect(textOf('score-how-to-hint')).toContain('MIDI or MusicXML');
       expect(textOf('score-how-to-hint')).toContain('Only a PDF or printed Scores?');
       const link = query('score-how-to-hint')?.querySelector<HTMLButtonElement>('[data-testid="score-how-to-open"]');
-      expect(link?.textContent?.trim()).toBe('How to get MusicXML');
+      expect(link?.querySelector('mat-icon')?.textContent?.trim()).toBe('help');
+      expect(link?.textContent?.replace('help', '').trim()).toBe('How to get MusicXML');
       expect(document.querySelector('mat-dialog-container')).toBeNull();
 
       link?.click();
@@ -741,6 +742,7 @@ describe('TapeImportComponent', () => {
       expect(query('song-rejection')?.dataset['code']).toBe('pdf');
       const link = query('song-rejection')?.querySelector<HTMLButtonElement>('[data-testid="score-how-to-open"]');
       expect(link).not.toBeNull();
+      expect(link?.querySelector('mat-icon')?.textContent?.trim()).toBe('help');
       expect(tapes.tapeEntities()).toEqual([]);
       expect(navigate).not.toHaveBeenCalled();
 
