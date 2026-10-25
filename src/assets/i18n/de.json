@@ -109,7 +109,7 @@
       "COLUMN_LENGTH": "Spaltenlänge",
       "TRANSPOSITION": "Halbtöne",
       "CREATE": "Lochband erstellen",
-      "SUBTITLE": "Wähle eine MIDI-Datei, die Drehorgel und die Stimmen. Die Passung zeigt, wie das Lied auf die Pfeifen trifft, bevor das Lochband erstellt wird.",
+      "SUBTITLE": "Wähle eine Notenquelle, die Drehorgel und die Stimmen. Die Passung zeigt, wie das Lied auf die Pfeifen trifft, bevor das Lochband erstellt wird.",
       "GROUP_SONG": "Lied",
       "GROUP_ORGAN": "Drehorgel",
       "GROUP_TRANSPOSITION": "Transposition",
@@ -160,7 +160,7 @@
       "MATCHING_A_PIPE": "Noten, die auf eine Pfeife passen",
       "MOVED_BY_OCTAVES": "Um Oktaven verschobene Noten",
       "UNPLAYABLE": "Nicht spielbare Noten",
-      "EMPTY": "Wähle eine MIDI-Datei und eine Drehorgel, um zu sehen, wie das Lied auf die Pfeifen passt.",
+      "EMPTY": "Wähle eine Notenquelle und eine Drehorgel, um zu sehen, wie das Lied auf die Pfeifen passt.",
       "UNPLAYABLE_WARNING": "{{count}} unspielbare Noten: Keine Pfeife spielt sie, auch nicht um Oktaven verschoben, sie bleiben vom Lochband weg. Eine andere Transposition passt vielleicht besser.",
       "UNPLAYABLE_WARNING_ONE": "1 unspielbare Note: Keine Pfeife spielt sie, auch nicht um Oktaven verschoben, sie bleibt vom Lochband weg. Eine andere Transposition passt vielleicht besser."
     },

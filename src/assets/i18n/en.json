@@ -109,7 +109,7 @@
       "COLUMN_LENGTH": "Column length",
       "TRANSPOSITION": "Semitones",
       "CREATE": "Create Tape",
-      "SUBTITLE": "Choose a MIDI file, the Organ and the Parts. The Fit shows how the Song meets the Pipes before the Tape is created.",
+      "SUBTITLE": "Choose a Song Source, the Organ and the Parts. The Fit shows how the Song meets the Pipes before the Tape is created.",
       "GROUP_SONG": "Song",
       "GROUP_ORGAN": "Organ",
       "GROUP_TRANSPOSITION": "Transposition",
@@ -160,7 +160,7 @@
       "MATCHING_A_PIPE": "Notes matching a Pipe",
       "MOVED_BY_OCTAVES": "Notes moved by octaves",
       "UNPLAYABLE": "Unplayable Notes",
-      "EMPTY": "Choose a MIDI file and an Organ to see how the Song fits its Pipes.",
+      "EMPTY": "Choose a Song Source and an Organ to see how the Song fits its Pipes.",
       "UNPLAYABLE_WARNING": "{{count}} Unplayable Notes: no Pipe plays them, not even moved by octaves, so they are left off the Tape. Another Transposition may fit better.",
       "UNPLAYABLE_WARNING_ONE": "1 Unplayable Note: no Pipe plays it, not even moved by octaves, so it is left off the Tape. Another Transposition may fit better."
     },

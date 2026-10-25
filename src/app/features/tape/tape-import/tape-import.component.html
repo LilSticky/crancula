@@ -12,7 +12,7 @@
       <section class="group">
         <h2 class="group-title" data-testid="group-title">{{ 'TAPE.IMPORT.GROUP_SONG' | translate }}</h2>
         <div class="file">
-          <input #songFile type="file" hidden accept=".mid,.midi" data-testid="song-file" (change)="chooseSong(songFile)"/>
+          <input #songFile type="file" hidden accept=".mid,.midi,.musicxml,.xml,.mxl,.pdf" data-testid="song-file" (change)="chooseSong(songFile)"/>
           @if (song()) {
             <mat-chip>
               <mat-icon matChipAvatar>music_note</mat-icon>

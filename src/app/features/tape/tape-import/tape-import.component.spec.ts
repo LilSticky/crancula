@@ -17,6 +17,7 @@ import {
 import {formatNumber} from '../../shared/format-number';
 import {createTapeFromDraft} from './tape-import-form';
 import {encodeSmf, type SmfTimedEvent} from '../../../../../api/song/midi/smf-test-helper';
+import {type PartSpec, scoreXml, type ScoreSpec} from '../../../../../api/song/musicxml/score-test-helper';
 import {CRANCULA_API, createInMemoryCranculaApi} from '../../../core/crancula-api.token';
 import {testOrgan} from '../../../../testing/organs';
 import {provideTestTranslations} from '../../../../testing/test-translations';
@@ -73,6 +74,33 @@ function percussionOnlyBytes(): Uint8Array {
 
 function midiFile(bytes: Uint8Array, name = 'melody.mid'): File {
   return new File([new Uint8Array(bytes)], name, {type: 'audio/midi'});
+}
+
+function scoreFile(spec: ScoreSpec, name = 'score.musicxml'): File {
+  return new File([scoreXml(spec)], name, {type: 'application/vnd.recordare.musicxml+xml'});
+}
+
+const C4 = {step: 'C', octave: 4} as const;
+
+/** A Flute of two quarter Notes and a Drums Part of three unpitched Notes, as a Score. */
+function fluteAndDrums(options: {workTitle?: string} = {}): ScoreSpec {
+  const flute: PartSpec = {
+    name: 'Flute',
+    measures: [{entries: [{kind: 'note', pitch: C4, duration: 1}, {kind: 'note', pitch: C4, duration: 1}]}],
+  };
+  const drums: PartSpec = {
+    name: 'Drums',
+    measures: [
+      {
+        entries: [
+          {kind: 'note', pitch: 'unpitched', displayPitch: C4, duration: 1},
+          {kind: 'note', pitch: 'unpitched', displayPitch: C4, duration: 1},
+          {kind: 'note', pitch: 'unpitched', displayPitch: C4, duration: 1},
+        ],
+      },
+    ],
+  };
+  return {...options, parts: [flute, drums]};
 }
 
 function songOf(bytes: Uint8Array, name: string): Song {
@@ -255,29 +283,34 @@ describe('TapeImportComponent', () => {
       expect(field('column-length').value).toBe(String(minimumHoleLength(organ.tapeBed)));
     });
 
-    it('shows the reason of a Song Rejection and creates nothing', async () => {
-      const {choose, query, tapes, navigate, create} = await render({organs: [testOrgan('Street organ', 3)]});
+    it('shows the reason of a Song Rejection in words and creates nothing', async () => {
+      const {choose, query, textOf, tapes, navigate, create} = await render({organs: [testOrgan('Street organ', 3)]});
 
       await choose(midiFile(new Uint8Array([1, 2, 3]), 'notes.mid'));
 
-      expect(query('song-rejection')?.dataset['code']).toBe('not-a-midi-file');
+      expect(query('song-rejection')?.dataset['code']).toBe('not-a-song-source');
+      expect(textOf('song-rejection')).toContain('This file is neither a MIDI file nor a MusicXML Score.');
       expect(query('create-tape')?.hasAttribute('disabled')).toBe(true);
       await create();
       expect(tapes.tapeEntities()).toEqual([]);
       expect(navigate).not.toHaveBeenCalled();
     });
 
-    it('rejects a file over 16 MiB as not a MIDI file without reading it', async () => {
+    it('rejects a file over 16 MiB as too large', async () => {
       const {choose, query, tapes} = await render({organs: [testOrgan('Street organ', 3)]});
-      const huge = midiFile(melodyBytes());
-      Object.defineProperty(huge, 'size', {value: MAXIMUM_MIDI_FILE_SIZE + 1});
-      const read = vi.spyOn(huge, 'arrayBuffer');
 
-      await choose(huge);
+      await choose(midiFile(new Uint8Array(MAXIMUM_MIDI_FILE_SIZE + 1)));
 
-      expect(query('song-rejection')?.dataset['code']).toBe('not-a-midi-file');
-      expect(read).not.toHaveBeenCalled();
+      expect(query('song-rejection')?.dataset['code']).toBe('too-large');
       expect(tapes.tapeEntities()).toEqual([]);
+    });
+
+    it('prefills the name with the title of a Score, not with the file name', async () => {
+      const {choose, field} = await render({organs: [testOrgan('Street organ', 3)]});
+
+      await choose(scoreFile(fluteAndDrums({workTitle: 'Gymnopedie'}), 'score.musicxml'));
+
+      expect(field('name').value).toBe('Gymnopedie');
     });
 
     it('clears the rejection once a readable file is chosen', async () => {
@@ -334,6 +367,25 @@ describe('TapeImportComponent', () => {
       await choose(midiFile(threePartBytes()));
 
       expect([0, 1, 2].map((index) => partCheckbox(index).checked)).toEqual([true, true, false]);
+    });
+
+    it('lists the Parts of a Score with their names and Note counts', async () => {
+      const {choose, partRow} = await render({organs: [testOrgan('Street organ', 3)]});
+
+      await choose(scoreFile(fluteAndDrums()));
+
+      expect(textOf(partRow(0), 'part-name')).toBe('Flute');
+      expect(textOf(partRow(0), 'part-note-count')).toBe('2');
+      expect(textOf(partRow(1), 'part-name')).toBe('Drums');
+      expect(textOf(partRow(1), 'part-note-count')).toBe('3');
+    });
+
+    it('leaves the percussion Part of a Score unselected', async () => {
+      const {choose, partCheckbox} = await render({organs: [testOrgan('Street organ', 3)]});
+
+      await choose(scoreFile(fluteAndDrums()));
+
+      expect([0, 1].map((index) => partCheckbox(index).checked)).toEqual([true, false]);
     });
 
     it('starts with nothing selected and Create disabled for a Song of only percussion', async () => {
@@ -505,7 +557,7 @@ describe('TapeImportComponent', () => {
       const {element} = await render({organs: [testOrgan('Street organ', 3)]});
 
       expect(element.querySelector('cranc-page-head p')?.textContent?.trim()).toBe(
-        'Choose a MIDI file, the Organ and the Parts. The Fit shows how the Song meets the Pipes before the Tape is created.',
+        'Choose a Song Source, the Organ and the Parts. The Fit shows how the Song meets the Pipes before the Tape is created.',
       );
     });
 
@@ -552,6 +604,12 @@ describe('TapeImportComponent', () => {
       expect(textOf('song-facts')).toBe('3 Parts, 11 Notes');
       expect(textOf('choose-song')).toContain('Choose another file');
       expect(query('song-name')).toBeNull();
+    });
+
+    it('accepts MIDI, MusicXML, compressed MusicXML and PDF files as Song Sources', async () => {
+      const {field} = await render({organs: [testOrgan('Street organ', 3)]});
+
+      expect(field('song-file').accept).toBe('.mid,.midi,.musicxml,.xml,.mxl,.pdf');
     });
 
     it('uses the singular for one Part and one Note', async () => {
@@ -762,6 +820,26 @@ describe('TapeImportComponent', () => {
       });
     });
 
+    // un-skip in T039
+    it.skip('puts the grace notes that a Score leaves out into the Import Summary', async () => {
+      const {choose, create, navigate} = await render({organs: [testOrgan('Street organ', 3)]});
+      const grace: ScoreSpec = {
+        parts: [
+          {
+            name: 'Flute',
+            measures: [{entries: [{kind: 'note', pitch: C4, grace: true}, {kind: 'note', pitch: C4, duration: 1}]}],
+          },
+        ],
+      };
+      await choose(scoreFile(grace));
+
+      await create();
+
+      expect(navigate).toHaveBeenCalledWith(expect.anything(), {
+        state: {importSummary: expect.objectContaining({leftOut: {graceNotes: 1, ornaments: 0}})},
+      });
+    });
+
     it('opens the Tape also when writing it to disk failed', async () => {
       const {navigate, tape, tapes} = await createdWith({failToSave: true});
 
@@ -853,7 +931,7 @@ describe('TapeImportComponent', () => {
     it('holds one sentence and no rows before a Song is chosen, and the sheet is no live region itself', async () => {
       const {query, textOf} = await render({organs: [testOrgan('Street organ', 3)]});
 
-      expect(textOf('fit-empty')).toBe('Choose a MIDI file and an Organ to see how the Song fits its Pipes.');
+      expect(textOf('fit-empty')).toBe('Choose a Song Source and an Organ to see how the Song fits its Pipes.');
       expect(query('fit-matching')).toBeNull();
       expect(query('fit-sheet')?.hasAttribute('aria-live')).toBe(false);
     });

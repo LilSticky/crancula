@@ -14,6 +14,8 @@ export interface PitchSpec {
 interface NoteCommon {
   readonly kind: 'note';
   readonly pitch: PitchSpec | 'unpitched';
+  /** Only for an unpitched Note: where its notehead is shown, written as the display pitch. */
+  readonly displayPitch?: PitchSpec;
   readonly staff?: number;
   readonly voice?: number;
   readonly chord?: true;
@@ -146,6 +148,11 @@ function optionalLeaf(name: string, value: string | number | undefined): string 
   return value === undefined ? '' : leaf(name, value);
 }
 
+function unpitchedXml(displayPitch: PitchSpec | undefined): string {
+  if (displayPitch === undefined) return tag('unpitched');
+  return tag('unpitched', {}, leaf('display-step', displayPitch.step) + leaf('display-octave', displayPitch.octave));
+}
+
 function pitchXml(pitch: PitchSpec): string {
   return tag('pitch', {}, leaf('step', pitch.step) + optionalLeaf('alter', pitch.alter) + leaf('octave', pitch.octave));
 }
@@ -165,7 +172,7 @@ function notationsXml(note: NoteSpec): string {
 
 function noteXml(note: NoteSpec): string {
   const head = (note.chord ? tag('chord') : '') + (note.grace === true ? tag('grace') : '');
-  const sounding = note.pitch === 'unpitched' ? tag('unpitched') : pitchXml(note.pitch);
+  const sounding = note.pitch === 'unpitched' ? unpitchedXml(note.displayPitch) : pitchXml(note.pitch);
   const duration = note.grace === true ? '' : leaf('duration', note.duration);
   const ties = (note.tie ?? []).map((type) => tag('tie', {type})).join('');
   return tag('note', {}, head + sounding + duration + ties + voiceAndStaff(note) + notationsXml(note));

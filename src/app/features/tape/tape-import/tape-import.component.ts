@@ -15,12 +15,12 @@ import {
   defaultSelectedParts,
   fitAndNotesOf,
   type FitNotes,
-  MAXIMUM_MIDI_FILE_SIZE,
   type Organ,
   type PartIndex,
   prefilledColumnLength,
   proposeTransposition,
-  readMidiSong,
+  readSongSource,
+  type SongReading,
   tapeLengthInMillimetres,
   transposition,
   type Song,
@@ -57,7 +57,7 @@ const DEFAULT_PREVIEW_WIDTH = 400;
 
 const NO_SONG_DRAFT: TapeImportDraft = {name: '', columnLength: null, transposition: null};
 
-/** Brings a MIDI Song onto a Tape: choose an Organ and a file, check the proposal, create. */
+/** Brings a Song onto a Tape from a MIDI file or a Score: choose an Organ and a file, check the proposal, create. */
 @Component({
   selector: 'cranc-tape-import',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -82,7 +82,9 @@ export class TapeImportComponent {
   });
   private readonly organ = computed<Organ | undefined>(() => this.organs.entityMap()[this.organId()]);
 
-  protected readonly song = signal<Song | null>(null);
+  /** The chosen Song Source as read: its Song and, for a Score, what it left out. */
+  protected readonly reading = signal<SongReading | null>(null);
+  protected readonly song = computed<Song | null>(() => this.reading()?.song ?? null);
   protected readonly rejection = signal<SongRejection | null>(null);
   /** The name of the chosen file, which can differ from the Song's name. */
   protected readonly fileName = signal('');
@@ -108,7 +110,9 @@ export class TapeImportComponent {
   protected readonly context = computed<TapeImportContext | null>(() => {
     const song = this.song();
     const organ = this.organ();
-    return song && organ ? {song, organ, selectedParts: this.selectedParts()} : null;
+    return song && organ
+      ? {song, organ, selectedParts: this.selectedParts(), leftOut: this.reading()?.leftOut}
+      : null;
   });
 
   /** The draft starts from the Song's name, the Column length of the Organ and the proposed Transposition. */
@@ -242,17 +246,14 @@ export class TapeImportComponent {
   private async readSong(input: HTMLInputElement): Promise<void> {
     const file = input.files?.[0];
     if (!file) return;
-    const result =
-      file.size > MAXIMUM_MIDI_FILE_SIZE
-        ? ({ok: false, error: 'not-a-midi-file'} as const)
-        : readMidiSong(new Uint8Array(await file.arrayBuffer()), file.name);
+    const result = readSongSource(new Uint8Array(await file.arrayBuffer()), file.name);
     if (result.ok) {
       this.rejection.set(null);
       this.fileName.set(file.name);
-      this.song.set(result.value);
+      this.reading.set(result.value);
     } else {
       this.rejection.set(result.error);
-      this.song.set(null);
+      this.reading.set(null);
     }
     input.value = '';
   }
