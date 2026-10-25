@@ -117,6 +117,7 @@
 # Song Source
 * The material a Song is imported from: MIDI or MusicXML
 * PDF and printed Scores reach Crancula as MusicXML from an outside music recognition tool (e.g. Audiveris)
+* German: Notenquelle
 
 # Tick
 * The unit of musical time in a Song and its Song Source (MIDI ticks, MusicXML divisions)
