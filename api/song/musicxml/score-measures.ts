@@ -32,6 +32,22 @@ export interface ScoreKey {
   readonly mode: Mode;
 }
 
+/** The repeat, ending and jump marks of a measure, from its barlines, sounds and words (research R7). */
+export interface MeasureMarks {
+  /** A forward repeat barline on the measure. */
+  readonly repeatForward: boolean;
+  /** A backward repeat barline on the measure, with the times it is played; `undefined` when there is none. */
+  readonly repeatBackward: {readonly times: number} | undefined;
+  /** The ending numbers of the measure, `[]` when it is in no ending. */
+  readonly endings: readonly number[];
+  readonly segno: boolean;
+  readonly coda: boolean;
+  readonly toCoda: boolean;
+  readonly fine: boolean;
+  readonly daCapo: boolean;
+  readonly dalSegno: boolean;
+}
+
 /** A measure of one part, with the attributes in force at it. */
 export interface ScoreMeasure {
   readonly number: string;
@@ -43,6 +59,7 @@ export interface ScoreMeasure {
   /** The furthest position any voice reached, in divisions. */
   readonly length: number;
   readonly notes: readonly ScoreNote[];
+  readonly marks: MeasureMarks;
 }
 
 export interface ScorePart {
@@ -79,6 +96,13 @@ const NO_TRANSPOSE: ScoreTranspose = {chromatic: 0, octaveChange: 0};
 const DEFAULT_DIVISIONS = 1;
 const DEFAULT_STAVES = 1;
 const NO_STAVES: ReadonlySet<number> = new Set();
+/** MusicXML plays a repeat twice when its barline writes no times. */
+const DEFAULT_REPEAT_TIMES = 2;
+/** The jump words, matched in lower case: "D.C." or "Da Capo", "D.S." or "Dal Segno", "Fine", "To Coda". */
+const DA_CAPO_WORDS = /\bd\.c\.|\bda capo\b/;
+const DAL_SEGNO_WORDS = /\bd\.s\.|\bdal segno\b/;
+const FINE_WORDS = /\bfine\b/;
+const TO_CODA_WORDS = /\bto coda\b/;
 
 /** What the attributes of a part give in force. */
 interface Attributes {
@@ -313,6 +337,58 @@ function bodyOf(
   return {notes, length, pitchedStaves, unpitchedStaves};
 }
 
+/** The times a backward repeat is played: as written, else the MusicXML default. */
+function repeatTimesOf(repeat: XmlElement): number {
+  const times = repeat.attributes.get('times');
+  return times !== undefined && INTEGER.test(times) && Number(times) >= 1 ? Number(times) : DEFAULT_REPEAT_TIMES;
+}
+
+/** The ending numbers of an ending, "1, 2" giving both; a token that is no integer is left out. */
+function endingNumbersOf(ending: XmlElement): readonly number[] {
+  return (ending.attributes.get('number') ?? '')
+    .split(',')
+    .map((token) => token.trim())
+    .filter((token) => INTEGER.test(token))
+    .map(Number);
+}
+
+/** A sound flag is given when its attribute is present and not "no"; a segno or coda names its own id. */
+function soundFlagOf(sound: XmlElement, name: string): boolean {
+  const value = sound.attributes.get(name);
+  return value !== undefined && value !== 'no';
+}
+
+/** The repeat, ending and jump marks of a measure, from its own barlines, sounds, signs and words. */
+function marksOf(content: readonly XmlElement[]): MeasureMarks {
+  const barlines = content.filter((element) => element.name === 'barline');
+  const repeats = barlines.flatMap((barline) => childrenNamed(barline, 'repeat'));
+  const backward = repeats.find((repeat) => repeat.attributes.get('direction') === 'backward');
+  const directions = content.filter((element) => element.name === 'direction');
+  const sounds = directions.flatMap((direction) => childrenNamed(direction, 'sound'));
+  const directionTypes = directions.flatMap((direction) => childrenNamed(direction, 'direction-type'));
+  const words = directionTypes
+    .flatMap((directionType) => childrenNamed(directionType, 'words'))
+    .map((element) => textOf(element).toLowerCase());
+  const signed = (name: string): boolean =>
+    directionTypes.some((directionType) => childNamed(directionType, name) !== undefined);
+  const soundSays = (name: string): boolean => sounds.some((sound) => soundFlagOf(sound, name));
+  const wordsSay = (pattern: RegExp): boolean => words.some((text) => pattern.test(text));
+  const endings = barlines.flatMap((barline) =>
+    childrenNamed(barline, 'ending').flatMap((ending) => endingNumbersOf(ending)),
+  );
+  return {
+    repeatForward: repeats.some((repeat) => repeat.attributes.get('direction') === 'forward'),
+    repeatBackward: backward === undefined ? undefined : {times: repeatTimesOf(backward)},
+    endings: [...new Set(endings)],
+    segno: signed('segno') || soundSays('segno'),
+    coda: signed('coda') || soundSays('coda'),
+    toCoda: soundSays('tocoda') || wordsSay(TO_CODA_WORDS),
+    fine: soundSays('fine') || wordsSay(FINE_WORDS),
+    daCapo: soundSays('dacapo') || wordsSay(DA_CAPO_WORDS),
+    dalSegno: soundSays('dalsegno') || wordsSay(DAL_SEGNO_WORDS),
+  };
+}
+
 /** One part: its measures in order, each with the attributes in force at it. */
 function partOf(source: PartSource, instruments: ReadonlyMap<string, MidiNoteNumber>): ScorePart {
   const measures: ScoreMeasure[] = [];
@@ -337,6 +413,7 @@ function partOf(source: PartSource, instruments: ReadonlyMap<string, MidiNoteNum
       staves: inForce.staves,
       length: body.length,
       notes: body.notes,
+      marks: marksOf(measure.content),
     });
   }
   for (const staff of unpitchedStaves) {

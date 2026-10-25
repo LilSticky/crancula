@@ -22,7 +22,7 @@
  */
 import {describe, expect, it} from 'vitest';
 import {midiNoteNumber, type MidiNoteNumber} from '../../organ/midi-note-number';
-import type {ScoreMeasure, ScoreNote, ScorePart} from './score-measures';
+import type {MeasureMarks, ScoreMeasure, ScoreNote, ScorePart} from './score-measures';
 import {layOut, type LaidOut, type LaidOutNote, type LaidOutStaff} from './lay-out';
 
 const QUARTER = 480;
@@ -52,6 +52,19 @@ interface MeasureFields {
   readonly staves?: number;
 }
 
+/** The marks of a measure with none: no repeat, ending or jump. */
+const NO_MARKS: MeasureMarks = {
+  repeatForward: false,
+  repeatBackward: undefined,
+  endings: [],
+  segno: false,
+  coda: false,
+  toCoda: false,
+  fine: false,
+  daCapo: false,
+  dalSegno: false,
+};
+
 /** A measure with the defaults of a plain 4/4 measure of quarter-note divisions, its length given or its Notes' end. */
 function measure(fields: MeasureFields): ScoreMeasure {
   const notes = fields.notes ?? [];
@@ -65,6 +78,7 @@ function measure(fields: MeasureFields): ScoreMeasure {
     staves: fields.staves ?? 1,
     length: fields.length ?? furthest,
     notes,
+    marks: NO_MARKS,
   };
 }
 

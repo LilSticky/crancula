@@ -24,12 +24,30 @@
  *     written pitch, before transpose, as a MIDI note number (C4 = 60; alter rounded to the nearest
  *     semitone, half way up). Rests are no Notes.
  *
+ *   ScoreMeasure also has (T028, the marks of the measure, from its own barlines, sounds and words; R7):
+ *     marks: MeasureMarks
+ *   The MeasureMarks type is the one defined in the header of play-out.spec.ts:
+ *     repeatForward: a forward repeat barline on the measure.
+ *     repeatBackward: { times } for a backward repeat barline, times as written, 2 when none is written
+ *       (the MusicXML default); undefined when there is none.
+ *     endings: the ending numbers of the measure, "1, 2" giving [1, 2]; [] when there is none.
+ *     segno, coda, toCoda, fine, daCapo, dalSegno: from the attributes of <sound> (segno, coda, tocoda, fine,
+ *       dacapo="yes", dalsegno), or from the words of a <direction>: "D.C." and "Da Capo" give daCapo,
+ *       "D.S." and "Dal Segno" give dalSegno, "Fine" gives fine, "To Coda" gives toCoda, case-insensitive.
+ *       Other words give no mark.
+ *
  * Out of this cycle: ties, grace notes, ornaments and arpeggiate flags (later tasks).
  */
 import {describe, expect, it} from 'vitest';
 import {parseXml, type XmlElement} from './xml';
-import {scoreXml, type ScoreSpec} from './score-test-helper';
-import {scoreMeasures, type ScoreMeasure, type ScoreNote, type ScorePart} from './score-measures';
+import {scoreXml, type MeasureEntry, type ScoreSpec, type SoundSpec} from './score-test-helper';
+import {
+  scoreMeasures,
+  type MeasureMarks,
+  type ScoreMeasure,
+  type ScoreNote,
+  type ScorePart,
+} from './score-measures';
 
 function elementOf(text: string): XmlElement {
   const root = parseXml(new TextEncoder().encode(text));
@@ -541,5 +559,136 @@ describe('scoreMeasures rejects a root that is not a score-partwise or score-tim
     ['a document that is not MusicXML', '<html><body/></html>'],
   ])('gives not-a-score for %s', (_, text) => {
     expect(scoreMeasures(elementOf(text))).toEqual({ ok: false, error: 'not-a-score' });
+  });
+});
+
+/** The marks of the one measure of a one-part Score with the given entries. */
+function marksOf(...entries: MeasureEntry[]): MeasureMarks {
+  return measureAt(partsOf({ parts: [{ measures: [{ entries }] }] }), 0).marks;
+}
+
+const NO_MARKS: MeasureMarks = {
+  repeatForward: false,
+  repeatBackward: undefined,
+  endings: [],
+  segno: false,
+  coda: false,
+  toCoda: false,
+  fine: false,
+  daCapo: false,
+  dalSegno: false,
+};
+
+type SoundMark = 'segno' | 'coda' | 'toCoda' | 'fine' | 'daCapo' | 'dalSegno';
+
+describe('scoreMeasures gives the repeat and ending marks of a measure', () => {
+  it('gives a forward repeat barline as repeatForward on its measure', () => {
+    expect(marksOf({ kind: 'barline', location: 'left', repeat: 'forward' })).toMatchObject({ repeatForward: true });
+  });
+
+  it('gives a backward repeat barline as repeatBackward with the times written', () => {
+    expect(marksOf({ kind: 'barline', location: 'right', repeat: 'backward', times: 3 })).toMatchObject({
+      repeatBackward: { times: 3 },
+    });
+  });
+
+  it('gives a backward repeat barline without times written two times, the MusicXML default', () => {
+    expect(marksOf({ kind: 'barline', location: 'right', repeat: 'backward' })).toMatchObject({
+      repeatBackward: { times: 2 },
+    });
+  });
+
+  it('gives a measure with no backward repeat barline no repeatBackward', () => {
+    expect(marksOf({ kind: 'barline', location: 'left', repeat: 'forward' })).toMatchObject({
+      repeatBackward: undefined,
+    });
+  });
+
+  it('gives the ending numbers of a measure, a list such as "1, 2" giving both', () => {
+    expect(marksOf({ kind: 'barline', location: 'left', ending: { number: '1, 2', type: 'start' } })).toMatchObject({
+      endings: [1, 2],
+    });
+  });
+
+  it('gives the marks of each measure from that measure alone', () => {
+    const parts = partsOf({
+      parts: [
+        {
+          measures: [
+            { entries: [{ kind: 'barline', location: 'left', repeat: 'forward' }] },
+            { entries: [{ kind: 'note', pitch: { step: 'C', octave: 4 }, duration: 1 }] },
+          ],
+        },
+      ],
+    });
+
+    expect(nth(parts, 0).measures.map((measure) => measure.marks)).toEqual([
+      { ...NO_MARKS, repeatForward: true },
+      NO_MARKS,
+    ]);
+  });
+});
+
+describe('scoreMeasures gives the sound marks of a measure', () => {
+  const SOUND_MARKS: readonly { readonly mark: SoundMark; readonly sound: SoundSpec }[] = [
+    { mark: 'segno', sound: { segno: 'segno1' } },
+    { mark: 'coda', sound: { coda: 'coda1' } },
+    { mark: 'toCoda', sound: { tocoda: 'coda1' } },
+    { mark: 'fine', sound: { fine: 'yes' } },
+    { mark: 'daCapo', sound: { dacapo: true } },
+    { mark: 'dalSegno', sound: { dalsegno: 'segno1' } },
+  ];
+
+  it.each(SOUND_MARKS)('gives the $mark mark from the sound of a direction', ({ mark, sound }) => {
+    expect(marksOf({ kind: 'direction', sound })).toMatchObject({ [mark]: true });
+  });
+
+  it('gives no sound mark when the sound of a direction says no da capo', () => {
+    expect(marksOf({ kind: 'direction', sound: { dacapo: false } })).toEqual(NO_MARKS);
+  });
+});
+
+/** The marks of the first measure of a one-part Score whose only direction holds the sign element `sign`. */
+function marksOfSign(sign: string): MeasureMarks {
+  const root = elementOf(
+    `<score-partwise version="4.0"><part-list><score-part id="P1"><part-name></part-name></score-part></part-list>` +
+      `<part id="P1"><measure number="1"><direction><direction-type><${sign}/></direction-type></direction>` +
+      `</measure></part></score-partwise>`,
+  );
+  const result = scoreMeasures(root);
+  if (!result.ok) throw new Error(`expected the measures of a score, got ${result.error}`);
+  return measureAt(result.value, 0).marks;
+}
+
+describe('scoreMeasures gives the segno and coda signs of a direction-type', () => {
+  it.each([
+    { sign: 'segno', mark: 'segno' },
+    { sign: 'coda', mark: 'coda' },
+  ] as const)('gives the $mark mark from a <$sign/> sign', ({ sign, mark }) => {
+    expect(marksOfSign(sign)).toMatchObject({ [mark]: true });
+  });
+});
+
+describe('scoreMeasures gives the jump marks of the words of a direction', () => {
+  const JUMP_WORDS: readonly { readonly words: string; readonly marks: readonly SoundMark[] }[] = [
+    { words: 'D.C.', marks: ['daCapo'] },
+    { words: 'Da Capo', marks: ['daCapo'] },
+    { words: 'D.S.', marks: ['dalSegno'] },
+    { words: 'Dal Segno', marks: ['dalSegno'] },
+    { words: 'Fine', marks: ['fine'] },
+    { words: 'To Coda', marks: ['toCoda'] },
+    { words: 'D.C. al Fine', marks: ['daCapo', 'fine'] },
+    { words: 'da capo', marks: ['daCapo'] },
+    { words: 'to coda', marks: ['toCoda'] },
+  ];
+
+  it.each(JUMP_WORDS)('gives the marks of the words "$words"', ({ words, marks }) => {
+    expect(marksOf({ kind: 'direction', words })).toMatchObject(
+      Object.fromEntries(marks.map((mark) => [mark, true])),
+    );
+  });
+
+  it('gives no mark to other words', () => {
+    expect(marksOf({ kind: 'direction', words: 'Allegro, dolce' })).toEqual(NO_MARKS);
   });
 });
