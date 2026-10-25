@@ -190,6 +190,14 @@ describe('readScoreSong makes percussion Parts', () => {
 
     expect(song.parts.map((part) => part.percussion)).toEqual([true]);
   });
+
+  it('keeps an unpitched Note with neither midi-unpitched nor display pitch, at E4 (MIDI 64), in its percussion Part', () => {
+    const song = songOf({
+      parts: [{name: 'Drums', measures: [measure({kind: 'note', pitch: 'unpitched', duration: 1})]}],
+    });
+
+    expect(song.parts).toMatchObject([{percussion: true, notes: [{noteNumber: 64}]}]);
+  });
 });
 
 describe('readScoreSong, the sounding pitch of a Note', () => {

@@ -4,8 +4,8 @@ import type {LeftOut} from '../read-song-source';
 import type {ScoreKey, ScoreMeasure, ScoreNote, ScorePart, ScoreTime, ScoreTranspose} from './score-measures';
 
 export interface LaidOutNote {
-  /** The sounding pitch; `'unpitched'` for a Note without pitch. */
-  readonly noteNumber: MidiNoteNumber | 'unpitched';
+  /** The sounding pitch. */
+  readonly noteNumber: MidiNoteNumber;
   readonly start: Tick;
   readonly duration: Tick;
 }
@@ -15,7 +15,7 @@ export interface LaidOutStaff {
   /** The index of the part in the parts given to {@link layOut}. */
   readonly part: number;
   readonly staff: number;
-  /** Sorted by start, then note number; unpitched Notes first among equal starts. */
+  /** Sorted by start, then note number. */
   readonly notes: readonly LaidOutNote[];
   /**
    * The grace notes and ornaments of the staff, counted in played-out order (research R8): each grace note once,
@@ -45,7 +45,6 @@ const MAXIMUM_FIFTHS = 7;
 const SEMITONES_PER_OCTAVE = 12;
 const MINIMUM_MIDI_NOTE = 0;
 const MAXIMUM_MIDI_NOTE = 127;
-const UNPITCHED_KEY = -1;
 
 /** A staff being filled, keyed by part and staff. */
 interface StaffBuild {
@@ -56,7 +55,7 @@ interface StaffBuild {
    * Per note number, the index in `notes` of the Note that waits for the next Note of that pitch in the staff to
    * join it through a tie. Voices of the staff and the Notes of a chord wait apart.
    */
-  readonly waiting: Map<LaidOutNote['noteNumber'], number>;
+  readonly waiting: Map<MidiNoteNumber, number>;
   graceNotes: number;
   ornaments: number;
 }
@@ -118,17 +117,12 @@ function knownMidiNoteNumber(value: number): MidiNoteNumber {
 }
 
 /** The sounding pitch: the written pitch plus the transposition in force, folded into the MIDI range. */
-function soundingPitchOf(written: MidiNoteNumber | 'unpitched', transpose: ScoreTranspose): MidiNoteNumber | 'unpitched' {
-  if (written === 'unpitched') return 'unpitched';
+function soundingPitchOf(written: MidiNoteNumber, transpose: ScoreTranspose): MidiNoteNumber {
   return foldIntoMidiRange(written + transpose.chromatic + SEMITONES_PER_OCTAVE * transpose.octaveChange);
 }
 
-function noteKey(note: LaidOutNote): number {
-  return note.noteNumber === 'unpitched' ? UNPITCHED_KEY : note.noteNumber;
-}
-
 function byStartThenNoteNumber(a: LaidOutNote, b: LaidOutNote): number {
-  return a.start - b.start || noteKey(a) - noteKey(b);
+  return a.start - b.start || a.noteNumber - b.noteNumber;
 }
 
 function staffFor(staves: Map<string, StaffBuild>, part: number, staff: number): StaffBuild {
@@ -156,7 +150,7 @@ function addMeasure(
 /**
  * Adds a Note to its staff. A grace note is no Note (research R8). A Note that waits for a tie is joined with the
  * next Note of its pitch in its staff when that one starts exactly where the waiting Note ends; another Note of
- * its pitch ends the waiting Note as written. An unpitched Note waits for nothing.
+ * its pitch ends the waiting Note as written.
  */
 function addNote(
   staves: Map<string, StaffBuild>,
@@ -186,7 +180,7 @@ function addNote(
     return;
   }
   build.notes.push({noteNumber, start, duration});
-  if (note.tie.start && noteNumber !== 'unpitched') build.waiting.set(noteNumber, build.notes.length - 1);
+  if (note.tie.start) build.waiting.set(noteNumber, build.notes.length - 1);
 }
 
 /** A Time signature as a Song keeps it, or `undefined` when the Score writes one a Song cannot keep. */

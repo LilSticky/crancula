@@ -12,9 +12,9 @@ export interface ScoreNote {
   readonly length: number;
   /**
    * The written pitch, before the transposition of its measure. An unpitched Note has the `midi-unpitched` of its
-   * instrument, else its display pitch, where the notation puts it; `'unpitched'` when it has neither.
+   * instrument, else its display pitch, where the notation puts it; else E4 (MIDI 64), the middle line.
    */
-  readonly pitch: MidiNoteNumber | 'unpitched';
+  readonly pitch: MidiNoteNumber;
   /** A grace Note: no duration, so length 0; its start is where it is written. */
   readonly grace: boolean;
   /** A Note with `<chord/>`: it sounds with the Note before it. */
@@ -246,12 +246,15 @@ function pitchOf(pitch: XmlElement): MidiNoteNumber {
   return midiOf(stepName, octave, decimalIn(pitch, 'alter') ?? 0) ?? notAScore();
 }
 
-/** The display pitch of an unpitched Note, where the notation puts its notehead; `'unpitched'` when none is written. */
-function displayPitchOf(unpitched: XmlElement): MidiNoteNumber | 'unpitched' {
+/** The octave of the middle line of the staff: E4, where an unpitched Note with nothing else to say sits (research R8). */
+const MIDDLE_LINE_OCTAVE = 4;
+
+/** The display pitch of an unpitched Note, where the notation puts its notehead; the middle line when none is written. */
+function displayPitchOf(unpitched: XmlElement): MidiNoteNumber {
   const step = childNamed(unpitched, 'display-step');
   const octave = integerIn(unpitched, 'display-octave');
-  if (step === undefined || octave === undefined) return 'unpitched';
-  return midiOf(textOf(step), octave, 0) ?? 'unpitched';
+  const displayed = step === undefined || octave === undefined ? undefined : midiOf(textOf(step), octave, 0);
+  return displayed ?? midiOf('E', MIDDLE_LINE_OCTAVE, 0) ?? notAScore();
 }
 
 /**
@@ -275,12 +278,9 @@ function instrumentNumbersOf(root: XmlElement): ReadonlyMap<string, MidiNoteNumb
 
 /**
  * The written pitch of a Note: a pitched Note has its pitch; an unpitched one its instrument's number, else its
- * display pitch.
+ * display pitch, else the middle line.
  */
-function writtenPitchOf(
-  note: XmlElement,
-  instruments: ReadonlyMap<string, MidiNoteNumber>,
-): MidiNoteNumber | 'unpitched' {
+function writtenPitchOf(note: XmlElement, instruments: ReadonlyMap<string, MidiNoteNumber>): MidiNoteNumber {
   const unpitched = childNamed(note, 'unpitched');
   if (unpitched === undefined) return pitchOf(requiredChild(note, 'pitch'));
   const instrumentId = childNamed(note, 'instrument')?.attributes.get('id');

@@ -26,9 +26,9 @@
  *       grace note once, each Note with an ornament once, each arpeggiated chord once; 0 and 0 when none.
  *     One entry per part and staff that has Notes, or a grace note, or an ornament. A staff of only a grace
  *     note therefore has an entry with notes []; the reader gives it no Part (read-score-song.spec.ts).
- *   LaidOutNote { noteNumber: MidiNoteNumber | 'unpitched'; start: Tick; duration: Tick }
+ *   LaidOutNote { noteNumber: MidiNoteNumber; start: Tick; duration: Tick }
  *     noteNumber: the sounding pitch, the written pitch plus the transposition in force in its measure
- *     (chromatic + 12 × octaveChange); unpitched Notes are kept as 'unpitched'.
+ *     (chromatic + 12 × octaveChange).
  *
  * Ties (research R8, NEW, T036): per staff, a Note with `tie.start` waits; the next Note of the same note number
  * in the same staff, in played-out order, joins it when it starts exactly where the waiting Note ends. The joined

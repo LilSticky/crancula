@@ -249,12 +249,12 @@ describe('scoreMeasures gives the Notes of a measure with their written position
     ]);
   });
 
-  it('gives an unpitched Note as unpitched', () => {
+  it('gives an unpitched Note with neither midi-unpitched nor display pitch the pitch E4 (MIDI 64)', () => {
     const notes = firstNotes({
       parts: [{ measures: [{ entries: [{ kind: 'note', pitch: 'unpitched', duration: 1 }] }] }],
     });
 
-    expect(notes).toMatchObject([{ pitch: 'unpitched' }]);
+    expect(notes).toMatchObject([{ pitch: 64 }]);
   });
 
   it.each([

@@ -105,8 +105,8 @@ and knows nothing of XML.
 (divisions, transpose, Time signature, Key, staves); then the played-out measures are laid one after
 another from Tick 0. Per Note: sounding pitch = `step`/`alter`/`octave` as a MIDI note number plus
 `<transpose>` chromatic and octave-change, rounded half up for quarter-tone alters; unpitched notes take the
-`<midi-unpitched>` of their instrument, else their display pitch. Notes go to their `<staff>` (default 1)
-of their part.
+`<midi-unpitched>` of their instrument, else their display pitch, else E4 (MIDI 64), the middle line. Notes go
+to their `<staff>` (default 1) of their part.
 
 - **Out of range** (SC-003): a sounding pitch outside MIDI 0 to 127 is folded by whole octaves into that range
   and kept, never dropped (decided with the orchestrator, T022/T024); the Organ's own Unplayable Note report

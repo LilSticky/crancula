@@ -11,7 +11,7 @@ Each finding has an ID; the fix tasks name them. Status: open until ticked.
   E tie start) only one Note joins. Keep waiting tied Notes per staff **and note number**. Test a tied two-Note chord.
 - [x] D2 Ties break with two voices on one staff: voice 2's Notes clear voice 1's waiting tie. Same fix as D1; test a
   tie over the bar line in voice 1 while voice 2 has Notes in the same measure.
-- [ ] D3 SC-003: an unpitched Note with neither `<midi-unpitched>` nor a display pitch is skipped silently.
+- [x] D3 SC-003: an unpitched Note with neither `<midi-unpitched>` nor a display pitch is skipped silently.
   Decision (orchestrator): it takes E4 (MIDI 64, the middle line of the five-line staff) and stays in its percussion
   Part; record in research.md R8.
 - [x] D4 A Note with an ornament and an arpeggiate counts as two ornaments; FR-012 / US3.4–3.5: one per Note (an

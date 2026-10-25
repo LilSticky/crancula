@@ -51,8 +51,6 @@ function staffNameOf(partName: string | undefined, staves: number, staff: number
 function notesOf(staff: LaidOutStaff): readonly Note[] | undefined {
   const notes: Note[] = [];
   for (const laidOut of staff.notes) {
-    // An unpitched Note without a display pitch has no MIDI note number and is not kept yet.
-    if (laidOut.noteNumber === 'unpitched') continue;
     const built = note({noteNumber: laidOut.noteNumber, start: laidOut.start, duration: laidOut.duration});
     if (built === undefined) return undefined;
     notes.push(built);
