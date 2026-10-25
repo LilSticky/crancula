@@ -57,3 +57,9 @@ Spec: Story 5, FR-021. Decision 7 left "README or import screen" open.
 | A (recommended) | A one-line hint on the import screen that opens a short how-to in the app (a dialog, English and German) | Found where it is needed, works offline, translated; the how-to text is maintained in both languages |
 | B | A one-line hint on the import screen with a link to a how-to section in the README | Less to translate; opens the browser and needs a connection; English only |
 | C | Only in the README | Smallest; owners who don't read the README won't find it |
+
+## Answers (user, 2026-10-25)
+
+All answered with the recommended option: Q1 A (repeats skipped after D.C./D.S.), Q2 A (every Key change kept), Q3 A (first Time signature and Key shown read-only), Q4 A (MIDI without a time signature event: none kept), Q5 A (in-app how-to dialog).
+
+Not yet folded into spec.md: the [NEEDS CLARIFICATION] markers still stand.
