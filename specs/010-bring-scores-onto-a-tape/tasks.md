@@ -103,12 +103,12 @@ Blocks every story: the Song gains its new fields and the import has one entry p
 
 **Independent Test**: a Score with a tie over a bar line, two grace notes and a trill gives one tied Hole, no grace Holes, a plain trilled Hole, and the Import Summary counts 2 and 1.
 
-- [ ] T036 [P] [US3] Red: `api/song/musicxml/lay-out.spec.ts`: a half tied over the bar line to a quarter of the same pitch is one Note of 3 quarters (scenario 1); a tie at the end of a repeat joins the next Note in played-out order only when it has the same MIDI note number and starts exactly at the tied Note's end (scenario 2); G♯ tied to A♭ joins; a tie whose next Note starts later or earlier does not join.
-- [ ] T037 [US3] Green: tie joining in `api/song/musicxml/lay-out.ts`.
-- [ ] T038 [P] [US3] Red: `api/song/musicxml/lay-out.spec.ts`: a grace note is no Note and the main Note starts where written (scenario 3); trill, mordent, turn, tremolo → one plain Note as long as written (scenario 4); an arpeggiated chord starts together (scenario 5); `leftOut` per Part counts grace notes and ornaments (arpeggiate counts as one ornament per chord) once per played pass (R8); a staff with only a grace note has no Part; a Score without either has counts 0 (scenario 6).
-- [ ] T039 [US3] Green: grace notes, ornaments and counts in `lay-out.ts`; `read-score-song.ts` returns `leftOut` keyed by `PartIndex`.
-- [ ] T040 [P] [US3] Red: `src/app/features/tape/import-summary/import-summary.component.spec.ts`: with `summary.leftOut` two rows `grace-notes-left-out-value` and `ornaments-left-out-value` (0 included) with `TAPE.SUMMARY.GRACE_NOTES_LEFT_OUT` / `ORNAMENTS_LEFT_OUT`; without `leftOut` (MIDI) neither row.
-- [ ] T041 [US3] Green: `src/app/features/tape/import-summary/import-summary.component.html` / `.ts`.
+- [x] T036 [P] [US3] Red: `api/song/musicxml/lay-out.spec.ts`: a half tied over the bar line to a quarter of the same pitch is one Note of 3 quarters (scenario 1); a tie at the end of a repeat joins the next Note in played-out order only when it has the same MIDI note number and starts exactly at the tied Note's end (scenario 2); G♯ tied to A♭ joins; a tie whose next Note starts later or earlier does not join.
+- [x] T037 [US3] Green: tie joining in `api/song/musicxml/lay-out.ts`.
+- [x] T038 [P] [US3] Red: `api/song/musicxml/lay-out.spec.ts`: a grace note is no Note and the main Note starts where written (scenario 3); trill, mordent, turn, tremolo → one plain Note as long as written (scenario 4); an arpeggiated chord starts together (scenario 5); `leftOut` per Part counts grace notes and ornaments (arpeggiate counts as one ornament per chord) once per played pass (R8); a staff with only a grace note has no Part; a Score without either has counts 0 (scenario 6).
+- [x] T039 [US3] Green: grace notes, ornaments and counts in `lay-out.ts`; `read-score-song.ts` returns `leftOut` keyed by `PartIndex`.
+- [x] T040 [P] [US3] Red: `src/app/features/tape/import-summary/import-summary.component.spec.ts`: with `summary.leftOut` two rows `grace-notes-left-out-value` and `ornaments-left-out-value` (0 included) with `TAPE.SUMMARY.GRACE_NOTES_LEFT_OUT` / `ORNAMENTS_LEFT_OUT`; without `leftOut` (MIDI) neither row.
+- [x] T041 [US3] Green: `src/app/features/tape/import-summary/import-summary.component.html` / `.ts`.
 
 **Checkpoint**: commit; STATUS.
 
