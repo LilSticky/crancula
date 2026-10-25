@@ -71,6 +71,8 @@ The five questions of [open-questions.md](open-questions.md), answered by the us
   view, and the side panel shows the count of Tape pieces.
 - Q: How is a Tape exported that fits in one piece while a Plotter is picked? → A: With the save
   dialog of spec 003 and "<Tape name>.svg".
+- Q: Under the Minimum Gap rule, which Columns does the Cutting Problem of Story 3 name? → A: The
+  Hole and one Minimum Gap after it, Columns 1–101 (confirmed while reviewing the plan).
 
 ## User Scenarios & Testing *(mandatory)*
 

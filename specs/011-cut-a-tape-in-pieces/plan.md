@@ -149,8 +149,8 @@ a rebase onto 010 once it is merged into `main`. ADR 27 is 010's; this slice use
 
 ## Open questions
 
-None blocking. For the user to confirm while reviewing (no new term): the corrected Columns of Story 3
-(1–101 under the Minimum Gap rule).
+None. The corrected Columns of Story 3 (1–101 under the Minimum Gap rule) were confirmed by the user
+on 2026-10-25.
 
 ## Complexity Tracking
 
