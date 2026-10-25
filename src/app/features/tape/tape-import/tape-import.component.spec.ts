@@ -533,10 +533,10 @@ describe('TapeImportComponent', () => {
   });
 
   describe('file chip', () => {
-    it('offers only "Choose a MIDI file" before a file is chosen', async () => {
+    it('offers only "Choose a Song Source" before a file is chosen', async () => {
       const {query, textOf} = await render({organs: [testOrgan('Street organ', 3)]});
 
-      expect(textOf('choose-song')).toContain('Choose a MIDI file');
+      expect(textOf('choose-song')).toContain('Choose a Song Source');
       expect(query('song-file-name')).toBeNull();
       expect(query('song-facts')).toBeNull();
     });
@@ -1158,10 +1158,10 @@ describe('TapeImportComponent', () => {
       expect(bar?.contains(query('create-tape'))).toBe(true);
     });
 
-    it('asks for a MIDI file without a Song', async () => {
+    it('asks for a Song Source without a Song', async () => {
       const {element} = await render({organs: [testOrgan('Street organ', 3)]});
 
-      expect(state(element)).toBe('Choose a MIDI file');
+      expect(state(element)).toBe('Choose a Song Source');
     });
 
     it('asks for an Organ while none is chosen among several', async () => {
