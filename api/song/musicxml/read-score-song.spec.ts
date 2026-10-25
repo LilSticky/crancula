@@ -381,3 +381,156 @@ describe('readScoreSong and createTape, the same music from MusicXML and from MI
     expect(holesOfTape(readFromScore, twelveUp)).toEqual(holesOfTape(readFromMidi, twelveUp));
   });
 });
+
+/*
+ * User Story 2 (T032) and SC-005 (T034): the repeats of the Score are played out before the Notes are laid out.
+ * A Bar is one whole note; the divisions are 4 per quarter note, so a whole note in 4/4 is 16 divisions.
+ */
+
+const DIVISIONS = 4;
+const WHOLE_NOTE = 16;
+
+/** The Bars 1 to 8 of the reference Score, the treble pitch of each; the piano's staves sound an octave and two below. */
+const BAR_PITCHES: readonly PitchSpec[] = [
+  {step: 'C', octave: 4},
+  {step: 'D', octave: 4},
+  {step: 'E', octave: 4},
+  {step: 'F', octave: 4},
+  {step: 'G', octave: 4},
+  {step: 'A', octave: 4},
+  {step: 'B', octave: 4},
+  {step: 'C', octave: 5},
+];
+/** The MIDI note numbers of the Notes of each staff, in Bar order. */
+const FLUTE_MIDI: readonly number[] = [60, 62, 64, 65, 67, 69, 71, 72];
+const PIANO_UPPER_MIDI: readonly number[] = [48, 50, 52, 53, 55, 57, 59, 60];
+const PIANO_LOWER_MIDI: readonly number[] = [36, 38, 40, 41, 43, 45, 47, 48];
+
+/** The Bars in played order, 0-based: Bars 1 to 4, then Bars 1 to 3 again, then Bars 5 to 8 (first ending, second ending). */
+const PLAYED_BARS: readonly number[] = [0, 1, 2, 3, 0, 1, 2, 4, 5, 6, 7];
+
+/** The entries a Bar begins with: the Time signature and divisions, in the first Bar only. */
+function attributesAt(index: number): MeasureEntry[] {
+  return index === 0 ? [{kind: 'attributes', divisions: DIVISIONS, time: {beats: 4, beatType: 4}}] : [];
+}
+
+/** The barlines of a Bar: a forward repeat before Bar 1, a first ending on Bar 4 with a backward repeat, a second ending on Bar 5. */
+function barlinesAt(index: number): MeasureEntry[] {
+  switch (index) {
+    case 0:
+      return [{kind: 'barline', location: 'left', repeat: 'forward'}];
+    case 3:
+      return [
+        {kind: 'barline', location: 'left', ending: {number: '1', type: 'start'}},
+        {kind: 'barline', location: 'right', ending: {number: '1', type: 'stop'}, repeat: 'backward'},
+      ];
+    case 4:
+      return [
+        {kind: 'barline', location: 'left', ending: {number: '2', type: 'start'}},
+        {kind: 'barline', location: 'right', ending: {number: '2', type: 'stop'}},
+      ];
+    default:
+      return [];
+  }
+}
+
+/** A Bar of the piano: its upper staff is written an octave below the treble pitch, its lower staff two octaves below. */
+function pianoBarAt(index: number, pitch: PitchSpec): MeasureSpec {
+  const upper: PitchSpec = {step: pitch.step, octave: pitch.octave - 1};
+  const lower: PitchSpec = {step: pitch.step, octave: pitch.octave - 2};
+  return measure(
+    ...attributesAt(index),
+    note(upper.step, upper.octave, WHOLE_NOTE, 1),
+    {kind: 'backup', duration: WHOLE_NOTE},
+    note(lower.step, lower.octave, WHOLE_NOTE, 2),
+  );
+}
+
+/** The 8-Bar reference Score: a flute with the repeats and endings, and a two-staff piano with no barlines of its own. */
+const EIGHT_BARS: ScoreSpec = {
+  parts: [
+    {
+      name: 'Flute',
+      measures: BAR_PITCHES.map((pitch, index) =>
+        measure(...attributesAt(index), note(pitch.step, pitch.octave, WHOLE_NOTE), ...barlinesAt(index)),
+      ),
+    },
+    {
+      name: 'Piano',
+      staves: 2,
+      measures: BAR_PITCHES.map((pitch, index) => pianoBarAt(index, pitch)),
+    },
+  ],
+};
+
+/** The Notes of a Part in played order: one whole note per played Bar, at the Tick where that Bar is played. */
+function playedNotesOf(midi: readonly number[], wholeNote: number) {
+  return PLAYED_BARS.map((bar, position) => ({
+    noteNumber: defined(midi[bar], `pitch of Bar ${bar + 1}`),
+    start: position * wholeNote,
+    duration: wholeNote,
+  }));
+}
+
+describe('readScoreSong plays the repeats out, every staff following the marks of the first part (US2)', () => {
+  it('gives the Notes of the 8-Bar reference Score at the Ticks of the played-out Bars, on every staff', () => {
+    const song = songOf(EIGHT_BARS, 'eight-bars.musicxml');
+    const wholeNote = 4 * song.ticksPerQuarter;
+
+    expect(namesOf(song)).toEqual(['Flute', 'Piano 1', 'Piano 2']);
+    expect(
+      song.parts.map((songPart) =>
+        songPart.notes.map(({noteNumber, start, duration}) => ({noteNumber, start, duration})),
+      ),
+    ).toEqual([
+      playedNotesOf(FLUTE_MIDI, wholeNote),
+      playedNotesOf(PIANO_UPPER_MIDI, wholeNote),
+      playedNotesOf(PIANO_LOWER_MIDI, wholeNote),
+    ]);
+  });
+});
+
+/** 5 minutes at 120 quarter notes a minute: 600 quarter notes, in 4/4 Bars of 4 quarter notes (SC-005). */
+const FIVE_MINUTE_QUARTERS = 600;
+const QUARTERS_PER_BAR = 4;
+const STAVES = 16;
+/** The Bars written; the first repeat is played this many times, so the Score lasts 5 minutes after play-out. */
+const WRITTEN_BARS = 15;
+const PASSES = FIVE_MINUTE_QUARTERS / QUARTERS_PER_BAR / WRITTEN_BARS;
+/** The bound of SC-005, in milliseconds; generous, so that a slow CI machine does not make the test flaky. */
+const READ_BOUND_MS = 5000;
+
+/** The Tick at which the last Note of a Song ends. */
+function endOf(song: Song): number {
+  return song.parts.reduce(
+    (end, songPart) => songPart.notes.reduce((partEnd, each) => Math.max(partEnd, each.start + each.duration), end),
+    0,
+  );
+}
+
+describe('readScoreSong reads a long Score in time (SC-005)', () => {
+  it('reads a 5 minute Score of 16 staves, its repeats played out, into Notes that last 5 minutes, in under 5 seconds', () => {
+    const measures: MeasureSpec[] = Array.from({length: WRITTEN_BARS}, (_, index) => {
+      const entries: MeasureEntry[] = [...attributesAt(index)];
+      if (index === 0) entries.push({kind: 'barline', location: 'left', repeat: 'forward'});
+      for (let staff = 1; staff <= STAVES; staff++) {
+        if (staff > 1) entries.push({kind: 'backup', duration: WHOLE_NOTE});
+        entries.push(note('C', 3, WHOLE_NOTE, staff));
+      }
+      if (index === WRITTEN_BARS - 1) {
+        entries.push({kind: 'barline', location: 'right', repeat: 'backward', times: PASSES});
+      }
+      return measure(...entries);
+    });
+    const bytes = utf8(scoreXml({parts: [{name: 'Ensemble', staves: STAVES, measures}]}));
+
+    const started = performance.now();
+    const result = readScoreSong(bytes, 'ensemble.musicxml');
+    const elapsed = performance.now() - started;
+
+    const song = readingOf(result).song;
+    expect(song.parts).toHaveLength(STAVES);
+    expect(endOf(song)).toBe(FIVE_MINUTE_QUARTERS * song.ticksPerQuarter);
+    expect(elapsed).toBeLessThan(READ_BOUND_MS);
+  });
+});

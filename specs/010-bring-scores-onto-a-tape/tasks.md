@@ -90,10 +90,10 @@ Blocks every story: the Song gains its new fields and the import has one entry p
 - [x] T029 [US2] Green: marks in `api/song/musicxml/score-measures.ts`.
 - [x] T030 [P] [US2] Red: `api/song/musicxml/play-out.spec.ts`: A B under repeat + C → A B A B C (scenario 1); A B(ending 1) C(ending 2) D → A B A C D (scenario 2); `times="3"` → three passes (scenario 3); D.C. al fine and D.S. al fine end at fine (scenario 4); D.C./D.S. al coda jump from to-coda to coda and end there (scenario 5); after a D.C./D.S. jump repeats are skipped and endings take the last ending (scenario 6, Q1 A); a repeat without forward mark repeats from the start; D.C. without fine plays to the end; to-coda without coda is ignored; nested or inconsistent marks terminate (bounded passes) without error.
 - [x] T031 [US2] Green: `api/song/musicxml/play-out.ts`, a pure function `MeasureMarks[] → number[]` (written measure indexes in played order).
-- [ ] T032 [P] [US2] Red: `api/song/musicxml/read-score-song.spec.ts`: the 8-Bar reference Score gives Notes at the played-out Ticks; every staff follows the first part's marks.
-- [ ] T033 [US2] Green: `lay-out.ts` lays measures out in the order from `play-out.ts`; `read-score-song.ts` wires it.
-- [ ] T034 [P] [US2] Red: SC-005 in `api/song/musicxml/read-score-song.spec.ts`: a generated Score of 16 staves that plays 5 minutes after play-out is read in under 5 s (generous bound, no flakiness on CI).
-- [ ] T035 [US2] Green: make T034 pass if needed (avoid quadratic work in play-out or lay-out).
+- [x] T032 [P] [US2] Red: `api/song/musicxml/read-score-song.spec.ts`: the 8-Bar reference Score gives Notes at the played-out Ticks; every staff follows the first part's marks.
+- [x] T033 [US2] Green: `lay-out.ts` lays measures out in the order from `play-out.ts`; `read-score-song.ts` wires it.
+- [x] T034 [P] [US2] Red: SC-005 in `api/song/musicxml/read-score-song.spec.ts`: a generated Score of 16 staves that plays 5 minutes after play-out is read in under 5 s (generous bound, no flakiness on CI).
+- [x] T035 [US2] Green: make T034 pass if needed (avoid quadratic work in play-out or lay-out).
 
 **Checkpoint**: commit; STATUS.
 

@@ -2,6 +2,7 @@ import {err, ok, type Result} from '../../result';
 import {note, newSongId, part, song, type Note, type Part, type Song} from '../song';
 import type {SongReading, SongRejection} from '../read-song-source';
 import {layOut, type LaidOutStaff} from './lay-out';
+import {playOut} from './play-out';
 import {scoreMeasures, type ScorePart} from './score-measures';
 import {parseXml, type XmlElement} from './xml';
 
@@ -46,12 +47,6 @@ function staffNameOf(partName: string | undefined, staves: number, staff: number
   return staves > 1 ? `${partName} ${staff}` : partName;
 }
 
-/** The measures are played straight through, in the order they are written (repeats are not played out yet). */
-function straightOrder(parts: readonly ScorePart[]): readonly number[] {
-  const count = parts.reduce((longest, part) => Math.max(longest, part.measures.length), 0);
-  return Array.from({length: count}, (_, index) => index);
-}
-
 /** The Notes of one staff as Notes of a Part; `undefined` when a Note is longer than a Song can hold. */
 function notesOf(staff: LaidOutStaff): readonly Note[] | undefined {
   const notes: Note[] = [];
@@ -76,7 +71,6 @@ export function readScoreSong(bytes: Uint8Array, fileName: string): Result<SongR
   if (!measured.ok) return err(measured.error);
 
   const parts = measured.value;
-  const laidOut = layOut(parts, straightOrder(parts));
   const listed = partListOf(root);
   const positionOf = (id: string): number => {
     const position = listed.findIndex((candidate) => candidate.id === id);
@@ -85,6 +79,9 @@ export function readScoreSong(bytes: Uint8Array, fileName: string): Result<SongR
   const byPartList = parts
     .map((scorePart, index) => ({scorePart, index}))
     .sort((a, b) => positionOf(a.scorePart.id) - positionOf(b.scorePart.id) || a.index - b.index);
+  // The first part's marks give the played order, and every staff is laid out in it (research R7).
+  const leadMeasures = byPartList[0]?.scorePart.measures ?? [];
+  const laidOut = layOut(parts, playOut(leadMeasures.map((measure) => measure.marks)));
 
   const songParts: Part[] = [];
   for (const {scorePart, index} of byPartList) {
