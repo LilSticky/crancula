@@ -30,7 +30,7 @@ packaged renderer, restart).
 
 ## Phase 1: Setup
 
-- [ ] T001 Add `fflate` at exactly `0.8.3` to `dependencies` in `package.json` (`npm install --save-exact fflate@0.8.3`); add it (MIT) to the third-party notices wherever `@breezystack/lamejs` is listed; `npm run build` green.
+- [x] T001 Add `fflate` at exactly `0.8.3` to `dependencies` in `package.json` (`npm install --save-exact fflate@0.8.3`); add it (MIT) to the third-party notices wherever `@breezystack/lamejs` is listed; `npm run build` green.
 - [ ] T002 Add the keys of [contracts/score-import-ui.md](contracts/score-import-ui.md) with en and de texts to `src/assets/i18n/en.json` and `de.json`: `TAPE.IMPORT.CHOOSE_SONG` changes to "Choose a Song Source" / "Notenquelle wählen"; `TAPE.IMPORT.SONG_SOURCES` (names MIDI and MusicXML), `TAPE.IMPORT.SCORE_HINT` ("Only a PDF or printed Scores?" / "Nur ein PDF oder gedruckte Noten?"), `TAPE.IMPORT.SCORE_HINT_LINK` ("How to get MusicXML" / "So kommst du zu MusicXML"); `TAPE.SONG_REJECTION.<CODE>` for every code of [data-model.md](data-model.md#songrejection-changed) (`TOO_LARGE`, `NOT_A_SONG_SOURCE`, `PDF`, `NOT_A_SCORE`, `DAMAGED_ARCHIVE`, `NO_SCORE_IN_ARCHIVE`, keeping the existing MIDI ones); `TAPE.SCORE_HOW_TO.TITLE`, `STEP_1`…`STEP_5`, `CLOSE`; `TAPE.METRE.*` (time signature, `MAJOR`/`MINOR` with `{{key}}`, `UPBEAT` with `{{fraction}}`, the 15 major and 15 minor key names in en and de, e.g. "G major"/"G-Dur", "E minor"/"e-Moll"); `TAPE.SUMMARY.GRACE_NOTES_LEFT_OUT`, `TAPE.SUMMARY.ORNAMENTS_LEFT_OUT`. German uses Stück, Stimme, Noten, Notenquelle. `npm run i18n:check` green.
 
 ## Phase 2: Foundational (domain types, recognition, snapshot)
