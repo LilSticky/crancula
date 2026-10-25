@@ -1,16 +1,15 @@
 // API: ScoreHowToDialogComponent (standalone, selector `cranc-score-how-to-dialog`, in ./score-how-to-dialog.component).
-// It is a Material dialog without data; it closes its MatDialogRef with its Close button.
+// It is a Material dialog without data; its Close button is a `mat-dialog-close` and closes the dialog it is in.
+import {ApplicationRef} from '@angular/core';
 import {TestBed} from '@angular/core/testing';
-import {MatDialogRef} from '@angular/material/dialog';
-import {vi} from 'vitest';
+import {MatDialog} from '@angular/material/dialog';
+import {firstValueFrom} from 'rxjs';
 import {provideTestTranslations} from '../../../../../testing/test-translations';
 import {ScoreHowToDialogComponent} from './score-how-to-dialog.component';
 
+/** Renders the dialog component as a fixture, for its content. */
 async function render() {
-  const close = vi.fn<(result?: unknown) => void>();
-  TestBed.configureTestingModule({
-    providers: [provideTestTranslations('en'), {provide: MatDialogRef, useValue: {close}}],
-  });
+  TestBed.configureTestingModule({providers: [provideTestTranslations('en')]});
   const fixture = TestBed.createComponent(ScoreHowToDialogComponent);
   fixture.autoDetectChanges();
   await fixture.whenStable();
@@ -22,7 +21,7 @@ async function render() {
     if (!button) throw new Error('no Close button');
     return button;
   };
-  return {element, close, closeButton, fixture};
+  return {element, closeButton, fixture};
 }
 
 describe('ScoreHowToDialogComponent', () => {
@@ -49,10 +48,17 @@ describe('ScoreHowToDialogComponent', () => {
   });
 
   it('closes the dialog with its Close button', async () => {
-    const {close, closeButton} = await render();
+    TestBed.configureTestingModule({providers: [provideTestTranslations('en')]});
+    const dialog = TestBed.inject(MatDialog);
+    const dialogRef = dialog.open(ScoreHowToDialogComponent);
+    const closed = firstValueFrom(dialogRef.afterClosed());
+    await TestBed.inject(ApplicationRef).whenStable();
+    const button = document.querySelector<HTMLButtonElement>('[data-testid="score-how-to-close"]');
+    if (!button) throw new Error('no Close button');
 
-    closeButton().click();
+    button.click();
 
-    expect(close).toHaveBeenCalled();
+    await closed;
+    expect(dialog.openDialogs).toEqual([]);
   });
 });
