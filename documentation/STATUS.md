@@ -6,17 +6,21 @@ Issues: [GitHub](https://github.com/LilSticky/crancula/issues)
 
 ## Current slice
 
-[Record a tape](../specs/009-record-a-tape/spec.md) ([#165](https://github.com/LilSticky/crancula/issues/165), v0.2, branch
-`009-record-a-tape`, draft PR [#166](https://github.com/LilSticky/crancula/pull/166)): save the whole Tape at its Crank speed as a
-WAV or MP3 Recording. Spec, clarifications (Recording/Record approved, Cutting Problems recorded as drawn, mono
-44.1 kHz, MP3 128 kbit/s), plan and [ADR 26](adr/0026-recording-rendered-offline-saved-by-main.md) done. Done: T001–T016
-(i18n, lamejs dependency, domain: WAV writer, PCM, file name, Preview note windows, save requests; main-process IPC).
+No slice in progress.
 
-**Next step:** T017–T020 in [tasks.md](../specs/009-record-a-tape/tasks.md): extract the Preview voices, then the
-TapeRecorder service (red specs written).
+**Next step:** start v0.3 [Bring Scores onto a tape](https://github.com/LilSticky/crancula/issues/167) (#167) with Spec Kit
+(`/speckit-specify`): MusicXML only, one Part per staff, repeats played out.
 
-**Known:** `npm install` could not refresh `node_modules` (EBUSY: Electron processes from 2026-10-24 were running);
-lamejs is in `package-lock.json` only. Run `npm install` before T022.
+**Done:** [Record a tape](../specs/009-record-a-tape/spec.md) ([#165](https://github.com/LilSticky/crancula/issues/165), v0.2,
+branch `009-record-a-tape`, PR [#166](https://github.com/LilSticky/crancula/pull/166)): save the whole Tape at its Crank speed as a
+WAV or MP3 Recording. WAV is mono 44.1 kHz 16 bit; MP3 is 128 kbit/s via LAME (LGPL, unmodified) in a Worker. The
+Recording is rendered offline with the Preview voices; two IPC calls (`recording.chooseFile`, `recording.writeFile`)
+with a single-use target, [ADR 26](adr/0026-recording-rendered-offline-saved-by-main.md). Record is disabled without a
+Tape per Crank turn or while the Preview plays; the page head actions are icon-only below 1180 px so Record fits at
+1024 px. Reviews (electron, angular, UX, spec audit, [audit.md](../specs/009-record-a-tape/audit.md)) fixed; open
+follow-ups [#172](https://github.com/LilSticky/crancula/issues/172) and [#173](https://github.com/LilSticky/crancula/issues/173).
+Gate: 1009 node and 1435 Angular unit tests, lint, i18n; e2e `record-a-tape`, `boundary` and `tape-layout` green locally,
+full e2e in CI. **Sound not checked by hand yet**: the user has not listened to a Recording (WAV or MP3).
 
 **Done:** [Ready-made Organs (#162)](https://github.com/LilSticky/crancula/issues/162) (2026-10-24, branch
 `claude/issue-162-20261024-2112`): the term is Preset (German Vorlage); a new Organ offers the Presets as starting

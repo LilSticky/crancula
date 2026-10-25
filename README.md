@@ -61,7 +61,9 @@ flowchart LR
    Column length. Cutting Problems show as you go, and Undo takes any edit back.
 4. **Hear the Tape.** Preview plays it with a tone per Pipe at the Crank speed you choose, while
    a playhead runs along the Tape. Your Organ needs its Tape per Crank turn for this.
-5. **Punch the Tape.** Export the Tape as a true-to-scale SVG and cut it with your Plotter.
+5. **Record the Tape.** Save the whole Tape at its Crank speed as a WAV or MP3 file to listen to
+   without Crancula.
+6. **Punch the Tape.** Export the Tape as a true-to-scale SVG and cut it with your Plotter.
    A Tape that can't be cut (a Hole too short, or too close to the next) is not exported;
    Crancula names every problem Hole instead.
 
