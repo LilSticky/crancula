@@ -16,11 +16,22 @@
  *     numbers 0 to 127 is left out of its Part. The docs give no other report for it: see the test.
  *
  *   Song name (FR-013): the work title, else the movement title, else the file name without its extension.
+ *
+ * T023 (SC-001) is in this file too: createTape (api/tape/create-tape.ts) takes the Song read by
+ * readScoreSong and the Song read from the same music as MIDI, and gives the same Holes. It sits here, not in
+ * create-tape.spec.ts, so that the missing module fails only this file.
  */
 import {describe, expect, it} from 'vitest';
+import {DEFAULT_CRANK_SPEED_RANGE} from '../../organ/crank-speed-range';
+import {asValidOrgan, millimetres, organId, type Organ} from '../../organ/organ';
+import {midiNoteNumber} from '../../organ/midi-note-number';
 import type {Result} from '../../result';
+import {createTape, type CreateTapeInput} from '../../tape/create-tape';
+import {transposition, type Transposition} from '../../tape/tape';
+import {readMidiSong} from '../midi/read-midi-song';
+import {encodeSmf, type SmfTimedEvent, type SmfTrack} from '../midi/smf-test-helper';
 import type {SongReading, SongRejection} from '../read-song-source';
-import type {Part, Song} from '../song';
+import {partIndex, type Part, type PartIndex, type Song} from '../song';
 import {readScoreSong} from './read-score-song';
 import {
   scoreXml,
@@ -30,6 +41,11 @@ import {
   type PitchSpec,
   type ScoreSpec,
 } from './score-test-helper';
+
+function defined<T>(value: T | undefined, what: string): T {
+  if (value === undefined) throw new Error(`invalid test value: ${what}`);
+  return value;
+}
 
 function utf8(text: string): Uint8Array {
   return new TextEncoder().encode(text);
@@ -222,5 +238,146 @@ describe('readScoreSong rejects what is not a Score with Notes', () => {
     );
 
     expect(rejectionOf(result)).toBe('no-notes');
+  });
+});
+
+/*
+ * T023, SC-001: the same two-staff music as MusicXML and as MIDI gives, through createTape with the same
+ * Organ and Transposition, identical Holes.
+ */
+
+const ORGAN_ID = '3f2b8c1e-9d4a-4f6b-8e2c-1a2b3c4d5e6f';
+const MIDI_TICKS_PER_QUARTER = 96;
+
+/** Pipes C4 to C6 without F#. */
+const PIPES_WITHOUT_F_SHARP = Array.from({length: 25}, (_, index) => 60 + index).filter((pipe) => pipe % 12 !== 6);
+
+function anOrgan(): Organ {
+  const mm = (value: number) => defined(millimetres(value), 'millimetres');
+  return asValidOrgan({
+    id: defined(organId(ORGAN_ID), 'organ id'),
+    name: 'Organ',
+    tapeBed: {tapeWidth: mm(100), holeDiameter: mm(1), rowSpacing: mm(2)},
+    minimumGap: mm(1),
+    leadIn: mm(0),
+    crankSpeedRange: DEFAULT_CRANK_SPEED_RANGE,
+    pipes: PIPES_WITHOUT_F_SHARP.map((each) => ({note: defined(midiNoteNumber(each), 'pipe')})),
+  });
+}
+
+interface MidiNote {
+  readonly note: number;
+  readonly startTick: number;
+  readonly ticks: number;
+}
+
+/** One track per staff; each track is one Part of the MIDI Song. */
+function midiSongOf(...tracks: readonly (readonly MidiNote[])[]): Song {
+  const smfTracks: SmfTrack[] = tracks.map((notes) => {
+    const events: SmfTimedEvent[] = [];
+    let clock = 0;
+    for (const {note, startTick, ticks} of notes) {
+      events.push({delta: startTick - clock, event: {type: 'noteOn', channel: 0, note, velocity: 64}});
+      events.push({delta: ticks, event: {type: 'noteOff', channel: 0, note, velocity: 0}});
+      clock = startTick + ticks;
+    }
+    return {events};
+  });
+  const bytes = encodeSmf({
+    format: 1,
+    division: {ticksPerQuarterNote: MIDI_TICKS_PER_QUARTER},
+    tracks: smfTracks,
+  });
+  const result = readMidiSong(bytes, 'tune.mid');
+  if (!result.ok) throw new Error(`test Song rejected: ${result.error}`);
+  return result.value;
+}
+
+/** The spelling of each pitch of the reference music, so that both Scores write the same notes. */
+const SPELLING: ReadonlyMap<number, PitchSpec> = new Map<number, PitchSpec>([
+  [48, {step: 'C', octave: 3}],
+  [52, {step: 'E', octave: 3}],
+  [55, {step: 'G', octave: 3}],
+  [60, {step: 'C', octave: 4}],
+  [64, {step: 'E', octave: 4}],
+  [67, {step: 'G', octave: 4}],
+  [69, {step: 'A', octave: 4}],
+]);
+
+/** A written Note of the reference music; `duration` is in divisions (4 per quarter note). */
+function written(noteNumber: number, duration: number, staff: number): NoteSpec {
+  return {kind: 'note', pitch: defined(SPELLING.get(noteNumber), `spelling of ${noteNumber}`), duration, staff};
+}
+
+/** The reference music: a treble staff with a melody and a bass staff under it, two 4/4 Bars. */
+const TWO_STAVES: ScoreSpec = {
+  parts: [
+    {
+      name: 'Piano',
+      staves: 2,
+      measures: [
+        measure(
+          {kind: 'attributes', divisions: 4, time: {beats: 4, beatType: 4}},
+          written(60, 4, 1),
+          written(64, 4, 1),
+          written(67, 8, 1),
+          {kind: 'backup', duration: 16},
+          written(48, 8, 2),
+          written(55, 8, 2),
+        ),
+        measure(
+          written(69, 16, 1),
+          {kind: 'backup', duration: 16},
+          written(52, 4, 2),
+          written(55, 4, 2),
+          written(48, 4, 2),
+          written(52, 4, 2),
+        ),
+      ],
+    },
+  ],
+};
+
+/** The same music as two MIDI tracks, one per staff, in 96 Ticks per quarter note. */
+const TREBLE_MIDI: readonly MidiNote[] = [
+  {note: 60, startTick: 0, ticks: 96},
+  {note: 64, startTick: 96, ticks: 96},
+  {note: 67, startTick: 192, ticks: 192},
+  {note: 69, startTick: 384, ticks: 384},
+];
+const BASS_MIDI: readonly MidiNote[] = [
+  {note: 48, startTick: 0, ticks: 192},
+  {note: 55, startTick: 192, ticks: 192},
+  {note: 52, startTick: 384, ticks: 96},
+  {note: 55, startTick: 480, ticks: 96},
+  {note: 48, startTick: 576, ticks: 96},
+  {note: 52, startTick: 672, ticks: 96},
+];
+
+function partsOf(...indexes: readonly number[]): ReadonlySet<PartIndex> {
+  return new Set(indexes.map((index) => defined(partIndex(index, 100), 'part index')));
+}
+
+function holesOfTape(song: Song, transposed: Transposition): readonly {pipe: number; start: number; length: number}[] {
+  const input: CreateTapeInput = {
+    song,
+    selectedParts: partsOf(0, 1),
+    organ: anOrgan(),
+    transposition: transposed,
+    name: 'Piano',
+    columnLength: 1,
+  };
+  const result = createTape(input);
+  if (!result.ok) throw new Error(`createTape failed: ${JSON.stringify(result.error)}`);
+  return result.value.tape.holes.map(({pipe, start, length}) => ({pipe, start, length}));
+}
+
+describe('readScoreSong and createTape, the same music from MusicXML and from MIDI (SC-001)', () => {
+  it('puts the same Holes on the Tape from MusicXML as from MIDI, with the same Organ and Transposition', () => {
+    const twelveUp = defined(transposition(12), 'transposition');
+    const readFromScore = readingOf(readScoreSong(utf8(scoreXml(TWO_STAVES)), 'piano.musicxml')).song;
+    const readFromMidi = midiSongOf(TREBLE_MIDI, BASS_MIDI);
+
+    expect(holesOfTape(readFromScore, twelveUp)).toEqual(holesOfTape(readFromMidi, twelveUp));
   });
 });

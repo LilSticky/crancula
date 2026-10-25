@@ -68,8 +68,8 @@ Blocks every story: the Song gains its new fields and the import has one entry p
 - [x] T020 [US1] Green: `api/song/musicxml/lay-out.ts` (taking an explicit played measure order, identity for now).
 - [x] T021 [P] [US1] Red: `api/song/musicxml/read-score-song.spec.ts`: piano part with two staves → Parts "Piano 1" and "Piano 2" (scenario 1); a one-staff part named "Flute" → "Flute"; a part without name → unnamed Part; flute + violin + piano → four Parts in part-list then staff order; a staff with a percussion clef or only unpitched notes → percussion Part (scenario 7); a staff without Notes is no Part; no Part with Notes → `no-notes`; the Song name is the work title, else the movement title, else the file name without extension (scenario 6); malformed XML → `not-a-score`.
 - [x] T022 [US1] Green: `api/song/musicxml/read-score-song.ts`; wire it into `readSongSource` for XML and (via `mxl.ts`) archive input.
-- [ ] T023 [P] [US1] Red: SC-001 in `api/song/musicxml/read-score-song.spec.ts` (or `api/tape/create-tape.spec.ts`): the same two-staff music built as MusicXML and as SMF gives, through `createTape` with the same Organ and Transposition, identical Holes; the `.mxl` of that Score gives the same Song as the `.musicxml` (scenario 5).
-- [ ] T024 [US1] Green: fix whatever T023 shows (Tick rounding to Columns stays in `createTape`, FR-011).
+- [x] T023 [P] [US1] Red: SC-001 in `api/song/musicxml/read-score-song.spec.ts` (or `api/tape/create-tape.spec.ts`): the same two-staff music built as MusicXML and as SMF gives, through `createTape` with the same Organ and Transposition, identical Holes; the `.mxl` of that Score gives the same Song as the `.musicxml` (scenario 5).
+- [x] T024 [US1] Green (needed no change: SC-001 passed on the T022 reader): fix whatever T023 shows (Tick rounding to Columns stays in `createTape`, FR-011).
 
 ### UI
 
