@@ -683,6 +683,42 @@ describe('TapeImportComponent', () => {
     });
   });
 
+  describe('Score how-to', () => {
+    const HOW_TO_TITLE = 'How to get MusicXML from printed Scores';
+
+    it('shows a hint with the Song Sources and a link that opens the how-to dialog', async () => {
+      const {query, textOf, fixture} = await render({organs: [testOrgan('Street organ', 3)]});
+
+      expect(textOf('score-how-to-hint')).toContain('MIDI or MusicXML');
+      expect(textOf('score-how-to-hint')).toContain('Only a PDF or printed Scores?');
+      const link = query('score-how-to-hint')?.querySelector<HTMLButtonElement>('[data-testid="score-how-to-open"]');
+      expect(link?.textContent?.trim()).toBe('How to get MusicXML');
+      expect(document.querySelector('mat-dialog-container')).toBeNull();
+
+      link?.click();
+      await fixture.whenStable();
+
+      expect(document.querySelector('mat-dialog-container')?.textContent).toContain(HOW_TO_TITLE);
+    });
+
+    it('holds the same link on the rejection of a PDF and creates no Tape', async () => {
+      const {choose, query, tapes, navigate, fixture} = await render({organs: [testOrgan('Street organ', 3)]});
+
+      await choose(new File([new Uint8Array([0x25, 0x50, 0x44, 0x46, 0x2d, 0x31, 0x2e, 0x37])], 'score.pdf', {type: 'application/pdf'}));
+
+      expect(query('song-rejection')?.dataset['code']).toBe('pdf');
+      const link = query('song-rejection')?.querySelector<HTMLButtonElement>('[data-testid="score-how-to-open"]');
+      expect(link).not.toBeNull();
+      expect(tapes.tapeEntities()).toEqual([]);
+      expect(navigate).not.toHaveBeenCalled();
+
+      link?.click();
+      await fixture.whenStable();
+
+      expect(document.querySelector('mat-dialog-container')?.textContent).toContain(HOW_TO_TITLE);
+    });
+  });
+
   describe('Organ range hint', () => {
     it('shows the number of Pipes and the range of the chosen Organ', async () => {
       const {textOf} = await render({organs: [testOrgan('Street organ', 3)]});

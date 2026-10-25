@@ -4,6 +4,7 @@ import {ErrorStateMatcher} from '@angular/material/core';
 import {MatButton, MatIconButton} from '@angular/material/button';
 import {MatCard} from '@angular/material/card';
 import {MatCheckbox} from '@angular/material/checkbox';
+import {MatDialog} from '@angular/material/dialog';
 import {MatChip} from '@angular/material/chips';
 import {MatTooltip} from '@angular/material/tooltip';
 import {MatError, MatFormField, MatInput, MatLabel, MatSuffix} from '@angular/material/input';
@@ -48,6 +49,7 @@ import {
 import {TapeFitCardComponent} from './tape-fit-card/tape-fit-card.component';
 import {TapePreviewComponent} from './tape-preview/tape-preview.component';
 import {SongMetreComponent} from '../song-metre/song-metre.component';
+import {ScoreHowToDialogComponent} from './score-how-to-dialog/score-how-to-dialog.component';
 
 /** A translation key and its parameters. */
 interface Readiness {
@@ -74,6 +76,7 @@ export class TapeImportComponent {
   protected readonly tapes = inject(TapeLibrary);
   private readonly router = inject(Router);
   private readonly pendingTasks = inject(PendingTasks);
+  private readonly dialog = inject(MatDialog);
   private readonly language = inject(LanguagePreference).language;
 
   protected readonly organList = this.organs.entities;
@@ -265,6 +268,11 @@ export class TapeImportComponent {
       this.reading.set(null);
     }
     input.value = '';
+  }
+
+  /** Opens the how-to for getting MusicXML from a printed or PDF Score. */
+  protected openScoreHowTo(): void {
+    this.dialog.open(ScoreHowToDialogComponent);
   }
 
   protected isSelected(index: number): boolean {
