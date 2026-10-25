@@ -57,3 +57,9 @@ pitch is known (a Hole's Pipe is a MIDI note number), but the Organ can't play i
 |--------|--------|--------------|
 | A (recommended) | As an ordinary note on the staff whose range holds its pitch (by Q1), with no mark. | The Scores show the Tape as it is; the Cutting Problem is already shown in the Tape view and blocks "Export for the Plotter". A reader can't tell which notes won't sound. |
 | B | On the same staff, with a cross notehead, so the reader sees that the Organ won't play it. | Matches the Preview, where such Holes are silent; one more notation rule, and the mark disappears if the Pipe is added to the Organ. |
+
+## Answers (user, 2026-10-25)
+
+Q4 A (further voices). Q1, Q2, Q3 and Q5 still open: the answers got mixed up between parallel prompts, so they must be asked again.
+
+Not yet folded into spec.md: the [NEEDS CLARIFICATION] markers still stand.
