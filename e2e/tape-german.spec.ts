@@ -194,9 +194,9 @@ test.describe('I can bring a Song onto a Tape in German', () => {
     await collect();
 
     await window.getByTestId('song-file').setInputFiles(notAMidiFile());
-    await expect(window.getByTestId('song-rejection')).toHaveAttribute('data-code', 'not-a-midi-file');
+    await expect(window.getByTestId('song-rejection')).toHaveAttribute('data-code', 'not-a-song-source');
     const rejection = (await window.getByTestId('song-rejection').innerText()).trim();
-    expect(rejection).toContain('keine MIDI-Datei');
+    expect(rejection).toContain('weder eine MIDI-Datei noch MusicXML-Noten');
     await collect();
 
     await window.getByTestId('song-file').setInputFiles(melodyC3ToC5());

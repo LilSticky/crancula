@@ -42,7 +42,7 @@ test.describe('Bring a MIDI song onto a tape', () => {
     await window.getByTestId('new-tape').click();
     await expect(window.getByTestId('import-form')).toBeVisible();
     await window.getByTestId('song-file').setInputFiles(notAMidiFile());
-    await expect(window.getByTestId('song-rejection')).toHaveAttribute('data-code', 'not-a-midi-file');
+    await expect(window.getByTestId('song-rejection')).toHaveAttribute('data-code', 'not-a-song-source');
 
     await window.getByTestId('song-file').setInputFiles(melodyC3ToC5());
     await expect(window.getByTestId('song-rejection')).toHaveCount(0);
