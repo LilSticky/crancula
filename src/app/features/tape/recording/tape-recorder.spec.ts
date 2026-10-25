@@ -1,4 +1,3 @@
-import {signal} from '@angular/core';
 import {TestBed} from '@angular/core/testing';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {TranslateService} from '@ngx-translate/core';
@@ -29,7 +28,6 @@ import {
 import {testOrgan} from '../../../../testing/organs';
 import {provideTestTranslations} from '../../../../testing/test-translations';
 import {TapeLibrary} from '../tape-library.store';
-import {TapePreview} from '../preview/tape-preview';
 import {MP3_ENCODER, type Mp3Encoder} from './mp3-encoder';
 import {RECORDING_RENDERER, type RecordingRenderer} from './recording-renderer';
 import {TapeRecorder} from './tape-recorder';
@@ -157,16 +155,12 @@ async function setUp(failures: InMemoryCranculaApiFailures = {}) {
   const api: InMemoryCranculaApi = createInMemoryCranculaApi(undefined, undefined, failures);
   const render = vi.fn<RecordingRenderer['render']>(() => Promise.resolve(SAMPLES));
   const encode = vi.fn<Mp3Encoder['encode']>(() => Promise.resolve(MP3_BYTES));
-  /** Whether the Preview of the Tape view plays; the test sets it. */
-  const previewPlaying = signal(false);
   TestBed.configureTestingModule({
     providers: [
       provideTestTranslations('en'),
       {provide: CRANCULA_API, useValue: api},
       {provide: RECORDING_RENDERER, useValue: {render}},
       {provide: MP3_ENCODER, useValue: {encode}},
-      {provide: TapePreview, useValue: {playing: previewPlaying.asReadonly()}},
-      TapeRecorder,
     ],
   });
   const organ = testOrgan('Street organ', 3, {tapePerCrankTurn: 100});
@@ -176,7 +170,7 @@ async function setUp(failures: InMemoryCranculaApiFailures = {}) {
   await library.create(tape, song);
   const snackBar = vi.spyOn(TestBed.inject(MatSnackBar), 'open');
   const translate = TestBed.inject(TranslateService);
-  return {api, organ, tape, library, snackBar, translate, render, encode, previewPlaying, recorder: TestBed.inject(TapeRecorder)};
+  return {api, organ, tape, library, snackBar, translate, render, encode, recorder: TestBed.inject(TapeRecorder)};
 }
 
 function chosen(target: string, format: 'wav' | 'mp3', fileName: string): RecordingChooseResult {
@@ -381,18 +375,6 @@ describe('TapeRecorder', () => {
     expect(choose).not.toHaveBeenCalled();
     expect(render).not.toHaveBeenCalled();
     expect(snackBar).not.toHaveBeenCalled();
-    expect(recorder.state()).toEqual({status: 'idle'});
-  });
-
-  it('renders nothing and asks for no file while the Preview plays', async () => {
-    const {api, organ, tape, previewPlaying, render, recorder} = await setUp();
-    const choose = vi.spyOn(api.recording, 'chooseFile');
-    previewPlaying.set(true);
-
-    await recorder.record(tape, organ);
-
-    expect(choose).not.toHaveBeenCalled();
-    expect(render).not.toHaveBeenCalled();
     expect(recorder.state()).toEqual({status: 'idle'});
   });
 

@@ -152,8 +152,8 @@ const COMPACT_QUERY = '(max-width: 1179.98px)';
 @Component({
   selector: 'cranc-tape-view',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  providers: [TapeEditor, TapePreview, TapeRecorder],
-  imports: [ImportSummaryComponent, TranslatePipe, RouterLink, PageHeadComponent, MatButton, MatIconButton, MatTooltip, MatButtonToggle, MatButtonToggleGroup, MatIcon, MatProgressSpinner,AddHoleComponent, CuttingProblemsComponent, SelectedHoleComponent, TapeSectionComponent, PreviewSectionComponent, TapeStatusLineComponent],
+  providers: [TapeEditor, TapePreview],
+  imports: [ImportSummaryComponent, TranslatePipe, RouterLink, PageHeadComponent, MatButton, MatIconButton, MatTooltip, MatButtonToggle, MatButtonToggleGroup, MatIcon, MatProgressSpinner, AddHoleComponent, CuttingProblemsComponent, SelectedHoleComponent, TapeSectionComponent, PreviewSectionComponent, TapeStatusLineComponent],
   templateUrl: './tape-view.component.html',
   styleUrl: './tape-view.component.scss',
   host: {'(keydown)': 'onViewKeydown($event)'},
@@ -408,6 +408,8 @@ export class TapeViewComponent {
   });
 
   protected record(): void {
+    // The button stays focusable with its reason, so a click reaches here while it is blocked: it does nothing then.
+    if (this.recordBlockedBy() !== undefined || this.recorder.recording()) return;
     const tape = this.tape();
     const organ = this.organ();
     if (tape !== undefined && organ !== undefined) void this.recorder.record(tape, organ);
@@ -558,8 +560,9 @@ export class TapeViewComponent {
       this.preview.stop();
       return;
     }
+    // The button stays focusable with its reason, so a click reaches here while it is unavailable: it does nothing then.
     // A Recording renders the Tape on its own; the Preview waits for it.
-    if (this.recorder.recording()) return;
+    if (!this.previewAvailable() || this.recorder.recording()) return;
     this.playFromPlayhead();
   }
 

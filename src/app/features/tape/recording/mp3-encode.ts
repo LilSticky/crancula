@@ -6,19 +6,27 @@ const BLOCK_SAMPLES = 1152;
 
 /**
  * Encodes mono samples to MP3 with LAME, one frame block at a time. Pure and synchronous, so the Worker and a
- * Vitest spec run the same code. `onProgress` gets the fraction of samples done; it ends with 1.
+ * Vitest spec run the same code. `onProgress` gets the fraction of samples done, once per whole percent; it ends
+ * with 1.
  */
 export function encodeMp3(samples: Float32Array, onProgress: (fraction: number) => void): Uint8Array {
   const pcm = pcm16(samples);
   const encoder = new LameEncoder(RECORDING_CHANNELS, RECORDING_SAMPLE_RATE, MP3_BIT_RATE);
   const blocks: Uint8Array[] = [];
+  let reportedPercent = -1;
+  const report = (fraction: number): void => {
+    const percent = Math.floor(fraction * 100);
+    if (percent === reportedPercent) return;
+    reportedPercent = percent;
+    onProgress(fraction);
+  };
   for (let start = 0; start < pcm.length; start += BLOCK_SAMPLES) {
     const end = Math.min(start + BLOCK_SAMPLES, pcm.length);
     blocks.push(Uint8Array.from(encoder.encodeBuffer(pcm.subarray(start, end))));
-    onProgress(end / pcm.length);
+    report(end / pcm.length);
   }
   blocks.push(Uint8Array.from(encoder.flush()));
-  onProgress(1);
+  report(1);
   return concatenate(blocks);
 }
 

@@ -1,6 +1,6 @@
 import {InjectionToken} from '@angular/core';
 import type {PreviewNote} from '@api/index';
-import {previewNoteWindows, RECORDING_CHANNELS, RECORDING_SAMPLE_RATE} from '@api/index';
+import {previewNoteWindows, RECORDING_CHANNELS, RECORDING_SAMPLE_RATE, type TimedPreviewNote} from '@api/index';
 import {previewVoices, RELEASE_SECONDS} from '../preview/preview-voices';
 
 /** What the offline renderer plays: the notes of a Tape, its Columns and the seconds of one Column. */
@@ -29,6 +29,7 @@ function offlineContextOf(length: number): OfflineScoreContext {
 /**
  * Plays the Preview's voices on an OfflineAudioContext, one window of notes at a time: the context is suspended
  * at each window start, that window's voices are scheduled, and it resumes. Renders as fast as the browser allows.
+ * Progress reaches 1 only when the rendering has ended.
  */
 export class OfflineRecordingRenderer implements RecordingRenderer {
   constructor(private readonly createContext: (length: number) => OfflineScoreContext = offlineContextOf) {}
@@ -38,16 +39,27 @@ export class OfflineRecordingRenderer implements RecordingRenderer {
     const context = this.createContext(Math.ceil(duration * RECORDING_SAMPLE_RATE));
     const voices = previewVoices(context, context.destination);
     const windows = previewNoteWindows(score.notes, score.columnSeconds, WINDOW_SECONDS);
-    const rendering = context.startRendering();
-    for (const [index, window] of windows.entries()) {
-      await context.suspend(index * WINDOW_SECONDS);
+    // Progress counts the windows scheduled; the last one is left to the end of the rendering.
+    const scheduleWindow = (index: number, window: readonly TimedPreviewNote[]): void => {
       for (const note of window) {
         voices.stop(voices.start(note.pipe, note.startSeconds), note.stopSeconds);
       }
+      if (index + 1 < windows.length) onProgress((index + 1) / windows.length);
+    };
+    // Window 0 is scheduled before the context starts; a later window is scheduled while the context is suspended at its start.
+    const [first = [], ...later] = windows;
+    scheduleWindow(0, first);
+    let reached = later.length > 0 ? context.suspend(WINDOW_SECONDS) : undefined;
+    const rendering = context.startRendering();
+    for (const [offset, window] of later.entries()) {
+      const index = offset + 1;
+      await reached;
+      reached = index + 1 < windows.length ? context.suspend((index + 1) * WINDOW_SECONDS) : undefined;
+      scheduleWindow(index, window);
       void context.resume();
-      onProgress((index + 1) / windows.length);
     }
     const buffer = await rendering;
+    onProgress(1);
     return buffer.getChannelData(0);
   }
 }

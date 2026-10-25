@@ -4,7 +4,7 @@ import {TranslateService} from '@ngx-translate/core';
 import {
   columnDuration,
   MAXIMUM_RECORDING_BYTES,
-  performance,
+  performance as tapePerformance,
   pcm16,
   RECORDING_SAMPLE_RATE,
   recordingFileName,
@@ -14,7 +14,6 @@ import {
   type Tape,
 } from '@api/index';
 import {CRANCULA_API} from '../../../core/crancula-api.token';
-import {TapePreview} from '../preview/tape-preview';
 import {MP3_ENCODER} from './mp3-encoder';
 import {RECORDING_RENDERER, type RecordingScore} from './recording-renderer';
 
@@ -33,12 +32,11 @@ const IDLE: RecordingState = {status: 'idle'};
 
 /**
  * Records a Tape to a WAV or MP3 file the owner chooses, and tells the user how it went.
- * Provided per Tape view, next to the Preview it refuses to run beside.
+ * The Tape view keeps Record and the Preview apart; this service only guards its own steps.
  */
-@Injectable()
+@Injectable({providedIn: 'root'})
 export class TapeRecorder {
   private readonly api = inject(CRANCULA_API);
-  private readonly preview = inject(TapePreview);
   private readonly renderer = inject(RECORDING_RENDERER);
   private readonly encoder = inject(MP3_ENCODER);
   private readonly snackBar = inject(MatSnackBar);
@@ -50,9 +48,9 @@ export class TapeRecorder {
   /** True in every state but idle. */
   readonly recording = computed(() => this.stateSignal().status !== 'idle');
 
-  /** Asks for the file, renders the Tape, encodes it if asked and writes it. A second call while one runs does nothing; so does a call while the Preview plays. */
+  /** Asks for the file, renders the Tape, encodes it if asked and writes it. A second call while one runs does nothing. */
   async record(tape: Tape, organ: Organ): Promise<void> {
-    if (this.recording() || this.preview.playing()) return;
+    if (this.recording()) return;
     // Without a Tape per Crank turn there is no Column time; the Record button is disabled then.
     const columnSeconds = columnDuration(tape, organ);
     if (columnSeconds === undefined) return;
@@ -70,7 +68,7 @@ export class TapeRecorder {
         this.showFailure(choice.reason, retry);
         return;
       }
-      const score: RecordingScore = {notes: performance(tape, organ), columns: tape.length, columnSeconds};
+      const score: RecordingScore = {notes: tapePerformance(tape, organ), columns: tape.length, columnSeconds};
       const bytes = await this.render(score, choice.format);
       if (bytes.length > MAXIMUM_RECORDING_BYTES) {
         this.showFailure(this.text('TAPE.RECORD.TOO_LARGE'), retry);

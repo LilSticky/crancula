@@ -207,13 +207,12 @@ async function render(options: RenderOptions = {}) {
     state: recordingState.asReadonly(),
     recording: computed(() => recordingState().status !== 'idle'),
     record: vi.fn((): Promise<void> => Promise.resolve()),
-  };
-  // The view provides its own TapeRecorder (next to the Preview it needs), so the fake replaces that provider.
-  TestBed.overrideComponent(TapeViewComponent, {remove: {providers: [TapeRecorder]}, add: {providers: [{provide: TapeRecorder, useValue: recorder}]}});
+  } satisfies Pick<TapeRecorder, 'state' | 'recording' | 'record'>;
   TestBed.configureTestingModule({
     providers: [
       ...(options.realExport ? [] : [{provide: PlotterExport, useValue: plotterExport}]),
       {provide: PREVIEW_SOUND, useValue: (): PreviewSound => previewSound},
+      {provide: TapeRecorder, useValue: recorder},
       provideRouter([
         {path: 'tapes', component: TapeListStubComponent},
         {path: 'tapes/:id', component: TapeViewComponent},
@@ -4476,8 +4475,46 @@ describe('TapeViewComponent', () => {
       await settle();
 
       const record = required(view()?.querySelector<HTMLButtonElement>('[data-testid="record"]'), 'record button');
-      expect(record.disabled).toBe(true);
+      expect(record.getAttribute('aria-disabled')).toBe('true');
       expect(record.textContent?.replace(/\s+/g, ' ')).toContain('Recording… 42 %');
+    });
+
+    it('shows a spinner and the Record text, without a percent, while the file is chosen and while writing', async () => {
+      const {tape, open, view, settle, recordingState} = await render({tapePerCrankTurn: 100});
+      await open(`/tapes/${tape.id}`);
+
+      for (const status of ['choosing', 'writing'] as const) {
+        recordingState.set({status});
+        await settle();
+
+        const record = required(view()?.querySelector<HTMLButtonElement>('[data-testid="record"]'), 'record button');
+        expect(record.querySelector('mat-spinner')).not.toBeNull();
+        expect(record.textContent?.replace(/\s+/g, ' ')).toContain('Record');
+        expect(record.textContent).not.toContain('%');
+      }
+    });
+
+    it('does not record when Record is clicked while the Preview plays', async () => {
+      const {tape, open, view, settle, recorder} = await render({holes: [{row: 1, start: 0, length: 10}], tapePerCrankTurn: 100});
+      await open(`/tapes/${tape.id}`);
+      required(view()?.querySelector<HTMLButtonElement>('[data-testid="preview-toggle"]'), 'preview toggle').click();
+      await settle();
+
+      required(view()?.querySelector<HTMLButtonElement>('[data-testid="record"]'), 'record button').click();
+      await settle();
+
+      expect(recorder.record).not.toHaveBeenCalled();
+    });
+
+    it('does not start the Preview when its button is clicked for a Tape without a Tape per Crank turn', async () => {
+      const {tape, open, view, settle, previewSound} = await render({holes: [{row: 1, start: 0, length: 10}]});
+      await open(`/tapes/${tape.id}`);
+
+      required(view()?.querySelector<HTMLButtonElement>('[data-testid="preview-toggle"]'), 'preview toggle').click();
+      await settle();
+
+      expect(isPreviewing(view())).toBe(false);
+      expect(previewSound.starts).toHaveLength(0);
     });
   });
 
@@ -4492,7 +4529,7 @@ describe('TapeViewComponent', () => {
       const {tape, open, view, loader} = await render();
       await open(`/tapes/${tape.id}`);
 
-      expect(recordButton(view())?.disabled).toBe(true);
+      expect(recordButton(view())?.getAttribute('aria-disabled')).toBe('true');
       const tooltip = await loader().getHarness(MatTooltipHarness.with({selector: '[data-testid="record"]'}));
       await tooltip.show();
       expect(await tooltip.getTooltipText()).toBe("Set the Organ's Tape per Crank turn to record this Tape");
@@ -4505,7 +4542,7 @@ describe('TapeViewComponent', () => {
       toggle(view())?.click();
       await settle();
 
-      expect(recordButton(view())?.disabled).toBe(true);
+      expect(recordButton(view())?.getAttribute('aria-disabled')).toBe('true');
       const tooltip = await loader().getHarness(MatTooltipHarness.with({selector: '[data-testid="record"]'}));
       await tooltip.show();
       expect(await tooltip.getTooltipText()).toBe('Stop the Preview to record this Tape');
@@ -4518,7 +4555,7 @@ describe('TapeViewComponent', () => {
       recordingState.set({status: 'writing'});
       await settle();
 
-      expect(toggle(view())?.disabled).toBe(true);
+      expect(toggle(view())?.getAttribute('aria-disabled')).toBe('true');
       const tooltip = await loader().getHarness(MatTooltipHarness.with({selector: '[data-testid="preview-toggle"]'}));
       await tooltip.show();
       expect(await tooltip.getTooltipText()).toBe('Wait for the Recording to finish');

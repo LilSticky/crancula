@@ -128,18 +128,27 @@ describe('OfflineRecordingRenderer', () => {
     await renderer.render(score([previewNote(60, 0, 2), previewNote(62, 12, 13)], 20, 1), () => {});
 
     expect(fake.events).toEqual([
-      'render',
-      'suspend 0',
       'start 0',
       'start 0',
       'start 0',
-      'resume',
       'suspend 10',
+      'render',
       'start 12',
       'start 12',
       'start 12',
       'resume',
     ]);
+  });
+
+  it('starts the first window before the rendering starts, and registers each next suspend before it resumes', async () => {
+    const fake = new FakeOfflineContext(new Float32Array(0));
+    const renderer = new OfflineRecordingRenderer(() => offlineOf(fake));
+
+    await renderer.render(score([previewNote(60, 0, 2), previewNote(62, 12, 13), previewNote(64, 22, 23)], 30, 1), () => {});
+
+    expect(fake.events.indexOf('start 0')).toBeLessThan(fake.events.indexOf('render'));
+    expect(fake.events.indexOf('suspend 10')).toBeLessThan(fake.events.indexOf('render'));
+    expect(fake.events.indexOf('suspend 20')).toBeLessThan(fake.events.indexOf('resume'));
   });
 
   it('reports progress after each window', async () => {
@@ -161,7 +170,28 @@ describe('OfflineRecordingRenderer', () => {
     expect(rendered).toBe(samples);
   });
 
-  it('renders a Tape without notes as silence, with no suspend and no progress', async () => {
+  it('reports progress 1 only once the rendering has ended', async () => {
+    const fake = new FakeOfflineContext(new Float32Array(0));
+    let endRendering: () => void = () => undefined;
+    fake.startRendering = () =>
+      new Promise<AudioBuffer>((resolve) => {
+        endRendering = () => resolve({getChannelData: () => new Float32Array(0)} as unknown as AudioBuffer);
+      });
+    const renderer = new OfflineRecordingRenderer(() => offlineOf(fake));
+    const onProgress = vi.fn();
+
+    const rendering = renderer.render(score([previewNote(60, 0, 2), previewNote(62, 12, 13)], 20, 1), onProgress);
+    await vi.waitFor(() => {
+      expect(fake.events).toContain('resume');
+    });
+    expect(onProgress.mock.calls).toEqual([[0.5]]);
+
+    endRendering();
+    await rendering;
+    expect(onProgress.mock.calls).toEqual([[0.5], [1]]);
+  });
+
+  it('renders a Tape without notes as silence, with no suspend, and reports progress 1 once rendered', async () => {
     const fake = new FakeOfflineContext(new Float32Array(4));
     const renderer = new OfflineRecordingRenderer(() => offlineOf(fake));
     const onProgress = vi.fn();
@@ -169,6 +199,6 @@ describe('OfflineRecordingRenderer', () => {
     await renderer.render(score([], 1, 1), onProgress);
 
     expect(fake.events).toEqual(['render']);
-    expect(onProgress).not.toHaveBeenCalled();
+    expect(onProgress.mock.calls).toEqual([[1]]);
   });
 });

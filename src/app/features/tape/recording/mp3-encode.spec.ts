@@ -25,6 +25,17 @@ describe('encodeMp3', () => {
     expect(progress.at(-1)).toBe(1);
   });
 
+  it('reports progress only when the whole percent changes, so at most 101 times', () => {
+    const progress: number[] = [];
+
+    encodeMp3(sine(20 * 44100), (fraction) => progress.push(fraction));
+
+    const percents = progress.map((fraction) => Math.floor(fraction * 100));
+    expect(progress.length).toBeLessThanOrEqual(101);
+    expect(new Set(percents).size).toBe(percents.length);
+    expect(progress.at(-1)).toBe(1);
+  });
+
   it('encodes empty input to a valid, possibly empty, result', () => {
     const progress: number[] = [];
 
