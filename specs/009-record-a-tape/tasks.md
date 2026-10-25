@@ -89,7 +89,7 @@ Playwright e2e only for what needs real Electron (offline rendering, LAME in a W
 
 ## Phase 5: Polish & Cross-Cutting
 
-- [ ] T029 [P] `npm run ux:screens` captures the Tape view with the Record button and during a Recording; run `ux-review` on them; fix findings.
+- [x] T029 [P] `npm run ux:screens` captures the Tape view with the Record button and during a Recording; run `ux-review` on them; fix findings.
 - [x] T030 [P] Reviews: `angular-reviewer` (src/), `electron-reviewer` (app/ and IPC), `spec-auditor` (spec vs. tests) → `specs/009-record-a-tape/audit.md`; fix findings.
 - [ ] T031 `npm run test`, `npm run lint`, `npm run i18n:check`, `npm run build` green; quickstart by hand (play a WAV and an MP3); record the result in STATUS.
 - [ ] T032 STATUS, ROADMAP (Record a tape done), CHANGELOG `[Unreleased]`, README feature list; PR with `Closes #165`.
