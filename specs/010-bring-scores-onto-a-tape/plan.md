@@ -114,9 +114,11 @@ package.json                    # + fflate 0.8.3
 
 ## Open questions
 
-None blocking. For the user to confirm while reviewing the slice (no domain term involved):
-- the how-to's wording and its five steps (contracts/score-import-ui.md);
-- the import button label, today "Choose a MIDI file", becomes "Choose a MIDI or MusicXML file".
+None blocking. For the user to confirm while reviewing the slice (no domain term involved): the how-to's wording
+and its five steps (contracts/score-import-ui.md).
+
+Decided (user, 2026-10-25): the import button label, today "Choose a MIDI file", becomes "Choose a Song Source"
+(German "Notenquelle wählen"); German for Song Source is Notenquelle.
 
 ## Complexity Tracking
 

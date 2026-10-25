@@ -4,8 +4,9 @@ Existing test ids stay; new ones are listed here.
 
 ## Import screen (`tape-import`)
 
-- **File input** `song-file` accepts `.mid,.midi,.musicxml,.xml,.mxl,.pdf`. The choose button's label and the
-  hint below name MIDI and MusicXML (`TAPE.IMPORT.CHOOSE_SONG`, `TAPE.IMPORT.SONG_SOURCES`).
+- **File input** `song-file` accepts `.mid,.midi,.musicxml,.xml,.mxl,.pdf`. The choose button says "Choose a Song Source"
+  (German "Notenquelle wählen", `TAPE.IMPORT.CHOOSE_SONG`); the hint below names MIDI and MusicXML
+  (`TAPE.IMPORT.SONG_SOURCES`).
 - **Score hint** `score-how-to-hint`: one line, "Only a PDF or printed Scores? How to get MusicXML" with a link
   button `score-how-to-open` that opens the how-to dialog (`TAPE.IMPORT.SCORE_HINT`, `TAPE.IMPORT.SCORE_HINT_LINK`).
 - **How-to dialog** `score-how-to-dialog` (Angular Material dialog): title `TAPE.SCORE_HOW_TO.TITLE`, five
