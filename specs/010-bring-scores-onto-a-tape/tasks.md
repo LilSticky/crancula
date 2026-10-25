@@ -153,7 +153,7 @@ Blocks every story: the Song gains its new fields and the import has one entry p
 **Independent Test**: in German, Stories 1, 3 and 5 show no untranslated text.
 
 - [x] T058 [US6] Red→Green: `src/app/features/tape/tape-i18n.spec.ts`: every `TAPE.SONG_REJECTION.*` code of `SongRejection`, `TAPE.SCORE_HOW_TO.*`, `TAPE.METRE.*` (all 30 key names) and the two `TAPE.SUMMARY` rows exist in en and de and are non-empty; the German texts use Stück, Stimme, Noten, Notenquelle and not Song, Part, Scores.
-- [ ] T059 [US6] Red→Green: extend `e2e/tape-german.spec.ts` (or `score-import.spec.ts`): in German, import a Score: button "Notenquelle wählen", Import Summary rows and how-to dialog in German.
+- [x] T059 [US6] Red→Green: extend `e2e/tape-german.spec.ts` (or `score-import.spec.ts`): in German, import a Score: button "Notenquelle wählen", Import Summary rows and how-to dialog in German.
 
 **Checkpoint**: commit; STATUS.
 
