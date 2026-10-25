@@ -920,4 +920,25 @@ describe('readScoreSong keeps the Time signatures, the upbeat and the Keys (US4,
 
     expect(song.timeSignatures).toEqual([{start: 0, beats: 3, beatType: 4}]);
   });
+
+  it('takes the Time signatures and Keys from the first part in part-list order, not in document order', () => {
+    // The Piano comes first in the document, the Flute first in the part-list: the Flute's 3/4 is the Song's.
+    const reversed = `<?xml version="1.0" encoding="UTF-8"?>
+<score-partwise version="4.0">
+  <part-list>
+    <score-part id="P1"><part-name>Flute</part-name></score-part>
+    <score-part id="P2"><part-name>Piano</part-name></score-part>
+  </part-list>
+  <part id="P2"><measure number="1"><attributes><divisions>1</divisions><time><beats>2</beats><beat-type>4</beat-type></time></attributes>
+    <note><pitch><step>C</step><octave>4</octave></pitch><duration>2</duration></note>
+  </measure></part>
+  <part id="P1"><measure number="1"><attributes><divisions>1</divisions><time><beats>3</beats><beat-type>4</beat-type></time></attributes>
+    <note><pitch><step>C</step><octave>5</octave></pitch><duration>3</duration></note>
+  </measure></part>
+</score-partwise>`;
+
+    const song = songOfBytes(utf8(reversed));
+
+    expect(song.timeSignatures).toEqual([{start: 0, beats: 3, beatType: 4}]);
+  });
 });

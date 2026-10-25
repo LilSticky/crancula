@@ -16,7 +16,7 @@ Each finding has an ID; the fix tasks name them. Status: open until ticked.
   Part; record in research.md R8.
 - [x] D4 A Note with an ornament and an arpeggiate counts as two ornaments; FR-012 / US3.4–3.5: one per Note (an
   arpeggiated chord counts once). Test the combination.
-- [ ] D5 The played order comes from the first part in part-list order, the Time signatures, Keys and upbeat from the
+- [x] D5 The played order comes from the first part in part-list order, the Time signatures, Keys and upbeat from the
   first part in document order. Use the same lead part (part-list order) for both; test a Score whose document order
   differs from its part-list order.
 - [ ] D6 Upbeat only when the lead measure 1 writes `<time>`: check that the Time signature in force is used, so a

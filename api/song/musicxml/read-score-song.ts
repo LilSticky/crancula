@@ -78,23 +78,21 @@ export function readScoreSong(bytes: Uint8Array, fileName: string): Result<SongR
   const measured = scoreMeasures(root);
   if (!measured.ok) return err(measured.error);
 
-  const parts = measured.value;
   const listed = partListOf(root);
   const positionOf = (id: string): number => {
     const position = listed.findIndex((candidate) => candidate.id === id);
     return position < 0 ? listed.length : position;
   };
-  const byPartList = parts
-    .map((scorePart, index) => ({scorePart, index}))
-    .sort((a, b) => positionOf(a.scorePart.id) - positionOf(b.scorePart.id) || a.index - b.index);
-  // The first part's marks give the played order, and every staff is laid out in it (research R7).
-  const leadMeasures = byPartList[0]?.scorePart.measures ?? [];
+  // The parts in part-list order (stable for equal positions): the first is the lead part, whose marks give the
+  // played order and whose metre the Song keeps; every staff is laid out in that order (research R7, R9).
+  const parts = [...measured.value].sort((a, b) => positionOf(a.id) - positionOf(b.id));
+  const leadMeasures = parts[0]?.measures ?? [];
   const laidOut = layOut(parts, playOut(leadMeasures.map((measure) => measure.marks)));
 
   const songParts: Part[] = [];
   // A staff of only grace notes has no Notes, so part() gives it no Part and its counts are left out with it.
   const leftOuts: LeftOut[] = [];
-  for (const {scorePart, index} of byPartList) {
+  for (const [index, scorePart] of parts.entries()) {
     const partName = listed.find((candidate) => candidate.id === scorePart.id)?.name;
     const staves = staffCountOf(scorePart);
     for (const staff of laidOut.staves.filter((candidate) => candidate.part === index)) {

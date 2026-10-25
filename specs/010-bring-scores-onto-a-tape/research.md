@@ -81,7 +81,7 @@ or two divisions values; the fallback only protects the Tick type's limit and lo
 
 **Decision**: a pure function `playOut(marks: readonly MeasureMarks[]): readonly number[]` in
 `api/song/musicxml/play-out.ts` returns the indices of the measures in the order they are played. The marks
-come from the first part (all parts share measure numbering in MusicXML):
+come from the first part in part-list order (all parts share measure numbering in MusicXML):
 
 - forward/backward repeat barlines (`<repeat direction times>`), endings (`<ending number type>`, numbers
   like `1, 2`);
@@ -128,7 +128,8 @@ to their `<staff>` (default 1) of their part.
 
 ## R9. Time signatures, upbeat and Key (FR-016 to FR-019)
 
-**Decision**: kept on the Song as optional lists and a value, from the first part:
+**Decision**: kept on the Song as optional lists and a value, from the first part in part-list order (the lead part,
+the same one the played order comes from):
 
 - a Time signature from `<time>` (`beats` may be a sum like `3+2`; `senza-misura` gives none), recorded at
   the start Tick of the Bar it is in;
