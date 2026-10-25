@@ -6,6 +6,7 @@ import {encodeSmf, type SmfTimedEvent, type SmfTrack} from '../song/midi/smf-tes
 import {readMidiSong} from '../song/midi/read-midi-song';
 import {partIndex, type PartIndex, type Song} from '../song/song';
 import {createTape, prefilledColumnLength, type CreateTapeInput} from './create-tape';
+import type {LeftOut} from './import-summary';
 import {columnCount, tapeId, transposition, type Tape} from './tape';
 import {tapeOf} from './tape-fixture';
 
@@ -367,5 +368,45 @@ describe('createTape performance (SC-006)', () => {
     );
     expect(result.ok).toBe(true);
     expect(performance.now() - started).toBeLessThan(5000);
+  });
+});
+
+describe('createTape with the grace notes and ornaments left out of a Score', () => {
+  // Two Parts: the first has two grace notes and one ornament, the second three grace notes.
+  const song = songOf(quarters(60, 62), quarters(64, 66));
+  const firstPart = defined(partIndex(0, song.parts.length), 'first Part');
+  const secondPart = defined(partIndex(1, song.parts.length), 'second Part');
+  const leftOut: ReadonlyMap<PartIndex, LeftOut> = new Map([
+    [firstPart, {graceNotes: 2, ornaments: 1}],
+    [secondPart, {graceNotes: 3, ornaments: 0}],
+  ]);
+
+  it('sums the counts of the selected Parts into the Import Summary', () => {
+    const {importSummary} = created(inputOf(song, {selectedParts: parts(0, 1), leftOut}));
+    expect(importSummary.leftOut).toEqual({graceNotes: 5, ornaments: 1});
+  });
+
+  it('counts only the selected Parts', () => {
+    const {importSummary} = created(inputOf(song, {selectedParts: parts(1), leftOut}));
+    expect(importSummary.leftOut).toEqual({graceNotes: 3, ornaments: 0});
+  });
+
+  it('has no leftOut in the Import Summary when none is given, as for a Song from MIDI', () => {
+    const {importSummary} = created(inputOf(song, {selectedParts: parts(0, 1)}));
+    expect(importSummary.leftOut).toBeUndefined();
+    expect(importSummary).not.toHaveProperty('leftOut');
+  });
+
+  it('leaves the Holes, length and every other Import Summary field unchanged', () => {
+    const withCounts = created(inputOf(song, {selectedParts: parts(0, 1), leftOut}));
+    const withoutCounts = created(inputOf(song, {selectedParts: parts(0, 1)}));
+
+    expect(withCounts.tape.holes).toEqual(withoutCounts.tape.holes);
+    expect(withCounts.tape.length).toBe(withoutCounts.tape.length);
+    expect(withCounts.importSummary.transposition).toBe(withoutCounts.importSummary.transposition);
+    expect(withCounts.importSummary.notesOnTape).toBe(withoutCounts.importSummary.notesOnTape);
+    expect(withCounts.importSummary.movedByOctaves).toEqual(withoutCounts.importSummary.movedByOctaves);
+    expect(withCounts.importSummary.unplayableNotes).toEqual(withoutCounts.importSummary.unplayableNotes);
+    expect(withCounts.importSummary.holesFixed).toEqual(withoutCounts.importSummary.holesFixed);
   });
 });
