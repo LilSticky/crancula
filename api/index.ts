@@ -56,7 +56,7 @@ export {
 } from './song/song';
 export {MAXIMUM_MIDI_FILE_SIZE, readMidiSong} from './song/midi/read-midi-song';
 export {songMetre, type SongMetre} from './song/song-metre';
-export {readSongSource, type LeftOut, type SongReading, type SongRejection} from './song/read-song-source';
+export {MAXIMUM_SONG_SOURCE_SIZE, readSongSource, type LeftOut, type SongReading, type SongRejection} from './song/read-song-source';
 export {
   addHole,
   changeHoleLength,

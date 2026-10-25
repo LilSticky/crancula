@@ -323,6 +323,20 @@ describe('TapeImportComponent', () => {
       expect(tapes.tapeEntities()).toEqual([]);
     });
 
+    it('rejects a file over the size limit as too large before reading its bytes', async () => {
+      const {choose, query} = await render({organs: [testOrgan('Street organ', 3)]});
+      const bytes = melodyBytes();
+      const file = midiFile(bytes, 'huge.mid');
+      const arrayBuffer = vi.fn(() => Promise.resolve(new Uint8Array(bytes).buffer));
+      Object.defineProperty(file, 'size', {value: MAXIMUM_MIDI_FILE_SIZE + 1});
+      Object.defineProperty(file, 'arrayBuffer', {value: arrayBuffer});
+
+      await choose(file);
+
+      expect(query('song-rejection')?.dataset['code']).toBe('too-large');
+      expect(arrayBuffer).not.toHaveBeenCalled();
+    });
+
     it('prefills the name with the title of a Score, not with the file name', async () => {
       const {choose, field} = await render({organs: [testOrgan('Street organ', 3)]});
 

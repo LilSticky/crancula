@@ -18,9 +18,11 @@ import {
   type FitNotes,
   type Organ,
   type PartIndex,
+  MAXIMUM_SONG_SOURCE_SIZE,
   prefilledColumnLength,
   proposeTransposition,
   readSongSource,
+  type Result,
   type SongMetre,
   type SongReading,
   songMetre,
@@ -258,7 +260,11 @@ export class TapeImportComponent {
   private async readSong(input: HTMLInputElement): Promise<void> {
     const file = input.files?.[0];
     if (!file) return;
-    const result = readSongSource(new Uint8Array(await file.arrayBuffer()), file.name);
+    // The size is checked before the bytes are read, so a file of any size never fills the memory.
+    const result: Result<SongReading, SongRejection> =
+      file.size > MAXIMUM_SONG_SOURCE_SIZE
+        ? {ok: false, error: 'too-large'}
+        : readSongSource(new Uint8Array(await file.arrayBuffer()), file.name);
     if (result.ok) {
       this.rejection.set(null);
       this.fileName.set(file.name);

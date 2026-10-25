@@ -5,7 +5,7 @@ import {readScoreSong} from './musicxml/read-score-song';
 import type {PartIndex, Song} from './song';
 
 /** Every Song Source is read only up to this size: MIDI, zipped Score and XML alike. */
-const MAXIMUM_SONG_SOURCE_SIZE = MAXIMUM_MIDI_FILE_SIZE;
+export const MAXIMUM_SONG_SOURCE_SIZE = MAXIMUM_MIDI_FILE_SIZE;
 
 /** The first bytes of the kinds of file a Song can come from, and of the files that are none of them. */
 const MIDI_MAGIC = [0x4d, 0x54, 0x68, 0x64]; // "MThd"

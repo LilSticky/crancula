@@ -29,7 +29,7 @@ Each finding has an ID; the fix tasks name them. Status: open until ticked.
 
 ## UI (src/)
 
-- [ ] U1 `tape-import.component.ts:261`: the size guard is gone, so `file.arrayBuffer()` reads a file of any size.
+- [x] U1 `tape-import.component.ts:261`: the size guard is gone, so `file.arrayBuffer()` reads a file of any size.
   Export the limit from `api/song/read-song-source.ts`; return `too-large` from `file.size` before reading.
 - [ ] U2 `tape-view.component.html:188`: `cranc-song-metre` sits loose in the side panel. Spec US4: in the Tape
   details. Pass the metre into `TapeSectionComponent` and show it there as a labelled row (new en/de key, label
