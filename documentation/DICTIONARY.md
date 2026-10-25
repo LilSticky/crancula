@@ -32,6 +32,8 @@
 * Defines the physical length of one Column in mm
 * Always editable in Crancula; the tool does not track whether it has been punched
 * Can be exported for the Plotter only when every Hole has a Pipe on its Organ and respects the Minimum Hole Length and Minimum Gap; exporting does not change the Tape
+* For a Plotter that is not a roll plotter, a Tape longer than its working length is cut in Tape pieces
+* Can be exported as Scores (MusicXML) to read or print; exporting does not change the Tape
 * Keeps a Crank speed, the tempo its Preview plays at; changing it is an edit like the Column length
 * German: Lochband (plural Lochbänder); compounds keep "Band": Bandbett, Bandbreite
 * Effectively a table
@@ -60,20 +62,27 @@
 # Song
 * A specific sequence of sounds forming music
 * Imported from a Song Source
+* One straight sequence: repeats, voltas, da capo and dal segno of its Song Source are played out at import
 * Converted to tape format for playback on barrel organs
-* Converted to scores for human reading
+* Not exported itself; its Tape can be exported as Scores (see Tape)
 * Made of Parts
+* Keeps its Time signatures (each at its Tick), its upbeat and its Key from its Song Source, where the Song Source has them
+* German: Stück
 
 # Part
 * One voice or instrument of a Song, such as melody, bass or drums
 * Has an optional name and its Notes; may be percussion (German: Schlagwerk)
+* From Scores: one Part per staff (a piano's right and left hand are two Parts)
 * The user chooses which Parts go onto a Tape
+* German: Stimme
 
 # Scores
 * Human-readable notation of music
 * Widely used to compose songs
 * Can be printed on paper and read by most musicians
 * One possible Song Source (printed, PDF, MusicXML); a MIDI file is not Scores
+* Crancula reads and writes Scores as MusicXML
+* German: Noten
 
 # Note
 * Specific perceivable frequency defined by a name
@@ -106,13 +115,27 @@
 * German: Reihenbreite
 
 # Song Source
-* The material a Song is imported from: MIDI, MusicXML, PDF or printed Scores
-* MIDI is supported first
+* The material a Song is imported from: MIDI or MusicXML
+* PDF and printed Scores reach Crancula as MusicXML from an outside music recognition tool (e.g. Audiveris)
 
 # Tick
-* The unit of musical time in a MIDI Song Source
+* The unit of musical time in a Song and its Song Source (MIDI ticks, MusicXML divisions)
 * The Song Source gives the number of Ticks per quarter note
 * Only matters inside the Song Source and the Song read from it; Quantisation turns Ticks into Columns
+
+# Time signature
+* How a Song's beats are grouped into Bars (e.g. 3/4)
+* Kept on the Song from its Song Source; it may change, each change at its Tick
+* German: Taktart
+
+# Bar
+* One group of beats under a Time signature
+* The first Bar may be shorter (an upbeat); the Song keeps its length
+* German: Takt
+
+# Key
+* The key signature a Song keeps from its Song Source
+* German: Tonart
 
 # Transposition
 * Transposing Holes moves each of them by a number of semitones to another Pipe (all Holes of a Tape or the selected ones)
@@ -134,7 +157,7 @@
 
 # Import Summary
 * What the user sees after a Song is brought onto a Tape
-* Shows the Transposition, the Notes moved by octaves, the Unplayable Notes and the Holes fixed, nothing else
+* Shows the Transposition, the Notes moved by octaves, the Unplayable Notes, the Holes fixed and, for Scores, how many grace notes and ornaments were left out; nothing else
 * "Holes fixed" is its name for the Holes changed to respect the Minimum Hole Length and Minimum Gap (not "Changed Holes")
 * German: Importübersicht; Holes fixed: Angepasste Löcher
 * Shown once; not stored with the Tape
@@ -150,11 +173,13 @@
 * The blank Tape before Column 1 that threads the Tape into the Organ; carries no Holes
 * Its length in mm is set per Organ; 0 means no Lead-in (Organs saved before it existed load with 0)
 * Starts with an angled cut: a straight diagonal over its whole length, from the full tape width at Column 1 to a point on the Tape's top edge
+* A Tape cut in Tape pieces has it on the first Tape piece only
 * German: Vorlauf
 
 # Tape Outline
 * The cut around a Tape: both long edges, the Lead-in's diagonal (a square cut at Column 1 when the Lead-in is 0) and a square end cut one Minimum Gap after the last Column, so no Hole touches it (no blank tail beyond that)
 * The Tape is cut out of a wider sheet or roll; the Plotter cuts the Tape Outline after all Holes
+* A Tape cut in Tape pieces: each Tape piece has its own outline, square at a Join
 * German: Bandumriss
 
 # Minimum Gap
@@ -163,6 +188,7 @@
 
 # Cutting Problem
 * Why a Hole can't be cut: its Pipe is not on the Organ, it is shorter than the Minimum Hole Length, or it is closer than the Minimum Gap to the next Hole in its row
+* With a Plotter picked in the Tape view, also: a stretch longer than its working length where no Join is possible; no Plotter picked, or a roll plotter, means no such Cutting Problem
 * A Tape with Cutting Problems can be edited but not exported for the Plotter
 * German: Schnittproblem
 
@@ -191,14 +217,50 @@
 * Playing a Tape in Crancula at a Crank speed, to hear it before it is cut
 * Changes nothing: no Hole, not the Organ (only the Tape's Crank speed can be changed while it plays)
 
+# Recording
+* An audio file (WAV or MP3) of a whole Tape played through at its Crank speed, sounding like its Preview
+* Written once by Crancula, never read back
+* German: Aufnahme
+
+# Record
+* Saving a Recording of a Tape; changes nothing
+* A Tape with Cutting Problems can be recorded; it plays as drawn
+* German: Aufnehmen
+
 # Punch
 * Cutting a Hole into a physical Tape; irreversible
 * Done by a Plotter from an exported Tape (or by hand)
 
 # Plotter
-* Machine that punches a Tape from an exported file (SVG first; DXF and HPGL later)
+* Machine that punches a Tape from an exported file (SVG; other formats such as DXF or HPGL only for a concrete device)
+* Described once by the user, like an Organ: name, format, Working area, Overlap length and whether it is a roll plotter
+* A roll plotter (a vinyl cutter) cuts near-endless lengths: it has no working length and never splits a Tape
+* Cuts a Tape longer than its working length in Tape pieces; refuses a Tape wider than its working width
+* Without a described Plotter, a Tape is exported as one file
 * First target: a vinyl cutter that cuts long sheets
-* Crancula exports exact 1:1 geometry in mm; blade offset, kerf and working area are left to the cutter's own software
+* Crancula exports exact 1:1 geometry in mm; blade offset and kerf are left to the cutter's own software
+* German: Plotter (Schneideplotter in prose)
+
+# Working area
+* The largest length (working length) and width (working width) a Plotter cuts in one go
+* A roll plotter has only a working width
+* German: Arbeitsbereich
+
+# Tape piece
+* A part of a Tape cut on its own, ending at a Join; glued to the next Tape piece
+* Exported as its own SVG file, numbered in order ("<tape> 1 of 3"); all pieces are saved together into one folder
+* German: Bandstück
+
+# Join
+* Where two Tape pieces meet; only between Columns no Hole crosses
+* Lies as close as possible before the Plotter's working length
+* German: Klebestelle
+
+# Overlap
+* The strip of a Tape piece that lies under the next Tape piece for gluing
+* Repeats the Holes of the stretch it lies under, so both layers are cut through
+* Its length is set on the Plotter (20 mm unless changed)
+* German: Klebezugabe
 
 # Barrel
 * Physical cylinder the Tape is rolled up on; no rules in Crancula

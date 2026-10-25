@@ -133,5 +133,25 @@ export {
   type PreviewNote,
 } from './preview/performance';
 export {plotterFileName} from './tape/plotter-file-name';
+export {
+  MP3_BIT_RATE,
+  RECORDING_CHANNELS,
+  RECORDING_SAMPLE_RATE,
+  recordingFormatOf,
+  type RecordingFormat,
+} from './recording/recording-format';
+export {recordingFileName} from './recording/recording-file-name';
+export {pcm16} from './recording/pcm';
+export {wavFile} from './recording/wav-file';
+export {
+  MAXIMUM_RECORDING_BYTES,
+  parseRecordingChooseRequest,
+  parseRecordingWriteRequest,
+  type RecordingChooseRequest,
+  type RecordingChooseResult,
+  type RecordingWriteRequest,
+  type RecordingWriteResult,
+} from './recording/recording-save-request';
+export {previewNoteWindows, type TimedPreviewNote} from './preview/preview-note-windows';
 export {plotterSvg} from './tape/plotter-svg';
 export {tapeGeometry, type Point, type Slot, type TapeGeometry, type TapeOutline} from './tape/tape-geometry';

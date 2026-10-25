@@ -1,8 +1,9 @@
 # Discovery: Later
 
 Domain-modeler proposal of 2026-10-23 for the four "Later" items in ROADMAP.md, with the user's decisions of the
-same day. Sources: DICTIONARY.md, ROADMAP.md, constitution 1.1.3, ADR 5, 17, 18, 21, specs/002, 003, 006,
-api/song, api/tape, api/organ.
+same day, and a second round of 2026-10-25 for sections 2-4 (decisions 15-28, terms approved). Sources:
+DICTIONARY.md, ROADMAP.md, constitution 1.1.3, ADR 5, 17, 18, 20, 21, specs/002, 003, 006, api/song, api/tape,
+api/organ.
 
 ## Decisions (user, 2026-10-23)
 
@@ -23,12 +24,37 @@ api/song, api/tape, api/organ.
 | 13 | Scores export | What is exported as Scores? | The Tape as MusicXML (opened in MuseScore and similar for printing) |
 | 14 | Scores export | Where does the time signature come from? | The Song keeps it from its Song Source; a Tape composed from scratch asks for it at export |
 
+## Decisions (user, 2026-10-25)
+
+| # | Slice | Question | Decision |
+|---|-------|----------|----------|
+| 15 | Bring Scores onto a tape | Grace notes and ornaments | Left out; the Import Summary counts how many were left out |
+| 16 | Bring Scores onto a tape | Ties when repeats are played out | Joined only when, in played-out order, the next same-pitch Note in the same staff starts exactly where the first ends |
+| 17 | Bring Scores onto a tape | Written tempo and Crank speed | Not used, like MIDI: the new Tape starts at the default Crank speed; "Crank speed from tempo" may become its own issue |
+| 18 | Bring Scores onto a tape | Time signature on the Song | Now, from MusicXML and MIDI: every Time signature change at its Tick, the upbeat, and the Key |
+| 19 | Cut a tape in pieces | Overlap | Repeats the Holes it lies under (both layers cut through); its length is set on the Plotter, default 20 mm |
+| 20 | Cut a tape in pieces | A stretch longer than the working area with no possible Join | A new kind of Cutting Problem, shown in the Tape view while editing |
+| 21 | Cut a tape in pieces | Which Plotter that Cutting Problem is checked against | A Plotter picker in the Tape view (side panel); no Plotter picked = no such Cutting Problem |
+| 22 | Cut a tape in pieces | What describes a Plotter | Name, format (only SVG), working length, working width, and a roll plotter toggle (vinyl cutters): a roll plotter cuts near-endless lengths, needs no working length and never splits a Tape. A Tape wider than the working width is refused. No Plotter described: export stays one file as today |
+| 23 | Cut a tape in pieces | How Tape pieces leave Crancula | One SVG per Tape piece, numbered "<tape> 1 of 3.svg", saved together into one folder the user picks |
+| 24 | Cut a tape in pieces | Several Tapes side by side on a roll plotter | Its own later slice, Cut several tapes side by side ([#170](https://github.com/LilSticky/crancula/issues/170)), not part of v0.4 |
+| 25 | Read a tape as Scores | Holes to note values | Close a gap no longer than the Minimum Gap before the next Hole in the same row, then the fewest standard values down to 1/32, dotted allowed, tied over bar lines |
+| 26 | Read a tape as Scores | Staves | One staff per range of Pipes the user picks at export |
+| 27 | Read a tape as Scores | Time signature without a Song | Asked at every export, prefilled with the Song's Time signature or 4/4 and no upbeat; not stored (keeps decision 14) |
+| 28 | Read a tape as Scores | Tempo and key | Tempo mark from the Tape's Crank speed (Column length, Tape per Crank turn); Key from the Song if it keeps one, else C major |
+
+Slice issues: Bring Scores onto a tape [#167](https://github.com/LilSticky/crancula/issues/167), Cut a tape in
+pieces [#168](https://github.com/LilSticky/crancula/issues/168), Read a tape as Scores
+[#169](https://github.com/LilSticky/crancula/issues/169), Cut several tapes side by side
+[#170](https://github.com/LilSticky/crancula/issues/170).
+
 Order that follows: Crank a tape (v0.2) → Record a tape → Bring Scores onto a tape (v0.3) → Cut a tape in pieces
-with a described Plotter (v0.4) → Read a tape as Scores. DXF/HPGL wait for a device.
+with a described Plotter (v0.4) → Cut several tapes side by side (#170) → Read a tape as Scores. DXF/HPGL wait for
+a device.
 
 Open: the rule for minor versus patch releases (Edit a tape shipped as 0.1.1) is not written down yet; it belongs
-in the `release` skill or ADR 19. The proposed terms below are not approved; each goes to the user with its
-slice's spec.
+in the `release` skill or ADR 19. The terms of sections 2-4 were approved by the user on 2026-10-25 and are in
+DICTIONARY.md.
 
 ## 1. Crank a tape
 
@@ -53,8 +79,8 @@ Hear a Tape the way the Organ would play it, at a Crank speed I choose, before c
    writer, a save dialog over IPC (like `plotter:save-svg`).
 
 ### Domain events and commands (proposed)
-- Mostly a read model: a pure `performance(tape, organ, crankSpeed)` gives the Pipe on/off times. Nothing about it
-  is stored on the Tape.
+- Mostly a read model: a pure `performance(tape, organ, crankSpeed)` gives the Pipe on/off times. (Proposal of
+  2026-10-23; the Tape now keeps its Crank speed, see the dictionary.)
 - Commands: StartCranking(from Column), ChangeCrankSpeed, StopCranking.
 - Events: CrankingStarted, CrankSpeedChanged, CrankingStopped, OrganTapePerTurnChanged.
 - Proposed rule: Holes without a Pipe on the Organ are silent. Holes with a Cutting Problem play as drawn and stay
@@ -85,8 +111,8 @@ New Song Sources are adapters of the existing "Bring a song onto a tape", so the
 the user starts from, not the file format.
 1. **Bring Scores onto a tape** (v0.3): MusicXML (`.musicxml`/`.mxl`) read into the existing Song model. One Part
    per staff; repeats, voltas and da capo played out. MusicXML `divisions` maps onto `ticksPerQuarter`. Ties are
-   joined into one Note. Grace notes are a question for the spec. The Song keeps the time signature (for Read a
-   tape as Scores).
+   joined into one Note (decision 16). Grace notes and ornaments are left out and counted (decision 15). The Song
+   keeps its Time signatures, upbeat and Key, from MusicXML and from MIDI (decision 18).
 2. PDF and printed Scores are not a slice: the user runs an outside optical music recognition tool (e.g. Audiveris)
    to get MusicXML. A short how-to in the README or the import screen.
 
@@ -94,11 +120,34 @@ the user starts from, not the file format.
 No new events: SongImported and TapeCreated as for MIDI. The reader returns `Result<Song, reason>`, like the MIDI
 reader.
 
-### Terms (proposals, not approved)
-- **Repeat**: a sentence in Song: "Repeats in a Song Source are played out; a Song is one straight sequence".
-- **Staff and voice**: Scores words, not terms. The Part entry gets: "From Scores: one Part per staff".
-- **Time signature**: kept on the Song from its Song Source. German: Taktart.
-- **Song Source**: "MusicXML; PDF and printed Scores through MusicXML from an outside recognition tool".
+### Rules (confirmed 2026-10-25)
+- Grace notes and ornaments (trills, mordents, arpeggios, tremolo) are left out; the Import Summary counts them.
+- A tie joins two Notes only when, in the played-out order, the next Note of the same pitch in the same staff
+  starts exactly where the first ends; otherwise the first Note just ends.
+- The written tempo is not used: the new Tape starts at the default Crank speed, as for MIDI. "Crank speed from
+  the Song's tempo" may become its own issue for both Song Sources.
+- The Song keeps every Time signature change at its Tick, the upbeat (a first Bar shorter than its Time
+  signature) and the Key, from MusicXML and from MIDI meta events. The Song snapshot changes once (ADR 20).
+- Notes no Pipe plays: the existing Unplayable Note and Fit rules apply unchanged; nothing downstream knows the
+  Song Source.
+- Several voices on one staff stay in that staff's Part; equal pitches overlapping are merged by the existing
+  overlap merge.
+- A percussion staff (MusicXML unpitched notes) becomes a percussion Part, not selected by default, as for MIDI
+  channel 10.
+- Part name: the MusicXML part name, with the staff number when the part has several staves (e.g. "Piano 1",
+  "Piano 2").
+
+### Terms (approved 2026-10-25, in DICTIONARY.md)
+- **Song**: one straight sequence; repeats, voltas, da capo and dal segno are played out at import. Keeps its
+  Time signatures, upbeat and Key. German: Stück.
+- **Part**: from Scores, one Part per staff. German: Stimme.
+- **Scores**: Crancula reads and writes them as MusicXML. German: Noten.
+- **Time signature** (Taktart), **Bar** (Takt), **Key** (Tonart): new.
+- **Song Source**: MIDI or MusicXML; PDF and printed Scores through MusicXML from an outside recognition tool.
+- **Tick**: the unit of musical time in a Song and its Song Source (MIDI ticks, MusicXML divisions).
+- **Import Summary**: also counts the grace notes and ornaments left out.
+- Staff, voice, grace note, tie and volta are Scores words inside the MusicXML adapter, not terms. "MusicXML" is
+  a format, not a term.
 
 ## 3. More Plotter formats (DXF, HPGL, splitting the Tape)
 
@@ -115,10 +164,13 @@ reader.
 - Cut a Tape on a Plotter that doesn't read SVG (only when such a device is at hand).
 
 ### Slices
-1. **Cut a tape in pieces** (v0.4, proposal name): describe a Plotter once (name, format, working area), like an
-   Organ, and split the Tape at export into Tape pieces with an overlap strip for gluing. Real domain work: a new
-   aggregate with persistence and UI, and rules about where a Tape may be split.
-2. **Punch a tape on another Plotter** (proposal): DXF or HPGL as a format adapter, only for a named device. HPGL
+1. **Cut a tape in pieces** (v0.4, [#168](https://github.com/LilSticky/crancula/issues/168)): describe a Plotter
+   once (name, format, Working area, or a roll plotter), like an Organ, and split the Tape at export into Tape
+   pieces with an Overlap for gluing. Real domain work: a new aggregate with persistence and UI, and rules about
+   where a Tape may be split.
+2. **Cut several tapes side by side** (later, [#170](https://github.com/LilSticky/crancula/issues/170)): lay
+   several Tapes across a roll plotter's working width in one cut (decision 24). Not part of v0.4.
+3. **Punch a tape on another Plotter** (proposal): DXF or HPGL as a format adapter, only for a named device. HPGL
    is in plotter units (0.025 mm), so the writer rounds.
 
 "DXF export" or "HPGL export" as a slice name would be a technology slice. Keep the format inside the slice.
@@ -127,20 +179,33 @@ reader.
 - DescribePlotter, ChangePlotter, RemovePlotter; PlotterDescribed, PlotterChanged, PlotterRemoved, as for Organ.
 - Pieces are derived at export by a pure `tapePieces(geometry, plotter)`, over `TapeGeometry`, not inside a format
   writer.
-- Proposed invariants:
+- The Plotter is independent of Organs and Tapes: removing one removes nothing else.
+- Invariants and rules (confirmed 2026-10-25):
   - no Hole crosses a Join;
-  - every piece, with its overlap strip, fits the working area, including the Lead-in on the first piece and the
-    end gap on the last;
-  - if a single span with no Hole-free Join is longer than the working area, export is refused with a reason.
-- For the spec: the overlap strip's length, and whether it may hold Holes of the next piece (as a guide) or stays
-  blank.
+  - every piece, with its Overlap, fits the working length, including the Lead-in on the first piece and the end
+    gap on the last; a Join lies as close as possible before the working length, pieces found greedily from the
+    Lead-in's tip;
+  - the Overlap repeats the Holes of the stretch it lies under, so both layers are cut through; its length is set
+    on the Plotter, default 20 mm (decision 19);
+  - a stretch longer than the working length with no possible Join is a new kind of Cutting Problem, shown in the
+    Tape view while editing, checked against the Plotter picked in the Tape view's side panel; no Plotter picked,
+    no such Cutting Problem (decisions 20, 21). This ties that kind of Cutting Problem to a Plotter, while the
+    others depend only on the Organ;
+  - a roll plotter has no working length and never splits a Tape (decision 22);
+  - a Tape wider than the Plotter's working width is refused;
+  - without a described Plotter, export stays one file as today;
+  - Tape pieces leave Crancula as one SVG each, numbered "<tape> 1 of 3.svg", saved together into one folder the
+    user picks (decision 23). This needs a new or widened allow-listed channel (ADR 4) next to
+    `plotter:save-svg` and extends ADR 21.
 
-### Terms (proposals, not approved)
-- **Tape piece**: a part of a Tape cut as its own file. German: Bandstück.
-- **Join**: where two Tape pieces are glued together. German: Klebestelle.
-- **Overlap**: the strip at a Join where two Tape pieces lie on each other for gluing. German: Klebezugabe.
-- **Working area**: the length a Plotter can cut in one go. German: Arbeitsbereich.
-- **Plotter**: becomes an aggregate (name, format, working area).
+### Terms (approved 2026-10-25, in DICTIONARY.md)
+- **Plotter**: an aggregate described once by the user (name, format, Working area, roll plotter toggle, Overlap
+  length). German: Plotter (Schneideplotter in prose).
+- **Working area** (Arbeitsbereich): working length and working width.
+- **Tape piece** (Bandstück), **Join** (Klebestelle), **Overlap** (Klebezugabe): new.
+- **Tape Outline**: each Tape piece has its own outline, square at a Join.
+- **Lead-in**: on the first Tape piece only.
+- **Tape**: can be cut in Tape pieces for a Plotter.
 
 ## 4. Export a Song as audio or Scores
 
@@ -154,9 +219,9 @@ Share or check what my Organ will play: listen to it away from the app (audio), 
 
 ### Slices
 1. Audio export is **Record a tape**, after Crank a tape (section 1).
-2. **Read a tape as Scores** (proposal name): the Tape as MusicXML. Columns become note values with the 1/32 grid as
-   the smallest; bars come from the Song's time signature, or one asked at export for a Tape without one. No PDF
-   engraving: MuseScore and similar programs render it.
+2. **Read a tape as Scores** (later, [#169](https://github.com/LilSticky/crancula/issues/169)): the Tape as
+   MusicXML. Columns become note values with the 1/32 grid as the smallest; Bars come from the Song's Time
+   signature, or one asked at export. No PDF engraving: MuseScore and similar programs render it.
 
 The roadmap said "a Song" here; the decision is the Tape, since it is what gets edited and what the Organ plays.
 
@@ -164,14 +229,32 @@ The roadmap said "a Song" here; the decision is the Tape, since it is what gets 
 - Commands: ExportTapeAsAudio(crankSpeed), ExportTapeAsScores(time signature).
 - Events: TapeExportedAsAudio, TapeExportedAsScores. Neither changes the Tape, just as the Plotter export doesn't.
 
-### Terms (proposals, not approved)
-- Song entry: change "Converted to scores for human reading" to "A Tape can be exported as Scores".
-- **Time signature**: see section 2.
+### Rules (confirmed 2026-10-25)
+- Holes to note values: first close the gap before the next Hole in the same row when it is no longer than the
+  Organ's Minimum Gap (rounded up to Columns), then write each length as the fewest standard values down to 1/32,
+  dotted allowed, tied over bar lines (decision 25).
+- One staff per range of Pipes the user picks at export (decision 26).
+- The Time signature is asked at every export, prefilled with the Song's Time signature or 4/4 and no upbeat; it
+  is not stored (decision 27).
+- A tempo mark from the Tape's Crank speed (with its Column length and the Organ's Tape per Crank turn, as
+  quarter notes per minute); the Key from the Song if it keeps one, else C major (decision 28).
+- No tuplets: the 1/32 grid gives only binary values; triplets quantised at import stay as the grid wrote them.
+- Rests are written explicitly so every Bar is full; a Bar with no Hole is a whole-bar rest.
+- Every Hole is exported, also Holes whose Pipe is not on the Organ and Holes with Cutting Problems; the Scores
+  show the Tape, not what can be cut.
+- Bar lines count from Column 0 (Column 0 is Tick 0 at import), shifted by the upbeat if the Song keeps one.
+- ExportTapeAsScores(Time signature, staff ranges) changes nothing.
+
+### Terms (approved 2026-10-25, in DICTIONARY.md)
+- **Tape**: can be exported as Scores (MusicXML) to read or print; exporting does not change the Tape.
+- **Song**: "Converted to scores for human reading" is replaced: the Song is not exported, its Tape is.
+- **Time signature**, **Bar**, **Key**: see section 2.
 
 ## Model observations (for later plans)
 
-- The Crank speed stays off the Tape: it is a preview setting, and "Tape per Crank turn" is an Organ value. Then the
-  rule "playing speed is set by the Crank" keeps holding.
+- The Tape keeps its Crank speed (dictionary, Tape and Crank speed); changing it is an edit like the Column length.
+  "Tape per Crank turn" is an Organ value. Read a tape as Scores takes its tempo mark from the Tape's Crank speed
+  (decision 28).
 - `TapeGeometry` is the single source for the view, the SVG and any later writer (ADR 21). Tape pieces are computed
   over it, or the split rule ends up inside the SVG adapter.
 - A MusicXML reader lives next to `read-midi-song.ts` in `api/song/` and returns the same `Song`. Nothing downstream

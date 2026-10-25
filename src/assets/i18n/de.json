@@ -237,6 +237,19 @@
       "APPLY": "Transponieren",
       "CANCEL": "Abbrechen"
     },
+    "RECORD": {
+      "BUTTON": "Aufnehmen",
+      "PROGRESS": "Aufnahme… {{percent}} %",
+      "SAVED": "Gespeichert: {{name}}",
+      "FAILED": "Aufnahme fehlgeschlagen: {{reason}}",
+      "RETRY": "Erneut versuchen",
+      "DIALOG_TITLE": "Als Datei aufnehmen",
+      "WAV_FILTER": "WAV-Audio",
+      "MP3_FILTER": "MP3-Audio",
+      "NO_TAPE_PER_TURN": "Stelle den Bandvorschub pro Umdrehung der Drehorgel ein, um dieses Lochband aufzunehmen",
+      "WHILE_PREVIEW": "Beende das Anhören, um dieses Lochband aufzunehmen",
+      "TOO_LARGE": "Die Aufnahme ist zu groß"
+    },
     "PREVIEW": {
       "PLAY": "Anhören",
       "STOP": "Anhören beenden",
@@ -248,6 +261,7 @@
       "LENGTH": "Spielt {{time}}",
       "EDITING_PAUSED": "Bearbeiten ist pausiert, während angehört wird",
       "UNAVAILABLE": "Stelle den Bandvorschub pro Umdrehung der Drehorgel ein, um dieses Lochband anzuhören",
+      "WHILE_RECORDING": "Warte, bis die Aufnahme fertig ist",
       "OPEN_ORGAN": "Drehorgel öffnen",
       "CRANK_SPEED_SLIDER": "Kurbelgeschwindigkeit",
       "OUTSIDE_RANGE": "Außerhalb des Kurbelbereichs dieser Drehorgel ({{slowest}}–{{fastest}} Umdrehungen pro Minute)."

@@ -416,6 +416,7 @@ describe('OrganEditorComponent', () => {
         },
         tapes: inMemory.tapes,
         plotter: inMemory.plotter,
+        recording: inMemory.recording,
         app: inMemory.app,
         edit: inMemory.edit,
       };
@@ -778,6 +779,7 @@ describe('OrganEditorComponent', () => {
         organs: {load: () => inMemory.organs.load(), save: () => new Promise<OrganLibrarySaveResult>(() => undefined)},
         tapes: inMemory.tapes,
         plotter: inMemory.plotter,
+        recording: inMemory.recording,
         app: inMemory.app,
         edit: inMemory.edit,
       };
@@ -2536,6 +2538,7 @@ describe('OrganEditorComponent', () => {
         organs: {load: () => inMemory.organs.load(), save: () => Promise.resolve(result)},
         tapes: inMemory.tapes,
         plotter: inMemory.plotter,
+        recording: inMemory.recording,
         app: inMemory.app,
         edit: inMemory.edit,
       };

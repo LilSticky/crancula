@@ -9,6 +9,8 @@ as its GitHub Release notes.
 ## [Unreleased]
 
 ### Added
+- Record a Tape as a WAV or MP3 file to listen to without Crancula: choose Record in the Tape view.
+  The file holds the whole Tape at its Crank speed, and the Tape is not changed.
 - Edit a Tape by touch: tap an empty place to select a Spot, tap it again to add a Hole. A selected
   Hole has grips beside its ends to lengthen or shorten it; drag a Hole to move it, double-tap it to
   remove it. A finger drag on empty Tape scrolls; the mouse still draws a selection frame.

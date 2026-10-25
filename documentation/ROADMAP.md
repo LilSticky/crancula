@@ -48,10 +48,11 @@ Decided by the user on 2026-10-23 ([discovery](discovery/later.md)): one capabil
 | v0.2 | Crank a tape | hear a Tape at an adjustable Crank speed (turns per minute), with a playhead, before cutting it | Tape, Organ (Tape per Crank turn) | Web Audio, Tape view, Organ editor | done ([#149](https://github.com/LilSticky/crancula/issues/149)) |
 | v0.2 | Edit a tape by touch | add, move, resize and remove Holes by finger, scroll by finger, drag the playhead, set the Crank speed with a slider within the Organ's Crank speed range | Organ (Crank speed range), Tape view (Spot) | Tape view gestures, Organ editor, snapshot v5 | done ([#152](https://github.com/LilSticky/crancula/issues/152)) |
 | v0.2 | Ready-made Organs ([#162](https://github.com/LilSticky/crancula/issues/162)) | start a new Organ from a Preset: the 20er- or the 31er-Drehorgel | Organ (Preset) | Organ editor | done |
-| v0.2 | Record a tape | save what Crank a tape plays as an audio file | Tape | audio file writer, save dialog | planned |
-| v0.3 | Bring Scores onto a tape | import MusicXML (one Part per staff, repeats played out); PDF and printed Scores through an outside recognition tool | Song | MusicXML reader | planned |
-| v0.4 | Cut a tape in pieces | describe a Plotter (name, format, working area) and cut a long Tape in pieces with a glue overlap | Plotter, Tape | Plotter editor, snapshot, SVG | planned |
-| later | Read a tape as Scores | export the Tape as MusicXML, bars from the Song's time signature | Tape, Song | MusicXML writer | planned |
+| v0.2 | Record a tape | save what Crank a tape plays as an audio file | Tape | audio file writer, save dialog | done ([#165](https://github.com/LilSticky/crancula/issues/165)) |
+| v0.3 | Bring Scores onto a tape ([#167](https://github.com/LilSticky/crancula/issues/167)) | import MusicXML (one Part per staff, repeats played out); PDF and printed Scores through an outside recognition tool | Song | MusicXML reader | planned |
+| v0.4 | Cut a tape in pieces ([#168](https://github.com/LilSticky/crancula/issues/168)) | describe a Plotter (name, format, Working area, or a roll plotter that never splits a Tape) and cut a Tape longer than the working length in Tape pieces with a glue Overlap | Plotter, Tape | Plotter editor, snapshot, SVG | planned |
+| later | Cut several tapes side by side ([#170](https://github.com/LilSticky/crancula/issues/170)) | lay several Tapes side by side across a roll plotter's working width in one cut | Plotter, Tape | SVG | planned |
+| later | Read a tape as Scores ([#169](https://github.com/LilSticky/crancula/issues/169)) | export the Tape as MusicXML, Bars from the Song's Time signature | Tape, Song | MusicXML writer | planned |
 
 ## Later (unordered)
 

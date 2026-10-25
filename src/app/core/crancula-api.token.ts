@@ -1,9 +1,13 @@
 import {InjectionToken} from '@angular/core';
 import {
+  parseRecordingChooseRequest,
+  parseRecordingWriteRequest,
   parseSvgSaveRequest,
   parseTapeLibrarySnapshot,
   type CranculaApi,
   type OrganLibrarySnapshot,
+  type RecordingChooseResult,
+  type RecordingWriteResult,
   type SvgSaveRequest,
   type SvgSaveResult,
   type TapeLibraryLoadResult,
@@ -22,6 +26,10 @@ export interface InMemoryCranculaApiFailures {
   readonly plotter?: {
     readonly saveSvg?: 'cancelled' | 'failed';
   };
+  readonly recording?: {
+    readonly chooseFile?: 'cancelled';
+    readonly writeFile?: 'failed';
+  };
   readonly tapes?: {
     readonly load?: 'unreadable';
     readonly save?: 'failed';
@@ -33,6 +41,9 @@ export type InMemoryCranculaApi = CranculaApi & {
   readonly plotter: CranculaApi['plotter'] & {readonly lastSaveSvgRequest: SvgSaveRequest | undefined};
 };
 
+/** The token the in-memory Recording target carries; a real target is a random UUID. */
+const IN_MEMORY_TARGET = '00000000-0000-4000-8000-000000000001';
+
 /** Keeps the snapshots in memory; nothing survives a reload. */
 export function createInMemoryCranculaApi(
   initial?: OrganLibrarySnapshot,
@@ -42,6 +53,7 @@ export function createInMemoryCranculaApi(
   let stored = initial;
   let storedTapes = initialTapes;
   let lastSaveSvgRequest: SvgSaveRequest | undefined;
+  let chosenFileName: string | undefined;
   return {
     organs: {
       load: () => Promise.resolve(stored ? {status: 'loaded', snapshot: stored} : {status: 'empty'}),
@@ -84,6 +96,23 @@ export function createInMemoryCranculaApi(
           return Promise.resolve({status: 'failed', reason: 'the Plotter file could not be written'});
         }
         return Promise.resolve({status: 'saved', filePath: `in-memory/${parsed.value.suggestedFileName}`});
+      },
+    },
+    recording: {
+      chooseFile: (request): Promise<RecordingChooseResult> => {
+        const parsed = parseRecordingChooseRequest(request);
+        if (!parsed.ok) return Promise.resolve({status: 'rejected', reason: parsed.error});
+        if (failures.recording?.chooseFile === 'cancelled') return Promise.resolve({status: 'cancelled'});
+        chosenFileName = `${parsed.value.suggestedFileName}.wav`;
+        return Promise.resolve({status: 'chosen', target: IN_MEMORY_TARGET, format: 'wav', fileName: chosenFileName});
+      },
+      writeFile: (request): Promise<RecordingWriteResult> => {
+        const parsed = parseRecordingWriteRequest(request);
+        if (!parsed.ok) return Promise.resolve({status: 'rejected', reason: parsed.error});
+        if (failures.recording?.writeFile === 'failed') {
+          return Promise.resolve({status: 'failed', reason: 'the Recording could not be written'});
+        }
+        return Promise.resolve({status: 'saved', filePath: `in-memory/${chosenFileName ?? 'recording.wav'}`});
       },
     },
     app: {
