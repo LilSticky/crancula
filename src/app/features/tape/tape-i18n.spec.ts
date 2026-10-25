@@ -185,3 +185,58 @@ describe('Tape texts', () => {
     });
   }
 });
+
+const scoreHowToKeys = ['TITLE', 'STEP_1', 'STEP_2', 'STEP_3', 'STEP_4', 'STEP_5', 'CLOSE'] as const;
+const summaryRowKeys = ['GRACE_NOTES_LEFT_OUT', 'ORNAMENTS_LEFT_OUT'] as const;
+const metreModes = ['MAJOR', 'MINOR'] as const;
+const metreTonics = ['0', '1', '2', '3', '4', '5', '6', '7', 'M1', 'M2', 'M3', 'M4', 'M5', 'M6', 'M7'] as const;
+
+describe('Score import texts (US6)', () => {
+  for (const key of scoreHowToKeys) {
+    const path = `TAPE.SCORE_HOW_TO.${key}`;
+
+    it(`${path} has an English and a German text`, () => {
+      expect(textAt(en as TranslationTree, path)).toBeTruthy();
+      expect(textAt(de, path)).toBeTruthy();
+    });
+  }
+
+  for (const row of summaryRowKeys) {
+    const path = `TAPE.SUMMARY.${row}`;
+
+    it(`${path} has an English and a German text`, () => {
+      expect(textAt(en as TranslationTree, path)).toBeTruthy();
+      expect(textAt(de, path)).toBeTruthy();
+    });
+  }
+
+  for (const mode of metreModes) {
+    for (const tonic of metreTonics) {
+      const path = `TAPE.METRE.TONIC.${mode}.${tonic}`;
+
+      it(`${path} has an English and a German text`, () => {
+        expect(textAt(en as TranslationTree, path)).toBeTruthy();
+        expect(textAt(de, path)).toBeTruthy();
+      });
+    }
+  }
+
+  for (const section of ['TAPE.SONG_REJECTION', 'TAPE.SCORE_HOW_TO', 'TAPE.SUMMARY', 'TAPE.METRE', 'TAPE.IMPORT']) {
+    it(`the German texts under ${section} use no Song, Part or Scores`, () => {
+      const german = leavesUnder(de, section).map((key) => textAt(de, key) ?? '');
+      for (const text of german) {
+        expect(text).not.toMatch(/\b(Songs?|Parts?|Scores?)\b/);
+      }
+    });
+  }
+
+  it('the German Score texts use Stimme, Noten and Notenquelle', () => {
+    const german = [...leavesUnder(de, 'TAPE.SUMMARY'), ...leavesUnder(de, 'TAPE.SCORE_HOW_TO'), ...leavesUnder(de, 'TAPE.IMPORT')]
+      .map((key) => textAt(de, key) ?? '')
+      .join(' ');
+
+    for (const word of ['Stimme', 'Noten', 'Notenquelle']) {
+      expect(german).toContain(word);
+    }
+  });
+});
