@@ -13,7 +13,7 @@
 
 ## Requirement Completeness
 
-- [ ] No [NEEDS CLARIFICATION] markers remain
+- [x] No [NEEDS CLARIFICATION] markers remain
 - [x] Requirements are testable and unambiguous
 - [x] Success criteria are measurable
 - [x] Success criteria are technology-agnostic (no implementation details)
@@ -31,10 +31,8 @@
 
 ## Notes
 
-- Five questions remain open in [open-questions.md](../open-questions.md) (Q1 where the picked
-  Plotter is kept, Q2 where Plotters are edited, Q3 distance of Holes from a Join, Q4 Joins drawn in
-  the Tape view, Q5 single-piece export). The spec assumes each recommended option; resolve them with
-  the user before `/speckit-plan`.
+- The five questions of [open-questions.md](../open-questions.md) were answered by the user on
+  2026-10-25 and folded into the spec (Clarifications, Session 2026-10-25).
 - SVG is named as the format the user's cutter software reads, as in spec 003, not as an
   implementation choice.
 - Left to the plan: Plotter snapshot and its version, IPC channel for several files, where the

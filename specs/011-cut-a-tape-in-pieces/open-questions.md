@@ -93,6 +93,6 @@ adds nothing.
 
 ## Answers (user, 2026-10-25)
 
-Q1 A (one remembered Plotter choice for all Tapes), Q2 A (own Plotter screen like Organs), Q3 B (Minimum Gap kept from a Join and from the end of an Overlap), Q4 A (Joins and Overlaps drawn, piece count in the side panel). Q5 still open.
+Q1 A (one remembered Plotter choice for all Tapes), Q2 A (own Plotter screen like Organs), Q3 B (Minimum Gap kept from a Join and from the end of an Overlap), Q4 A (Joins and Overlaps drawn, piece count in the side panel), Q5 A (save dialog with "<Tape name>.svg").
 
-Not yet folded into spec.md: the [NEEDS CLARIFICATION] markers still stand.
+Folded into spec.md (Clarifications, Session 2026-10-25).

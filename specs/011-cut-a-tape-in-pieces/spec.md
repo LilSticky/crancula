@@ -57,11 +57,20 @@ Decisions 19–24 on the domain-modeler's discovery questions (section B):
   toggle (German: Plotter, Schneideplotter in prose). Changed entries: Plotter, Tape Outline, Lead-in,
   Tape, Cutting Problem.
 
-### Open questions
+### Session 2026-10-25
 
-Five questions remain; they are in [open-questions.md](open-questions.md) and marked below as
-`[NEEDS CLARIFICATION: Qn]`. Each has a recommended answer, which this spec assumes until the user
-decides.
+The five questions of [open-questions.md](open-questions.md), answered by the user:
+
+- Q: Where is the Plotter picked in the Tape view kept? → A: One choice for all Tapes, remembered
+  across restarts as a UI preference (ADR 11); not part of any Tape.
+- Q: Where are Plotters listed and edited? → A: Their own screen like Organs: a Plotter list and a
+  Plotter editor in the rail; the picker links to it ("Describe a Plotter…").
+- Q: How close may a Hole come to a Join or to the end of an Overlap? → A: It keeps the Organ's
+  Minimum Gap from both, as from the end cut of spec 003.
+- Q: Are the Joins drawn in the Tape view? → A: Yes: each Join and its Overlap are drawn in the Tape
+  view, and the side panel shows the count of Tape pieces.
+- Q: How is a Tape exported that fits in one piece while a Plotter is picked? → A: With the save
+  dialog of spec 003 and "<Tape name>.svg".
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -133,16 +142,16 @@ geometry.
    piece's length by the tape width.
 4. **Given** a Hole lies in the 20 mm after a Join, **Then** it is cut in both Tape pieces at the same
    place relative to the Join: in the earlier piece's Overlap and at the start of the later piece.
-5. **Given** a Join, **Then** no Hole crosses it nor the end of its Overlap
-   [NEEDS CLARIFICATION: Q3 – may a Hole touch them, or must it keep the Minimum Gap?].
+5. **Given** a Join, **Then** no Hole crosses it nor the end of its Overlap, and every Hole keeps
+   at least the Organ's Minimum Gap from both.
 6. **Given** the Tape pieces, **Then** only the first starts with the Lead-in; the others start with
    a square cut at their Join; every piece but the last ends with a square cut at the end of its
    Overlap, and the last ends with the end cut of spec 003.
 7. **Given** a Tape piece file, **Then** it holds only cuts, the Holes ordered from its left end and
    by row, then that piece's Tape Outline last, as in spec 003.
 8. **Given** a Tape that fits the working length in one piece, **When** I export with that Plotter
-   picked, **Then** it is exported as one file as today
-   [NEEDS CLARIFICATION: Q5 – save dialog with "<Tape name>.svg", or the folder with "1 of 1"?].
+   picked, **Then** it is exported as one file as today: the save dialog of spec 003 with
+   "<Tape name>.svg".
 9. **Given** no Plotter is picked (or none is described), **When** I export, **Then** it works exactly
    as in spec 003: one file, whatever the length.
 10. **Given** I exported in pieces, **Then** the Tape has not changed and I can export it again.
@@ -166,8 +175,8 @@ saves a round trip, and it is the only way the user learns where to change the T
 **Acceptance Scenarios**:
 
 1. **Given** the Tape view of a Tape, **Then** the side panel has a Plotter picker listing every
-   described Plotter and "No Plotter"; the picked Plotter is kept
-   [NEEDS CLARIFICATION: Q1 – per Tape, or one choice for all Tapes?].
+   described Plotter and "No Plotter"; the pick is one choice for all Tapes, remembered across
+   restarts, and picking changes no Tape.
 2. **Given** the reference Tape with a Hole in row 1 from Column 1 that is 100 Columns long, and the
    300 mm Plotter picked, **Then** the Tape has a Cutting Problem naming Columns 1–100 and the
    Plotter: longer than its working length, with no place for a Join.
@@ -185,7 +194,7 @@ saves a round trip, and it is the only way the user learns where to change the T
 8. **Given** the picked Plotter's working width is less than the Organ's tape width, **Then** the
    Tape view says the Tape is too wide for that Plotter, and export is refused with that reason.
 9. **Given** a Plotter is picked, **Then** the side panel says how many Tape pieces the Tape is cut
-   in [NEEDS CLARIFICATION: Q4 – are the Joins also drawn in the Tape view?].
+   in, and the Tape view draws each Join and its Overlap.
 
 ---
 
@@ -229,9 +238,9 @@ it change; remove the Plotter and see the Tape view's picker fall back to "No Pl
 3. **Given** a stored Plotter, **When** I remove it and confirm, **Then** it is gone; no Tape or
    Organ changes, and where it was picked the picker shows "No Plotter".
 4. **Given** two Plotters with the same name, **Then** they are still two Plotters.
-5. **Given** where Plotters are listed and edited
-   [NEEDS CLARIFICATION: Q2 – their own screen like Organs, or only from the Tape view?], **Then** I
-   can reach them in one step from the Tape view's Plotter picker.
+5. **Given** the Plotters have their own screen in the rail, like Organs (a Plotter list and a
+   Plotter editor), **Then** I can reach it in one step from the Tape view's Plotter picker
+   ("Describe a Plotter…").
 
 ---
 
@@ -301,22 +310,23 @@ message and the new Cutting Problem, export in pieces; no text is shown untransl
   button and a warning on leaving with unsaved changes, as in the Organ editor (spec 001).
 - **FR-004**: Plotters MUST be kept across restarts. A Plotter is independent of Organs and Tapes:
   removing it changes no Tape or Organ.
-- **FR-005**: The Plotter list and editor MUST be reachable from the Tape view's Plotter picker
-  [NEEDS CLARIFICATION: Q2].
+- **FR-005**: Plotters MUST have their own screen in the rail, like Organs: a Plotter list and a
+  Plotter editor. The Tape view's Plotter picker MUST link to it ("Describe a Plotter…").
 
 #### Picking a Plotter
 
 - **FR-006**: The Tape view's side panel MUST offer a Plotter picker with every described Plotter and
-  "No Plotter". Picking one MUST NOT change the Tape or its undo history
-  [NEEDS CLARIFICATION: Q1 – where the pick is kept].
+  "No Plotter". The pick MUST be one choice for all Tapes, remembered across restarts as a UI
+  preference (ADR 11). Picking one MUST NOT change any Tape or its undo history.
 - **FR-007**: With a sheet Plotter picked (roll toggle off) and the Tape not too wide, the side panel
-  MUST show how many Tape pieces the Tape is cut in [NEEDS CLARIFICATION: Q4].
+  MUST show how many Tape pieces the Tape is cut in, and the Tape view MUST draw each Join and its
+  Overlap.
 
 #### Tape pieces
 
 - **FR-008**: A Join MUST lie on a Column boundary that no Hole crosses, and the end of its Overlap
-  (the Join plus the Overlap length) MUST also cross no Hole
-  [NEEDS CLARIFICATION: Q3 – touching allowed, or the Minimum Gap kept]. Holes whose Pipe is not on
+  (the Join plus the Overlap length) MUST also cross no Hole. Every Hole MUST keep at least the
+  Organ's Minimum Gap from the Join and from the end of its Overlap. Holes whose Pipe is not on
   the Organ are not counted.
 - **FR-009**: Every Tape piece MUST fit the working length: the first counted from the Lead-in's tip,
   every piece but the last including its Overlap, and the last including the end gap of spec 003.
@@ -358,7 +368,8 @@ message and the new Cutting Problem, export in pieces; no text is shown untransl
   with the characters the file system doesn't allow replaced, numbered so the files sort in order.
   If any of these files exists, the user MUST be asked once whether to replace them. The user MUST
   be told where the files were saved.
-- **FR-022**: A Tape that is one piece MUST be exported as one file [NEEDS CLARIFICATION: Q5].
+- **FR-022**: A Tape that is one piece MUST be exported as one file, through the save dialog of
+  spec 003 with "<Tape name>.svg".
 - **FR-023**: Every Tape piece file MUST be in true size, 1:1 in millimetres, its document size the
   piece's length by the tape width, the piece's start at the left edge, and MUST hold only cuts in the
   order of spec 003 FR-012: that piece's Holes, then its Tape Outline. It MUST hold no Plotter
@@ -385,7 +396,7 @@ message and the new Cutting Problem, export in pieces; no text is shown untransl
   repeats the Holes it lies under.
 - **Cutting Problem** (new kind): a stretch of Columns that, for the picked Plotter, can't be made a
   Tape piece because it is longer than the working length with no place for a Join.
-- **Tape**: unchanged by this slice, apart from the picked Plotter if Q1 keeps it per Tape.
+- **Tape**: unchanged by this slice; the picked Plotter is a UI preference, not part of a Tape.
 
 ## Success Criteria *(mandatory)*
 
