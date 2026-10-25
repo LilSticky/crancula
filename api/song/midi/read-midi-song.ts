@@ -2,7 +2,7 @@ import {midiNoteNumber, type MidiNoteNumber} from '../../organ/midi-note-number'
 import {err, ok, type Result} from '../../result';
 import {newSongId, note, type Note, part, type Part, song, type Song, tick, type Tick, ticksPerQuarter} from '../song';
 
-export type SongRejection = 'not-a-midi-file' | 'format-2' | 'not-timed-in-beats' | 'no-notes';
+export type MidiRejection = 'not-a-midi-file' | 'format-2' | 'not-timed-in-beats' | 'no-notes';
 
 /** Larger files are rejected as not readable before any byte is read. */
 export const MAXIMUM_MIDI_FILE_SIZE = 16 * 1024 * 1024;
@@ -183,7 +183,7 @@ function nameWithoutExtension(fileName: string): string {
   return fileName.replace(/\.midi?$/i, '');
 }
 
-function readSong(bytes: Uint8Array, fileName: string): Result<Song, SongRejection> {
+function readSong(bytes: Uint8Array, fileName: string): Result<Song, MidiRejection> {
   const reader = new ByteReader(bytes);
   if (reader.uint32() !== 0x4d546864) return malformed();
   const headerLength = reader.uint32();
@@ -219,7 +219,7 @@ function readSong(bytes: Uint8Array, fileName: string): Result<Song, SongRejecti
  * Reads a Standard MIDI File into a Song. Never throws, for any bytes.
  * Tempo, controllers, programs and velocity are read past and ignored.
  */
-export function readMidiSong(bytes: Uint8Array, fileName: string): Result<Song, SongRejection> {
+export function readMidiSong(bytes: Uint8Array, fileName: string): Result<Song, MidiRejection> {
   if (bytes.length > MAXIMUM_MIDI_FILE_SIZE) return err('not-a-midi-file');
   try {
     return readSong(bytes, fileName);

@@ -54,7 +54,8 @@ export {
   type TicksPerQuarter,
   type TimeSignature,
 } from './song/song';
-export {MAXIMUM_MIDI_FILE_SIZE, readMidiSong, type SongRejection} from './song/midi/read-midi-song';
+export {MAXIMUM_MIDI_FILE_SIZE, readMidiSong} from './song/midi/read-midi-song';
+export {readSongSource, type LeftOut, type SongReading, type SongRejection} from './song/read-song-source';
 export {
   addHole,
   changeHoleLength,

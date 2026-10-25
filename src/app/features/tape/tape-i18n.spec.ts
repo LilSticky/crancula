@@ -22,6 +22,12 @@ const songRejections: Record<SongRejection, true> = {
   'format-2': true,
   'not-timed-in-beats': true,
   'no-notes': true,
+  'too-large': true,
+  'not-a-song-source': true,
+  pdf: true,
+  'not-a-score': true,
+  'damaged-archive': true,
+  'no-score-in-archive': true,
 };
 const tapeViolationCodes: Record<TapeViolationCode, true> = {
   'name-required': true,
