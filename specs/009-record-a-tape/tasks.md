@@ -69,8 +69,8 @@ Playwright e2e only for what needs real Electron (offline rendering, LAME in a W
 
 ### UI
 
-- [ ] T023 [US1] Red: Tape view component spec (`src/app/features/tape/tape-view/tape-view.component.spec.ts` or the page-head component): a Record button with `TAPE.RECORD.BUTTON` left of Export calls `TapeRecorder.record(tape, organ)`; while recording it is disabled and shows the progress text with the percent.
-- [ ] T024 [US1] Green: the Record button in the Tape view's page head (Material button, icon `fiber_manual_record`, `white-space: nowrap` like Export).
+- [x] T023 [US1] Red: Tape view component spec (`src/app/features/tape/tape-view/tape-view.component.spec.ts` or the page-head component): a Record button with `TAPE.RECORD.BUTTON` left of Export calls `TapeRecorder.record(tape, organ)`; while recording it is disabled and shows the progress text with the percent.
+- [x] T024 [US1] Green: the Record button in the Tape view's page head (Material button, icon `fiber_manual_record`, `white-space: nowrap` like Export).
 - [ ] T025 [US1] Red→Green: `e2e/record-a-tape.spec.ts`: stub `dialog.showSaveDialog` in main to a temp path; record the README fixture Tape as `.wav`: header mono/44100/16 bit, duration = Columns × Column time + release within 1 %, peak above 0.01; record as `.mp3`: file starts with `ID3` or `0xFF 0xE?` and is larger than 1 kB; the Tape and Undo state unchanged afterwards. Extend `e2e/boundary.spec.ts`: `recording.chooseFile/writeFile` exist; a forged write with an unknown target is rejected and writes nothing.
 
 **Checkpoint**: US1 works end to end; commit; STATUS.
@@ -81,9 +81,9 @@ Playwright e2e only for what needs real Electron (offline rendering, LAME in a W
 
 **Independent Test**: a Tape of an Organ without Tape per Crank turn shows Record disabled with the hint.
 
-- [ ] T026 [US2] Red: Tape view spec: Record disabled with tooltip `TAPE.RECORD.NO_TAPE_PER_TURN` when `organ.tapePerCrankTurn` is undefined; disabled with `TAPE.RECORD.WHILE_PREVIEW` while the Preview plays; the Preview's play button disabled with `TAPE.PREVIEW.WHILE_RECORDING` while `TapeRecorder.recording()`; Space does not start the Preview while recording.
-- [ ] T027 [US2] Green: wire the disabled states in the Tape view and `src/app/features/tape/preview/tape-preview.ts` (or its section component).
-- [ ] T028 [US2] Red→Green: `TapeRecorder` refuses `record` (no dialog) when the Organ has no Tape per Crank turn or the Preview plays (guard for keyboard/menu paths), in `tape-recorder.spec.ts` / `tape-recorder.ts`.
+- [x] T026 [US2] Red: Tape view spec: Record disabled with tooltip `TAPE.RECORD.NO_TAPE_PER_TURN` when `organ.tapePerCrankTurn` is undefined; disabled with `TAPE.RECORD.WHILE_PREVIEW` while the Preview plays; the Preview's play button disabled with `TAPE.PREVIEW.WHILE_RECORDING` while `TapeRecorder.recording()`; Space does not start the Preview while recording.
+- [x] T027 [US2] Green: wire the disabled states in the Tape view and `src/app/features/tape/preview/tape-preview.ts` (or its section component).
+- [x] T028 [US2] Red→Green: `TapeRecorder` refuses `record` (no dialog) when the Organ has no Tape per Crank turn or the Preview plays (guard for keyboard/menu paths), in `tape-recorder.spec.ts` / `tape-recorder.ts`.
 
 **Checkpoint**: commit; STATUS.
 

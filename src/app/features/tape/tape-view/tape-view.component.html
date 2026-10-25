@@ -17,7 +17,7 @@
     </mat-button-toggle-group>
     @if (compact()) {<button pageHeadActions mat-stroked-button type="button" data-testid="side-panel-toggle" [attr.aria-expanded]="sidePanelOpen()" (click)="toggleSidePanel()">{{ 'TAPE.VIEW.DETAILS' | translate }}</button>}
     <ng-container ngProjectAs="[pageHeadActions]">
-      <button mat-stroked-button type="button" data-testid="preview-toggle" [disabled]="!previewAvailable()" disabledInteractive [attr.aria-describedby]="previewAvailable() ? null : 'preview-unavailable-reason'" (click)="togglePreview()">
+      <button mat-stroked-button type="button" data-testid="preview-toggle" [disabled]="!previewAvailable() || recorder.recording()" [disabledInteractive]="!recorder.recording()" [matTooltip]="(recorder.recording() ? 'TAPE.PREVIEW.WHILE_RECORDING' : '') | translate" [attr.aria-describedby]="previewAvailable() ? null : 'preview-unavailable-reason'" (click)="togglePreview()">
         <mat-icon aria-hidden="true">{{ preview.playing() ? 'stop' : 'play_arrow' }}</mat-icon>
         {{ (preview.playing() ? 'TAPE.PREVIEW.STOP' : 'TAPE.PREVIEW.PLAY') | translate }}
       </button>
@@ -28,6 +28,13 @@
         <mat-icon aria-hidden="true">redo</mat-icon>
       </button>
       <button mat-stroked-button type="button" data-testid="transpose" [disabled]="!canTranspose() || editingPaused()" (click)="transpose()">{{ 'TAPE.TRANSPOSE.BUTTON' | translate }}</button>
+      <button mat-stroked-button type="button" data-testid="record" [disabled]="recordBlockedBy() !== undefined || recorder.recording()" [matTooltip]="(recordBlockedBy() ?? '') | translate" (click)="record()">
+        <mat-icon aria-hidden="true">fiber_manual_record</mat-icon>
+        @if (recordPercent() !== undefined) {
+          <mat-spinner diameter="18" aria-hidden="true" />
+        }
+        {{ (recordPercent() === undefined ? 'TAPE.RECORD.BUTTON' : 'TAPE.RECORD.PROGRESS') | translate: {percent: recordPercent()} }}
+      </button>
       @if (compact()) {
         <button mat-icon-button type="button" data-testid="export" [attr.aria-label]="'TAPE.VIEW.EXPORT' | translate" [matTooltip]="'TAPE.VIEW.EXPORT' | translate" [disabled]="plotterExport.saving()" (click)="exportTape()">
           <mat-icon aria-hidden="true">content_cut</mat-icon>
