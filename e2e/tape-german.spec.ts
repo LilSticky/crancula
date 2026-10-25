@@ -190,7 +190,7 @@ test.describe('I can bring a Song onto a Tape in German', () => {
     };
 
     await window.getByRole('link', {name: 'Lochbänder'}).click();
-    await window.getByRole('link', {name: 'Ein Lied auf ein Lochband bringen'}).click();
+    await window.getByRole('link', {name: 'Ein Stück auf ein Lochband bringen'}).click();
     await expect(window.getByTestId('import-form')).toBeVisible();
     await collect();
 
@@ -308,7 +308,7 @@ test.describe('I can import a Score in German', () => {
       };
 
       await window.getByRole('link', {name: 'Lochbänder'}).click();
-      await window.getByRole('link', {name: 'Ein Lied auf ein Lochband bringen'}).click();
+      await window.getByRole('link', {name: 'Ein Stück auf ein Lochband bringen'}).click();
       await expect(window.getByTestId('choose-song')).toContainText('Notenquelle wählen');
       await expect(window.getByTestId('score-how-to-open')).toContainText('So kommst du zu MusicXML');
       await collect();

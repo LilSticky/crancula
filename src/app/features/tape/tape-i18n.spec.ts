@@ -191,6 +191,14 @@ const summaryRowKeys = ['GRACE_NOTES_LEFT_OUT', 'ORNAMENTS_LEFT_OUT'] as const;
 const metreModes = ['MAJOR', 'MINOR'] as const;
 const metreTonics = ['0', '1', '2', '3', '4', '5', '6', '7', 'M1', 'M2', 'M3', 'M4', 'M5', 'M6', 'M7'] as const;
 
+describe('Song wording in German', () => {
+  it('no German TAPE text calls a Song Lied, as the dictionary calls it Stück', () => {
+    const german = [...leavesUnder(de, 'TAPE'), 'ORGAN.LIST.NEXT_STEP'].map((key) => ({key, text: textAt(de, key) ?? ''}));
+
+    expect(german.filter(({text}) => /\bLied(er)?\b/.test(text)).map(({key}) => key)).toEqual([]);
+  });
+});
+
 describe('Score import texts (US6)', () => {
   for (const key of scoreHowToKeys) {
     const path = `TAPE.SCORE_HOW_TO.${key}`;
