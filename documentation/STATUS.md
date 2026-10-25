@@ -28,7 +28,8 @@ full e2e in CI. **Sound not checked by hand yet**: the user has not listened to 
 [#168](https://github.com/LilSticky/crancula/issues/168) (Cut a tape in pieces),
 [#169](https://github.com/LilSticky/crancula/issues/169) (Read a tape as Scores) and
 [#170](https://github.com/LilSticky/crancula/issues/170) (Cut several tapes side by side, discovery still to do).
-The specs 010–012 are written on their own branches, each with a draft pull request. The Project board now holds
+Slice 011 (Cut a tape in pieces) is planned and has tasks ([specs/011](../specs/011-cut-a-tape-in-pieces/tasks.md),
+[ADR 28](adr/0028-tape-pieces-saved-into-one-folder-by-main.md)). The Project board now holds
 every issue (29 were missing); its built-in auto-add workflow is on (it adds only new issues, so the older ones had to be added by hand).
 
 **Done:** [Ready-made Organs (#162)](https://github.com/LilSticky/crancula/issues/162) (2026-10-24, branch
