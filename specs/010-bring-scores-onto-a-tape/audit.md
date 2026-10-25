@@ -7,9 +7,9 @@ Each finding has an ID; the fix tasks name them. Status: open until ticked.
 
 ## Domain (api/song/musicxml)
 
-- [ ] D1 Ties break in chords: `lay-out.ts` `addNote` keeps one `waiting` slot per staff, so of a tied chord (C and
+- [x] D1 Ties break in chords: `lay-out.ts` `addNote` keeps one `waiting` slot per staff, so of a tied chord (C and
   E tie start) only one Note joins. Keep waiting tied Notes per staff **and note number**. Test a tied two-Note chord.
-- [ ] D2 Ties break with two voices on one staff: voice 2's Notes clear voice 1's waiting tie. Same fix as D1; test a
+- [x] D2 Ties break with two voices on one staff: voice 2's Notes clear voice 1's waiting tie. Same fix as D1; test a
   tie over the bar line in voice 1 while voice 2 has Notes in the same measure.
 - [ ] D3 SC-003: an unpitched Note with neither `<midi-unpitched>` nor a display pitch is skipped silently.
   Decision (orchestrator): it takes E4 (MIDI 64, the middle line of the five-line staff) and stays in its percussion

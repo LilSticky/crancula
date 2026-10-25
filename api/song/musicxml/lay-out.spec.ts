@@ -32,7 +32,8 @@
  *
  * Ties (research R8, NEW, T036): per staff, a Note with `tie.start` waits; the next Note of the same note number
  * in the same staff, in played-out order, joins it when it starts exactly where the waiting Note ends. The joined
- * Note starts with the first and lasts the sum of both. Any other next Note ends the waiting Note as written.
+ * Note starts with the first and lasts the sum of both. Another Note of that note number that does not join ends the
+ * waiting Note as written; Notes of other pitches, and other voices of the staff, leave it waiting.
  *
  * Types from score-measures.ts: ScorePart, ScoreMeasure, ScoreNote (see its header). Types from song.ts:
  * Tick, TicksPerQuarter. MidiNoteNumber from api/organ/midi-note-number.ts. LeftOut is the shape
@@ -466,6 +467,55 @@ describe('layOut joins a tied Note with the next Note of its pitch, in played-ou
       {noteNumber: 60, start: QUARTER, duration: QUARTER},
     ]);
     expect(notesOf(layout, 0, 2)).toMatchObject([{noteNumber: 64, start: 0, duration: 2 * QUARTER}]);
+  });
+
+  it('joins each tied Note of a chord with the next Note of its pitch, the chord holding two waiting Notes', () => {
+    const layout = layOutStraight([
+      part(
+        measure({
+          notes: [
+            scoreNote({start: 0, length: 2 * QUARTER, pitch: 60, tie: TIE_START}),
+            scoreNote({start: 0, length: 2 * QUARTER, pitch: 64, tie: TIE_START}),
+          ],
+        }),
+        measure({
+          notes: [
+            scoreNote({start: 0, length: QUARTER, pitch: 60, tie: TIE_STOP}),
+            scoreNote({start: 0, length: QUARTER, pitch: 64, tie: TIE_STOP}),
+          ],
+        }),
+      ),
+    ]);
+
+    expect(notesOf(layout, 0, 1)).toMatchObject([
+      {noteNumber: 60, start: 0, duration: 3 * QUARTER},
+      {noteNumber: 64, start: 0, duration: 3 * QUARTER},
+    ]);
+  });
+
+  it('keeps a tie over the bar line in one voice when the other voice of the staff has Notes in the same measure', () => {
+    // Voice 1 holds a half C tied over the bar line; voice 2, after it in the measure, holds Es on the same staff.
+    const layout = layOut(
+      [
+        part(
+          measure({
+            notes: [
+              scoreNote({start: 2 * QUARTER, length: 2 * QUARTER, pitch: 60, tie: TIE_START}),
+              scoreNote({start: 0, length: QUARTER, pitch: 64}),
+              scoreNote({start: QUARTER, length: QUARTER, pitch: 64}),
+            ],
+          }),
+          measure({notes: [scoreNote({start: 0, length: QUARTER, pitch: 60, tie: TIE_STOP})]}),
+        ),
+      ],
+      [0, 1],
+    );
+
+    expect(notesOf(layout, 0, 1)).toMatchObject([
+      {noteNumber: 64, start: 0, duration: QUARTER},
+      {noteNumber: 64, start: QUARTER, duration: QUARTER},
+      {noteNumber: 60, start: 2 * QUARTER, duration: 3 * QUARTER},
+    ]);
   });
 });
 

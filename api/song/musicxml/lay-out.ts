@@ -52,8 +52,11 @@ interface StaffBuild {
   readonly part: number;
   readonly staff: number;
   readonly notes: LaidOutNote[];
-  /** The index in `notes` of the Note that waits for the next Note of the staff to join it through a tie. */
-  waiting: number | undefined;
+  /**
+   * Per note number, the index in `notes` of the Note that waits for the next Note of that pitch in the staff to
+   * join it through a tie. Voices of the staff and the Notes of a chord wait apart.
+   */
+  readonly waiting: Map<LaidOutNote['noteNumber'], number>;
   graceNotes: number;
   ornaments: number;
 }
@@ -132,7 +135,7 @@ function staffFor(staves: Map<string, StaffBuild>, part: number, staff: number):
   const key = `${part}/${staff}`;
   const existing = staves.get(key);
   if (existing !== undefined) return existing;
-  const created: StaffBuild = {part, staff, notes: [], waiting: undefined, graceNotes: 0, ornaments: 0};
+  const created: StaffBuild = {part, staff, notes: [], waiting: new Map(), graceNotes: 0, ornaments: 0};
   staves.set(key, created);
   return created;
 }
@@ -151,16 +154,9 @@ function addMeasure(
 }
 
 /**
- * Whether the Note that waits for a tie joins the next Note of its staff: the same MIDI note number, starting
- * exactly where the waiting Note ends. An unpitched Note joins nothing.
- */
-function tieJoins(waiting: LaidOutNote, noteNumber: MidiNoteNumber | 'unpitched', start: Tick): boolean {
-  return noteNumber !== 'unpitched' && waiting.noteNumber === noteNumber && waiting.start + waiting.duration === start;
-}
-
-/**
  * Adds a Note to its staff. A grace note is no Note (research R8). A Note that waits for a tie is joined with the
- * next Note of its staff when that one joins it; any other next Note ends the waiting Note as written.
+ * next Note of its pitch in its staff when that one starts exactly where the waiting Note ends; another Note of
+ * its pitch ends the waiting Note as written. An unpitched Note waits for nothing.
  */
 function addNote(
   staves: Map<string, StaffBuild>,
@@ -181,16 +177,16 @@ function addNote(
   const noteNumber = soundingPitchOf(note.pitch, measure.transpose);
   const start = knownTick(measureStart + ticksOf(note.start, measure.divisions, perQuarter));
   const duration = knownTick(ticksOf(note.length, measure.divisions, perQuarter));
-  const waitingIndex = build.waiting;
+  const waitingIndex = build.waiting.get(noteNumber);
   const waiting = waitingIndex === undefined ? undefined : build.notes[waitingIndex];
-  build.waiting = undefined;
-  if (waitingIndex !== undefined && waiting !== undefined && tieJoins(waiting, noteNumber, start)) {
+  build.waiting.delete(noteNumber);
+  if (waitingIndex !== undefined && waiting !== undefined && waiting.start + waiting.duration === start) {
     build.notes[waitingIndex] = {noteNumber, start: waiting.start, duration: knownTick(waiting.duration + duration)};
-    build.waiting = note.tie.start ? waitingIndex : undefined;
+    if (note.tie.start) build.waiting.set(noteNumber, waitingIndex);
     return;
   }
   build.notes.push({noteNumber, start, duration});
-  if (note.tie.start) build.waiting = build.notes.length - 1;
+  if (note.tie.start && noteNumber !== 'unpitched') build.waiting.set(noteNumber, build.notes.length - 1);
 }
 
 /** A Time signature as a Song keeps it, or `undefined` when the Score writes one a Song cannot keep. */

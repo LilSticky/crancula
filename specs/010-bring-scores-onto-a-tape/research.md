@@ -112,9 +112,10 @@ of their part.
   and kept, never dropped (decided with the orchestrator, T022/T024); the Organ's own Unplayable Note report
   then shows it if no Pipe plays it.
 
-- **Ties** (FR-008): per staff, a Note with `<tie type="start">` waits; the next Note of the same note number
-  in the same staff, in played-out order, joins it if it starts exactly where the first ends; any other next
-  Note, a rest in between, or the end of the Song ends the waiting Note as written.
+- **Ties** (FR-008): per staff and note number, a Note with `<tie type="start">` waits; the next Note of the same
+  note number in the same staff, in played-out order, joins it if it starts exactly where the first ends; another
+  Note of that note number that does not join, a rest in between, or the end of the Song ends the waiting Note as
+  written. The Notes of other pitches, and the other voices of the staff, leave it waiting.
 - **Grace notes** (FR-009): a `<grace/>` Note is not kept and is counted for its staff.
 - **Ornaments** (FR-010): a Note with anything in `<ornaments>` (trill, mordent, inverted mordent, turn,
   shake, wavy line, tremolo, …) is kept plainly and counted once; an `<arpeggiate>` chord is kept with all
