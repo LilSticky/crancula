@@ -12,15 +12,19 @@ import {
   noteName,
   changeColumnLength,
   defaultSelectedParts,
+  newPlotterId,
   proposeTransposition,
   readMidiSong,
   type CranculaApi,
   type EditCommand,
   type MidiNoteNumber,
   type Organ,
+  type Plotter,
+  type PlotterDraft,
   type Tape,
   toTapeLibrarySnapshot,
   tapeGeometry,
+  validatePlotter,
 } from '@api/index';
 import {encodeSmf} from '../../../../../api/song/midi/smf-test-helper';
 import {CRANCULA_API, createInMemoryCranculaApi} from '../../../core/crancula-api.token';
@@ -45,6 +49,20 @@ import {TestbedHarnessEnvironment} from '@angular/cdk/testing/testbed';
 import {MatTooltipHarness} from '@angular/material/tooltip/testing';
 import {TapeRecorder, type RecordingState} from '../recording/tape-recorder';
 import {PREVIEW_SOUND, type PreviewSound, type PreviewVoice} from '../preview/preview-sound';
+import {type HarnessLoader} from '@angular/cdk/testing';
+import {MatSelectHarness} from '@angular/material/select/testing';
+import {PlotterLibrary} from '../../plotter/plotter-library.store';
+import {PlotterPreference} from '../../plotter/plotter-preference';
+
+const PLOTTER_KEY = 'crancula.plotter';
+
+/** A sheet Plotter of 300 mm working width and length, named as the user describes it. */
+function cuttingMat(): Plotter {
+  const draft: PlotterDraft = {id: newPlotterId(), name: 'Cutting mat', workingWidth: 300, roll: false, workingLength: 300, overlap: 20};
+  const result = validatePlotter(draft);
+  if (!result.ok) throw new Error(`invalid test Plotter: ${JSON.stringify(result.error)}`);
+  return result.value;
+}
 
 /** The scale the Tape opens at: 1:1, true size on screen. */
 const SCALE = pixelsPerMillimetre('1:1', 0, 0);
@@ -608,6 +626,64 @@ describe('TapeViewComponent', () => {
       await open(`/tapes/${tape.id}`);
 
       expect(texts(section(view()) as HTMLElement | null, 'selected-part')).toEqual(['Lead']);
+    });
+  });
+
+  describe('the Plotter section below the Tape section (T033)', () => {
+    beforeEach(() => {
+      localStorage.removeItem(PLOTTER_KEY);
+    });
+
+    const pickerOf = (loader: () => HarnessLoader) =>
+      loader().getHarness(MatSelectHarness.with({selector: '[data-testid="plotter-picker"]'}));
+    const undoButton = (view: HTMLElement | null) => view?.querySelector<HTMLButtonElement>('[data-testid="undo"]') ?? null;
+
+    it('places the Plotter section after the Tape section in the side panel', async () => {
+      const {tape, open, view} = await render();
+
+      await open(`/tapes/${tape.id}`);
+
+      const panel = required(view()?.querySelector('[data-testid="side-panel"]'), 'side panel');
+      const tapeSection = required(panel.querySelector('[data-testid="tape-section"]'), 'Tape section');
+      const plotterSection = required(panel.querySelector('[data-testid="plotter-section"]'), 'Plotter section');
+      expect(tapeSection.compareDocumentPosition(plotterSection) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0);
+    });
+
+    it('keeps the Plotter picker usable while the Preview plays', async () => {
+      const {tape, open, view, loader, settle} = await render({tapePerCrankTurn: 100});
+      await open(`/tapes/${tape.id}`);
+      required(view()?.querySelector<HTMLButtonElement>('[data-testid="preview-toggle"]'), 'preview toggle').click();
+      await settle();
+      expect(isPreviewing(view())).toBe(true);
+      const plotter = cuttingMat();
+      await TestBed.inject(PlotterLibrary).put(plotter);
+      await settle();
+
+      const picker = await pickerOf(loader);
+      expect(await picker.isDisabled()).toBe(false);
+      await picker.clickOptions({text: 'Cutting mat'});
+
+      expect(TestBed.inject(PlotterPreference).picked()?.id).toBe(plotter.id);
+      expect(isPreviewing(view())).toBe(true);
+    });
+
+    it('changes no Tape and no undo history when a Plotter is picked', async () => {
+      const {tape, open, view, loader, settle} = await render();
+      await open(`/tapes/${tape.id}`);
+      const tapes = TestBed.inject(TapeLibrary);
+      const tapesBefore = tapes.tapeEntities();
+      const update = vi.spyOn(tapes, 'update');
+      await TestBed.inject(PlotterLibrary).put(cuttingMat());
+      await settle();
+      expect(undoButton(view())?.disabled).toBe(true);
+
+      await (await pickerOf(loader)).clickOptions({text: 'Cutting mat'});
+      await settle();
+
+      expect(TestBed.inject(PlotterPreference).picked()).toBeDefined();
+      expect(update).not.toHaveBeenCalled();
+      expect(tapes.tapeEntities()).toEqual(tapesBefore);
+      expect(undoButton(view())?.disabled).toBe(true);
     });
   });
 

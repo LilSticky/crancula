@@ -185,6 +185,7 @@
         <cranc-add-hole [organ]="organ" [tape]="tape" [selected]="selectedHoleRef()" [spot]="spotSelected()" [editingPaused]="editingPaused()" (added)="addFromForm($event)" />
       }
       <cranc-tape-section [view]="drawing.section" [tape]="tape" [organ]="drawing.organ" [metre]="metre()" [editingPaused]="editingPaused()" (columnLengthChange)="onColumnLengthChange($event)" />
+      <cranc-plotter-section [pieces]="tapePieces()" [tapeWidth]="drawing.organ.tapeBed.tapeWidth" />
       @if (!previewAvailable()) {
         <p class="preview-unavailable" data-testid="preview-unavailable">
           {{ 'TAPE.PREVIEW.UNAVAILABLE' | translate }}

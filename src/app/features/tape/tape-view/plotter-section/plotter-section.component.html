@@ -1,0 +1,27 @@
+<section data-testid="plotter-section">
+  <h2>{{ 'PLOTTER.NAV' | translate }}</h2>
+  <mat-form-field subscriptSizing="dynamic">
+    <mat-label>{{ 'PLOTTER.NAV' | translate }}</mat-label>
+    <mat-select data-testid="plotter-picker" [value]="plotter()?.id ?? noPlotter" (selectionChange)="pick($event.value)">
+      <mat-option [value]="noPlotter">{{ 'TAPE.PLOTTER.NONE' | translate }}</mat-option>
+      @for (option of plotters(); track option.id) {
+        <mat-option [value]="option.id">{{ option.name }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+  @if (tooWide(); as wide) {
+    <p class="plotter-text" role="status" data-testid="plotter-too-wide">{{ 'TAPE.PLOTTER.TOO_WIDE' | translate: wide }}</p>
+  } @else if (plotter()?.roll) {
+    <p class="plotter-text" data-testid="plotter-pieces">{{ 'TAPE.PLOTTER.ROLL' | translate }}</p>
+  } @else if (pieces(); as pieces) {
+    <p class="plotter-text" data-testid="plotter-pieces">
+      @if (pieces.kind === 'no-join') {
+        {{ 'TAPE.PLOTTER.NO_JOIN' | translate }}
+      } @else if (pieces.pieces.length === 1) {
+        {{ 'TAPE.PLOTTER.PIECES_ONE' | translate }}
+      } @else {
+        {{ 'TAPE.PLOTTER.PIECES' | translate: {count: pieces.pieces.length} }}
+      }
+    </p>
+  }
+</section>

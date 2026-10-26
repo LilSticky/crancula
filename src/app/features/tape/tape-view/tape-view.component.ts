@@ -17,7 +17,7 @@ import {BreakpointObserver} from '@angular/cdk/layout';
 import {toSignal} from '@angular/core/rxjs-interop';
 import {ActivatedRoute, Router, RouterLink} from '@angular/router';
 import {map} from 'rxjs';
-import {column, columnDuration, cuttingProblems, holesWithCuttingProblems, noteName, type HoleRef, type ImportSummary, type Organ, type SongMetre, songMetre, type Tape, tapeGeometry, type TapeGeometry, type Transposed} from '@api/index';
+import {column, columnDuration, cuttingProblems, holesWithCuttingProblems, noteName, type HoleRef, type ImportSummary, type Organ, type SongMetre, songMetre, type Tape, tapeGeometry, tapePieces, type TapeGeometry, type TapePieces, type Transposed} from '@api/index';
 import {canTranspose, holeRefsOf, selectionOfRefs} from './transpose-selection';
 import {crankSpeedChangeTo} from './crank-speed-change';
 import {holeAt, moveSpot, sameSpot, spotAt, type Spot, type TapeSelection} from './spot';
@@ -74,6 +74,8 @@ import {TapeSectionComponent} from './tape-section/tape-section.component';
 import {TapeStatusLineComponent, type PointerText} from './tape-status-line/tape-status-line.component';
 import {overviewFrame, scrollLeftFor} from './overview-frame';
 import {PlotterExport} from './plotter-export';
+import {PlotterSectionComponent} from './plotter-section/plotter-section.component';
+import {PlotterPreference} from '../../plotter/plotter-preference';
 import {pointerAt} from './pointer-at';
 import {pixelsPerMillimetre, type Zoom} from './pixels-per-millimetre';
 import {visibleColumns} from './visible-columns';
@@ -156,7 +158,7 @@ const GERMAN_ACTIONS_QUERY = '(max-width: 1439.98px)';
   selector: 'cranc-tape-view',
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [TapeEditor, TapePreview],
-  imports: [ImportSummaryComponent, TranslatePipe, RouterLink, PageHeadComponent, MatButton, MatIconButton, MatTooltip, MatButtonToggle, MatButtonToggleGroup, MatIcon, MatProgressSpinner, AddHoleComponent, CuttingProblemsComponent, SelectedHoleComponent, TapeSectionComponent, PreviewSectionComponent, TapeStatusLineComponent],
+  imports: [ImportSummaryComponent, TranslatePipe, RouterLink, PageHeadComponent, MatButton, MatIconButton, MatTooltip, MatButtonToggle, MatButtonToggleGroup, MatIcon, MatProgressSpinner, AddHoleComponent, CuttingProblemsComponent, SelectedHoleComponent, TapeSectionComponent, PlotterSectionComponent, PreviewSectionComponent, TapeStatusLineComponent],
   templateUrl: './tape-view.component.html',
   styleUrl: './tape-view.component.scss',
   host: {'(keydown)': 'onViewKeydown($event)'},
@@ -199,6 +201,7 @@ export class TapeViewComponent {
   protected readonly frameRect = signal<{readonly x: number; readonly y: number; readonly width: number; readonly height: number} | undefined>(undefined);
   protected readonly dragging = this.holeDrag.dragging;
   protected readonly plotterExport = inject(PlotterExport);
+  private readonly plotterPreference = inject(PlotterPreference);
   private readonly language = inject(LanguagePreference).language;
   protected readonly rulerHeight = RULER_HEIGHT;
   protected readonly zooms: readonly {readonly zoom: Zoom; readonly label: string}[] = [
@@ -305,6 +308,14 @@ export class TapeViewComponent {
   protected readonly organ = computed(() => {
     const organId = this.tape()?.organId;
     return this.organs.entities().find((organ) => organ.id === organId);
+  });
+
+  /** The saved Tape cut in Tape pieces for the picked Plotter; nothing while no Plotter is picked or the Tape is not known. */
+  protected readonly tapePieces = computed((): TapePieces | undefined => {
+    const tape = this.tape();
+    const organ = this.organ();
+    const plotter = this.plotterPreference.picked();
+    return tape === undefined || organ === undefined || plotter === undefined ? undefined : tapePieces(tapeGeometry(tape, organ), plotter);
   });
 
   private readonly geometry = computed(() => {
