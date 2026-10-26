@@ -4,7 +4,7 @@ import {MatSelectHarness} from '@angular/material/select/testing';
 import {MatSlideToggleHarness} from '@angular/material/slide-toggle/testing';
 import {MatDialog} from '@angular/material/dialog';
 import {type ActivatedRouteSnapshot, provideRouter, Router, type RouterStateSnapshot} from '@angular/router';
-import type {CranculaApi} from '@api/index';
+import {type CranculaApi, newPlotterId, type Plotter, type PlotterDraft, validatePlotter} from '@api/index';
 import {of} from 'rxjs';
 import {CRANCULA_API, createInMemoryCranculaApi} from '../../../core/crancula-api.token';
 import {provideTestTranslations} from '../../../../testing/test-translations';
@@ -21,8 +21,18 @@ function render(language: 'en' | 'de' = 'en') {
   return {library, navigate, open};
 }
 
-async function open() {
+/** A stored sheet Plotter: "Cutting mat", 120 mm wide, 300 mm long, with the default Overlap of 20 mm. */
+function storedSheet(): Plotter {
+  const draft: PlotterDraft = {id: newPlotterId(), name: 'Cutting mat', workingWidth: 120, roll: false, workingLength: 300, overlap: 20};
+  const result = validatePlotter(draft);
+  if (!result.ok) throw new Error(`invalid test Plotter: ${JSON.stringify(result.error)}`);
+  return result.value;
+}
+
+/** Opens the editor: a new Plotter, or the stored Plotter with `id` as the route `/plotters/:id` gives it. */
+async function open(id?: string) {
   const fixture: ComponentFixture<PlotterEditorComponent> = TestBed.createComponent(PlotterEditorComponent);
+  if (id !== undefined) fixture.componentRef.setInput('id', id);
   fixture.autoDetectChanges();
   await fixture.whenStable();
   const element = fixture.nativeElement as HTMLElement;
@@ -182,6 +192,36 @@ describe('PlotterEditorComponent', () => {
     });
   });
 
+  describe('editing a stored Plotter', () => {
+    it('fills the form with the stored Plotter when it is opened at /plotters/:id', async () => {
+      const {open: openEditor, library} = render();
+      const stored = storedSheet();
+      await library.put(stored);
+
+      const {field, rollToggle, formatSelect} = await openEditor(stored.id);
+
+      expect(field('plotter-name').value).toBe('Cutting mat');
+      expect(field('plotter-working-width').value).toBe('120');
+      expect(field('plotter-working-length').value).toBe('300');
+      expect(field('plotter-overlap').value).toBe('20');
+      expect(await (await rollToggle()).isChecked()).toBe(false);
+      expect(await (await formatSelect()).getValueText()).toBe('SVG');
+    });
+
+    it('keeps the id of the stored Plotter when it is saved with a new name', async () => {
+      const {open: openEditor, library} = render();
+      const stored = storedSheet();
+      await library.put(stored);
+      const {field, type, save} = await openEditor(stored.id);
+
+      await type(field('plotter-name'), 'Anton');
+      await save();
+
+      expect(library.entities()).toHaveLength(1);
+      expect(library.entities()[0]).toMatchObject({id: stored.id, name: 'Anton', workingLength: 300});
+    });
+  });
+
   describe('saving', () => {
     it('keeps Save disabled while the Plotter is invalid and enables it once it is valid', async () => {
       const {open: openEditor} = render();
@@ -301,6 +341,37 @@ describe('PlotterEditorComponent', () => {
       const {dialog} = renderWithLeaveDialog();
       const {fixture, fillValidSheet, field, type} = await open();
       await fillValidSheet();
+      await type(field('plotter-name'), '');
+
+      askToLeave(fixture.componentInstance);
+
+      expect(dialog.mock.calls[0]?.[0]).toBe(LeaveUnsavedDialogComponent);
+      expect(dialog.mock.calls[0]?.[1]).toEqual({
+        data: {
+          problems: [
+            {
+              field: {key: 'PLOTTER.EDITOR.NAME', params: {}},
+              message: {key: 'PLOTTER.ERROR.NAME_REQUIRED', params: {}},
+            },
+          ],
+        },
+      });
+    });
+
+    it('has no unsaved changes while a stored Plotter is untouched', async () => {
+      renderWithLeaveDialog();
+      const stored = storedSheet();
+      await TestBed.inject(PlotterLibrary).put(stored);
+      const {fixture} = await open(stored.id);
+
+      expect(fixture.componentInstance.unsavedChanges()).toBeNull();
+    });
+
+    it('asks through the leave dialog, naming the field with a problem, before leaving a changed stored Plotter', async () => {
+      const {dialog} = renderWithLeaveDialog();
+      const stored = storedSheet();
+      await TestBed.inject(PlotterLibrary).put(stored);
+      const {fixture, field, type} = await open(stored.id);
       await type(field('plotter-name'), '');
 
       askToLeave(fixture.componentInstance);

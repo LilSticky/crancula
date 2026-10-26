@@ -492,7 +492,8 @@
       "WORKING_AREA_VALUE": "{{length}} × {{width}} mm",
       "ROLL_WIDTH": "Rolle, {{width}} mm breit",
       "OVERLAP": "Klebezugabe",
-      "OVERLAP_VALUE": "{{overlap}} mm"
+      "OVERLAP_VALUE": "{{overlap}} mm",
+      "MORE_ACTIONS": "Weitere Aktionen für {{name}}"
     },
     "EDITOR": {
       "TITLE_NEW": "Neuer Plotter",

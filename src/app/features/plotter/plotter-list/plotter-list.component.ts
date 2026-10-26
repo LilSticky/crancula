@@ -1,13 +1,17 @@
 import {ChangeDetectionStrategy, Component, computed, inject} from '@angular/core';
-import {MatButton} from '@angular/material/button';
+import {MatButton, MatIconButton} from '@angular/material/button';
 import {MatCard} from '@angular/material/card';
+import {MatDialog} from '@angular/material/dialog';
 import {MatIcon} from '@angular/material/icon';
+import {MatMenu, MatMenuItem, MatMenuTrigger} from '@angular/material/menu';
 import {
   MatCell, MatCellDef, MatColumnDef, MatHeaderCell, MatHeaderCellDef, MatHeaderRow, MatHeaderRowDef, MatRow, MatRowDef, MatTable,
 } from '@angular/material/table';
+import {MatTooltip} from '@angular/material/tooltip';
 import {Router, RouterLink} from '@angular/router';
 import {TranslatePipe} from '@ngx-translate/core';
 import type {Plotter, PlotterId} from '@api/index';
+import {ConfirmableAction, ConfirmDialogComponent} from '../../shared/components/confirm-dialog/confirm-dialog.component';
 import {PageHeadComponent} from '../../shared/components/page-head/page-head.component';
 import {formatNumber} from '../../shared/format-number';
 import {LanguagePreference} from '../../shared/language-preference';
@@ -25,8 +29,8 @@ interface PlotterRow {
 @Component({
   selector: 'cranc-plotter-list',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslatePipe, RouterLink, MatButton, MatIcon, MatCard, MatTable, MatColumnDef, MatHeaderCell, MatHeaderCellDef,
-    MatHeaderRow, MatHeaderRowDef, MatCell, MatCellDef, MatRow, MatRowDef, PageHeadComponent],
+  imports: [TranslatePipe, RouterLink, MatButton, MatIconButton, MatIcon, MatCard, MatMenu, MatMenuItem, MatMenuTrigger, MatTooltip,
+    MatTable, MatColumnDef, MatHeaderCell, MatHeaderCellDef, MatHeaderRow, MatHeaderRowDef, MatCell, MatCellDef, MatRow, MatRowDef, PageHeadComponent],
   template: `
     <cranc-page-head [title]="'PLOTTER.LIST.TITLE' | translate" [subtitle]="'PLOTTER.LIST.SUBTITLE' | translate">
       <ng-container ngProjectAs="[pageHeadActions]">
@@ -68,6 +72,22 @@ interface PlotterRow {
               }
             </td>
           </ng-container>
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef></th>
+            <td mat-cell *matCellDef="let row">
+              <button matIconButton type="button" [matMenuTriggerFor]="rowMenu" (click)="$event.stopPropagation()"
+                      [attr.aria-label]="'PLOTTER.LIST.MORE_ACTIONS' | translate: {name: row.plotter.name}"
+                      [matTooltip]="'PLOTTER.LIST.MORE_ACTIONS' | translate: {name: row.plotter.name}">
+                <mat-icon>more_vert</mat-icon>
+              </button>
+              <mat-menu #rowMenu="matMenu">
+                <button mat-menu-item type="button" class="destructive" data-testid="remove-plotter" (click)="remove(row.plotter)">
+                  <mat-icon>delete</mat-icon>
+                  <span>{{ 'PLOTTER.REMOVE.ACTION' | translate }}</span>
+                </button>
+              </mat-menu>
+            </td>
+          </ng-container>
           <tr mat-header-row *matHeaderRowDef="columns"></tr>
           <tr mat-row *matRowDef="let row; columns: columns" data-testid="plotter-row" (click)="open(row.plotter.id)"></tr>
         </table>
@@ -77,6 +97,11 @@ interface PlotterRow {
   styles: `
     tr[mat-row] {
       cursor: pointer;
+    }
+
+    .destructive {
+      --mat-menu-item-label-text-color: var(--mat-sys-error);
+      --mat-menu-item-icon-color: var(--mat-sys-error);
     }
 
     .name {
@@ -96,9 +121,10 @@ interface PlotterRow {
 export class PlotterListComponent {
   private readonly library = inject(PlotterLibrary);
   private readonly router = inject(Router);
+  private readonly dialog = inject(MatDialog);
   private readonly language = inject(LanguagePreference).language;
 
-  protected readonly columns = ['name', 'workingArea', 'overlap'];
+  protected readonly columns = ['name', 'workingArea', 'overlap', 'actions'];
 
   protected readonly rows = computed<PlotterRow[]>(() => {
     const language = this.language();
@@ -121,5 +147,15 @@ export class PlotterListComponent {
 
   protected open(id: PlotterId): void {
     void this.router.navigate(['/plotters', id]);
+  }
+
+  /** Removes the Plotter once the user confirms; no Tape or Organ is written. */
+  protected remove(plotter: Plotter): void {
+    this.dialog
+      .open(ConfirmDialogComponent, {data: {action: ConfirmableAction.DELETE, entity: {id: plotter.id, name: plotter.name}}})
+      .afterClosed()
+      .subscribe((confirmed: boolean | undefined) => {
+        if (confirmed === true) void this.library.remove(plotter.id);
+      });
   }
 }
