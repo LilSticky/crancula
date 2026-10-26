@@ -195,6 +195,7 @@ export {assignVoices, type Chord, type StaffVoices, type VoiceNumber} from './sc
 export {scoresBars, songKeepsBarsOnColumns, type Bar} from './scores/scores-bars';
 export {
   prefilledScoresChoices,
+  scoresChoicesOf,
   type ChosenTimeSignature,
   type ScoresBeatType,
   type ScoresChoices,

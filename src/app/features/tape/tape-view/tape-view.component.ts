@@ -74,6 +74,7 @@ import {TapeSectionComponent} from './tape-section/tape-section.component';
 import {TapeStatusLineComponent, type PointerText} from './tape-status-line/tape-status-line.component';
 import {overviewFrame, scrollLeftFor} from './overview-frame';
 import {PlotterExport} from './plotter-export';
+import {ScoresExport} from './scores-export/scores-export';
 import {PlotterSectionComponent} from './plotter-section/plotter-section.component';
 import {PlotterPreference} from '../../plotter/plotter-preference';
 import {pointerAt} from './pointer-at';
@@ -201,6 +202,7 @@ export class TapeViewComponent {
   protected readonly frameRect = signal<{readonly x: number; readonly y: number; readonly width: number; readonly height: number} | undefined>(undefined);
   protected readonly dragging = this.holeDrag.dragging;
   protected readonly plotterExport = inject(PlotterExport);
+  protected readonly scoresExport = inject(ScoresExport);
   private readonly plotterPreference = inject(PlotterPreference);
   private readonly language = inject(LanguagePreference).language;
   protected readonly rulerHeight = RULER_HEIGHT;
@@ -277,9 +279,14 @@ export class TapeViewComponent {
 
   /** The metre of the Tape's Song: its first Time signature, Key and upbeat; nothing while the Song is not found. */
   protected readonly metre = computed<SongMetre>(() => {
-    const songId = this.tape()?.songId;
-    const song = this.library.songEntities().find((candidate) => candidate.id === songId);
+    const song = this.song();
     return song ? songMetre(song) : {};
+  });
+
+  /** The Song of the shown Tape; undefined while the Tape has none in the library. */
+  private readonly song = computed(() => {
+    const songId = this.tape()?.songId;
+    return this.library.songEntities().find((candidate) => candidate.id === songId);
   });
 
   /** The Tape as drawn: the would-be Tape while a Hole is dragged. */
@@ -462,6 +469,12 @@ export class TapeViewComponent {
     const tape = this.tape();
     const organ = this.organ();
     if (tape !== undefined && organ !== undefined) void this.plotterExport.export(tape, organ, this.plotterPreference.picked());
+  }
+
+  protected exportScores(): void {
+    const tape = this.tape();
+    const organ = this.organ();
+    if (tape !== undefined && organ !== undefined) void this.scoresExport.export(tape, organ, this.song());
   }
 
   protected readonly canTranspose = computed(() => {

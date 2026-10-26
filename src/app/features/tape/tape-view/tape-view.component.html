@@ -58,6 +58,13 @@
           {{ 'TAPE.VIEW.EXPORT' | translate }}
         </button>
       }
+      @let scoresLabel = 'TAPE.VIEW.EXPORT_SCORES' | translate;
+      <button mat-stroked-button type="button" data-testid="export-scores" [class.icon-only]="compactActions()" [disabled]="scoresExport.saving()" [attr.aria-label]="compactActions() ? scoresLabel : null" [matTooltip]="compactActions() ? scoresLabel : ''" (click)="exportScores()">
+        <mat-icon aria-hidden="true">queue_music</mat-icon>
+        @if (!compactActions()) {
+          {{ scoresLabel }}
+        }
+      </button>
     </ng-container>
   </cranc-page-head>
   <div class="layout" [class.compact]="compact()" [class.panel-open]="sidePanelOpen()">

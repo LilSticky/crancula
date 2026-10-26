@@ -375,6 +375,7 @@
       "SPLIT_ADD": "Teilungston hinzufügen",
       "SPLIT_REMOVE": "Diesen Teilungston entfernen",
       "STAFF": "Notensystem {{number}}: {{range}}, {{clef}}",
+      "RANGE": "{{from}} bis {{to}}",
       "CLEF": {
         "TREBLE": "Violinschlüssel",
         "TREBLE_8VA": "Violinschlüssel, 8va",

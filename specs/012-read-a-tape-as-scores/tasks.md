@@ -142,20 +142,20 @@ the file back and compare Bars, pitches, key and tempo mark.
 
 ### UI
 
-- [ ] T026 [P] [US1] Red: `src/app/features/tape/tape-view/scores-export/scores-export-dialog.component.spec.ts`
+- [x] T026 [P] [US1] Red: `src/app/features/tape/tape-view/scores-export/scores-export-dialog.component.spec.ts`
   (read-only part): shows the Song's metre with "As in the Song", the upbeat and the staves with their clefs;
   Cancel closes with `undefined`; Export closes with the prefilled `ScoresChoices`.
-- [ ] T027 [US1] Green: `scores-export-dialog.component.ts` (OnPush, signals, Material dialog, `data-testid`s of
+- [x] T027 [US1] Green: `scores-export-dialog.component.ts` (OnPush, signals, Material dialog, `data-testid`s of
   the contract).
-- [ ] T028 [P] [US1] Red: `src/app/features/tape/tape-view/scores-export/scores-export.spec.ts`: cancel the
+- [x] T028 [P] [US1] Red: `src/app/features/tape/tape-view/scores-export/scores-export.spec.ts`: cancel the
   dialog → no save call, no snackbar; confirm → `api.scores.save` with `scoresFileName`, the writer's text and
   the translated dialog texts; `saved` → `TAPE.SCORES.SAVED` with the path; `cancelled` → nothing; `failed`,
   `rejected` or a throw → `TAPE.SCORES.FAILED` with the reason and "Try again"; `saving` true while running.
-- [ ] T029 [US1] Green: `scores-export.ts` (`ScoresExport`, like `PlotterExport`).
-- [ ] T030 [P] [US1] Red: `tape-view.component.spec.ts`: "Export as Scores" (`export-scores`) after "Export for
+- [x] T029 [US1] Green: `scores-export.ts` (`ScoresExport`, like `PlotterExport`).
+- [x] T030 [P] [US1] Red: `tape-view.component.spec.ts`: "Export as Scores" (`export-scores`) after "Export for
   the Plotter", labelled and icon-only (`compactActions`), enabled with Cutting Problems and while the Preview
   plays, the Preview not stopped and no undo step after an export; disabled while `saving` (FR-001, FR-017).
-- [ ] T031 [US1] Green: the action in `tape-view.component.{ts,html}`, passing the Tape, Organ and the Song from
+- [x] T031 [US1] Green: the action in `tape-view.component.{ts,html}`, passing the Tape, Organ and the Song from
   `TapeLibrary`.
 - [ ] T032 [US1] e2e Red then Green: `e2e/read-a-tape-as-scores.spec.ts`: import a 3/4 MusicXML Score with an
   upbeat in G major (fixture under `e2e/support/`), stub `dialog.showSaveDialog` in main, export with the

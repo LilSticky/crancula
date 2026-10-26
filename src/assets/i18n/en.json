@@ -375,6 +375,7 @@
       "SPLIT_ADD": "Add a split note",
       "SPLIT_REMOVE": "Remove this split note",
       "STAFF": "Staff {{number}}: {{range}}, {{clef}}",
+      "RANGE": "{{from}} to {{to}}",
       "CLEF": {
         "TREBLE": "treble clef",
         "TREBLE_8VA": "treble clef, 8va",

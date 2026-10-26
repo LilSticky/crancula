@@ -80,3 +80,33 @@ export function prefilledScoresChoices(
   return {timeSignature: 'song', upbeat: upbeatOf(song), splitNotes};
 }
 
+/** The beat types the export dialog offers, as the Scores take them. */
+const BEAT_TYPES: readonly ScoresBeatType[] = [1, 2, 4, 8, 16, 32];
+
+function isBeatType(value: number): value is ScoresBeatType {
+  return (BEAT_TYPES as readonly number[]).includes(value);
+}
+
+/**
+ * The choices the Scores are written with, or undefined while the dialog holds a value that is not yet a choice
+ * (a missing number, a beat type it does not offer, an upbeat that is not a whole number of Columns).
+ */
+export function scoresChoicesOf(input: ScoresChoicesInput): ScoresChoices | undefined {
+  const timeSignature = chosenTimeSignatureOf(input.timeSignature);
+  const upbeat = upbeatColumnsOf(input.upbeat);
+  if (timeSignature === undefined || upbeat === undefined) return undefined;
+  return {timeSignature, upbeat, splitNotes: input.splitNotes};
+}
+
+function chosenTimeSignatureOf(input: ScoresChoicesInput['timeSignature']): ScoresChoices['timeSignature'] | undefined {
+  if (input === 'song') return 'song';
+  if (input.beats === null || input.beatType === null || !isBeatType(input.beatType)) return undefined;
+  return {beats: input.beats, beatType: input.beatType};
+}
+
+/** The upbeat in Columns: its count of a note value, where a 1/32 note is one Column; undefined unless a whole number. */
+function upbeatColumnsOf(upbeat: ScoresChoicesInput['upbeat']): number | undefined {
+  if (upbeat.count === null || upbeat.noteValue === null) return undefined;
+  const columns = (upbeat.count * COLUMNS_PER_WHOLE) / upbeat.noteValue;
+  return Number.isInteger(columns) && columns >= 0 ? columns : undefined;
+}
