@@ -76,6 +76,7 @@
       "COLUMNS_ONE": "{{count}} Column",
       "COLUMNS_OTHER": "{{count}} Columns",
       "EXPORT": "Export for the Plotter",
+      "EXPORT_SCORES": "Export as Scores",
       "SIDE_PANEL": "Details",
       "DETAILS": "Tape details",
       "STATUS_COLUMN": "Column {{column}} at {{mm}} mm",
@@ -350,6 +351,51 @@
       "TOO_WIDE": "The Tape is {{tapeWidth}} mm wide, the Plotter's working width is {{workingWidth}} mm",
       "TOO_WIDE_ACTION": "Pick a wider Plotter, or change the working width of this Plotter.",
       "EDIT_PICKED": "Change this Plotter"
+    },
+    "SCORES": {
+      "TITLE": "Scores",
+      "TIME_SIGNATURE": "Time signature",
+      "TIME_SONG": "As in the Song: {{metre}}",
+      "TIME_OTHER": "Another one",
+      "BEATS": "Beats",
+      "BEAT_TYPE": "Beat type",
+      "UPBEAT": "Upbeat",
+      "UPBEAT_COUNT": "Upbeat count",
+      "UPBEAT_VALUE": "Upbeat note value",
+      "NOTE_VALUE": {
+        "1": "Whole",
+        "2": "Half",
+        "4": "Quarter",
+        "8": "Eighth",
+        "16": "Sixteenth",
+        "32": "Thirty-second"
+      },
+      "STAVES": "Staves",
+      "SPLIT_NOTE": "Split note",
+      "SPLIT_ADD": "Add a split note",
+      "SPLIT_REMOVE": "Remove this split note",
+      "STAFF": "Staff {{number}}: {{range}}, {{clef}}",
+      "CLEF": {
+        "TREBLE": "treble clef",
+        "TREBLE_8VA": "treble clef, 8va",
+        "BASS": "bass clef",
+        "BASS_8VB": "bass clef, 8vb"
+      },
+      "SONG_METRE_NOT_ON_COLUMNS": "The Song's Time signature does not fall on whole Columns, so it cannot be kept.",
+      "ERROR": {
+        "BEATS": "Enter a whole number of beats from 1 to 99.",
+        "BEAT_TYPE": "Choose 1, 2, 4, 8, 16 or 32.",
+        "UPBEAT": "Enter a whole number of Columns, 0 or more.",
+        "UPBEAT_TOO_LONG": "The upbeat must be shorter than the first Bar.",
+        "SPLIT_NOTES": "Each split note must be different."
+      },
+      "CONFIRM": "Export",
+      "CANCEL": "Cancel",
+      "DIALOG_TITLE": "Export as Scores",
+      "FILTER_NAME": "MusicXML file",
+      "SAVED": "Saved: {{name}}",
+      "FAILED": "Could not export the Scores: {{reason}}",
+      "RETRY": "Try again"
     }
   },
   "ORGAN": {
