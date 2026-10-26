@@ -1,6 +1,8 @@
 import {ChangeDetectionStrategy, Component, computed, inject, input} from '@angular/core';
+import {MatButton} from '@angular/material/button';
 import {MatFormField, MatLabel} from '@angular/material/form-field';
 import {MatOption, MatSelect} from '@angular/material/select';
+import {RouterLink} from '@angular/router';
 import {TranslatePipe} from '@ngx-translate/core';
 import {plotterId, type TapePieces} from '@api/index';
 import {formatNumber} from '../../../shared/format-number';
@@ -15,7 +17,7 @@ const NO_PLOTTER = '';
 @Component({
   selector: 'cranc-plotter-section',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MatFormField, MatLabel, MatOption, MatSelect, TranslatePipe],
+  imports: [MatButton, MatFormField, MatLabel, MatOption, MatSelect, RouterLink, TranslatePipe],
   templateUrl: './plotter-section.component.html',
   styleUrl: './plotter-section.component.scss',
 })

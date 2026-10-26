@@ -12,6 +12,7 @@ import {
   noteName,
   changeColumnLength,
   defaultSelectedParts,
+  millimetres,
   newPlotterId,
   proposeTransposition,
   readMidiSong,
@@ -812,6 +813,95 @@ describe('TapeViewComponent', () => {
       } finally {
         scrollIntoView.mockRestore();
       }
+    });
+  });
+
+  describe('the Tape pieces and Cutting Problems follow the library (T054)', () => {
+    beforeEach(() => {
+      localStorage.removeItem(PLOTTER_KEY);
+    });
+
+    // 150 Columns of 3 mm (450 mm) without Holes and a Lead-in of 0 mm: one Join, after Column 93, for the 300 mm working length.
+    const withJoin: RenderOptions = {holes: [], columns: 150, columnLength: 3};
+    // 200 Columns of 3 mm with row 1 held from Column 1 for 100 Columns: Columns 1 to 101 have no place for a Join.
+    const withStretch: RenderOptions = {holes: [{row: 1, start: 0, length: 100}], columns: 200, columnLength: 3};
+
+    /** A sheet Plotter with the given id, working length and working width 300 mm, named "Cutting mat". */
+    function sheet(id: Plotter['id'], workingLength: number): Plotter {
+      const draft: PlotterDraft = {id, name: 'Cutting mat', workingWidth: 300, roll: false, workingLength, overlap: 20};
+      const result = validatePlotter(draft);
+      if (!result.ok) throw new Error(`invalid test Plotter: ${JSON.stringify(result.error)}`);
+      return result.value;
+    }
+
+    /** Describes the Plotter in the library and picks it, as the Plotter section does. */
+    async function pick(plotter: Plotter): Promise<void> {
+      await TestBed.inject(PlotterLibrary).put(plotter);
+      TestBed.inject(PlotterPreference).pick(plotter.id);
+    }
+
+    const joinsOf = (view: HTMLElement | null) =>
+      all(view, '[data-testid="tape-scroll"] [data-testid="join"]').map((join) => join.getAttribute('data-after'));
+    const stretchesOf = (view: HTMLElement | null) => all(view, '[data-testid="side-panel"] [data-testid="cutting-problem-stretch"]');
+    const piecesText = (view: HTMLElement | null) => view?.querySelector('[data-testid="plotter-pieces"]')?.textContent?.trim();
+
+    it('recomputes the Join and the Tape pieces at once when the working length of the picked Plotter changes (scenario 1)', async () => {
+      const {tape, open, view, settle} = await render(withJoin);
+      const cuttingMat = sheet(newPlotterId(), 300);
+      await pick(cuttingMat);
+      await open(`/tapes/${tape.id}`);
+      expect(joinsOf(view())).toEqual(['93']);
+
+      await TestBed.inject(PlotterLibrary).put(sheet(cuttingMat.id, 600));
+      await settle();
+
+      expect(joinsOf(view())).toEqual([]);
+      expect(piecesText(view())).toBe('Fits in one Tape piece');
+    });
+
+    it('recomputes the Join at once when the Lead-in of the Organ changes', async () => {
+      const {tape, organ, open, view, settle} = await render(withJoin);
+      await pick(sheet(newPlotterId(), 300));
+      await open(`/tapes/${tape.id}`);
+      expect(joinsOf(view())).toEqual(['93']);
+
+      // With a Lead-in of 60 mm the Overlap after Column 73 is the last that ends within 300 mm.
+      await TestBed.inject(OrganLibrary).put({...organ, leadIn: required(millimetres(60), 'Lead-in of 60 mm')});
+      await settle();
+
+      expect(joinsOf(view())).toEqual(['73']);
+    });
+
+    it('recomputes the Tape pieces at once when the Column length of the shown Tape changes', async () => {
+      const {tape, open, view, settle, tapeSection} = await render(withJoin);
+      await pick(sheet(newPlotterId(), 300));
+      await open(`/tapes/${tape.id}`);
+
+      // At 6 mm per Column the 900 mm Tape needs four Tape pieces: Joins after Columns 46, 92 and 138.
+      const changed = changeColumnLength(tape, 6);
+      if (!changed.ok) throw new Error('invalid test Column length: 6 mm');
+      tapeSection().columnLengthChange.emit(changed.value);
+      await settle();
+
+      expect(joinsOf(view())).toEqual(['46', '92', '138']);
+      expect(piecesText(view())).toBe('Cut in 4 Tape pieces');
+    });
+
+    it('shows No Plotter and drops the Cutting Problems of a Plotter that was removed (edge case)', async () => {
+      const {tape, open, view, settle, loader} = await render(withStretch);
+      const cuttingMat = sheet(newPlotterId(), 300);
+      await pick(cuttingMat);
+      await open(`/tapes/${tape.id}`);
+      expect(stretchesOf(view())).toHaveLength(1);
+
+      await TestBed.inject(PlotterLibrary).remove(cuttingMat.id);
+      await settle();
+
+      const picker = await loader().getHarness(MatSelectHarness.with({selector: '[data-testid="plotter-picker"]'}));
+      expect(await picker.getValueText()).toBe('No Plotter');
+      expect(stretchesOf(view())).toHaveLength(0);
+      expect(all(view(), '[data-testid="tape-scroll"] [data-testid="stretch-mark"]')).toHaveLength(0);
+      expect(piecesText(view())).toBeUndefined();
     });
   });
 

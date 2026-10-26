@@ -9,6 +9,7 @@
       }
     </mat-select>
   </mat-form-field>
+  <a matButton routerLink="/plotters/new" data-testid="plotter-describe">{{ 'TAPE.PLOTTER.DESCRIBE' | translate }}</a>
   @if (tooWide(); as wide) {
     <p class="plotter-text" role="status" data-testid="plotter-too-wide">{{ 'TAPE.PLOTTER.TOO_WIDE' | translate: wide }}</p>
   } @else if (plotter()?.roll) {

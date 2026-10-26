@@ -168,6 +168,26 @@ describe('PlotterSectionComponent', () => {
     });
   });
 
+  describe('the Describe a Plotter link', () => {
+    it('is shown with Describe a Plotter… and links to the editor of a new Plotter, while no Plotter is described', async () => {
+      const {element} = await render();
+
+      const link = element.querySelector('[data-testid="plotter-describe"]');
+      expect(link?.textContent?.trim()).toBe('Describe a Plotter…');
+      expect(link?.getAttribute('href')).toBe('/plotters/new');
+    });
+
+    it('stays shown and links to the editor of a new Plotter once a Plotter is picked', async () => {
+      const {library, preference, element, settle} = await render();
+      const cuttingMat = sheetPlotter('Cutting mat', 300, 120);
+      await library.put(cuttingMat);
+      preference.pick(cuttingMat.id);
+      await settle();
+
+      expect(element.querySelector('[data-testid="plotter-describe"]')?.getAttribute('href')).toBe('/plotters/new');
+    });
+  });
+
   describe('the Tape pieces of the picked Plotter', () => {
     it('says how many Tape pieces a Tape longer than the working length is cut in', async () => {
       // 100 Columns of 5 mm is 500 mm: longer than the 300 mm working length, cut once at the Join after Column 56.

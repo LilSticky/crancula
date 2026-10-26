@@ -147,8 +147,8 @@ reference Plotter picked, gives a Cutting Problem for Columns 1–101; shortened
 
 **Independent Test**: a 120 mm roll plotter exports the reference Tape as one 652 mm file; at 90 mm export is refused.
 
-- [ ] T049 [P] [US4] Red: `api/tape/tape-pieces.spec.ts`: a roll plotter gives one piece of any length (FR-011) and `too-wide` when narrower than the tape width (scenario 2); `plotter-section.component.spec.ts` shows `TAPE.PLOTTER.ROLL`; `plotter-list.component.spec.ts` shows a roll plotter's Working area as roll with width and no Overlap.
-- [ ] T050 [US4] Green: roll branches in `tape-pieces.ts`, `plotter-section.component.ts` and `plotter-list.component.ts` (whatever is still missing after US1–US3).
+- [x] T049 [P] [US4] Red: `api/tape/tape-pieces.spec.ts`: a roll plotter gives one piece of any length (FR-011) and `too-wide` when narrower than the tape width (scenario 2); `plotter-section.component.spec.ts` shows `TAPE.PLOTTER.ROLL`; `plotter-list.component.spec.ts` shows a roll plotter's Working area as roll with width and no Overlap.
+- [x] T050 [US4] Green: roll branches in `tape-pieces.ts`, `plotter-section.component.ts` and `plotter-list.component.ts` (whatever is still missing after US1–US3).
 - [ ] T051 [US4] Red→Green: extend `e2e/tape-pieces.spec.ts`: a 120 mm roll plotter exports one file through the save dialog (scenario 1); changed to 90 mm, export is refused with the too-wide reason (scenario 2).
 
 **Checkpoint**: commit; STATUS.
@@ -160,10 +160,10 @@ reference Plotter picked, gives a Cutting Problem for Columns 1–101; shortened
 **Independent Test**: changing a Plotter's working length changes the Tape pieces of a Tape with it picked;
 removing it turns the picker to "No Plotter".
 
-- [ ] T052 [P] [US5] Red: `plotter-editor.component.spec.ts`: opening `/plotters/:id` fills the form; saving keeps the id; leaving with unsaved changes asks through the shared leave-unsaved dialog naming the fields with problems (scenario 2); `plotter-list.component.spec.ts`: `remove-plotter` asks through the confirm dialog and removes only that Plotter, no Tape or Organ write (scenario 3, FR-004); two Plotters with the same name stay two rows (scenario 4).
-- [ ] T053 [US5] Green: edit and remove in `plotter-editor.component.ts` and `plotter-list.component.ts`.
-- [ ] T054 [P] [US5] Red: `tape-view.component.spec.ts`: a change of the picked Plotter in the store recomputes Tape pieces and Cutting Problems at once (scenario 1), and so does a change of the Organ (tape width, Lead-in, Minimum Gap, Pipes) or of the Tape's Column length (edge case); removing the picked Plotter shows "No Plotter" and its problems disappear (edge case); `plotter-section.component.spec.ts`: `plotter-describe` links to `/plotters/new` (scenario 5, FR-005).
-- [ ] T055 [US5] Green: whatever the two specs still need in `plotter-section.component.ts` and `tape-view.component.ts`.
+- [x] T052 [P] [US5] Red: `plotter-editor.component.spec.ts`: opening `/plotters/:id` fills the form; saving keeps the id; leaving with unsaved changes asks through the shared leave-unsaved dialog naming the fields with problems (scenario 2); `plotter-list.component.spec.ts`: `remove-plotter` asks through the confirm dialog and removes only that Plotter, no Tape or Organ write (scenario 3, FR-004); two Plotters with the same name stay two rows (scenario 4).
+- [x] T053 [US5] Green: edit and remove in `plotter-editor.component.ts` and `plotter-list.component.ts`.
+- [x] T054 [P] [US5] Red: `tape-view.component.spec.ts`: a change of the picked Plotter in the store recomputes Tape pieces and Cutting Problems at once (scenario 1), and so does a change of the Organ (tape width, Lead-in, Minimum Gap, Pipes) or of the Tape's Column length (edge case); removing the picked Plotter shows "No Plotter" and its problems disappear (edge case); `plotter-section.component.spec.ts`: `plotter-describe` links to `/plotters/new` (scenario 5, FR-005).
+- [x] T055 [US5] Green: whatever the two specs still need in `plotter-section.component.ts` and `tape-view.component.ts`.
 - [ ] T056 [US5] Red→Green: extend `e2e/plotter-library.spec.ts`: change the working length and restart (scenario 1); remove the Plotter, the Tape view shows "No Plotter" and the Tapes are unchanged (scenario 3); from the Tape view, "Describe a Plotter…" opens the editor (scenario 5).
 
 **Checkpoint**: commit; STATUS.
