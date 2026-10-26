@@ -513,8 +513,7 @@
       "OVERLAP_NOT_BELOW_WORKING_LENGTH": "The Overlap must be shorter than the working length."
     },
     "REMOVE": {
-      "ACTION": "Remove Plotter",
-      "MESSAGE": "Remove {{name}}? Tapes and Organs stay as they are."
+      "ACTION": "Remove Plotter"
     },
     "STORAGE": {
       "LOAD_PROBLEM": "Your Plotters couldn't be loaded. The file was kept at {{backupPath}}. Your Organs still work.",

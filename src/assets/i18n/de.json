@@ -513,8 +513,7 @@
       "OVERLAP_NOT_BELOW_WORKING_LENGTH": "Die Klebezugabe muss kürzer als die Arbeitslänge sein."
     },
     "REMOVE": {
-      "ACTION": "Plotter entfernen",
-      "MESSAGE": "{{name}} entfernen? Lochbänder und Drehorgeln bleiben unverändert."
+      "ACTION": "Plotter entfernen"
     },
     "STORAGE": {
       "LOAD_PROBLEM": "Deine Plotter konnten nicht geladen werden. Die Datei wurde unter {{backupPath}} aufbewahrt. Deine Drehorgeln funktionieren weiterhin.",
