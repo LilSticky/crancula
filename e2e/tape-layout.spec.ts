@@ -424,6 +424,30 @@ test.describe('The Tape view with a Preview playing at 1280 x 800 (#159)', () =>
   }
 });
 
+test.describe('The Tape view in German at 1280 x 800 (#177)', () => {
+  test('the page head actions fit: no horizontal overflow, the Export button inside the window, no horizontal document scroll', async () => {
+    const launched = await launchApp();
+    const {app, window} = launched;
+    await resizeWindowOrSkip(launched, 1280, 800, true);
+    await defineOrganWithLeadIn(window, {tapePerCrankTurn: '100'});
+    await createTapeFromSong(window, 'Scale', melodyC3ToC5(), {columnLength: '5'});
+    await window.getByTestId('language-switch').locator('[data-language="de"]').click();
+
+    const head = window.getByTestId('page-head-actions');
+    expect(await head.evaluate((element) => element.scrollWidth - element.clientWidth), 'page head overflow').toBeLessThanOrEqual(1);
+
+    const exportButton = await boxOf(head.getByTestId('export'));
+    const viewport = await window.evaluate(() => ({width: globalThis.innerWidth}));
+    expect(exportButton.right, `Export right edge ${exportButton.right} vs viewport width ${viewport.width}`).toBeLessThanOrEqual(viewport.width);
+
+    expect(
+      await window.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth),
+      'document horizontal overflow',
+    ).toBeLessThanOrEqual(1);
+    await app.close();
+  });
+});
+
 test.describe('The Tape view at 1024 x 700 (#156)', () => {
   test('keeps every level of the zoom segment fully visible inside the page head', async () => {
     const launched = await launchApp();

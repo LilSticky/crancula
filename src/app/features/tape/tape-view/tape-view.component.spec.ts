@@ -1,6 +1,7 @@
 import {BreakpointObserver, type BreakpointState} from '@angular/cdk/layout';
 import {ApplicationRef, Component, computed, signal} from '@angular/core';
-import {type Observable, of} from 'rxjs';
+import {TranslateService} from '@ngx-translate/core';
+import {firstValueFrom, type Observable, of} from 'rxjs';
 import {TestBed} from '@angular/core/testing';
 import {MatDialog} from '@angular/material/dialog';
 import {MatSnackBar} from '@angular/material/snack-bar';
@@ -1088,6 +1089,75 @@ describe('TapeViewComponent', () => {
         expect(button.classList.contains('icon-only'), testId).toBe(true);
         expect(button.getAttribute('aria-label'), testId).toBe(name);
         expect(button.textContent, testId).not.toContain(name);
+      }
+    });
+
+    it('shows the page head actions as icons in German at 1280 px, with their German labels as accessible names', async () => {
+      const {tape, open, view} = await render({windowWidth: 1280, tapePerCrankTurn: 100, language: 'de'});
+      await open(`/tapes/${tape.id}`);
+
+      const names: Record<string, string> = {
+        'preview-toggle': 'Anhören',
+        transpose: 'Transponieren…',
+        record: 'Aufnehmen',
+        export: 'Export für den Plotter',
+      };
+      for (const [testId, name] of Object.entries(names)) {
+        const button = required(view()?.querySelector<HTMLButtonElement>(`[data-testid="page-head-actions"] [data-testid="${testId}"]`), testId);
+        expect(button.classList.contains('icon-only'), testId).toBe(true);
+        expect(button.getAttribute('aria-label'), testId).toBe(name);
+        expect(button.textContent, testId).not.toContain(name);
+      }
+      expect(toggle(view())).toBeNull();
+      expect(panel(view())).not.toBeNull();
+    });
+
+    it('keeps the full German labels of the page head actions at 1440 px', async () => {
+      const {tape, open, view} = await render({windowWidth: 1440, tapePerCrankTurn: 100, language: 'de'});
+      await open(`/tapes/${tape.id}`);
+
+      const names: Record<string, string> = {
+        'preview-toggle': 'Anhören',
+        transpose: 'Transponieren…',
+        record: 'Aufnehmen',
+      };
+      for (const [testId, name] of Object.entries(names)) {
+        const button = required(view()?.querySelector<HTMLButtonElement>(`[data-testid="page-head-actions"] [data-testid="${testId}"]`), testId);
+        expect(button.classList.contains('icon-only'), testId).toBe(false);
+        expect(button.textContent, testId).toContain(name);
+      }
+    });
+
+    it('switches the page head actions to icons when the language changes to German while the Tape view is open at 1280 px', async () => {
+      const {tape, open, view, settle} = await render({windowWidth: 1280, tapePerCrankTurn: 100});
+      await open(`/tapes/${tape.id}`);
+      const preview = (): HTMLButtonElement =>
+        required(view()?.querySelector<HTMLButtonElement>('[data-testid="page-head-actions"] [data-testid="preview-toggle"]'), 'preview-toggle');
+      expect(preview().classList.contains('icon-only')).toBe(false);
+      expect(preview().textContent).toContain('Preview');
+
+      await firstValueFrom(TestBed.inject(TranslateService).use('de'));
+      await settle();
+
+      expect(preview().classList.contains('icon-only')).toBe(true);
+      expect(preview().getAttribute('aria-label')).toBe('Anhören');
+      expect(preview().textContent).not.toContain('Anhören');
+    });
+
+    it('keeps the full English labels of the page head actions at 1280 px', async () => {
+      const {tape, open, view} = await render({windowWidth: 1280, tapePerCrankTurn: 100});
+      await open(`/tapes/${tape.id}`);
+
+      const names: Record<string, string> = {
+        'preview-toggle': 'Preview',
+        transpose: 'Transpose…',
+        record: 'Record',
+        export: 'Export for the Plotter',
+      };
+      for (const [testId, name] of Object.entries(names)) {
+        const button = required(view()?.querySelector<HTMLButtonElement>(`[data-testid="page-head-actions"] [data-testid="${testId}"]`), testId);
+        expect(button.classList.contains('icon-only'), testId).toBe(false);
+        expect(button.textContent, testId).toContain(name);
       }
     });
 
