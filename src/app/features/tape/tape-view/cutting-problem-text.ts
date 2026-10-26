@@ -1,4 +1,4 @@
-import {noteName, type HoleProblem} from '@api/index';
+import {noteName, type HoleProblem, type NoJoinProblem} from '@api/index';
 import {formatNumber} from '../../shared/format-number';
 
 /** A translation key with its parameters. */
@@ -8,8 +8,19 @@ export interface ProblemText {
 }
 
 /** The translated text of a Cutting Problem, with mm values and Columns (from 1) written for the language. */
-export function cuttingProblemText(problem: HoleProblem, language: string): ProblemText {
+export function cuttingProblemText(problem: HoleProblem | NoJoinProblem, language: string): ProblemText {
   const mm = (value: number): string => formatNumber(value, language);
+  if (problem.code === 'no-join') {
+    return {
+      key: 'TAPE.CUTTING_PROBLEM.NO_JOIN',
+      params: {
+        first: String(problem.start + 1),
+        last: String(problem.last + 1),
+        plotter: problem.plotterName,
+        length: mm(problem.workingLengthMm),
+      },
+    };
+  }
   const base = {note: noteName(problem.pipe), column: String(problem.start + 1)};
   switch (problem.code) {
     case 'no-pipe':

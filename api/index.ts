@@ -121,10 +121,13 @@ export type {HoleFix, ImportSummary} from './tape/import-summary';
 export {
   cuttingProblems,
   holesWithCuttingProblems,
+  stretchesOf,
   type CuttingProblem,
   type CuttingProblemCode,
+  type HoleCuttingProblem,
   type HoleCuttingProblems,
   type HoleProblem,
+  type NoJoinProblem,
 } from './tape/cutting-problems';
 export {
   transposeHoles,
@@ -180,4 +183,4 @@ export {previewNoteWindows, type TimedPreviewNote} from './preview/preview-note-
 export {plotterSvg} from './tape/plotter-svg';
 export {pieceGeometry, type CutGeometry} from './tape/tape-piece-geometry';
 export {tapeGeometry, type Point, type Slot, type TapeGeometry, type TapeOutline} from './tape/tape-geometry';
-export {tapePieces, type Join, type TapePiece, type TapePieces} from './tape/tape-pieces';
+export {tapePieces, type Join, type JoinlessStretch, type TapePiece, type TapePieces} from './tape/tape-pieces';

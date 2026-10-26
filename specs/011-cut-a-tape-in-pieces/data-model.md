@@ -116,7 +116,8 @@ Rules (research R3, R4):
   `end − start ≤ workingLength`.
 - Stretches: each pair of neighbouring possible Joins (with the tip before and the end cut after) that a
   piece can't span; `first` is the Column after the earlier one, `last` the Column before the later one (the
-  last Column at the end cut).
+  last Column at the end cut). A piece from a Join ends at its Overlap end capped at `totalLength`, so a Join whose
+  Overlap reaches past the end of the Tape does not make a stretch when the rest of the Tape fits.
 
 Invariants (tests, SC-003, SC-004): pieces are contiguous (`pieces[i + 1].start === pieces[i].join.at`), the
 first starts at 0, the last ends at `totalLength`, every piece's length ≤ `workingLength`, no Slot within the
@@ -144,25 +145,28 @@ function pieceGeometry(geometry: TapeGeometry, piece: TapePiece): CutGeometry;
 
 ```ts
 type HoleCuttingProblem = /* the existing 'no-pipe' | 'too-short' | 'too-close' */;
-type CuttingProblem =
-  | HoleCuttingProblem
-  | {
-      readonly code: 'no-join';
-      /** First and last Column of the stretch, counted from 0. */
-      readonly start: Column;
-      readonly last: Column;
-      readonly plotterName: string;
-      readonly workingLengthMm: Millimetres;
-    };
+interface NoJoinProblem {
+  readonly code: 'no-join';
+  /** First and last Column of the stretch, counted from 0. */
+  readonly start: Column;
+  readonly last: Column;
+  readonly plotterName: string;
+  readonly workingLengthMm: number;
+}
+type CuttingProblem = HoleCuttingProblem | NoJoinProblem;
 
+function cuttingProblems(tape: Tape, organ: Organ): readonly HoleCuttingProblem[];
 function cuttingProblems(tape: Tape, organ: Organ, plotter?: Plotter): readonly CuttingProblem[];
+function stretchesOf(problems: readonly CuttingProblem[]): readonly NoJoinProblem[];
 ```
 
-- Without `plotter`, with a roll plotter, or too wide: exactly today's result (FR-018).
-- `no-join` problems come from `tapePieces(...).stretches`; all problems stay sorted by `start`, then row,
-  then code (`no-join` after the Hole codes at the same start).
-- `holesWithCuttingProblems` takes the Hole kinds only (`HoleCuttingProblem`); the Tape view gets the
-  stretches separately (`stretchesOf(problems)`).
+- The overload without a Plotter has no `no-join` problems: its result is hole-only, so callers that read a
+  Hole's `pipe` need no narrowing. Without `plotter`, with a roll plotter, or too wide: exactly today's result
+  (FR-018).
+- `no-join` problems come from `tapePieces(...).stretches` of a sheet Plotter; all problems stay sorted by `start`,
+  then row, then code (`no-join` after the Hole codes at the same start).
+- `holesWithCuttingProblems` takes the whole `CuttingProblem` union and skips `no-join`, which marks no Hole; the
+  Tape view gets the stretches separately (`stretchesOf(problems)`).
 
 ## Export refusal (renderer, `plotter-export.ts`)
 

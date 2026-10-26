@@ -14,14 +14,16 @@
   } @else if (plotter()?.roll) {
     <p class="plotter-text" data-testid="plotter-pieces">{{ 'TAPE.PLOTTER.ROLL' | translate }}</p>
   } @else if (pieces(); as pieces) {
-    <p class="plotter-text" data-testid="plotter-pieces">
-      @if (pieces.kind === 'no-join') {
-        {{ 'TAPE.PLOTTER.NO_JOIN' | translate }}
-      } @else if (pieces.pieces.length === 1) {
-        {{ 'TAPE.PLOTTER.PIECES_ONE' | translate }}
-      } @else {
-        {{ 'TAPE.PLOTTER.PIECES' | translate: {count: pieces.pieces.length} }}
-      }
-    </p>
+    @if (pieces.kind === 'no-join') {
+      <p class="plotter-text" data-testid="plotter-pieces">{{ 'TAPE.PLOTTER.NO_JOIN' | translate }}</p>
+    } @else if (pieces.kind === 'pieces') {
+      <p class="plotter-text" data-testid="plotter-pieces">
+        @if (pieces.pieces.length === 1) {
+          {{ 'TAPE.PLOTTER.PIECES_ONE' | translate }}
+        } @else {
+          {{ 'TAPE.PLOTTER.PIECES' | translate: {count: pieces.pieces.length} }}
+        }
+      </p>
+    }
   }
 </section>

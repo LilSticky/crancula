@@ -53,6 +53,7 @@ const cuttingProblemCodes: Record<CuttingProblemCode, true> = {
   'no-pipe': true,
   'too-short': true,
   'too-close': true,
+  'no-join': true,
 };
 
 function keysUnder(tree: TranslationTree, path: string): readonly string[] {
