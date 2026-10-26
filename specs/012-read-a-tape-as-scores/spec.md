@@ -72,6 +72,14 @@ Decisions 25–28 on the domain-modeler's discovery questions (section C), with 
 - Q: How does a Hole whose Pipe is not on the Organ appear? → A: As an ordinary note on the staff
   whose range holds its pitch, with no mark (FR-007).
 
+### Session 2026-10-26 (plan rule calls, approved by the user)
+
+- Q: How is a Hole written whose pitch MusicXML can't write (MIDI notes 0–11, below C0; MusicXML has no
+  octave −1)? → A: One octave up, in octave 0, with no mark and no message (FR-007).
+- Q: What if the Song keeps a Time signature whose Bar is not a whole number of Columns (beat type 64 with
+  an odd beat count)? → A: The Song counts as keeping no Time signature: the dialog is prefilled with 4/4
+  and no upbeat and says why (FR-004).
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Export my tape as Scores (Priority: P1)
@@ -257,6 +265,10 @@ that no text is shown untranslated.
   of quarter notes per minute, and at least 1.
 - **The Song keeps a Key with flats** (e.g. F major): notes off the key are spelled to suit it (B
   flat, not A sharp). With no Key, C major and sharps.
+- **MIDI notes 0–11** (below C0): MusicXML has no octave −1; such a Hole is written one octave up, with no
+  mark (FR-007).
+- **A Song Time signature not on whole Columns** (e.g. 3/64): the Song counts as keeping none; the dialog
+  is prefilled with 4/4 and no upbeat and says why (FR-004).
 - **Very low or high Pipes** (e.g. a bass far below the staff): written at their true pitch on their
   staff; the clef or octave clef follows FR-006.
 - **Exporting while the Preview plays**: allowed, as exporting is not an edit; the Preview keeps
@@ -287,7 +299,9 @@ that no text is shown untranslated.
   the Song's Time signature(s) and upbeat when the Tape has a Song that keeps them, else with 4/4 and
   no upbeat. A Time signature MUST be a whole beat count of at least 1 over a note value of 1, 2, 4,
   8, 16 or 32; an upbeat MUST be a whole number of Columns from 0 up to less than one Bar. Anything
-  else MUST be refused with a message. Kept unchanged, the Song's Time signature changes MUST be used
+  else MUST be refused with a message. A Song Time signature whose Bar is not a whole number of Columns
+  (beat type 64 with an odd beat count) MUST count as none: 4/4 and no upbeat prefilled, and the dialog
+  MUST say why. Kept unchanged, the Song's Time signature changes MUST be used
   at their Columns; replaced, the chosen Time signature MUST apply to the whole Tape. What the user
   enters MUST NOT be stored, on the Tape, its Song or elsewhere.
 - **FR-005**: The Scores MUST have one staff per range of pitches the user picks in the export
@@ -303,7 +317,8 @@ that no text is shown untranslated.
 - **FR-007**: Every Hole of the Tape MUST be in the Scores as a note of its Pipe's pitch (the MIDI
   note number of its Pipe), at its start Column, on the staff that holds its Pipe, including Holes
   whose Pipe is not on the Organ and Holes with other Cutting Problems. A Hole whose Pipe is not on
-  the Organ MUST be an ordinary note, with no mark, on the staff whose range holds its pitch.
+  the Organ MUST be an ordinary note, with no mark, on the staff whose range holds its pitch. A Hole of MIDI note 0–11, which MusicXML can't write,
+  MUST be written one octave up (octave 0), with no mark.
 - **FR-008**: Before note values are written, each Hole MUST be lengthened in the Scores to the
   start of the next Hole in its row when the gap between them is no longer than the Organ's Minimum
   Gap, rounded up to whole Columns (Minimum Gap ÷ Column length). A Hole MUST NOT be lengthened past

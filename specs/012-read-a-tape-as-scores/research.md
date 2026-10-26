@@ -54,8 +54,8 @@ files only (brittle; kept for one small reference file, `api/scores/scores.refer
   rests (FR-011). A Tape of length 0 cannot exist (`ColumnCount` ≥ 1).
 - A Bar of `beats`/`beatType` is `beats × 32 / beatType` Columns. A Song's Time signature whose Bar is not
   a whole number of Columns (only beat type 64 with an odd beat count; the Song model allows 64) cannot be
-  kept: the dialog then treats the Song as keeping no Time signature (prefill 4/4) and says why
-  (`TAPE.SCORES.SONG_METRE_NOT_ON_COLUMNS`). The dialog itself offers beat types 1 to 32 only (FR-004).
+  kept: the dialog then treats the Song as keeping no Time signature (prefill 4/4, no upbeat) and says why
+  (`TAPE.SCORES.SONG_METRE_NOT_ON_COLUMNS`). Approved by the user on 2026-10-26 and written into FR-004. The dialog itself offers beat types 1 to 32 only (FR-004).
 - In MusicXML the upbeat is `<measure number="0" implicit="yes">`; the following Bars count from 1. A Bar
   cut short before a change keeps its number and is written short (notation programs read it as an
   irregular Bar).
@@ -92,8 +92,8 @@ inside a Bar (legal MusicXML, rare in print, harder to read).
 - No `<accidental>` elements: notation programs derive the shown accidentals from pitch, Key and Bar, as
   MuseScore does on import (checked by hand).
 - MusicXML octaves run 0–9, so MIDI 0–11 cannot be written at their pitch. Such a Hole (far below any
-  Organ) is written an octave up, at octave 0; a B♯ that would fall in octave −1 is spelled C. This is the
-  only deviation from FR-007 and needs no message: no Organ has such Pipes.
+  Organ) is written an octave up, at octave 0; a B♯ that would fall in octave −1 is spelled C. No mark and no
+  message: no Organ has such Pipes. Approved by the user on 2026-10-26 and written into FR-007.
 
 **Rationale**: the spec's rule, plus the in-key spelling every reader expects.
 

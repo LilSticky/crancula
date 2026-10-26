@@ -116,8 +116,8 @@ UI sits beside `plotter-export.ts` in the Tape view, as its sibling export.
 - **Upbeat entry**: a count of a note value (e.g. 1 × 1/4), as the Metre shows it (R11).
 - **Off-key spelling**: in-key notes as the scale spells them; others sharps, or flats in a key with flats (R5).
 - **Key changes**: all of the Song's, each from the start of the Bar holding it; C major before the first (R4).
-- **Song Time signatures not on Columns** (beat type 64, odd beats): treated as none, with a hint (R3).
-- **MIDI 0–11**: written an octave up at octave 0, MusicXML has no octave −1 (R5).
+- **Song Time signatures not on Columns** (beat type 64, odd beats): treated as none, with a hint (R3; user-approved 2026-10-26, FR-004).
+- **MIDI 0–11**: written an octave up at octave 0, MusicXML has no octave −1 (R5; user-approved 2026-10-26, FR-007).
 - **Octave clef rule made countable**: ≥ 3 fewer ledger lines for more than half of the staff's notes (R9).
 - **File layout**: pure writer in `api/scores/` (ADR 2, ADR 29); one IPC channel `scores:save` (R13).
 - **Command placement**: fifth page head action; compact breakpoints raised if needed (R14).
