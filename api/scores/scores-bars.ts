@@ -31,7 +31,7 @@ const COMMON_TIME: MetreFields = {beats: 4, beatType: 4};
 const C_MAJOR: KeyFields = {fifths: 0, mode: 'major'};
 
 /** Columns in a full Bar: 32 Columns make a whole note (research R3). */
-function fullBarColumns(timeSignature: MetreFields): number {
+export function fullBarColumns(timeSignature: MetreFields): number {
   return (timeSignature.beats * 32) / timeSignature.beatType;
 }
 

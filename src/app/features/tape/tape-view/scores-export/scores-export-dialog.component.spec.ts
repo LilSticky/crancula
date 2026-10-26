@@ -3,11 +3,12 @@ import {type HarnessLoader} from '@angular/cdk/testing';
 import {TestbedHarnessEnvironment} from '@angular/cdk/testing/testbed';
 import {MAT_DIALOG_DATA, MatDialogRef} from '@angular/material/dialog';
 import {MatInputHarness} from '@angular/material/input/testing';
+import {MatRadioButtonHarness} from '@angular/material/radio/testing';
 import {MatSelectHarness} from '@angular/material/select/testing';
 import {TranslateService} from '@ngx-translate/core';
-import {midiNoteNumber, type Organ, type ScoresChoices} from '@api/index';
+import {midiNoteNumber, noteName, type Organ, type ScoresChoices} from '@api/index';
 import {referenceTape} from '@api/tape/tape-fixture';
-import {note, part, song, songId, tick, ticksPerQuarter, type Song} from '@api/song/song';
+import {note, part, song, songId, tick, ticksPerQuarter, type BeatType, type Song} from '@api/song/song';
 import {vi} from 'vitest';
 import {testOrgan} from '../../../../../testing/organs';
 import {provideTestTranslations} from '../../../../../testing/test-translations';
@@ -27,6 +28,11 @@ function required<T>(value: T | null | undefined, what: string): T {
 
 /** A Song in 3/4 from Tick 0 with the given upbeat in Ticks (a quarter is 480), if any. */
 function songIn3Four(upbeat?: number): Song {
+  return songWithMetre(3, 4, upbeat);
+}
+
+/** A Song in the given Time signature from Tick 0 with the given upbeat in Ticks (a quarter is 480), if any. */
+function songWithMetre(beats: number, beatType: BeatType, upbeat?: number): Song {
   const melody = defined(
     part({
       name: 'Melody',
@@ -50,7 +56,7 @@ function songIn3Four(upbeat?: number): Song {
       name: 'Waltz',
       ticksPerQuarter: defined(ticksPerQuarter(QUARTER), 'ticks per quarter'),
       parts: [melody],
-      timeSignatures: [{start: defined(tick(0), 'start'), beats: 3, beatType: 4}],
+      timeSignatures: [{start: defined(tick(0), 'start'), beats, beatType}],
       upbeat: upbeat === undefined ? undefined : defined(tick(upbeat), 'upbeat'),
     }),
     'song',
@@ -204,5 +210,128 @@ describe('ScoresExportDialogComponent edits the split notes (FR-005, Story 3)', 
 
     expect(await splitNoteNames(loader)).toEqual(['C3', 'C3']);
     expect(required(element.querySelector<HTMLButtonElement>('[data-testid="scores-confirm"]'), 'Export').disabled).toBe(true);
+  });
+});
+
+describe('ScoresExportDialogComponent offers split notes from MIDI 1 up (FR-005)', () => {
+  it('offers no split note at MIDI 0, since the staff below it would be empty', async () => {
+    const {loader} = await render(songIn3Four(), organAcrossMiddleC());
+    const select = await loader.getHarness(MatSelectHarness.with({selector: '[data-testid="scores-split-note"]'}));
+
+    await select.open();
+    const names = await Promise.all((await select.getOptions()).map((option) => option.getText()));
+    await select.close();
+
+    expect(names).not.toContain(noteName(defined(midiNoteNumber(0), 'MIDI 0')));
+    expect(names[0]).toBe(noteName(defined(midiNoteNumber(1), 'MIDI 1')));
+  });
+});
+
+/** The texts of the validation messages the dialog shows under its fields. */
+function errorTexts(element: HTMLElement): string[] {
+  return [...element.querySelectorAll('mat-error')].map((error) => error.textContent ?? '');
+}
+
+function exportDisabled(element: HTMLElement): boolean {
+  return required(element.querySelector<HTMLButtonElement>('[data-testid="scores-confirm"]'), 'Export').disabled;
+}
+
+describe('ScoresExportDialogComponent asks the Time signature and upbeat (FR-004, Story 4)', () => {
+  it('without a Song offers only the fields, prefilled with 4/4 and no upbeat', async () => {
+    const {element, loader, translate} = await render(undefined, organAcrossMiddleC());
+
+    expect(element.querySelector('[data-testid="scores-time-song"]')).toBeNull();
+    const beats = await loader.getHarness(MatInputHarness.with({selector: '[data-testid="scores-beats"]'}));
+    const beatType = await loader.getHarness(MatSelectHarness.with({selector: '[data-testid="scores-beat-type"]'}));
+    const upbeat = await loader.getHarness(MatInputHarness.with({selector: '[data-testid="scores-upbeat-count"]'}));
+    expect(await beats.getValue()).toBe('4');
+    expect(await beatType.getValueText()).toBe(String(translate.instant('TAPE.SCORES.NOTE_VALUE.4')));
+    expect(await upbeat.getValue()).toBe('0');
+  });
+
+  it('exports the Time signature and upbeat the user chose with "Another one": 6/8 with an upbeat of one eighth', async () => {
+    const {close, loader, press, translate} = await render(songIn3Four(), organAcrossMiddleC());
+    const another = await loader.getHarness(MatRadioButtonHarness.with({selector: '[data-testid="scores-time-other"]'}));
+    await another.check();
+    const beats = await loader.getHarness(MatInputHarness.with({selector: '[data-testid="scores-beats"]'}));
+    await beats.setValue('6');
+    const beatType = await loader.getHarness(MatSelectHarness.with({selector: '[data-testid="scores-beat-type"]'}));
+    await beatType.clickOptions({text: String(translate.instant('TAPE.SCORES.NOTE_VALUE.8'))});
+    const count = await loader.getHarness(MatInputHarness.with({selector: '[data-testid="scores-upbeat-count"]'}));
+    await count.setValue('1');
+    const value = await loader.getHarness(MatSelectHarness.with({selector: '[data-testid="scores-upbeat-value"]'}));
+    await value.clickOptions({text: String(translate.instant('TAPE.SCORES.NOTE_VALUE.8'))});
+
+    press('scores-confirm');
+
+    expect(close).toHaveBeenCalledWith({timeSignature: {beats: 6, beatType: 8}, upbeat: 4, splitNotes: [60]});
+  });
+
+  it('shows the error of a beat count of 0 under its field and disables Export', async () => {
+    const {element, loader, translate} = await render(undefined, organAcrossMiddleC());
+    const beats = await loader.getHarness(MatInputHarness.with({selector: '[data-testid="scores-beats"]'}));
+
+    await beats.setValue('0');
+
+    expect(errorTexts(element)).toContain(String(translate.instant('TAPE.SCORES.ERROR.BEATS')));
+    expect(exportDisabled(element)).toBe(true);
+  });
+
+  it('shows the error of a negative upbeat count under its field and disables Export', async () => {
+    const {element, loader, translate} = await render(undefined, organAcrossMiddleC());
+    const count = await loader.getHarness(MatInputHarness.with({selector: '[data-testid="scores-upbeat-count"]'}));
+
+    await count.setValue('-1');
+
+    expect(errorTexts(element)).toContain(String(translate.instant('TAPE.SCORES.ERROR.UPBEAT')));
+    expect(exportDisabled(element)).toBe(true);
+  });
+
+  it('shows the error of an upbeat as long as the first Bar under its field and disables Export', async () => {
+    const {element, loader, translate} = await render(undefined, organAcrossMiddleC());
+    const count = await loader.getHarness(MatInputHarness.with({selector: '[data-testid="scores-upbeat-count"]'}));
+    await count.setValue('1');
+    const value = await loader.getHarness(MatSelectHarness.with({selector: '[data-testid="scores-upbeat-value"]'}));
+    await value.clickOptions({text: String(translate.instant('TAPE.SCORES.NOTE_VALUE.1'))});
+
+    expect(errorTexts(element)).toContain(String(translate.instant('TAPE.SCORES.ERROR.UPBEAT_TOO_LONG')));
+    expect(exportDisabled(element)).toBe(true);
+  });
+
+  it('shows the error of two equal split notes under the staves and disables Export', async () => {
+    const {fixture, element, loader, press, translate} = await render(songIn3Four(), organAcrossMiddleC());
+    press('scores-split-add');
+    await fixture.whenStable();
+    const [top] = await loader.getAllHarnesses(MatSelectHarness.with({selector: '[data-testid="scores-split-note"]'}));
+    await top?.clickOptions({text: 'C3'});
+    await fixture.whenStable();
+
+    expect(errorTexts(element)).toContain(String(translate.instant('TAPE.SCORES.ERROR.SPLIT_NOTES')));
+    expect(exportDisabled(element)).toBe(true);
+  });
+
+  it('says why a Song Time signature that cannot lie on Columns is not offered, and prefills 4/4', async () => {
+    const {element, loader, translate} = await render(songWithMetre(3, 64), organAcrossMiddleC());
+    const beats = await loader.getHarness(MatInputHarness.with({selector: '[data-testid="scores-beats"]'}));
+    const beatType = await loader.getHarness(MatSelectHarness.with({selector: '[data-testid="scores-beat-type"]'}));
+
+    expect(element.textContent).toContain(String(translate.instant('TAPE.SCORES.SONG_METRE_NOT_ON_COLUMNS')));
+    expect(element.querySelector('[data-testid="scores-time-song"]')).toBeNull();
+    expect(await beats.getValue()).toBe('4');
+    expect(await beatType.getValueText()).toBe(String(translate.instant('TAPE.SCORES.NOTE_VALUE.4')));
+  });
+
+  it('prefills 4/4 again when the dialog is opened again, as the choice of an export is not stored', async () => {
+    const first = await render(undefined, organAcrossMiddleC());
+    const beats = await first.loader.getHarness(MatInputHarness.with({selector: '[data-testid="scores-beats"]'}));
+    await beats.setValue('6');
+    first.press('scores-confirm');
+    expect(first.close).toHaveBeenCalledWith({timeSignature: {beats: 6, beatType: 4}, upbeat: 0, splitNotes: [60]});
+
+    TestBed.resetTestingModule();
+    const second = await render(undefined, organAcrossMiddleC());
+    const again = await second.loader.getHarness(MatInputHarness.with({selector: '[data-testid="scores-beats"]'}));
+
+    expect(await again.getValue()).toBe('4');
   });
 });

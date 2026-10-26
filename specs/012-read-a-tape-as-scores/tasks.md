@@ -221,15 +221,15 @@ clef; the next Tape of the Organ is prefilled with the three.
 **Independent Test**: export a Tape composed from scratch in 3/4 with an upbeat of one quarter; open the dialog
 again and see 4/4 and no upbeat.
 
-- [ ] T045 [P] [US4] Red: `validateScoresChoices` in `api/scores/scores-choices.spec.ts`: beats 0, 2.5 or 100 →
+- [x] T045 [P] [US4] Red: `validateScoresChoices` in `api/scores/scores-choices.spec.ts`: beats 0, 2.5 or 100 →
   `beats`; beat type 64 or 3 → `beatType`; upbeat count negative or not whole → `upbeat`; upbeat as long as the
   first Bar → `not-shorter-than-bar`; upbeat 1 × 1/8 in 6/8 → 4 Columns; `'song'` refused when
   `songKeepsBarsOnColumns` is false (FR-004, Story 4.3).
-- [ ] T046 [US4] Green: the remaining rules of `validateScoresChoices`.
-- [ ] T047 [P] [US4] Red: dialog spec: without a Song only the fields, prefilled 4/4 and 0; "Another one" with
+- [x] T046 [US4] Green: the remaining rules of `validateScoresChoices`.
+- [x] T047 [P] [US4] Red: dialog spec: without a Song only the fields, prefilled 4/4 and 0; "Another one" with
   6/8 and 1 × 1/8 returns that choice; each violation shows its `mat-error` and disables Export; a 3/64 Song shows
   `SONG_METRE_NOT_ON_COLUMNS` and 4/4; reopening shows the prefill again (nothing stored) (Story 4.1–4.5).
-- [ ] T048 [US4] Green: Time signature and upbeat fields in `scores-export-dialog.component.ts`.
+- [x] T048 [US4] Green: Time signature and upbeat fields in `scores-export-dialog.component.ts`.
 - [ ] T049 [US4] e2e: extend `e2e/read-a-tape-as-scores.spec.ts`: a Tape composed from scratch exported in 6/8
   with an upbeat of one eighth → first Bar 4 Columns (duration 4), then 24; reopening shows 4/4. (`test-first`,
   then `implementer`)
@@ -238,10 +238,10 @@ again and see 4/4 and no upbeat.
 
 ## Phase 7: User Story 5 - Use it in German or English (P3)
 
-- [ ] T050 [P] [US5] Red: `src/app/features/tape/tape-i18n.spec.ts`: every `TAPE.SCORES.*` and
+- [x] T050 [P] [US5] Red: `src/app/features/tape/tape-i18n.spec.ts`: every `TAPE.SCORES.*` and
   `TAPE.VIEW.EXPORT_SCORES` key used in the dialog and flow exists in en and de; with German, the dialog and
   messages show no key; the suggested file name is the Tape's name in both (Story 5.1, SC-007).
-- [ ] T051 [US5] Green: fix texts; `npm run i18n:check` green.
+- [x] T051 [US5] Green: fix texts; `npm run i18n:check` green.
 - [ ] T052 [US5] e2e: `e2e/tape-layout.spec.ts`: the page head with five actions in one row at 1180 px (en) and
   1440 px (de), icon-only below; raise `COMPACT_QUERY` / `GERMAN_ACTIONS_QUERY` in `tape-view.component.ts` if
   needed (R14). (`test-first`, then `implementer`)

@@ -194,3 +194,73 @@ describe('scoresChoicesOf gives the split notes sorted ascending (data-model.md 
     expect(choices?.splitNotes).toEqual(midi([48, 72]));
   });
 });
+
+/** A dialog input that is valid as it is: 4/4, no upbeat, no split note. Each test changes the field it is about. */
+function choicesInput(fields: Partial<ScoresChoicesInput>): ScoresChoicesInput {
+  return {timeSignature: {beats: 4, beatType: 4}, upbeat: {count: 0, noteValue: 4}, splitNotes: [], ...fields};
+}
+
+describe('validateScoresChoices checks the Time signature (FR-004, Story 4.3)', () => {
+  it('refuses a beat count of 0 as out of range', () => {
+    expect(validateScoresChoices(choicesInput({timeSignature: {beats: 0, beatType: 4}}), undefined)).toEqual([
+      {field: 'beats', code: 'out-of-range'},
+    ]);
+  });
+
+  it('refuses a beat count of 2.5 as not whole', () => {
+    expect(validateScoresChoices(choicesInput({timeSignature: {beats: 2.5, beatType: 4}}), undefined)).toEqual([
+      {field: 'beats', code: 'not-whole'},
+    ]);
+  });
+
+  it('refuses a beat count of 100 as out of range', () => {
+    expect(validateScoresChoices(choicesInput({timeSignature: {beats: 100, beatType: 4}}), undefined)).toEqual([
+      {field: 'beats', code: 'out-of-range'},
+    ]);
+  });
+
+  it.each([64, 3])('refuses the beat type %d, which the dialog does not offer', (beatType) => {
+    expect(validateScoresChoices(choicesInput({timeSignature: {beats: 4, beatType}}), undefined)).toEqual([
+      {field: 'beatType', code: 'not-offered'},
+    ]);
+  });
+
+  it("refuses the Song's Time signatures when the Song does not keep its Bars on Columns (3/64)", () => {
+    const of = songWith({timeSignatures: [timeAt(3, 64)]});
+
+    expect(validateScoresChoices(choicesInput({timeSignature: 'song'}), of)).toHaveLength(1);
+  });
+});
+
+describe('validateScoresChoices checks the upbeat (FR-004, Story 4.3)', () => {
+  it('refuses a negative upbeat count as negative', () => {
+    expect(validateScoresChoices(choicesInput({upbeat: {count: -1, noteValue: 4}}), undefined)).toEqual([
+      {field: 'upbeat', code: 'negative'},
+    ]);
+  });
+
+  it('refuses an upbeat count that is not whole as not whole', () => {
+    expect(validateScoresChoices(choicesInput({upbeat: {count: 1.5, noteValue: 4}}), undefined)).toEqual([
+      {field: 'upbeat', code: 'not-whole'},
+    ]);
+  });
+
+  it('refuses an upbeat as long as the first Bar (1 whole note in 4/4) as not shorter than the Bar', () => {
+    expect(validateScoresChoices(choicesInput({upbeat: {count: 1, noteValue: 1}}), undefined)).toEqual([
+      {field: 'upbeat', code: 'not-shorter-than-bar'},
+    ]);
+  });
+
+  it('refuses an upbeat as long as a 6/8 Bar (6 eighths) as not shorter than the Bar', () => {
+    const input = choicesInput({timeSignature: {beats: 6, beatType: 8}, upbeat: {count: 6, noteValue: 8}});
+
+    expect(validateScoresChoices(input, undefined)).toEqual([{field: 'upbeat', code: 'not-shorter-than-bar'}]);
+  });
+
+  it('accepts an upbeat of one eighth in 6/8 as 4 Columns', () => {
+    const input = choicesInput({timeSignature: {beats: 6, beatType: 8}, upbeat: {count: 1, noteValue: 8}});
+
+    expect(validateScoresChoices(input, undefined)).toEqual([]);
+    expect(scoresChoicesOf(input)?.upbeat).toBe(4);
+  });
+});

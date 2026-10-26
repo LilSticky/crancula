@@ -37,6 +37,7 @@ interface ScoresChoices {
 type ScoresChoicesViolation =
   | {readonly field: 'beats'; readonly code: 'not-whole' | 'out-of-range'}
   | {readonly field: 'beatType'; readonly code: 'not-offered'}
+  | {readonly field: 'timeSignature'; readonly code: 'not-on-columns'}
   | {readonly field: 'upbeat'; readonly code: 'not-whole' | 'negative' | 'not-shorter-than-bar' | 'not-on-columns'}
   | {readonly field: 'splitNotes'; readonly code: 'not-distinct' | 'out-of-range'};
 
@@ -47,7 +48,10 @@ function validateScoresChoices(input: ScoresChoicesInput, song: Song | undefined
 becomes `ScoresChoices` only when `validateScoresChoices` returns no violation (invalid states are not
 representable in `ScoresChoices`). `'song'` is valid only when `songKeepsBarsOnColumns(song)` (research R3).
 "Not shorter than the first Bar" compares with the first Bar of the chosen Time signature, or of the Song's
-first one.
+first one. `timeSignature` `not-on-columns` is the `'song'` choice without a Song whose Bars lie on whole
+Columns (a 3/64 Song: its Bar is 1.5 Columns); the dialog then does not offer `'song'`. A count of 0 is no upbeat
+and has no violation whatever its note value. Violations are returned in the order: Time signature, upbeat,
+split notes.
 
 ### Prefill
 
