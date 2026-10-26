@@ -516,7 +516,8 @@
       "MESSAGE": "{{name}} entfernen? Lochbänder und Drehorgeln bleiben unverändert."
     },
     "STORAGE": {
-      "LOAD_PROBLEM": "Deine Plotter konnten nicht geladen werden. Die Datei wurde unter {{backupPath}} aufbewahrt. Deine Drehorgeln funktionieren weiterhin."
+      "LOAD_PROBLEM": "Deine Plotter konnten nicht geladen werden. Die Datei wurde unter {{backupPath}} aufbewahrt. Deine Drehorgeln funktionieren weiterhin.",
+      "SAVE_PROBLEM": "Deine Plotter konnten nicht gespeichert werden: {{reason}}"
     }
   }
 }

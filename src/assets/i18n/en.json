@@ -516,7 +516,8 @@
       "MESSAGE": "Remove {{name}}? Tapes and Organs stay as they are."
     },
     "STORAGE": {
-      "LOAD_PROBLEM": "Your Plotters couldn't be loaded. The file was kept at {{backupPath}}. Your Organs still work."
+      "LOAD_PROBLEM": "Your Plotters couldn't be loaded. The file was kept at {{backupPath}}. Your Organs still work.",
+      "SAVE_PROBLEM": "Your Plotters couldn't be saved: {{reason}}"
     }
   }
 }

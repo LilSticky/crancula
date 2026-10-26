@@ -1,0 +1,88 @@
+import {ChangeDetectionStrategy, Component, computed, inject, input, linkedSignal, signal, untracked} from '@angular/core';
+import {type FieldTree, form, FormField} from '@angular/forms/signals';
+import {ErrorStateMatcher} from '@angular/material/core';
+import {MatButton} from '@angular/material/button';
+import {MatCard} from '@angular/material/card';
+import {MatError, MatFormField, MatInput, MatLabel, MatSuffix} from '@angular/material/input';
+import {MatIcon} from '@angular/material/icon';
+import {MatOption, MatSelect} from '@angular/material/select';
+import {MatSlideToggle} from '@angular/material/slide-toggle';
+import {Router} from '@angular/router';
+import {TranslatePipe} from '@ngx-translate/core';
+import {draftOf, emptyPlotterDraft, type PlotterDraft, validatePlotter} from '@api/index';
+import {DecimalInputDirective} from '../../shared/decimal-input.directive';
+import {PageHeadComponent} from '../../shared/components/page-head/page-head.component';
+import {PlotterLibrary} from '../plotter-library.store';
+import {plotterFormSchema, shownMessages, ShownViolationMatcher} from './plotter-form';
+
+/** The Plotter editor: describes a new Plotter, or edits the stored one whose id the route gives. */
+@Component({
+  selector: 'cranc-plotter-editor',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [TranslatePipe, MatButton, MatCard, MatError, MatFormField, MatIcon, MatInput, MatLabel, MatOption, MatSelect, MatSlideToggle,
+    MatSuffix, FormField, DecimalInputDirective, PageHeadComponent],
+  templateUrl: './plotter-editor.component.html',
+  providers: [{provide: ErrorStateMatcher, useClass: ShownViolationMatcher}],
+  styles: `
+    .fields {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0 16px;
+    }
+
+    .full-width {
+      grid-column: 1 / -1;
+    }
+
+    .actions {
+      display: flex;
+      justify-content: flex-end;
+      padding-top: 8px;
+    }
+  `,
+})
+export class PlotterEditorComponent {
+  /** Route parameter; absent for a new Plotter. */
+  readonly id = input<string>();
+
+  private readonly library = inject(PlotterLibrary);
+  private readonly router = inject(Router);
+
+  /** The Plotter as it was when opened: the stored one, or an empty new one. */
+  private readonly opened = computed<PlotterDraft>(() => {
+    const id = this.id();
+    const stored = id ? untracked(() => this.library.entityMap()[id]) : undefined;
+    return stored ? draftOf(stored) : emptyPlotterDraft();
+  });
+
+  /** The Plotter as entered; may be invalid. */
+  private readonly draft = linkedSignal<PlotterDraft>(() => this.opened());
+
+  /** The inputs bind to this form; its one rule is `validatePlotter`, reported at the fields. */
+  protected readonly plotter: FieldTree<PlotterDraft> = form(this.draft, plotterFormSchema);
+
+  protected readonly saving = signal(false);
+
+  /** Save is unavailable while the Plotter is invalid or a save is running. */
+  protected readonly saveDisabled = computed(() => this.saving() || !this.plotter().valid());
+
+  protected readonly shownMessages = shownMessages;
+
+  protected setRoll(roll: boolean): void {
+    this.draft.update((draft) => ({...draft, roll}));
+  }
+
+  /** Stores the valid Plotter and returns to the Plotter list. */
+  protected async save(): Promise<void> {
+    const result = validatePlotter(this.draft());
+    if (!result.ok || this.saving()) return;
+    this.saving.set(true);
+    try {
+      // A failed write leaves the Plotter unsaved: stay here. The app reports the save problem (as for Organs).
+      if (!(await this.library.put(result.value))) return;
+      await this.router.navigate(['/plotters']);
+    } finally {
+      this.saving.set(false);
+    }
+  }
+}
