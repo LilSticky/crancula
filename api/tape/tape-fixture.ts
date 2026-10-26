@@ -3,6 +3,9 @@ import {validTape, type Column, type ColumnCount, type Hole, type Tape, type Tap
 import {midiNoteNumber} from '../organ/midi-note-number';
 import type {Millimetres, Organ} from '../organ/organ';
 import {validateOrgan} from '../organ/validate-organ';
+import type {Plotter} from '../plotter/plotter';
+import type {PlotterDraft} from '../plotter/plotter-draft';
+import {validatePlotter} from '../plotter/validate-plotter';
 
 /** The fields of a Tape for specs; the Crank speed defaults to {@link DEFAULT_CRANK_SPEED}. */
 export type TapeFixtureFields = Omit<TapeFields, 'crankSpeed'> & { readonly crankSpeed?: CrankSpeed };
@@ -52,4 +55,16 @@ export function referenceTape(organ: Organ): Tape {
     length: 200 as ColumnCount,
     holes,
   });
+}
+
+/** For specs: the Plotter for a draft that is valid; throws otherwise. */
+export function plotterOf(draft: PlotterDraft): Plotter {
+  const result = validatePlotter(draft);
+  if (!result.ok) throw new Error(`invalid Plotter fixture: ${JSON.stringify(result.error)}`);
+  return result.value;
+}
+
+/** For specs: the reference Plotter of spec 011: a sheet Plotter with working length 300 mm, working width 120 mm and Overlap 20 mm. */
+export function referencePlotter(): Plotter {
+  return plotterOf({name: 'Cutting mat', workingWidth: 120, roll: false, workingLength: 300, overlap: 20});
 }

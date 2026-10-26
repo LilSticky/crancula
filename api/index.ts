@@ -173,3 +173,4 @@ export {previewNoteWindows, type TimedPreviewNote} from './preview/preview-note-
 export {plotterSvg} from './tape/plotter-svg';
 export type {CutGeometry} from './tape/tape-piece-geometry';
 export {tapeGeometry, type Point, type Slot, type TapeGeometry, type TapeOutline} from './tape/tape-geometry';
+export {tapePieces, type Join, type TapePiece, type TapePieces} from './tape/tape-pieces';
