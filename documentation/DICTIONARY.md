@@ -250,6 +250,11 @@
 * Crancula exports exact 1:1 geometry in mm; blade offset and kerf are left to the cutter's own software
 * German: Plotter (Schneideplotter in prose)
 
+# Sheet plotter
+* A Plotter that is not a roll plotter: it cuts within its Working area (working length and working width)
+* Has an Overlap; a Tape longer than its working length is cut in Tape pieces
+* German: Bogenplotter
+
 # Working area
 * The largest length (working length) and width (working width) a Plotter cuts in one go
 * A roll plotter has only a working width
