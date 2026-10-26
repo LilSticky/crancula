@@ -12,6 +12,7 @@ import {
 } from '../api/song/musicxml/score-test-helper';
 import {launchApp} from './support/launch-app';
 import {defineOctaveOrgan} from './support/tape-creation';
+import {resizeWindowOrSkip} from './support/window-size';
 
 const CONTAINER = `<?xml version="1.0" encoding="UTF-8"?>
 <container version="1.0"><rootfiles><rootfile full-path="piano.musicxml"/></rootfiles></container>`;
@@ -162,6 +163,8 @@ test.describe('A Score with its Time signature, Key and upbeat on the import scr
     await first.app.close();
 
     const second = await launchApp(first.userDataDir);
+    // The Tape details sit in the side panel only from 1180 px; a CI display can start narrower.
+    await resizeWindowOrSkip(second, 1280, 800);
     await second.window.getByTestId('rail-nav').getByRole('link', {name: 'Tapes'}).click();
     await second.window.getByTestId('tape').filter({hasText: 'Waltz from score'}).getByTestId('open-tape').click();
     await expect(second.window.getByTestId('side-panel').getByTestId('song-metre')).toHaveText('3/4, G major, upbeat 1/4');
