@@ -1,6 +1,27 @@
 import {TestBed} from '@angular/core/testing';
-import type {CranculaApi, OrganLibrarySnapshot, SvgSaveRequest, TapeLibrarySnapshot} from '@api/index';
+import type {
+  CranculaApi,
+  OrganLibrarySnapshot,
+  PlotterLibrarySnapshot,
+  SvgSaveRequest,
+  TapeLibrarySnapshot,
+} from '@api/index';
 import {CRANCULA_API, createInMemoryCranculaApi} from './crancula-api.token';
+
+const plotterSnapshot: PlotterLibrarySnapshot = {
+  version: 1,
+  plotters: [
+    {
+      id: '3f2b8c1e-9d4a-4f6b-8e2c-1a2b3c4d5e6f',
+      name: 'Cutting mat',
+      format: 'svg',
+      workingWidth: 300,
+      roll: false,
+      workingLength: 120,
+      overlap: 20,
+    },
+  ],
+};
 
 const snapshot: OrganLibrarySnapshot = {
   version: 5,
@@ -113,6 +134,36 @@ describe('createInMemoryCranculaApi', () => {
       const api = createInMemoryCranculaApi(undefined, undefined, {plotter: {saveSvg: 'failed'}});
 
       expect(await api.plotter.saveSvg(request)).toEqual({status: 'failed', reason: expect.any(String)});
+    });
+  });
+
+  describe('plotters', () => {
+    it('is empty without an initial Plotter snapshot', async () => {
+      expect(await createInMemoryCranculaApi().plotters.load()).toEqual({status: 'empty'});
+    });
+
+    it('starts with an initial Plotter snapshot', async () => {
+      const api = createInMemoryCranculaApi(undefined, undefined, {}, plotterSnapshot);
+
+      expect(await api.plotters.load()).toEqual({status: 'loaded', snapshot: plotterSnapshot});
+    });
+
+    it('loads what was saved', async () => {
+      const api = createInMemoryCranculaApi();
+
+      expect(await api.plotters.save(plotterSnapshot)).toEqual({status: 'saved'});
+      expect(await api.plotters.load()).toEqual({status: 'loaded', snapshot: plotterSnapshot});
+    });
+
+    it('rejects an invalid snapshot and keeps what was stored', async () => {
+      const api = createInMemoryCranculaApi(undefined, undefined, {}, plotterSnapshot);
+      const invalid: PlotterLibrarySnapshot = {
+        ...plotterSnapshot,
+        plotters: [{...plotterSnapshot.plotters[0], name: ''}],
+      };
+
+      expect(await api.plotters.save(invalid)).toEqual({status: 'rejected', reason: expect.any(String)});
+      expect(await api.plotters.load()).toEqual({status: 'loaded', snapshot: plotterSnapshot});
     });
   });
 

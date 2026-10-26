@@ -35,11 +35,11 @@ test.describe('Electron boundary', () => {
     expect(result).toEqual({status: 'empty'});
   });
 
-  test('exposes no members beyond app, edit, organs, plotter, recording and tapes', async () => {
+  test('exposes no members beyond app, edit, organs, plotter, plotters, recording and tapes', async () => {
     const keys = await launched.window.evaluate(() =>
       Object.keys((window as {crancula?: object}).crancula ?? {}).sort(),
     );
-    expect(keys).toEqual(['app', 'edit', 'organs', 'plotter', 'recording', 'tapes']);
+    expect(keys).toEqual(['app', 'edit', 'organs', 'plotter', 'plotters', 'recording', 'tapes']);
   });
 
   test('exposes the Recording methods and rejects a forged write without opening a dialog', async () => {

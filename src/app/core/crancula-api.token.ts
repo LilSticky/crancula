@@ -1,11 +1,15 @@
 import {InjectionToken} from '@angular/core';
 import {
+  parsePlotterLibrarySnapshot,
   parseRecordingChooseRequest,
   parseRecordingWriteRequest,
   parseSvgSaveRequest,
   parseTapeLibrarySnapshot,
   type CranculaApi,
   type OrganLibrarySnapshot,
+  type PlotterLibraryLoadResult,
+  type PlotterLibrarySaveResult,
+  type PlotterLibrarySnapshot,
   type RecordingChooseResult,
   type RecordingWriteResult,
   type SvgSaveRequest,
@@ -49,9 +53,11 @@ export function createInMemoryCranculaApi(
   initial?: OrganLibrarySnapshot,
   initialTapes?: TapeLibrarySnapshot,
   failures: InMemoryCranculaApiFailures = {},
+  initialPlotters?: PlotterLibrarySnapshot,
 ): InMemoryCranculaApi {
   let stored = initial;
   let storedTapes = initialTapes;
+  let storedPlotters = initialPlotters;
   let lastSaveSvgRequest: SvgSaveRequest | undefined;
   let chosenFileName: string | undefined;
   return {
@@ -83,10 +89,15 @@ export function createInMemoryCranculaApi(
         return Promise.resolve({status: 'saved'});
       },
     },
-    // Stand-in until the in-memory Plotter library is added (slice 011, T013).
     plotters: {
-      load: () => Promise.resolve({status: 'empty'}),
-      save: () => Promise.resolve({status: 'saved'}),
+      load: (): Promise<PlotterLibraryLoadResult> =>
+        Promise.resolve(storedPlotters ? {status: 'loaded', snapshot: storedPlotters} : {status: 'empty'}),
+      save: (snapshot): Promise<PlotterLibrarySaveResult> => {
+        const parsed = parsePlotterLibrarySnapshot(snapshot);
+        if (!parsed.ok) return Promise.resolve({status: 'rejected', reason: parsed.error});
+        storedPlotters = snapshot;
+        return Promise.resolve({status: 'saved'});
+      },
     },
     plotter: {
       get lastSaveSvgRequest(): SvgSaveRequest | undefined {

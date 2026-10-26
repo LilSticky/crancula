@@ -66,7 +66,7 @@ and the default Overlap, restart, see it again with the same values.
 
 - [x] T011 [P] [US1] Red: `app/plotter-library-file.spec.ts` (fake file system, as `organ-library-file.spec.ts`): loads `plotters.json`, `empty` when missing, an unreadable file moved to `plotters.unreadable-<timestamp>.json`; `app/plotter-library-ipc.spec.ts`: registers exactly `plotters:load` and `plotters:save` and validates the payload.
 - [x] T012 [US1] Green: `app/plotter-library-file.ts`, `app/plotter-library-ipc.ts` (`PLOTTER_LIBRARY_CHANNELS`), wiring in `app/main.ts` including the flush in `before-quit`; `plotters` in `app/preload.ts`.
-- [ ] T013 [US1] Red→Green: `e2e/boundary.spec.ts` expects the keys `app`, `edit`, `organs`, `plotter`, `plotters`, `recording`, `tapes`; in-memory `plotters.load/save` in `src/app/core/crancula-api.token.ts` (validated with `parsePlotterLibrarySnapshot`, initial snapshot as an options field).
+- [x] T013 [US1] Red→Green: `e2e/boundary.spec.ts` expects the keys `app`, `edit`, `organs`, `plotter`, `plotters`, `recording`, `tapes`; in-memory `plotters.load/save` in `src/app/core/crancula-api.token.ts` (validated with `parsePlotterLibrarySnapshot`, initial snapshot as an options field).
 
 ### UI
 
