@@ -31,7 +31,7 @@
         </ng-container>
       </mat-form-field>
 
-      <mat-slide-toggle class="full-width" data-testid="plotter-roll" [checked]="plotter.roll().value()" (change)="setRoll($event.checked)">
+      <mat-slide-toggle class="full-width" data-testid="plotter-roll" [formField]="plotter.roll">
         {{ 'PLOTTER.EDITOR.ROLL' | translate }}
       </mat-slide-toggle>
 

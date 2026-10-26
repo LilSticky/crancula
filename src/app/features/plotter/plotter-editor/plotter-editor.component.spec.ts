@@ -2,10 +2,14 @@ import {type ComponentFixture, TestBed} from '@angular/core/testing';
 import {TestbedHarnessEnvironment} from '@angular/cdk/testing/testbed';
 import {MatSelectHarness} from '@angular/material/select/testing';
 import {MatSlideToggleHarness} from '@angular/material/slide-toggle/testing';
-import {provideRouter, Router} from '@angular/router';
+import {MatDialog} from '@angular/material/dialog';
+import {type ActivatedRouteSnapshot, provideRouter, Router, type RouterStateSnapshot} from '@angular/router';
 import type {CranculaApi} from '@api/index';
+import {of} from 'rxjs';
 import {CRANCULA_API, createInMemoryCranculaApi} from '../../../core/crancula-api.token';
 import {provideTestTranslations} from '../../../../testing/test-translations';
+import {LeaveUnsavedDialogComponent} from '../../shared/leave-unsaved/leave-unsaved-dialog/leave-unsaved-dialog.component';
+import {leaveUnsavedGuard} from '../../shared/leave-unsaved/leave-unsaved.guard';
 import {PlotterLibrary} from '../plotter-library.store';
 import {PlotterEditorComponent} from './plotter-editor.component';
 
@@ -236,6 +240,113 @@ describe('PlotterEditorComponent', () => {
         expect(field('plotter-name').value).toBe('Cutting mat');
         expect(saveButton().disabled).toBe(false);
       });
+    });
+
+    describe('when a retry follows a failed write', () => {
+      it('stores one Plotter, not a second one under a new id', async () => {
+        const inMemory = createInMemoryCranculaApi();
+        let writes = 0;
+        const api: CranculaApi = {
+          ...inMemory,
+          plotters: {
+            ...inMemory.plotters,
+            save: (snapshot) => {
+              writes += 1;
+              return writes === 1 ? Promise.resolve({status: 'failed', reason: 'disk full'}) : inMemory.plotters.save(snapshot);
+            },
+          },
+        };
+        TestBed.configureTestingModule({providers: [provideRouter([]), provideTestTranslations(), {provide: CRANCULA_API, useValue: api}]});
+        const library = TestBed.inject(PlotterLibrary);
+        vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+        const {fillValidSheet, save} = await open();
+        await fillValidSheet();
+
+        await save();
+        await save();
+
+        expect(writes).toBe(2);
+        expect(library.entities()).toHaveLength(1);
+      });
+    });
+  });
+
+  describe('unsaved changes', () => {
+    /** Renders the editor with a leave dialog that the user answers with "stay" (`false`). */
+    function renderWithLeaveDialog() {
+      const dialog = vi.fn((...args: readonly unknown[]) => ({afterClosed: () => of(false), args}));
+      TestBed.configureTestingModule({
+        providers: [provideRouter([]), provideTestTranslations(), {provide: MatDialog, useValue: {open: dialog}}],
+      });
+      vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+      return {dialog};
+    }
+
+    /** Asks the leave guard whether the editor may be left; the dialog opens when there are unsaved changes. */
+    function askToLeave(editor: PlotterEditorComponent): void {
+      // The answer is the dialog's; these tests only look at whether the dialog opened.
+      void TestBed.runInInjectionContext(() =>
+        leaveUnsavedGuard(editor, {} as ActivatedRouteSnapshot, {} as RouterStateSnapshot, {} as RouterStateSnapshot),
+      );
+    }
+
+    it('has no unsaved changes while the new Plotter is untouched', async () => {
+      renderWithLeaveDialog();
+      const {fixture} = await open();
+
+      expect(fixture.componentInstance.unsavedChanges()).toBeNull();
+    });
+
+    it('asks through the leave dialog, naming the field with a problem, before leaving a changed Plotter', async () => {
+      const {dialog} = renderWithLeaveDialog();
+      const {fixture, fillValidSheet, field, type} = await open();
+      await fillValidSheet();
+      await type(field('plotter-name'), '');
+
+      askToLeave(fixture.componentInstance);
+
+      expect(dialog.mock.calls[0]?.[0]).toBe(LeaveUnsavedDialogComponent);
+      expect(dialog.mock.calls[0]?.[1]).toEqual({
+        data: {
+          problems: [
+            {
+              field: {key: 'PLOTTER.EDITOR.NAME', params: {}},
+              message: {key: 'PLOTTER.ERROR.NAME_REQUIRED', params: {}},
+            },
+          ],
+        },
+      });
+    });
+
+    it('does not ask after the Plotter was saved', async () => {
+      const {dialog} = renderWithLeaveDialog();
+      const {fixture, fillValidSheet, save} = await open();
+      await fillValidSheet();
+      await save();
+
+      askToLeave(fixture.componentInstance);
+
+      expect(dialog).not.toHaveBeenCalled();
+    });
+
+    it('counts a roll change alone as an unsaved change', async () => {
+      renderWithLeaveDialog();
+      const {fixture, fillValidSheet, save, rollToggle} = await open();
+      await fillValidSheet();
+      await save();
+
+      await (await rollToggle()).check();
+
+      expect(fixture.componentInstance.unsavedChanges()).toEqual({problems: []});
+    });
+
+    it('marks the form field of the roll dirty when the toggle is switched', async () => {
+      const {open: openEditor} = render();
+      const {fixture, rollToggle} = await openEditor();
+
+      await (await rollToggle()).check();
+
+      expect(fixture.componentInstance['plotter'].roll().dirty()).toBe(true);
     });
   });
 });

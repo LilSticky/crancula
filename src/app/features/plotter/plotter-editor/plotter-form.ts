@@ -1,7 +1,7 @@
 import {Injectable} from '@angular/core';
 import {type Field, type FieldTree, type SchemaPath, validateTree, type ValidationError} from '@angular/forms/signals';
 import {ErrorStateMatcher} from '@angular/material/core';
-import {type PlotterDraft, type PlotterViolation, type PlotterViolationCode, validatePlotter} from '@api/index';
+import {type PlotterDraft, type PlotterField, type PlotterViolation, type PlotterViolationCode, validatePlotter} from '@api/index';
 import type {TranslatableText} from '../../shared/leave-unsaved/leave-unsaved.guard';
 
 /**
@@ -38,8 +38,17 @@ function isShown(error: PlotterFieldError, dirty: boolean): boolean {
   return dirty || !MISSING_VALUE_CODES.has(error.kind);
 }
 
-function violationMessage(error: PlotterFieldError): TranslatableText {
-  return {key: `PLOTTER.ERROR.${error.kind.toUpperCase().replace(/-/g, '_')}`, params: error.violation.params ?? {}};
+/** The label of each field of a Plotter, as the editor and the leave dialog name it. */
+export const PLOTTER_FIELD_LABEL_KEYS: Readonly<Record<PlotterField, string>> = {
+  name: 'PLOTTER.EDITOR.NAME',
+  workingWidth: 'PLOTTER.EDITOR.WORKING_WIDTH',
+  workingLength: 'PLOTTER.EDITOR.WORKING_LENGTH',
+  overlap: 'PLOTTER.EDITOR.OVERLAP',
+};
+
+/** The message that tells the user which rule a violation breaks. */
+export function violationText(violation: PlotterViolation): TranslatableText {
+  return {key: `PLOTTER.ERROR.${violation.code.toUpperCase().replace(/-/g, '_')}`, params: violation.params ?? {}};
 }
 
 /** The messages of a field that the user should see now. */
@@ -47,7 +56,7 @@ export function shownMessages(field: FieldTree<unknown>): readonly TranslatableT
   const dirty = field().dirty();
   return field()
     .errors()
-    .flatMap((error) => (isPlotterFieldError(error) && isShown(error, dirty) ? [violationMessage(error)] : []));
+    .flatMap((error) => (isPlotterFieldError(error) && isShown(error, dirty) ? [violationText(error.violation)] : []));
 }
 
 /** Puts a Material input in its error state exactly while the editor shows a message for its field. */

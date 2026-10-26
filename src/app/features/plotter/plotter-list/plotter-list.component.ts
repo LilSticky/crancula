@@ -12,19 +12,14 @@ import {PageHeadComponent} from '../../shared/components/page-head/page-head.com
 import {formatNumber} from '../../shared/format-number';
 import {LanguagePreference} from '../../shared/language-preference';
 import {byName} from '../../shared/ledger-order';
+import type {TranslatableText} from '../../shared/leave-unsaved/leave-unsaved.guard';
 import {PlotterLibrary} from '../plotter-library.store';
-
-/** A translation key with the values its text takes. */
-interface TranslatedText {
-  readonly key: string;
-  readonly params: Record<string, string>;
-}
 
 interface PlotterRow {
   readonly plotter: Plotter;
-  readonly workingArea: TranslatedText;
+  readonly workingArea: TranslatableText;
   /** `null` for a roll Plotter, which has no Overlap. */
-  readonly overlap: TranslatedText | null;
+  readonly overlap: TranslatableText | null;
 }
 
 @Component({
