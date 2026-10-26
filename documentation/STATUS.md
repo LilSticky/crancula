@@ -11,15 +11,21 @@ Issues: [GitHub](https://github.com/LilSticky/crancula/issues)
 **Decisions (2026-10-25):** Keys stay at each Tick (dictionary updated); the import button reads "Choose a Song Source"
 (German "Notenquelle wählen"); German term for Song Source is Notenquelle.
 
-**Next step:** take [#177](https://github.com/LilSticky/crancula/issues/177) (Tape view toolbar clips Export at 1280 px in German),
-then the next slice by [ROADMAP](ROADMAP.md) (highest-priority triaged: [#168](https://github.com/LilSticky/crancula/issues/168), [#169](https://github.com/LilSticky/crancula/issues/169)).
+**Next step:** the next slice by [ROADMAP](ROADMAP.md) (highest-priority triaged: [#168](https://github.com/LilSticky/crancula/issues/168),
+spec and draft PR [#174](https://github.com/LilSticky/crancula/pull/174) exist; then [#169](https://github.com/LilSticky/crancula/issues/169)).
 
 **Known broken:** [#175](https://github.com/LilSticky/crancula/issues/175): `api/` is not covered by `npm run lint`
-(`ng lint` only covers `src/` and `e2e/`, pre-existing). [#177](https://github.com/LilSticky/crancula/issues/177): Export clipped at 1280 px in German.
+(`ng lint` only covers `src/` and `e2e/`, pre-existing).
 
 **Known skipped:** one Angular test until T039 (grace notes left out of the Import Summary).
 
 **Open:** real MuseScore and Audiveris files not checked by hand (T063, needs the user's files).
+
+**Done:** [Export clipped at 1280 px in German (#177)](https://github.com/LilSticky/crancula/issues/177) (2026-10-26, branch
+`177-tape-toolbar-german`): in German the Tape view's page head actions (Preview, Transpose, Record, Export) show as icons
+below 1440 px, with their labels as accessible names and tooltips; English keeps 1180 px, and the side panel stays on 1180 px.
+New e2e in `e2e/tape-layout.spec.ts` at 1280×800 in German. Gate: 1527 Angular unit tests, lint, `tape-layout` e2e (#177 and
+one-row tests) locally; full e2e in CI.
 
 **Done:** [Bring Scores onto a tape](../specs/010-bring-scores-onto-a-tape/spec.md) ([#167](https://github.com/LilSticky/crancula/issues/167), v0.3,
 branch `010-bring-scores-onto-a-tape`, PR [#176](https://github.com/LilSticky/crancula/pull/176)): a MusicXML Score (`.musicxml`, `.xml`,
