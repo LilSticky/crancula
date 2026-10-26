@@ -81,34 +81,34 @@ the file back and compare Bars, pitches, key and tempo mark.
 
 ### Domain
 
-- [ ] T010 [P] [US1] Red: `api/scores/scores-tempo.spec.ts`: Tape per Crank turn 100 mm, Column length 5 mm,
+- [x] T010 [P] [US1] Red: `api/scores/scores-tempo.spec.ts`: Tape per Crank turn 100 mm, Column length 5 mm,
   Crank speed 60 → 150 (Story 1.5); rounded to nearest; at least 1; `undefined` without Tape per Crank turn
   (FR-013). `api/scores/scores-file-name.spec.ts`: "Waltz" → "Waltz.musicxml"; forbidden characters replaced as
   in `safeFileName`.
-- [ ] T011 [US1] Green: `api/scores/scores-tempo.ts`, `api/scores/scores-file-name.ts`; export.
-- [ ] T012 [P] [US1] Red: extend `api/scores/scores-bars.spec.ts` with `'song'` Time signatures: Song 3/4 at
+- [x] T011 [US1] Green: `api/scores/scores-tempo.ts`, `api/scores/scores-file-name.ts`; export.
+- [x] T012 [P] [US1] Red: extend `api/scores/scores-bars.spec.ts` with `'song'` Time signatures: Song 3/4 at
   Tick 0 with upbeat of one quarter → Bar 0 Columns 0–7, then 24 each (Story 1.3); 4/4 at Tick 0 and 3/4 at Tick
   3840 at 480 per quarter → two 4/4 Bars, 3/4 from Column 64 (Story 1.4); a change inside a Bar ends that Bar
   short; two changes on one Column → the later wins; before a first Time signature after Tick 0 → 4/4; Tick
   between Columns lies on `columnOfTick`; `songKeepsBarsOnColumns` false for 3/64 (R3).
-- [ ] T013 [US1] Green: `'song'` in `api/scores/scores-bars.ts`, `songKeepsBarsOnColumns`.
-- [ ] T014 [P] [US1] Red: `api/scores/scores-choices.spec.ts` (prefill only): `prefilledScoresChoices(organ,
+- [x] T013 [US1] Green: `'song'` in `api/scores/scores-bars.ts`, `songKeepsBarsOnColumns`.
+- [x] T014 [P] [US1] Red: `api/scores/scores-choices.spec.ts` (prefill only): `prefilledScoresChoices(organ,
   song, remembered)`: Song 3/4 with upbeat 1/4 → `'song'`, upbeat 1 × 1/4; Song keeping none, a 3/64 Song or no
   Song → 4/4, upbeat 0; split notes `[60]` when the Organ has Pipes below 60 and at or above, else `[]`;
   remembered split notes win (FR-004, FR-005).
-- [ ] T015 [US1] Green: `api/scores/scores-choices.ts` (`ScoresBeatType`, `ChosenTimeSignature`,
+- [x] T015 [US1] Green: `api/scores/scores-choices.ts` (`ScoresBeatType`, `ChosenTimeSignature`,
   `ScoresChoices`, `ScoresChoicesInput`, `prefilledScoresChoices`, a `toScoresChoices` for valid input); export.
-- [ ] T016 [P] [US1] Red: Keys in `api/scores/scores-bars.spec.ts`: Song G major at Tick 0 → every Bar fifths 1;
+- [x] T016 [P] [US1] Red: Keys in `api/scores/scores-bars.spec.ts`: Song G major at Tick 0 → every Bar fifths 1;
   a Key change mid-Bar applies from that Bar's start; two Keys in one Bar → the later; no Song or no Keys → C
   major; `showsKey`/`showsTimeSignature` true on the first Bar and on changes only (FR-014, R4).
-- [ ] T017 [US1] Green: Keys in `api/scores/scores-bars.ts`.
-- [ ] T018 [P] [US1] Red: `api/scores/scores-staves.spec.ts` (plain clefs): `scoresStaves([], …)` one staff;
+- [x] T017 [US1] Green: Keys in `api/scores/scores-bars.ts`.
+- [x] T018 [P] [US1] Red: `api/scores/scores-staves.spec.ts` (plain clefs): `scoresStaves([], …)` one staff;
   `[60]` two staves, top `from 60`, bottom `below 60`; every pitch 0–127 on exactly one staff (`staffOf`); clef
   treble when the middle of the staff's Organ Pipes is ≥ 60, else bass; no Pipe → middle of its notes; neither →
   by its range bound (FR-005, FR-006, R9).
-- [ ] T019 [US1] Green: `api/scores/scores-staves.ts` (`Clef`, `Staff`, `scoresStaves`, `staffOf`, plain clefs);
+- [x] T019 [US1] Green: `api/scores/scores-staves.ts` (`Clef`, `Staff`, `scoresStaves`, `staffOf`, plain clefs);
   export.
-- [ ] T020 [P] [US1] Red: `api/scores/scores-musicxml.spec.ts`: `scoresMusicXml` for the Story 1.3 Tape writes
+- [x] T020 [P] [US1] Red: `api/scores/scores-musicxml.spec.ts`: `scoresMusicXml` for the Story 1.3 Tape writes
   the document of [contracts/musicxml-output.md](contracts/musicxml-output.md): DOCTYPE 4.0, `<work-title>` the
   Tape's name XML-escaped (FR-015), `<divisions>8`, `<key><fifths>1`, `<time>3/4`, `measure number="0"
   implicit="yes"`, metronome quarter = 150 and `<sound tempo>` (none without Tape per Crank turn), Pipe 67 → G4
@@ -117,9 +117,10 @@ the file back and compare Bars, pitches, key and tempo mark.
   only `<rest measure="yes"/>`; same input → same text; Tape, Song and Organ deep-equal before and after
   (FR-017, SC-006); Holes whose Pipe is not on the Organ are ordinary notes (FR-007); golden file
   `api/scores/scores.reference.musicxml`.
-- [ ] T021 [US1] Green: `api/scores/scores-musicxml.ts` (`ScoresInput`, `scoresMusicXml`; staves, `<backup>`,
+- [x] T021 [US1] Green: `api/scores/scores-musicxml.ts` (`ScoresInput`, `scoresMusicXml`; staves, `<backup>`,
   voice numbers `(staff − 1) × 4 + voice`, stems only in Bars with more than one voice, ties and `<tied>`,
-  chords, rests, whole-bar rests); record the golden file; export.
+  chords, rests, whole-bar rests); record the golden file; export. **Partly done**: one staff, one voice, rests
+  for gaps, ties between the values of one note; the rest waits for Red tests (T035, T037), not yet written.
 
 ### Boundary
 

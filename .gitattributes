@@ -1,2 +1,3 @@
 # Byte-identical fixtures: never convert line endings
 api/tape/plotter-svg.reference.svg -text
+api/scores/scores.reference.musicxml -text

@@ -188,4 +188,15 @@ export {tapePieces, type Join, type JoinlessStretch, type TapePiece, type TapePi
 export {noteValues, type NoteType, type NoteValue} from './scores/note-values';
 export {spell, type Spelling, type Step} from './scores/spell';
 export {assignVoices, type Chord, type StaffVoices, type VoiceNumber} from './scores/voices';
-export {scoresBars, type Bar} from './scores/scores-bars';
+export {scoresBars, songKeepsBarsOnColumns, type Bar} from './scores/scores-bars';
+export {
+  prefilledScoresChoices,
+  type ChosenTimeSignature,
+  type ScoresBeatType,
+  type ScoresChoices,
+  type ScoresChoicesInput,
+} from './scores/scores-choices';
+export {scoresFileName} from './scores/scores-file-name';
+export {scoresTempo} from './scores/scores-tempo';
+export {scoresStaves, staffOf, type Clef, type Staff} from './scores/scores-staves';
+export {scoresMusicXml, type ScoresInput} from './scores/scores-musicxml';
