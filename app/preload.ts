@@ -25,6 +25,7 @@ import type {APP_CHANNELS} from './app-ipc';
 import type {EDIT_CHANNELS} from './edit-ipc';
 import type {ORGAN_LIBRARY_CHANNELS} from './organ-library-ipc';
 import type {PLOTTER_CHANNELS} from './plotter-ipc';
+import type {PLOTTER_LIBRARY_CHANNELS} from './plotter-library-ipc';
 import type {RECORDING_CHANNELS} from './recording-ipc';
 import type {TAPE_LIBRARY_CHANNELS} from './tape-library-ipc';
 
@@ -32,8 +33,7 @@ const channels: typeof ORGAN_LIBRARY_CHANNELS = {load: 'organs:load', save: 'org
 const tapeChannels: typeof TAPE_LIBRARY_CHANNELS = {load: 'tapes:load', save: 'tapes:save'};
 const appChannels: typeof APP_CHANNELS = {setLanguage: 'app:set-language'};
 const editChannels: typeof EDIT_CHANNELS = {command: 'edit:command'};
-// Plotter library channels; the main process handles them once slice 011 wires the Plotter library (T012).
-const plotterLibraryChannels = {load: 'plotters:load', save: 'plotters:save'} as const;
+const plotterLibraryChannels: typeof PLOTTER_LIBRARY_CHANNELS = {load: 'plotters:load', save: 'plotters:save'};
 const plotterChannels: typeof PLOTTER_CHANNELS = {saveSvg: 'plotter:save-svg'};
 const recordingChannels: typeof RECORDING_CHANNELS = {chooseFile: 'recording:choose-file', writeFile: 'recording:write-file'};
 
