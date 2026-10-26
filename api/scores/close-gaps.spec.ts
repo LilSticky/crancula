@@ -97,6 +97,13 @@ describe('closeGaps', () => {
     expect(notes).toEqual([{pitch: midi(60), start: column(0), length: columnCount(7)}]);
   });
 
+  it('never lengthens a Hole past the last Column of the Tape: a closed gap ends at the next Hole, the last Hole keeps its end (FR-008)', () => {
+    // A 40-Column Tape whose last Hole of Pipe 60 ends on its last Column; the Hole before it closes its gap.
+    const notes = closeGaps([hole(60, 0, 7), hole(60, 8, 32)], 1);
+
+    expect(notes.map((each) => each.start + each.length)).toEqual([8, 40]);
+  });
+
   it('closes the gaps of each Pipe on its own: a Hole of another Pipe does not close a gap (research R6)', () => {
     const notes = closeGaps([hole(60, 0, 7), hole(62, 8, 4)], 1);
 

@@ -617,3 +617,116 @@ describe('scoresMusicXml writes the octave clef of a staff, with its pitches unc
     expect(entriesOf(measureAt(root, 0)).filter((entry) => !entry.rest).map((entry) => entry.midi)).toEqual([29, 29, 29]);
   });
 });
+
+/** A Song with the given Time signatures and Keys, from Tick 0, with the melody of `aPart`. */
+function songWithMetre(timeSignatures: readonly TimeSignature[], keys: readonly Key[] = []): Song {
+  return defined(
+    song({
+      id: defined(songId(SONG_ID), 'song id'),
+      name: 'Waltz',
+      ticksPerQuarter: defined(ticksPerQuarter(QUARTER), 'ticks per quarter'),
+      parts: [aPart()],
+      timeSignatures,
+      keys,
+    }),
+    'song',
+  );
+}
+
+/** The Time signatures a measure shows, as "beats/beat-type" strings. */
+function timesOf(measure: XmlElement): string[] {
+  return all(measure, 'time').map((time) => `${textOf(time, 'beats')}/${textOf(time, 'beat-type')}`);
+}
+
+describe('scoresMusicXml numbers the voices of a staff and spells the Key (FR-012, FR-014, research R8)', () => {
+  it('numbers the four voices of the second staff 5 to 8, so that voices 3 and 4 are 7 and 8', () => {
+    // Four notes below C4 starting together, with four different lengths: each takes its own voice.
+    const holes = [hole(58, 0, 8), hole(57, 0, 16), hole(56, 0, 24), hole(55, 0, 32)];
+    const root = parsed(
+      scoresMusicXml(tapeInput({holes, length: 32, organ: organWith(100, LOW_PIPES), splitNotes: [midi(60)]})),
+    );
+
+    const bottom = entriesOf(measureAt(root, 0)).filter((entry) => entry.staff === '2' && !entry.rest);
+    expect(bottom.map((entry) => entry.voice)).toEqual(['5', '6', '7', '8']);
+  });
+
+  it('spells Pipe 70 as B♭4 in F major, with an alter of -1 (FR-014)', () => {
+    const fMajor: Key = {start: at(0), fifths: -1, mode: 'major'};
+    const input = tapeInput({
+      song: songWithMetre([{start: at(0), beats: 4, beatType: 4}], [fMajor]),
+      holes: [hole(70, 0, 8)],
+      length: 32,
+    });
+
+    const pitch = defined(all(measureAt(parsed(scoresMusicXml(input)), 0), 'pitch')[0], 'pitch');
+    expect(textOf(pitch, 'step')).toBe('B');
+    expect(textOf(pitch, 'alter')).toBe('-1');
+    expect(textOf(pitch, 'octave')).toBe('4');
+  });
+});
+
+describe('scoresMusicXml fills the last Bar of a Tape that is not a whole number of Bars (FR-011, Story 2.5)', () => {
+  it('ends a 40-Column Tape of 4/4 with a full last Bar of rests, as one whole-Bar rest', () => {
+    const root = parsed(scoresMusicXml(tapeInput({holes: [hole(60, 0, 8)], length: 40})));
+    const measures = measuresOf(root);
+    const last = defined(measures[1], 'last Bar');
+
+    expect(measures).toHaveLength(2);
+    expect(voiceSums(last)).toEqual({1: 32});
+    expect(entriesOf(last)).toMatchObject([{rest: true, measureRest: true, duration: 32}]);
+  });
+});
+
+describe('scoresMusicXml follows the Time signature changes of the Song (Story 1.4, Story 4.5)', () => {
+  it('writes 4/4 Bars up to Column 64 and 3/4 from Column 64 (Story 1.4)', () => {
+    // 480 Ticks per quarter and 60 Ticks per Column: Tick 3840 is Column 64, two 4/4 Bars before it.
+    const song = songWithMetre([
+      {start: at(0), beats: 4, beatType: 4},
+      {start: at(3840), beats: 3, beatType: 4},
+    ]);
+
+    const measures = measuresOf(parsed(scoresMusicXml(tapeInput({song, holes: [hole(60, 0, 8)], length: 88}))));
+
+    expect(measures.map(voiceSums)).toEqual([{1: 32}, {1: 32}, {1: 24}]);
+    expect(measures.map(timesOf)).toEqual([['4/4'], [], ['3/4']]);
+  });
+
+  it('replaces several Song changes by the one Time signature chosen, for the whole Tape (Story 4.5)', () => {
+    const song = songWithMetre([
+      {start: at(0), beats: 3, beatType: 4},
+      {start: at(1440), beats: 4, beatType: 4},
+      {start: at(2880), beats: 6, beatType: 8},
+    ]);
+    const input = tapeInput({song, holes: [hole(60, 0, 8)], length: 64});
+
+    const root = parsed(
+      scoresMusicXml({...input, choices: {timeSignature: {beats: 2, beatType: 4}, upbeat: 0, splitNotes: []}}),
+    );
+
+    const measures = measuresOf(root);
+    expect(measures.map(voiceSums)).toEqual([{1: 16}, {1: 16}, {1: 16}, {1: 16}]);
+    expect(measures.map(timesOf)).toEqual([['2/4'], [], [], []]);
+  });
+});
+
+/** A Tape of 10 000 Columns with 3 000 Holes on the reference Pipes: ten minutes of a busy barrel (SC-005). */
+function tenMinuteHoles(): Hole[] {
+  return Array.from({length: 3000}, (_, index) => {
+    const pipeRow = index % 10;
+    const slot = Math.floor(index / 10);
+    return hole(60 + pipeRow, slot * 33 + (index % 7), 2 + (index % 11));
+  });
+}
+
+describe('scoresMusicXml exports a generated 10-minute Tape in time (SC-005, T055)', () => {
+  it('writes a Tape of 10 000 Columns and 3 000 Holes in under 5 seconds', () => {
+    const input = tapeInput({holes: tenMinuteHoles(), length: 10000});
+
+    const started = performance.now();
+    const text = scoresMusicXml(input);
+    const elapsed = performance.now() - started;
+
+    expect(text).toContain('<score-partwise version="4.0">');
+    expect(elapsed).toBeLessThan(5000);
+  });
+});
