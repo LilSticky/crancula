@@ -5,9 +5,10 @@ import type {Millimetres} from '../organ/organ';
 import {validateOrgan} from '../organ/validate-organ';
 import {plotterSvg} from './plotter-svg';
 import {type Column, type ColumnCount, type Hole, type Tape} from './tape';
-import {referenceOrgan, referenceTape, tapeOf} from './tape-fixture';
+import {referenceOrgan, referencePlotter, referenceTape, tapeOf} from './tape-fixture';
 import {tapeGeometry, type Slot, type TapeGeometry} from './tape-geometry';
-import type {CutGeometry} from './tape-piece-geometry';
+import {pieceGeometry, type CutGeometry} from './tape-piece-geometry';
+import {tapePieces} from './tape-pieces';
 
 const STROKE = 'fill="none" stroke="#000000" stroke-width="0.1"/>';
 
@@ -233,6 +234,38 @@ describe('plotterSvg', () => {
         '',
       ].join('\n'),
     );
+  });
+
+  it('writes a Tape piece at its length in mm, its Holes first and then its own outline (scenarios 3, 7)', () => {
+    const organ = referenceOrgan();
+    const note = midiNoteNumber(60);
+    if (note === undefined) throw new Error('not a note');
+    // Row 1 at x 290 mm: inside the Overlap of the first Tape piece, which ends at 298 mm.
+    const tape = tapeOf({
+      id: '00000000-0000-4000-8000-0000000000dd' as Tape['id'],
+      name: 'Waltz',
+      organId: organ.id,
+      songId: undefined,
+      selectedParts: undefined,
+      transposition: 0 as Tape['transposition'],
+      columnLength: 3 as Millimetres,
+      length: 200 as ColumnCount,
+      holes: [{pipe: note, start: 80 as Column, length: 2 as ColumnCount}],
+    });
+    const geometry = tapeGeometry(tape, organ);
+    const cut = tapePieces(geometry, referencePlotter());
+    if (cut.kind !== 'pieces') throw new Error('expected Tape pieces');
+    const first = cut.pieces[0];
+    if (first === undefined) throw new Error('expected a first Tape piece');
+
+    const svg = plotterSvg(pieceGeometry(geometry, first));
+
+    expect(lines(svg)[1]).toBe(
+      '<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="298mm" height="100mm" viewBox="0 0 298 100">',
+    );
+    expect(paths(svg)).toHaveLength(2);
+    expect(paths(svg)[0]?.trim()).toMatch(/^<path d="M291\.5,/);
+    expect(paths(svg).at(-1)?.trim()).toBe(`<path d="M0,0 H298 V100 H50 Z" ${STROKE}`);
   });
 
   it('writes the reference Tape byte-identical to the fixture recorded from today writer (SC-007)', () => {
