@@ -4,8 +4,8 @@ const FALLBACK_NAME = 'Tape';
 // eslint-disable-next-line no-control-regex
 export const FORBIDDEN_CHARACTERS = /[<>:"/\\|?*\u0000-\u001f\u007f]/;
 const FORBIDDEN_EVERYWHERE = new RegExp(FORBIDDEN_CHARACTERS, 'g');
-/** A Windows device name, alone or with any extension (`CON`, `nul.svg`). */
-export const DEVICE_NAME = /^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(\..*)?$/i;
+/** A Windows device name, alone or with any extension (`CON`, `nul.svg`), including COM0, LPT0, the superscript COM and LPT digits, CONIN$ and CONOUT$. */
+export const DEVICE_NAME = /^(CON|PRN|AUX|NUL|CONIN\$|CONOUT\$|COM[0-9¹²³]|LPT[0-9¹²³])(\..*)?$/i;
 
 /**
  * A file name stem (no extension) that is safe on Windows: never a path, no forbidden characters or device
