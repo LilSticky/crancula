@@ -5,7 +5,15 @@ import {TranslatePipe, TranslateService} from '@ngx-translate/core';
 import {type CuttingProblem} from '@api/index';
 import {cuttingProblemText, type ProblemText} from '../cutting-problem-text';
 
-/** Lists why a Tape can not be cut yet, one entry per Cutting Problem. */
+/** The Tape is wider than the working width of the picked Plotter (FR-017). */
+export interface TooWideRefusal {
+  readonly code: 'too-wide';
+}
+
+/** A reason a Tape can not be saved for the picked Plotter: too wide, or a Cutting Problem. */
+export type ExportRefusal = CuttingProblem | TooWideRefusal;
+
+/** Lists why a Tape can not be cut yet, one entry per reason. */
 @Component({
   selector: 'cranc-cutting-problems-dialog',
   imports: [MatButton, MatDialogActions, MatDialogContent, MatDialogTitle, TranslatePipe],
@@ -27,7 +35,7 @@ import {cuttingProblemText, type ProblemText} from '../cutting-problem-text';
 export class CuttingProblemsDialogComponent {
   protected readonly dialogRef = inject<MatDialogRef<CuttingProblemsDialogComponent>>(MatDialogRef);
   private readonly language = inject(TranslateService).getCurrentLang() ?? 'en';
-  protected readonly entries: readonly ProblemText[] = inject<readonly CuttingProblem[]>(MAT_DIALOG_DATA).map((problem) =>
-    cuttingProblemText(problem, this.language),
+  protected readonly entries: readonly ProblemText[] = inject<readonly ExportRefusal[]>(MAT_DIALOG_DATA).map((refusal) =>
+    refusal.code === 'too-wide' ? {key: 'TAPE.EXPORT.TOO_WIDE', params: {}} : cuttingProblemText(refusal, this.language),
   );
 }

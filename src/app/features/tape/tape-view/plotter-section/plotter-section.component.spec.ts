@@ -82,10 +82,13 @@ function tapeWith(columns: number, columnLength = 5, holes: readonly Hole[] = []
   });
 }
 
-/** Stands in for the Tape view, which computes the Tape pieces of the picked Plotter once and passes them on. */
+/**
+ * Stands in for the Tape view, which computes the Tape pieces of the picked Plotter once and passes them on. The section
+ * takes the too-wide state from them too (`kind: 'too-wide'`), so the stub passes nothing else.
+ */
 @Component({
   imports: [PlotterSectionComponent],
-  template: '<cranc-plotter-section [pieces]="pieces()" [tapeWidth]="tapeWidth()" />',
+  template: '<cranc-plotter-section [pieces]="pieces()" />',
 })
 class TapeViewStubComponent {
   readonly tape = input.required<Tape>();
@@ -95,7 +98,6 @@ class TapeViewStubComponent {
     const plotter = this.picked();
     return plotter === undefined ? undefined : tapePieces(tapeGeometry(this.tape(), this.organ()), plotter);
   });
-  protected readonly tapeWidth = computed(() => this.organ().tapeBed.tapeWidth);
 }
 
 async function render(options: {readonly tape?: Tape; readonly organ?: Organ} = {}) {

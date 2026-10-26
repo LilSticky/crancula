@@ -22,20 +22,17 @@ const NO_PLOTTER = '';
 export class PlotterSectionComponent {
   /** The Tape cut for the picked Plotter; nothing while no Plotter is picked or the Tape is not known. */
   readonly pieces = input<TapePieces | undefined>(undefined);
-  /** The width of the Tape in mm, to compare with the working width of the picked Plotter. */
-  readonly tapeWidth = input<number | undefined>(undefined);
   private readonly library = inject(PlotterLibrary);
   private readonly preference = inject(PlotterPreference);
   private readonly language = inject(LanguagePreference).language;
   protected readonly noPlotter = NO_PLOTTER;
   protected readonly plotter = this.preference.picked;
   protected readonly plotters = computed(() => [...this.library.entities()].sort((a, b) => a.name.localeCompare(b.name)));
-  /** The width of the Tape and the working width of the picked Plotter when the Tape is wider; otherwise nothing. */
+  /** The width of the Tape and the working width of the picked Plotter when the Tape is too wide; otherwise nothing. */
   protected readonly tooWide = computed(() => {
-    const plotter = this.plotter();
-    const tapeWidth = this.tapeWidth();
-    if (plotter === undefined || tapeWidth === undefined || tapeWidth <= plotter.workingWidth) return undefined;
-    return {tapeWidth: formatNumber(tapeWidth, this.language()), workingWidth: formatNumber(plotter.workingWidth, this.language())};
+    const pieces = this.pieces();
+    if (pieces?.kind !== 'too-wide') return undefined;
+    return {tapeWidth: formatNumber(pieces.tapeWidth, this.language()), workingWidth: formatNumber(pieces.workingWidth, this.language())};
   });
 
   /** Writes the picked Plotter to the preference; the Tape stays as it is. */

@@ -95,6 +95,13 @@
           @for (mark of drawing.marks; track mark.column) {
             <line class="mark" [class.strong]="mark.strong" data-testid="column-mark" [attr.x1]="mark.x" [attr.x2]="mark.x" y1="0" [attr.y2]="drawing.height" />
           }
+          @for (join of drawing.joins; track join.after) {
+            <rect class="overlap" data-testid="overlap" aria-hidden="true" y="0" [attr.x]="join.overlap.x" [attr.width]="join.overlap.width" [attr.height]="drawing.height" />
+            <line class="join" data-testid="join" aria-hidden="true" [attr.data-after]="join.after" [attr.x1]="join.x" [attr.x2]="join.x" y1="0" [attr.y2]="drawing.height" />
+          }
+          @for (stretch of drawing.stretches; track stretch.first) {
+            <rect class="stretch-mark" data-testid="stretch-mark" aria-hidden="true" [attr.data-first]="stretch.first" [attr.data-last]="stretch.last" y="0" [attr.x]="stretch.x" [attr.width]="stretch.width" [attr.height]="drawing.height" />
+          }
           @for (hole of drawing.holes; track hole.row + ':' + hole.start) {
             <rect
               class="hole grab hole-part"
@@ -179,13 +186,13 @@
   @if (!compact() || sidePanelOpen()) {
   <aside class="side-panel" data-testid="side-panel" (keydown)="onSidePanelKeydown($event)" [attr.aria-label]="'TAPE.VIEW.SIDE_PANEL' | translate">
     <cranc-selected-hole [inspection]="inspection()" [selectionCount]="shownSelection().length" />
-    <cranc-cutting-problems [holes]="holesWithProblems()" (chosen)="chooseProblem($event)" />
+    <cranc-cutting-problems [holes]="holesWithProblems()" [stretches]="stretchProblems()" (chosen)="chooseProblem($event)" (stretchChosen)="chooseStretch($event)" />
     @if (tape(); as tape) {
       @if (organ(); as organ) {
         <cranc-add-hole [organ]="organ" [tape]="tape" [selected]="selectedHoleRef()" [spot]="spotSelected()" [editingPaused]="editingPaused()" (added)="addFromForm($event)" />
       }
       <cranc-tape-section [view]="drawing.section" [tape]="tape" [organ]="drawing.organ" [metre]="metre()" [editingPaused]="editingPaused()" (columnLengthChange)="onColumnLengthChange($event)" />
-      <cranc-plotter-section [pieces]="tapePieces()" [tapeWidth]="drawing.organ.tapeBed.tapeWidth" />
+      <cranc-plotter-section [pieces]="tapePieces()" />
       @if (!previewAvailable()) {
         <p class="preview-unavailable" data-testid="preview-unavailable">
           {{ 'TAPE.PREVIEW.UNAVAILABLE' | translate }}

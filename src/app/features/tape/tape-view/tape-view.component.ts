@@ -17,7 +17,7 @@ import {BreakpointObserver} from '@angular/cdk/layout';
 import {toSignal} from '@angular/core/rxjs-interop';
 import {ActivatedRoute, Router, RouterLink} from '@angular/router';
 import {map} from 'rxjs';
-import {column, columnDuration, cuttingProblems, holesWithCuttingProblems, noteName, type HoleRef, type ImportSummary, type Organ, type SongMetre, songMetre, type Tape, tapeGeometry, tapePieces, type TapeGeometry, type TapePieces, type Transposed} from '@api/index';
+import {column, columnDuration, cuttingProblems, holesWithCuttingProblems, noteName, type HoleRef, type ImportSummary, type NoJoinProblem, type Organ, type SongMetre, songMetre, stretchesOf, type Tape, tapeGeometry, tapePieces, type TapeGeometry, type TapePieces, type Transposed} from '@api/index';
 import {canTranspose, holeRefsOf, selectionOfRefs} from './transpose-selection';
 import {crankSpeedChangeTo} from './crank-speed-change';
 import {holeAt, moveSpot, sameSpot, spotAt, type Spot, type TapeSelection} from './spot';
@@ -69,7 +69,7 @@ import {TapeEditor} from './tape-editor';
 import {TapePreview} from '../preview/tape-preview';
 import {TapeRecorder} from '../recording/tape-recorder';
 import {PreviewSectionComponent} from '../preview/preview-section/preview-section.component';
-import {columnMarks, drawingParams, drawingWidth, ghostRect, gripsOf, holeMarks, holeRects, outline, overviewOf, rowLabels, RULER_HEIGHT, sectionView, spotRect} from './tape-drawing';
+import {columnMarks, drawingParams, drawingWidth, ghostRect, gripsOf, holeMarks, holeRects, joinMarks, outline, overviewOf, rowLabels, RULER_HEIGHT, sectionView, spotRect, stretchMarks} from './tape-drawing';
 import {TapeSectionComponent} from './tape-section/tape-section.component';
 import {TapeStatusLineComponent, type PointerText} from './tape-status-line/tape-status-line.component';
 import {overviewFrame, scrollLeftFor} from './overview-frame';
@@ -262,6 +262,8 @@ export class TapeViewComponent {
     return 'spot' in selection ? selection.spot : undefined;
   });
   private scrollToSelection = false;
+  /** The first Column, counted from 1, of a chosen stretch whose mark is brought into view on the next render. */
+  private stretchInView: number | undefined;
 
   protected readonly importSummary = signal(importSummaryOf(this.router.currentNavigation()?.extras.state));
   private readonly id = toSignal(inject(ActivatedRoute).paramMap.pipe(map((params) => params.get('id'))), {
@@ -322,6 +324,21 @@ export class TapeViewComponent {
     const tape = this.shownTape();
     const organ = this.organ();
     return tape === undefined || organ === undefined ? undefined : tapeGeometry(tape, organ);
+  });
+
+  /** The Tape pieces of the shown Tape (the would-be Tape while dragging) for the picked Plotter, as the drawing shows them. */
+  private readonly shownCut = computed((): TapePieces | undefined => {
+    const geometry = this.geometry();
+    const plotter = this.plotterPreference.picked();
+    return geometry === undefined || plotter === undefined ? undefined : tapePieces(geometry, plotter);
+  });
+
+  /** The stretches of the shown Tape that no Join of the picked Plotter cuts within its working length; none without a Plotter. */
+  protected readonly stretchProblems = computed((): readonly NoJoinProblem[] => {
+    const tape = this.shownTape();
+    const organ = this.organ();
+    const plotter = this.plotterPreference.picked();
+    return tape === undefined || organ === undefined || plotter === undefined ? [] : stretchesOf(cuttingProblems(tape, organ, plotter));
   });
 
   protected readonly scale = computed(() => {
@@ -414,6 +431,8 @@ export class TapeViewComponent {
         this.shownSelection(),
       ),
       ...columnMarks(tape, geometry, scale, range),
+      joins: joinMarks(this.shownCut(), scale),
+      stretches: stretchMarks(this.stretchProblems(), geometry, scale),
       ...outline(geometry, scale),
       // The Whole Tape fills the stage without a scroll, so only the other zooms leave room for the end grip.
       svgWidth: drawingWidth(geometry, scale, this.zoom() !== 'whole'),
@@ -486,6 +505,12 @@ export class TapeViewComponent {
     if (row === undefined || row < 0) return;
     this.selection.set({holes: [{row: row + 1, start: hole.start}]});
     this.scrollToSelection = true;
+  }
+
+  /** Selects nothing and brings the first Column of a stretch, where its mark is drawn, into view. */
+  protected chooseStretch(stretch: NoJoinProblem): void {
+    this.selection.set({holes: []});
+    this.stretchInView = stretch.start + 1;
   }
 
   /** Whether the Organ can play the Tape: it needs a Tape per Crank turn. */
@@ -1127,6 +1152,12 @@ export class TapeViewComponent {
       const element = this.scrollElement()?.nativeElement;
       if (element === undefined) return;
       this.stage.readStage(element);
+      if (this.stretchInView !== undefined) {
+        const first = this.stretchInView;
+        this.stretchInView = undefined;
+        element.querySelector(`[data-testid="stretch-mark"][data-first="${first}"]`)?.scrollIntoView({block: 'nearest', inline: 'nearest'});
+        return;
+      }
       if (!this.scrollToSelection) return;
       const selected = element.querySelector('rect.selected');
       if (selected !== null) {

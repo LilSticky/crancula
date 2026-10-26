@@ -135,6 +135,24 @@ cranc-page-head button[mat-icon-button] {
   stroke-dasharray: 4 3;
   pointer-events: none;
 }
+.join {
+  stroke: var(--cr-select);
+  stroke-width: 2;
+  stroke-dasharray: 6 3;
+  pointer-events: none;
+}
+.overlap {
+  fill: var(--cr-select);
+  fill-opacity: 0.15;
+  pointer-events: none;
+}
+.stretch-mark {
+  fill: var(--cr-problem);
+  fill-opacity: 0.12;
+  stroke: var(--cr-problem);
+  stroke-width: 1;
+  pointer-events: none;
+}
 .cutting-problem-glyph {
   fill: var(--cr-problem);
   font-weight: bold;

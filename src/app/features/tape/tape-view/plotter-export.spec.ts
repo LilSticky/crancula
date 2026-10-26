@@ -1,11 +1,16 @@
+import {ApplicationRef} from '@angular/core';
 import {TestBed} from '@angular/core/testing';
 import {MatDialog} from '@angular/material/dialog';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {TranslateService} from '@ngx-translate/core';
 import {
+  column,
+  columnCount,
   createTape,
   defaultSelectedParts,
   cuttingProblems,
+  type Hole,
+  millimetres,
   pieceGeometry,
   plotterFileName,
   plotterSvg,
@@ -23,6 +28,7 @@ import {
   type Tape,
   type TapePiece,
 } from '@api/index';
+import {tapeOf} from '@api/tape/tape-fixture';
 import {vi} from 'vitest';
 import {encodeSmf} from '../../../../../api/song/midi/smf-test-helper';
 import {
@@ -93,6 +99,16 @@ function defined<T>(value: T | undefined, what: string): T {
 
 function text(translate: TranslateService, key: string, params?: Record<string, string>): string {
   return String(translate.instant(key, params));
+}
+
+/** A Tape of `length` Columns of 3 mm on `organ` with the given Holes; the other fields are those of a Waltz. */
+function tapeOnOrgan(organ: Organ, length: number, holes: readonly Hole[] = []): Tape {
+  return tapeOf({
+    ...waltz(organ).tape,
+    columnLength: defined(millimetres(3), 'column length'),
+    length: defined(columnCount(length), 'length'),
+    holes,
+  });
 }
 
 /** The Tape pieces the Plotter cuts the Tape into; throws when no cut exists. */
@@ -379,6 +395,73 @@ describe('PlotterExport', () => {
 
       expect(savePieces).toHaveBeenCalledTimes(2);
       expect(library.tapeEntities()).toEqual(before);
+    });
+  });
+
+  describe('for a Tape that the picked Plotter can not cut (T046)', () => {
+    afterEach(() => TestBed.inject(MatDialog).closeAll());
+
+    /** The texts the Cutting Problems dialog lists now, in order. */
+    function dialogEntries(): string[] {
+      TestBed.inject(ApplicationRef).tick();
+      return [...document.querySelectorAll('[data-testid="export-problem"]')].map((item) =>
+        (item.textContent ?? '').replace(/\s+/g, ' ').trim(),
+      );
+    }
+
+    /** An Organ of 140 mm tape width, wider than the 120 mm working width of the reference Plotter, with 30 mm Holes. */
+    const wideOrgan = (): Organ => testOrgan('Street organ', 3, {tapeBed: {tapeWidth: 140, holeDiameter: 30, rowSpacing: 30}});
+
+    it('opens the Cutting Problems dialog with the stretch that has no place for a Join, and saves nothing (FR-019)', async () => {
+      const {api, translate, snackBar, plotterExport} = await setUp();
+      const organ = testOrgan('Street organ', 3);
+      const pipe = defined(organ.pipes[0], 'first Pipe').note;
+      // 200 Columns of 3 mm held from Column 1: the first Join after it lies at 623 mm, past the 300 mm working length.
+      const tape = tapeOnOrgan(organ, 400, [
+        {pipe, start: defined(column(0), 'start'), length: defined(columnCount(200), 'hole length')},
+      ]);
+      const saveSvg = vi.spyOn(api.plotter, 'saveSvg');
+      const savePieces = vi.spyOn(api.plotter, 'savePieces');
+
+      await plotterExport.export(tape, organ, plotterOf(REFERENCE_PLOTTER));
+
+      expect(dialogEntries()).toEqual([
+        text(translate, 'TAPE.CUTTING_PROBLEM.NO_JOIN', {first: '1', last: '201', plotter: 'Cutting mat', length: '300'}),
+      ]);
+      expect(saveSvg).not.toHaveBeenCalled();
+      expect(savePieces).not.toHaveBeenCalled();
+      expect(snackBar).not.toHaveBeenCalled();
+    });
+
+    it('opens the Cutting Problems dialog with the too-wide reason for a Tape wider than the working width, and saves nothing', async () => {
+      const {api, translate, snackBar, plotterExport} = await setUp();
+      const organ = wideOrgan();
+      const tape = tapeOnOrgan(organ, 100);
+      const saveSvg = vi.spyOn(api.plotter, 'saveSvg');
+      const savePieces = vi.spyOn(api.plotter, 'savePieces');
+
+      await plotterExport.export(tape, organ, plotterOf(REFERENCE_PLOTTER));
+
+      expect(dialogEntries()).toEqual([text(translate, 'TAPE.EXPORT.TOO_WIDE')]);
+      expect(saveSvg).not.toHaveBeenCalled();
+      expect(savePieces).not.toHaveBeenCalled();
+      expect(snackBar).not.toHaveBeenCalled();
+    });
+
+    it('lists the too-wide reason before the Cutting Problems of the Holes', async () => {
+      const {translate, plotterExport} = await setUp();
+      const organ = wideOrgan();
+      const pipe = defined(organ.pipes[0], 'first Pipe').note;
+      // Two Columns (6 mm) are shorter than the Minimum Hole Length of 30 mm: a Cutting Problem of the Hole.
+      const tape = tapeOnOrgan(organ, 100, [
+        {pipe, start: defined(column(10), 'start'), length: defined(columnCount(2), 'hole length')},
+      ]);
+
+      await plotterExport.export(tape, organ, plotterOf(REFERENCE_PLOTTER));
+
+      const entries = dialogEntries();
+      expect(entries).toHaveLength(2);
+      expect(entries[0]).toBe(text(translate, 'TAPE.EXPORT.TOO_WIDE'));
     });
   });
 });

@@ -124,6 +124,8 @@ interface RenderOptions {
    * (from 1) is note 52 + r, so row 25 is F5. The Minimum Hole Length is 2.5 mm, the Minimum Gap 1.5 mm.
    */
   readonly holes?: readonly {readonly row: number; readonly start: number; readonly length: number}[];
+  /** The number of Columns of the Tape with `holes`; 100 when not given. */
+  readonly columns?: number;
   /** The notes of the Organ's Pipes from row 1 on, for `holes`; the notes 53 to 77 when not given. */
   readonly pipeNotes?: readonly number[];
   /** The Column length of the Tape with `holes` in mm; 2.5 when not given. */
@@ -300,7 +302,7 @@ async function render(options: RenderOptions = {}) {
     : options.holes
     ? tapeOf({
         ...shortTape,
-        length: 100 as ColumnCount,
+        length: (options.columns ?? 100) as ColumnCount,
         columnLength: (options.columnLength ?? 2.5) as Tape['columnLength'],
         holes: options.holes.map(({row, start, length}) => ({
           pipe: (organ.pipes[row - 1]?.note ?? 0),
@@ -684,6 +686,132 @@ describe('TapeViewComponent', () => {
       expect(update).not.toHaveBeenCalled();
       expect(tapes.tapeEntities()).toEqual(tapesBefore);
       expect(undoButton(view())?.disabled).toBe(true);
+    });
+  });
+
+  describe('the Joins, Overlaps and stretches of the picked Plotter (T044, T043)', () => {
+    beforeEach(() => {
+      localStorage.removeItem(PLOTTER_KEY);
+    });
+
+    // 150 Columns of 3 mm (450 mm) without Holes: one Join, after Column 93, for the 300 mm working length.
+    const withJoin: RenderOptions = {holes: [], columns: 150, columnLength: 3};
+    // 200 Columns of 3 mm with row 1 held from Column 1 for 100 Columns: Columns 1 to 101 have no place for a Join.
+    const withStretch: RenderOptions = {holes: [{row: 1, start: 0, length: 100}], columns: 200, columnLength: 3};
+
+    /** A sheet Plotter of 300 mm working length and the given working width, or a roll Plotter of that width. */
+    function plotterOf(workingWidth: number, roll = false): Plotter {
+      const draft: PlotterDraft = roll
+        ? {id: newPlotterId(), name: 'Vinyl cutter', workingWidth, roll: true, workingLength: null, overlap: null}
+        : {id: newPlotterId(), name: 'Cutting mat', workingWidth, roll: false, workingLength: 300, overlap: 20};
+      const result = validatePlotter(draft);
+      if (!result.ok) throw new Error(`invalid test Plotter: ${JSON.stringify(result.error)}`);
+      return result.value;
+    }
+
+    /** Describes the Plotter in the library and picks it, as the Plotter section does. */
+    async function pick(plotter: Plotter): Promise<void> {
+      await TestBed.inject(PlotterLibrary).put(plotter);
+      TestBed.inject(PlotterPreference).pick(plotter.id);
+    }
+
+    const drawn = (view: HTMLElement | null, testId: string) => all(view, `[data-testid="tape-scroll"] [data-testid="${testId}"]`);
+    const selectedHoles = (view: HTMLElement | null) =>
+      all(view, '[data-testid="tape-scroll"] rect[data-testid="hole"].selected').map(
+        (rect) => `${Number(rect.getAttribute('data-row')) + 1}:${rect.getAttribute('data-start')}`,
+      );
+
+    it('draws a line at the Join of the picked sheet Plotter, after the Column it follows counted from 1', async () => {
+      const {tape, open, view} = await render(withJoin);
+      await pick(plotterOf(300));
+      await open(`/tapes/${tape.id}`);
+
+      expect(drawn(view(), 'join').map((join) => join.getAttribute('data-after'))).toEqual(['93']);
+    });
+
+    it('draws an Overlap band for the Join of the picked sheet Plotter', async () => {
+      const {tape, open, view} = await render(withJoin);
+      await pick(plotterOf(300));
+      await open(`/tapes/${tape.id}`);
+
+      expect(drawn(view(), 'overlap')).toHaveLength(1);
+    });
+
+    it('hides each Join and Overlap from assistive technology', async () => {
+      const {tape, open, view} = await render(withJoin);
+      await pick(plotterOf(300));
+      await open(`/tapes/${tape.id}`);
+
+      expect([...drawn(view(), 'join'), ...drawn(view(), 'overlap')].map((element) => element.getAttribute('aria-hidden'))).toEqual([
+        'true',
+        'true',
+      ]);
+    });
+
+    it('draws a stretch mark over the Columns of a stretch with no place for a Join, counted from 1', async () => {
+      const {tape, open, view} = await render(withStretch);
+      await pick(plotterOf(300));
+      await open(`/tapes/${tape.id}`);
+
+      const marks = drawn(view(), 'stretch-mark');
+      expect(marks.map((mark) => [mark.getAttribute('data-first'), mark.getAttribute('data-last')])).toEqual([['1', '101']]);
+      expect(marks.map((mark) => mark.getAttribute('aria-hidden'))).toEqual(['true']);
+    });
+
+    it('draws no Join, Overlap or stretch mark while no Plotter is picked', async () => {
+      const {tape, open, view} = await render(withStretch);
+      await open(`/tapes/${tape.id}`);
+
+      expect([...drawn(view(), 'join'), ...drawn(view(), 'overlap'), ...drawn(view(), 'stretch-mark')]).toEqual([]);
+    });
+
+    it('draws no Join, Overlap or stretch mark for a roll Plotter', async () => {
+      const {tape, open, view} = await render(withStretch);
+      await pick(plotterOf(120, true));
+      await open(`/tapes/${tape.id}`);
+
+      expect([...drawn(view(), 'join'), ...drawn(view(), 'overlap'), ...drawn(view(), 'stretch-mark')]).toEqual([]);
+    });
+
+    it('draws no Join, Overlap or stretch mark when the Tape is too wide for the picked Plotter', async () => {
+      const {tape, open, view} = await render(withJoin);
+      await pick(plotterOf(50));
+      await open(`/tapes/${tape.id}`);
+
+      expect([...drawn(view(), 'join'), ...drawn(view(), 'overlap'), ...drawn(view(), 'stretch-mark')]).toEqual([]);
+    });
+
+    it('lists the stretch among the Cutting Problems with its Columns, the Plotter and its working length', async () => {
+      const {tape, open, view} = await render(withStretch);
+      await pick(plotterOf(300));
+      await open(`/tapes/${tape.id}`);
+
+      const entry = view()?.querySelector('[data-testid="side-panel"] [data-testid="cutting-problem-stretch"]');
+      expect(entry?.textContent?.replace(/\s+/g, ' ').trim()).toBe(
+        'Columns 1–101 are longer than the working length of Cutting mat (300 mm) with no place for a Join',
+      );
+    });
+
+    it('selects nothing and scrolls the first Column of a chosen stretch into view', async () => {
+      const {tape, open, view, settle} = await render(withStretch);
+      await pick(plotterOf(300));
+      await open(`/tapes/${tape.id}`);
+      view()
+        ?.querySelector('[data-testid="tape-scroll"] rect[data-testid="hole"][data-row="0"][data-start="0"]')
+        ?.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+      await settle();
+      expect(selectedHoles(view())).toEqual(['1:0']);
+      const scrollIntoView = vi.spyOn(Element.prototype, 'scrollIntoView').mockImplementation(() => undefined);
+
+      try {
+        view()?.querySelector<HTMLButtonElement>('[data-testid="cutting-problem-stretch"]')?.click();
+        await settle();
+
+        expect(selectedHoles(view())).toEqual([]);
+        expect(scrollIntoView.mock.contexts).toContain(view()?.querySelector('[data-testid="tape-scroll"] [data-testid="stretch-mark"]'));
+      } finally {
+        scrollIntoView.mockRestore();
+      }
     });
   });
 
@@ -2286,7 +2414,7 @@ describe('TapeViewComponent', () => {
 
       expect(update).not.toHaveBeenCalled();
       expect(marks()).toHaveLength(1);
-      expect(count()).toBe("1 Hole can't be cut");
+      expect(count()).toBe("1 Cutting Problem");
     });
 
     it('a tap on a Hole and then a still tap on its grip within the double-tap window keeps the Hole, with no save', async () => {
@@ -3229,7 +3357,7 @@ describe('TapeViewComponent', () => {
       await press(view(), {key: 'ArrowLeft', altKey: true}, settle);
 
       expect(view()?.querySelector('[data-testid="side-panel"] [data-testid="cutting-problems"]')).not.toBeNull();
-      expect(countText(view())).toBe("2 Holes can't be cut");
+      expect(countText(view())).toBe("2 Cutting Problems");
       expect(entries(view())).toHaveLength(2);
     });
 
@@ -3238,7 +3366,7 @@ describe('TapeViewComponent', () => {
       await open(`/tapes/${tape.id}`);
       await select(view(), 24, 10, settle);
       await press(view(), {key: 'ArrowLeft', shiftKey: true}, settle);
-      expect(countText(view())).toBe("1 Hole can't be cut");
+      expect(countText(view())).toBe("1 Cutting Problem");
 
       await press(view(), {key: 'ArrowRight', shiftKey: true}, settle);
 
@@ -3302,7 +3430,7 @@ describe('TapeViewComponent', () => {
         const noPipeEntries = entries(view()).filter((entry) => squash(entry).includes('the Organ has no Pipe for this note'));
         expect(noPipeEntries).toHaveLength(orphans.length);
         expect(noPipeEntries.every((entry) => entry.tagName !== 'BUTTON')).toBe(true);
-        expect(countText(view())).toMatch(/^\d+ Holes? can't be cut$/);
+        expect(countText(view())).toMatch(/^\d+ Cutting Problems?$/);
         expect(marks(view())).toHaveLength(0);
       });
 
@@ -3819,7 +3947,7 @@ describe('TapeViewComponent', () => {
       await settle();
 
       expect(marks()).toHaveLength(1);
-      expect(countText()).toBe("1 Hole can't be cut");
+      expect(countText()).toBe("1 Cutting Problem");
       expect(entries()).toHaveLength(1);
     });
   });
@@ -3868,7 +3996,7 @@ describe('TapeViewComponent', () => {
 
       tapeSection().columnLengthChange.emit(withColumnLength(tape, 1));
       await settle();
-      expect(countText(view())).toBe("1 Hole can't be cut");
+      expect(countText(view())).toBe("1 Cutting Problem");
       update.mockClear();
 
       button(view(), 'undo')?.click();
@@ -3894,7 +4022,7 @@ describe('TapeViewComponent', () => {
       await settle();
 
       expect(storedColumnLength(tape.id)).toBe(1);
-      expect(countText(view())).toBe("1 Hole can't be cut");
+      expect(countText(view())).toBe("1 Cutting Problem");
       expect(marks(view())).toHaveLength(1);
       expect(button(view(), 'redo')?.disabled).toBe(true);
     });
