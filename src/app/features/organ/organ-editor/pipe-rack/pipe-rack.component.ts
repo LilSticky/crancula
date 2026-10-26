@@ -9,7 +9,7 @@ import {MatMenu, MatMenuItem, MatMenuTrigger} from '@angular/material/menu';
 import {MatTooltip} from '@angular/material/tooltip';
 import {TranslatePipe} from '@ngx-translate/core';
 import {midiNoteNumber, noteName, type OrganDraft} from '@api/index';
-import type {TranslatableText} from '../../leave-unsaved.guard';
+import type {TranslatableText} from '../../../shared/leave-unsaved/leave-unsaved.guard';
 import {SaveAttempt, shownMessages} from '../organ-form';
 import {rackColumns} from '../pipe-rack';
 

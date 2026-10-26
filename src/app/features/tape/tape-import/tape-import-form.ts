@@ -22,7 +22,7 @@ import {
   transposition,
   type TapeViolationCode,
 } from '@api/index';
-import type {TranslatableText} from '../../organ/leave-unsaved.guard';
+import type {TranslatableText} from '../../shared/leave-unsaved/leave-unsaved.guard';
 
 /** What the user enters on the import page; the Parts are chosen apart from the form. */
 export interface TapeImportDraft {

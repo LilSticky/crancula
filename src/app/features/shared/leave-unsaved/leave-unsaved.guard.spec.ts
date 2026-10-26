@@ -4,10 +4,10 @@ import type {ActivatedRouteSnapshot, RouterStateSnapshot} from '@angular/router'
 import {newOrganId, type Organ, type OrganDraft, toSnapshot, validateOrgan} from '@api/index';
 import {firstValueFrom, isObservable, of} from 'rxjs';
 import {vi} from 'vitest';
-import {CRANCULA_API, createInMemoryCranculaApi} from '../../core/crancula-api.token';
+import {CRANCULA_API, createInMemoryCranculaApi} from '../../../core/crancula-api.token';
 import {LeaveUnsavedDialogComponent} from './leave-unsaved-dialog/leave-unsaved-dialog.component';
 import {leaveUnsavedGuard, type UnsavedChanges, type UnsavedChangesCheck} from './leave-unsaved.guard';
-import {OrganLibrary} from './organ-library.store';
+import {OrganLibrary} from '../../organ/organ-library.store';
 
 type GuardOutcome = ReturnType<typeof leaveUnsavedGuard>;
 
