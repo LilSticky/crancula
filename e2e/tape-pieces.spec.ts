@@ -1,7 +1,7 @@
 import {mkdtemp, readdir, readFile, rm} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {basename, join} from 'node:path';
-import {expect, type Page, test} from '@playwright/test';
+import {expect, type Locator, type Page, test} from '@playwright/test';
 import {encodeSmf, type SmfTimedEvent} from '../api/song/midi/smf-test-helper';
 import {
   stubFolderDialog,
@@ -17,6 +17,7 @@ import {type MidiFilePayload} from './support/midi-file';
 import {saveOrgan} from './support/organ-editor';
 import {stubSaveDialog, type SaveDialogStub} from './support/save-dialog';
 import {createTapeFromSong} from './support/tape-creation';
+import {drawnHoles, holeAt, pressOnDrawing} from './support/tape-edit';
 import {resizeWindowOrSkip} from './support/window-size';
 
 const TICKS_PER_QUARTER = 480;
@@ -97,6 +98,37 @@ function notesAtQuarters(fileName: string, starts: readonly number[]): MidiFileP
     tracks: [{events: [{delta: 0, event: {type: 'trackName', text: 'Notes'}}, ...events]}],
   });
   return {name: fileName, mimeType: 'audio/midi', buffer: Buffer.from(bytes)};
+}
+
+/**
+ * A Song of C4 held for 12.5 quarters from the start (a Hole of 100 Columns from Column 1, at 8 Columns per
+ * quarter) and a quarter of C4 at quarter 24, so the Tape runs 200 Columns like the reference Tape.
+ */
+function heldNote(fileName: string): MidiFilePayload {
+  const notes = [
+    {start: 0, ticks: 12.5 * TICKS_PER_QUARTER},
+    {start: 24 * TICKS_PER_QUARTER, ticks: TICKS_PER_QUARTER},
+  ];
+  const events: SmfTimedEvent[] = [{delta: 0, event: {type: 'trackName', text: 'Notes'}}];
+  let previousEnd = 0;
+  for (const {start, ticks} of notes) {
+    events.push(
+      {delta: start - previousEnd, event: {type: 'noteOn', channel: 0, note: 60, velocity: 80}},
+      {delta: ticks, event: {type: 'noteOff', channel: 0, note: 60, velocity: 0}},
+    );
+    previousEnd = start + ticks;
+  }
+  const bytes = encodeSmf({
+    format: 1,
+    division: {ticksPerQuarterNote: TICKS_PER_QUARTER},
+    tracks: [{events}],
+  });
+  return {name: fileName, mimeType: 'audio/midi', buffer: Buffer.from(bytes)};
+}
+
+/** The Tape drawing of the Tape view (not the overview strip). */
+function tapeDrawing(window: Page): Locator {
+  return window.locator('[data-testid="tape-scroll"] svg');
 }
 
 test.describe('Cut a long Tape in pieces on the picked Plotter', () => {
@@ -194,5 +226,64 @@ test.describe('Cut a long Tape in pieces on the picked Plotter', () => {
 
     await expect(window.locator('.mat-mdc-snack-bar-container').filter({hasText: restartFolder})).toBeVisible();
     expect((await readdir(restartFolder)).sort()).toEqual(['Waltz 1 of 3.svg', 'Waltz 2 of 3.svg', 'Waltz 3 of 3.svg']);
+  });
+
+  test('lists a stretch with no place for a Join as a Cutting Problem, marks it on the Tape, and refuses the export with no file written', async () => {
+    const {window} = launched;
+    saves = await stubSaveDialog(launched.app); // The restart above relaunched the app, so the stub is on the new one.
+    await createTapeFromSong(window, 'Held', heldNote('held.mid'), {columnLength: COLUMN_LENGTH});
+    await pickPlotter(window, 'Cutting mat');
+
+    await expect(window.getByTestId('cutting-problems-count')).toHaveText(/^\s*1 Cutting Problem\s*$/);
+    await expect(window.getByTestId('cutting-problem-stretch')).toHaveCount(1);
+    await expect(window.getByTestId('cutting-problem-stretch')).toContainText('Columns 1–101');
+    const marks = await tapeDrawing(window)
+      .locator('[data-testid="stretch-mark"]')
+      .evaluateAll((rects) => rects.map((rect) => [rect.getAttribute('data-first'), rect.getAttribute('data-last')]));
+    expect(marks).toEqual([['1', '101']]);
+
+    const savesBefore = (await saves.calls()).length;
+    const foldersBefore = (await folders.calls()).length;
+    await window.getByTestId('export').click();
+    await expect(window.getByRole('dialog').getByTestId('export-problem')).toHaveCount(1);
+    await expect(window.getByRole('dialog').getByTestId('export-problem')).toContainText('Columns 1–101');
+    expect(await saves.calls()).toHaveLength(savesBefore);
+    expect(await folders.calls()).toHaveLength(foldersBefore);
+    expect((await readdir(folder)).filter((name) => name.startsWith('Held'))).toEqual([]);
+    await window.getByRole('dialog').getByRole('button', {name: 'Close'}).click();
+  });
+
+  test('shortens the Hole to 70 Columns, the Cutting Problem is gone, and the Tape is exported in pieces', async () => {
+    const {window} = launched;
+    const hole = (await drawnHoles(window)).find((drawn) => drawn.start === 0);
+    if (!hole) throw new Error('the Held Tape shows no Hole at Column 1');
+    await holeAt(window, hole.row, hole.start).click();
+    for (let times = 0; times < 30; times++) await pressOnDrawing(window, 'Shift+ArrowLeft');
+
+    await expect(window.getByTestId('selected-hole')).toContainText('Columns 1–70');
+    await expect(window.getByTestId('cutting-problems-count')).toHaveText('None');
+    await expect(window.getByTestId('cutting-problem-stretch')).toHaveCount(0);
+    await expect(tapeDrawing(window).locator('[data-testid="stretch-mark"]')).toHaveCount(0);
+
+    const foldersBefore = (await folders.calls()).length;
+    await folders.answerWith({canceled: false, filePaths: [folder]});
+    await window.getByTestId('export').click();
+    await expect(window.locator('.mat-mdc-snack-bar-container').filter({hasText: folder})).toBeVisible();
+    expect(await folders.calls()).toHaveLength(foldersBefore + 1);
+    const pieces = (await readdir(folder)).filter((name) => /^Held \d+ of \d+\.svg$/.test(name));
+    expect(pieces.length).toBeGreaterThan(1);
+  });
+
+  test('draws each Join and its Overlap in the Tape view of the Tape in pieces', async () => {
+    const {window} = launched;
+    await openTape(window, 'Waltz');
+    await pickPlotter(window, 'Cutting mat');
+
+    await expect(tapeDrawing(window).locator('[data-testid="join"]')).toHaveCount(2);
+    await expect(tapeDrawing(window).locator('[data-testid="overlap"]')).toHaveCount(2);
+    const afters = await tapeDrawing(window)
+      .locator('[data-testid="join"]')
+      .evaluateAll((lines) => lines.map((line) => Number(line.getAttribute('data-after'))));
+    expect(afters).toEqual([76, 169]);
   });
 });

@@ -137,7 +137,7 @@ reference Plotter picked, gives a Cutting Problem for Columns 1–101; shortened
 - [x] T045 [US3] Green: `joinMarks` and stretch marks in `tape-drawing.ts`, the SVG elements in `tape-view.component.html`, styles from the existing tokens (`--cr-problem`, select colours) in `tape-view.component.scss`.
 - [x] T046 [US3] Red: `plotter-section.component.spec.ts`: with `too-wide` the section shows `plotter-too-wide` (role `status`) with both widths instead of the piece count; with `no-join` it shows `TAPE.PLOTTER.NO_JOIN`; `plotter-export.spec.ts`: export with a `no-join` problem or too wide opens the Cutting Problems dialog with every reason (too wide first), and no IPC call is made (scenarios 7, 8, FR-019, SC-006).
 - [x] T047 [US3] Green: too-wide and no-join states in `plotter-section.component.ts`; refusal in `plotter-export.ts` and `cutting-problems-dialog.component.ts` with `TAPE.EXPORT.TOO_WIDE`.
-- [ ] T048 [US3] Red→Green: extend `e2e/tape-pieces.spec.ts`: add the 100-Column Hole, see the stretch in the list and marked on the Tape, export refused with no file written; shorten the Hole to 70 Columns (Selected Hole form) and the problem is gone; the Joins are drawn (scenarios 2, 4, 7, 9).
+- [x] T048 [US3] Red→Green: extend `e2e/tape-pieces.spec.ts`: add the 100-Column Hole, see the stretch in the list and marked on the Tape, export refused with no file written; shorten the Hole to 70 Columns (Selected Hole form) and the problem is gone; the Joins are drawn (scenarios 2, 4, 7, 9).
 
 **Checkpoint**: commit; STATUS.
 
