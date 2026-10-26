@@ -105,8 +105,8 @@ expected geometry.
 
 ### UI
 
-- [ ] T031 [US2] Red: `src/app/features/plotter/plotter-preference.spec.ts`: no stored id → `picked()` undefined; `pick(id)` stores `crancula.plotter` in `localStorage`; a stored id not in the library reads as undefined; `pick(undefined)` removes the key.
-- [ ] T032 [US2] Green: `src/app/features/plotter/plotter-preference.ts`.
+- [x] T031 [US2] Red: `src/app/features/plotter/plotter-preference.spec.ts`: no stored id → `picked()` undefined; `pick(id)` stores `crancula.plotter` in `localStorage`; a stored id not in the library reads as undefined; `pick(undefined)` removes the key.
+- [x] T032 [US2] Green: `src/app/features/plotter/plotter-preference.ts`.
 - [ ] T033 [US2] Red: `src/app/features/tape/tape-view/plotter-section/plotter-section.component.spec.ts`: `plotter-picker` lists "No Plotter" and every Plotter by name, shows the picked one, picking calls the preference and changes no Tape or undo history (FR-006); `plotter-pieces` says "Cut in 3 Tape pieces" / "Fits in one Tape piece"; `tape-view.component.spec.ts` places the section below the Tape section and keeps it usable while the Preview plays.
 - [ ] T034 [US2] Green: `plotter-section.component.ts` (standalone, OnPush), its use in `tape-view.component.html` / `.ts` with `tapePieces` computed from Tape, Organ and picked Plotter.
 - [ ] T035 [US2] Red: `src/app/features/tape/tape-view/plotter-export.spec.ts`: no Plotter → `saveSvg` as today (FR-020); one piece with a sheet Plotter → `saveSvg` with "<Tape name>.svg" (FR-022); several pieces → `savePieces` with `tapePieceFileNames` and `plotterSvg(pieceGeometry(...))` per piece and the translated texts; `saved` → `TAPE.EXPORT.PIECES_SAVED` with count and folder; `cancelled` → nothing; `failed` → `PIECES_FAILED` naming the file, with Retry; the Tape is unchanged (scenario 10).
