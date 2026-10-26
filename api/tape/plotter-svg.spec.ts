@@ -236,6 +236,42 @@ describe('plotterSvg', () => {
     );
   });
 
+  it('writes only cuts for every Tape piece of a cut Tape, as for the whole Tape (FR-023)', () => {
+    const organ = referenceOrgan();
+    const rowOne = midiNoteNumber(60);
+    const rowThree = midiNoteNumber(62);
+    if (rowOne === undefined || rowThree === undefined) throw new Error('not a note');
+    const tape = tapeOf({
+      id: '00000000-0000-4000-8000-0000000000ee' as Tape['id'],
+      name: 'Waltz',
+      organId: organ.id,
+      songId: undefined,
+      selectedParts: undefined,
+      transposition: 0 as Tape['transposition'],
+      columnLength: 3 as Millimetres,
+      length: 200 as ColumnCount,
+      holes: [
+        {pipe: rowOne, start: 80 as Column, length: 2 as ColumnCount},
+        {pipe: rowThree, start: 150 as Column, length: 2 as ColumnCount},
+      ],
+    });
+    const geometry = tapeGeometry(tape, organ);
+    const cut = tapePieces(geometry, referencePlotter());
+    if (cut.kind !== 'pieces') throw new Error(`expected Tape pieces, got ${cut.kind}`);
+    expect(cut.pieces.length).toBeGreaterThan(1);
+
+    for (const piece of cut.pieces) {
+      const svg = plotterSvg(pieceGeometry(geometry, piece));
+      const body = lines(svg).slice(2, -1);
+
+      expect(body.length).toBeGreaterThan(0);
+      expect(body.every((line) => line.trim().startsWith('<path ') && line.includes('fill="none"'))).toBe(true);
+      for (const forbidden of ['<rect', '<text', '<g', 'id=', '<metadata', '<title', 'style', 'transform']) {
+        expect(svg).not.toContain(forbidden);
+      }
+    }
+  });
+
   it('writes a Tape piece at its length in mm, its Holes first and then its own outline (scenarios 3, 7)', () => {
     const organ = referenceOrgan();
     const note = midiNoteNumber(60);

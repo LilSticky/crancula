@@ -100,6 +100,24 @@ describe('pieceGeometry', () => {
     expect(xsOf(third)[0]).toBeCloseTo(63, DIGITS);
   });
 
+  it('gives each Hole of a piece the x it has on the whole Tape, minus the piece start (FR-014)', () => {
+    const organ = referenceOrgan();
+    const {geometry, pieces} = cutOf(tapeWith(organ, SCENARIO_HOLES), organ);
+    const cuts = pieces.map((piece) => pieceGeometry(geometry, piece));
+
+    // The Hole in the Overlap is cut from two pieces, so the pieces hold five Holes in all for the four Holes of the Tape.
+    expect(cuts.flatMap((cut) => cut.slots)).toHaveLength(5);
+    pieces.forEach((piece, index) => {
+      for (const slot of nth(cuts, index).slots) {
+        const onTape = defined(
+          geometry.slots.find((candidate) => candidate.row === slot.row && candidate.start === slot.start),
+          `Hole of row ${slot.row} at Column ${slot.start}`,
+        );
+        expect(slot.x).toBeCloseTo(onTape.x - piece.start, DIGITS);
+      }
+    });
+  });
+
   it('keeps a Slot in an Overlap at the same place relative to its Join in both pieces', () => {
     const organ = referenceOrgan();
     const {geometry, pieces} = cutOf(tapeWith(organ, SCENARIO_HOLES), organ);
