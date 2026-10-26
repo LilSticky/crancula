@@ -9,15 +9,21 @@ const DEVICE_NAME = /^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(\..*)?$/i;
  * name, at most 200 UTF-16 code units without splitting a surrogate pair, and never empty.
  */
 export function safeFileName(name: string): string {
-  const cleaned = name.replace(FORBIDDEN, '_').replace(/^ +/, '').replace(/[ .]+$/, '');
+  const cleaned = replaceForbiddenCharacters(name).replace(/^ +/, '').replace(/[ .]+$/, '');
   const named = cleaned === '' ? FALLBACK_NAME : cleaned;
   const safe = DEVICE_NAME.test(named) ? `_${named}` : named;
-  return cut(safe);
+  return cutWithin(safe, MAXIMUM_LENGTH);
 }
 
-function cut(name: string): string {
-  if (name.length <= MAXIMUM_LENGTH) return name;
-  const last = name.charCodeAt(MAXIMUM_LENGTH - 1);
+/** `text` with every character a file name may not contain replaced by `_`. */
+export function replaceForbiddenCharacters(text: string): string {
+  return text.replace(FORBIDDEN, '_');
+}
+
+/** The longest prefix of `text` of at most `maximum` UTF-16 code units that does not split a surrogate pair. */
+export function cutWithin(text: string, maximum: number): string {
+  if (text.length <= maximum) return text;
+  const last = text.charCodeAt(maximum - 1);
   const splitsPair = last >= 0xd800 && last <= 0xdbff;
-  return name.slice(0, splitsPair ? MAXIMUM_LENGTH - 1 : MAXIMUM_LENGTH);
+  return text.slice(0, splitsPair ? maximum - 1 : maximum);
 }

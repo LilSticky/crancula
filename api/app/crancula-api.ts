@@ -1,6 +1,7 @@
 import type {EditCommand} from './edit-command';
 import type {Language} from './language';
 import type {SvgSaveRequest, SvgSaveResult} from './svg-save-request';
+import type {SvgPiecesSaveRequest, SvgPiecesSaveResult} from './svg-pieces-save-request';
 import type {
   RecordingChooseRequest,
   RecordingChooseResult,
@@ -57,6 +58,8 @@ export interface CranculaApi {
   readonly plotter: {
     /** Shows the save dialog and writes `request.svg` where the user chooses. */
     saveSvg(request: SvgSaveRequest): Promise<SvgSaveResult>;
+    /** Asks for a folder, asks once before replacing, and writes every Tape piece into it (ADR 28). */
+    savePieces(request: SvgPiecesSaveRequest): Promise<SvgPiecesSaveResult>;
   };
   readonly recording: {
     /** Shows the save dialog for a Recording; the chosen target is the only place its bytes may be written. */

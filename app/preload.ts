@@ -15,6 +15,8 @@ import type {
   RecordingWriteRequest,
   RecordingWriteResult,
   SetLanguageResult,
+  SvgPiecesSaveRequest,
+  SvgPiecesSaveResult,
   SvgSaveRequest,
   SvgSaveResult,
   TapeLibraryLoadResult,
@@ -58,6 +60,9 @@ const crancula: CranculaApi = {
   },
   plotter: {
     saveSvg: (request: SvgSaveRequest) => ipcRenderer.invoke(plotterChannels.saveSvg, request) as Promise<SvgSaveResult>,
+    // Stub until the IPC channel is wired (T030).
+    savePieces: (_request: SvgPiecesSaveRequest): Promise<SvgPiecesSaveResult> =>
+      Promise.resolve({status: 'rejected', reason: 'saving Tape pieces is not wired yet'}),
   },
   recording: {
     chooseFile: (request: RecordingChooseRequest) =>

@@ -19,13 +19,35 @@ export type SvgSaveResult =
   | {readonly status: 'failed'; readonly reason: string};
 
 const FIELDS = ['suggestedFileName', 'svg', 'dialogTitle', 'filterName'] as const;
-const MAXIMUM_SVG_LENGTH = 64 * 2 ** 20;
+/** The largest SVG document, in characters. */
+export const MAXIMUM_SVG_LENGTH = 64 * 2 ** 20;
 const MAXIMUM_FILE_NAME_LENGTH = 255;
 const MINIMUM_FILE_NAME_LENGTH = 5;
-const MAXIMUM_LABEL_LENGTH = 200;
+/** The longest text of a dialog, a button or a label, in characters. */
+export const MAXIMUM_LABEL_LENGTH = 200;
 // eslint-disable-next-line no-control-regex
 const CONTROL = /[\u0000-\u001f\u007f]/;
 const FILE_NAME = /^[^/\\:]*[^./\\:][^/\\:]*\.svg$/i;
+
+/** A Plotter file name: a `.svg` name of 5 to 255 characters, no separator and no control character. */
+export function isSafeSvgFileName(name: string): boolean {
+  return (
+    name.length >= MINIMUM_FILE_NAME_LENGTH &&
+    name.length <= MAXIMUM_FILE_NAME_LENGTH &&
+    !CONTROL.test(name) &&
+    FILE_NAME.test(name)
+  );
+}
+
+/** An SVG document within the size limit: an XML declaration and an `<svg ` root. */
+export function isSvgDocument(svg: string): boolean {
+  return svg.length <= MAXIMUM_SVG_LENGTH && svg.startsWith('<?xml') && svg.includes('<svg ');
+}
+
+/** A text of 1 to 200 characters without control characters. */
+export function isLabel(text: string): boolean {
+  return text.length >= 1 && text.length <= MAXIMUM_LABEL_LENGTH && !CONTROL.test(text);
+}
 
 export function parseSvgSaveRequest(input: unknown): Result<SvgSaveRequest, string> {
   if (typeof input !== 'object' || input === null || Array.isArray(input)) {
@@ -41,22 +63,13 @@ export function parseSvgSaveRequest(input: unknown): Result<SvgSaveRequest, stri
   if (typeof dialogTitle !== 'string') return err('dialogTitle is not a string');
   if (typeof filterName !== 'string') return err('filterName is not a string');
 
-  if (
-    suggestedFileName.length < MINIMUM_FILE_NAME_LENGTH ||
-    suggestedFileName.length > MAXIMUM_FILE_NAME_LENGTH ||
-    CONTROL.test(suggestedFileName) ||
-    !FILE_NAME.test(suggestedFileName)
-  ) {
-    return err('suggestedFileName is not a safe .svg file name');
-  }
-  if (svg.length > MAXIMUM_SVG_LENGTH || !svg.startsWith('<?xml') || !svg.includes('<svg ')) {
-    return err('svg is not an SVG document within the size limit');
-  }
+  if (!isSafeSvgFileName(suggestedFileName)) return err('suggestedFileName is not a safe .svg file name');
+  if (!isSvgDocument(svg)) return err('svg is not an SVG document within the size limit');
   for (const [field, text] of [
     ['dialogTitle', dialogTitle],
     ['filterName', filterName],
   ] as const) {
-    if (text.length < 1 || text.length > MAXIMUM_LABEL_LENGTH || CONTROL.test(text)) {
+    if (!isLabel(text)) {
       return err(`${field} must be 1 to ${MAXIMUM_LABEL_LENGTH} characters without control characters`);
     }
   }

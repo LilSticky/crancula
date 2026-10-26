@@ -12,6 +12,7 @@ import {
   type PlotterLibrarySnapshot,
   type RecordingChooseResult,
   type RecordingWriteResult,
+  type SvgPiecesSaveResult,
   type SvgSaveRequest,
   type SvgSaveResult,
   type TapeLibraryLoadResult,
@@ -103,6 +104,9 @@ export function createInMemoryCranculaApi(
       get lastSaveSvgRequest(): SvgSaveRequest | undefined {
         return lastSaveSvgRequest;
       },
+      // Stub until the IPC channel is wired (T030).
+      savePieces: (): Promise<SvgPiecesSaveResult> =>
+        Promise.resolve({status: 'rejected', reason: 'saving Tape pieces is not wired yet'}),
       saveSvg: (request): Promise<SvgSaveResult> => {
         const parsed = parseSvgSaveRequest(request);
         if (!parsed.ok) return Promise.resolve({status: 'rejected', reason: parsed.error});
