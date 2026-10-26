@@ -139,6 +139,7 @@ export {
   type Transposed,
   type TranspositionOutcome,
 } from './tape/transpose-holes';
+export {exportRefusals, type ExportRefusal, type TooWideRefusal} from './tape/export-refusals';
 export {renameTape} from './tape/rename-tape';
 export {changeColumnLength} from './tape/change-column-length';
 export {changeCrankSpeed} from './tape/change-crank-speed';

@@ -3,7 +3,7 @@ import {MatDialog} from '@angular/material/dialog';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {TranslateService} from '@ngx-translate/core';
 import {
-  cuttingProblems,
+  exportRefusals,
   pieceGeometry,
   plotterFileName,
   plotterSvg,
@@ -17,17 +17,10 @@ import {
   type TapePiece,
 } from '@api/index';
 import {CRANCULA_API} from '../../../core/crancula-api.token';
-import {CuttingProblemsDialogComponent, type ExportRefusal} from './cutting-problems-dialog/cutting-problems-dialog.component';
+import {CuttingProblemsDialogComponent} from './cutting-problems-dialog/cutting-problems-dialog.component';
 
 /** How long the "saved" snackbar stays, in ms. */
 const SAVED_DURATION = 6000;
-
-/** Why the Tape can not be saved for `plotter`: too wide first, then the Cutting Problems, the stretches among them (FR-019). */
-function refusalsOf(tape: Tape, organ: Organ, plotter: Plotter | undefined): readonly ExportRefusal[] {
-  const problems = cuttingProblems(tape, organ, plotter);
-  const tooWide = plotter !== undefined && tapePieces(tapeGeometry(tape, organ), plotter).kind === 'too-wide';
-  return tooWide ? [{code: 'too-wide'}, ...problems] : problems;
-}
 
 /** Saves a Tape as the Plotter file, or as Tape pieces for a sheet Plotter, through the main process and tells the user how it went. */
 @Injectable({providedIn: 'root'})
@@ -44,7 +37,7 @@ export class PlotterExport {
   /** Saves the Tape as one file, or in Tape pieces when the picked Plotter cuts it into more than one. */
   async export(tape: Tape, organ: Organ, plotter: Plotter | undefined): Promise<void> {
     if (this.savingState()) return;
-    const refusals = refusalsOf(tape, organ, plotter);
+    const refusals = exportRefusals(tape, organ, plotter);
     if (refusals.length > 0) {
       this.dialog.open(CuttingProblemsDialogComponent, {data: refusals});
       return;

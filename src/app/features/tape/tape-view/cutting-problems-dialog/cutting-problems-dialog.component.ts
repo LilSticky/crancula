@@ -2,16 +2,8 @@ import {ChangeDetectionStrategy, Component, inject} from '@angular/core';
 import {MatButton} from '@angular/material/button';
 import {MAT_DIALOG_DATA, MatDialogActions, MatDialogContent, MatDialogRef, MatDialogTitle} from '@angular/material/dialog';
 import {TranslatePipe, TranslateService} from '@ngx-translate/core';
-import {type CuttingProblem} from '@api/index';
+import {type ExportRefusal} from '@api/index';
 import {cuttingProblemText, type ProblemText} from '../cutting-problem-text';
-
-/** The Tape is wider than the working width of the picked Plotter (FR-017). */
-export interface TooWideRefusal {
-  readonly code: 'too-wide';
-}
-
-/** A reason a Tape can not be saved for the picked Plotter: too wide, or a Cutting Problem. */
-export type ExportRefusal = CuttingProblem | TooWideRefusal;
 
 /** Lists why a Tape can not be cut yet, one entry per reason. */
 @Component({
