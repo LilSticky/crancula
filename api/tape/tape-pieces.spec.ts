@@ -232,6 +232,69 @@ describe('tapePieces', () => {
     });
   });
 
+  describe('when no cut exists', () => {
+    it('lists a 100-Column Hole from Column 1 as one stretch from Column 1 to Column 101', () => {
+      // The Hole covers 50–350 mm and blocks up to 352 mm; the first possible Join is after Column 101 at 353 mm.
+      const tape = tapeWith(organ, 3, 200, [hole(ROW_1, 0, 100)]);
+      const expected: TapePieces = {kind: 'no-join', stretches: [{first: col(0), last: col(100)}]};
+
+      expect(piecesOf(tape, organ, plotter)).toEqual(expected);
+    });
+
+    it('finds the reference cut for a 70-Column Hole from Column 1, at the furthest Join that fits', () => {
+      // The first possible Join is after Column 71 at 263 mm; the furthest one within 300 mm is after Column 76.
+      const tape = tapeWith(organ, 3, 200, [hole(ROW_1, 0, 70)]);
+
+      expect(piecesOf(tape, organ, plotter)).toEqual(referenceCut);
+    });
+
+    it('lists two separate long stretches each on its own', () => {
+      // Row 1 from Column 1 and row 2 from Column 151, 100 Columns each, 300 Columns in all. Stretch 1 runs from
+      // the tip to the Join after Column 101 (353 mm). Stretch 2 runs from the Join after Column 142 (476 mm) to
+      // the Join after Column 251 (803 mm), which is past the second Hole (500–800 mm).
+      const tape = tapeWith(organ, 3, 300, [hole(ROW_1, 0, 100), hole(ROW_2, 150, 100)]);
+      const expected: TapePieces = {
+        kind: 'no-join',
+        stretches: [
+          {first: col(0), last: col(100)},
+          {first: col(142), last: col(250)},
+        ],
+      };
+
+      expect(piecesOf(tape, organ, plotter)).toEqual(expected);
+    });
+
+    it('makes the stretch from Column 1 to the first possible Join a problem when Lead-in and Overlap reach the working length', () => {
+      // Lead-in 50 mm + Overlap 20 mm = 70 mm, at least the working length of 60 mm: no Join after the tip fits.
+      const short = plotterOf({name: 'Short', workingWidth: 120, roll: false, workingLength: 60, overlap: 20});
+      const expected: TapePieces = {kind: 'no-join', stretches: [{first: col(0), last: col(0)}]};
+
+      expect(piecesOf(tapeWith(organ, 3, 200), organ, short)).toEqual(expected);
+    });
+
+    it('makes a Tape without Holes uncuttable when a Column is longer than the working length less the Overlap', () => {
+      // Columns of 290 mm: the Join after Column 1 ends its Overlap at 360 mm, beyond the 300 mm working length.
+      const expected: TapePieces = {kind: 'no-join', stretches: [{first: col(0), last: col(0)}]};
+
+      expect(piecesOf(tapeWith(organ, 290, 2), organ, plotter)).toEqual(expected);
+    });
+  });
+
+  describe('when the Plotter is narrower than the tape', () => {
+    it('gives too-wide with both widths and nothing else', () => {
+      const narrow = plotterOf({name: 'Narrow', workingWidth: 90, roll: false, workingLength: 300, overlap: 20});
+      const expected: TapePieces = {kind: 'too-wide', tapeWidth: 100, workingWidth: 90};
+
+      expect(piecesOf(tapeWith(organ, 3, 200), organ, narrow)).toEqual(expected);
+    });
+
+    it('fits a Tape exactly as wide as the working width (FR-017)', () => {
+      const exact = plotterOf({name: 'Exact', workingWidth: 100, roll: false, workingLength: 300, overlap: 20});
+
+      expect(piecesOf(tapeWith(organ, 3, 200), organ, exact)).toEqual(referenceCut);
+    });
+  });
+
   describe('on generated small Tapes', () => {
     it('cuts into contiguous Tape pieces within the working length, with the fewest pieces (SC-003, SC-004)', () => {
       let multiPiece = 0;
