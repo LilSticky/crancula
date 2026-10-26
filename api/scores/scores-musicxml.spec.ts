@@ -52,8 +52,14 @@ function hole(pipe: number, start: number, length: number): Hole {
   };
 }
 
-/** The reference Organ of spec 003 (Pipes 60 to 69), with the given Tape per Crank turn in millimetres. */
-function organWith(tapePerCrankTurn: number | null): Organ {
+/** The Pipes 60 to 69 of the reference Organ of spec 003. */
+const REFERENCE_PIPES: readonly number[] = Array.from({length: 10}, (_, row) => 60 + row);
+
+/** The Pipes 55 to 69: some below C4, for the two-staff exports. */
+const LOW_PIPES: readonly number[] = Array.from({length: 15}, (_, row) => 55 + row);
+
+/** The reference Organ of spec 003 (Pipes 60 to 69 unless others are given), with the Tape per Crank turn in mm. */
+function organWith(tapePerCrankTurn: number | null, pipes: readonly number[] = REFERENCE_PIPES): Organ {
   const result = validateOrgan({
     id: defined(organId(ORGAN_ID), 'organ id'),
     name: 'Reference organ',
@@ -63,7 +69,7 @@ function organWith(tapePerCrankTurn: number | null): Organ {
     slowestCrankSpeed: 30,
     fastestCrankSpeed: 120,
     tapePerCrankTurn,
-    pipes: Array.from({length: 10}, (_, row) => ({note: 60 + row})),
+    pipes: pipes.map((note) => ({note})),
   });
   if (!result.ok) throw new Error('invalid Organ fixture');
   return result.value;
@@ -173,6 +179,117 @@ function voiceSums(measure: XmlElement): Record<string, number> {
 
 function firstPartOf(root: XmlElement): XmlElement {
   return defined(named(root, 'part')[0], 'part');
+}
+
+/** The measures of the first part, in document order. */
+function measuresOf(root: XmlElement): XmlElement[] {
+  return named(firstPartOf(root), 'measure');
+}
+
+function measureAt(root: XmlElement, index: number): XmlElement {
+  return defined(measuresOf(root)[index], `measure ${index}`);
+}
+
+const STEP_SEMITONES: ReadonlyMap<string, number> = new Map([
+  ['C', 0],
+  ['D', 2],
+  ['E', 4],
+  ['F', 5],
+  ['G', 7],
+  ['A', 9],
+  ['B', 11],
+]);
+
+/** The spelled pitch of a `<pitch>` element, as in "C4", "F#3" or "Bb2". */
+function pitchNameOf(pitch: XmlElement): string {
+  const alter = Number(named(pitch, 'alter')[0]?.text.trim() ?? 0);
+  const accidental = alter === 1 ? '#' : alter === -1 ? 'b' : '';
+  return `${textOf(pitch, 'step')}${accidental}${textOf(pitch, 'octave')}`;
+}
+
+/** The MIDI note number a `<pitch>` element sounds at, from its step, alter and octave. */
+function midiOf(pitch: XmlElement): number {
+  const semitones = defined(STEP_SEMITONES.get(textOf(pitch, 'step')), 'step');
+  const alter = Number(named(pitch, 'alter')[0]?.text.trim() ?? 0);
+  return (Number(textOf(pitch, 'octave')) + 1) * 12 + semitones + alter;
+}
+
+/** One `<note>` of a measure as read back; a field the note does not have is undefined or empty. */
+interface Entry {
+  readonly rest: boolean;
+  readonly measureRest: boolean;
+  readonly chord: boolean;
+  readonly pitch: string | undefined;
+  readonly midi: number | undefined;
+  readonly type: string | undefined;
+  readonly dotted: boolean;
+  readonly duration: number;
+  readonly ties: readonly string[];
+  readonly voice: string;
+  readonly staff: string | undefined;
+  readonly stem: string | undefined;
+}
+
+function entryOf(noteElement: XmlElement): Entry {
+  const pitch = named(noteElement, 'pitch')[0];
+  const rest = named(noteElement, 'rest')[0];
+  return {
+    rest: rest !== undefined,
+    measureRest: rest?.attributes.get('measure') === 'yes',
+    chord: named(noteElement, 'chord').length > 0,
+    pitch: pitch === undefined ? undefined : pitchNameOf(pitch),
+    midi: pitch === undefined ? undefined : midiOf(pitch),
+    type: named(noteElement, 'type')[0]?.text.trim(),
+    dotted: named(noteElement, 'dot').length > 0,
+    duration: Number(textOf(noteElement, 'duration')),
+    ties: named(noteElement, 'tie').map((tie) => tie.attributes.get('type') ?? ''),
+    voice: textOf(noteElement, 'voice'),
+    staff: named(noteElement, 'staff')[0]?.text.trim(),
+    stem: named(noteElement, 'stem')[0]?.text.trim(),
+  };
+}
+
+/** The `<note>` elements of a measure, in the order they are written. */
+function entriesOf(measure: XmlElement): Entry[] {
+  return named(measure, 'note').map(entryOf);
+}
+
+interface InputFields {
+  readonly holes: readonly Hole[];
+  /** In Columns; 64 when left out (two Bars of 32 Columns). */
+  readonly length?: number;
+  readonly organ?: Organ;
+  readonly song?: Song;
+  readonly splitNotes?: readonly MidiNoteNumber[];
+}
+
+/**
+ * A Tape of 3 mm Columns, so the Minimum Gap of 2 mm rounds up to one Column (Story 2). Without a Song it is in
+ * 4/4 with no upbeat; with one, its Time signatures are kept.
+ */
+function tapeInput(fields: InputFields): ScoresInput {
+  const organ = fields.organ ?? organWith(100);
+  const tape: Tape = tapeOf({
+    id: defined(tapeId(TAPE_ID), 'tape id'),
+    name: 'Plain',
+    organId: organ.id,
+    songId: fields.song?.id,
+    selectedParts: fields.song === undefined ? undefined : [defined(partIndex(0, 1), 'part index')],
+    transposition: defined(transposition(0), 'transposition'),
+    columnLength: defined(millimetres(3), 'column length'),
+    length: defined(columnCount(fields.length ?? 64), 'length'),
+    holes: fields.holes,
+  });
+  return {
+    tape,
+    organ,
+    song: fields.song,
+    choices: {
+      timeSignature: fields.song === undefined ? {beats: 4, beatType: 4} : 'song',
+      upbeat: 0,
+      splitNotes: fields.splitNotes ?? [],
+    },
+  };
 }
 
 describe('scoresMusicXml writes the MusicXML 4.0 document of the Story 1.3 Tape', () => {
@@ -292,5 +409,187 @@ describe('scoresMusicXml writes the MusicXML 4.0 document of the Story 1.3 Tape'
     const golden = readFileSync(new URL('./scores.reference.musicxml', import.meta.url), 'utf8');
 
     expect(scoresMusicXml(storyInput())).toBe(golden);
+  });
+});
+
+describe('scoresMusicXml writes one staff per range of Pipes (FR-005, FR-006, FR-007, FR-010)', () => {
+  const split = [midi(60)];
+
+  it('writes two staves split at C4 with a treble clef on the top staff and a bass clef below (FR-005, FR-006)', () => {
+    const root = parsed(
+      scoresMusicXml(tapeInput({holes: [hole(67, 0, 8), hole(55, 8, 8)], length: 32, organ: organWith(100, LOW_PIPES), splitNotes: split})),
+    );
+    const attributes = defined(named(measureAt(root, 0), 'attributes')[0], 'attributes');
+    const clefs = named(attributes, 'clef').map((clef) => [clef.attributes.get('number'), textOf(clef, 'sign')]);
+
+    expect(named(attributes, 'staves').map((staves) => staves.text.trim())).toEqual(['2']);
+    expect(clefs).toEqual([
+      ['1', 'G'],
+      ['2', 'F'],
+    ]);
+    expect(all(root, 'backup').length).toBeGreaterThan(0);
+  });
+
+  it('puts every Hole on the staff of its pitch: the Pipes at C4 and above on the top staff, the rest below (FR-005, FR-007)', () => {
+    const input = tapeInput({
+      holes: [hole(67, 0, 8), hole(55, 8, 8), hole(60, 16, 8)],
+      length: 32,
+      organ: organWith(100, LOW_PIPES),
+      splitNotes: split,
+    });
+
+    const result = readScoreSong(new TextEncoder().encode(scoresMusicXml(input)), 'Plain.musicxml');
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(
+      result.value.song.parts.map((each) => each.notes.map(({noteNumber, start, duration}) => ({noteNumber, start, duration}))),
+    ).toEqual([
+      [
+        {noteNumber: 67, start: 0, duration: 8},
+        {noteNumber: 60, start: 16, duration: 8},
+      ],
+      [{noteNumber: 55, start: 8, duration: 8}],
+    ]);
+  });
+
+  it('writes a Bar with no note on a staff as one whole-Bar rest on that staff (FR-010)', () => {
+    const root = parsed(
+      scoresMusicXml(tapeInput({holes: [hole(67, 0, 8)], length: 32, organ: organWith(100, LOW_PIPES), splitNotes: split})),
+    );
+    const entries = entriesOf(measureAt(root, 0));
+
+    expect(entries.filter((entry) => entry.staff === '2')).toMatchObject([{rest: true, measureRest: true, duration: 32}]);
+  });
+
+  it('writes a Hole whose Pipe is not on the Organ as an ordinary note on the staff of its pitch (FR-007)', () => {
+    const text = scoresMusicXml(
+      tapeInput({holes: [hole(50, 0, 8)], length: 32, organ: organWith(100, LOW_PIPES), splitNotes: split}),
+    );
+    const entries = entriesOf(measureAt(parsed(text), 0));
+
+    expect(entries.filter((entry) => entry.staff === '2' && !entry.rest)).toMatchObject([
+      {pitch: 'D3', midi: 50, chord: false, type: 'quarter', duration: 8, ties: []},
+    ]);
+    expect(text).not.toMatch(/<(accidental|notehead|cue|grace)\b/);
+  });
+
+  it('writes MIDI notes 0 to 11 one octave up, in octave 0, with no mark (FR-007)', () => {
+    const root = parsed(scoresMusicXml(tapeInput({holes: [hole(0, 0, 8), hole(11, 8, 8)]})));
+    const pitches = entriesOf(measureAt(root, 0)).filter((entry) => !entry.rest).map((entry) => entry.pitch);
+
+    expect(pitches).toEqual(['C0', 'B0']);
+  });
+});
+
+describe('scoresMusicXml writes chords, voices and ties (FR-009, FR-012)', () => {
+  it('writes two Holes that start and end together on one staff as one chord (FR-012)', () => {
+    const root = parsed(scoresMusicXml(tapeInput({holes: [hole(60, 0, 8), hole(64, 0, 8)]})));
+    const [first, second] = entriesOf(measureAt(root, 0));
+
+    expect(first).toMatchObject({pitch: 'C4', chord: false, type: 'quarter', duration: 8});
+    expect(second).toMatchObject({pitch: 'E4', chord: true, duration: 8});
+  });
+
+  it('writes a note that overlaps one of another length in voice 2, stems up in voice 1 and down in voice 2 (FR-012)', () => {
+    const root = parsed(scoresMusicXml(tapeInput({holes: [hole(67, 0, 16), hole(64, 8, 8)]})));
+    const entries = entriesOf(measureAt(root, 0));
+
+    expect(entries.filter((entry) => entry.voice === '1' && !entry.rest)).toMatchObject([
+      {pitch: 'G4', duration: 16, stem: 'up'},
+    ]);
+    expect(entries.filter((entry) => entry.voice === '2' && !entry.rest)).toMatchObject([
+      {pitch: 'E4', duration: 8, stem: 'down'},
+    ]);
+    expect(voiceSums(measureAt(root, 0))).toEqual({1: 32, 2: 32});
+  });
+
+  it('ties a note that crosses a bar line into the next Bar, and reads it back as one note (FR-009, Story 2.4)', () => {
+    const root = parsed(scoresMusicXml(tapeInput({holes: [hole(60, 24, 16)]})));
+
+    expect(entriesOf(measureAt(root, 0)).at(-1)).toMatchObject({pitch: 'C4', duration: 8, type: 'quarter', ties: ['start']});
+    expect(entriesOf(measureAt(root, 1))[0]).toMatchObject({pitch: 'C4', duration: 8, type: 'quarter', ties: ['stop']});
+
+    const result = readScoreSong(new TextEncoder().encode(scoresMusicXml(tapeInput({holes: [hole(60, 24, 16)]}))), 'Plain.musicxml');
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value.song.parts[0]?.notes.map(({noteNumber, start, duration}) => ({noteNumber, start, duration}))).toEqual([
+      {noteNumber: 60, start: 24, duration: 16},
+    ]);
+  });
+
+  it('ties a note that crosses a Time signature change, where the Bar changes from 3/4 to 4/4 (FR-009)', () => {
+    const threeToFour = defined(
+      song({
+        id: defined(songId(SONG_ID), 'song id'),
+        name: 'Waltz',
+        ticksPerQuarter: defined(ticksPerQuarter(QUARTER), 'ticks per quarter'),
+        parts: [aPart()],
+        timeSignatures: [
+          {start: at(0), beats: 3, beatType: 4},
+          {start: at(3 * QUARTER), beats: 4, beatType: 4},
+        ],
+      }),
+      'song',
+    );
+    const root = parsed(scoresMusicXml(tapeInput({song: threeToFour, holes: [hole(60, 16, 16)], length: 56})));
+    const time = defined(all(measureAt(root, 1), 'time')[0], 'time of Bar 1');
+
+    expect(entriesOf(measureAt(root, 0)).at(-1)).toMatchObject({pitch: 'C4', duration: 8, ties: ['start']});
+    expect(entriesOf(measureAt(root, 1))[0]).toMatchObject({pitch: 'C4', duration: 8, ties: ['stop']});
+    expect(textOf(time, 'beats')).toBe('4');
+  });
+});
+
+describe('scoresMusicXml closes small gaps and writes few note values (Story 2)', () => {
+  it('writes a 7-Column Hole followed 1 Column later by the next Hole as one quarter note, with no rest (Story 2.1)', () => {
+    const root = parsed(scoresMusicXml(tapeInput({holes: [hole(60, 0, 7), hole(60, 8, 8)]})));
+
+    expect(entriesOf(measureAt(root, 0)).slice(0, 2)).toMatchObject([
+      {pitch: 'C4', type: 'quarter', dotted: false, duration: 8, ties: []},
+      {pitch: 'C4', rest: false},
+    ]);
+  });
+
+  it('keeps a gap of 2 Columns: a 7-Column Hole is a dotted eighth tied to a 32nd, then a sixteenth rest (Story 2.2)', () => {
+    const root = parsed(scoresMusicXml(tapeInput({holes: [hole(60, 0, 7), hole(60, 9, 8)]})));
+
+    expect(entriesOf(measureAt(root, 0)).slice(0, 3)).toMatchObject([
+      {pitch: 'C4', type: 'eighth', dotted: true, duration: 6, ties: ['start']},
+      {pitch: 'C4', type: '32nd', dotted: false, duration: 1, ties: ['stop']},
+      {rest: true, type: '16th', duration: 2},
+    ]);
+  });
+
+  it('writes a 12-Column Hole with nothing after it as a dotted quarter (Story 2.3)', () => {
+    const root = parsed(scoresMusicXml(tapeInput({holes: [hole(60, 0, 12)]})));
+
+    expect(entriesOf(measureAt(root, 0)).slice(0, 1)).toMatchObject([
+      {pitch: 'C4', type: 'quarter', dotted: true, duration: 12, ties: []},
+    ]);
+  });
+
+  it('writes a 3-Column Hole as a dotted sixteenth (Story 2.3)', () => {
+    const root = parsed(scoresMusicXml(tapeInput({holes: [hole(60, 0, 3)]})));
+
+    expect(entriesOf(measureAt(root, 0)).slice(0, 1)).toMatchObject([
+      {pitch: 'C4', type: '16th', dotted: true, duration: 3, ties: []},
+    ]);
+  });
+
+  it('writes a 5-Column Hole as an eighth tied to a 32nd (Story 2.3)', () => {
+    const root = parsed(scoresMusicXml(tapeInput({holes: [hole(60, 0, 5)]})));
+
+    expect(entriesOf(measureAt(root, 0)).slice(0, 2)).toMatchObject([
+      {pitch: 'C4', type: 'eighth', dotted: false, duration: 4, ties: ['start']},
+      {pitch: 'C4', type: '32nd', dotted: false, duration: 1, ties: ['stop']},
+    ]);
+  });
+
+  it('writes a 23-Column Hole with the fewest tied values, three: a dotted quarter, a quarter and a dotted sixteenth (SC-003)', () => {
+    const root = parsed(scoresMusicXml(tapeInput({holes: [hole(60, 0, 23)]})));
+
+    expect(entriesOf(measureAt(root, 0)).filter((entry) => entry.pitch === 'C4')).toHaveLength(3);
   });
 });

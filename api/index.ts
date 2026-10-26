@@ -185,6 +185,7 @@ export {plotterSvg} from './tape/plotter-svg';
 export {pieceGeometry, type CutGeometry} from './tape/tape-piece-geometry';
 export {tapeGeometry, type Point, type Slot, type TapeGeometry, type TapeOutline} from './tape/tape-geometry';
 export {tapePieces, type Join, type JoinlessStretch, type TapePiece, type TapePieces} from './tape/tape-pieces';
+export {closeGaps, minimumGapColumns, type ScoresNote} from './scores/close-gaps';
 export {noteValues, type NoteType, type NoteValue} from './scores/note-values';
 export {spell, type Spelling, type Step} from './scores/spell';
 export {assignVoices, type Chord, type StaffVoices, type VoiceNumber} from './scores/voices';

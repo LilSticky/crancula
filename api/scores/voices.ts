@@ -5,7 +5,8 @@ import type {Staff} from './scores-staves';
 
 export type VoiceNumber = 1 | 2 | 3 | 4;
 
-const VOICES: readonly VoiceNumber[] = [1, 2, 3, 4];
+/** The voices of a staff, from the lowest. */
+export const VOICES: readonly VoiceNumber[] = [1, 2, 3, 4];
 
 /** Notes of one staff that start and end together; `pitches` ascending. */
 export interface Chord {

@@ -30,31 +30,31 @@
       <note>
         <pitch><step>G</step><octave>4</octave></pitch>
         <duration>8</duration>
-        <type>quarter</type>
         <voice>1</voice>
+        <type>quarter</type>
       </note>
     </measure>
     <measure number="1">
       <note>
         <pitch><step>C</step><octave>4</octave></pitch>
         <duration>8</duration>
-        <type>quarter</type>
         <voice>1</voice>
+        <type>quarter</type>
       </note>
       <note>
         <pitch><step>E</step><octave>4</octave></pitch>
         <duration>16</duration>
-        <type>half</type>
         <voice>1</voice>
+        <type>half</type>
       </note>
     </measure>
     <measure number="2">
       <note>
         <pitch><step>G</step><octave>4</octave></pitch>
         <duration>24</duration>
+        <voice>1</voice>
         <type>half</type>
         <dot/>
-        <voice>1</voice>
       </note>
     </measure>
   </part>

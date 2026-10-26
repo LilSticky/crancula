@@ -171,18 +171,18 @@ the file back and compare Bars, pitches, key and tempo mark.
 
 **Independent Test**: export the Story 2 reference Tape and compare each Bar's notes and rests.
 
-- [ ] T033 [P] [US2] Red: `api/scores/close-gaps.spec.ts`: `minimumGapColumns` = ceil(Minimum Gap ÷ Column
+- [x] T033 [P] [US2] Red: `api/scores/close-gaps.spec.ts`: `minimumGapColumns` = ceil(Minimum Gap ÷ Column
   length − 1e-9) (2 mm ÷ 3 mm → 1; 6 ÷ 3 → 2; 0 → 0); `closeGaps`: 7 + gap 1 → length 8; 7 + gap 2 → stays 7;
   touching Holes stay two notes; the last Hole of a Pipe keeps its length; Holes of other Pipes are independent;
   the input Holes are unchanged (FR-008, Story 2.1, 2.2, 2.8).
-- [ ] T034 [US2] Green: `api/scores/close-gaps.ts` (`ScoresNote`, `minimumGapColumns`, `closeGaps`); export.
-- [ ] T035 [P] [US2] Red: Story 2 cases in `api/scores/scores-musicxml.spec.ts`: 7 + gap 1 → quarter, no rest; 7
+- [x] T034 [US2] Green: `api/scores/close-gaps.ts` (`ScoresNote`, `minimumGapColumns`, `closeGaps`); export.
+- [x] T035 [P] [US2] Red: Story 2 cases in `api/scores/scores-musicxml.spec.ts`: 7 + gap 1 → quarter, no rest; 7
   + gap 2 → dotted eighth tied to 32nd then 16th rest; 12 → dotted quarter; 3 → dotted 16th; 5 → eighth tied to
   32nd; start 24 length 16 → quarter tied over the bar line to a quarter; an empty Bar on a staff → whole-bar
   rest; same start and length on two Pipes → `<chord/>`; overlapping different lengths → voice 2 with stems
   down, voice 1 up (Story 2.1–2.7, FR-009, FR-010, FR-012); no note has more tied values than `noteValues` gives
   (SC-003).
-- [ ] T036 [US2] Green: use `closeGaps` in `scoresMusicXml`; refresh the golden file.
+- [x] T036 [US2] Green: use `closeGaps` in `scoresMusicXml`; refresh the golden file.
 
 **Checkpoint**: commit; STATUS.
 
