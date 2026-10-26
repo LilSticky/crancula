@@ -32,7 +32,7 @@ the file on disk, the page head at real widths, the preload allow-list).
 
 ## Phase 1: Setup
 
-- [ ] T001 Add the keys of [contracts/scores-export-ui.md](contracts/scores-export-ui.md) and
+- [x] T001 Add the keys of [contracts/scores-export-ui.md](contracts/scores-export-ui.md) and
   [contracts/scores-ipc.md](contracts/scores-ipc.md) with en and de texts to `src/assets/i18n/en.json` and
   `de.json`: `TAPE.VIEW.EXPORT_SCORES` ("Export as Scores" / "Als Noten exportieren"), `TAPE.SCORES.TITLE`,
   `TIME_SIGNATURE` ("Time signature" / "Taktart"), `TIME_SONG` ("As in the Song: {{metre}}" / "Wie im Stück:
@@ -47,27 +47,27 @@ the file on disk, the page head at real widths, the preload allow-list).
 
 Blocks every story: the parts of the writer that every Scores file needs.
 
-- [ ] T002 [P] Red: `api/scores/note-values.spec.ts`: `noteValues(n)` gives the fewest values from {48 dotted
+- [x] T002 [P] Red: `api/scores/note-values.spec.ts`: `noteValues(n)` gives the fewest values from {48 dotted
   whole, 32 whole, 24 dotted half, 16 half, 12 dotted quarter, 8 quarter, 6 dotted eighth, 4 eighth, 3 dotted
   16th, 2 16th, 1 32nd}, longest first: 8 → quarter; 12 → dotted quarter; 3 → dotted 16th; 5 → eighth + 32nd;
   7 → dotted eighth + 32nd; every n 1–200 sums to n and its count equals a brute-force minimum (FR-009, R7).
-- [ ] T003 Green: `api/scores/note-values.ts` (`NoteType`, `NoteValue`, `noteValues`, dynamic programme);
+- [x] T003 Green: `api/scores/note-values.ts` (`NoteType`, `NoteValue`, `noteValues`, dynamic programme);
   export from `api/index.ts`.
-- [ ] T004 [P] Red: `api/scores/spell.spec.ts`: `spell(pitch, fifths)` → C major 60 C4, 61 C♯4, 70 A♯4; G
+- [x] T004 [P] Red: `api/scores/spell.spec.ts`: `spell(pitch, fifths)` → C major 60 C4, 61 C♯4, 70 A♯4; G
   major 66 F♯4; F major 70 B♭4, 66 G♭4 (off-key flats when fifths < 0); C♯ major 65 E♯4 and 60 B♯3; C♭ major
   59 C♭4; every pitch 12–127 spelled back to its MIDI number; MIDI 0–11 written one octave up at octave 0, and
   a B♯ that would land in octave −1 spelled C (FR-007, FR-014, R5).
-- [ ] T005 Green: `api/scores/spell.ts` (`Step`, `Spelling`, `spell`); export.
-- [ ] T006 [P] Red: `api/scores/voices.spec.ts`: `assignVoices(staff, notes)`: same start and length → one
+- [x] T005 Green: `api/scores/spell.ts` (`Step`, `Spelling`, `spell`); export.
+- [x] T006 [P] Red: `api/scores/voices.spec.ts`: `assignVoices(staff, notes)`: same start and length → one
   chord, pitches ascending; a held low note under moving higher notes → the higher chords in voice 1, the held
   note in voice 2; chords in one voice never overlap; five overlapping layers → the fifth goes into voice 4,
   whose chords are then cut into tied pieces at every start and end so none overlap (FR-012, R8).
-- [ ] T007 Green: `api/scores/voices.ts` (`VoiceNumber`, `Chord`, `StaffVoices`, `assignVoices`); export.
-- [ ] T008 [P] Red: `api/scores/scores-bars.spec.ts` (Bars only, Keys follow in T016): one Time signature
+- [x] T007 Green: `api/scores/voices.ts` (`VoiceNumber`, `Chord`, `StaffVoices`, `assignVoices`); export.
+- [x] T008 [P] Red: `api/scores/scores-bars.spec.ts` (Bars only, Keys follow in T016): one Time signature
   `{beats, beatType}` from Column 0 over `tape.length`, with an upbeat in Columns: 4/4 over 70 Columns → Bars at
   0, 32, 64, the last full (32); 6/8 with upbeat 4 → 0–3, then 24 each, Bar numbers 0, 1, 2… (Story 4.2, FR-011);
   a Bar of `beats × 32 / beatType` Columns.
-- [ ] T009 Green: `api/scores/scores-bars.ts` (`Bar`, `scoresBars` for one chosen Time signature); export.
+- [x] T009 Green: `api/scores/scores-bars.ts` (`Bar`, `scoresBars` for one chosen Time signature); export.
 
 **Checkpoint**: `npm run test:node` green; commit; STATUS.
 
