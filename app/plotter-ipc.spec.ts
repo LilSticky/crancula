@@ -1,4 +1,4 @@
-import {access, mkdir, mkdtemp, readdir, readFile, rm, stat, writeFile} from 'node:fs/promises';
+import {mkdir, mkdtemp, readdir, readFile, rm, stat, symlink, writeFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {basename, dirname, join} from 'node:path';
 import type {
@@ -11,6 +11,7 @@ import type {
   SaveDialogReturnValue,
 } from 'electron';
 import {afterEach, beforeEach, describe, expect, it} from 'vitest';
+import {entryExists} from './entry-exists';
 import type {IpcHandlerRegistry} from './organ-library-ipc';
 import {PLOTTER_CHANNELS, registerPlotterHandlers, type PlotterEffects} from './plotter-ipc';
 
@@ -40,6 +41,21 @@ const piecesRequest = {
   cancelButton: 'Cancel',
 };
 
+/** Whether this machine lets a process create a symlink, probed once in a temporary folder. */
+async function symlinksAllowed(): Promise<boolean> {
+  const probeDir = await mkdtemp(join(tmpdir(), 'crancula-symlink-probe-'));
+  try {
+    await symlink(probeDir, join(probeDir, 'link'));
+    return true;
+  } catch {
+    return false;
+  } finally {
+    await rm(probeDir, {recursive: true, force: true});
+  }
+}
+
+const SYMLINKS_ALLOWED = await symlinksAllowed();
+
 let dir: string;
 let documents: string;
 let folder: string;
@@ -66,10 +82,7 @@ const effects: PlotterEffects = {
     messageBoxCalls.push(options);
     return Promise.resolve(messageAnswers.shift() ?? {response: 1, checkboxChecked: false});
   },
-  exists: (filePath) => access(filePath).then(
-    () => true,
-    () => false,
-  ),
+  exists: entryExists,
   writeFile: (filePath, text) => writeFile(filePath, text, 'utf8'),
   documentsFolder: () => documents,
 };
@@ -285,6 +298,17 @@ describe('registerPlotterHandlers: savePieces', () => {
 
     expect(await savePieces(piecesRequest)).toMatchObject({status: 'saved'});
     expect(messageBoxCalls).toEqual([]);
+  });
+
+  // Creating a symlink needs Developer Mode or elevation on Windows; without it this one case is skipped.
+  it.skipIf(!SYMLINKS_ALLOWED)('counts a dangling symlink as existing and asks the replace question', async () => {
+    await symlink(join(dir, 'missing-target.svg'), join(folder, 'Waltz 2 of 3.svg'));
+    folderAnswers.push({canceled: false, filePaths: [folder]});
+    messageAnswers.push({response: 1, checkboxChecked: false});
+
+    expect(await savePieces(piecesRequest)).toEqual({status: 'cancelled'});
+    expect(messageBoxCalls).toHaveLength(1);
+    expect(messageBoxCalls[0]).toMatchObject({detail: 'Waltz 2 of 3.svg'});
   });
 
   it('asks once before replacing, naming the existing files one per line', async () => {

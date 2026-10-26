@@ -5,6 +5,7 @@ import * as path from 'path';
 import type {Language} from '../api';
 import {registerAppHandlers} from './app-ipc';
 import {menuTemplate, SOURCE_I18N_DIRECTORY} from './application-menu';
+import {entryExists} from './entry-exists';
 import {createOrganLibraryFile} from './organ-library-file';
 import {registerOrganLibraryHandlers} from './organ-library-ipc';
 import {createPlotterLibraryFile} from './plotter-library-file';
@@ -37,8 +38,7 @@ registerPlotterHandlers(
     showSaveDialog: (window, options) => dialog.showSaveDialog(window, options),
     showOpenDialog: (window, options) => dialog.showOpenDialog(window, options),
     showMessageBox: (window, options) => dialog.showMessageBox(window, options),
-    // lstat, not access: a broken symlink is an existing entry that a save would replace, so it counts as existing.
-    exists: (filePath) => fs.promises.lstat(filePath).then(() => true, () => false),
+    exists: entryExists,
     writeFile: (filePath, text) => fs.promises.writeFile(filePath, text, 'utf8'),
     documentsFolder: () => app.getPath('documents'),
   },
