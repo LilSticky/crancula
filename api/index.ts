@@ -195,13 +195,16 @@ export {assignVoices, type Chord, type StaffVoices, type VoiceNumber} from './sc
 export {scoresBars, songKeepsBarsOnColumns, type Bar} from './scores/scores-bars';
 export {
   prefilledScoresChoices,
+  SCORES_BEAT_TYPES,
   scoresChoicesOf,
+  validateScoresChoices,
   type ChosenTimeSignature,
   type ScoresBeatType,
   type ScoresChoices,
   type ScoresChoicesInput,
+  type ScoresChoicesViolation,
 } from './scores/scores-choices';
 export {scoresFileName} from './scores/scores-file-name';
 export {scoresTempo} from './scores/scores-tempo';
-export {scoresStaves, staffOf, type Clef, type Staff} from './scores/scores-staves';
+export {scoresStaves, staffOf, staffRange, type Clef, type Staff, type StaffRange} from './scores/scores-staves';
 export {scoresMusicXml, type ScoresInput} from './scores/scores-musicxml';

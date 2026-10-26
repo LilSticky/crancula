@@ -5,22 +5,24 @@ import {MatFormField, MatLabel} from '@angular/material/form-field';
 import {MatInput} from '@angular/material/input';
 import {MatOption, MatSelect, MatSelectChange} from '@angular/material/select';
 import {MatRadioButton, MatRadioGroup} from '@angular/material/radio';
-import {TranslatePipe, TranslateService} from '@ngx-translate/core';
+import {TranslatePipe} from '@ngx-translate/core';
 import {
   closeGaps,
   midiNoteNumber,
   minimumGapColumns,
   noteName,
   prefilledScoresChoices,
+  SCORES_BEAT_TYPES,
   scoresChoicesOf,
   scoresStaves,
   songMetre,
+  staffRange,
   type Clef,
   type MidiNoteNumber,
   type Organ,
+  type ScoresBeatType,
   type ScoresChoices,
   type Song,
-  type Staff,
   type Tape,
 } from '@api/index';
 
@@ -31,9 +33,12 @@ export interface ScoresExportDialogData {
   readonly rememberedSplitNotes: readonly MidiNoteNumber[] | undefined;
 }
 
-/** The lowest and highest notes of the keyboard, the open ends of the top and bottom staff. */
-const LOWEST_NOTE = 0 as MidiNoteNumber;
-const HIGHEST_NOTE = 127 as MidiNoteNumber;
+/** Middle C, the split note that Add gives when there is none yet (FR-005). */
+const MIDDLE_C = 60;
+/** MIDI notes in an octave: Add gives a split note one octave below the lowest one. */
+const OCTAVE = 12;
+/** The lowest MIDI note that Add gives a split note. */
+const LOWEST_ADDED_NOTE = 1;
 
 /** The translation key of each clef. */
 const CLEF_KEYS: Readonly<Record<Clef, string>> = {
@@ -43,10 +48,52 @@ const CLEF_KEYS: Readonly<Record<Clef, string>> = {
   'bass-8vb': 'TAPE.SCORES.CLEF.BASS_8VB',
 };
 
+/** A MIDI note with its name, as the split note selects offer it. */
+interface PitchOption {
+  readonly pitch: MidiNoteNumber;
+  readonly name: string;
+}
+
+/** Every MIDI note from 0 to 127, by name. */
+const PITCH_OPTIONS: readonly PitchOption[] = Array.from({length: 128}, (_, value) => value).flatMap((value) => {
+  const pitch = midiNoteNumber(value);
+  return pitch === undefined ? [] : [{pitch, name: noteName(pitch)}];
+});
+
 /** The first Time signature of the Song as "3/4"; undefined without a Song or without a Time signature. */
 function metreTextOf(song: Song | undefined): string | undefined {
   const timeSignature = song === undefined ? undefined : songMetre(song).timeSignature;
   return timeSignature === undefined ? undefined : `${timeSignature.beats}/${timeSignature.beatType}`;
+}
+
+/** The beat type of a value the dialog holds, or null when the Scores do not offer it. */
+function beatTypeOf(value: unknown): ScoresBeatType | null {
+  return SCORES_BEAT_TYPES.find((beatType) => beatType === value) ?? null;
+}
+
+/** The split notes in the order the dialog lists them: the highest on top. */
+function highestFirst(values: readonly number[]): readonly number[] {
+  return [...values].sort((a, b) => b - a);
+}
+
+/** The split notes that are MIDI notes, sorted ascending; the others are shown as a violation and left out. */
+function pitchesOf(values: readonly number[]): readonly MidiNoteNumber[] {
+  return values
+    .flatMap((value) => {
+      const pitch = midiNoteNumber(value);
+      return pitch === undefined ? [] : [pitch];
+    })
+    .sort((a, b) => a - b);
+}
+
+/**
+ * The split note that Add gives: one octave below the lowest split note, or C4 when there is none. Undefined when
+ * that would be below MIDI 1, which disables Add.
+ */
+function nextSplitNoteOf(splitNotes: readonly number[]): MidiNoteNumber | undefined {
+  if (splitNotes.length === 0) return midiNoteNumber(MIDDLE_C);
+  const candidate = Math.min(...splitNotes) - OCTAVE;
+  return candidate >= LOWEST_ADDED_NOTE ? midiNoteNumber(candidate) : undefined;
 }
 
 /** Asks how the Scores are written; the choices start from the Song and the Organ (FR-004, FR-005). */
@@ -102,10 +149,41 @@ function metreTextOf(song: Song | undefined): string | undefined {
       </mat-form-field>
 
       <h3>{{ 'TAPE.SCORES.STAVES' | translate }}</h3>
+      @for (value of splitNotes(); track $index; let index = $index) {
+        <div class="split-note">
+          <mat-form-field>
+            <mat-label>{{ 'TAPE.SCORES.SPLIT_NOTE' | translate }}</mat-label>
+            <mat-select data-testid="scores-split-note" [value]="value" (selectionChange)="splitChosen(index, $event)">
+              @for (option of pitchOptions; track option.pitch) {
+                <mat-option [value]="option.pitch">{{ option.name }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          <button mat-button type="button" data-testid="scores-split-remove" (click)="removeSplitNote(index)">
+            {{ 'TAPE.SCORES.SPLIT_REMOVE' | translate }}
+          </button>
+        </div>
+      }
+      <button
+        mat-button
+        type="button"
+        data-testid="scores-split-add"
+        [disabled]="nextSplitNote() === undefined"
+        (click)="addSplitNote()"
+      >
+        {{ 'TAPE.SCORES.SPLIT_ADD' | translate }}
+      </button>
       <ul>
-        @for (staff of staves; track staff.number) {
+        @for (line of staffLines(); track line.number) {
           <li data-testid="scores-staff">
-            {{ 'TAPE.SCORES.STAFF' | translate: {number: staff.number, range: rangeOf(staff), clef: (clefKey(staff.clef) | translate)} }}
+            {{
+              'TAPE.SCORES.STAFF'
+                | translate: {
+                    number: line.number,
+                    range: ('TAPE.SCORES.RANGE' | translate: {from: line.from, to: line.to}),
+                    clef: (line.clef | translate),
+                  }
+            }}
           </li>
         }
       </ul>
@@ -122,6 +200,10 @@ function metreTextOf(song: Song | undefined): string | undefined {
     mat-form-field {
       margin-right: 0.5rem;
     }
+    .split-note {
+      display: flex;
+      align-items: center;
+    }
     ul {
       margin: 0;
       padding-left: 1.25rem;
@@ -131,30 +213,44 @@ function metreTextOf(song: Song | undefined): string | undefined {
 export class ScoresExportDialogComponent {
   protected readonly dialogRef = inject<MatDialogRef<ScoresExportDialogComponent, ScoresChoices | undefined>>(MatDialogRef);
   protected readonly data = inject<ScoresExportDialogData>(MAT_DIALOG_DATA);
-  private readonly translate = inject(TranslateService);
-  protected readonly noteValues = [1, 2, 4, 8, 16, 32] as const;
+  protected readonly noteValues = SCORES_BEAT_TYPES;
+  protected readonly pitchOptions = PITCH_OPTIONS;
 
   private readonly prefilled = prefilledScoresChoices(this.data.organ, this.data.song, this.data.rememberedSplitNotes);
+  private readonly notes = closeGaps(this.data.tape.holes, minimumGapColumns(this.data.organ, this.data.tape.columnLength));
 
   /** The metre of the "As in the Song" choice; undefined when the dialog does not offer that choice. */
   protected readonly songMetreText = this.prefilled.timeSignature === 'song' ? metreTextOf(this.data.song) : undefined;
 
   protected readonly upbeatCount = signal<number | null>(this.prefilled.upbeat.count);
-  protected readonly upbeatValue = signal<number | null>(this.prefilled.upbeat.noteValue);
+  protected readonly upbeatValue = signal<ScoresBeatType | null>(beatTypeOf(this.prefilled.upbeat.noteValue));
+
+  /** The split notes as the dialog holds them, the highest on top; they may not be distinct while being edited. */
+  protected readonly splitNotes = signal<readonly number[]>(highestFirst(this.prefilled.splitNotes));
+
+  /** The split note that Add gives next; undefined when Add is disabled. */
+  protected readonly nextSplitNote = computed(() => nextSplitNoteOf(this.splitNotes()));
 
   /** The choices as the dialog holds them; undefined while a value is not yet a choice, which keeps Export disabled. */
   protected readonly choices = computed(() =>
     scoresChoicesOf({
       timeSignature: this.prefilled.timeSignature,
       upbeat: {count: this.upbeatCount(), noteValue: this.upbeatValue()},
-      splitNotes: this.prefilled.splitNotes,
+      splitNotes: this.splitNotes(),
     }),
   );
 
-  protected readonly staves: readonly Staff[] = scoresStaves(
-    this.prefilled.splitNotes,
-    this.data.organ,
-    closeGaps(this.data.tape.holes, minimumGapColumns(this.data.organ, this.data.tape.columnLength)),
+  /** One line per staff from the top: its number, the notes it holds (from, to) and its clef. */
+  protected readonly staffLines = computed(() =>
+    scoresStaves(pitchesOf(this.splitNotes()), this.data.organ, this.notes).map((staff) => {
+      const range = staffRange(staff);
+      return {
+        number: staff.number,
+        from: noteName(range.lowest),
+        to: noteName(range.highest),
+        clef: CLEF_KEYS[staff.clef],
+      };
+    }),
   );
 
   protected countTyped(event: Event): void {
@@ -163,19 +259,23 @@ export class ScoresExportDialogComponent {
   }
 
   protected valueChosen(change: MatSelectChange): void {
+    this.upbeatValue.set(beatTypeOf(change.value));
+  }
+
+  /** Changes the split note of a row; the rows stay highest first. */
+  protected splitChosen(index: number, change: MatSelectChange): void {
     const value: unknown = change.value;
-    this.upbeatValue.set(typeof value === 'number' ? value : null);
+    if (typeof value !== 'number') return;
+    this.splitNotes.update((values) => highestFirst(values.map((current, position) => (position === index ? value : current))));
   }
 
-  protected clefKey(clef: Clef): string {
-    return CLEF_KEYS[clef];
+  protected removeSplitNote(index: number): void {
+    this.splitNotes.update((values) => values.filter((_, position) => position !== index));
   }
 
-  /** The notes a staff holds, from its lowest to its highest; the keyboard's ends where the staff is open. */
-  protected rangeOf(staff: Staff): string {
-    const lowest = staff.from ?? LOWEST_NOTE;
-    const highest = staff.below === undefined ? HIGHEST_NOTE : (midiNoteNumber(staff.below - 1) ?? LOWEST_NOTE);
-    return String(this.translate.instant('TAPE.SCORES.RANGE', {from: noteName(lowest), to: noteName(highest)}));
+  protected addSplitNote(): void {
+    const next = this.nextSplitNote();
+    if (next !== undefined) this.splitNotes.update((values) => [...values, next]);
   }
 
   /** Closes with no choices, which tells the export that nothing is to be written. */

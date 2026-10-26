@@ -14,7 +14,7 @@ import {midiNoteNumber, type MidiNoteNumber} from '../organ/midi-note-number';
 import {organId, type Organ} from '../organ/organ';
 import {validateOrgan} from '../organ/validate-organ';
 import {column, columnCount} from '../tape/tape';
-import {scoresStaves, staffOf, type Staff} from './scores-staves';
+import {scoresStaves, staffOf, staffRange, type Staff} from './scores-staves';
 
 const ORGAN_ID = '7d1f3a52-6c4e-4b8a-9f01-2e3d4c5b6a79';
 
@@ -109,5 +109,63 @@ describe('scoresStaves gives each staff a plain clef (FR-006, research R9)', () 
     const staves = scoresStaves([midi(60)], organWithPipes([48, 50]), []);
 
     expect(staves[0]?.clef).toBe('treble');
+  });
+});
+
+describe('staffRange gives the notes a staff holds, open at the ends of the keyboard (FR-005)', () => {
+  it('gives the whole keyboard, 0 to 127, for the only staff', () => {
+    const staves = scoresStaves([], organWithPipes([60, 62]), []);
+
+    expect(staves.map((staff) => staffRange(staff))).toEqual([{lowest: 0, highest: 127}]);
+  });
+
+  it('gives the top staff from its split note up to 127 and the bottom staff from 0 up to the split note less one', () => {
+    const staves = scoresStaves([midi(60)], organWithPipes([60, 62]), []);
+
+    expect(staves.map((staff) => staffRange(staff))).toEqual([
+      {lowest: 60, highest: 127},
+      {lowest: 0, highest: 59},
+    ]);
+  });
+
+  it('gives a middle staff from its split note up to the next split note less one', () => {
+    const staves = scoresStaves([midi(48), midi(72)], organWithPipes([60, 62]), []);
+
+    expect(staves.map((staff) => staffRange(staff))).toEqual([
+      {lowest: 72, highest: 127},
+      {lowest: 48, highest: 71},
+      {lowest: 0, highest: 47},
+    ]);
+  });
+});
+
+describe('scoresStaves gives an octave clef when most notes of a staff need three ledger lines fewer (FR-006, R9)', () => {
+  it('gives treble-8va to a treble staff whose notes mostly need three ledger lines fewer with the octave clef', () => {
+    // G6 needs four ledger lines on the plain treble clef and none drawn an octave lower (G5 sits in a space).
+    const staves = scoresStaves([], organWithPipes([60, 62]), [91, 91, 91].map((pitch) => scoresNoteAt(pitch)));
+
+    expect(staves.map(({clef}) => clef)).toEqual(['treble-8va']);
+  });
+
+  it('gives bass-8vb to a bass staff whose notes mostly need three ledger lines fewer with the octave clef', () => {
+    // F1 needs four ledger lines on the plain bass clef and none drawn an octave higher (F2 sits in a space).
+    const staves = scoresStaves([], organWithPipes([29, 31]), [29, 29, 29].map((pitch) => scoresNoteAt(pitch)));
+
+    expect(staves.map(({clef}) => clef)).toEqual(['bass-8vb']);
+  });
+
+  it('keeps the plain treble clef when half the notes or fewer save three ledger lines', () => {
+    // Two G6 notes save four ledger lines each; two C4 notes save none, so half of the notes is not more than half.
+    const notes = [91, 91, 60, 60].map((pitch) => scoresNoteAt(pitch));
+
+    const staves = scoresStaves([], organWithPipes([60, 62]), notes);
+
+    expect(staves.map(({clef}) => clef)).toEqual(['treble']);
+  });
+
+  it('keeps the plain clef of a staff without notes', () => {
+    const staves = scoresStaves([], organWithPipes([60, 62]), []);
+
+    expect(staves.map(({clef}) => clef)).toEqual(['treble']);
   });
 });

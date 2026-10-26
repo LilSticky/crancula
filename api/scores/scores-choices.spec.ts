@@ -6,9 +6,15 @@
  *   ScoresChoicesInput: what the export dialog holds before it is valid (numbers or null, never stored):
  *     timeSignature: 'song' | {beats: number | null; beatType: number | null}
  *     upbeat: {count: number | null; noteValue: number | null}   // noteValue is the denominator: 4 is a quarter
- *     splitNotes: readonly MidiNoteNumber[]
+ *     splitNotes: readonly number[]   // raw numbers as the dialog holds them; validateScoresChoices reports
+ *                                      // the ones that are not MIDI notes (data-model.md "Choices")
  *   An upbeat of none is count 0. The shape of the input is the implementer's to refine (T015); these tests
  *   read only the three fields above.
+ *
+ *   validateScoresChoices(input: ScoresChoicesInput, song: Song | undefined): readonly ScoresChoicesViolation[]
+ *     with {field: 'splitNotes', code: 'not-distinct' | 'out-of-range'} (T039, data-model.md)
+ *   scoresChoicesOf(input: ScoresChoicesInput): ScoresChoices | undefined, its splitNotes sorted ascending
+ *   SCORES_BEAT_TYPES: readonly ScoresBeatType[] = [1, 2, 4, 8, 16, 32] (T015, the beat types the dialog offers)
  */
 import {describe, expect, it} from 'vitest';
 import {midiNoteNumber, type MidiNoteNumber} from '../organ/midi-note-number';
@@ -16,7 +22,13 @@ import {organId, type Organ} from '../organ/organ';
 import {validateOrgan} from '../organ/validate-organ';
 import {note, part, song, songId, tick, ticksPerQuarter, type BeatType, type Part, type Song, type TimeSignature} from '../song/song';
 import {referenceOrgan} from '../tape/tape-fixture';
-import {prefilledScoresChoices} from './scores-choices';
+import {
+  prefilledScoresChoices,
+  SCORES_BEAT_TYPES,
+  scoresChoicesOf,
+  validateScoresChoices,
+  type ScoresChoicesInput,
+} from './scores-choices';
 
 const QUARTER = 480;
 const SONG_ID = '3f2b8c1e-9d4a-4f6b-8e2c-1a2b3c4d5e6f';
@@ -143,5 +155,42 @@ describe('prefilledScoresChoices prefills the split notes (FR-005)', () => {
     const choices = prefilledScoresChoices(organWithPipes([48, 60]), undefined, []);
 
     expect(choices.splitNotes).toEqual([]);
+  });
+});
+
+describe('SCORES_BEAT_TYPES lists the beat types the export dialog offers (FR-004)', () => {
+  it('is 1, 2, 4, 8, 16 and 32', () => {
+    expect(SCORES_BEAT_TYPES).toEqual([1, 2, 4, 8, 16, 32]);
+  });
+});
+
+/** A dialog input in 4/4 without an upbeat, holding the split notes given as the dialog holds them: plain numbers. */
+function inputWithSplits(splitNotes: readonly number[]): ScoresChoicesInput {
+  return {timeSignature: {beats: 4, beatType: 4}, upbeat: {count: 0, noteValue: 4}, splitNotes};
+}
+
+describe('validateScoresChoices checks the split notes (FR-005, data-model.md)', () => {
+  it('gives no violation for distinct split notes given in any order', () => {
+    expect(validateScoresChoices(inputWithSplits([72, 48]), undefined)).toEqual([]);
+  });
+
+  it('reports two equal split notes as not-distinct', () => {
+    expect(validateScoresChoices(inputWithSplits([60, 60]), undefined)).toEqual([
+      {field: 'splitNotes', code: 'not-distinct'},
+    ]);
+  });
+
+  it.each([128, -1])('reports the split note %d, outside 0 to 127, as out-of-range', (value) => {
+    expect(validateScoresChoices(inputWithSplits([value]), undefined)).toEqual([
+      {field: 'splitNotes', code: 'out-of-range'},
+    ]);
+  });
+});
+
+describe('scoresChoicesOf gives the split notes sorted ascending (data-model.md "ScoresChoices")', () => {
+  it('gives the split notes 48 and 72 given as 72 and 48 in ascending order', () => {
+    const choices = scoresChoicesOf(inputWithSplits([72, 48]));
+
+    expect(choices?.splitNotes).toEqual(midi([48, 72]));
   });
 });

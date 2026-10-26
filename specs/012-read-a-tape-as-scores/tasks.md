@@ -193,24 +193,24 @@ the file back and compare Bars, pitches, key and tempo mark.
 **Independent Test**: export the same Tape with the prefill and with three staves; check each staff's notes and
 clef; the next Tape of the Organ is prefilled with the three.
 
-- [ ] T037 [P] [US3] Red: octave clefs in `api/scores/scores-staves.spec.ts`: a treble staff whose notes mostly
+- [x] T037 [P] [US3] Red: octave clefs in `api/scores/scores-staves.spec.ts`: a treble staff whose notes mostly
   need ≥ 3 more ledger lines than with 8va → `treble-8va`; a bass staff far below → `bass-8vb`; half or fewer →
   plain; no notes → plain (FR-006, R9). Writer test: `<clef-octave-change>` 1 / −1, pitches unchanged.
-- [ ] T038 [US3] Green: ledger line count and octave clefs in `api/scores/scores-staves.ts` and
+- [x] T038 [US3] Green: ledger line count and octave clefs in `api/scores/scores-staves.ts` and
   `scores-musicxml.ts`.
-- [ ] T039 [P] [US3] Red: `split-notes` part of `api/scores/scores-choices.spec.ts`: `validateScoresChoices`
+- [x] T039 [P] [US3] Red: `split-notes` part of `api/scores/scores-choices.spec.ts`: `validateScoresChoices`
   reports `splitNotes` `not-distinct` and `out-of-range` (outside 0–127); split notes are sorted.
-- [ ] T040 [US3] Green: split notes in `validateScoresChoices`.
-- [ ] T041 [P] [US3] Red: `scores-staves-preference.spec.ts`: `splitNotesFor(organId)` undefined when nothing
+- [x] T040 [US3] Green: split notes in `validateScoresChoices`.
+- [x] T041 [P] [US3] Red: `scores-staves-preference.spec.ts`: `splitNotesFor(organId)` undefined when nothing
   is stored, when the JSON is broken or the list is not sorted distinct integers 0–127, or when `localStorage`
   throws; `remember` stores per Organ under `crancula.scoresSplitNotes` without touching other Organs (FR-005,
   R12).
-- [ ] T042 [US3] Green: `src/app/features/tape/tape-view/scores-export/scores-staves-preference.ts`.
-- [ ] T043 [P] [US3] Red: dialog spec: add, remove and change split notes (note-name selects, highest on top);
-  "Add a split note" an octave below the lowest (C4 when none, next free below if taken); staff lines show range
+- [x] T042 [US3] Green: `src/app/features/tape/tape-view/scores-export/scores-staves-preference.ts`.
+- [x] T043 [P] [US3] Red: dialog spec: add, remove and change split notes (note-name selects, highest on top);
+  "Add a split note" an octave below the lowest (C4 when none; disabled when that would be below MIDI 1); staff lines show range
   and clef; Export disabled with duplicates. Flow spec: confirm remembers the split notes for the Organ, cancel
   does not; the next export of another Tape of the Organ is prefilled with them, another Organ is not (Story 3.4).
-- [ ] T044 [US3] Green: staves editing in `scores-export-dialog.component.ts`; `remember` in `scores-export.ts`.
+- [x] T044 [US3] Green: staves editing in `scores-export-dialog.component.ts`; `remember` in `scores-export.ts`.
 
 **Checkpoint**: commit; STATUS.
 

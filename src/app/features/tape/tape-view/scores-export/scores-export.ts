@@ -14,6 +14,7 @@ import {
 } from '@api/index';
 import {CRANCULA_API} from '../../../../core/crancula-api.token';
 import {ScoresExportDialogComponent, type ScoresExportDialogData} from './scores-export-dialog.component';
+import {ScoresStavesPreference} from './scores-staves-preference';
 
 /** How long the "saved" snackbar stays, in ms. */
 const SAVED_DURATION = 6000;
@@ -25,6 +26,7 @@ export class ScoresExport {
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
   private readonly translate = inject(TranslateService);
+  private readonly staves = inject(ScoresStavesPreference);
   private readonly savingState = signal(false);
 
   /** True while a save is running. */
@@ -33,13 +35,14 @@ export class ScoresExport {
   /** Opens the export dialog; when it is confirmed, saves the Scores of the Tape with the chosen Song choices. */
   async export(tape: Tape, organ: Organ, song: Song | undefined): Promise<void> {
     if (this.savingState()) return;
-    const data: ScoresExportDialogData = {tape, organ, song, rememberedSplitNotes: undefined};
+    const data: ScoresExportDialogData = {tape, organ, song, rememberedSplitNotes: this.staves.splitNotesFor(organ.id)};
     const dialogRef = this.dialog.open<ScoresExportDialogComponent, ScoresExportDialogData, ScoresChoices | undefined>(
       ScoresExportDialogComponent,
       {data},
     );
     const choices = await firstValueFrom(dialogRef.afterClosed());
     if (choices === undefined) return;
+    this.staves.remember(organ.id, choices.splitNotes);
     await this.save({
       suggestedFileName: scoresFileName(tape.name),
       musicXml: scoresMusicXml({tape, organ, song, choices}),

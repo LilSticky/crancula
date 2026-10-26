@@ -3,7 +3,15 @@ import {TestBed} from '@angular/core/testing';
 import {MatDialog} from '@angular/material/dialog';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {TranslateService} from '@ngx-translate/core';
-import {midiNoteNumber, scoresFileName, scoresMusicXml, type Organ, type ScoresChoices} from '@api/index';
+import {
+  midiNoteNumber,
+  scoresFileName,
+  scoresMusicXml,
+  type MidiNoteNumber,
+  type Organ,
+  type ScoresChoices,
+  type Tape,
+} from '@api/index';
 import {referenceOrgan, referenceTape} from '@api/tape/tape-fixture';
 import {note, part, song, songId, tick, ticksPerQuarter, type Song} from '@api/song/song';
 import {vi} from 'vitest';
@@ -13,6 +21,7 @@ import {
   type InMemoryCranculaApi,
   type InMemoryCranculaApiFailures,
 } from '../../../../core/crancula-api.token';
+import {testOrgan} from '../../../../../testing/organs';
 import {provideTestTranslations} from '../../../../../testing/test-translations';
 import {ScoresExport} from './scores-export';
 
@@ -75,7 +84,7 @@ function setUp(failures: InMemoryCranculaApiFailures = {}) {
 }
 
 /** Presses a button of the export dialog once it is open; the export is still running until it is awaited. */
-function pressInDialog(testId: 'scores-confirm' | 'scores-cancel'): void {
+function pressInDialog(testId: 'scores-confirm' | 'scores-cancel' | 'scores-split-add'): void {
   TestBed.inject(ApplicationRef).tick();
   required(document.querySelector<HTMLButtonElement>(`[data-testid="${testId}"]`), testId).click();
 }
@@ -202,5 +211,90 @@ describe('ScoresExport', () => {
     finish();
     await first;
     expect(scoresExport.saving()).toBe(false);
+  });
+});
+
+// jsdom's localStorage is unavailable here, so the split notes preference reads an in-memory stand-in.
+function stubLocalStorage(): void {
+  const store = new Map<string, string>();
+  const storage: Pick<Storage, 'getItem' | 'setItem' | 'removeItem'> = {
+    getItem: (key) => store.get(key) ?? null,
+    setItem: (key, value) => void store.set(key, value),
+    removeItem: (key) => void store.delete(key),
+  };
+  vi.stubGlobal('localStorage', storage);
+}
+
+function splitNotesOf(values: readonly number[]): MidiNoteNumber[] {
+  return values.map((value) => defined(midiNoteNumber(value), `note ${value}`));
+}
+
+/** An Organ with Pipes on both sides of C4, so its export is prefilled with the split note C4 (FR-005). */
+function streetOrgan(): Organ {
+  return testOrgan('Street organ', 2, {pipes: [{note: 52}, {note: 72}]});
+}
+
+/** The MusicXML the save request carries for the Tape with the Scores choices given. */
+function musicXmlOf(tape: Tape, organ: Organ, choices: ScoresChoices): string {
+  return scoresMusicXml({tape, organ, song: songWithUpbeat(), choices});
+}
+
+describe('ScoresExport remembers the split notes per Organ (FR-005, Story 3.4)', () => {
+  beforeEach(() => stubLocalStorage());
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('prefills the next export of another Tape of the Organ with the split notes confirmed for it', async () => {
+    const {api, song, scoresExport} = setUp();
+    const organ = streetOrgan();
+    const tape = referenceTape(organ);
+    const another: Tape = {...tape, name: 'Another waltz'};
+
+    const first = scoresExport.export(tape, organ, song);
+    pressInDialog('scores-split-add');
+    pressInDialog('scores-confirm');
+    await first;
+    const next = scoresExport.export(another, organ, song);
+    pressInDialog('scores-confirm');
+    await next;
+
+    expect(api.scores.lastSaveRequest?.musicXml).toBe(
+      musicXmlOf(another, organ, {timeSignature: 'song', upbeat: 8, splitNotes: splitNotesOf([48, 60])}),
+    );
+  });
+
+  it('does not remember the split notes of an export whose dialog was cancelled', async () => {
+    const {api, song, scoresExport} = setUp();
+    const organ = streetOrgan();
+    const tape = referenceTape(organ);
+
+    const first = scoresExport.export(tape, organ, song);
+    pressInDialog('scores-split-add');
+    pressInDialog('scores-cancel');
+    await first;
+    const next = scoresExport.export(tape, organ, song);
+    pressInDialog('scores-confirm');
+    await next;
+
+    expect(api.scores.lastSaveRequest?.musicXml).toBe(
+      musicXmlOf(tape, organ, {timeSignature: 'song', upbeat: 8, splitNotes: splitNotesOf([60])}),
+    );
+  });
+
+  it('does not prefill another Organ with the split notes confirmed for this one', async () => {
+    const {api, song, scoresExport} = setUp();
+    const organ = streetOrgan();
+    const otherOrgan = testOrgan('Other street organ', 2, {pipes: [{note: 52}, {note: 72}]});
+
+    const first = scoresExport.export(referenceTape(organ), organ, song);
+    pressInDialog('scores-split-add');
+    pressInDialog('scores-confirm');
+    await first;
+    const other = scoresExport.export(referenceTape(otherOrgan), otherOrgan, song);
+    pressInDialog('scores-confirm');
+    await other;
+
+    expect(api.scores.lastSaveRequest?.musicXml).toBe(
+      musicXmlOf(referenceTape(otherOrgan), otherOrgan, {timeSignature: 'song', upbeat: 8, splitNotes: splitNotesOf([60])}),
+    );
   });
 });

@@ -1,4 +1,5 @@
 import {TestBed} from '@angular/core/testing';
+import {type HarnessLoader} from '@angular/cdk/testing';
 import {TestbedHarnessEnvironment} from '@angular/cdk/testing/testbed';
 import {MAT_DIALOG_DATA, MatDialogRef} from '@angular/material/dialog';
 import {MatInputHarness} from '@angular/material/input/testing';
@@ -62,6 +63,7 @@ function organAcrossMiddleC(): Organ {
 }
 
 async function render(songOf: Song | undefined, organ: Organ) {
+  // Renders the dialog with no remembered split notes; the prefill comes from the Organ (FR-005).
   const close = vi.fn<(result?: ScoresChoices) => void>();
   TestBed.configureTestingModule({
     providers: [
@@ -78,6 +80,7 @@ async function render(songOf: Song | undefined, organ: Organ) {
   await fixture.whenStable();
   const element = fixture.nativeElement as HTMLElement;
   return {
+    fixture,
     element,
     close,
     translate: TestBed.inject(TranslateService),
@@ -127,5 +130,79 @@ describe('ScoresExportDialogComponent', () => {
 
     // The Song's 3/4 and its upbeat of one quarter (8 Columns), with the split note C4 the Organ is prefilled with.
     expect(close).toHaveBeenCalledWith({timeSignature: 'song', upbeat: 8, splitNotes: [60]});
+  });
+});
+
+/** The note names the split note selects show, from the highest split note at the top. */
+async function splitNoteNames(loader: HarnessLoader): Promise<string[]> {
+  const selects = await loader.getAllHarnesses(MatSelectHarness.with({selector: '[data-testid="scores-split-note"]'}));
+  return Promise.all(selects.map((select) => select.getValueText()));
+}
+
+function staffCount(element: HTMLElement): number {
+  return element.querySelectorAll('[data-testid="scores-staff"]').length;
+}
+
+describe('ScoresExportDialogComponent edits the split notes (FR-005, Story 3)', () => {
+  it('adds a split note an octave below the lowest one, shown above the others', async () => {
+    const {fixture, loader, press} = await render(songIn3Four(), organAcrossMiddleC());
+
+    press('scores-split-add');
+    await fixture.whenStable();
+
+    expect(await splitNoteNames(loader)).toEqual(['C4', 'C3']);
+  });
+
+  it('adds C4 as the split note when the Organ has no split note to start from', async () => {
+    const {fixture, loader, press} = await render(songIn3Four(), testOrgan('Plain organ', 2));
+
+    press('scores-split-add');
+    await fixture.whenStable();
+
+    expect(await splitNoteNames(loader)).toEqual(['C4']);
+  });
+
+  it('removes a split note, which leaves one staff less', async () => {
+    const {fixture, element, loader, press} = await render(songIn3Four(), organAcrossMiddleC());
+
+    press('scores-split-remove');
+    await fixture.whenStable();
+
+    expect(await splitNoteNames(loader)).toEqual([]);
+    expect(staffCount(element)).toBe(1);
+  });
+
+  it('moves a split note to another note, which keeps one staff per range', async () => {
+    const {fixture, element, loader} = await render(songIn3Four(), organAcrossMiddleC());
+    const select = await loader.getHarness(MatSelectHarness.with({selector: '[data-testid="scores-split-note"]'}));
+
+    await select.clickOptions({text: 'D4'});
+    await fixture.whenStable();
+
+    expect(await splitNoteNames(loader)).toEqual(['D4']);
+    expect(staffCount(element)).toBe(2);
+  });
+
+  it('closes with the moved split note when Export is pressed', async () => {
+    const {fixture, close, loader, press} = await render(songIn3Four(), organAcrossMiddleC());
+    const select = await loader.getHarness(MatSelectHarness.with({selector: '[data-testid="scores-split-note"]'}));
+    await select.clickOptions({text: 'D4'});
+    await fixture.whenStable();
+
+    press('scores-confirm');
+
+    expect(close).toHaveBeenCalledWith({timeSignature: 'song', upbeat: 0, splitNotes: [62]});
+  });
+
+  it('disables Export while two split notes are the same note', async () => {
+    const {fixture, element, loader, press} = await render(songIn3Four(), organAcrossMiddleC());
+    press('scores-split-add');
+    await fixture.whenStable();
+    const [top] = await loader.getAllHarnesses(MatSelectHarness.with({selector: '[data-testid="scores-split-note"]'}));
+    await top?.clickOptions({text: 'C3'});
+    await fixture.whenStable();
+
+    expect(await splitNoteNames(loader)).toEqual(['C3', 'C3']);
+    expect(required(element.querySelector<HTMLButtonElement>('[data-testid="scores-confirm"]'), 'Export').disabled).toBe(true);
   });
 });

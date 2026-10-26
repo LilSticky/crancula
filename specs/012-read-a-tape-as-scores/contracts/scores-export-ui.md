@@ -25,6 +25,9 @@ Data in: `{tape, organ, song: Song | undefined, rememberedSplitNotes}`. Result: 
 | Staves | per split note: note-name select and remove button; "Add a split note"; a read-only line per staff with its range and clef | `scores-split-note`, `scores-split-remove`, `scores-split-add`, `scores-staff` | remembered for the Organ, else C4 when the Organ has Pipes on both sides, else none |
 | Actions | Cancel; Export (disabled while a violation is shown) | `scores-cancel`, `scores-confirm` | |
 
+"Add a split note" gives one an octave below the lowest split note, or C4 when there is none; it is disabled
+when that note would be below MIDI 1. Split notes are listed highest on top; Export is disabled while two are equal.
+
 Hint when the Song keeps a Time signature that cannot lie on Columns: `TAPE.SCORES.SONG_METRE_NOT_ON_COLUMNS`.
 Violations show as `mat-error` under their field: `TAPE.SCORES.ERROR.BEATS`, `.BEAT_TYPE`, `.UPBEAT`,
 `.UPBEAT_TOO_LONG`, `.SPLIT_NOTES` (Story 4 scenario 3).

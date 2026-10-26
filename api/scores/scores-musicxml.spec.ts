@@ -593,3 +593,27 @@ describe('scoresMusicXml closes small gaps and writes few note values (Story 2)'
     expect(entriesOf(measureAt(root, 0)).filter((entry) => entry.pitch === 'C4')).toHaveLength(3);
   });
 });
+
+describe('scoresMusicXml writes the octave clef of a staff, with its pitches unchanged (FR-006, R9)', () => {
+  it('writes treble 8va as clef-octave-change 1, and the notes at the pitches they sound', () => {
+    const root = parsed(
+      scoresMusicXml(tapeInput({holes: [hole(91, 0, 8), hole(91, 8, 8), hole(91, 16, 8)], length: 32, organ: organWith(100, [60, 62])})),
+    );
+    const clef = defined(all(root, 'clef')[0], 'clef');
+
+    expect(textOf(clef, 'sign')).toBe('G');
+    expect(textOf(clef, 'clef-octave-change')).toBe('1');
+    expect(entriesOf(measureAt(root, 0)).filter((entry) => !entry.rest).map((entry) => entry.midi)).toEqual([91, 91, 91]);
+  });
+
+  it('writes bass 8vb as clef-octave-change -1, and the notes at the pitches they sound', () => {
+    const root = parsed(
+      scoresMusicXml(tapeInput({holes: [hole(29, 0, 8), hole(29, 8, 8), hole(29, 16, 8)], length: 32, organ: organWith(100, [29, 31])})),
+    );
+    const clef = defined(all(root, 'clef')[0], 'clef');
+
+    expect(textOf(clef, 'sign')).toBe('F');
+    expect(textOf(clef, 'clef-octave-change')).toBe('-1');
+    expect(entriesOf(measureAt(root, 0)).filter((entry) => !entry.rest).map((entry) => entry.midi)).toEqual([29, 29, 29]);
+  });
+});

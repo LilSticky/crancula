@@ -1,4 +1,4 @@
-import type {MidiNoteNumber} from '../organ/midi-note-number';
+import {midiNoteNumber, type MidiNoteNumber} from '../organ/midi-note-number';
 import type {Organ} from '../organ/organ';
 import type {Song, TimeSignature} from '../song/song';
 import {columnOfTick} from '../tape/quantisation';
@@ -6,6 +6,9 @@ import {songKeepsBarsOnColumns} from './scores-bars';
 
 /** The beat types the export dialog offers (FR-004); the Song model also allows 64. */
 export type ScoresBeatType = 1 | 2 | 4 | 8 | 16 | 32;
+
+/** The beat types the export dialog offers, in the order it lists them. */
+export const SCORES_BEAT_TYPES: readonly ScoresBeatType[] = [1, 2, 4, 8, 16, 32];
 
 /** A Time signature chosen for the whole Tape in the export dialog. */
 export interface ChosenTimeSignature {
@@ -32,7 +35,14 @@ export interface ScoresChoicesInput {
   readonly timeSignature: 'song' | { readonly beats: number | null; readonly beatType: number | null };
   /** The upbeat as a count of a note value: 1 × 1/4 is one quarter; a count of 0 is no upbeat. */
   readonly upbeat: { readonly count: number | null; readonly noteValue: number | null };
-  readonly splitNotes: readonly MidiNoteNumber[];
+  /** The split notes as the dialog holds them, in any order; the ones that are not MIDI notes are violations. */
+  readonly splitNotes: readonly number[];
+}
+
+/** A value of the export choices that the dialog must correct before the Scores can be written. */
+export interface ScoresChoicesViolation {
+  readonly field: 'splitNotes';
+  readonly code: 'not-distinct' | 'out-of-range';
 }
 
 /** The split note that a Organ with Pipes on both sides of it is prefilled with: middle C (FR-005). */
@@ -80,22 +90,59 @@ export function prefilledScoresChoices(
   return {timeSignature: 'song', upbeat: upbeatOf(song), splitNotes};
 }
 
-/** The beat types the export dialog offers, as the Scores take them. */
-const BEAT_TYPES: readonly ScoresBeatType[] = [1, 2, 4, 8, 16, 32];
-
 function isBeatType(value: number): value is ScoresBeatType {
-  return (BEAT_TYPES as readonly number[]).includes(value);
+  return (SCORES_BEAT_TYPES as readonly number[]).includes(value);
+}
+
+/** Whether no two of the values are equal. */
+function isDistinct(values: readonly number[]): boolean {
+  return new Set(values).size === values.length;
+}
+
+/** The violations of the split notes: a value that is not a MIDI note, and two equal split notes (FR-005). */
+function splitNoteViolationsOf(splitNotes: readonly number[]): readonly ScoresChoicesViolation[] {
+  const violations: ScoresChoicesViolation[] = [];
+  if (splitNotes.some((value) => midiNoteNumber(value) === undefined)) {
+    violations.push({field: 'splitNotes', code: 'out-of-range'});
+  }
+  if (!isDistinct(splitNotes)) violations.push({field: 'splitNotes', code: 'not-distinct'});
+  return violations;
+}
+
+/**
+ * The violations the export dialog must show before Export is enabled (FR-004, FR-005, data-model.md). Split
+ * notes only for now; the Time signature and upbeat rules follow.
+ */
+export function validateScoresChoices(
+  input: ScoresChoicesInput,
+  song: Song | undefined,
+): readonly ScoresChoicesViolation[] {
+  return splitNoteViolationsOf(input.splitNotes);
+}
+
+/** The split notes as MIDI notes sorted ascending, or undefined when one of them is not a MIDI note. */
+function sortedSplitNotesOf(splitNotes: readonly number[]): readonly MidiNoteNumber[] | undefined {
+  const notes: MidiNoteNumber[] = [];
+  for (const value of splitNotes) {
+    const note = midiNoteNumber(value);
+    if (note === undefined) return undefined;
+    notes.push(note);
+  }
+  return notes.sort((a, b) => a - b);
 }
 
 /**
  * The choices the Scores are written with, or undefined while the dialog holds a value that is not yet a choice
- * (a missing number, a beat type it does not offer, an upbeat that is not a whole number of Columns).
+ * (a missing number, a beat type it does not offer, an upbeat that is not a whole number of Columns, split notes
+ * that are not distinct MIDI notes).
  */
 export function scoresChoicesOf(input: ScoresChoicesInput): ScoresChoices | undefined {
   const timeSignature = chosenTimeSignatureOf(input.timeSignature);
   const upbeat = upbeatColumnsOf(input.upbeat);
-  if (timeSignature === undefined || upbeat === undefined) return undefined;
-  return {timeSignature, upbeat, splitNotes: input.splitNotes};
+  const splitNotes = sortedSplitNotesOf(input.splitNotes);
+  if (timeSignature === undefined || upbeat === undefined || splitNotes === undefined) return undefined;
+  if (!isDistinct(input.splitNotes)) return undefined;
+  return {timeSignature, upbeat, splitNotes};
 }
 
 function chosenTimeSignatureOf(input: ScoresChoicesInput['timeSignature']): ScoresChoices['timeSignature'] | undefined {
