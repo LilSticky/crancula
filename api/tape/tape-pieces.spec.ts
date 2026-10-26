@@ -3,7 +3,7 @@ import {midiNoteNumber, type MidiNoteNumber} from '../organ/midi-note-number';
 import {millimetres, type Organ} from '../organ/organ';
 import {validateOrgan} from '../organ/validate-organ';
 import {column, columnCount, tapeId, transposition, type Column, type ColumnCount, type Hole, type Tape} from './tape';
-import {plotterOf, referenceOrgan, referencePlotter, tapeOf} from './tape-fixture';
+import {plotterOf, referenceOrgan, referencePlotter, referenceTape, tapeOf} from './tape-fixture';
 import {tapeGeometry, type Slot, type TapeGeometry} from './tape-geometry';
 import {tapePieces, type TapePiece, type TapePieces} from './tape-pieces';
 import type {Plotter} from '../plotter/plotter';
@@ -292,6 +292,24 @@ describe('tapePieces', () => {
       const exact = plotterOf({name: 'Exact', workingWidth: 100, roll: false, workingLength: 300, overlap: 20});
 
       expect(piecesOf(tapeWith(organ, 3, 200), organ, exact)).toEqual(referenceCut);
+    });
+  });
+
+  describe('when the Plotter is a roll Plotter', () => {
+    it('gives the reference Tape as one Tape piece of 652 mm, however long it is (FR-011)', () => {
+      const roll = plotterOf({name: 'Vinyl cutter', workingWidth: 120, roll: true, workingLength: null, overlap: null});
+
+      expect(piecesOf(referenceTape(organ), organ, roll)).toEqual({
+        kind: 'pieces',
+        pieces: [{number: 1, start: 0, end: 652}],
+      });
+    });
+
+    it('gives too-wide with both widths when the roll Plotter is narrower than the Tape (scenario 2)', () => {
+      const narrowRoll = plotterOf({name: 'Narrow roll', workingWidth: 90, roll: true, workingLength: null, overlap: null});
+      const expected: TapePieces = {kind: 'too-wide', tapeWidth: 100, workingWidth: 90};
+
+      expect(piecesOf(referenceTape(organ), organ, narrowRoll)).toEqual(expected);
     });
   });
 
