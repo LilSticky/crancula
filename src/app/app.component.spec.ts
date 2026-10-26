@@ -5,7 +5,7 @@ import {MatSidenavHarness} from '@angular/material/sidenav/testing';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {provideRouter} from '@angular/router';
 import {TranslateService} from '@ngx-translate/core';
-import type {CranculaApi} from '@api/index';
+import {type CranculaApi, type Plotter, validatePlotter} from '@api/index';
 import {firstValueFrom, of, type Observable} from 'rxjs';
 import {vi} from 'vitest';
 import {provideTestTranslations} from '../testing/test-translations';
@@ -15,6 +15,13 @@ import {CRANCULA_API, createInMemoryCranculaApi} from './core/crancula-api.token
 import {OrganLibrary} from './features/organ/organ-library.store';
 import {PlotterLibrary} from './features/plotter/plotter-library.store';
 import {TapeLibrary} from './features/tape/tape-library.store';
+
+/** A valid sheet Plotter with the given name. */
+function testPlotter(name: string): Plotter {
+  const result = validatePlotter({name, workingWidth: 120, roll: false, workingLength: 300, overlap: 20});
+  if (!result.ok) throw new Error('invalid test Plotter');
+  return result.value;
+}
 
 async function render(api: CranculaApi) {
   TestBed.configureTestingModule({
@@ -70,6 +77,17 @@ describe('AppComponent', () => {
     await fixture.whenStable();
 
     expect(document.body.textContent).toContain("Your changes couldn't be saved: disk full");
+  });
+
+  it('tells the user when the Plotters could not be saved', async () => {
+    const api = createInMemoryCranculaApi();
+    api.plotters.save = () => Promise.resolve({status: 'failed', reason: 'disk full'});
+    const {fixture} = await render(api);
+
+    await TestBed.inject(PlotterLibrary).put(testPlotter('Cutting mat'));
+    await fixture.whenStable();
+
+    expect(document.body.textContent).toContain("Your Plotters couldn't be saved: disk full");
   });
 
   it('tells the user when the Tapes could not be loaded, and that the Organs still work', async () => {

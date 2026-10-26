@@ -64,6 +64,10 @@ export class AppComponent {
       if (problem) untracked(() => void this.notify('PLOTTER.STORAGE.LOAD_PROBLEM', {backupPath: problem.backupPath}));
     });
     effect(() => {
+      const problem = this.plotters.saveProblem();
+      if (problem) untracked(() => void this.notify('PLOTTER.STORAGE.SAVE_PROBLEM', {reason: problem.reason}));
+    });
+    effect(() => {
       const problem = this.tapes.loadProblem();
       if (problem) untracked(() => void this.notify('TAPE.STORAGE.LOAD_PROBLEM', {backupPath: problem.backupPath}));
     });
