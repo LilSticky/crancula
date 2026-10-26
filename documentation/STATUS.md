@@ -6,13 +6,12 @@ Issues: [GitHub](https://github.com/LilSticky/crancula/issues)
 
 ## Current slice
 
-**None in progress.** v0.3 [Bring Scores onto a tape](https://github.com/LilSticky/crancula/issues/167) is done (see below).
+**[Cut a tape in pieces](../specs/011-cut-a-tape-in-pieces/spec.md)** ([#168](https://github.com/LilSticky/crancula/issues/168),
+branch `011-cut-a-tape-in-pieces`, draft PR [#174](https://github.com/LilSticky/crancula/pull/174)), implementing since 2026-10-26.
+Main merged in; Phase 1 (T001 texts, T002 leave-unsaved guard moved to `shared/`) and Phase 2 (T003–T004: `plotterSvg`
+takes a `CutGeometry`, export byte-identical to `api/tape/plotter-svg.reference.svg`) done.
 
-**Decisions (2026-10-25):** Keys stay at each Tick (dictionary updated); the import button reads "Choose a Song Source"
-(German "Notenquelle wählen"); German term for Song Source is Notenquelle.
-
-**Next step:** the next slice by [ROADMAP](ROADMAP.md) (highest-priority triaged: [#168](https://github.com/LilSticky/crancula/issues/168),
-spec and draft PR [#174](https://github.com/LilSticky/crancula/pull/174) exist; then [#169](https://github.com/LilSticky/crancula/issues/169)).
+**Next step:** US1 "Describe my plotter", T005 onward in [tasks.md](../specs/011-cut-a-tape-in-pieces/tasks.md).
 
 **Known broken:** [#175](https://github.com/LilSticky/crancula/issues/175): `api/` is not covered by `npm run lint`
 (`ng lint` only covers `src/` and `e2e/`, pre-existing).
