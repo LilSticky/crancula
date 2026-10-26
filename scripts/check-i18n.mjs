@@ -26,6 +26,9 @@ const DYNAMIC_PREFIXES = [
   // Built in organ-editor.component.ts: `ORGAN.EDITOR.${fit/tooWide}${_ONE}`.
   'ORGAN.EDITOR.FIT',
   'ORGAN.EDITOR.TAPE_BED_DRAWING',
+  // Built from violation codes in plotter-form.ts and from Keys in song-metre.component.ts.
+  'PLOTTER.ERROR.',
+  'TAPE.METRE.TONIC.',
 ];
 /** Any quoted string shaped like a key; counts as a use when the key exists (e.g. `label="KEY"`). */
 const KEY_LITERAL = /['"`]([A-Z][A-Z0-9_]*(?:\.[A-Z0-9_]+)*)['"`]/g;
