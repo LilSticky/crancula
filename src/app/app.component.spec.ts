@@ -13,6 +13,7 @@ import {testOrgan} from '../testing/organs';
 import {AppComponent} from './app.component';
 import {CRANCULA_API, createInMemoryCranculaApi} from './core/crancula-api.token';
 import {OrganLibrary} from './features/organ/organ-library.store';
+import {PlotterLibrary} from './features/plotter/plotter-library.store';
 import {TapeLibrary} from './features/tape/tape-library.store';
 
 async function render(api: CranculaApi) {
@@ -80,6 +81,33 @@ describe('AppComponent', () => {
 
     expect(document.body.textContent).toContain('tapes.json.bak');
     expect(document.body.textContent).toContain('Your Organs still work.');
+  });
+
+  it('tells the user when the Plotters could not be loaded, and that the Organs still work', async () => {
+    const api = createInMemoryCranculaApi();
+    api.plotters.load = () => Promise.resolve({status: 'unreadable', backupPath: 'C:/data/plotters.unreadable.json', reason: 'bad JSON'});
+    const {fixture} = await render(api);
+
+    await TestBed.inject(PlotterLibrary).load();
+    await fixture.whenStable();
+
+    expect(document.body.textContent).toContain(
+      "Your Plotters couldn't be loaded. The file was kept at C:/data/plotters.unreadable.json. Your Organs still work.",
+    );
+  });
+
+  it('tells the user only once when the Plotters could not be loaded', async () => {
+    const api = createInMemoryCranculaApi();
+    api.plotters.load = () => Promise.resolve({status: 'unreadable', backupPath: 'C:/data/plotters.unreadable.json', reason: 'bad JSON'});
+    const {fixture} = await render(api);
+    const open = vi.spyOn(TestBed.inject(MatSnackBar), 'open');
+
+    await TestBed.inject(PlotterLibrary).load();
+    await fixture.whenStable();
+    await firstValueFrom(TestBed.inject(TranslateService).use('de'));
+    await fixture.whenStable();
+
+    expect(open).toHaveBeenCalledTimes(1);
   });
 
   it('tells the user when the Tapes could not be saved', async () => {
