@@ -148,6 +148,9 @@ const PLAYHEAD_GRIP_WIDTH = 44;
 /** The shell's query: below this width the side panel gives way to a toggle. */
 const COMPACT_QUERY = '(max-width: 1179.98px)';
 
+/** The query for the window width below which German labels crowd the page head actions into icons. */
+const GERMAN_ACTIONS_QUERY = '(max-width: 1439.98px)';
+
 /** One Tape. Right after an import, the navigation state carries the Import Summary. */
 @Component({
   selector: 'cranc-tape-view',
@@ -210,6 +213,14 @@ export class TapeViewComponent {
   protected readonly compact = toSignal(this.breakpoints.observe(COMPACT_QUERY).pipe(map((state) => state.matches)), {
     initialValue: this.breakpoints.isMatched(COMPACT_QUERY),
   });
+  private readonly translateLanguage = toSignal(this.translate.onLangChange.pipe(map((event) => event.lang)), {
+    initialValue: this.translate.getCurrentLang() ?? 'en',
+  });
+  private readonly germanNarrow = toSignal(this.breakpoints.observe(GERMAN_ACTIONS_QUERY).pipe(map((state) => state.matches)), {
+    initialValue: this.breakpoints.isMatched(GERMAN_ACTIONS_QUERY),
+  });
+  /** Whether the page head actions show their icons only: when the window is compact, or German labels would crowd them. */
+  protected readonly compactActions = computed(() => this.compact() || (this.translateLanguage() === 'de' && this.germanNarrow()));
   protected readonly sidePanelOpen = signal(false);
   protected readonly saveProblem = this.library.saveProblem;
   private readonly pointer = signal<{readonly column: number; readonly mm: number; readonly row: number | undefined} | undefined>(undefined);

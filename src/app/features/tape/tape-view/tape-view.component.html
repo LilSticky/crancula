@@ -18,9 +18,9 @@
     @if (compact()) {<button pageHeadActions mat-stroked-button type="button" class="icon-only" data-testid="side-panel-toggle" [attr.aria-label]="'TAPE.VIEW.DETAILS' | translate" [matTooltip]="'TAPE.VIEW.DETAILS' | translate" [attr.aria-expanded]="sidePanelOpen()" (click)="toggleSidePanel()"><mat-icon aria-hidden="true">view_sidebar</mat-icon></button>}
     <ng-container ngProjectAs="[pageHeadActions]">
       @let previewLabel = (preview.playing() ? 'TAPE.PREVIEW.STOP' : 'TAPE.PREVIEW.PLAY') | translate;
-      <button mat-stroked-button type="button" data-testid="preview-toggle" [class.icon-only]="compact()" [disabled]="!previewAvailable() || recorder.recording()" [disabledInteractive]="true" [attr.aria-label]="compact() ? previewLabel : null" [matTooltip]="recorder.recording() ? ('TAPE.PREVIEW.WHILE_RECORDING' | translate) : compact() ? previewLabel : ''" [attr.aria-describedby]="previewAvailable() ? null : 'preview-unavailable-reason'" (click)="togglePreview()">
+      <button mat-stroked-button type="button" data-testid="preview-toggle" [class.icon-only]="compactActions()" [disabled]="!previewAvailable() || recorder.recording()" [disabledInteractive]="true" [attr.aria-label]="compactActions() ? previewLabel : null" [matTooltip]="recorder.recording() ? ('TAPE.PREVIEW.WHILE_RECORDING' | translate) : compactActions() ? previewLabel : ''" [attr.aria-describedby]="previewAvailable() ? null : 'preview-unavailable-reason'" (click)="togglePreview()">
         <mat-icon aria-hidden="true">{{ preview.playing() ? 'stop' : 'play_arrow' }}</mat-icon>
-        @if (!compact()) {
+        @if (!compactActions()) {
           {{ previewLabel }}
         }
       </button>
@@ -31,8 +31,8 @@
         <mat-icon aria-hidden="true">redo</mat-icon>
       </button>
       @let transposeLabel = 'TAPE.TRANSPOSE.BUTTON' | translate;
-      <button mat-stroked-button type="button" data-testid="transpose" [class.icon-only]="compact()" [disabled]="!canTranspose() || editingPaused()" [attr.aria-label]="compact() ? transposeLabel : null" [matTooltip]="compact() ? transposeLabel : ''" (click)="transpose()">
-        @if (compact()) {
+      <button mat-stroked-button type="button" data-testid="transpose" [class.icon-only]="compactActions()" [disabled]="!canTranspose() || editingPaused()" [attr.aria-label]="compactActions() ? transposeLabel : null" [matTooltip]="compactActions() ? transposeLabel : ''" (click)="transpose()">
+        @if (compactActions()) {
           <mat-icon aria-hidden="true">swap_vert</mat-icon>
         } @else {
           {{ transposeLabel }}
@@ -40,19 +40,19 @@
       </button>
       @let recordBlocked = recordBlockedBy();
       @let recordLabel = (recordPercent() === undefined ? 'TAPE.RECORD.BUTTON' : 'TAPE.RECORD.PROGRESS') | translate: {percent: recordPercent()};
-      <button mat-stroked-button type="button" data-testid="record" [class.icon-only]="compact()" [disabled]="recordBlocked !== undefined" [disabledInteractive]="true" [attr.aria-disabled]="recordBlocked !== undefined || recorder.recording() ? 'true' : null" [attr.aria-busy]="recorder.recording() ? 'true' : null" [attr.aria-label]="compact() ? recordLabel : null" [matTooltip]="recordBlocked !== undefined ? (recordBlocked | translate) : compact() ? recordLabel : ''" (click)="record()">
+      <button mat-stroked-button type="button" data-testid="record" [class.icon-only]="compactActions()" [disabled]="recordBlocked !== undefined" [disabledInteractive]="true" [attr.aria-disabled]="recordBlocked !== undefined || recorder.recording() ? 'true' : null" [attr.aria-busy]="recorder.recording() ? 'true' : null" [attr.aria-label]="compactActions() ? recordLabel : null" [matTooltip]="recordBlocked !== undefined ? (recordBlocked | translate) : compactActions() ? recordLabel : ''" (click)="record()">
         @if (!recorder.recording()) {<mat-icon aria-hidden="true">fiber_manual_record</mat-icon>}
         @if (recorder.recording()) {<mat-progress-spinner diameter="18" [mode]="recordPercent() === undefined ? 'indeterminate' : 'determinate'" [value]="recordPercent() ?? 0" aria-hidden="true" />}
-        @if (!compact()) {
+        @if (!compactActions()) {
           {{ recordLabel }}
         }
       </button>
-      @if (compact()) {
-        <button mat-icon-button type="button" data-testid="export" [attr.aria-label]="'TAPE.VIEW.EXPORT' | translate" [matTooltip]="'TAPE.VIEW.EXPORT' | translate" [disabled]="plotterExport.saving()" (click)="exportTape()">
+      @if (compactActions()) {
+        <button mat-icon-button type="button" class="icon-only" data-testid="export" [attr.aria-label]="'TAPE.VIEW.EXPORT' | translate" [matTooltip]="'TAPE.VIEW.EXPORT' | translate" [disabled]="plotterExport.saving()" (click)="exportTape()">
           <mat-icon aria-hidden="true">content_cut</mat-icon>
         </button>
       }
-      @if (!compact()) {
+      @if (!compactActions()) {
         <button mat-stroked-button type="button" data-testid="export" [disabled]="plotterExport.saving()" (click)="exportTape()">
           <mat-icon aria-hidden="true">content_cut</mat-icon>
           {{ 'TAPE.VIEW.EXPORT' | translate }}
