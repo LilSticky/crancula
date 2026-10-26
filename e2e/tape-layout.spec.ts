@@ -407,7 +407,7 @@ test.describe('The Tape view with a Preview playing at 1280 x 800 (#159)', () =>
 
       const toggle = window.getByTestId('preview-toggle');
       await toggle.click();
-      await expect(toggle).toContainText(stopLabel);
+      await expect(toggle).toHaveAccessibleName(stopLabel);
 
       const toggles = await toggle.evaluateAll(measureTextLines);
       expect(toggles).toHaveLength(1);
@@ -418,7 +418,7 @@ test.describe('The Tape view with a Preview playing at 1280 x 800 (#159)', () =>
       expect(await window.getByTestId('page-head-actions').evaluate((element) => element.scrollWidth - element.clientWidth), 'page head overflow').toBeLessThanOrEqual(1);
 
       await toggle.click();
-      await expect(toggle).not.toContainText(stopLabel);
+      await expect(toggle).not.toHaveAccessibleName(stopLabel);
       await app.close();
     });
   }
