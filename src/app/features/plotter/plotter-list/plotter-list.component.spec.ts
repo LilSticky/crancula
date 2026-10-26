@@ -1,5 +1,6 @@
+import {Component} from '@angular/core';
 import {TestBed} from '@angular/core/testing';
-import {provideRouter} from '@angular/router';
+import {provideRouter, Router} from '@angular/router';
 import {newPlotterId, type Plotter, type PlotterDraft, validatePlotter} from '@api/index';
 import {provideTestTranslations} from '../../../../testing/test-translations';
 import {PlotterLibrary} from '../plotter-library.store';
@@ -20,6 +21,11 @@ function rollPlotter(name: string, workingWidth: number): Plotter {
   if (!result.ok) throw new Error(`invalid test Plotter: ${JSON.stringify(result.error)}`);
   return result.value;
 }
+
+@Component({template: ''})
+class StubComponent {}
+
+const stubRoutes = [{path: 'plotters/:id', component: StubComponent}];
 
 async function render() {
   TestBed.configureTestingModule({providers: [provideRouter([]), provideTestTranslations()]});
@@ -58,6 +64,29 @@ describe('PlotterListComponent', () => {
     await fixture.whenStable();
 
     expect(rowTexts(element)).toEqual([expect.stringContaining('Anton'), expect.stringContaining('Cutting mat')]);
+  });
+
+  it('links each Plotter to its editor', async () => {
+    const {fixture, library, element} = await render();
+    const plotter = sheetPlotter('Cutting mat', 300, 120);
+    await library.put(plotter);
+    await fixture.whenStable();
+
+    expect(element.querySelector('[data-testid="plotter"]')?.getAttribute('href')).toBe(`/plotters/${plotter.id}`);
+  });
+
+  it('opens the editor with a click on the row', async () => {
+    TestBed.configureTestingModule({providers: [provideRouter(stubRoutes), provideTestTranslations()]});
+    const plotter = sheetPlotter('Cutting mat', 300, 120);
+    await TestBed.inject(PlotterLibrary).put(plotter);
+    const fixture = TestBed.createComponent(PlotterListComponent);
+    fixture.autoDetectChanges();
+    await fixture.whenStable();
+
+    (fixture.nativeElement as HTMLElement).querySelector<HTMLElement>('[data-testid="plotter-row"]')?.click();
+    await fixture.whenStable();
+
+    expect(TestBed.inject(Router).url).toBe(`/plotters/${plotter.id}`);
   });
 
   it('shows the Working area as length × width in mm and the Overlap of a sheet Plotter', async () => {

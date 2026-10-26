@@ -5,7 +5,7 @@ import {MatIcon} from '@angular/material/icon';
 import {
   MatCell, MatCellDef, MatColumnDef, MatHeaderCell, MatHeaderCellDef, MatHeaderRow, MatHeaderRowDef, MatRow, MatRowDef, MatTable,
 } from '@angular/material/table';
-import {RouterLink} from '@angular/router';
+import {Router, RouterLink} from '@angular/router';
 import {TranslatePipe} from '@ngx-translate/core';
 import type {Plotter, PlotterId} from '@api/index';
 import {PageHeadComponent} from '../../shared/components/page-head/page-head.component';
@@ -57,7 +57,9 @@ interface PlotterRow {
         <table mat-table class="cr-ledger" [dataSource]="rows()" [trackBy]="trackRow">
           <ng-container matColumnDef="name">
             <th mat-header-cell *matHeaderCellDef>{{ 'PLOTTER.LIST.NAME' | translate }}</th>
-            <td mat-cell *matCellDef="let row" class="name">{{ row.plotter.name }}</td>
+            <td mat-cell *matCellDef="let row">
+              <a class="name" [routerLink]="['/plotters', row.plotter.id]" data-testid="plotter" (click)="$event.stopPropagation()">{{ row.plotter.name }}</a>
+            </td>
           </ng-container>
           <ng-container matColumnDef="workingArea">
             <th mat-header-cell *matHeaderCellDef>{{ 'PLOTTER.LIST.WORKING_AREA' | translate }}</th>
@@ -72,12 +74,16 @@ interface PlotterRow {
             </td>
           </ng-container>
           <tr mat-header-row *matHeaderRowDef="columns"></tr>
-          <tr mat-row *matRowDef="let row; columns: columns" data-testid="plotter-row"></tr>
+          <tr mat-row *matRowDef="let row; columns: columns" data-testid="plotter-row" (click)="open(row.plotter.id)"></tr>
         </table>
       </mat-card>
     }
   `,
   styles: `
+    tr[mat-row] {
+      cursor: pointer;
+    }
+
     .name {
       font-family: var(--mat-sys-headline-small-font);
       font-size: 1.125rem;
@@ -94,6 +100,7 @@ interface PlotterRow {
 })
 export class PlotterListComponent {
   private readonly library = inject(PlotterLibrary);
+  private readonly router = inject(Router);
   private readonly language = inject(LanguagePreference).language;
 
   protected readonly columns = ['name', 'workingArea', 'overlap'];
@@ -115,5 +122,9 @@ export class PlotterListComponent {
 
   protected trackRow(_index: number, row: PlotterRow): PlotterId {
     return row.plotter.id;
+  }
+
+  protected open(id: PlotterId): void {
+    void this.router.navigate(['/plotters', id]);
   }
 }

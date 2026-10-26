@@ -76,7 +76,7 @@ and the default Overlap, restart, see it again with the same values.
 - [x] T017 [US1] Green: `src/app/features/plotter/routes.ts` (`plotters`, `plotters/new`, `plotters/:id`, rail icon `content_cut`, leave guard on the editor routes), `plotter-list.component.ts`, `src/app.routes.ts`.
 - [x] T018 [US1] Red: `src/app/features/plotter/plotter-editor/plotter-form.spec.ts` and `plotter-editor.component.spec.ts`: fields `plotter-name`, `plotter-format` (only SVG, chosen), `plotter-working-width`, `plotter-roll`, `plotter-working-length`, `plotter-overlap` (20 in a new Plotter); with the roll toggle on, working length and Overlap are hidden and not required, off again they come back with their values; each violation shows under its field (missing values only after editing, as the Organ form); German comma decimals read like points (scenario 7); `save-plotter` saves through the store and returns to the list.
 - [x] T019 [US1] Green: `plotter-form.ts` (signal form schema over `PlotterDraft`, `validatePlotter` as the only rule, like `organ-form.ts`), `plotter-editor.component.ts` / `.html` (standalone, OnPush, Angular Material, shared decimal-input directive).
-- [ ] T020 [US1] Red→Green: `e2e/plotter-library.spec.ts`: describe "Cutting mat" 300 × 120 mm with the default Overlap, see it listed, restart, open it with the same values (scenarios 1, 6).
+- [x] T020 [US1] Red→Green: `e2e/plotter-library.spec.ts`: describe "Cutting mat" 300 × 120 mm with the default Overlap, see it listed, restart, open it with the same values (scenarios 1, 6).
 
 **Checkpoint**: Plotters can be described and survive a restart; commit; STATUS.
 
