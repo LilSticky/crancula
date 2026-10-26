@@ -51,7 +51,7 @@ const LONG_TAPE_RESTS = 60;
 /** The reference Plotter of spec 011: a sheet Plotter with working length 300 mm, working width 120 mm and Overlap 20 mm. */
 const REFERENCE_PLOTTER: PlotterDraft = {name: 'Cutting mat', workingWidth: 120, roll: false, workingLength: 300, overlap: 20};
 
-/** A roll Plotter: it never splits a Tape. */
+/** A roll plotter: it never splits a Tape. */
 const ROLL_PLOTTER: PlotterDraft = {name: 'Vinyl cutter', workingWidth: 120, roll: true, workingLength: null, overlap: 20};
 
 /** Three quarter notes on three rows, with `restQuarters` rests before each note. */
@@ -288,7 +288,7 @@ describe('PlotterExport', () => {
     expect(library.tapeEntities()).toEqual(before);
   });
 
-  describe('with no Plotter or a roll Plotter', () => {
+  describe('with no Plotter or a roll plotter', () => {
     it('saves a Tape longer than a working length as one file when no Plotter is picked (FR-020)', async () => {
       const {api, organ, tape, plotterExport} = await setUp({}, LONG_TAPE_RESTS);
 
@@ -298,7 +298,7 @@ describe('PlotterExport', () => {
       expect(api.plotter.lastSavePiecesRequest).toBeUndefined();
     });
 
-    it('saves a Tape longer than a working length as one file with a roll Plotter picked', async () => {
+    it('saves a Tape longer than a working length as one file with a roll plotter picked', async () => {
       const {api, organ, tape, translate, plotterExport} = await setUp({}, LONG_TAPE_RESTS);
       const plotter = plotterOf(ROLL_PLOTTER);
 

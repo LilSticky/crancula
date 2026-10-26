@@ -23,7 +23,7 @@ describe('plotterFormSchema', () => {
     expect(root().errorSummary()).toEqual([]);
   });
 
-  it('reports no error for a roll Plotter that has no working length and no Overlap', () => {
+  it('reports no error for a roll plotter that has no working length and no Overlap', () => {
     const root = plotterForm({name: 'Vinyl cutter', workingWidth: 120, roll: true, workingLength: null, overlap: null});
 
     expect(root().valid()).toBe(true);

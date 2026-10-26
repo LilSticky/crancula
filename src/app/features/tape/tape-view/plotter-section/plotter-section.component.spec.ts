@@ -1,7 +1,7 @@
 // API: PlotterSectionComponent (standalone, OnPush, selector `cranc-plotter-section`); inputs `pieces: TapePieces | undefined`
-// (the Tape cut for the picked Plotter, computed by the Tape view) and `tapeWidth: number | undefined` (mm); no outputs,
-// the section changes no Tape. It reads the described Plotters from PlotterLibrary and the picked one from PlotterPreference.
-import {Component, computed, inject, input} from '@angular/core';
+// (the Tape cut for the picked Plotter, computed by the Tape view); output `cuttingProblemsRequested` (the Tape view shows the
+// Cutting Problems); the section changes no Tape. It reads the described Plotters from PlotterLibrary and the picked one from PlotterPreference.
+import {Component, computed, inject, input, signal} from '@angular/core';
 import {type ComponentFixture, TestBed} from '@angular/core/testing';
 import {provideRouter} from '@angular/router';
 import {TestbedHarnessEnvironment} from '@angular/cdk/testing/testbed';
@@ -47,7 +47,7 @@ function sheetPlotter(name: string, workingLength: number, workingWidth: number,
   return result.value;
 }
 
-/** A roll Plotter (a vinyl cutter) of a working width. */
+/** A roll plotter (a vinyl cutter) of a working width. */
 function rollPlotter(name: string, workingWidth: number): Plotter {
   const draft: PlotterDraft = {id: newPlotterId(), name, workingWidth, roll: true, workingLength: null, overlap: null};
   const result = validatePlotter(draft);
@@ -88,11 +88,13 @@ function tapeWith(columns: number, columnLength = 5, holes: readonly Hole[] = []
  */
 @Component({
   imports: [PlotterSectionComponent],
-  template: '<cranc-plotter-section [pieces]="pieces()" />',
+  template: '<cranc-plotter-section [pieces]="pieces()" (cuttingProblemsRequested)="requests.set(requests() + 1)" />',
 })
 class TapeViewStubComponent {
   readonly tape = input.required<Tape>();
   readonly organ = input.required<Organ>();
+  /** How many times the section asked to show the Cutting Problems. */
+  readonly requests = signal(0);
   private readonly picked = inject(PlotterPreference).picked;
   protected readonly pieces = computed(() => {
     const plotter = this.picked();
@@ -116,7 +118,8 @@ async function render(options: {readonly tape?: Tape; readonly organ?: Organ} = 
     fixture.detectChanges();
     await fixture.whenStable();
   };
-  return {element, picker, piecesText, settle, library: TestBed.inject(PlotterLibrary), preference: TestBed.inject(PlotterPreference)};
+  const requests = (): number => fixture.componentInstance.requests();
+  return {element, picker, piecesText, settle, requests, library: TestBed.inject(PlotterLibrary), preference: TestBed.inject(PlotterPreference)};
 }
 
 describe('PlotterSectionComponent', () => {
@@ -168,6 +171,15 @@ describe('PlotterSectionComponent', () => {
     });
   });
 
+  describe('the picker label', () => {
+    it('is the singular "Plotter", as one Plotter is picked', async () => {
+      const {element, settle} = await render();
+      await settle();
+
+      expect(element.querySelector('mat-label')?.textContent?.trim()).toBe('Plotter');
+    });
+  });
+
   describe('the Describe a Plotter link', () => {
     it('is shown with Describe a Plotter… and links to the editor of a new Plotter, while no Plotter is described', async () => {
       const {element} = await render();
@@ -210,7 +222,7 @@ describe('PlotterSectionComponent', () => {
       expect(piecesText()).toBe('Fits in one Tape piece');
     });
 
-    it('says a roll Plotter cuts the Tape in one Tape piece, however long', async () => {
+    it('says a roll plotter cuts the Tape in one Tape piece, however long', async () => {
       const {library, preference, piecesText, settle} = await render({tape: tapeWith(100, 5)});
       const vinylCutter = rollPlotter('Vinyl cutter', 120);
       await library.put(vinylCutter);
@@ -228,7 +240,22 @@ describe('PlotterSectionComponent', () => {
       preference.pick(cuttingMat.id);
       await settle();
 
-      expect(piecesText()).toBe("Can't be cut in pieces: see Cutting Problems");
+      expect(piecesText()).toBe("Can't be cut in Tape pieces: see Cutting Problems");
+    });
+
+    it('offers to show the Cutting Problems when the Tape can not be cut in pieces, and asks for them when pressed', async () => {
+      const {library, preference, element, requests, settle} = await render({tape: tapeWith(100, 5, [holeOf(0, 100)])});
+      const cuttingMat = sheetPlotter('Cutting mat', 300, 120);
+      await library.put(cuttingMat);
+      preference.pick(cuttingMat.id);
+      await settle();
+
+      element.querySelector<HTMLButtonElement>('[data-testid="plotter-cutting-problems"]')?.click();
+
+      expect(element.querySelector('[data-testid="plotter-cutting-problems"]')?.textContent?.trim()).toBe(
+        "Can't be cut in Tape pieces: see Cutting Problems",
+      );
+      expect(requests()).toBe(1);
     });
 
     it('says the Tape is too wide for the picked Plotter, instead of the Tape pieces', async () => {
@@ -246,6 +273,22 @@ describe('PlotterSectionComponent', () => {
       );
       expect(element.querySelector('[data-testid="plotter-too-wide"]')?.getAttribute('role')).toBe('status');
       expect(piecesText()).toBeUndefined();
+    });
+
+    it('marks the too-wide reason with an icon and tells what to do, with a link to the picked Plotter', async () => {
+      const wide = testOrgan('Fairground', 1, {
+        tapeBed: {tapeWidth: 140, holeDiameter: 2.5, rowSpacing: 3.5},
+      });
+      const {element, library, preference, settle} = await render({tape: tapeWith(100, 5), organ: wide});
+      const cuttingMat = sheetPlotter('Cutting mat', 300, 120);
+      await library.put(cuttingMat);
+      preference.pick(cuttingMat.id);
+      await settle();
+
+      const problem = element.querySelector('[data-testid="plotter-problem"]');
+      expect(problem?.querySelector('mat-icon')?.textContent?.trim()).toBe('error');
+      expect(problem?.textContent).toContain('Pick a wider Plotter, or change the working width of this Plotter.');
+      expect(element.querySelector('[data-testid="plotter-edit-picked"]')?.getAttribute('href')).toBe(`/plotters/${cuttingMat.id}`);
     });
 
     it('says nothing about Tape pieces while no Plotter is picked', async () => {

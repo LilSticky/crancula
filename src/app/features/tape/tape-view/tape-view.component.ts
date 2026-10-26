@@ -17,7 +17,7 @@ import {BreakpointObserver} from '@angular/cdk/layout';
 import {toSignal} from '@angular/core/rxjs-interop';
 import {ActivatedRoute, Router, RouterLink} from '@angular/router';
 import {map} from 'rxjs';
-import {column, columnDuration, cuttingProblems, holesWithCuttingProblems, noteName, type HoleRef, type ImportSummary, type NoJoinProblem, type Organ, type SongMetre, songMetre, stretchesOf, type Tape, tapeGeometry, tapePieces, type TapeGeometry, type TapePieces, type Transposed} from '@api/index';
+import {column, columnDuration, cuttingProblems, holesWithCuttingProblems, noteName, type HoleRef, type ImportSummary, type NoJoinProblem, type Organ, type SongMetre, songMetre, type Tape, tapeGeometry, tapePieces, type TapeGeometry, type TapePieces, type Transposed} from '@api/index';
 import {canTranspose, holeRefsOf, selectionOfRefs} from './transpose-selection';
 import {crankSpeedChangeTo} from './crank-speed-change';
 import {holeAt, moveSpot, sameSpot, spotAt, type Spot, type TapeSelection} from './spot';
@@ -250,6 +250,7 @@ export class TapeViewComponent {
   private readonly scrollElement = viewChild<ElementRef<HTMLElement>>('scroll');
   private readonly stage = stageMetrics(this.scrollElement);
   private readonly drawingSvg = viewChild<ElementRef<SVGSVGElement>>('tapeSvg');
+  private readonly cuttingProblemsSection = viewChild(CuttingProblemsComponent);
   private readonly selection = signal<TapeSelection>({holes: []});
   /** The Holes selected, or none while a Spot is. */
   private readonly holeSelection = computed((): HoleSelection => {
@@ -312,22 +313,14 @@ export class TapeViewComponent {
     return this.organs.entities().find((organ) => organ.id === organId);
   });
 
-  /** The saved Tape cut in Tape pieces for the picked Plotter; nothing while no Plotter is picked or the Tape is not known. */
-  protected readonly tapePieces = computed((): TapePieces | undefined => {
-    const tape = this.tape();
-    const organ = this.organ();
-    const plotter = this.plotterPreference.picked();
-    return tape === undefined || organ === undefined || plotter === undefined ? undefined : tapePieces(tapeGeometry(tape, organ), plotter);
-  });
-
   private readonly geometry = computed(() => {
     const tape = this.shownTape();
     const organ = this.organ();
     return tape === undefined || organ === undefined ? undefined : tapeGeometry(tape, organ);
   });
 
-  /** The Tape pieces of the shown Tape (the would-be Tape while dragging) for the picked Plotter, as the drawing shows them. */
-  private readonly shownCut = computed((): TapePieces | undefined => {
+  /** The Tape pieces of the shown Tape (the would-be Tape while dragging) for the picked Plotter, as the drawing and the Plotter section show them. */
+  protected readonly shownCut = computed((): TapePieces | undefined => {
     const geometry = this.geometry();
     const plotter = this.plotterPreference.picked();
     return geometry === undefined || plotter === undefined ? undefined : tapePieces(geometry, plotter);
@@ -335,10 +328,12 @@ export class TapeViewComponent {
 
   /** The stretches of the shown Tape that no Join of the picked Plotter cuts within its working length; none without a Plotter. */
   protected readonly stretchProblems = computed((): readonly NoJoinProblem[] => {
-    const tape = this.shownTape();
-    const organ = this.organ();
+    const cut = this.shownCut();
     const plotter = this.plotterPreference.picked();
-    return tape === undefined || organ === undefined || plotter === undefined ? [] : stretchesOf(cuttingProblems(tape, organ, plotter));
+    if (cut?.kind !== 'no-join' || plotter === undefined || plotter.roll) return [];
+    return cut.stretches.map(
+      ({first, last}): NoJoinProblem => ({code: 'no-join', start: first, last, plotterName: plotter.name, workingLengthMm: plotter.workingLength}),
+    );
   });
 
   protected readonly scale = computed(() => {
@@ -511,6 +506,11 @@ export class TapeViewComponent {
   protected chooseStretch(stretch: NoJoinProblem): void {
     this.selection.set({holes: []});
     this.stretchInView = stretch.start + 1;
+  }
+
+  /** Shows the Cutting Problems section in the side panel and focuses it, for the Plotter section's link to them. */
+  protected revealCuttingProblems(): void {
+    this.cuttingProblemsSection()?.reveal();
   }
 
   /** Whether the Organ can play the Tape: it needs a Tape per Crank turn. */
@@ -1155,7 +1155,7 @@ export class TapeViewComponent {
       if (this.stretchInView !== undefined) {
         const first = this.stretchInView;
         this.stretchInView = undefined;
-        element.querySelector(`[data-testid="stretch-mark"][data-first="${first}"]`)?.scrollIntoView({block: 'nearest', inline: 'nearest'});
+        element.querySelector(`[data-testid="stretch-mark"][data-first="${first}"]`)?.scrollIntoView({block: 'nearest', inline: 'start'});
         return;
       }
       if (!this.scrollToSelection) return;

@@ -1,7 +1,8 @@
-// API: CuttingProblemsComponent (standalone); input `holes: readonly HoleCuttingProblems[]` (cut order, Columns 0-based); input `stretches: readonly NoJoinProblem[]` (default none); output `chosen: OutputEmitterRef<HoleRef>`; output `stretchChosen: OutputEmitterRef<NoJoinProblem>`.
+// API: CuttingProblemsComponent (standalone); input `holes: readonly HoleCuttingProblems[]` (cut order, Columns 0-based); input `stretches: readonly NoJoinProblem[]` (default none); output `chosen: OutputEmitterRef<HoleRef>`; output `stretchChosen: OutputEmitterRef<NoJoinProblem>`; method `reveal()` scrolls the section into view and focuses it.
 import {TestBed} from '@angular/core/testing';
 import {TranslateService} from '@ngx-translate/core';
 import {firstValueFrom} from 'rxjs';
+import {vi} from 'vitest';
 import {
   column,
   holesWithCuttingProblems,
@@ -73,7 +74,7 @@ async function render(problems: readonly CuttingProblem[], language: 'en' | 'de'
     [...element.querySelectorAll('[data-testid="cutting-problem-stretch"]')].map((item) =>
       (item.textContent ?? '').replace(/\s+/g, ' ').trim(),
     );
-  return {element, chosen, chosenStretches, text, entries, stretchEntries};
+  return {element, component: fixture.componentInstance, chosen, chosenStretches, text, entries, stretchEntries};
 }
 
 describe('CuttingProblemsComponent', () => {
@@ -198,6 +199,29 @@ describe('CuttingProblemsComponent', () => {
     expect(entries()[0]).toContain('A#4');
     expect(entries()[0]).toMatch(/\b5\b/);
     expect(element.querySelectorAll('button[data-testid="cutting-problem"]')).toHaveLength(0);
+  });
+
+  it('holds no paragraph inside its buttons, so that the buttons are valid HTML', async () => {
+    const {element} = await render([TOO_SHORT], 'en', [NO_JOIN]);
+
+    expect(element.querySelectorAll('button p')).toHaveLength(0);
+    expect(element.querySelectorAll('button[data-testid="cutting-problem"], button[data-testid="cutting-problem-stretch"]')).toHaveLength(2);
+  });
+
+  it('scrolls the section to the top of the view and focuses it when revealed', async () => {
+    const {element, component} = await render([TOO_SHORT], 'en', [NO_JOIN]);
+    const section = element.querySelector('[data-testid="cutting-problems"]');
+    const scrollIntoView = vi.spyOn(Element.prototype, 'scrollIntoView').mockImplementation(() => undefined);
+
+    try {
+      component.reveal();
+
+      expect(scrollIntoView.mock.contexts).toContain(section);
+      expect(scrollIntoView.mock.calls[scrollIntoView.mock.contexts.indexOf(section)]).toEqual([{block: 'start'}]);
+      expect(document.activeElement).toBe(section);
+    } finally {
+      scrollIntoView.mockRestore();
+    }
   });
 
   describe('stretches with no place for a Join (T042, US3 scenario 3)', () => {

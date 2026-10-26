@@ -1,4 +1,4 @@
-import {ChangeDetectionStrategy, Component, computed, inject, input, output} from '@angular/core';
+import {ChangeDetectionStrategy, Component, computed, ElementRef, inject, input, output, viewChild} from '@angular/core';
 import {toSignal} from '@angular/core/rxjs-interop';
 import {MatButton} from '@angular/material/button';
 import {MatIcon} from '@angular/material/icon';
@@ -57,8 +57,14 @@ interface StretchEntry {
     .unselectable {
       padding: 0.5rem 0.75rem;
     }
+    .text {
+      display: block;
+    }
     p {
       margin: 0;
+    }
+    section:focus {
+      outline: none;
     }
     .visually-hidden {
       position: absolute;
@@ -70,7 +76,7 @@ interface StretchEntry {
     }
   `,
   template: `
-    <section data-testid="cutting-problems">
+    <section #section data-testid="cutting-problems" tabindex="-1">
       <h2>{{ 'TAPE.CUTTING_PROBLEMS.TITLE' | translate }}</h2>
       <p data-testid="cutting-problems-count">
         @if (count() === 0) {
@@ -88,7 +94,7 @@ interface StretchEntry {
                   <mat-icon aria-hidden="true" fontIcon="my_location" />
                   <span>
                     @for (text of entry.texts; track $index) {
-                      <p>{{ text.key | translate: text.params }}</p>
+                      <span class="text">{{ text.key | translate: text.params }}</span>
                     }
                   </span>
                 </span>
@@ -103,13 +109,13 @@ interface StretchEntry {
             }
           </li>
         }
-        @for (entry of stretchEntries(); track $index) {
+        @for (entry of stretchEntries(); track entry.stretch.start) {
           <li>
             <button mat-button type="button" data-testid="cutting-problem-stretch" (click)="stretchChosen.emit(entry.stretch)">
               <span class="row">
                 <mat-icon aria-hidden="true" fontIcon="straighten" />
                 <span>
-                  <p>{{ entry.text.key | translate: entry.text.params }}</p>
+                  <span class="text">{{ entry.text.key | translate: entry.text.params }}</span>
                 </span>
               </span>
             </button>
@@ -150,4 +156,13 @@ export class CuttingProblemsComponent {
 
   /** Holes and stretches together: each is one Cutting Problem. */
   protected readonly count = computed(() => this.entries().length + this.stretchEntries().length);
+
+  private readonly section = viewChild.required<ElementRef<HTMLElement>>('section');
+
+  /** Scrolls the section to the top of the view and focuses it, so that a link to the Cutting Problems lands on them. */
+  reveal(): void {
+    const element = this.section().nativeElement;
+    element.scrollIntoView({block: 'start'});
+    element.focus();
+  }
 }

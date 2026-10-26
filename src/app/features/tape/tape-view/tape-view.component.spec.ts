@@ -700,7 +700,7 @@ describe('TapeViewComponent', () => {
     // 200 Columns of 3 mm with row 1 held from Column 1 for 100 Columns: Columns 1 to 101 have no place for a Join.
     const withStretch: RenderOptions = {holes: [{row: 1, start: 0, length: 100}], columns: 200, columnLength: 3};
 
-    /** A sheet Plotter of 300 mm working length and the given working width, or a roll Plotter of that width. */
+    /** A sheet Plotter of 300 mm working length and the given working width, or a roll plotter of that width. */
     function plotterOf(workingWidth: number, roll = false): Plotter {
       const draft: PlotterDraft = roll
         ? {id: newPlotterId(), name: 'Vinyl cutter', workingWidth, roll: true, workingLength: null, overlap: null}
@@ -766,7 +766,7 @@ describe('TapeViewComponent', () => {
       expect([...drawn(view(), 'join'), ...drawn(view(), 'overlap'), ...drawn(view(), 'stretch-mark')]).toEqual([]);
     });
 
-    it('draws no Join, Overlap or stretch mark for a roll Plotter', async () => {
+    it('draws no Join, Overlap or stretch mark for a roll plotter', async () => {
       const {tape, open, view} = await render(withStretch);
       await pick(plotterOf(120, true));
       await open(`/tapes/${tape.id}`);
@@ -808,8 +808,28 @@ describe('TapeViewComponent', () => {
         view()?.querySelector<HTMLButtonElement>('[data-testid="cutting-problem-stretch"]')?.click();
         await settle();
 
+        const mark = view()?.querySelector('[data-testid="tape-scroll"] [data-testid="stretch-mark"]');
         expect(selectedHoles(view())).toEqual([]);
-        expect(scrollIntoView.mock.contexts).toContain(view()?.querySelector('[data-testid="tape-scroll"] [data-testid="stretch-mark"]'));
+        expect(scrollIntoView.mock.contexts).toContain(mark);
+        expect(scrollIntoView.mock.calls[scrollIntoView.mock.contexts.indexOf(mark)]).toEqual([{block: 'nearest', inline: 'start'}]);
+      } finally {
+        scrollIntoView.mockRestore();
+      }
+    });
+
+    it('shows the Cutting Problems and focuses them when the Plotter section asks, scrolled to the top of the view', async () => {
+      const {tape, open, view, settle} = await render(withStretch);
+      await pick(plotterOf(300));
+      await open(`/tapes/${tape.id}`);
+      const problems = required(view()?.querySelector<HTMLElement>('[data-testid="side-panel"] [data-testid="cutting-problems"]'), 'Cutting Problems');
+      const scrollIntoView = vi.spyOn(Element.prototype, 'scrollIntoView').mockImplementation(() => undefined);
+
+      try {
+        required(view()?.querySelector<HTMLButtonElement>('[data-testid="plotter-cutting-problems"]'), 'Cutting Problems button').click();
+        await settle();
+
+        expect(document.activeElement).toBe(problems);
+        expect(scrollIntoView.mock.calls[scrollIntoView.mock.contexts.indexOf(problems)]).toEqual([{block: 'start'}]);
       } finally {
         scrollIntoView.mockRestore();
       }
@@ -902,6 +922,36 @@ describe('TapeViewComponent', () => {
       expect(stretchesOf(view())).toHaveLength(0);
       expect(all(view(), '[data-testid="tape-scroll"] [data-testid="stretch-mark"]')).toHaveLength(0);
       expect(piecesText(view())).toBeUndefined();
+    });
+
+    it('says the Tape pieces of the Tape as dragged, as the Joins drawn for it do, until the Hole is dropped', async () => {
+      // A Hole of 38 Columns (114 mm) from Column 1 leaves two Tape pieces; dragged to Column 57 the Tape needs three.
+      const {tape, organ, open, view, settle} = await render({holes: [{row: 1, start: 0, length: 38}], columns: 150, columnLength: 3});
+      await pick(sheet(newPlotterId(), 300));
+      await open(`/tapes/${tape.id}`);
+      expect(piecesText(view())).toBe('Cut in 2 Tape pieces');
+      const svg = required(view()?.querySelector<SVGSVGElement>('[data-testid="tape-scroll"] svg'), 'Tape drawing');
+      Object.defineProperty(svg, 'getBoundingClientRect', {value: () => new DOMRect(0, 0, 4000, 300), configurable: true});
+      const geometry = tapeGeometry(tape, organ);
+      /** A position in the middle of a Column (from 0) on the first row, in client px. */
+      const at = (column: number) => ({
+        clientX: (geometry.leadIn + (column + 0.5) * geometry.columnLength) * SCALE,
+        clientY: (geometry.rowCentres[0] ?? 0) * SCALE + 24,
+      });
+      const pointerAt = (type: string, column: number) => new PointerEvent(type, {...at(column), pointerId: 1, button: 0, bubbles: true, cancelable: true});
+      required(view()?.querySelector('[data-testid="tape-scroll"] rect[data-testid="hole"][data-row="0"][data-start="0"]'), 'Hole').dispatchEvent(pointerAt('pointerdown', 10));
+      await settle();
+      svg.dispatchEvent(pointerAt('pointermove', 66));
+      await twoFrames();
+      await settle();
+
+      expect(piecesText(view())).toBe('Cut in 3 Tape pieces');
+      const joinsWhileDragged = joinsOf(view());
+      svg.dispatchEvent(pointerAt('pointerup', 66));
+      await settle();
+
+      expect(joinsOf(view())).toEqual(joinsWhileDragged);
+      expect(piecesText(view())).toBe('Cut in 3 Tape pieces');
     });
   });
 

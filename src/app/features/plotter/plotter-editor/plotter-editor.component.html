@@ -20,6 +20,10 @@
         </mat-select>
       </mat-form-field>
 
+      <mat-slide-toggle class="full-width" data-testid="plotter-roll" [formField]="plotter.roll">
+        {{ 'PLOTTER.EDITOR.ROLL' | translate }}
+      </mat-slide-toggle>
+
       <mat-form-field>
         <mat-label>{{ 'PLOTTER.EDITOR.WORKING_WIDTH' | translate }}</mat-label>
         <input matInput crancDecimalInput data-testid="plotter-working-width" [formField]="plotter.workingWidth"/>
@@ -30,10 +34,6 @@
           }
         </ng-container>
       </mat-form-field>
-
-      <mat-slide-toggle class="full-width" data-testid="plotter-roll" [formField]="plotter.roll">
-        {{ 'PLOTTER.EDITOR.ROLL' | translate }}
-      </mat-slide-toggle>
 
       @if (!plotter.roll().value()) {
         <mat-form-field>

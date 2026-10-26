@@ -341,12 +341,15 @@
     },
     "PLOTTER": {
       "NONE": "No Plotter",
+      "PICKER_LABEL": "Plotter",
       "DESCRIBE": "Describe a Plotter…",
       "PIECES": "Cut in {{count}} Tape pieces",
       "PIECES_ONE": "Fits in one Tape piece",
       "ROLL": "Roll plotter: one Tape piece",
-      "NO_JOIN": "Can't be cut in pieces: see Cutting Problems",
-      "TOO_WIDE": "The Tape is {{tapeWidth}} mm wide, the Plotter's working width is {{workingWidth}} mm"
+      "NO_JOIN": "Can't be cut in Tape pieces: see Cutting Problems",
+      "TOO_WIDE": "The Tape is {{tapeWidth}} mm wide, the Plotter's working width is {{workingWidth}} mm",
+      "TOO_WIDE_ACTION": "Pick a wider Plotter, or change the working width of this Plotter.",
+      "EDIT_PICKED": "Change this Plotter"
     }
   },
   "ORGAN": {

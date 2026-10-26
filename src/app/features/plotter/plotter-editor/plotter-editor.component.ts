@@ -25,10 +25,24 @@ import {PLOTTER_FIELD_LABEL_KEYS, plotterFormSchema, shownMessages, ShownViolati
   templateUrl: './plotter-editor.component.html',
   providers: [{provide: ErrorStateMatcher, useClass: ShownViolationMatcher}],
   styles: `
+    mat-card {
+      padding: 20px;
+    }
+
+    /* The Organ editor's field grid: two columns, the roll switch and the name across both. */
     .fields {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 0 16px;
+      column-gap: 16px;
+      row-gap: 20px;
+      margin-top: 16px;
+    }
+
+    @media (max-width: 1180px) {
+      .fields {
+        grid-template-columns: minmax(0, 1fr);
+        row-gap: 12px;
+      }
     }
 
     .full-width {

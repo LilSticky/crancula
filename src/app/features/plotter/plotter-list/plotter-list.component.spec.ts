@@ -20,7 +20,7 @@ function sheetPlotter(name: string, workingLength: number, workingWidth: number,
   return result.value;
 }
 
-/** A roll Plotter (a vinyl cutter) of a working width. */
+/** A roll plotter (a vinyl cutter) of a working width. */
 function rollPlotter(name: string, workingWidth: number): Plotter {
   const draft: PlotterDraft = {id: newPlotterId(), name, workingWidth, roll: true, workingLength: null, overlap: null};
   const result = validatePlotter(draft);
@@ -105,7 +105,7 @@ describe('PlotterListComponent', () => {
     expect(row).toContain('20 mm');
   });
 
-  it('shows the width of a roll Plotter and no Overlap', async () => {
+  it('shows the width of a roll plotter and no Overlap', async () => {
     const {fixture, library, element} = await render();
     await library.put(rollPlotter('Vinyl cutter', 120));
     await fixture.whenStable();
@@ -113,6 +113,14 @@ describe('PlotterListComponent', () => {
     const [row] = rowTexts(element);
     expect(row).toContain('roll, 120 mm wide');
     expect(row).not.toMatch(/\b20 mm/);
+  });
+
+  it('shows a dash in the Overlap cell of a roll plotter, so the column does not look broken', async () => {
+    const {fixture, library, element} = await render();
+    await library.put(rollPlotter('Vinyl cutter', 120));
+    await fixture.whenStable();
+
+    expect(element.querySelector('[data-testid="plotter-row"] td:nth-child(3)')?.textContent?.trim()).toBe('—');
   });
 
   it('holds the only Describe a Plotter button while there are Plotters, and no empty state', async () => {

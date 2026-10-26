@@ -141,17 +141,34 @@ cranc-page-head button[mat-icon-button] {
   stroke-dasharray: 6 3;
   pointer-events: none;
 }
+/* The Overlap band: a hatch in the Join colour (the fill is the pattern #overlap-hatch) and 1 px edges, both 5.6:1 on the Tape. */
 .overlap {
-  fill: var(--cr-select);
-  fill-opacity: 0.15;
   pointer-events: none;
 }
-.stretch-mark {
-  fill: var(--cr-problem);
-  fill-opacity: 0.12;
-  stroke: var(--cr-problem);
+.overlap-edge {
+  stroke: var(--cr-select);
   stroke-width: 1;
   pointer-events: none;
+}
+.overlap-hatch {
+  stroke: var(--cr-select);
+  stroke-width: 1.5;
+  stroke-opacity: 0.5;
+}
+/* The stretch no Join cuts: the warning tint and hatch (the fill is the pattern #stretch-hatch) and a 2 px outline. */
+.stretch-mark {
+  stroke: var(--cr-problem);
+  stroke-width: 2;
+  pointer-events: none;
+}
+.stretch-ground {
+  fill: var(--cr-problem);
+  fill-opacity: 0.2;
+}
+.stretch-hatch {
+  stroke: var(--cr-problem);
+  stroke-width: 1.5;
+  stroke-opacity: 0.6;
 }
 .cutting-problem-glyph {
   fill: var(--cr-problem);

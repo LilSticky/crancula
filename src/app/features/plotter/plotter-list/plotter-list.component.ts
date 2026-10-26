@@ -22,7 +22,7 @@ import {PlotterLibrary} from '../plotter-library.store';
 interface PlotterRow {
   readonly plotter: Plotter;
   readonly workingArea: TranslatableText;
-  /** `null` for a roll Plotter, which has no Overlap. */
+  /** `null` for a roll plotter, which has no Overlap. */
   readonly overlap: TranslatableText | null;
 }
 
@@ -69,6 +69,8 @@ interface PlotterRow {
             <td mat-cell *matCellDef="let row">
               @if (row.overlap; as overlap) {
                 {{ overlap.key | translate: overlap.params }}
+              } @else {
+                —
               }
             </td>
           </ng-container>

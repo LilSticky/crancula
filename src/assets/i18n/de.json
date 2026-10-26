@@ -341,12 +341,15 @@
     },
     "PLOTTER": {
       "NONE": "Kein Plotter",
+      "PICKER_LABEL": "Plotter",
       "DESCRIBE": "Plotter beschreiben…",
       "PIECES": "In {{count}} Bandstücke schneiden",
       "PIECES_ONE": "Passt in ein Bandstück",
       "ROLL": "Rollenplotter: ein Bandstück",
       "NO_JOIN": "Kann nicht in Bandstücke geschnitten werden: siehe Schnittprobleme",
-      "TOO_WIDE": "Das Lochband ist {{tapeWidth}} mm breit, die Arbeitsbreite des Plotters ist {{workingWidth}} mm"
+      "TOO_WIDE": "Das Lochband ist {{tapeWidth}} mm breit, die Arbeitsbreite des Plotters ist {{workingWidth}} mm",
+      "TOO_WIDE_ACTION": "Wähle einen breiteren Plotter oder ändere die Arbeitsbreite dieses Plotters.",
+      "EDIT_PICKED": "Diesen Plotter ändern"
     }
   },
   "ORGAN": {
