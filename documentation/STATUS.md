@@ -6,20 +6,28 @@ Issues: [GitHub](https://github.com/LilSticky/crancula/issues)
 
 ## Current slice
 
-**None in progress.** v0.3 [Bring Scores onto a tape](https://github.com/LilSticky/crancula/issues/167) is done (see below).
+None in progress.
 
-**Decisions (2026-10-25):** Keys stay at each Tick (dictionary updated); the import button reads "Choose a Song Source"
-(German "Notenquelle wählen"); German term for Song Source is Notenquelle.
-
-**Next step:** the next slice by [ROADMAP](ROADMAP.md) (highest-priority triaged: [#168](https://github.com/LilSticky/crancula/issues/168),
-spec and draft PR [#174](https://github.com/LilSticky/crancula/pull/174) exist; then [#169](https://github.com/LilSticky/crancula/issues/169)).
+**Next step:** [Read a tape as Scores](https://github.com/LilSticky/crancula/issues/169) ([#169](https://github.com/LilSticky/crancula/issues/169),
+later slice, draft PR open): export the Tape as MusicXML, Bars from the Song's Time signature.
 
 **Known broken:** [#175](https://github.com/LilSticky/crancula/issues/175): `api/` is not covered by `npm run lint`
 (`ng lint` only covers `src/` and `e2e/`, pre-existing).
 
-**Known skipped:** one Angular test until T039 (grace notes left out of the Import Summary).
+**Open:** real MuseScore and Audiveris files not checked by hand (010 T063, needs the user's files). Tape pieces not checked by
+hand either: piece SVGs in Inkscape and a real Tape glued (011 T062, needs the user).
 
-**Open:** real MuseScore and Audiveris files not checked by hand (T063, needs the user's files).
+**Done:** [Cut a tape in pieces](../specs/011-cut-a-tape-in-pieces/spec.md) ([#168](https://github.com/LilSticky/crancula/issues/168), v0.4,
+branch `011-cut-a-tape-in-pieces`, PR [#174](https://github.com/LilSticky/crancula/pull/174)): Plotters are described like Organs
+(`plotters.json`, list, editor, sheet or roll plotter). The Plotter is picked in the Tape view and remembered per machine. A Tape
+longer than the Plotter's Working area is cut in Tape pieces at the furthest Joins, each with an Overlap for gluing; the pieces are
+saved into one folder (`plotter:save-svg-pieces`, [ADR 28](adr/0028-tape-pieces-saved-into-one-folder-by-main.md)).
+A stretch without a Join and a Plotter too narrow for the Tape are Cutting Problems and refuse the export. Joins, Overlaps and
+stretches are drawn on the Tape. Dictionary: Sheet plotter (Bogenplotter), added with user approval 2026-10-26; the count reads
+"N Cutting Problems". Reviews ([audit.md](../specs/011-cut-a-tape-in-pieces/audit.md),
+[ux-review.md](../specs/011-cut-a-tape-in-pieces/ux-review.md)) fixed; follow-ups [#180](https://github.com/LilSticky/crancula/issues/180)
+and [#181](https://github.com/LilSticky/crancula/issues/181). Gate: 1530 node (1 skipped: dangling link, needs symlink rights on Windows) and 1732 Angular unit tests, lint, i18n (432 keys), build; e2e `tape-pieces`, `plotter-library`, `tape-edit`, `tape-german`, `boundary` green locally; full e2e in CI.
+**Not checked by hand yet**: piece SVGs in Inkscape and a real Tape glued (T062, needs the user).
 
 **Done:** [Export clipped at 1280 px in German (#177)](https://github.com/LilSticky/crancula/issues/177) (2026-10-26, branch
 `177-tape-toolbar-german`): in German the Tape view's page head actions (Preview, Transpose, Record, Export) show as icons
@@ -57,7 +65,8 @@ full e2e in CI. **Sound not checked by hand yet**: the user has not listened to 
 [#168](https://github.com/LilSticky/crancula/issues/168) (Cut a tape in pieces),
 [#169](https://github.com/LilSticky/crancula/issues/169) (Read a tape as Scores) and
 [#170](https://github.com/LilSticky/crancula/issues/170) (Cut several tapes side by side, discovery still to do).
-The specs 010–012 are written on their own branches, each with a draft pull request. The Project board now holds
+Slice 011 (Cut a tape in pieces) is planned and has tasks ([specs/011](../specs/011-cut-a-tape-in-pieces/tasks.md),
+[ADR 28](adr/0028-tape-pieces-saved-into-one-folder-by-main.md)). The Project board now holds
 every issue (29 were missing); its built-in auto-add workflow is on (it adds only new issues, so the older ones had to be added by hand).
 
 **Done:** [Ready-made Organs (#162)](https://github.com/LilSticky/crancula/issues/162) (2026-10-24, branch

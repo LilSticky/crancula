@@ -1,9 +1,9 @@
-import {ChangeDetectionStrategy, Component, computed, inject, input, output} from '@angular/core';
+import {ChangeDetectionStrategy, Component, computed, ElementRef, inject, input, output, viewChild} from '@angular/core';
 import {toSignal} from '@angular/core/rxjs-interop';
 import {MatButton} from '@angular/material/button';
 import {MatIcon} from '@angular/material/icon';
 import {TranslatePipe, TranslateService} from '@ngx-translate/core';
-import {noteName, type HoleCuttingProblems, type HoleRef} from '@api/index';
+import {noteName, type HoleCuttingProblems, type HoleRef, type NoJoinProblem} from '@api/index';
 import {map} from 'rxjs';
 import {cuttingProblemText, type ProblemText} from '../cutting-problem-text';
 
@@ -16,7 +16,12 @@ interface Entry {
   readonly selectable: boolean;
 }
 
-/** The Cutting Problems section of the side panel: how many Holes can't be cut, and which. */
+interface StretchEntry {
+  readonly stretch: NoJoinProblem;
+  readonly text: ProblemText;
+}
+
+/** The Cutting Problems section of the side panel: how many Holes and stretches can't be cut, and which. */
 @Component({
   selector: 'cranc-cutting-problems',
   imports: [MatButton, MatIcon, TranslatePipe],
@@ -52,8 +57,14 @@ interface Entry {
     .unselectable {
       padding: 0.5rem 0.75rem;
     }
+    .text {
+      display: block;
+    }
     p {
       margin: 0;
+    }
+    section:focus {
+      outline: none;
     }
     .visually-hidden {
       position: absolute;
@@ -65,13 +76,13 @@ interface Entry {
     }
   `,
   template: `
-    <section data-testid="cutting-problems">
+    <section #section data-testid="cutting-problems" tabindex="-1">
       <h2>{{ 'TAPE.CUTTING_PROBLEMS.TITLE' | translate }}</h2>
       <p data-testid="cutting-problems-count">
-        @if (entries().length === 0) {
+        @if (count() === 0) {
           {{ 'TAPE.CUTTING_PROBLEMS.NONE' | translate }}
         } @else {
-          {{ (entries().length === 1 ? 'TAPE.CUTTING_PROBLEMS.COUNT_ONE' : 'TAPE.CUTTING_PROBLEMS.COUNT') | translate: {count: entries().length} }}
+          {{ (count() === 1 ? 'TAPE.CUTTING_PROBLEMS.COUNT_ONE' : 'TAPE.CUTTING_PROBLEMS.COUNT') | translate: {count: count()} }}
         }
       </p>
       <ul>
@@ -83,7 +94,7 @@ interface Entry {
                   <mat-icon aria-hidden="true" fontIcon="my_location" />
                   <span>
                     @for (text of entry.texts; track $index) {
-                      <p>{{ text.key | translate: text.params }}</p>
+                      <span class="text">{{ text.key | translate: text.params }}</span>
                     }
                   </span>
                 </span>
@@ -98,13 +109,28 @@ interface Entry {
             }
           </li>
         }
+        @for (entry of stretchEntries(); track entry.stretch.start) {
+          <li>
+            <button mat-button type="button" data-testid="cutting-problem-stretch" (click)="stretchChosen.emit(entry.stretch)">
+              <span class="row">
+                <mat-icon aria-hidden="true" fontIcon="straighten" />
+                <span>
+                  <span class="text">{{ entry.text.key | translate: entry.text.params }}</span>
+                </span>
+              </span>
+            </button>
+          </li>
+        }
       </ul>
     </section>
   `,
 })
 export class CuttingProblemsComponent {
   readonly holes = input.required<readonly HoleCuttingProblems[]>();
+  /** The stretches with no place for a Join; each is listed after the Holes. */
+  readonly stretches = input<readonly NoJoinProblem[]>([]);
   readonly chosen = output<HoleRef>();
+  readonly stretchChosen = output<NoJoinProblem>();
 
   private static nextId = 0;
   /** Prefix of the ids of the descriptions, unique per instance. */
@@ -123,4 +149,20 @@ export class CuttingProblemsComponent {
       selectable: problems.some((problem) => problem.code !== 'no-pipe'),
     })),
   );
+
+  protected readonly stretchEntries = computed<readonly StretchEntry[]>(() =>
+    this.stretches().map((stretch) => ({stretch, text: cuttingProblemText(stretch, this.language())})),
+  );
+
+  /** Holes and stretches together: each is one Cutting Problem. */
+  protected readonly count = computed(() => this.entries().length + this.stretchEntries().length);
+
+  private readonly section = viewChild.required<ElementRef<HTMLElement>>('section');
+
+  /** Scrolls the section to the top of the view and focuses it, so that a link to the Cutting Problems lands on them. */
+  reveal(): void {
+    const element = this.section().nativeElement;
+    element.scrollIntoView({block: 'start'});
+    element.focus();
+  }
 }

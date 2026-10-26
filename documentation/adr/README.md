@@ -33,3 +33,4 @@ with a new one and update both statuses here.
 | 25 | [One gesture model for all pointer types](0025-one-gesture-model-for-all-pointer-types.md) | Accepted |
 | 26 | [Recording rendered offline in the renderer, saved by the main process](0026-recording-rendered-offline-saved-by-main.md) | Accepted |
 | 27 | [Own MusicXML reader in the domain, `.mxl` unzipped with fflate](0027-own-musicxml-reader-in-the-domain.md) | Accepted |
+| 28 | [Tape pieces saved into one folder by the main process; Plotters in a snapshot of their own](0028-tape-pieces-saved-into-one-folder-by-main.md) | Accepted |

@@ -6,7 +6,7 @@ import {MatIcon} from '@angular/material/icon';
 import {TranslatePipe} from '@ngx-translate/core';
 import type {OrganDraft} from '@api/index';
 import {DecimalInputDirective} from '../../../shared/decimal-input.directive';
-import type {TranslatableText} from '../../leave-unsaved.guard';
+import type {TranslatableText} from '../../../shared/leave-unsaved/leave-unsaved.guard';
 import {SaveAttempt, shownMessages} from '../organ-form';
 
 /** The numbers of the fit check in the current language. */

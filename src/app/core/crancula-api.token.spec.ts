@@ -1,6 +1,28 @@
 import {TestBed} from '@angular/core/testing';
-import type {CranculaApi, OrganLibrarySnapshot, SvgSaveRequest, TapeLibrarySnapshot} from '@api/index';
+import type {
+  CranculaApi,
+  OrganLibrarySnapshot,
+  PlotterLibrarySnapshot,
+  SvgPiecesSaveRequest,
+  SvgSaveRequest,
+  TapeLibrarySnapshot,
+} from '@api/index';
 import {CRANCULA_API, createInMemoryCranculaApi} from './crancula-api.token';
+
+const plotterSnapshot: PlotterLibrarySnapshot = {
+  version: 1,
+  plotters: [
+    {
+      id: '3f2b8c1e-9d4a-4f6b-8e2c-1a2b3c4d5e6f',
+      name: 'Cutting mat',
+      format: 'svg',
+      workingWidth: 300,
+      roll: false,
+      workingLength: 120,
+      overlap: 20,
+    },
+  ],
+};
 
 const snapshot: OrganLibrarySnapshot = {
   version: 5,
@@ -113,6 +135,91 @@ describe('createInMemoryCranculaApi', () => {
       const api = createInMemoryCranculaApi(undefined, undefined, {plotter: {saveSvg: 'failed'}});
 
       expect(await api.plotter.saveSvg(request)).toEqual({status: 'failed', reason: expect.any(String)});
+    });
+  });
+
+  describe('plotter pieces', () => {
+    const svgDocument = '<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg"></svg>\n';
+    const request: SvgPiecesSaveRequest = {
+      pieces: [
+        {fileName: 'Waltz 1 of 2.svg', svg: svgDocument},
+        {fileName: 'Waltz 2 of 2.svg', svg: svgDocument},
+      ],
+      dialogTitle: 'Choose the folder for the Tape pieces',
+      dialogButton: 'Save here',
+      replaceMessage: 'Some of these files already exist. Replace them?',
+      replaceButton: 'Replace',
+      cancelButton: 'Cancel',
+    };
+
+    it('records the request and answers saved with an in-memory folder and the file names', async () => {
+      const api = createInMemoryCranculaApi();
+
+      expect(await api.plotter.savePieces(request)).toEqual({
+        status: 'saved',
+        folderPath: 'in-memory',
+        fileNames: ['Waltz 1 of 2.svg', 'Waltz 2 of 2.svg'],
+      });
+      expect(api.plotter.lastSavePiecesRequest).toEqual(request);
+    });
+
+    it('rejects a forged request and records nothing', async () => {
+      const api = createInMemoryCranculaApi();
+
+      const reply = await api.plotter.savePieces({
+        ...request,
+        pieces: [{fileName: '../evil.svg', svg: svgDocument}, {fileName: 'Waltz 2 of 2.svg', svg: svgDocument}],
+      });
+
+      expect(reply).toEqual({status: 'rejected', reason: expect.any(String)});
+      expect(api.plotter.lastSavePiecesRequest).toBeUndefined();
+    });
+
+    it('answers cancelled when told to', async () => {
+      const api = createInMemoryCranculaApi(undefined, undefined, {plotter: {savePieces: 'cancelled'}});
+
+      expect(await api.plotter.savePieces(request)).toEqual({status: 'cancelled'});
+    });
+
+    it('answers failed with the first file name and nothing written when told to', async () => {
+      const api = createInMemoryCranculaApi(undefined, undefined, {plotter: {savePieces: 'failed'}});
+
+      expect(await api.plotter.savePieces(request)).toEqual({
+        status: 'failed',
+        fileName: 'Waltz 1 of 2.svg',
+        reason: expect.any(String),
+        written: [],
+      });
+    });
+  });
+
+  describe('plotters', () => {
+    it('is empty without an initial Plotter snapshot', async () => {
+      expect(await createInMemoryCranculaApi().plotters.load()).toEqual({status: 'empty'});
+    });
+
+    it('starts with an initial Plotter snapshot', async () => {
+      const api = createInMemoryCranculaApi(undefined, undefined, {}, plotterSnapshot);
+
+      expect(await api.plotters.load()).toEqual({status: 'loaded', snapshot: plotterSnapshot});
+    });
+
+    it('loads what was saved', async () => {
+      const api = createInMemoryCranculaApi();
+
+      expect(await api.plotters.save(plotterSnapshot)).toEqual({status: 'saved'});
+      expect(await api.plotters.load()).toEqual({status: 'loaded', snapshot: plotterSnapshot});
+    });
+
+    it('rejects an invalid snapshot and keeps what was stored', async () => {
+      const api = createInMemoryCranculaApi(undefined, undefined, {}, plotterSnapshot);
+      const invalid: PlotterLibrarySnapshot = {
+        ...plotterSnapshot,
+        plotters: [{...plotterSnapshot.plotters[0], name: ''}],
+      };
+
+      expect(await api.plotters.save(invalid)).toEqual({status: 'rejected', reason: expect.any(String)});
+      expect(await api.plotters.load()).toEqual({status: 'loaded', snapshot: plotterSnapshot});
     });
   });
 

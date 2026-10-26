@@ -1,5 +1,5 @@
 import type {CranculaRoutes} from '../../../model/crancula-routes';
-import {leaveUnsavedGuard} from './leave-unsaved.guard';
+import {leaveUnsavedGuard} from '../shared/leave-unsaved/leave-unsaved.guard';
 import {OrganEditorComponent} from './organ-editor/organ-editor.component';
 import {OrganListComponent} from './organ-list/organ-list.component';
 

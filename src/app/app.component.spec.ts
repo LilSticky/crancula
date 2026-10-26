@@ -5,7 +5,7 @@ import {MatSidenavHarness} from '@angular/material/sidenav/testing';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {provideRouter} from '@angular/router';
 import {TranslateService} from '@ngx-translate/core';
-import type {CranculaApi} from '@api/index';
+import {type CranculaApi, type Plotter, validatePlotter} from '@api/index';
 import {firstValueFrom, of, type Observable} from 'rxjs';
 import {vi} from 'vitest';
 import {provideTestTranslations} from '../testing/test-translations';
@@ -13,7 +13,15 @@ import {testOrgan} from '../testing/organs';
 import {AppComponent} from './app.component';
 import {CRANCULA_API, createInMemoryCranculaApi} from './core/crancula-api.token';
 import {OrganLibrary} from './features/organ/organ-library.store';
+import {PlotterLibrary} from './features/plotter/plotter-library.store';
 import {TapeLibrary} from './features/tape/tape-library.store';
+
+/** A valid sheet Plotter with the given name. */
+function testPlotter(name: string): Plotter {
+  const result = validatePlotter({name, workingWidth: 120, roll: false, workingLength: 300, overlap: 20});
+  if (!result.ok) throw new Error('invalid test Plotter');
+  return result.value;
+}
 
 async function render(api: CranculaApi) {
   TestBed.configureTestingModule({
@@ -71,6 +79,17 @@ describe('AppComponent', () => {
     expect(document.body.textContent).toContain("Your changes couldn't be saved: disk full");
   });
 
+  it('tells the user when the Plotters could not be saved', async () => {
+    const api = createInMemoryCranculaApi();
+    api.plotters.save = () => Promise.resolve({status: 'failed', reason: 'disk full'});
+    const {fixture} = await render(api);
+
+    await TestBed.inject(PlotterLibrary).put(testPlotter('Cutting mat'));
+    await fixture.whenStable();
+
+    expect(document.body.textContent).toContain("Your Plotters couldn't be saved: disk full");
+  });
+
   it('tells the user when the Tapes could not be loaded, and that the Organs still work', async () => {
     const api = createInMemoryCranculaApi(undefined, undefined, {tapes: {load: 'unreadable'}});
     const {fixture} = await render(api);
@@ -80,6 +99,33 @@ describe('AppComponent', () => {
 
     expect(document.body.textContent).toContain('tapes.json.bak');
     expect(document.body.textContent).toContain('Your Organs still work.');
+  });
+
+  it('tells the user when the Plotters could not be loaded, and that the Organs still work', async () => {
+    const api = createInMemoryCranculaApi();
+    api.plotters.load = () => Promise.resolve({status: 'unreadable', backupPath: 'C:/data/plotters.unreadable.json', reason: 'bad JSON'});
+    const {fixture} = await render(api);
+
+    await TestBed.inject(PlotterLibrary).load();
+    await fixture.whenStable();
+
+    expect(document.body.textContent).toContain(
+      "Your Plotters couldn't be loaded. The file was kept at C:/data/plotters.unreadable.json. Your Organs still work.",
+    );
+  });
+
+  it('tells the user only once when the Plotters could not be loaded', async () => {
+    const api = createInMemoryCranculaApi();
+    api.plotters.load = () => Promise.resolve({status: 'unreadable', backupPath: 'C:/data/plotters.unreadable.json', reason: 'bad JSON'});
+    const {fixture} = await render(api);
+    const open = vi.spyOn(TestBed.inject(MatSnackBar), 'open');
+
+    await TestBed.inject(PlotterLibrary).load();
+    await fixture.whenStable();
+    await firstValueFrom(TestBed.inject(TranslateService).use('de'));
+    await fixture.whenStable();
+
+    expect(open).toHaveBeenCalledTimes(1);
   });
 
   it('tells the user when the Tapes could not be saved', async () => {

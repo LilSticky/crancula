@@ -27,7 +27,7 @@ import {firstValueFrom, map} from 'rxjs';
 import {formatNumber} from '../../shared/format-number';
 import {LanguagePreference} from '../../shared/language-preference';
 import {ConfirmableAction, ConfirmDialogComponent} from '../../shared/components/confirm-dialog/confirm-dialog.component';
-import type {LeaveProblem, TranslatableText, UnsavedChanges, UnsavedChangesCheck} from '../leave-unsaved.guard';
+import type {LeaveProblem, TranslatableText, UnsavedChanges, UnsavedChangesCheck} from '../../shared/leave-unsaved/leave-unsaved.guard';
 import {ActionBarComponent} from '../../shared/components/action-bar/action-bar.component';
 import {PageHeadComponent} from '../../shared/components/page-head/page-head.component';
 import {TapeLibrary} from '../../tape/tape-library.store';

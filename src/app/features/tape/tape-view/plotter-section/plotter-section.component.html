@@ -1,0 +1,39 @@
+<section data-testid="plotter-section">
+  <h2>{{ 'PLOTTER.NAV' | translate }}</h2>
+  <mat-form-field subscriptSizing="dynamic">
+    <mat-label>{{ 'TAPE.PLOTTER.PICKER_LABEL' | translate }}</mat-label>
+    <mat-select data-testid="plotter-picker" [value]="plotter()?.id ?? noPlotter" (selectionChange)="pick($event)">
+      <mat-option [value]="noPlotter">{{ 'TAPE.PLOTTER.NONE' | translate }}</mat-option>
+      @for (option of plotters(); track option.id) {
+        <mat-option [value]="option.id">{{ option.name }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+  <a matButton routerLink="/plotters/new" data-testid="plotter-describe">{{ 'TAPE.PLOTTER.DESCRIBE' | translate }}</a>
+  @if (tooWide(); as wide) {
+    <div class="problem" data-testid="plotter-problem">
+      <mat-icon aria-hidden="true">error</mat-icon>
+      <div>
+        <p role="status" data-testid="plotter-too-wide">{{ 'TAPE.PLOTTER.TOO_WIDE' | translate: wide }}</p>
+        <p>{{ 'TAPE.PLOTTER.TOO_WIDE_ACTION' | translate }}</p>
+        <a matButton [routerLink]="['/plotters', wide.plotterId]" data-testid="plotter-edit-picked">{{ 'TAPE.PLOTTER.EDIT_PICKED' | translate }}</a>
+      </div>
+    </div>
+  } @else if (plotter()?.roll) {
+    <p class="plotter-text" data-testid="plotter-pieces">{{ 'TAPE.PLOTTER.ROLL' | translate }}</p>
+  } @else if (pieces(); as pieces) {
+    @if (pieces.kind === 'no-join') {
+      <p class="plotter-text" data-testid="plotter-pieces">
+        <button type="button" class="link" data-testid="plotter-cutting-problems" (click)="cuttingProblemsRequested.emit()">{{ 'TAPE.PLOTTER.NO_JOIN' | translate }}</button>
+      </p>
+    } @else if (pieces.kind === 'pieces') {
+      <p class="plotter-text" data-testid="plotter-pieces">
+        @if (pieces.pieces.length === 1) {
+          {{ 'TAPE.PLOTTER.PIECES_ONE' | translate }}
+        } @else {
+          {{ 'TAPE.PLOTTER.PIECES' | translate: {count: pieces.pieces.length} }}
+        }
+      </p>
+    }
+  }
+</section>

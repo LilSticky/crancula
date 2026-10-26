@@ -1,8 +1,8 @@
-import {type Millimetres, type Organ, type Tape, midiNoteNumber, tapeGeometry} from '@api/index';
+import {type Millimetres, type NoJoinProblem, type Organ, type Tape, midiNoteNumber, tapePieces, tapeGeometry} from '@api/index';
 import {type Column, type ColumnCount} from '../../../../../api/tape/tape';
-import {tapeOf} from '../../../../../api/tape/tape-fixture';
+import {referenceOrgan, referencePlotter, referenceTape, plotterOf, tapeOf} from '../../../../../api/tape/tape-fixture';
 import {testOrgan} from '../../../../testing/organs';
-import {columnMarks, drawingWidth, gripsOf, holeMarks, holeRects, outline, rowLabels, sectionView, spotRect, RULER_HEIGHT} from './tape-drawing';
+import {columnMarks, drawingWidth, gripsOf, holeMarks, holeRects, joinMarks, outline, rowLabels, sectionView, spotRect, stretchMarks, RULER_HEIGHT} from './tape-drawing';
 import {gripBars, gripRects} from './hole-drag';
 import type {Spot} from './spot';
 
@@ -234,5 +234,84 @@ describe('drawingWidth', () => {
     const endGrip = gripRects({x: lastColumnEnd, y: 0, width: 0, height: 10}, 1).end;
 
     expect(drawingWidth(geometry, 2, true)).toBeGreaterThanOrEqual(endGrip.x + endGrip.width);
+  });
+});
+
+// The reference organ of spec 003 (Lead-in 50 mm, Minimum Gap 2 mm) and its reference Tape of 200 Columns of 3 mm.
+const referenceOrganForCuts = referenceOrgan();
+const referenceWithoutHoles = tapeOf({...referenceTape(referenceOrganForCuts), holes: []});
+
+/** The reference Tape with the Pipe of note 60 held from Column 1 for 100 Columns: Columns 1 to 101 have no place for a Join. */
+function heldReferenceTape(): Tape {
+  const note = midiNoteNumber(60);
+  if (note === undefined) throw new Error('not a note');
+  return tapeOf({...referenceWithoutHoles, holes: [{pipe: note, start: 0 as Column, length: 100 as ColumnCount}]});
+}
+
+describe('joinMarks', () => {
+  // On the reference Plotter (working length 300 mm, Overlap 20 mm) the Tape without Holes is cut after Columns 76 (278 mm)
+  // and 169 (557 mm).
+  const cut = tapePieces(tapeGeometry(referenceWithoutHoles, referenceOrganForCuts), referencePlotter());
+
+  it('gives a line at each Join, in px for the zoom, after the Column it follows counted from 1', () => {
+    expect(joinMarks(cut, 2).map(({after, x}) => ({after, x}))).toEqual([
+      {after: 76, x: 278 * 2},
+      {after: 169, x: 557 * 2},
+    ]);
+  });
+
+  it('gives each Join an Overlap band from the Join across the Overlap of the Plotter, in px', () => {
+    expect(joinMarks(cut, 2).map(({overlap}) => overlap)).toEqual([
+      {x: 278 * 2, width: 20 * 2},
+      {x: 557 * 2, width: 20 * 2},
+    ]);
+  });
+
+  it('gives no Join for a Tape that fits one Tape piece', () => {
+    const short = tapeOf({...referenceWithoutHoles, length: 50 as ColumnCount});
+
+    expect(joinMarks(tapePieces(tapeGeometry(short, referenceOrganForCuts), referencePlotter()), 2)).toEqual([]);
+  });
+
+  it('gives no Join for a Tape too wide for the Plotter', () => {
+    const narrow = plotterOf({name: 'Narrow', workingWidth: 50, roll: false, workingLength: 300, overlap: 20});
+
+    expect(joinMarks(tapePieces(tapeGeometry(referenceWithoutHoles, referenceOrganForCuts), narrow), 2)).toEqual([]);
+  });
+
+  it('gives no Join for a stretch that has no place for one', () => {
+    const stuck = tapePieces(tapeGeometry(heldReferenceTape(), referenceOrganForCuts), referencePlotter());
+    expect(stuck.kind).toBe('no-join');
+
+    expect(joinMarks(stuck, 2)).toEqual([]);
+  });
+});
+
+describe('stretchMarks', () => {
+  const geometry = tapeGeometry(heldReferenceTape(), referenceOrganForCuts);
+  const stretch: NoJoinProblem = {
+    code: 'no-join',
+    start: 0 as Column,
+    last: 100 as Column,
+    plotterName: 'Cutting mat',
+    workingLengthMm: 300,
+  };
+
+  it('draws a band over the Columns of a stretch, its first and last Column counted from 1, in px', () => {
+    // The band starts at the Lead-in (50 mm) and covers 101 Columns of 3 mm.
+    expect(stretchMarks([stretch], geometry, 2)).toEqual([{first: 1, last: 101, x: 50 * 2, width: 101 * 3 * 2}]);
+  });
+
+  it('draws one band for each stretch, each on its own', () => {
+    const later: NoJoinProblem = {...stretch, start: 120 as Column, last: 199 as Column};
+
+    expect(stretchMarks([stretch, later], geometry, 2).map(({first, last}) => [first, last])).toEqual([
+      [1, 101],
+      [121, 200],
+    ]);
+  });
+
+  it('draws no band without a stretch', () => {
+    expect(stretchMarks([], geometry, 2)).toEqual([]);
   });
 });

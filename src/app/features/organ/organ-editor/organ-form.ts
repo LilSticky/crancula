@@ -9,7 +9,7 @@ import {
 } from '@angular/forms/signals';
 import {ErrorStateMatcher} from '@angular/material/core';
 import {type OrganDraft, type OrganViolation, type OrganViolationCode, validateOrgan} from '@api/index';
-import type {TranslatableText} from '../leave-unsaved.guard';
+import type {TranslatableText} from '../../shared/leave-unsaved/leave-unsaved.guard';
 
 /**
  * A rule of the Organ that the editor's form reports at a field. `kind` is the code of the domain

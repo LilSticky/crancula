@@ -5,8 +5,11 @@ import * as path from 'path';
 import type {Language} from '../api';
 import {registerAppHandlers} from './app-ipc';
 import {menuTemplate, SOURCE_I18N_DIRECTORY} from './application-menu';
+import {entryExists} from './entry-exists';
 import {createOrganLibraryFile} from './organ-library-file';
 import {registerOrganLibraryHandlers} from './organ-library-ipc';
+import {createPlotterLibraryFile} from './plotter-library-file';
+import {registerPlotterLibraryHandlers} from './plotter-library-ipc';
 import {registerPlotterHandlers} from './plotter-ipc';
 import {registerRecordingHandlers} from './recording-ipc';
 import {createTapeLibraryFile} from './tape-library-file';
@@ -26,11 +29,16 @@ const organLibraryFile = createOrganLibraryFile(path.join(app.getPath('userData'
 registerOrganLibraryHandlers(ipcMain, organLibraryFile);
 const tapeLibraryFile = createTapeLibraryFile(path.join(app.getPath('userData'), 'snapshots'));
 registerTapeLibraryHandlers(ipcMain, tapeLibraryFile);
+const plotterLibraryFile = createPlotterLibraryFile(path.join(app.getPath('userData'), 'snapshots'));
+registerPlotterLibraryHandlers(ipcMain, plotterLibraryFile);
 registerPlotterHandlers(
   ipcMain,
   {
-    // Looked up at call time, so e2e tests can replace dialog.showSaveDialog.
+    // Looked up at call time, so e2e tests can replace the dialogs.
     showSaveDialog: (window, options) => dialog.showSaveDialog(window, options),
+    showOpenDialog: (window, options) => dialog.showOpenDialog(window, options),
+    showMessageBox: (window, options) => dialog.showMessageBox(window, options),
+    exists: entryExists,
     writeFile: (filePath, text) => fs.promises.writeFile(filePath, text, 'utf8'),
     documentsFolder: () => app.getPath('documents'),
   },
@@ -106,7 +114,7 @@ let flushedBeforeQuit = false;
 app.on('before-quit', (event) => {
   if (flushedBeforeQuit) return;
   event.preventDefault();
-  void Promise.all([organLibraryFile.flush(), tapeLibraryFile.flush()])
+  void Promise.all([organLibraryFile.flush(), tapeLibraryFile.flush(), plotterLibraryFile.flush()])
     .catch((error: unknown) => console.error('Could not write the snapshots before quitting', error))
     .finally(() => {
       flushedBeforeQuit = true;

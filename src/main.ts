@@ -11,6 +11,7 @@ import {provideTranslateService} from '@ngx-translate/core';
 import {provideTranslateHttpLoader} from '@ngx-translate/http-loader';
 import {routes} from "./app.routes";
 import {provideOrganLibrary} from "./app/features/organ/organ-library.store";
+import {providePlotterLibrary} from "./app/features/plotter/plotter-library.store";
 import {provideTapeLibrary} from "./app/features/tape/tape-library.store";
 import {provideFormFieldDefaults} from "./app/features/shared/form-field-defaults";
 import {EditCommandRouter} from "./app/features/shared/edit-command-router";
@@ -33,6 +34,7 @@ bootstrapApplication(AppComponent, {
     }),
     provideRouter(routes, withComponentInputBinding(), withHashLocation()),
     provideOrganLibrary(),
+    providePlotterLibrary(),
     provideTapeLibrary(),
     provideFormFieldDefaults(),
     // Listens for the menu's Edit Commands from the start, so Undo and Redo work before any view registers.

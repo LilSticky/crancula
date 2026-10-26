@@ -23,14 +23,8 @@ describe('parseSvgSaveRequest', () => {
 
   it('accepts what plotterFileName and plotterSvg produce', () => {
     const svg = plotterSvg({
-      leadIn: 50,
-      columnLength: 2.5,
-      length: 600,
-      endGap: 2,
       totalLength: 652,
       width: 100,
-      border: 5,
-      rowCentres: [],
       slots: [],
       outline: {
         tip: {x: 0, y: 0},
@@ -62,7 +56,7 @@ describe('parseSvgSaveRequest', () => {
   });
 
   describe('suggestedFileName', () => {
-    it.each(['../evil.svg', 'a/b.svg', 'C:\\x.svg', 'a\\b.svg', 'C:x.svg', '...svg', '.svg', 'a.txt', 'abc', 'a\u0000b.svg', 'a\nb.svg', 'a\u007fb.svg'])(
+    it.each(['../evil.svg', 'a/b.svg', 'C:\\x.svg', 'a\\b.svg', 'C:x.svg', '...svg', '.svg', 'a.txt', 'abc', 'a\u0000b.svg', 'a\nb.svg', 'a\u007fb.svg', 'a?b.svg', 'CON.svg', 'nul.SVG', 'a<b>.svg', 'a|b.svg', 'COM0.svg', 'LPT0.svg', 'COM¹.svg', 'LPT³.svg', 'CONIN$.svg', 'conout$.SVG'])(
       'rejects %j',
       (name) => {
         expect(errorOf({...valid, suggestedFileName: name})).toContain('suggestedFileName');

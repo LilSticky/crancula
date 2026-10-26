@@ -115,6 +115,14 @@ describe('RailComponent navigation', () => {
     expect(tapes?.textContent).toContain('Tapes');
   });
 
+  it('lists Plotters after Tapes, with a content_cut icon and a label', async () => {
+    const {navItem} = await startRail();
+
+    const plotters = navItem('/plotters');
+    expect(plotters?.querySelector('mat-icon')?.textContent?.trim()).toBe('content_cut');
+    expect(plotters?.textContent).toContain('Plotters');
+  });
+
   it('marks only the item of the active route as the current page', async () => {
     const {fixture, navItem} = await startRail();
 

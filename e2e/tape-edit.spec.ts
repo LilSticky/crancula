@@ -144,7 +144,7 @@ test.describe('Editing a Tape by hand', () => {
 
       await expect(window.getByTestId('hole-mark')).toHaveCount(1);
       await expect(window.getByTestId('cutting-problems').getByTestId('cutting-problem')).toHaveCount(1);
-      await expect(window.getByTestId('cutting-problems-count')).toHaveText(/^\s*1 Hole can't be cut\s*$/);
+      await expect(window.getByTestId('cutting-problems-count')).toHaveText(/^\s*1 Cutting Problem\s*$/);
 
       // Choosing the entry selects the Hole.
       await pressOnDrawing(window, 'Escape');
