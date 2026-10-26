@@ -89,6 +89,7 @@ function apiSaving(result: TapeLibrarySaveResult, initialTapes?: TapeLibrarySnap
     recording: inMemory.recording,
     app: inMemory.app,
     edit: inMemory.edit,
+    scores: inMemory.scores,
   };
 }
 
@@ -226,6 +227,7 @@ describe('TapeLibrary', () => {
         recording: inMemory.recording,
         app: inMemory.app,
         edit: inMemory.edit,
+        scores: inMemory.scores,
       });
       const content = library({tape: 1, song: 1}, {tape: 2, song: 2});
 
@@ -317,6 +319,7 @@ describe('TapeLibrary', () => {
         recording: inMemory.recording,
         app: inMemory.app,
         edit: inMemory.edit,
+        scores: inMemory.scores,
       });
       await store.load();
       const content = library({tape: 1, song: 1});
@@ -347,6 +350,7 @@ describe('TapeLibrary', () => {
           recording: inMemory.recording,
           app: inMemory.app,
           edit: inMemory.edit,
+          scores: inMemory.scores,
         },
       };
     }
@@ -503,6 +507,7 @@ describe('TapeLibrary', () => {
         recording: inMemory.recording,
         app: inMemory.app,
         edit: inMemory.edit,
+        scores: inMemory.scores,
       });
       await store.load();
       const content = library({tape: 1, song: 1});

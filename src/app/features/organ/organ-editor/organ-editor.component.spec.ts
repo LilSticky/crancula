@@ -420,6 +420,7 @@ describe('OrganEditorComponent', () => {
         recording: inMemory.recording,
         app: inMemory.app,
         edit: inMemory.edit,
+        scores: inMemory.scores,
       };
       TestBed.configureTestingModule({
         providers: [provideRouter([]), provideTestTranslations(), {provide: CRANCULA_API, useValue: api}],
@@ -784,6 +785,7 @@ describe('OrganEditorComponent', () => {
         recording: inMemory.recording,
         app: inMemory.app,
         edit: inMemory.edit,
+        scores: inMemory.scores,
       };
       TestBed.configureTestingModule({
         providers: [provideRouter([]), provideTestTranslations(), {provide: CRANCULA_API, useValue: api}],
@@ -2544,6 +2546,7 @@ describe('OrganEditorComponent', () => {
         recording: inMemory.recording,
         app: inMemory.app,
         edit: inMemory.edit,
+        scores: inMemory.scores,
       };
       TestBed.configureTestingModule({
         providers: [provideRouter([]), provideTestTranslations(), {provide: CRANCULA_API, useValue: api}],

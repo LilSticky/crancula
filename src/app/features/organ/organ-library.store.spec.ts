@@ -102,6 +102,7 @@ describe('OrganLibrary', () => {
         recording: inMemory.recording,
         app: inMemory.app,
         edit: inMemory.edit,
+        scores: inMemory.scores,
       };
     }
 
@@ -152,6 +153,7 @@ describe('OrganLibrary', () => {
         recording: inMemory.recording,
         app: inMemory.app,
         edit: inMemory.edit,
+        scores: inMemory.scores,
       };
       const {library} = setup(api);
 
