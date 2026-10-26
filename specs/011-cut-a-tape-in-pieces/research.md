@@ -72,8 +72,8 @@ The problem names every Column of its stretch: from the Column after `p` (Column
 Column before `q` (the last Column when `q` is the end cut). Story 3's Hole from Column 1, 100 Columns long,
 covers 50–350 mm and blocks up to 352 mm (one Minimum Gap more); the first possible Join is after Column 101 at 353 mm, and
 353 + 20 > 300, so the stretch is Columns 1–101. The spec said 1–100, written before the Minimum Gap answer
-(Q3); it is corrected. Shortened to 70 Columns (50–260 mm), the Join after Column 71 at 263 mm gives a first piece of
-283 mm, and the problem is gone.
+(Q3); it is corrected. Shortened to 70 Columns (50–260 mm), the first possible Join is after Column 71 at 263 mm; the furthest
+Join that still fits is after Column 76 at 278 mm (first piece 0–298 mm, as without Holes), and the problem is gone.
 
 Checks against the spec: the reference Tape with no Holes gives Joins after Column 76 (278 mm) and 169
 (557 mm), pieces 0–298, 278–577, 557–652 (Story 2, scenario 1). Lead-in + Overlap ≥ W: no `J` fits after the
