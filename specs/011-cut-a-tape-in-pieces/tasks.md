@@ -182,11 +182,11 @@ Problem, export in pieces; no text is untranslated.
 
 ## Phase 9: Polish & Cross-Cutting
 
-- [ ] T059 [P] Extend `npm run ux:screens` (`e2e/ux/`) with the Plotter list, the Plotter editor (sheet and roll), the Tape view with a Plotter picked showing Joins and Overlaps, a no-join stretch and the too-wide message; run the `ux-review` skill on them; fix findings (contrast of the Overlap band and stretch marks in light and dark).
-- [ ] T060 [P] Reviews, read-only and in parallel: `angular-reviewer` (`src/`), `electron-reviewer` (`app/`, the new channels `plotters:load`, `plotters:save`, `plotter:save-svg-pieces`, ADR 4 and ADR 28), `spec-auditor` (spec vs. tests and tasks) → `specs/011-cut-a-tape-in-pieces/audit.md`; `domain-modeler` checks the terms (Plotter, Working area, Tape piece, Join, Overlap, Cutting Problem) in code, tests and UI texts; fix findings via `implementer`.
+- [x] T059 [P] Extend `npm run ux:screens` (`e2e/ux/`) with the Plotter list, the Plotter editor (sheet and roll), the Tape view with a Plotter picked showing Joins and Overlaps, a no-join stretch and the too-wide message; run the `ux-review` skill on them; fix findings (contrast of the Overlap band and stretch marks in light and dark).
+- [x] T060 [P] Reviews, read-only and in parallel: `angular-reviewer` (`src/`), `electron-reviewer` (`app/`, the new channels `plotters:load`, `plotters:save`, `plotter:save-svg-pieces`, ADR 4 and ADR 28), `spec-auditor` (spec vs. tests and tasks) → `specs/011-cut-a-tape-in-pieces/audit.md`; `domain-modeler` checks the terms (Plotter, Working area, Tape piece, Join, Overlap, Cutting Problem) in code, tests and UI texts; fix findings via `implementer`.
 - [ ] T061 Gate: `npm run test`, `npm run lint`, `npm run i18n:check`, `npm run build` green; `e2e/plotter-library.spec.ts`, `e2e/tape-pieces.spec.ts`, `e2e/tape-export.spec.ts`, `e2e/boundary.spec.ts` green locally; full e2e green in CI on Linux, Windows and macOS (ADR 13).
 - [ ] T062 Quickstart by hand ([quickstart.md](quickstart.md) "By hand"): open the piece files in Inkscape, check true size, repeated Holes in the Overlap and square ends; record the result in STATUS; if not possible, say so in STATUS and the pull request.
-- [ ] T063 `documentation/STATUS.md`, `documentation/ROADMAP.md` (Cut a tape in pieces done), `CHANGELOG.md` `[Unreleased]`, README feature list (Plotters, Tape pieces); pull request with `Closes #168`.
+- [x] T063 `documentation/STATUS.md`, `documentation/ROADMAP.md` (Cut a tape in pieces done), `CHANGELOG.md` `[Unreleased]`, README feature list (Plotters, Tape pieces); pull request with `Closes #168`.
 
 ## Dependencies
 
