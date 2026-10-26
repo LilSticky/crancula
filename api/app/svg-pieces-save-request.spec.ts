@@ -85,7 +85,7 @@ describe('parseSvgPiecesSaveRequest', () => {
   });
 
   describe('fileName of each piece', () => {
-    it.each(['../evil.svg', 'a/b.svg', 'C:\\x.svg', 'a\\b.svg', 'C:x.svg', '...svg', '.svg', 'a.txt', 'abc', 'a\u0000b.svg', 'a\nb.svg'])(
+    it.each(['../evil.svg', 'a/b.svg', 'C:\\x.svg', 'a\\b.svg', 'C:x.svg', '...svg', '.svg', 'a.txt', 'abc', 'a\u0000b.svg', 'a\nb.svg', 'a?b.svg', 'CON.svg', 'nul.SVG', 'a<b>.svg', 'a|b.svg'])(
       'rejects %j',
       (name) => {
         expect(errorOf(withNames(name, 'Waltz 2 of 2.svg'))).toContain('fileName');

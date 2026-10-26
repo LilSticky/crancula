@@ -1,8 +1,11 @@
 const MAXIMUM_LENGTH = 200;
 const FALLBACK_NAME = 'Tape';
+/** Characters a Windows file name may not contain: separators, reserved punctuation and control characters. */
 // eslint-disable-next-line no-control-regex
-const FORBIDDEN = /[<>:"/\\|?*\u0000-\u001f\u007f]/g;
-const DEVICE_NAME = /^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(\..*)?$/i;
+export const FORBIDDEN_CHARACTERS = /[<>:"/\\|?*\u0000-\u001f\u007f]/;
+const FORBIDDEN_EVERYWHERE = new RegExp(FORBIDDEN_CHARACTERS, 'g');
+/** A Windows device name, alone or with any extension (`CON`, `nul.svg`). */
+export const DEVICE_NAME = /^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(\..*)?$/i;
 
 /**
  * A file name stem (no extension) that is safe on Windows: never a path, no forbidden characters or device
@@ -17,7 +20,7 @@ export function safeFileName(name: string): string {
 
 /** `text` with every character a file name may not contain replaced by `_`. */
 export function replaceForbiddenCharacters(text: string): string {
-  return text.replace(FORBIDDEN, '_');
+  return text.replace(FORBIDDEN_EVERYWHERE, '_');
 }
 
 /** The longest prefix of `text` of at most `maximum` UTF-16 code units that does not split a surrogate pair. */

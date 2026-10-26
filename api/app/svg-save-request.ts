@@ -1,4 +1,5 @@
 import {err, ok, type Result} from '../result';
+import {DEVICE_NAME, FORBIDDEN_CHARACTERS} from './safe-file-name';
 
 /** What the renderer asks the main process to save as the Plotter file. */
 export interface SvgSaveRequest {
@@ -29,12 +30,16 @@ export const MAXIMUM_LABEL_LENGTH = 200;
 const CONTROL = /[\u0000-\u001f\u007f]/;
 const FILE_NAME = /^[^/\\:]*[^./\\:][^/\\:]*\.svg$/i;
 
-/** A Plotter file name: a `.svg` name of 5 to 255 characters, no separator and no control character. */
+/**
+ * A Plotter file name: a `.svg` name of 5 to 255 characters with a stem, no forbidden character and no Windows
+ * device name, the same rules `safeFileName` applies to the names the app builds.
+ */
 export function isSafeSvgFileName(name: string): boolean {
   return (
     name.length >= MINIMUM_FILE_NAME_LENGTH &&
     name.length <= MAXIMUM_FILE_NAME_LENGTH &&
-    !CONTROL.test(name) &&
+    !FORBIDDEN_CHARACTERS.test(name) &&
+    !DEVICE_NAME.test(name) &&
     FILE_NAME.test(name)
   );
 }

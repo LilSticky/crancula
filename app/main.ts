@@ -37,7 +37,8 @@ registerPlotterHandlers(
     showSaveDialog: (window, options) => dialog.showSaveDialog(window, options),
     showOpenDialog: (window, options) => dialog.showOpenDialog(window, options),
     showMessageBox: (window, options) => dialog.showMessageBox(window, options),
-    exists: (filePath) => fs.promises.access(filePath).then(() => true, () => false),
+    // lstat, not access: a broken symlink is an existing entry that a save would replace, so it counts as existing.
+    exists: (filePath) => fs.promises.lstat(filePath).then(() => true, () => false),
     writeFile: (filePath, text) => fs.promises.writeFile(filePath, text, 'utf8'),
     documentsFolder: () => app.getPath('documents'),
   },

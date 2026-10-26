@@ -56,7 +56,7 @@ describe('parseSvgSaveRequest', () => {
   });
 
   describe('suggestedFileName', () => {
-    it.each(['../evil.svg', 'a/b.svg', 'C:\\x.svg', 'a\\b.svg', 'C:x.svg', '...svg', '.svg', 'a.txt', 'abc', 'a\u0000b.svg', 'a\nb.svg', 'a\u007fb.svg'])(
+    it.each(['../evil.svg', 'a/b.svg', 'C:\\x.svg', 'a\\b.svg', 'C:x.svg', '...svg', '.svg', 'a.txt', 'abc', 'a\u0000b.svg', 'a\nb.svg', 'a\u007fb.svg', 'a?b.svg', 'CON.svg', 'nul.SVG', 'a<b>.svg', 'a|b.svg'])(
       'rejects %j',
       (name) => {
         expect(errorOf({...valid, suggestedFileName: name})).toContain('suggestedFileName');
