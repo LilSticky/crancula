@@ -447,7 +447,7 @@ export class TapeViewComponent {
   protected exportTape(): void {
     const tape = this.tape();
     const organ = this.organ();
-    if (tape !== undefined && organ !== undefined) void this.plotterExport.export(tape, organ);
+    if (tape !== undefined && organ !== undefined) void this.plotterExport.export(tape, organ, this.plotterPreference.picked());
   }
 
   protected readonly canTranspose = computed(() => {

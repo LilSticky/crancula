@@ -515,7 +515,7 @@ describe('TapeViewComponent', () => {
       await settle();
 
       expect(plotterExport.export).toHaveBeenCalledTimes(1);
-      expect(plotterExport.export).toHaveBeenCalledWith(tape, organ);
+      expect(plotterExport.export).toHaveBeenCalledWith(tape, organ, undefined);
     });
 
     describe('for a Tape that can not be cut', () => {
