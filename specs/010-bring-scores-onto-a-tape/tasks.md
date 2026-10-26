@@ -161,9 +161,9 @@ Blocks every story: the Song gains its new fields and the import has one entry p
 
 - [x] T060 [P] Extend `npm run ux:screens` (`e2e/` screens script) with the import screen showing a Score's Parts and metre, the how-to dialog, the `pdf` rejection, and the Tape details with metre; run the `ux-review` skill on them; fix findings.
 - [x] T061 [P] Reviews, read-only and in parallel: `angular-reviewer` (src/), `electron-reviewer` (only if `app/` changed; confirm no new channel), `spec-auditor` (spec vs. tests and tasks) → `specs/010-bring-scores-onto-a-tape/audit.md`; `domain-modeler` checks that staff, voice, grace note, ornament, tie, ending and measure appear only inside `api/song/musicxml/`; fix findings via `implementer`.
-- [ ] T062 `npm run test`, `npm run lint`, `npm run i18n:check`, `npm run build` green; `e2e/score-import.spec.ts`, `tape-import.spec.ts`, `tape-restart.spec.ts` green locally, full e2e in CI.
-- [ ] T063 Quickstart by hand (SC-004, [quickstart.md](quickstart.md) "By hand"): MuseScore `.musicxml` and `.mxl` with repeats and a da capo, one Audiveris `.mxl`; record the result in STATUS. Needs the user's files or tools; if not available, say so in STATUS and the pull request.
-- [ ] T064 `documentation/STATUS.md`, `documentation/ROADMAP.md` (Bring Scores onto a tape done), `CHANGELOG.md` `[Unreleased]`, README feature list (MusicXML, Song Source); pull request with `Closes #167`.
+- [x] T062 `npm run test`, `npm run lint`, `npm run i18n:check`, `npm run build` green; `e2e/score-import.spec.ts`, `tape-import.spec.ts`, `tape-restart.spec.ts` green locally, full e2e in CI.
+- [ ] T063 Quickstart by hand (SC-004, [quickstart.md](quickstart.md) "By hand"): MuseScore `.musicxml` and `.mxl` with repeats and a da capo, one Audiveris `.mxl`; record the result in STATUS. Needs the user's files or tools; if not available, say so in STATUS and the pull request. (pending: needs the user's MuseScore/Audiveris files)
+- [x] T064 `documentation/STATUS.md`, `documentation/ROADMAP.md` (Bring Scores onto a tape done), `CHANGELOG.md` `[Unreleased]`, README feature list (MusicXML, Song Source); pull request with `Closes #167`.
 
 ## Dependencies
 

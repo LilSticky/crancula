@@ -6,21 +6,33 @@ Issues: [GitHub](https://github.com/LilSticky/crancula/issues)
 
 ## Current slice
 
-**In progress:** v0.3 [Bring Scores onto a tape](https://github.com/LilSticky/crancula/issues/167) (#167, branch
-`010-bring-scores-onto-a-tape`, [spec](../specs/010-bring-scores-onto-a-tape/spec.md)): MusicXML only, one Part per staff,
-repeats played out. [Plan](../specs/010-bring-scores-onto-a-tape/plan.md) ([ADR 27](adr/0027-own-musicxml-reader-in-the-domain.md):
-own MusicXML reader in the domain, fflate 0.8.3 for `.mxl`; Tape snapshot v3) and [tasks.md](../specs/010-bring-scores-onto-a-tape/tasks.md)
-(64 tasks). US1 (MVP) done: Phases 1–3 implemented, full e2e 158/158 green locally.
-- Song keeps Time signatures, upbeat and Keys (Tape snapshot v3); `readSongSource` picks MIDI or MusicXML by first bytes.
-- Own XML reader, `.mxl` unzip, score-measures, lay-out and `readScoreSong`; the import page takes MIDI or MusicXML (Song Source); `e2e/score-import` green.
-- Decision: a sounding pitch outside MIDI 0–127 is folded by octaves ([research.md](../specs/010-bring-scores-onto-a-tape/research.md)).
-- Known: one Angular test skipped until T039 (grace notes are left out of the Import Summary). `api/` is not covered by
-  `npm run lint` (`ng lint` only covers `src/` and `e2e/`, pre-existing; [#175](https://github.com/LilSticky/crancula/issues/175)).
+**None in progress.** v0.3 [Bring Scores onto a tape](https://github.com/LilSticky/crancula/issues/167) is done (see below).
 
 **Decisions (2026-10-25):** Keys stay at each Tick (dictionary updated); the import button reads "Choose a Song Source"
 (German "Notenquelle wählen"); German term for Song Source is Notenquelle.
 
-**Next step:** Phase 4 US2 of slice 010 (repeats played out, T028) in `tasks.md`.
+**Next step:** take [#177](https://github.com/LilSticky/crancula/issues/177) (Tape view toolbar clips Export at 1280 px in German),
+then the next slice by [ROADMAP](ROADMAP.md) (highest-priority triaged: [#168](https://github.com/LilSticky/crancula/issues/168), [#169](https://github.com/LilSticky/crancula/issues/169)).
+
+**Known broken:** [#175](https://github.com/LilSticky/crancula/issues/175): `api/` is not covered by `npm run lint`
+(`ng lint` only covers `src/` and `e2e/`, pre-existing). [#177](https://github.com/LilSticky/crancula/issues/177): Export clipped at 1280 px in German.
+
+**Known skipped:** one Angular test until T039 (grace notes left out of the Import Summary).
+
+**Open:** real MuseScore and Audiveris files not checked by hand (T063, needs the user's files).
+
+**Done:** [Bring Scores onto a tape](../specs/010-bring-scores-onto-a-tape/spec.md) ([#167](https://github.com/LilSticky/crancula/issues/167), v0.3,
+branch `010-bring-scores-onto-a-tape`, PR [#176](https://github.com/LilSticky/crancula/pull/176)): a MusicXML Score (`.musicxml`, `.xml`,
+`.mxl`) becomes a Song with one Part per staff. Repeats, endings, D.C./D.S., fine and coda are played out (after a jump, repeats are
+skipped); ties are joined; grace notes and ornaments are left out and counted in the Import Summary. Songs from Scores and MIDI keep
+Time signatures, Keys and upbeat (Tape snapshot v3), shown read-only as the Metre on the import screen and in the Tape details. PDF and
+printed Scores get a how-to dialog. Own XML reader, fflate 0.8.3 for `.mxl`, [ADR 27](adr/0027-own-musicxml-reader-in-the-domain.md).
+Decisions: a sounding pitch outside 0–127 folds by octaves; an unpitched Note without pitch is E4. Dictionary: Metre, Part = one staff
+or instrument, Score (singular), German Import Summary words; German Song texts now "Stück". Reviews ([audit.md](../specs/010-bring-scores-onto-a-tape/audit.md),
+[ux-review.md](../specs/010-bring-scores-onto-a-tape/ux-review.md)) fixed; follow-ups [#175](https://github.com/LilSticky/crancula/issues/175),
+[#177](https://github.com/LilSticky/crancula/issues/177), [#178](https://github.com/LilSticky/crancula/issues/178). Gate: 1284 node and
+1523 Angular unit tests, lint, i18n; full e2e 161 green locally, CI on three OSes. **Not checked by hand yet**: real MuseScore and
+Audiveris files (T063).
 
 **Done:** [Record a tape](../specs/009-record-a-tape/spec.md) ([#165](https://github.com/LilSticky/crancula/issues/165), v0.2,
 branch `009-record-a-tape`, PR [#166](https://github.com/LilSticky/crancula/pull/166)): save the whole Tape at its Crank speed as a
@@ -132,7 +144,6 @@ own, so a longer antivirus lock left `tapes.json` with the old name. The retry n
 about 2.5 s). Not proven from the CI trace (an Electron trace has no app log); reopen if it recurs.
 
 **Done:** flaky Transpose e2e on Windows ([#133](https://github.com/LilSticky/crancula/issues/133), PR #134): keyboard tests wait for focus to enter the dialog before tabbing.
-
 
 **Done:** menu Undo and Redo act on the Tape ([#122](https://github.com/LilSticky/crancula/issues/122), PR #135, 2026-10-22, branch
 `122-menu-undo-redo`). The menu sends an Edit Command over `edit:command`; text fields keep their own undo, the
