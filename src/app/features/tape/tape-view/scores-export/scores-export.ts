@@ -43,12 +43,20 @@ export class ScoresExport {
     const choices = await firstValueFrom(dialogRef.afterClosed());
     if (choices === undefined) return;
     this.staves.remember(organ.id, choices.splitNotes);
-    await this.save({
-      suggestedFileName: scoresFileName(tape.name),
-      musicXml: scoresMusicXml({tape, organ, song, choices}),
-      dialogTitle: this.text('TAPE.SCORES.DIALOG_TITLE'),
-      filterName: this.text('TAPE.SCORES.FILTER_NAME'),
-    });
+    let request: ScoresSaveRequest;
+    try {
+      request = {
+        suggestedFileName: scoresFileName(tape.name),
+        musicXml: scoresMusicXml({tape, organ, song, choices}),
+        dialogTitle: this.text('TAPE.SCORES.DIALOG_TITLE'),
+        filterName: this.text('TAPE.SCORES.FILTER_NAME'),
+      };
+    } catch (error: unknown) {
+      // Nothing was saved, and saving again would build the same Scores: the failure is shown without Try again.
+      this.showFailure(this.text('TAPE.SCORES.FAILED', {reason: errorMessage(error)}));
+      return;
+    }
+    await this.save(request);
   }
 
   private async save(request: ScoresSaveRequest): Promise<void> {
@@ -73,8 +81,12 @@ export class ScoresExport {
     }
   }
 
-  /** Shows `message` until dismissed; Try again saves the same Scores file once more. */
-  private showFailure(message: string, request: ScoresSaveRequest): void {
+  /** Shows `message` until dismissed; with a `request`, Try again saves the same Scores file once more. */
+  private showFailure(message: string, request?: ScoresSaveRequest): void {
+    if (request === undefined) {
+      this.snackBar.open(message, undefined, {duration: 0});
+      return;
+    }
     this.snackBar
       .open(message, this.text('TAPE.SCORES.RETRY'), {duration: 0})
       .onAction()

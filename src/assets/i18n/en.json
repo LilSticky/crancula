@@ -387,7 +387,7 @@
       "ERROR": {
         "BEATS": "Enter a whole number of beats from 1 to 99.",
         "BEAT_TYPE": "Choose 1, 2, 4, 8, 16 or 32.",
-        "UPBEAT": "Enter a whole number of Columns, 0 or more.",
+        "UPBEAT": "Enter a whole number, 0 or more.",
         "UPBEAT_TOO_LONG": "The upbeat must be shorter than the first Bar.",
         "SPLIT_NOTES": "Each split note must be different."
       },

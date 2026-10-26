@@ -119,8 +119,7 @@ the file back and compare Bars, pitches, key and tempo mark.
   `api/scores/scores.reference.musicxml`.
 - [x] T021 [US1] Green: `api/scores/scores-musicxml.ts` (`ScoresInput`, `scoresMusicXml`; staves, `<backup>`,
   voice numbers `(staff − 1) × 4 + voice`, stems only in Bars with more than one voice, ties and `<tied>`,
-  chords, rests, whole-bar rests); record the golden file; export. **Partly done**: one staff, one voice, rests
-  for gaps, ties between the values of one note; the rest waits for Red tests (T035, T037), not yet written.
+  chords, rests, whole-bar rests); record the golden file; export.
 
 ### Boundary
 
@@ -260,7 +259,7 @@ again and see 4/4 and no upbeat.
   `scores:save`, ADR 4 and ADR 29), `spec-auditor` (spec vs. tests and tasks) →
   `specs/012-read-a-tape-as-scores/audit.md`; `domain-modeler` checks the terms (Scores, Time signature, Bar,
   Key, Hole, Pipe, Minimum Gap) in code, tests and UI texts; fix findings via `implementer`.
-- [ ] T055 Performance: a node test exports a generated 10-minute Tape (~10 000 Columns, 3 000 Holes) in under
+- [x] T055 Performance: a node test exports a generated 10-minute Tape (~10 000 Columns, 3 000 Holes) in under
   5 s (SC-005) in `api/scores/scores-musicxml.spec.ts`. (`test-first`; `implementer` only if red)
 - [ ] T056 Gate: `npm run test`, `npm run lint`, `npm run i18n:check`, `npm run build` green;
   `e2e/read-a-tape-as-scores.spec.ts`, `e2e/tape-layout.spec.ts`, `e2e/tape-export.spec.ts`,

@@ -355,6 +355,11 @@ describe('Scores export texts (US5, SC-007)', () => {
     expect(element.textContent).toContain(germanText('TAPE.SCORES.BEAT_TYPE'));
   });
 
+  it('words the upbeat error without Columns, as the field counts note values (en and de)', () => {
+    expect(textAt(en, 'TAPE.SCORES.ERROR.UPBEAT')).toBe('Enter a whole number, 0 or more.');
+    expect(germanText('TAPE.SCORES.ERROR.UPBEAT')).toBe('Gib eine ganze Zahl ab 0 ein.');
+  });
+
   it("suggests the Tape's name as the file name and sends German dialog texts when the export is in German", async () => {
     const api = createInMemoryCranculaApi(undefined, undefined, {});
     TestBed.configureTestingModule({providers: [provideTestTranslations('de'), {provide: CRANCULA_API, useValue: api}]});

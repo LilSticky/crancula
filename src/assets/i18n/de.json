@@ -387,7 +387,7 @@
       "ERROR": {
         "BEATS": "Gib eine ganze Zahl von Schlägen von 1 bis 99 ein.",
         "BEAT_TYPE": "Wähle 1, 2, 4, 8, 16 oder 32.",
-        "UPBEAT": "Gib eine ganze Zahl von Spalten ab 0 ein.",
+        "UPBEAT": "Gib eine ganze Zahl ab 0 ein.",
         "UPBEAT_TOO_LONG": "Der Auftakt muss kürzer als der erste Takt sein.",
         "SPLIT_NOTES": "Jeder Teilungston muss verschieden sein."
       },

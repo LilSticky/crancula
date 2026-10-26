@@ -1,8 +1,9 @@
 import {ApplicationRef} from '@angular/core';
 import {TestBed} from '@angular/core/testing';
-import {MatDialog} from '@angular/material/dialog';
+import {MatDialog, MatDialogRef} from '@angular/material/dialog';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {TranslateService} from '@ngx-translate/core';
+import {of} from 'rxjs';
 import {
   midiNoteNumber,
   scoresFileName,
@@ -24,6 +25,7 @@ import {
 import {testOrgan} from '../../../../../testing/organs';
 import {provideTestTranslations} from '../../../../../testing/test-translations';
 import {ScoresExport} from './scores-export';
+import type {ScoresExportDialogComponent} from './scores-export-dialog.component';
 
 const QUARTER = 480;
 
@@ -81,6 +83,13 @@ function setUp(failures: InMemoryCranculaApiFailures = {}) {
   const snackBar = vi.spyOn(TestBed.inject(MatSnackBar), 'open');
   const translate = TestBed.inject(TranslateService);
   return {api, organ, tape, song: waltz, snackBar, translate, scoresExport: TestBed.inject(ScoresExport)};
+}
+
+/** Makes the export dialog close with the choices given, as if the user had confirmed them. */
+function closeDialogWith(dialog: MatDialog, choices: ScoresChoices): void {
+  // Only afterClosed is read from the reference, so a stand-in with that one method is enough.
+  const reference = {afterClosed: () => of(choices)} as unknown as MatDialogRef<ScoresExportDialogComponent, ScoresChoices | undefined>;
+  vi.spyOn(dialog, 'open').mockReturnValue(reference);
 }
 
 /** Presses a button of the export dialog once it is open; the export is still running until it is awaited. */
@@ -187,6 +196,29 @@ describe('ScoresExport', () => {
     const [message, action] = snackBar.mock.calls[0] ?? [];
     expect(message).toBe(translate.instant('TAPE.SCORES.FAILED', {reason: 'the disk is full'}));
     expect(action).toBe(translate.instant('TAPE.SCORES.RETRY'));
+    expect(scoresExport.saving()).toBe(false);
+  });
+
+  it('shows the failure snackbar and resolves, without Try again, when the MusicXML cannot be built', async () => {
+    // The dialog never offers the Song's 3/64 for Columns, so its choices are made to say so: the writer then throws.
+    const {api, organ, tape, translate, snackBar, scoresExport} = setUp();
+    const save = vi.spyOn(api.scores, 'save');
+    const unfittable: Song = {
+      ...songWithUpbeat(),
+      timeSignatures: [{start: defined(tick(0), 'start'), beats: 3, beatType: 64}],
+    };
+    closeDialogWith(TestBed.inject(MatDialog), {timeSignature: 'song', upbeat: 0, splitNotes: []});
+
+    const pending = scoresExport.export(tape, organ, unfittable);
+    await expect(pending).resolves.toBeUndefined();
+
+    expect(save).not.toHaveBeenCalled();
+    expect(snackBar).toHaveBeenCalledTimes(1);
+    const [message, action] = snackBar.mock.calls[0] ?? [];
+    expect(message).toBe(
+      translate.instant('TAPE.SCORES.FAILED', {reason: 'the Time signatures of this Song do not fall on Columns'}),
+    );
+    expect(action).toBeFalsy();
     expect(scoresExport.saving()).toBe(false);
   });
 

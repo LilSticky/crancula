@@ -1,4 +1,5 @@
-import {ChangeDetectionStrategy, Component, computed, effect, inject, signal, viewChild} from '@angular/core';
+import {ChangeDetectionStrategy, Component, computed, inject, Injectable, signal} from '@angular/core';
+import {type Field, type FieldTree, form, FormField, type ReadonlyFieldTree, type SchemaPath, validateTree, type ValidationError} from '@angular/forms/signals';
 import {ErrorStateMatcher} from '@angular/material/core';
 import {MatButton} from '@angular/material/button';
 import {MAT_DIALOG_DATA, MatDialogActions, MatDialogContent, MatDialogRef, MatDialogTitle} from '@angular/material/dialog';
@@ -35,6 +36,22 @@ export interface ScoresExportDialogData {
   readonly organ: Organ;
   readonly song: Song | undefined;
   readonly rememberedSplitNotes: readonly MidiNoteNumber[] | undefined;
+}
+
+/** What the dialog holds: numbers or null while a field holds none (FR-004), the split notes highest first. */
+interface ScoresDialogModel {
+  readonly timeChoice: 'song' | 'other';
+  readonly beats: number | null;
+  readonly beatType: number | null;
+  readonly upbeatCount: number | null;
+  readonly upbeatValue: number | null;
+  readonly splitNotes: readonly number[];
+}
+
+/** A violation of the export choices, reported at the field of the dialog that it names. */
+interface ScoresFieldError extends ValidationError.WithFieldTree {
+  readonly kind: ScoresChoicesViolation['code'];
+  readonly violation: ScoresChoicesViolation;
 }
 
 /** Middle C, the split note that Add gives when there is none yet (FR-005). */
@@ -82,17 +99,15 @@ const PITCH_OPTIONS: readonly PitchOption[] = Array.from(
   return pitch === undefined ? [] : [{pitch, name: noteName(pitch)}];
 });
 
+function isScoresFieldError(error: unknown): error is ScoresFieldError {
+  return typeof error === 'object' && error !== null && 'violation' in error && 'fieldTree' in error;
+}
+
 /** Puts a Material field in its error state exactly while the dialog shows a message for it. */
-class ShownMessageMatcher extends ErrorStateMatcher {
-  readonly isShown: () => boolean;
-
-  constructor(isShown: () => boolean) {
-    super();
-    this.isShown = isShown;
-  }
-
-  override isErrorState(): boolean {
-    return this.isShown();
+@Injectable()
+class ShownViolationMatcher extends ErrorStateMatcher {
+  override isSignalErrorState(field: Field<unknown> | null): boolean {
+    return field !== null && field().errors().some(isScoresFieldError);
   }
 }
 
@@ -102,19 +117,56 @@ function metreTextOf(song: Song | undefined): string | undefined {
   return timeSignature === undefined ? undefined : `${timeSignature.beats}/${timeSignature.beatType}`;
 }
 
-/** The beat type of a value the dialog holds, or null when the Scores do not offer it. */
-function beatTypeOf(value: unknown): ScoresBeatType | null {
-  return SCORES_BEAT_TYPES.find((beatType) => beatType === value) ?? null;
+/**
+ * The Time signature that "Another one" starts with: the Song's first one when the Tape keeps the Song's Time
+ * signature, else 4/4.
+ */
+function otherTimeSignatureOf(song: Song | undefined, prefilled: ScoresChoicesInput): { beats: number; beatType: number } {
+  const first = song !== undefined && prefilled.timeSignature === 'song' ? songMetre(song).timeSignature : undefined;
+  return first === undefined ? { beats: COMMON_BEATS, beatType: COMMON_BEAT_TYPE } : { beats: first.beats, beatType: first.beatType };
 }
 
-/** The number an input holds, or null while it holds none. */
-function numberTypedIn(event: Event): number | null {
-  const value = event.target instanceof HTMLInputElement ? event.target.valueAsNumber : Number.NaN;
-  return Number.isNaN(value) ? null : value;
+/** The dialog's fields as the choices the domain validates. */
+function inputOf(model: ScoresDialogModel): ScoresChoicesInput {
+  return {
+    timeSignature: model.timeChoice === 'song' ? 'song' : { beats: model.beats, beatType: model.beatType },
+    upbeat: { count: model.upbeatCount, noteValue: model.upbeatValue },
+    splitNotes: model.splitNotes,
+  };
+}
+
+/** The field of the dialog that a violation of the choices is reported at. */
+function fieldOf(violation: ScoresChoicesViolation, fields: ReadonlyFieldTree<ScoresDialogModel>): ReadonlyFieldTree<unknown> {
+  switch (violation.field) {
+    case 'beats':
+      return fields.beats;
+    case 'beatType':
+      return fields.beatType;
+    case 'timeSignature':
+      return fields.timeChoice;
+    case 'upbeat':
+      return fields.upbeatCount;
+    case 'splitNotes':
+      return fields.splitNotes;
+  }
+}
+
+/**
+ * The schema of the dialog's form. It has one rule: `validateScoresChoices`, the only place where the rules of the
+ * export choices live. Each violation becomes an error at the field it names.
+ */
+function scoresFormSchema(song: Song | undefined): (path: SchemaPath<ScoresDialogModel>) => void {
+  return (path) => {
+    validateTree(path, ({ value, fieldTree }) =>
+      validateScoresChoices(inputOf(value()), song).map(
+        (violation): ScoresFieldError => ({ kind: violation.code, violation, fieldTree: fieldOf(violation, fieldTree) }),
+      ),
+    );
+  };
 }
 
 /** The translation key of the message that explains a violation. */
-function messageKeyOf(violation: ScoresChoicesViolation): string {
+function violationMessageKey(violation: ScoresChoicesViolation): string {
   switch (violation.field) {
     case 'beats':
       return 'TAPE.SCORES.ERROR.BEATS';
@@ -129,15 +181,15 @@ function messageKeyOf(violation: ScoresChoicesViolation): string {
   }
 }
 
-/** The message key of the first violation of each field, the one the dialog shows under that field. */
-function messageKeysOf(
-  violations: readonly ScoresChoicesViolation[],
-): ReadonlyMap<ScoresChoicesViolation['field'], string> {
-  const keys = new Map<ScoresChoicesViolation['field'], string>();
-  for (const violation of violations) {
-    if (!keys.has(violation.field)) keys.set(violation.field, messageKeyOf(violation));
-  }
-  return keys;
+/** The translation key of the first violation a field has, the one the dialog shows under it; undefined if none. */
+function shownMessageKey(field: FieldTree<unknown>): string | undefined {
+  const error = field().errors().find(isScoresFieldError);
+  return error === undefined ? undefined : violationMessageKey(error.violation);
+}
+
+/** The beat type of a value the dialog holds, or null when the Scores do not offer it. */
+function beatTypeOf(value: unknown): ScoresBeatType | null {
+  return SCORES_BEAT_TYPES.find((beatType) => beatType === value) ?? null;
 }
 
 /** The split notes in the order the dialog lists them: the highest on top. */
@@ -169,6 +221,7 @@ function nextSplitNoteOf(splitNotes: readonly number[]): MidiNoteNumber | undefi
 @Component({
   selector: 'cranc-scores-export-dialog',
   imports: [
+    FormField,
     MatButton,
     MatDialogActions,
     MatDialogContent,
@@ -184,6 +237,7 @@ function nextSplitNoteOf(splitNotes: readonly number[]): MidiNoteNumber | undefi
     TranslatePipe,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  providers: [{ provide: ErrorStateMatcher, useClass: ShownViolationMatcher }],
   template: `
     <h2 mat-dialog-title>{{ 'TAPE.SCORES.TITLE' | translate }}</h2>
     <mat-dialog-content data-testid="scores-export-dialog">
@@ -191,7 +245,7 @@ function nextSplitNoteOf(splitNotes: readonly number[]): MidiNoteNumber | undefi
       @if (songMetreText; as metre) {
         <mat-radio-group
           [attr.aria-label]="'TAPE.SCORES.TIME_SIGNATURE' | translate"
-          [value]="timeChoice()"
+          [value]="fields.timeChoice().value()"
           (change)="timeChoiceChosen($event)"
         >
           <mat-radio-button value="song" data-testid="scores-time-song">
@@ -203,44 +257,24 @@ function nextSplitNoteOf(splitNotes: readonly number[]): MidiNoteNumber | undefi
       @if (songMetreNotOnColumns) {
         <p class="hint" data-testid="scores-song-metre-hint">{{ 'TAPE.SCORES.SONG_METRE_NOT_ON_COLUMNS' | translate }}</p>
       }
-      @if (timeChoice() === 'other') {
+      @if (fields.timeChoice().value() === 'other') {
         <div class="time-fields">
           <mat-form-field>
             <mat-label>{{ 'TAPE.SCORES.BEATS' | translate }}</mat-label>
-            <input
-              matInput
-              type="number"
-              step="1"
-              #beatsField
-              data-testid="scores-beats"
-              [value]="beats() ?? ''"
-              [errorStateMatcher]="beatsMatcher"
-              (input)="beatsTyped($event)"
-            />
+            <input matInput type="number" step="1" data-testid="scores-beats" [formField]="fields.beats" />
             <ng-container ngProjectAs="mat-error">
-              @if (messageOf('beats'); as key) {
+              @if (shownMessageKey(fields.beats); as key) {
                 <mat-error>{{ key | translate }}</mat-error>
               }
             </ng-container>
           </mat-form-field>
           <mat-form-field>
             <mat-label>{{ 'TAPE.SCORES.BEAT_TYPE' | translate }}</mat-label>
-            <mat-select
-              #beatTypeField
-              data-testid="scores-beat-type"
-              [value]="beatType()"
-              [errorStateMatcher]="beatTypeMatcher"
-              (selectionChange)="beatTypeChosen($event)"
-            >
+            <mat-select data-testid="scores-beat-type" [value]="fields.beatType().value()" (selectionChange)="beatTypeChosen($event)">
               @for (value of noteValues; track value) {
                 <mat-option [value]="value">{{ noteValueKeys[value] | translate }}</mat-option>
               }
             </mat-select>
-            <ng-container ngProjectAs="mat-error">
-              @if (messageOf('beatType'); as key) {
-                <mat-error>{{ key | translate }}</mat-error>
-              }
-            </ng-container>
           </mat-form-field>
         </div>
       }
@@ -248,26 +282,16 @@ function nextSplitNoteOf(splitNotes: readonly number[]): MidiNoteNumber | undefi
       <h3>{{ 'TAPE.SCORES.UPBEAT' | translate }}</h3>
       <mat-form-field>
         <mat-label>{{ 'TAPE.SCORES.UPBEAT_COUNT' | translate }}</mat-label>
-        <input
-          matInput
-          type="number"
-          min="0"
-          step="1"
-          #upbeatField
-          data-testid="scores-upbeat-count"
-          [value]="upbeatCount() ?? ''"
-          [errorStateMatcher]="upbeatMatcher"
-          (input)="countTyped($event)"
-        />
+        <input matInput type="number" step="1" data-testid="scores-upbeat-count" [formField]="fields.upbeatCount" />
         <ng-container ngProjectAs="mat-error">
-          @if (messageOf('upbeat'); as key) {
+          @if (shownMessageKey(fields.upbeatCount); as key) {
             <mat-error>{{ key | translate }}</mat-error>
           }
         </ng-container>
       </mat-form-field>
       <mat-form-field>
         <mat-label>{{ 'TAPE.SCORES.UPBEAT_VALUE' | translate }}</mat-label>
-        <mat-select data-testid="scores-upbeat-value" [value]="upbeatValue()" (selectionChange)="valueChosen($event)">
+        <mat-select data-testid="scores-upbeat-value" [value]="fields.upbeatValue().value()" (selectionChange)="valueChosen($event)">
           @for (value of noteValues; track value) {
             <mat-option [value]="value">{{ noteValueKeys[value] | translate }}</mat-option>
           }
@@ -275,7 +299,7 @@ function nextSplitNoteOf(splitNotes: readonly number[]): MidiNoteNumber | undefi
       </mat-form-field>
 
       <h3>{{ 'TAPE.SCORES.STAVES' | translate }}</h3>
-      @for (value of splitNotes(); track $index; let index = $index) {
+      @for (value of fields.splitNotes().value(); track $index; let index = $index) {
         <div class="split-note">
           <mat-form-field>
             <mat-label>{{ 'TAPE.SCORES.SPLIT_NOTE' | translate }}</mat-label>
@@ -290,7 +314,7 @@ function nextSplitNoteOf(splitNotes: readonly number[]): MidiNoteNumber | undefi
           </button>
         </div>
       }
-      @if (messageOf('splitNotes'); as key) {
+      @if (shownMessageKey(fields.splitNotes); as key) {
         <mat-error>{{ key | translate }}</mat-error>
       }
       <button
@@ -352,6 +376,7 @@ export class ScoresExportDialogComponent {
   protected readonly noteValues = SCORES_BEAT_TYPES;
   protected readonly noteValueKeys = NOTE_VALUE_KEYS;
   protected readonly pitchOptions = PITCH_OPTIONS;
+  protected readonly shownMessageKey = shownMessageKey;
 
   private readonly prefilled = prefilledScoresChoices(this.data.organ, this.data.song, this.data.rememberedSplitNotes);
   private readonly notes = closeGaps(this.data.tape.holes, minimumGapColumns(this.data.organ, this.data.tape.columnLength));
@@ -361,55 +386,21 @@ export class ScoresExportDialogComponent {
   /** The Song has a Time signature that its Bars cannot keep on whole Columns: the dialog says so and offers none. */
   protected readonly songMetreNotOnColumns = this.prefilled.timeSignature !== 'song' && metreTextOf(this.data.song) !== undefined;
 
-  /** 'song' while the Tape keeps the Song's Time signature, else 'other': the beats and beat type the dialog holds. */
-  protected readonly timeChoice = signal<'song' | 'other'>(this.prefilled.timeSignature === 'song' ? 'song' : 'other');
-  protected readonly beats = signal<number | null>(COMMON_BEATS);
-  protected readonly beatType = signal<ScoresBeatType | null>(COMMON_BEAT_TYPE);
+  /** The dialog's fields as the user holds them; they may be invalid. */
+  private readonly model = signal<ScoresDialogModel>(this.initialModel());
 
-  protected readonly upbeatCount = signal<number | null>(this.prefilled.upbeat.count);
-  protected readonly upbeatValue = signal<ScoresBeatType | null>(beatTypeOf(this.prefilled.upbeat.noteValue));
-
-  /** The split notes as the dialog holds them, the highest on top; they may not be distinct while being edited. */
-  protected readonly splitNotes = signal<readonly number[]>(highestFirst(this.prefilled.splitNotes));
+  /** The fields the template binds to; their one rule is the domain's `validateScoresChoices`. */
+  protected readonly fields: FieldTree<ScoresDialogModel> = form(this.model, scoresFormSchema(this.data.song));
 
   /** The split note that Add gives next; undefined when Add is disabled. */
-  protected readonly nextSplitNote = computed(() => nextSplitNoteOf(this.splitNotes()));
-
-  /** The choices as the dialog holds them. */
-  private readonly input = computed<ScoresChoicesInput>(() => ({
-    timeSignature: this.timeChoice() === 'song' ? 'song' : {beats: this.beats(), beatType: this.beatType()},
-    upbeat: {count: this.upbeatCount(), noteValue: this.upbeatValue()},
-    splitNotes: this.splitNotes(),
-  }));
-
-  /** The message keys of the violations of the choices, by field; they keep Export disabled. */
-  private readonly messageKeys = computed(() => messageKeysOf(validateScoresChoices(this.input(), this.data.song)));
-
-  protected readonly beatsMatcher = new ShownMessageMatcher(() => this.messageKeys().has('beats'));
-  protected readonly beatTypeMatcher = new ShownMessageMatcher(() => this.messageKeys().has('beatType'));
-  protected readonly upbeatMatcher = new ShownMessageMatcher(() => this.messageKeys().has('upbeat'));
-
-  private readonly beatsInput = viewChild('beatsField', {read: MatInput});
-  private readonly beatTypeSelect = viewChild('beatTypeField', {read: MatSelect});
-  private readonly upbeatInput = viewChild('upbeatField', {read: MatInput});
-
-  /**
-   * Material only refreshes the error state of a field that has a form control; these fields have none, so each
-   * one is asked again whenever the messages change.
-   */
-  private readonly refreshErrorStates = effect(() => {
-    this.messageKeys();
-    this.beatsInput()?.updateErrorState();
-    this.beatTypeSelect()?.updateErrorState();
-    this.upbeatInput()?.updateErrorState();
-  });
+  protected readonly nextSplitNote = computed(() => nextSplitNoteOf(this.model().splitNotes));
 
   /** The choices the Scores are written with; undefined while a value is not yet a choice, which keeps Export disabled. */
-  protected readonly choices = computed(() => scoresChoicesOf(this.input(), this.data.song));
+  protected readonly choices = computed(() => scoresChoicesOf(inputOf(this.model()), this.data.song));
 
   /** One line per staff from the top: its number, the notes it holds (from, to) and its clef. */
   protected readonly staffLines = computed(() =>
-    scoresStaves(pitchesOf(this.splitNotes()), this.data.organ, this.notes).map((staff) => {
+    scoresStaves(pitchesOf(this.model().splitNotes), this.data.organ, this.notes).map((staff) => {
       const range = staffRange(staff);
       return {
         number: staff.number,
@@ -420,46 +411,35 @@ export class ScoresExportDialogComponent {
     }),
   );
 
-  /** The translation key of the message under a field, or undefined when the field has no violation. */
-  protected messageOf(field: ScoresChoicesViolation['field']): string | undefined {
-    return this.messageKeys().get(field);
-  }
-
   protected timeChoiceChosen(change: MatRadioChange): void {
     const choice: unknown = change.value;
-    this.timeChoice.set(choice === 'song' ? 'song' : 'other');
-  }
-
-  protected beatsTyped(event: Event): void {
-    this.beats.set(numberTypedIn(event));
+    this.fields.timeChoice().value.set(choice === 'song' ? 'song' : 'other');
   }
 
   protected beatTypeChosen(change: MatSelectChange): void {
-    this.beatType.set(beatTypeOf(change.value));
-  }
-
-  protected countTyped(event: Event): void {
-    this.upbeatCount.set(numberTypedIn(event));
+    this.fields.beatType().value.set(beatTypeOf(change.value));
   }
 
   protected valueChosen(change: MatSelectChange): void {
-    this.upbeatValue.set(beatTypeOf(change.value));
+    this.fields.upbeatValue().value.set(beatTypeOf(change.value));
   }
 
   /** Changes the split note of a row; the rows stay highest first. */
   protected splitChosen(index: number, change: MatSelectChange): void {
     const value: unknown = change.value;
     if (typeof value !== 'number') return;
-    this.splitNotes.update((values) => highestFirst(values.map((current, position) => (position === index ? value : current))));
+    this.fields.splitNotes().value.update((values) =>
+      highestFirst(values.map((current, position) => (position === index ? value : current))),
+    );
   }
 
   protected removeSplitNote(index: number): void {
-    this.splitNotes.update((values) => values.filter((_, position) => position !== index));
+    this.fields.splitNotes().value.update((values) => values.filter((_, position) => position !== index));
   }
 
   protected addSplitNote(): void {
     const next = this.nextSplitNote();
-    if (next !== undefined) this.splitNotes.update((values) => [...values, next]);
+    if (next !== undefined) this.fields.splitNotes().value.update((values) => [...values, next]);
   }
 
   /** Closes with no choices, which tells the export that nothing is to be written. */
@@ -470,5 +450,18 @@ export class ScoresExportDialogComponent {
   protected confirm(): void {
     const choices = this.choices();
     if (choices !== undefined) this.dialogRef.close(choices);
+  }
+
+  /** The fields the dialog starts with: the prefilled choices, and "Another one" from the Song's Time signature. */
+  private initialModel(): ScoresDialogModel {
+    const other = otherTimeSignatureOf(this.data.song, this.prefilled);
+    return {
+      timeChoice: this.prefilled.timeSignature === 'song' ? 'song' : 'other',
+      beats: other.beats,
+      beatType: other.beatType,
+      upbeatCount: this.prefilled.upbeat.count,
+      upbeatValue: beatTypeOf(this.prefilled.upbeat.noteValue),
+      splitNotes: highestFirst(this.prefilled.splitNotes),
+    };
   }
 }

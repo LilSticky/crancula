@@ -43,7 +43,7 @@ export function isSafeFileName(name: string, extension: string): boolean {
   );
 }
 
-/** A document within the size limit: an XML declaration and a start tag of `root` (such as `svg`). */
+/** A document within the size limit: an XML declaration and a `<root ` tag (such as `<svg `). */
 export function isXmlDocument(text: string, root: string): boolean {
   return text.length <= MAXIMUM_DOCUMENT_LENGTH && text.startsWith('<?xml') && text.includes(`<${root} `);
 }

@@ -267,6 +267,17 @@ describe('ScoresExportDialogComponent asks the Time signature and upbeat (FR-004
     expect(close).toHaveBeenCalledWith({timeSignature: {beats: 6, beatType: 8}, upbeat: 4, splitNotes: [60]});
   });
 
+  it('starts "Another one" from the Song Time signature when it lies on Columns, 3/4 with a quarter', async () => {
+    const {loader, translate} = await render(songIn3Four(), organAcrossMiddleC());
+    const another = await loader.getHarness(MatRadioButtonHarness.with({selector: '[data-testid="scores-time-other"]'}));
+    await another.check();
+
+    const beats = await loader.getHarness(MatInputHarness.with({selector: '[data-testid="scores-beats"]'}));
+    const beatType = await loader.getHarness(MatSelectHarness.with({selector: '[data-testid="scores-beat-type"]'}));
+    expect(await beats.getValue()).toBe('3');
+    expect(await beatType.getValueText()).toBe(String(translate.instant('TAPE.SCORES.NOTE_VALUE.4')));
+  });
+
   it('shows the error of a beat count of 0 under its field and disables Export', async () => {
     const {element, loader, translate} = await render(undefined, organAcrossMiddleC());
     const beats = await loader.getHarness(MatInputHarness.with({selector: '[data-testid="scores-beats"]'}));
