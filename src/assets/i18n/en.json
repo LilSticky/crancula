@@ -35,8 +35,8 @@
     },
     "CUTTING_PROBLEMS": {
       "TITLE": "Cutting Problems",
-      "COUNT": "{{count}} Holes can't be cut",
-      "COUNT_ONE": "{{count}} Hole can't be cut",
+      "COUNT": "{{count}} Cutting Problems",
+      "COUNT_ONE": "{{count}} Cutting Problem",
       "SHOW_HOLE": "Show {{note}} at Column {{column}} on the Tape",
       "NONE": "None"
     },

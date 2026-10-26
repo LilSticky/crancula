@@ -3,7 +3,7 @@ import {toSignal} from '@angular/core/rxjs-interop';
 import {MatButton} from '@angular/material/button';
 import {MatIcon} from '@angular/material/icon';
 import {TranslatePipe, TranslateService} from '@ngx-translate/core';
-import {noteName, type HoleCuttingProblems, type HoleRef} from '@api/index';
+import {noteName, type HoleCuttingProblems, type HoleRef, type NoJoinProblem} from '@api/index';
 import {map} from 'rxjs';
 import {cuttingProblemText, type ProblemText} from '../cutting-problem-text';
 
@@ -16,7 +16,12 @@ interface Entry {
   readonly selectable: boolean;
 }
 
-/** The Cutting Problems section of the side panel: how many Holes can't be cut, and which. */
+interface StretchEntry {
+  readonly stretch: NoJoinProblem;
+  readonly text: ProblemText;
+}
+
+/** The Cutting Problems section of the side panel: how many Holes and stretches can't be cut, and which. */
 @Component({
   selector: 'cranc-cutting-problems',
   imports: [MatButton, MatIcon, TranslatePipe],
@@ -68,10 +73,10 @@ interface Entry {
     <section data-testid="cutting-problems">
       <h2>{{ 'TAPE.CUTTING_PROBLEMS.TITLE' | translate }}</h2>
       <p data-testid="cutting-problems-count">
-        @if (entries().length === 0) {
+        @if (count() === 0) {
           {{ 'TAPE.CUTTING_PROBLEMS.NONE' | translate }}
         } @else {
-          {{ (entries().length === 1 ? 'TAPE.CUTTING_PROBLEMS.COUNT_ONE' : 'TAPE.CUTTING_PROBLEMS.COUNT') | translate: {count: entries().length} }}
+          {{ (count() === 1 ? 'TAPE.CUTTING_PROBLEMS.COUNT_ONE' : 'TAPE.CUTTING_PROBLEMS.COUNT') | translate: {count: count()} }}
         }
       </p>
       <ul>
@@ -98,13 +103,28 @@ interface Entry {
             }
           </li>
         }
+        @for (entry of stretchEntries(); track $index) {
+          <li>
+            <button mat-button type="button" data-testid="cutting-problem-stretch" (click)="stretchChosen.emit(entry.stretch)">
+              <span class="row">
+                <mat-icon aria-hidden="true" fontIcon="straighten" />
+                <span>
+                  <p>{{ entry.text.key | translate: entry.text.params }}</p>
+                </span>
+              </span>
+            </button>
+          </li>
+        }
       </ul>
     </section>
   `,
 })
 export class CuttingProblemsComponent {
   readonly holes = input.required<readonly HoleCuttingProblems[]>();
+  /** The stretches with no place for a Join; each is listed after the Holes. */
+  readonly stretches = input<readonly NoJoinProblem[]>([]);
   readonly chosen = output<HoleRef>();
+  readonly stretchChosen = output<NoJoinProblem>();
 
   private static nextId = 0;
   /** Prefix of the ids of the descriptions, unique per instance. */
@@ -123,4 +143,11 @@ export class CuttingProblemsComponent {
       selectable: problems.some((problem) => problem.code !== 'no-pipe'),
     })),
   );
+
+  protected readonly stretchEntries = computed<readonly StretchEntry[]>(() =>
+    this.stretches().map((stretch) => ({stretch, text: cuttingProblemText(stretch, this.language())})),
+  );
+
+  /** Holes and stretches together: each is one Cutting Problem. */
+  protected readonly count = computed(() => this.entries().length + this.stretchEntries().length);
 }

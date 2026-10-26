@@ -1,4 +1,4 @@
-// API: CuttingProblemsComponent (standalone); input `holes: readonly HoleCuttingProblems[]` (cut order, Columns 0-based); output `chosen: OutputEmitterRef<HoleRef>`.
+// API: CuttingProblemsComponent (standalone); input `holes: readonly HoleCuttingProblems[]` (cut order, Columns 0-based); input `stretches: readonly NoJoinProblem[]` (default none); output `chosen: OutputEmitterRef<HoleRef>`; output `stretchChosen: OutputEmitterRef<NoJoinProblem>`.
 import {TestBed} from '@angular/core/testing';
 import {TranslateService} from '@ngx-translate/core';
 import {firstValueFrom} from 'rxjs';
@@ -11,6 +11,7 @@ import {
   type HoleRef,
   type Millimetres,
   type MidiNoteNumber,
+  type NoJoinProblem,
 } from '@api/index';
 import {provideTestTranslations} from '../../../../../testing/test-translations';
 import {CuttingProblemsComponent} from './cutting-problems.component';
@@ -46,13 +47,19 @@ const TOO_CLOSE: CuttingProblem = {
   minimumGapMm: mm(1.7),
 };
 
-async function render(problems: readonly CuttingProblem[], language: 'en' | 'de' = 'en') {
+/** A stretch of Columns 1 to 101 that no Join cuts for a Plotter of 300 mm working length (FR-015). */
+const NO_JOIN: NoJoinProblem = {code: 'no-join', start: col(0), last: col(100), plotterName: 'Cutting mat', workingLengthMm: 300};
+
+async function render(problems: readonly CuttingProblem[], language: 'en' | 'de' = 'en', stretches: readonly NoJoinProblem[] = []) {
   TestBed.configureTestingModule({providers: [provideTestTranslations(language)]});
   const fixture = TestBed.createComponent(CuttingProblemsComponent);
   const holes: readonly HoleCuttingProblems[] = holesWithCuttingProblems(problems);
   fixture.componentRef.setInput('holes', holes);
+  fixture.componentRef.setInput('stretches', stretches);
   const chosen: HoleRef[] = [];
   fixture.componentInstance.chosen.subscribe((value) => chosen.push(value));
+  const chosenStretches: NoJoinProblem[] = [];
+  fixture.componentInstance.stretchChosen.subscribe((value) => chosenStretches.push(value));
   fixture.autoDetectChanges();
   await fixture.whenStable();
   const element = fixture.nativeElement as HTMLElement;
@@ -62,7 +69,11 @@ async function render(problems: readonly CuttingProblem[], language: 'en' | 'de'
     [...element.querySelectorAll('[data-testid="cutting-problem"]')].map((item) =>
       (item.textContent ?? '').replace(/\s+/g, ' ').trim(),
     );
-  return {element, chosen, text, entries};
+  const stretchEntries = (): string[] =>
+    [...element.querySelectorAll('[data-testid="cutting-problem-stretch"]')].map((item) =>
+      (item.textContent ?? '').replace(/\s+/g, ' ').trim(),
+    );
+  return {element, chosen, chosenStretches, text, entries, stretchEntries};
 }
 
 describe('CuttingProblemsComponent', () => {
@@ -74,22 +85,22 @@ describe('CuttingProblemsComponent', () => {
     expect(section?.textContent).toContain('Cutting Problems');
   });
 
-  it("counts the marked Holes: \"2 Holes can't be cut\"", async () => {
+  it("counts the marked Holes: \"2 Cutting Problems\"", async () => {
     const {text} = await render([TOO_SHORT, NO_PIPE]);
 
-    expect(text('cutting-problems-count')).toBe("2 Holes can't be cut");
+    expect(text('cutting-problems-count')).toBe("2 Cutting Problems");
   });
 
-  it("counts one marked Hole as \"1 Hole can't be cut\"", async () => {
+  it("counts one marked Hole as \"1 Cutting Problem\"", async () => {
     const {text} = await render([TOO_SHORT]);
 
-    expect(text('cutting-problems-count')).toBe("1 Hole can't be cut");
+    expect(text('cutting-problems-count')).toBe("1 Cutting Problem");
   });
 
   it('counts a too-close pair as two Holes', async () => {
     const {text, entries} = await render([TOO_CLOSE]);
 
-    expect(text('cutting-problems-count')).toBe("2 Holes can't be cut");
+    expect(text('cutting-problems-count')).toBe("2 Cutting Problems");
     expect(entries()).toHaveLength(2);
   });
 
@@ -182,10 +193,64 @@ describe('CuttingProblemsComponent', () => {
   it('lists a Hole without a Pipe as plain text, counted but not a button', async () => {
     const {element, text, entries} = await render([NO_PIPE]);
 
-    expect(text('cutting-problems-count')).toBe("1 Hole can't be cut");
+    expect(text('cutting-problems-count')).toBe("1 Cutting Problem");
     expect(entries()).toHaveLength(1);
     expect(entries()[0]).toContain('A#4');
     expect(entries()[0]).toMatch(/\b5\b/);
     expect(element.querySelectorAll('button[data-testid="cutting-problem"]')).toHaveLength(0);
+  });
+
+  describe('stretches with no place for a Join (T042, US3 scenario 3)', () => {
+    it('lists a stretch as a button naming its Columns from 1, the Plotter and its working length', async () => {
+      const {element, stretchEntries} = await render([], 'en', [NO_JOIN]);
+
+      expect(stretchEntries()).toEqual([
+        'Columns 1–101 are longer than the working length of Cutting mat (300 mm) with no place for a Join',
+      ]);
+      expect(element.querySelectorAll('button[data-testid="cutting-problem-stretch"]')).toHaveLength(1);
+    });
+
+    it('counts a stretch with the Holes, so a Hole and a stretch are two entries', async () => {
+      const {text, entries, stretchEntries} = await render([TOO_SHORT], 'en', [NO_JOIN]);
+
+      expect(text('cutting-problems-count')).toMatch(/^2\b/);
+      expect(entries()).toHaveLength(1);
+      expect(stretchEntries()).toHaveLength(1);
+    });
+
+    it('counts a stretch alone as one entry, and does not say None', async () => {
+      const {text, stretchEntries} = await render([], 'en', [NO_JOIN]);
+
+      expect(text('cutting-problems-count')).toMatch(/^1\b/);
+      expect(text('cutting-problems-count')).not.toBe('None');
+      expect(stretchEntries()).toHaveLength(1);
+    });
+
+    it('emits the stretch when it is chosen, and no Hole', async () => {
+      const {element, chosen, chosenStretches} = await render([TOO_SHORT], 'en', [NO_JOIN]);
+
+      element.querySelector<HTMLButtonElement>('button[data-testid="cutting-problem-stretch"]')?.click();
+
+      expect(chosenStretches).toEqual([NO_JOIN]);
+      expect(chosen).toEqual([]);
+    });
+
+    it('lists each stretch on its own, in the given order', async () => {
+      const later: NoJoinProblem = {...NO_JOIN, start: col(119), last: col(199)};
+
+      const {stretchEntries} = await render([], 'en', [NO_JOIN, later]);
+
+      expect(stretchEntries()).toHaveLength(2);
+      expect(stretchEntries()[0]).toContain('Columns 1–101');
+      expect(stretchEntries()[1]).toContain('Columns 120–200');
+    });
+
+    it('writes the stretch in German with the Join as Klebestelle', async () => {
+      const {stretchEntries} = await render([], 'de', [NO_JOIN]);
+
+      expect(stretchEntries()[0]).toContain('Spalten 1–101');
+      expect(stretchEntries()[0]).toContain('Klebestelle');
+      expect(stretchEntries()[0]).toContain('Cutting mat');
+    });
   });
 });

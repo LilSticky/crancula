@@ -35,8 +35,8 @@
     },
     "CUTTING_PROBLEMS": {
       "TITLE": "Schnittprobleme",
-      "COUNT": "{{count}} Löcher können nicht geschnitten werden",
-      "COUNT_ONE": "{{count}} Loch kann nicht geschnitten werden",
+      "COUNT": "{{count}} Schnittprobleme",
+      "COUNT_ONE": "{{count}} Schnittproblem",
       "SHOW_HOLE": "Zeige {{note}} in Spalte {{column}} auf dem Lochband",
       "NONE": "Keine"
     },

@@ -138,7 +138,7 @@ test.describe('I can edit a Tape in German', () => {
       await window.locator('[data-testid="tape-scroll"] svg').focus();
       await window.keyboard.press('Shift+ArrowLeft');
       await expect(window.getByTestId('cutting-problem')).toHaveCount(1);
-      await expect(window.getByTestId('cutting-problems-count')).toContainText('kann nicht geschnitten werden');
+      await expect(window.getByTestId('cutting-problems-count')).toContainText('Schnittproblem');
       await expect(window.getByTestId('cutting-problem')).toContainText('Mindestlochlänge');
       await collect();
 
