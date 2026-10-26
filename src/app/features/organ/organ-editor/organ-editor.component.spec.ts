@@ -415,6 +415,7 @@ describe('OrganEditorComponent', () => {
           save: () => new Promise<OrganLibrarySaveResult>((resolve) => writes.push(resolve)),
         },
         tapes: inMemory.tapes,
+        plotters: inMemory.plotters,
         plotter: inMemory.plotter,
         recording: inMemory.recording,
         app: inMemory.app,
@@ -778,6 +779,7 @@ describe('OrganEditorComponent', () => {
       const api: CranculaApi = {
         organs: {load: () => inMemory.organs.load(), save: () => new Promise<OrganLibrarySaveResult>(() => undefined)},
         tapes: inMemory.tapes,
+        plotters: inMemory.plotters,
         plotter: inMemory.plotter,
         recording: inMemory.recording,
         app: inMemory.app,
@@ -2537,6 +2539,7 @@ describe('OrganEditorComponent', () => {
       const api: CranculaApi = {
         organs: {load: () => inMemory.organs.load(), save: () => Promise.resolve(result)},
         tapes: inMemory.tapes,
+        plotters: inMemory.plotters,
         plotter: inMemory.plotter,
         recording: inMemory.recording,
         app: inMemory.app,

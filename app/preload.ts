@@ -7,6 +7,9 @@ import type {
   OrganLibraryLoadResult,
   OrganLibrarySaveResult,
   OrganLibrarySnapshot,
+  PlotterLibraryLoadResult,
+  PlotterLibrarySaveResult,
+  PlotterLibrarySnapshot,
   RecordingChooseRequest,
   RecordingChooseResult,
   RecordingWriteRequest,
@@ -29,6 +32,8 @@ const channels: typeof ORGAN_LIBRARY_CHANNELS = {load: 'organs:load', save: 'org
 const tapeChannels: typeof TAPE_LIBRARY_CHANNELS = {load: 'tapes:load', save: 'tapes:save'};
 const appChannels: typeof APP_CHANNELS = {setLanguage: 'app:set-language'};
 const editChannels: typeof EDIT_CHANNELS = {command: 'edit:command'};
+// Plotter library channels; the main process handles them once slice 011 wires the Plotter library (T012).
+const plotterLibraryChannels = {load: 'plotters:load', save: 'plotters:save'} as const;
 const plotterChannels: typeof PLOTTER_CHANNELS = {saveSvg: 'plotter:save-svg'};
 const recordingChannels: typeof RECORDING_CHANNELS = {chooseFile: 'recording:choose-file', writeFile: 'recording:write-file'};
 
@@ -45,6 +50,11 @@ const crancula: CranculaApi = {
   tapes: {
     load: () => ipcRenderer.invoke(tapeChannels.load) as Promise<TapeLibraryLoadResult>,
     save: (snapshot: TapeLibrarySnapshot) => ipcRenderer.invoke(tapeChannels.save, snapshot) as Promise<TapeLibrarySaveResult>,
+  },
+  plotters: {
+    load: () => ipcRenderer.invoke(plotterLibraryChannels.load) as Promise<PlotterLibraryLoadResult>,
+    save: (snapshot: PlotterLibrarySnapshot) =>
+      ipcRenderer.invoke(plotterLibraryChannels.save, snapshot) as Promise<PlotterLibrarySaveResult>,
   },
   plotter: {
     saveSvg: (request: SvgSaveRequest) => ipcRenderer.invoke(plotterChannels.saveSvg, request) as Promise<SvgSaveResult>,

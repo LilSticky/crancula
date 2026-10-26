@@ -83,6 +83,11 @@ export function createInMemoryCranculaApi(
         return Promise.resolve({status: 'saved'});
       },
     },
+    // Stand-in until the in-memory Plotter library is added (slice 011, T013).
+    plotters: {
+      load: () => Promise.resolve({status: 'empty'}),
+      save: () => Promise.resolve({status: 'saved'}),
+    },
     plotter: {
       get lastSaveSvgRequest(): SvgSaveRequest | undefined {
         return lastSaveSvgRequest;

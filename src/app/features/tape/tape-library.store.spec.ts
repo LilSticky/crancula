@@ -84,6 +84,7 @@ function apiSaving(result: TapeLibrarySaveResult, initialTapes?: TapeLibrarySnap
   return {
     organs: inMemory.organs,
     tapes: {load: () => inMemory.tapes.load(), save: () => Promise.resolve(result)},
+    plotters: inMemory.plotters,
     plotter: inMemory.plotter,
     recording: inMemory.recording,
     app: inMemory.app,
@@ -220,6 +221,7 @@ describe('TapeLibrary', () => {
           load: () => inMemory.tapes.load(),
           save: (snapshot) => (next.status === 'saved' ? inMemory.tapes.save(snapshot) : Promise.resolve(next)),
         },
+        plotters: inMemory.plotters,
         plotter: inMemory.plotter,
         recording: inMemory.recording,
         app: inMemory.app,
@@ -310,6 +312,7 @@ describe('TapeLibrary', () => {
             return inMemory.tapes.save(snapshot);
           },
         },
+        plotters: inMemory.plotters,
         plotter: inMemory.plotter,
         recording: inMemory.recording,
         app: inMemory.app,
@@ -339,6 +342,7 @@ describe('TapeLibrary', () => {
               return forced === undefined ? inMemory.tapes.save(snapshot) : Promise.resolve(forced);
             },
           },
+          plotters: inMemory.plotters,
           plotter: inMemory.plotter,
           recording: inMemory.recording,
           app: inMemory.app,
@@ -494,6 +498,7 @@ describe('TapeLibrary', () => {
             return inMemory.tapes.save(snapshot);
           },
         },
+        plotters: inMemory.plotters,
         plotter: inMemory.plotter,
         recording: inMemory.recording,
         app: inMemory.app,

@@ -28,6 +28,8 @@ export type {
   CranculaApi,
   OrganLibraryLoadResult,
   OrganLibrarySaveResult,
+  PlotterLibraryLoadResult,
+  PlotterLibrarySaveResult,
   SetLanguageResult,
   SnapshotLoadResult,
   SnapshotSaveResult,
@@ -139,6 +141,15 @@ export {
   type PreviewNote,
 } from './preview/performance';
 export {plotterFileName} from './tape/plotter-file-name';
+export {DEFAULT_OVERLAP, newPlotterId, plotterId, type Plotter, type PlotterId, type RollPlotter, type SheetPlotter} from './plotter/plotter';
+export {draftOf, emptyPlotterDraft, type PlotterDraft} from './plotter/plotter-draft';
+export {validatePlotter, type PlotterField, type PlotterViolation, type PlotterViolationCode} from './plotter/validate-plotter';
+export {
+  parsePlotterLibrarySnapshot,
+  toPlotterSnapshot,
+  type PlotterLibrarySnapshot,
+  type PlotterSnapshot,
+} from './plotter/plotter-library-snapshot';
 export {
   MP3_BIT_RATE,
   RECORDING_CHANNELS,

@@ -9,6 +9,7 @@ import type {
 } from '../recording/recording-save-request';
 import type {OrganLibrarySnapshot} from '../organ/organ-library-snapshot';
 import type {TapeLibrarySnapshot} from '../tape/tape-library-snapshot';
+import type {PlotterLibrarySnapshot} from '../plotter/plotter-library-snapshot';
 
 export type SnapshotLoadResult<S> =
   /** The snapshot file was read and is valid. */
@@ -29,6 +30,8 @@ export type OrganLibraryLoadResult = SnapshotLoadResult<OrganLibrarySnapshot>;
 export type OrganLibrarySaveResult = SnapshotSaveResult;
 export type TapeLibraryLoadResult = SnapshotLoadResult<TapeLibrarySnapshot>;
 export type TapeLibrarySaveResult = SnapshotSaveResult;
+export type PlotterLibraryLoadResult = SnapshotLoadResult<PlotterLibrarySnapshot>;
+export type PlotterLibrarySaveResult = SnapshotSaveResult;
 
 export type SetLanguageResult =
   | {readonly status: 'set'}
@@ -46,6 +49,10 @@ export interface CranculaApi {
   readonly tapes: {
     load(): Promise<TapeLibraryLoadResult>;
     save(snapshot: TapeLibrarySnapshot): Promise<TapeLibrarySaveResult>;
+  };
+  readonly plotters: {
+    load(): Promise<PlotterLibraryLoadResult>;
+    save(snapshot: PlotterLibrarySnapshot): Promise<PlotterLibrarySaveResult>;
   };
   readonly plotter: {
     /** Shows the save dialog and writes `request.svg` where the user chooses. */
