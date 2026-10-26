@@ -85,7 +85,7 @@ describe('TapeFitCardComponent', () => {
   it('says what it needs while there is no Fit', async () => {
     const {query, text} = await render({withFit: false});
 
-    expect(text('fit-empty')).toBe('Choose a MIDI file and an Organ to see how the Song fits its Pipes.');
+    expect(text('fit-empty')).toBe('Choose a Song Source and an Organ to see how the Song fits its Pipes.');
     expect(query('fit-matching')).toBeNull();
   });
 

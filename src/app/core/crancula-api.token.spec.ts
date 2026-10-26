@@ -18,7 +18,7 @@ const snapshot: OrganLibrarySnapshot = {
 };
 
 const tapeSnapshot: TapeLibrarySnapshot = {
-  version: 2,
+  version: 3,
   songs: [
     {
       id: '3f2b8c1e-9d4a-4f6b-8e2c-1a2b3c4d5e6f',

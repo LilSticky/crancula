@@ -8,7 +8,9 @@ export type SmfEvent =
   | { readonly type: 'programChange'; readonly channel: number; readonly program: number }
   | { readonly type: 'trackName'; readonly text: string }
   | { readonly type: 'tempo'; readonly microsecondsPerQuarterNote: number }
-  | { readonly type: 'sysEx'; readonly data: readonly number[] };
+  | { readonly type: 'sysEx'; readonly data: readonly number[] }
+  | { readonly type: 'timeSignature'; readonly beats: number; readonly beatType: number }
+  | { readonly type: 'keySignature'; readonly fifths: number; readonly mode: 'major' | 'minor' };
 
 export interface SmfTimedEvent {
   readonly delta: number;
@@ -87,6 +89,11 @@ function encodeNonChannelEvent(event: SmfEvent): number[] {
       ];
     case 'sysEx':
       return [0xf0, ...encodeVariableLengthQuantity(event.data.length + 1), ...event.data, 0xf7];
+    case 'timeSignature':
+      // The denominator is written as a power of two; 24 MIDI clocks per quarter and 8 notated 32nds per quarter.
+      return [0xff, 0x58, 4, event.beats, Math.log2(event.beatType), 24, 8];
+    case 'keySignature':
+      return [0xff, 0x59, 2, event.fifths & 0xff, event.mode === 'minor' ? 1 : 0];
     default:
       return [];
   }

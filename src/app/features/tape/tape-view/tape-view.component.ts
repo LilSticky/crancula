@@ -17,7 +17,7 @@ import {BreakpointObserver} from '@angular/cdk/layout';
 import {toSignal} from '@angular/core/rxjs-interop';
 import {ActivatedRoute, Router, RouterLink} from '@angular/router';
 import {map} from 'rxjs';
-import {column, columnDuration, cuttingProblems, holesWithCuttingProblems, noteName, type HoleRef, type ImportSummary, type Organ, type Tape, tapeGeometry, type TapeGeometry, type Transposed} from '@api/index';
+import {column, columnDuration, cuttingProblems, holesWithCuttingProblems, noteName, type HoleRef, type ImportSummary, type Organ, type SongMetre, songMetre, type Tape, tapeGeometry, type TapeGeometry, type Transposed} from '@api/index';
 import {canTranspose, holeRefsOf, selectionOfRefs} from './transpose-selection';
 import {crankSpeedChangeTo} from './crank-speed-change';
 import {holeAt, moveSpot, sameSpot, spotAt, type Spot, type TapeSelection} from './spot';
@@ -148,6 +148,9 @@ const PLAYHEAD_GRIP_WIDTH = 44;
 /** The shell's query: below this width the side panel gives way to a toggle. */
 const COMPACT_QUERY = '(max-width: 1179.98px)';
 
+/** The query for the window width below which German labels crowd the page head actions into icons. */
+const GERMAN_ACTIONS_QUERY = '(max-width: 1439.98px)';
+
 /** One Tape. Right after an import, the navigation state carries the Import Summary. */
 @Component({
   selector: 'cranc-tape-view',
@@ -210,6 +213,14 @@ export class TapeViewComponent {
   protected readonly compact = toSignal(this.breakpoints.observe(COMPACT_QUERY).pipe(map((state) => state.matches)), {
     initialValue: this.breakpoints.isMatched(COMPACT_QUERY),
   });
+  private readonly translateLanguage = toSignal(this.translate.onLangChange.pipe(map((event) => event.lang)), {
+    initialValue: this.translate.getCurrentLang() ?? 'en',
+  });
+  private readonly germanNarrow = toSignal(this.breakpoints.observe(GERMAN_ACTIONS_QUERY).pipe(map((state) => state.matches)), {
+    initialValue: this.breakpoints.isMatched(GERMAN_ACTIONS_QUERY),
+  });
+  /** Whether the page head actions show their icons only: when the window is compact, or German labels would crowd them. */
+  protected readonly compactActions = computed(() => this.compact() || (this.translateLanguage() === 'de' && this.germanNarrow()));
   protected readonly sidePanelOpen = signal(false);
   protected readonly saveProblem = this.library.saveProblem;
   private readonly pointer = signal<{readonly column: number; readonly mm: number; readonly row: number | undefined} | undefined>(undefined);
@@ -256,6 +267,13 @@ export class TapeViewComponent {
   protected readonly tape = computed(() => {
     const id = this.id();
     return id === null ? undefined : this.library.tapeEntities().find((tape) => tape.id === id);
+  });
+
+  /** The metre of the Tape's Song: its first Time signature, Key and upbeat; nothing while the Song is not found. */
+  protected readonly metre = computed<SongMetre>(() => {
+    const songId = this.tape()?.songId;
+    const song = this.library.songEntities().find((candidate) => candidate.id === songId);
+    return song ? songMetre(song) : {};
   });
 
   /** The Tape as drawn: the would-be Tape while a Hole is dragged. */

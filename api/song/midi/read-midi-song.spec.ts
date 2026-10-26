@@ -1,7 +1,7 @@
 import {describe, expect, it} from 'vitest';
 import {MAXIMUM_MIDI_FILE_SIZE, readMidiSong} from './read-midi-song';
 import type {Song} from '../song';
-import {encodeSmf, type SmfSpec, type SmfTimedEvent, type SmfTrack} from './smf-test-helper';
+import {encodeSmf, type SmfEvent, type SmfSpec, type SmfTimedEvent, type SmfTrack} from './smf-test-helper';
 
 const FILE_NAME = 'tune.mid';
 
@@ -411,5 +411,67 @@ describe('readMidiSong: Notes, Parts and names', () => {
   it('gives every Song a new SongId', () => {
     const bytes = encodeSmf(validSpec);
     expect(songOf(bytes).id).not.toBe(songOf(bytes).id);
+  });
+});
+
+describe('readMidiSong keeps the Time signatures and Keys of its meta events (US4, scenario 5, R9)', () => {
+  const at = (delta: number, event: SmfEvent): SmfTimedEvent => ({delta, event});
+  const sixEight: SmfEvent = {type: 'timeSignature', beats: 6, beatType: 8};
+  const threeFour: SmfEvent = {type: 'timeSignature', beats: 3, beatType: 4};
+
+  it('keeps a time signature meta event at its Tick', () => {
+    const song = songOfTracks({events: [on(0, 60), off(96, 60), at(0, sixEight)]});
+
+    expect(song.timeSignatures).toEqual([{start: 96, beats: 6, beatType: 8}]);
+  });
+
+  it('reads the denominator of a time signature meta event as a power of two', () => {
+    // Raw bytes, not the encoder: FF 58 04 06 03 18 08 is 6/8 (denominator 2^3 = 8) at Tick 96.
+    const song = songOf(
+      fileWithTrack([0x00, 0x90, 60, 64, 0x60, 0x80, 60, 0, 0x00, 0xff, 0x58, 0x04, 6, 3, 24, 8, 0x00, 0xff, 0x2f, 0x00]),
+    );
+
+    expect(song.timeSignatures).toEqual([{start: 96, beats: 6, beatType: 8}]);
+  });
+
+  it('keeps a key signature meta event at its Tick, with sf signed and mi 1 as minor', () => {
+    const song = songOfTracks({
+      events: [on(0, 60), off(96, 60), at(0, {type: 'keySignature', fifths: -3, mode: 'minor'})],
+    });
+
+    expect(song.keys).toEqual([{start: 96, fifths: -3, mode: 'minor'}]);
+  });
+
+  it('reads mi 0 as major', () => {
+    const song = songOfTracks({events: [at(0, {type: 'keySignature', fifths: 1, mode: 'major'}), on(0, 60), off(96, 60)]});
+
+    expect(song.keys).toEqual([{start: 0, fifths: 1, mode: 'major'}]);
+  });
+
+  it('keeps no Time signature for a MIDI file without a time signature event', () => {
+    const song = songOfTracks({events: [on(0, 60), off(96, 60)]});
+
+    expect(song.timeSignatures).toEqual([]);
+  });
+
+  it('never keeps an upbeat from MIDI, even when the first Notes are shorter than the first Bar', () => {
+    const song = songOfTracks({events: [at(0, threeFour), on(0, 60), off(96, 60)]});
+
+    expect(song.upbeat).toBeUndefined();
+  });
+
+  it('keeps a repeated equal time signature once', () => {
+    const song = songOfTracks({events: [at(0, threeFour), on(0, 60), off(96, 60), at(0, threeFour)]});
+
+    expect(song.timeSignatures).toEqual([{start: 0, beats: 3, beatType: 4}]);
+  });
+
+  it('takes the first track when two tracks give a time signature on the same Tick', () => {
+    const song = songOfTracks(
+      {events: [at(0, threeFour), on(0, 60), off(96, 60)]},
+      {events: [at(0, sixEight), on(0, 62), off(96, 62)]},
+    );
+
+    expect(song.timeSignatures).toEqual([{start: 0, beats: 3, beatType: 4}]);
   });
 });

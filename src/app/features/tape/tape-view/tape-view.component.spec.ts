@@ -1,6 +1,7 @@
 import {BreakpointObserver, type BreakpointState} from '@angular/cdk/layout';
 import {ApplicationRef, Component, computed, signal} from '@angular/core';
-import {type Observable, of} from 'rxjs';
+import {TranslateService} from '@ngx-translate/core';
+import {firstValueFrom, type Observable, of} from 'rxjs';
 import {TestBed} from '@angular/core/testing';
 import {MatDialog} from '@angular/material/dialog';
 import {MatSnackBar} from '@angular/material/snack-bar';
@@ -111,6 +112,8 @@ interface RenderOptions {
   readonly columnLength?: number;
   /** The language of the texts; English when not given. */
   readonly language?: 'en' | 'de';
+  /** The Lead of the Song has a Time signature of 3/4 and the Key of G major in its meta events. */
+  readonly metre?: boolean;
   /** Writing the Tape library fails. */
   readonly saveFails?: boolean;
   /** Uses the real PlotterExport (and the real problems dialog) instead of a stub. */
@@ -168,6 +171,12 @@ function stubBreakpointObserver(width: number): Pick<BreakpointObserver, 'observ
     isMatched: (value: string | readonly string[]): boolean => queries(value).some(matches),
   };
 }
+
+/** A Time signature of 3/4 and the Key of G major at Tick 0. */
+const METRE_EVENTS = [
+  {delta: 0, event: {type: 'timeSignature' as const, beats: 3, beatType: 4}},
+  {delta: 0, event: {type: 'keySignature' as const, fifths: 1, mode: 'major' as const}},
+];
 
 async function render(options: RenderOptions = {}) {
   const inMemory = createInMemoryCranculaApi(undefined, undefined, options.saveFails ? {tapes: {save: 'failed'}} : {});
@@ -246,6 +255,7 @@ async function render(options: RenderOptions = {}) {
     ].map(({name, channel}) => ({
       events: [
         {delta: 0, event: {type: 'trackName' as const, text: name}},
+        ...(options.metre && channel === 0 ? METRE_EVENTS : []),
         ...[61, 63, 65].flatMap((note) => [
           {delta: 0, event: {type: 'noteOn' as const, channel, note, velocity: 80}},
           {delta: TICKS_PER_QUARTER, event: {type: 'noteOff' as const, channel, note, velocity: 0}},
@@ -598,6 +608,19 @@ describe('TapeViewComponent', () => {
       await open(`/tapes/${tape.id}`);
 
       expect(texts(section(view()) as HTMLElement | null, 'selected-part')).toEqual(['Lead']);
+    });
+  });
+
+  describe('the song metre in the Tape details (US4)', () => {
+    it("shows the Time signature and the Key of the Tape's Song in the Tape details, read-only, and nowhere else in the side panel", async () => {
+      const {tape, open, view} = await render({metre: true});
+
+      await open(`/tapes/${tape.id}`);
+
+      const metre = view()?.querySelector('[data-testid="tape-section"] [data-testid="song-metre"]');
+      expect(metre?.textContent?.replace(/\s+/g, ' ').trim()).toBe('3/4, G major');
+      expect(view()?.querySelectorAll('[data-testid="song-metre"]')).toHaveLength(1);
+      expect(view()?.querySelector('[data-testid="side-panel"] > cranc-song-metre')).toBeNull();
     });
   });
 
@@ -1066,6 +1089,75 @@ describe('TapeViewComponent', () => {
         expect(button.classList.contains('icon-only'), testId).toBe(true);
         expect(button.getAttribute('aria-label'), testId).toBe(name);
         expect(button.textContent, testId).not.toContain(name);
+      }
+    });
+
+    it('shows the page head actions as icons in German at 1280 px, with their German labels as accessible names', async () => {
+      const {tape, open, view} = await render({windowWidth: 1280, tapePerCrankTurn: 100, language: 'de'});
+      await open(`/tapes/${tape.id}`);
+
+      const names: Record<string, string> = {
+        'preview-toggle': 'Anhören',
+        transpose: 'Transponieren…',
+        record: 'Aufnehmen',
+        export: 'Export für den Plotter',
+      };
+      for (const [testId, name] of Object.entries(names)) {
+        const button = required(view()?.querySelector<HTMLButtonElement>(`[data-testid="page-head-actions"] [data-testid="${testId}"]`), testId);
+        expect(button.classList.contains('icon-only'), testId).toBe(true);
+        expect(button.getAttribute('aria-label'), testId).toBe(name);
+        expect(button.textContent, testId).not.toContain(name);
+      }
+      expect(toggle(view())).toBeNull();
+      expect(panel(view())).not.toBeNull();
+    });
+
+    it('keeps the full German labels of the page head actions at 1440 px', async () => {
+      const {tape, open, view} = await render({windowWidth: 1440, tapePerCrankTurn: 100, language: 'de'});
+      await open(`/tapes/${tape.id}`);
+
+      const names: Record<string, string> = {
+        'preview-toggle': 'Anhören',
+        transpose: 'Transponieren…',
+        record: 'Aufnehmen',
+      };
+      for (const [testId, name] of Object.entries(names)) {
+        const button = required(view()?.querySelector<HTMLButtonElement>(`[data-testid="page-head-actions"] [data-testid="${testId}"]`), testId);
+        expect(button.classList.contains('icon-only'), testId).toBe(false);
+        expect(button.textContent, testId).toContain(name);
+      }
+    });
+
+    it('switches the page head actions to icons when the language changes to German while the Tape view is open at 1280 px', async () => {
+      const {tape, open, view, settle} = await render({windowWidth: 1280, tapePerCrankTurn: 100});
+      await open(`/tapes/${tape.id}`);
+      const preview = (): HTMLButtonElement =>
+        required(view()?.querySelector<HTMLButtonElement>('[data-testid="page-head-actions"] [data-testid="preview-toggle"]'), 'preview-toggle');
+      expect(preview().classList.contains('icon-only')).toBe(false);
+      expect(preview().textContent).toContain('Preview');
+
+      await firstValueFrom(TestBed.inject(TranslateService).use('de'));
+      await settle();
+
+      expect(preview().classList.contains('icon-only')).toBe(true);
+      expect(preview().getAttribute('aria-label')).toBe('Anhören');
+      expect(preview().textContent).not.toContain('Anhören');
+    });
+
+    it('keeps the full English labels of the page head actions at 1280 px', async () => {
+      const {tape, open, view} = await render({windowWidth: 1280, tapePerCrankTurn: 100});
+      await open(`/tapes/${tape.id}`);
+
+      const names: Record<string, string> = {
+        'preview-toggle': 'Preview',
+        transpose: 'Transpose…',
+        record: 'Record',
+        export: 'Export for the Plotter',
+      };
+      for (const [testId, name] of Object.entries(names)) {
+        const button = required(view()?.querySelector<HTMLButtonElement>(`[data-testid="page-head-actions"] [data-testid="${testId}"]`), testId);
+        expect(button.classList.contains('icon-only'), testId).toBe(false);
+        expect(button.textContent, testId).toContain(name);
       }
     });
 

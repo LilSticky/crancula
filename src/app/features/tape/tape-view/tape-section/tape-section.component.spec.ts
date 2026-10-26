@@ -1,6 +1,6 @@
 import {provideRouter} from '@angular/router';
 import {type ComponentFixture, TestBed} from '@angular/core/testing';
-import {column, columnCount, type Hole, midiNoteNumber, millimetres, type Organ, organId, tapeId, transposition, type Tape} from '@api/index';
+import {column, columnCount, type Hole, midiNoteNumber, millimetres, type Organ, organId, type SongMetre, tapeId, transposition, type Tape} from '@api/index';
 import {tapeOf} from '../../../../../../api/tape/tape-fixture';
 import {partIndex, songId} from '../../../../../../api/song/song';
 import {testOrgan} from '../../../../../testing/organs';
@@ -62,6 +62,8 @@ async function render(
     /** The Organ the section works out the Cutting Problems on; the Organ of ORGAN when not given. */
     readonly organ?: Organ;
     readonly language?: 'en' | 'de';
+    /** The metre of the Song; not set on the section when not given. */
+    readonly metre?: SongMetre;
   } = {},
 ) {
   TestBed.configureTestingModule({
@@ -71,6 +73,7 @@ async function render(
   fixture.componentRef.setInput('view', options.view ?? VIEW);
   fixture.componentRef.setInput('tape', tapeWith(options.columnLength ?? 2.5, options.holes));
   fixture.componentRef.setInput('organ', options.organ ?? ORGAN);
+  if (options.metre !== undefined) fixture.componentRef.setInput('metre', options.metre);
   const emitted: Tape[] = [];
   fixture.componentInstance.columnLengthChange.subscribe((changed: Tape) => emitted.push(changed));
   fixture.autoDetectChanges();
@@ -144,6 +147,26 @@ describe('TapeSectionComponent', () => {
       'Melody',
       'Part 3',
     ]);
+  });
+
+  describe('the Metre of the Song (US4)', () => {
+    const rowOf = (section: Element | null, label: string) =>
+      [...(section?.querySelectorAll('dt') ?? [])].find((term) => term.textContent?.trim() === label)?.nextElementSibling;
+
+    it('shows the Metre of a Song that keeps one as a labelled row of the Tape details, read-only', async () => {
+      const {section} = await render({metre: {timeSignature: {beats: 3, beatType: 4}, key: {fifths: 1, mode: 'major'}}});
+
+      const value = rowOf(section, 'Metre');
+      expect(value?.tagName).toBe('DD');
+      expect(value?.querySelector('[data-testid="song-metre"]')?.textContent?.replace(/\s+/g, ' ').trim()).toBe('3/4, G major');
+    });
+
+    it('shows no Metre row for a Song that keeps no Time signature, Key or upbeat', async () => {
+      const {section, element} = await render({metre: {}});
+
+      expect(rowOf(section, 'Metre')).toBeUndefined();
+      expect(element.querySelector('[data-testid="song-metre"]')).toBeNull();
+    });
   });
 
   describe('changing the Column length (T006)', () => {

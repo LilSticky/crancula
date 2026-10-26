@@ -62,7 +62,7 @@ test.describe('Editing a Tape by hand', () => {
     await first.app.close();
 
     const stored = JSON.parse(await readFile(join(first.userDataDir, 'snapshots', 'tapes.json'), 'utf8')) as StoredTapes;
-    expect(stored.version).toBe(2);
+    expect(stored.version).toBe(3);
     const holes = stored.tapes[0]?.holes ?? [];
     expect(holes).toHaveLength(original.length - 1);
     for (const hole of holes) {

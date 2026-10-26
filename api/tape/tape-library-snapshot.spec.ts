@@ -150,7 +150,7 @@ describe('parseTapeLibrarySnapshot', () => {
     ['not an object', 'oops'],
     ['null', null],
     ['a missing version', {songs: [], tapes: []}],
-    ['an unknown version', {version: 3, songs: [], tapes: []}],
+    ['an unknown version', {version: 4, songs: [], tapes: []}],
     ['songs that are not a list', snapshot({songs: {}})],
     ['tapes that are not a list', snapshot({tapes: 'none'})],
     ['a Tape that is not an object', snapshot({tapes: [42]})],
@@ -217,29 +217,29 @@ describe('toTapeLibrarySnapshot', () => {
 
     const written = toTapeLibrarySnapshot(parsed.value.tapes, parsed.value.songs);
 
-    expect(written).toEqual(snapshot());
+    expect(written).toEqual({...snapshot(), version: 3});
     expect(parseTapeLibrarySnapshot(JSON.parse(JSON.stringify(written)))).toEqual(parsed);
   });
 
-  it('writes version 2 with the Crank speed of each Tape', () => {
+  it('writes version 3 with the Crank speed of each Tape', () => {
     const parsed = parseTapeLibrarySnapshot(snapshot({tapes: [tapeSnapshot({crankSpeed: 72.5})]}));
     expect(parsed.ok).toBe(true);
     if (!parsed.ok) return;
 
     const written = toTapeLibrarySnapshot(parsed.value.tapes, parsed.value.songs);
 
-    expect(written.version).toBe(2);
+    expect(written.version).toBe(3);
     expect(written.tapes[0].crankSpeed).toBe(72.5);
   });
 
-  it('upgrades a version 1 snapshot: the next save writes version 2 with Crank speed 60', () => {
+  it('upgrades a version 1 snapshot: the next save writes version 3 with Crank speed 60', () => {
     const parsed = parseTapeLibrarySnapshot({version: 1, songs: [songSnapshot()], tapes: [tapeSnapshotV1()]});
     expect(parsed.ok).toBe(true);
     if (!parsed.ok) return;
 
     const written = toTapeLibrarySnapshot(parsed.value.tapes, parsed.value.songs);
 
-    expect(written.version).toBe(2);
+    expect(written.version).toBe(3);
     expect(written.tapes[0].crankSpeed).toBe(60);
   });
 
@@ -293,5 +293,125 @@ describe('toTapeLibrarySnapshot', () => {
     const written = toTapeLibrarySnapshot([{...tape, holes: [...tape.holes].reverse()}], parsed.value.songs);
 
     expect(written.tapes[0].holes).toEqual([[60, 0, 2], [60, 4, 1], [64, 2, 3]]);
+  });
+});
+
+/** A version 3 file whose only Song is `song`, the Tape referencing all of its Parts. */
+function version3With(song: Record<string, unknown>) {
+  return {...withSong(song), version: 3};
+}
+
+describe('parseTapeLibrarySnapshot, Time signatures, upbeat and Keys (version 3)', () => {
+  it('reads the Time signatures, upbeat and Keys of a Song', () => {
+    const result = parseTapeLibrarySnapshot(
+      version3With({
+        timeSignatures: [
+          [0, 3, 4],
+          [11520, 2, 4],
+        ],
+        upbeat: 480,
+        keys: [[0, 1, 'major']],
+      }),
+    );
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    const [read] = result.value.songs;
+    expect(read?.timeSignatures).toEqual([
+      {start: 0, beats: 3, beatType: 4},
+      {start: 11520, beats: 2, beatType: 4},
+    ]);
+    expect(read?.upbeat).toBe(480);
+    expect(read?.keys).toEqual([{start: 0, fifths: 1, mode: 'major'}]);
+  });
+
+  it('writes the Time signatures, upbeat and Keys of a Song as arrays, in their order', () => {
+    const parsed = parseTapeLibrarySnapshot(
+      version3With({
+        timeSignatures: [
+          [0, 3, 4],
+          [11520, 2, 4],
+        ],
+        upbeat: 480,
+        keys: [[0, 1, 'major']],
+      }),
+    );
+    expect(parsed.ok).toBe(true);
+    if (!parsed.ok) return;
+
+    const written = toTapeLibrarySnapshot(parsed.value.tapes, parsed.value.songs);
+
+    expect(written.songs[0]).toEqual({
+      ...songSnapshot(),
+      timeSignatures: [
+        [0, 3, 4],
+        [11520, 2, 4],
+      ],
+      upbeat: 480,
+      keys: [[0, 1, 'major']],
+    });
+  });
+
+  it('round-trips a version 3 file through the parser and the writer', () => {
+    const input = version3With({timeSignatures: [[0, 3, 4]], upbeat: 480, keys: [[0, -2, 'minor']]});
+    const parsed = parseTapeLibrarySnapshot(input);
+    expect(parsed.ok).toBe(true);
+    if (!parsed.ok) return;
+
+    const written = toTapeLibrarySnapshot(parsed.value.tapes, parsed.value.songs);
+
+    expect(written).toEqual(input);
+  });
+
+  it('omits the Time signatures, upbeat and Keys of a Song that keeps none', () => {
+    const parsed = parseTapeLibrarySnapshot(version3With({}));
+    expect(parsed.ok).toBe(true);
+    if (!parsed.ok) return;
+
+    const written = toTapeLibrarySnapshot(parsed.value.tapes, parsed.value.songs);
+
+    expect(written.songs[0]).toEqual(songSnapshot());
+    expect(written.songs[0]).not.toHaveProperty('timeSignatures');
+    expect(written.songs[0]).not.toHaveProperty('upbeat');
+    expect(written.songs[0]).not.toHaveProperty('keys');
+  });
+
+  it.each([
+    ['version 1', {version: 1, songs: [songSnapshot()], tapes: [tapeSnapshotV1()]}],
+    ['version 2', snapshot()],
+  ])('reads a %s Song with no Time signature, no upbeat and no Key', (_, input) => {
+    const result = parseTapeLibrarySnapshot(input);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    const [read] = result.value.songs;
+    expect(read?.timeSignatures).toEqual([]);
+    expect(read?.upbeat).toBeUndefined();
+    expect(read?.keys).toEqual([]);
+  });
+
+  it.each([
+    ['Time signatures not sorted by start', {timeSignatures: [[480, 3, 4], [0, 2, 4]]}],
+    ['two Time signatures with the same start', {timeSignatures: [[0, 3, 4], [0, 2, 4]]}],
+    ['Time signatures that are not a list', {timeSignatures: 'none'}],
+    ['a Time signature that is not a triple', {timeSignatures: [[0, 3]]}],
+    ['a Time signature with 0 beats', {timeSignatures: [[0, 0, 4]]}],
+    ['a Time signature with beat type 3', {timeSignatures: [[0, 3, 3]]}],
+    ['an upbeat of 0 Ticks', {timeSignatures: [[0, 3, 4]], upbeat: 0}],
+    ['a fractional upbeat', {timeSignatures: [[0, 3, 4]], upbeat: 1.5}],
+    ['an upbeat as long as the first Bar', {timeSignatures: [[0, 3, 4]], upbeat: 1440}],
+    ['an upbeat without a Time signature at Tick 0', {timeSignatures: [[480, 3, 4]], upbeat: 240}],
+    ['Keys not sorted by start', {keys: [[480, 1, 'major'], [0, 0, 'major']]}],
+    ['two Keys with the same start', {keys: [[0, 1, 'major'], [0, 2, 'minor']]}],
+    ['a Key that is not a triple', {keys: [[0, 0]]}],
+    ['a Key with 8 fifths', {keys: [[0, 8, 'major']]}],
+    ['a Key with a mode that is neither major nor minor', {keys: [[0, 0, 'dorian']]}],
+  ])('makes a version 3 file unreadable with %s', (_, fields) => {
+    // Guard: the file without the broken field reads, so the rejection below comes from that field alone.
+    expect(parseTapeLibrarySnapshot(version3With({})).ok).toBe(true);
+    const result = parseTapeLibrarySnapshot(version3With(fields));
+
+    expect(result.ok).toBe(false);
+    expect(result.ok ? '' : result.error).not.toBe('');
   });
 });

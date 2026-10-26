@@ -9,6 +9,9 @@ as its GitHub Release notes.
 ## [Unreleased]
 
 ### Added
+- Bring a MusicXML Score onto a Tape (`.musicxml`, `.xml` or `.mxl`): each staff becomes a Part. Repeats, endings, D.C., D.S., fine and coda are played out; ties are joined. Time signatures, Keys and upbeat are kept, and the Metre is shown on the import screen and in the Tape details.
+- Grace notes and ornaments are left out of a Score and counted in the import summary.
+- A PDF or printed Score cannot be read directly: a how-to dialog explains how to get MusicXML from it.
 - Record a Tape as a WAV or MP3 file to listen to without Crancula: choose Record in the Tape view.
   The file holds the whole Tape at its Crank speed, and the Tape is not changed.
 - Edit a Tape by touch: tap an empty place to select a Spot, tap it again to add a Hole. A selected
@@ -20,6 +23,7 @@ as its GitHub Release notes.
   takes 1–300.
 
 ### Changed
+- The import button says "Choose a Song Source": a MIDI file or a MusicXML Score.
 - A double-click on a Hole now removes it (two taps on one Hole).
 
 ## [0.2.0] - 2026-10-24

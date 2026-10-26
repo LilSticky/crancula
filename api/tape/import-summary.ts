@@ -1,6 +1,9 @@
 import type {MidiNoteNumber} from '../organ/midi-note-number';
+import type {LeftOut} from '../song/read-song-source';
 import type {PartIndex} from '../song/song';
 import type {Column, ColumnCount, Transposition} from './tape';
+
+export type {LeftOut} from '../song/read-song-source';
 
 /** A change made to a Hole so the Tape can be cut (FR-008, FR-012). Columns count from 0. */
 export type HoleFix =
@@ -49,4 +52,6 @@ export interface ImportSummary {
   readonly movedByOctaves: readonly NoteMovedByOctaves[];
   readonly unplayableNotes: readonly UnplayableNote[];
   readonly holesFixed: readonly HoleFix[];
+  /** The grace notes and ornaments left out of the selected Parts; absent for a Song from MIDI. */
+  readonly leftOut?: LeftOut;
 }

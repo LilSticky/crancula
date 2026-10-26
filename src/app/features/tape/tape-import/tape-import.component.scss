@@ -58,6 +58,11 @@ mat-card {
   flex-wrap: wrap;
 }
 
+/* The metre host has the same 8 px in front of it, so the dot sits centred between the counts and the metre. */
+.facts-separator {
+  margin-inline-start: 8px;
+}
+
 .parts {
   list-style: none;
   margin: 0;
@@ -106,8 +111,22 @@ mat-card {
   color: var(--mat-sys-on-surface-variant);
 }
 
+.score-hint {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 0;
+  color: var(--mat-sys-on-surface-variant);
+}
+
 .rejection {
   color: var(--mat-sys-error);
+}
+
+/* Centred on the first line of the message, not on the baseline above it. */
+.rejection mat-icon {
+  vertical-align: middle;
 }
 
 cranc-action-bar {

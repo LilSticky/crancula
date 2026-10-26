@@ -55,7 +55,8 @@ flowchart LR
 1. **Describe your Organ.** List its Pipes by the notes they play (C4, D4, …) and measure its
    Tape Bed: tape width, hole diameter and row spacing in mm (Crancula works out the Border). Crancula refuses Organs
    that can't exist, for example duplicate Pipes or more Pipes than fit on the tape.
-2. **Bring a Song onto a Tape.** Import a MIDI file. Crancula shifts it up or down
+2. **Bring a Song onto a Tape.** Choose a Song Source: a MIDI file, or a MusicXML Score (`.musicxml`, `.xml`, `.mxl`)
+   with one Part per staff, repeats played out. Crancula shifts it up or down
    (Transposition) so that it fits the Pipes your Organ has.
 3. **Edit the Tape.** Add, move, lengthen and remove Holes, transpose them or change the
    Column length. Cutting Problems show as you go, and Undo takes any edit back.

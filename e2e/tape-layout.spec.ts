@@ -407,7 +407,7 @@ test.describe('The Tape view with a Preview playing at 1280 x 800 (#159)', () =>
 
       const toggle = window.getByTestId('preview-toggle');
       await toggle.click();
-      await expect(toggle).toContainText(stopLabel);
+      await expect(toggle).toHaveAccessibleName(stopLabel);
 
       const toggles = await toggle.evaluateAll(measureTextLines);
       expect(toggles).toHaveLength(1);
@@ -418,10 +418,34 @@ test.describe('The Tape view with a Preview playing at 1280 x 800 (#159)', () =>
       expect(await window.getByTestId('page-head-actions').evaluate((element) => element.scrollWidth - element.clientWidth), 'page head overflow').toBeLessThanOrEqual(1);
 
       await toggle.click();
-      await expect(toggle).not.toContainText(stopLabel);
+      await expect(toggle).not.toHaveAccessibleName(stopLabel);
       await app.close();
     });
   }
+});
+
+test.describe('The Tape view in German at 1280 x 800 (#177)', () => {
+  test('the page head actions fit: no horizontal overflow, the Export button inside the window, no horizontal document scroll', async () => {
+    const launched = await launchApp();
+    const {app, window} = launched;
+    await resizeWindowOrSkip(launched, 1280, 800, true);
+    await defineOrganWithLeadIn(window, {tapePerCrankTurn: '100'});
+    await createTapeFromSong(window, 'Scale', melodyC3ToC5(), {columnLength: '5'});
+    await window.getByTestId('language-switch').locator('[data-language="de"]').click();
+
+    const head = window.getByTestId('page-head-actions');
+    expect(await head.evaluate((element) => element.scrollWidth - element.clientWidth), 'page head overflow').toBeLessThanOrEqual(1);
+
+    const exportButton = await boxOf(head.getByTestId('export'));
+    const viewport = await window.evaluate(() => ({width: globalThis.innerWidth}));
+    expect(exportButton.right, `Export right edge ${exportButton.right} vs viewport width ${viewport.width}`).toBeLessThanOrEqual(viewport.width);
+
+    expect(
+      await window.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth),
+      'document horizontal overflow',
+    ).toBeLessThanOrEqual(1);
+    await app.close();
+  });
 });
 
 test.describe('The Tape view at 1024 x 700 (#156)', () => {
