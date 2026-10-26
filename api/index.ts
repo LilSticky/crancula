@@ -33,11 +33,14 @@ export type {
   SetLanguageResult,
   SnapshotLoadResult,
   SnapshotSaveResult,
+  ScoresSaveRequest,
+  ScoresSaveResult,
   SvgSaveRequest,
   SvgSaveResult,
   TapeLibraryLoadResult,
   TapeLibrarySaveResult,
 } from './app/crancula-api';
+export {parseScoresSaveRequest} from './app/scores-save-request';
 export {parseSvgSaveRequest} from './app/svg-save-request';
 export {
   parseSvgPiecesSaveRequest,

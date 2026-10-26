@@ -2,6 +2,7 @@ import type {EditCommand} from './edit-command';
 import type {Language} from './language';
 import type {SvgSaveRequest, SvgSaveResult} from './svg-save-request';
 import type {SvgPiecesSaveRequest, SvgPiecesSaveResult} from './svg-pieces-save-request';
+import type {ScoresSaveRequest, ScoresSaveResult} from './scores-save-request';
 import type {
   RecordingChooseRequest,
   RecordingChooseResult,
@@ -39,7 +40,7 @@ export type SetLanguageResult =
   /** The payload is not a supported language; the menu is unchanged. */
   | {readonly status: 'rejected'; readonly reason: string};
 
-export type {SvgSaveRequest, SvgSaveResult};
+export type {ScoresSaveRequest, ScoresSaveResult, SvgSaveRequest, SvgSaveResult};
 
 /** What the preload script exposes as `window.crancula` (ADR 4). */
 export interface CranculaApi {
@@ -60,6 +61,10 @@ export interface CranculaApi {
     saveSvg(request: SvgSaveRequest): Promise<SvgSaveResult>;
     /** Asks for a folder, asks once before replacing, and writes every Tape piece into it (ADR 28). */
     savePieces(request: SvgPiecesSaveRequest): Promise<SvgPiecesSaveResult>;
+  };
+  readonly scores: {
+    /** Shows the save dialog and writes `request.musicXml` where the user chooses. */
+    save(request: ScoresSaveRequest): Promise<ScoresSaveResult>;
   };
   readonly recording: {
     /** Shows the save dialog for a Recording; the chosen target is the only place its bytes may be written. */

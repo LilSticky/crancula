@@ -124,19 +124,19 @@ the file back and compare Bars, pitches, key and tempo mark.
 
 ### Boundary
 
-- [ ] T022 [P] [US1] Red: `api/app/scores-save-request.spec.ts`: `parseScoresSaveRequest` rejects a non-object,
+- [x] T022 [P] [US1] Red: `api/app/scores-save-request.spec.ts`: `parseScoresSaveRequest` rejects a non-object,
   an extra or missing field, a non-string, a file name failing `isSafeFileName(name, 'musicxml')` (not
   `.musicxml`, device name, forbidden character, < 5 or > 255 characters), a text over 64 × 2²⁰ characters or
   without `<?xml` and `<score-partwise`, a label failing `isLabel`; accepts a valid request. Existing
   `svg-save-request.spec.ts` stays green with `isSafeFileName(name, 'svg')`.
-- [ ] T023 [US1] Green: `api/app/scores-save-request.ts`; generalise `isSafeSvgFileName` to
+- [x] T023 [US1] Green: `api/app/scores-save-request.ts`; generalise `isSafeSvgFileName` to
   `isSafeFileName(name, extension)` and share the length limit in `api/app/svg-save-request.ts`; `scores.save`
   in `api/app/crancula-api.ts`; export.
-- [ ] T024 [P] [US1] Red: `app/scores-ipc.spec.ts` with fake effects: rejected payload → no dialog; no window →
+- [x] T024 [P] [US1] Red: `app/scores-ipc.spec.ts` with fake effects: rejected payload → no dialog; no window →
   rejected; cancel → nothing written; saved → exact text at the chosen path, filter `['musicxml']`,
   `showOverwriteConfirmation`, default path in Documents with the suggested name; write error → `failed` with the
   code; the next save starts in the last folder (FR-002, FR-003, FR-018).
-- [ ] T025 [US1] Green: `app/scores-ipc.ts` (`SCORES_CHANNELS`, `ScoresEffects`, `registerScoresHandlers`);
+- [x] T025 [US1] Green: `app/scores-ipc.ts` (`SCORES_CHANNELS`, `ScoresEffects`, `registerScoresHandlers`);
   wire in `app/main.ts` with `dialog.showSaveDialog` looked up at call time; `scores.save` in `app/preload.ts`;
   in-memory `scores.save` with a failure switch in `src/app/core/crancula-api.token.ts`.
 

@@ -3,6 +3,7 @@ import {
   parsePlotterLibrarySnapshot,
   parseRecordingChooseRequest,
   parseRecordingWriteRequest,
+  parseScoresSaveRequest,
   parseSvgPiecesSaveRequest,
   parseSvgSaveRequest,
   parseTapeLibrarySnapshot,
@@ -13,6 +14,7 @@ import {
   type PlotterLibrarySnapshot,
   type RecordingChooseResult,
   type RecordingWriteResult,
+  type ScoresSaveResult,
   type SvgPiecesSaveRequest,
   type SvgPiecesSaveResult,
   type SvgSaveRequest,
@@ -141,6 +143,13 @@ export function createInMemoryCranculaApi(
         if (failures.plotter?.saveSvg === 'failed') {
           return Promise.resolve({status: 'failed', reason: 'the Plotter file could not be written'});
         }
+        return Promise.resolve({status: 'saved', filePath: `in-memory/${parsed.value.suggestedFileName}`});
+      },
+    },
+    scores: {
+      save: (request): Promise<ScoresSaveResult> => {
+        const parsed = parseScoresSaveRequest(request);
+        if (!parsed.ok) return Promise.resolve({status: 'rejected', reason: parsed.error});
         return Promise.resolve({status: 'saved', filePath: `in-memory/${parsed.value.suggestedFileName}`});
       },
     },

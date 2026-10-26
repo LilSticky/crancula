@@ -20,33 +20,32 @@ export type SvgSaveResult =
   | {readonly status: 'failed'; readonly reason: string};
 
 const FIELDS = ['suggestedFileName', 'svg', 'dialogTitle', 'filterName'] as const;
-/** The largest SVG document, in characters. */
-export const MAXIMUM_SVG_LENGTH = 64 * 2 ** 20;
+/** The largest document (a Plotter file or a Scores file), in characters. */
+export const MAXIMUM_DOCUMENT_LENGTH = 64 * 2 ** 20;
 const MAXIMUM_FILE_NAME_LENGTH = 255;
 const MINIMUM_FILE_NAME_LENGTH = 5;
 /** The longest text of a dialog, a button or a label, in characters. */
 export const MAXIMUM_LABEL_LENGTH = 200;
 // eslint-disable-next-line no-control-regex
 const CONTROL = /[\u0000-\u001f\u007f]/;
-const FILE_NAME = /^[^/\\:]*[^./\\:][^/\\:]*\.svg$/i;
+const STEM_CHARACTER = /[^.]/;
 
 /**
- * A Plotter file name: a `.svg` name of 5 to 255 characters with a stem, no forbidden character and no Windows
- * device name, the same rules `safeFileName` applies to the names the app builds.
+ * A file name with `extension` (without the dot, any case) of 5 to 255 characters: a stem, no forbidden character
+ * and no Windows device name, the same rules `safeFileName` applies to the names the app builds.
  */
-export function isSafeSvgFileName(name: string): boolean {
+export function isSafeFileName(name: string, extension: string): boolean {
+  const suffix = `.${extension}`;
+  if (name.length < MINIMUM_FILE_NAME_LENGTH || name.length > MAXIMUM_FILE_NAME_LENGTH) return false;
+  if (name.slice(-suffix.length).toLowerCase() !== suffix) return false;
   return (
-    name.length >= MINIMUM_FILE_NAME_LENGTH &&
-    name.length <= MAXIMUM_FILE_NAME_LENGTH &&
-    !FORBIDDEN_CHARACTERS.test(name) &&
-    !DEVICE_NAME.test(name) &&
-    FILE_NAME.test(name)
+    STEM_CHARACTER.test(name.slice(0, -suffix.length)) && !FORBIDDEN_CHARACTERS.test(name) && !DEVICE_NAME.test(name)
   );
 }
 
-/** An SVG document within the size limit: an XML declaration and an `<svg ` root. */
-export function isSvgDocument(svg: string): boolean {
-  return svg.length <= MAXIMUM_SVG_LENGTH && svg.startsWith('<?xml') && svg.includes('<svg ');
+/** A document within the size limit: an XML declaration and a start tag of `root` (such as `svg`). */
+export function isXmlDocument(text: string, root: string): boolean {
+  return text.length <= MAXIMUM_DOCUMENT_LENGTH && text.startsWith('<?xml') && text.includes(`<${root} `);
 }
 
 /** A text of 1 to 200 characters without control characters. */
@@ -68,8 +67,8 @@ export function parseSvgSaveRequest(input: unknown): Result<SvgSaveRequest, stri
   if (typeof dialogTitle !== 'string') return err('dialogTitle is not a string');
   if (typeof filterName !== 'string') return err('filterName is not a string');
 
-  if (!isSafeSvgFileName(suggestedFileName)) return err('suggestedFileName is not a safe .svg file name');
-  if (!isSvgDocument(svg)) return err('svg is not an SVG document within the size limit');
+  if (!isSafeFileName(suggestedFileName, 'svg')) return err('suggestedFileName is not a safe .svg file name');
+  if (!isXmlDocument(svg, 'svg')) return err('svg is not an SVG document within the size limit');
   for (const [field, text] of [
     ['dialogTitle', dialogTitle],
     ['filterName', filterName],

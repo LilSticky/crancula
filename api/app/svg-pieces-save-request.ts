@@ -1,5 +1,5 @@
 import {err, ok, type Result} from '../result';
-import {isLabel, isSafeSvgFileName, isSvgDocument, MAXIMUM_LABEL_LENGTH, MAXIMUM_SVG_LENGTH} from './svg-save-request';
+import {isLabel, isSafeFileName, isXmlDocument, MAXIMUM_DOCUMENT_LENGTH, MAXIMUM_LABEL_LENGTH} from './svg-save-request';
 
 /** One Tape piece as the renderer built it: its Plotter file name and its SVG document. */
 export interface SvgPiece {
@@ -71,9 +71,9 @@ function piecesOf(value: unknown): Result<readonly SvgPiece[], string> {
     if (!record.ok) return err(record.error);
     const {fileName, svg} = record.value;
     if (typeof fileName !== 'string') return err(`${path}.fileName is not a string`);
-    if (!isSafeSvgFileName(fileName)) return err(`${path}.fileName is not a safe .svg file name`);
+    if (!isSafeFileName(fileName, 'svg')) return err(`${path}.fileName is not a safe .svg file name`);
     if (typeof svg !== 'string') return err(`${path}.svg is not a string`);
-    if (!isSvgDocument(svg)) return err(`${path}.svg is not an SVG document within the size limit`);
+    if (!isXmlDocument(svg, 'svg')) return err(`${path}.svg is not an SVG document within the size limit`);
     pieces.push({fileName, svg});
   }
 
@@ -84,8 +84,8 @@ function piecesOf(value: unknown): Result<readonly SvgPiece[], string> {
     names.add(key);
   }
   const totalLength = pieces.reduce((sum, piece) => sum + piece.svg.length, 0);
-  if (totalLength > MAXIMUM_SVG_LENGTH) {
-    return err(`request.pieces svg of all pieces together exceed ${MAXIMUM_SVG_LENGTH} characters`);
+  if (totalLength > MAXIMUM_DOCUMENT_LENGTH) {
+    return err(`request.pieces svg of all pieces together exceed ${MAXIMUM_DOCUMENT_LENGTH} characters`);
   }
   return ok(pieces);
 }

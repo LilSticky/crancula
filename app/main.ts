@@ -12,6 +12,7 @@ import {createPlotterLibraryFile} from './plotter-library-file';
 import {registerPlotterLibraryHandlers} from './plotter-library-ipc';
 import {registerPlotterHandlers} from './plotter-ipc';
 import {registerRecordingHandlers} from './recording-ipc';
+import {registerScoresHandlers} from './scores-ipc';
 import {createTapeLibraryFile} from './tape-library-file';
 import {registerTapeLibraryHandlers} from './tape-library-ipc';
 import {windowOptions} from './window-options';
@@ -39,6 +40,16 @@ registerPlotterHandlers(
     showOpenDialog: (window, options) => dialog.showOpenDialog(window, options),
     showMessageBox: (window, options) => dialog.showMessageBox(window, options),
     exists: entryExists,
+    writeFile: (filePath, text) => fs.promises.writeFile(filePath, text, 'utf8'),
+    documentsFolder: () => app.getPath('documents'),
+  },
+  (event) => BrowserWindow.fromWebContents(event.sender),
+);
+registerScoresHandlers(
+  ipcMain,
+  {
+    // Looked up at call time, so e2e tests can replace the dialog.
+    showSaveDialog: (window, options) => dialog.showSaveDialog(window, options),
     writeFile: (filePath, text) => fs.promises.writeFile(filePath, text, 'utf8'),
     documentsFolder: () => app.getPath('documents'),
   },
