@@ -54,8 +54,23 @@ Decisions 25–28 on the domain-modeler's discovery questions (section C), with 
   Tape". Scores is "Noten" in German. Note values, rests, staves, clefs and voices are Scores words,
   not terms.
 
-Open questions found by the clarify scan are in [open-questions.md](open-questions.md); each is
-marked in this spec as `[NEEDS CLARIFICATION: Qn]`.
+### Session 2026-10-25/26 (clarify scan, [open-questions.md](open-questions.md))
+
+- Q: How does the user pick the Pipe ranges of the staves? → A: By pitch, with split notes: each
+  staff holds every pitch from its split note up to the next one; the lowest staff reaches all the
+  way down, the highest all the way up. Prefilled with one split at C4 when the Organ has Pipes on
+  both sides of it, else one staff (FR-005).
+- Q: Are the picked staves remembered? → A: Per Organ, as a UI preference (ADR 11): the next export
+  of any Tape of that Organ is prefilled with the split notes last used for it. Not stored on the
+  Organ or the Tape (FR-005).
+- Q: Which clef does each staff get? → A: Chosen by Crancula: treble clef if the middle of the
+  staff's Pipes' range is at or above C4, else bass clef; an octave clef (treble 8va or bass 8vb)
+  when that saves more than two ledger lines for most of its notes (FR-006).
+- Q: How are overlapping notes of different lengths written on one staff? → A: In further voices:
+  notes with the same start and length are a chord in one voice; a note that overlaps them with
+  another length goes into a second voice (stems up and down), a third or fourth if needed (FR-012).
+- Q: How does a Hole whose Pipe is not on the Organ appear? → A: As an ordinary note on the staff
+  whose range holds its pitch, with no mark (FR-007).
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -132,7 +147,8 @@ up to 1 Column), in 4/4 (32 Columns per Bar):
 6. **Given** two Holes in different rows of one staff that start on the same Column with the same
    length after gap closing, **Then** they are written as one chord.
 7. **Given** two Holes on one staff that overlap with different lengths, **Then** both are written
-   with their own lengths, readable as music. [NEEDS CLARIFICATION: Q4]
+   with their own lengths: the note that overlaps another chord or note with a different length goes
+   into a further voice of that staff, with stems up in voice 1 and down in voice 2.
 8. **Given** a Tape exported this way, **When** I look at it in Crancula, **Then** no Hole has been
    lengthened: gap closing happens only in the Scores.
 
@@ -152,16 +168,20 @@ staves picked by hand, and check which notes each staff holds and its clef.
 
 **Acceptance Scenarios**:
 
-1. **Given** the export dialog, **When** I look at the staves, **Then** they are prefilled and every
-   Pipe of the Organ belongs to exactly one staff. [NEEDS CLARIFICATION: Q1]
-2. **Given** the export dialog, **When** I add a staff, remove one or change which Pipes a staff
-   holds, **Then** the Scores have one staff per range I picked, from the highest Pipes at the top to
-   the lowest at the bottom, and each Hole is on the staff of its Pipe.
-3. **Given** a staff, **Then** it gets a clef that suits its Pipes. [NEEDS CLARIFICATION: Q3]
-4. **Given** I picked staves for a Tape and export another Tape of the same Organ later, **Then**
-   the dialog is prefilled as decided in [NEEDS CLARIFICATION: Q2].
-5. **Given** a Hole whose Pipe is not on the Organ, **When** I export, **Then** it is in the Scores
-   on the staff whose range holds its pitch. [NEEDS CLARIFICATION: Q5]
+1. **Given** the export dialog for an Organ with Pipes below and at or above C4, **When** I look at
+   the staves, **Then** there are two, split at C4; for an Organ with Pipes on one side of C4 only,
+   there is one staff. Every pitch belongs to exactly one staff.
+2. **Given** the export dialog, **When** I add a split note, remove one or move one, **Then** the
+   Scores have one staff per range between split notes, from the highest at the top to the lowest at
+   the bottom, and each Hole is on the staff whose range holds its Pipe's pitch.
+3. **Given** a staff whose Pipes' range has its middle at or above C4, **Then** it gets a treble
+   clef, else a bass clef; an octave clef (treble 8va or bass 8vb) when that saves more than two
+   ledger lines for most of its notes.
+4. **Given** I picked split notes for a Tape and export another Tape of the same Organ later,
+   **Then** the dialog is prefilled with those split notes. For another Organ it is prefilled as in
+   scenario 1.
+5. **Given** a Hole whose Pipe is not on the Organ, **When** I export, **Then** it is an ordinary
+   note, with no mark, on the staff whose range holds its pitch.
 
 ---
 
@@ -230,7 +250,7 @@ that no text is shown untranslated.
 - **A gap to the next Hole in the row that equals the Minimum Gap in Columns**: it is closed; one
   Column longer is not.
 - **A Hole whose Pipe is not on the Organ**: exported as its pitch (FR-007). Its Cutting Problem is
-  not shown in the Scores. [NEEDS CLARIFICATION: Q5]
+  not shown in the Scores: it is an ordinary note with no mark.
 - **The Organ has no Tape per Crank turn** (saved before Crank a tape and never completed): the
   Scores have no tempo mark; everything else is exported.
 - **A very slow or fast Crank speed**: the tempo mark is the computed value, rounded to a whole number
@@ -238,7 +258,7 @@ that no text is shown untranslated.
 - **The Song keeps a Key with flats** (e.g. F major): notes off the key are spelled to suit it (B
   flat, not A sharp). With no Key, C major and sharps.
 - **Very low or high Pipes** (e.g. a bass far below the staff): written at their true pitch on their
-  staff; the clef or octave sign follows Q3.
+  staff; the clef or octave clef follows FR-006.
 - **Exporting while the Preview plays**: allowed, as exporting is not an edit; the Preview keeps
   playing.
 - **Cancelling the export dialog or the save dialog**: nothing is written, no message is shown, and
@@ -270,15 +290,20 @@ that no text is shown untranslated.
   else MUST be refused with a message. Kept unchanged, the Song's Time signature changes MUST be used
   at their Columns; replaced, the chosen Time signature MUST apply to the whole Tape. What the user
   enters MUST NOT be stored, on the Tape, its Song or elsewhere.
-- **FR-005**: The Scores MUST have one staff per range of Pipes the user picks in the export dialog,
-  ordered from the highest Pipes at the top to the lowest at the bottom. The dialog MUST be prefilled
-  so that the user can export without picking. How ranges are picked, what they are prefilled with,
-  and whether they are remembered: [NEEDS CLARIFICATION: Q1, Q2].
-- **FR-006**: Each staff MUST have a clef suited to its Pipes. [NEEDS CLARIFICATION: Q3]
+- **FR-005**: The Scores MUST have one staff per range of pitches the user picks in the export
+  dialog by split notes: each staff holds every pitch from its split note up to the next one; the
+  lowest staff reaches all the way down, the highest all the way up. Staves MUST be ordered from the
+  highest range at the top to the lowest at the bottom. The dialog MUST be prefilled so that the user
+  can export without picking: with the split notes last used for the Tape's Organ, kept per Organ as
+  a UI preference (ADR 11) and not on the Organ or the Tape; else with one split at C4 when the Organ
+  has Pipes below C4 and at or above it, else one staff.
+- **FR-006**: Each staff MUST get a treble clef if the middle of its Pipes' range is at or above C4,
+  else a bass clef; an octave clef (treble 8va or bass 8vb) when that saves more than two ledger lines
+  for most of its notes. The user does not pick clefs.
 - **FR-007**: Every Hole of the Tape MUST be in the Scores as a note of its Pipe's pitch (the MIDI
   note number of its Pipe), at its start Column, on the staff that holds its Pipe, including Holes
-  whose Pipe is not on the Organ and Holes with other Cutting Problems. How a Hole whose Pipe is not
-  on the Organ is placed and shown: [NEEDS CLARIFICATION: Q5].
+  whose Pipe is not on the Organ and Holes with other Cutting Problems. A Hole whose Pipe is not on
+  the Organ MUST be an ordinary note, with no mark, on the staff whose range holds its pitch.
 - **FR-008**: Before note values are written, each Hole MUST be lengthened in the Scores to the
   start of the next Hole in its row when the gap between them is no longer than the Organ's Minimum
   Gap, rounded up to whole Columns (Minimum Gap ÷ Column length). A Hole MUST NOT be lengthened past
@@ -293,8 +318,9 @@ that no text is shown untranslated.
   one, and follow the Time signature(s) of FR-004. The Scores MUST cover every Column of the Tape,
   its last Bar filled with rests.
 - **FR-012**: Notes on one staff that start on the same Column with the same length (after FR-008)
-  MUST be written as one chord. Overlapping notes of different lengths on one staff: [NEEDS
-  CLARIFICATION: Q4].
+  MUST be written as one chord in one voice. A note that overlaps them with another length MUST go
+  into a further voice of that staff (voice 1 stems up, voice 2 stems down), up to four voices; which
+  note goes into which voice is decided in the plan.
 - **FR-013**: The Scores MUST carry a tempo mark in quarter notes per minute, computed from the
   Tape's Crank speed, the Organ's Tape per Crank turn and the Tape's Column length: Crank speed ×
   Tape per Crank turn ÷ (8 × Column length), rounded to a whole number, at least 1. If the Organ has

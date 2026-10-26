@@ -60,6 +60,7 @@ pitch is known (a Hole's Pipe is a MIDI note number), but the Organ can't play i
 
 ## Answers (user, 2026-10-25)
 
-Q4 A (further voices). Q1, Q2, Q3 and Q5 still open: the answers got mixed up between parallel prompts, so they must be asked again.
+Q4 A (further voices), 2026-10-25. Asked again on 2026-10-26 in one prompt: Q1 A (by pitch, split
+notes), Q2 A (per Organ, UI preference), Q3 A (Crancula chooses the clef), Q5 A (ordinary note).
 
-Not yet folded into spec.md: the [NEEDS CLARIFICATION] markers still stand.
+All folded into spec.md (Clarifications and FR-005, FR-006, FR-007, FR-012); no markers remain.
