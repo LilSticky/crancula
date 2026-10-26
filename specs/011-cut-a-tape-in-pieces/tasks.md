@@ -70,8 +70,8 @@ and the default Overlap, restart, see it again with the same values.
 
 ### UI
 
-- [ ] T014 [US1] Red: `src/app/features/plotter/plotter-library.store.spec.ts`: loads on startup, `put` and `remove` write all Plotters, load and save problems as in `organ-library.store.spec.ts`.
-- [ ] T015 [US1] Green: `src/app/features/plotter/plotter-library.store.ts`, provided at startup next to the Organ library.
+- [x] T014 [US1] Red: `src/app/features/plotter/plotter-library.store.spec.ts`: loads on startup, `put` and `remove` write all Plotters, load and save problems as in `organ-library.store.spec.ts`.
+- [x] T015 [US1] Green: `src/app/features/plotter/plotter-library.store.ts`, provided at startup next to the Organ library.
 - [ ] T016 [US1] Red: `src/app/features/plotter/plotter-list/plotter-list.component.spec.ts`: empty state `plotter-list-empty` with `new-plotter`; rows `plotter-row` by name with Working area ("300 × 120 mm" or roll with width) and Overlap; load problem `plotter-load-problem`; the rail lists "Plotters" (`src/app/features/rail/rail.component.spec.ts`).
 - [ ] T017 [US1] Green: `src/app/features/plotter/routes.ts` (`plotters`, `plotters/new`, `plotters/:id`, rail icon `content_cut`, leave guard on the editor routes), `plotter-list.component.ts`, `src/app.routes.ts`.
 - [ ] T018 [US1] Red: `src/app/features/plotter/plotter-editor/plotter-form.spec.ts` and `plotter-editor.component.spec.ts`: fields `plotter-name`, `plotter-format` (only SVG, chosen), `plotter-working-width`, `plotter-roll`, `plotter-working-length`, `plotter-overlap` (20 in a new Plotter); with the roll toggle on, working length and Overlap are hidden and not required, off again they come back with their values; each violation shows under its field (missing values only after editing, as the Organ form); German comma decimals read like points (scenario 7); `save-plotter` saves through the store and returns to the list.
