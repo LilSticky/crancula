@@ -1,11 +1,13 @@
+import {readFileSync} from 'node:fs';
 import {describe, expect, it} from 'vitest';
 import {midiNoteNumber} from '../organ/midi-note-number';
 import type {Millimetres} from '../organ/organ';
 import {validateOrgan} from '../organ/validate-organ';
 import {plotterSvg} from './plotter-svg';
 import {type Column, type ColumnCount, type Hole, type Tape} from './tape';
-import {tapeOf} from './tape-fixture';
+import {referenceOrgan, referenceTape, tapeOf} from './tape-fixture';
 import {tapeGeometry, type Slot, type TapeGeometry} from './tape-geometry';
+import type {CutGeometry} from './tape-piece-geometry';
 
 const STROKE = 'fill="none" stroke="#000000" stroke-width="0.1"/>';
 
@@ -206,6 +208,38 @@ describe('plotterSvg', () => {
 
     expect(svg).not.toContain('Secret');
     expect(paths(svg)).toHaveLength(2);
+  });
+
+  it('writes a CutGeometry built by hand as the same SVG, without a Tape', () => {
+    const geometry: CutGeometry = {
+      totalLength: 60,
+      width: 20,
+      slots: [slot({x: 10, y: 5, width: 6, height: 3, radius: 1.5})],
+      outline: {
+        tip: {x: 0, y: 0},
+        topEnd: {x: 60, y: 0},
+        bottomEnd: {x: 60, y: 20},
+        columnOneBottom: {x: 0, y: 20},
+      },
+    };
+
+    expect(plotterSvg(geometry)).toBe(
+      [
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        '<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="60mm" height="20mm" viewBox="0 0 60 20">',
+        `  <path d="M11.5,5 H14.5 A1.5,1.5 0 0 1 14.5,8 H11.5 A1.5,1.5 0 0 1 11.5,5 Z" ${STROKE}`,
+        `  <path d="M0,0 H60 V20 H0 Z" ${STROKE}`,
+        '</svg>',
+        '',
+      ].join('\n'),
+    );
+  });
+
+  it('writes the reference Tape byte-identical to the fixture recorded from today writer (SC-007)', () => {
+    const fixture = readFileSync(new URL('./plotter-svg.reference.svg', import.meta.url), 'utf8');
+    const organ = referenceOrgan();
+
+    expect(plotterSvg(tapeGeometry(referenceTape(organ), organ))).toBe(fixture);
   });
 
   it('writes a generated 10-minute Tape in under 5 s as one string (SC-005)', () => {

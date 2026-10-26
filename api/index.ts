@@ -160,4 +160,5 @@ export {
 } from './recording/recording-save-request';
 export {previewNoteWindows, type TimedPreviewNote} from './preview/preview-note-windows';
 export {plotterSvg} from './tape/plotter-svg';
+export type {CutGeometry} from './tape/tape-piece-geometry';
 export {tapeGeometry, type Point, type Slot, type TapeGeometry, type TapeOutline} from './tape/tape-geometry';

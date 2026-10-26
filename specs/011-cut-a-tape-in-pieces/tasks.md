@@ -41,8 +41,8 @@ folder, restart).
 
 Blocks US2–US4: the SVG writer reads only what a Tape piece has.
 
-- [ ] T003 Red: `api/tape/plotter-svg.spec.ts`: `plotterSvg` accepts a `CutGeometry` (`Pick<TapeGeometry, 'totalLength' | 'width' | 'slots' | 'outline'>`) built by hand, and for `tapeGeometry(referenceTape, referenceOrgan)` its output is byte-identical to a fixture string recorded from today's writer (SC-007).
-- [ ] T004 Green: `CutGeometry` type in `api/tape/tape-piece-geometry.ts`, `plotterSvg(geometry: CutGeometry)` in `api/tape/plotter-svg.ts`; export from `api/index.ts`.
+- [x] T003 Red: `api/tape/plotter-svg.spec.ts`: `plotterSvg` accepts a `CutGeometry` (`Pick<TapeGeometry, 'totalLength' | 'width' | 'slots' | 'outline'>`) built by hand, and for `tapeGeometry(referenceTape, referenceOrgan)` its output is byte-identical to a fixture string recorded from today's writer (SC-007).
+- [x] T004 Green: `CutGeometry` type in `api/tape/tape-piece-geometry.ts`, `plotterSvg(geometry: CutGeometry)` in `api/tape/plotter-svg.ts`; export from `api/index.ts`.
 
 **Checkpoint**: `npm run test:node` green; export unchanged; commit; STATUS.
 

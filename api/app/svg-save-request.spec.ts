@@ -23,14 +23,8 @@ describe('parseSvgSaveRequest', () => {
 
   it('accepts what plotterFileName and plotterSvg produce', () => {
     const svg = plotterSvg({
-      leadIn: 50,
-      columnLength: 2.5,
-      length: 600,
-      endGap: 2,
       totalLength: 652,
       width: 100,
-      border: 5,
-      rowCentres: [],
       slots: [],
       outline: {
         tip: {x: 0, y: 0},
