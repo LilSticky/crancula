@@ -44,7 +44,8 @@
       "TOO_CLOSE_PREVIOUS": "{{note}} in Spalte {{column}}: Der Abstand zum vorherigen Loch in Spalte {{previous}} beträgt {{gap}} mm, der Mindestabstand beträgt {{minimum}} mm.",
       "NO_PIPE": "{{note}} in Spalte {{column}}: Die Orgel hat keine Pfeife für diesen Ton.",
       "TOO_SHORT": "{{note}} in Spalte {{column}}: Das Loch ist {{length}} mm lang, die Mindestlochlänge beträgt {{minimum}} mm.",
-      "TOO_CLOSE": "{{note}} in Spalte {{column}}: Der Abstand zum nächsten Loch in Spalte {{next}} beträgt {{gap}} mm, der Mindestabstand beträgt {{minimum}} mm."
+      "TOO_CLOSE": "{{note}} in Spalte {{column}}: Der Abstand zum nächsten Loch in Spalte {{next}} beträgt {{gap}} mm, der Mindestabstand beträgt {{minimum}} mm.",
+      "NO_JOIN": "Spalten {{first}}–{{last}} sind länger als die Arbeitslänge von {{plotter}} ({{length}} mm), ohne Platz für eine Klebestelle"
     },
     "EXPORT": {
       "DIALOG_TITLE": "Für den Plotter exportieren",
@@ -53,7 +54,16 @@
       "FAILED": "Speichern fehlgeschlagen: {{reason}}",
       "RETRY": "Erneut versuchen",
       "PROBLEMS_TITLE": "Dieses Lochband kann noch nicht geschnitten werden",
-      "PROBLEMS_CLOSE": "Schließen"
+      "PROBLEMS_CLOSE": "Schließen",
+      "TOO_WIDE": "Dieses Lochband ist zu breit für die Arbeitsbreite des Plotters",
+      "PIECES_DIALOG_TITLE": "Bandstücke in einem Ordner speichern",
+      "PIECES_DIALOG_BUTTON": "Hier speichern",
+      "PIECES_REPLACE_MESSAGE": "Einige dieser Dateien gibt es schon. Sollen sie ersetzt werden?",
+      "PIECES_REPLACE": "Ersetzen",
+      "PIECES_CANCEL": "Abbrechen",
+      "PIECES_SAVED": "{{count}} Dateien in {{folder}} gespeichert",
+      "PIECES_FAILED": "{{file}} konnte nicht gespeichert werden: {{reason}}",
+      "PIECE_LABEL": "{{number}} von {{count}}"
     },
     "NAV": "Lochbänder",
     "VIEW": {
@@ -328,6 +338,15 @@
           "M1": "d"
         }
       }
+    },
+    "PLOTTER": {
+      "NONE": "Kein Plotter",
+      "DESCRIBE": "Plotter beschreiben…",
+      "PIECES": "In {{count}} Bandstücke schneiden",
+      "PIECES_ONE": "Passt in ein Bandstück",
+      "ROLL": "Rollenplotter: ein Bandstück",
+      "NO_JOIN": "Kann nicht in Bandstücke geschnitten werden: siehe Schnittprobleme",
+      "TOO_WIDE": "Das Lochband ist {{tapeWidth}} mm breit, die Arbeitsbreite des Plotters ist {{workingWidth}} mm"
     }
   },
   "ORGAN": {
@@ -460,5 +479,41 @@
     "MINIMIZE": "Minimieren",
     "CLOSE": "Schließen",
     "QUIT": "Beenden"
+  },
+  "PLOTTER": {
+    "NAV": "Plotter",
+    "LIST": {
+      "TITLE": "Plotter",
+      "SUBTITLE": "Jeder Plotter schneidet ein Lochband in Bandstücke, die in seinen Arbeitsbereich passen.",
+      "EMPTY": "Noch keine Plotter. Beschreibe den Schneideplotter, mit dem du Lochbänder schneidest.",
+      "NEW": "Plotter beschreiben",
+      "NAME": "Name",
+      "WORKING_AREA": "Arbeitsbereich",
+      "WORKING_AREA_VALUE": "{{length}} × {{width}} mm",
+      "ROLL_WIDTH": "Rolle, {{width}} mm breit",
+      "OVERLAP": "Klebezugabe",
+      "OVERLAP_VALUE": "{{overlap}} mm"
+    },
+    "EDITOR": {
+      "TITLE_NEW": "Neuer Plotter",
+      "TITLE": "Plotter",
+      "NAME": "Name",
+      "FORMAT": "Format",
+      "WORKING_WIDTH": "Arbeitsbreite",
+      "WORKING_LENGTH": "Arbeitslänge",
+      "OVERLAP": "Klebezugabe",
+      "ROLL": "Rollenplotter (schneidet jede Länge)",
+      "SAVE": "Speichern"
+    },
+    "ERROR": {
+      "NAME_REQUIRED": "Bitte gib einen Namen ein.",
+      "VALUE_REQUIRED": "Bitte gib einen Wert ein.",
+      "MUST_BE_POSITIVE": "Muss größer als 0 sein.",
+      "OVERLAP_NOT_BELOW_WORKING_LENGTH": "Die Klebezugabe muss kürzer als die Arbeitslänge sein."
+    },
+    "REMOVE": {
+      "ACTION": "Plotter entfernen",
+      "MESSAGE": "{{name}} entfernen? Lochbänder und Drehorgeln bleiben unverändert."
+    }
   }
 }
