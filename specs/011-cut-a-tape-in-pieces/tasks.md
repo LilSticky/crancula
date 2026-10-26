@@ -149,7 +149,7 @@ reference Plotter picked, gives a Cutting Problem for Columns 1–101; shortened
 
 - [x] T049 [P] [US4] Red: `api/tape/tape-pieces.spec.ts`: a roll plotter gives one piece of any length (FR-011) and `too-wide` when narrower than the tape width (scenario 2); `plotter-section.component.spec.ts` shows `TAPE.PLOTTER.ROLL`; `plotter-list.component.spec.ts` shows a roll plotter's Working area as roll with width and no Overlap.
 - [x] T050 [US4] Green: roll branches in `tape-pieces.ts`, `plotter-section.component.ts` and `plotter-list.component.ts` (whatever is still missing after US1–US3).
-- [ ] T051 [US4] Red→Green: extend `e2e/tape-pieces.spec.ts`: a 120 mm roll plotter exports one file through the save dialog (scenario 1); changed to 90 mm, export is refused with the too-wide reason (scenario 2).
+- [x] T051 [US4] Red→Green: extend `e2e/tape-pieces.spec.ts`: a 120 mm roll plotter exports one file through the save dialog (scenario 1); changed to 90 mm, export is refused with the too-wide reason (scenario 2).
 
 **Checkpoint**: commit; STATUS.
 
@@ -164,7 +164,7 @@ removing it turns the picker to "No Plotter".
 - [x] T053 [US5] Green: edit and remove in `plotter-editor.component.ts` and `plotter-list.component.ts`.
 - [x] T054 [P] [US5] Red: `tape-view.component.spec.ts`: a change of the picked Plotter in the store recomputes Tape pieces and Cutting Problems at once (scenario 1), and so does a change of the Organ (tape width, Lead-in, Minimum Gap, Pipes) or of the Tape's Column length (edge case); removing the picked Plotter shows "No Plotter" and its problems disappear (edge case); `plotter-section.component.spec.ts`: `plotter-describe` links to `/plotters/new` (scenario 5, FR-005).
 - [x] T055 [US5] Green: whatever the two specs still need in `plotter-section.component.ts` and `tape-view.component.ts`.
-- [ ] T056 [US5] Red→Green: extend `e2e/plotter-library.spec.ts`: change the working length and restart (scenario 1); remove the Plotter, the Tape view shows "No Plotter" and the Tapes are unchanged (scenario 3); from the Tape view, "Describe a Plotter…" opens the editor (scenario 5).
+- [x] T056 [US5] Red→Green: extend `e2e/plotter-library.spec.ts`: change the working length and restart (scenario 1); remove the Plotter, the Tape view shows "No Plotter" and the Tapes are unchanged (scenario 3); from the Tape view, "Describe a Plotter…" opens the editor (scenario 5).
 
 **Checkpoint**: commit; STATUS.
 
@@ -175,8 +175,8 @@ removing it turns the picker to "No Plotter".
 **Independent Test**: in German, describe a Plotter, trigger every validation message and the new Cutting
 Problem, export in pieces; no text is untranslated.
 
-- [ ] T057 [US6] Red→Green: `src/app/features/plotter/plotter-i18n.spec.ts` (like `tape-i18n.spec.ts`): every `PLOTTER.*`, `TAPE.PLOTTER.*`, `TAPE.CUTTING_PROBLEM.NO_JOIN` and `TAPE.EXPORT.PIECES_*` / `PIECE_LABEL` / `TOO_WIDE` key exists in en and de and is non-empty; every `PlotterViolationCode` has a `PLOTTER.ERROR.*` text; German uses Arbeitsbereich, Bandstück, Klebestelle, Klebezugabe.
-- [ ] T058 [US6] Red→Green: extend `e2e/tape-pieces.spec.ts` (or `e2e/tape-german.spec.ts`): in German, export in pieces writes "<Tape> 1 von 3.svg" …, and the picker, the piece count and the Cutting Problem are German (scenario 1).
+- [x] T057 [US6] Red→Green: `src/app/features/plotter/plotter-i18n.spec.ts` (like `tape-i18n.spec.ts`): every `PLOTTER.*`, `TAPE.PLOTTER.*`, `TAPE.CUTTING_PROBLEM.NO_JOIN` and `TAPE.EXPORT.PIECES_*` / `PIECE_LABEL` / `TOO_WIDE` key exists in en and de and is non-empty; every `PlotterViolationCode` has a `PLOTTER.ERROR.*` text; German uses Arbeitsbereich, Bandstück, Klebestelle, Klebezugabe.
+- [x] T058 [US6] Red→Green: extend `e2e/tape-pieces.spec.ts` (or `e2e/tape-german.spec.ts`): in German, export in pieces writes "<Tape> 1 von 3.svg" …, and the picker, the piece count and the Cutting Problem are German (scenario 1).
 
 **Checkpoint**: commit; STATUS.
 

@@ -287,3 +287,123 @@ test.describe('Cut a long Tape in pieces on the picked Plotter', () => {
     expect(afters).toEqual([76, 169]);
   });
 });
+
+/** The length in mm of the reference Tape as one piece: 600 mm of Columns and the 50 mm Lead-in, the Overlaps not added. */
+const REFERENCE_TAPE_MM = 652;
+
+/** Describes the roll plotter "Vinyl cutter": a working width of 120 mm, no working length and no Overlap. */
+async function describeVinylCutter(window: Page): Promise<void> {
+  await window.getByRole('link', {name: 'Plotters'}).click();
+  await window.getByTestId('new-plotter').click();
+  await window.getByTestId('plotter-name').fill('Vinyl cutter');
+  await window.getByTestId('plotter-roll').getByRole('switch').click();
+  await window.getByTestId('plotter-working-width').fill('120');
+  await expect(window.getByTestId('plotter-working-length')).toHaveCount(0);
+  await window.getByTestId('save-plotter').click();
+  await expect(window).toHaveURL(/#?\/plotters$/);
+}
+
+test.describe('Cut a Tape on a roll plotter', () => {
+  test.describe.configure({mode: 'serial'});
+  let launched: LaunchedApp;
+  let saves: SaveDialogStub;
+  let folder: string;
+
+  test.beforeAll(async () => {
+    launched = await launchApp();
+    await resizeWindowOrSkip(launched, 1280, 800);
+    saves = await stubSaveDialog(launched.app);
+    folder = await mkdtemp(join(tmpdir(), 'crancula-roll-'));
+    await defineReferenceOrgan(launched.window);
+    await describeVinylCutter(launched.window);
+    await createTapeFromSong(launched.window, 'Reel', notesAtQuarters('reel.mid', [0, 24]), {columnLength: COLUMN_LENGTH});
+  });
+
+  test.afterAll(async () => {
+    await launched.app.close();
+  });
+
+  test('exports the whole Tape as one file through the save dialog on a 120 mm roll plotter', async () => {
+    const {window} = launched;
+    await openTape(window, 'Reel');
+    await pickPlotter(window, 'Vinyl cutter');
+    await expect(window.getByTestId('plotter-pieces')).toContainText('Roll plotter: one Tape piece');
+    const target = join(folder, 'Reel.svg');
+    await saves.answerWith(target);
+
+    await window.getByTestId('export').click();
+
+    await expect(window.locator('.mat-mdc-snack-bar-container').filter({hasText: target})).toBeVisible();
+    const [call] = (await saves.calls()).slice(-1);
+    expect(basename(call?.defaultPath ?? '')).toBe('Reel.svg');
+    expect(documentWidth(await readFile(target, 'utf8'))).toBeCloseTo(REFERENCE_TAPE_MM, 2);
+  });
+
+  test('refuses the export with the too-wide reason and opens no save dialog once the roll is 90 mm wide', async () => {
+    const {window} = launched;
+    await window.getByRole('link', {name: 'Plotters'}).click();
+    await window.getByTestId('plotter-row').filter({hasText: 'Vinyl cutter'}).click();
+    await window.getByTestId('plotter-working-width').fill('90');
+    await window.getByTestId('save-plotter').click();
+    await expect(window).toHaveURL(/#?\/plotters$/);
+
+    await openTape(window, 'Reel');
+    await pickPlotter(window, 'Vinyl cutter');
+    await expect(window.getByTestId('plotter-too-wide')).toContainText('The Tape is 100 mm wide');
+    const savesBefore = (await saves.calls()).length;
+
+    await window.getByTestId('export').click();
+
+    await expect(window.getByRole('dialog').getByTestId('export-problem')).toHaveCount(1);
+    await expect(window.getByRole('dialog').getByTestId('export-problem')).toContainText('too wide for the Plotter');
+    expect(await saves.calls()).toHaveLength(savesBefore);
+    await window.getByRole('dialog').getByRole('button', {name: 'Close'}).click();
+  });
+});
+
+test.describe('Cut a Tape in pieces in German', () => {
+  test('names the picker, the piece count, the Cutting Problem and the piece files in German', async () => {
+    const launched = await launchApp();
+    const {app, window} = launched;
+    try {
+      await resizeWindowOrSkip(launched, 1280, 800);
+      const folders = await stubFolderDialog(app);
+      const folder = await mkdtemp(join(tmpdir(), 'crancula-pieces-german-'));
+      await defineReferenceOrgan(window);
+      await describeCuttingMat(window);
+      await createTapeFromSong(window, 'Waltz', notesAtQuarters('long.mid', [0, 24]), {columnLength: COLUMN_LENGTH});
+      await createTapeFromSong(window, 'Held', heldNote('held.mid'), {columnLength: COLUMN_LENGTH});
+      await window.getByTestId('language-switch').locator('[data-language="de"]').click();
+
+      // Held has a stretch of 101 Columns with no place for a Join: the Cutting Problem is German and refuses the export.
+      await pickPlotter(window, 'Cutting mat');
+      await expect(window.getByTestId('plotter-pieces')).toContainText('Schnittprobleme');
+      await expect(window.getByTestId('cutting-problems-count')).toHaveText(/^\s*1 Schnittproblem\s*$/);
+      await expect(window.getByTestId('cutting-problem-stretch')).toContainText('Spalten 1–101');
+      await expect(window.getByTestId('cutting-problem-stretch')).toContainText('Klebestelle');
+      await window.getByTestId('export').click();
+      await expect(window.getByRole('dialog').getByTestId('export-problem')).toContainText('Spalten 1–101');
+      await window.getByRole('dialog').getByRole('button', {name: 'Schließen'}).click();
+
+      // Waltz fits in three Tape pieces: the picker, the piece count and the file names are German.
+      await window.getByRole('link', {name: 'Lochbänder'}).click();
+      await window.getByTestId('open-tape').filter({hasText: 'Waltz'}).click();
+      await expect(window.getByTestId('tape-name').getByRole('heading', {level: 1})).toHaveText('Waltz');
+      await window.getByTestId('plotter-picker').click();
+      await expect(window.getByRole('option', {name: 'Kein Plotter'})).toBeVisible();
+      await window.getByRole('option', {name: 'Cutting mat'}).click();
+      await expect(window.getByTestId('plotter-picker')).toContainText('Cutting mat');
+      await expect(window.getByTestId('plotter-pieces')).toContainText('In 3 Bandstücke schneiden');
+      await folders.answerWith({canceled: false, filePaths: [folder]});
+
+      await window.getByTestId('export').click();
+
+      await expect(window.locator('.mat-mdc-snack-bar-container').filter({hasText: folder})).toBeVisible();
+      expect((await readdir(folder)).sort()).toEqual(['Waltz 1 von 3.svg', 'Waltz 2 von 3.svg', 'Waltz 3 von 3.svg']);
+      expect(await window.locator('body').innerText()).not.toMatch(/\bTAPE\.[A-Z_.]+/);
+      expect(await window.locator('body').innerText()).not.toMatch(/\bPLOTTER\.[A-Z_.]+/);
+    } finally {
+      await app.close();
+    }
+  });
+});
