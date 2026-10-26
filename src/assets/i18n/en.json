@@ -35,8 +35,8 @@
     },
     "CUTTING_PROBLEMS": {
       "TITLE": "Cutting Problems",
-      "COUNT": "{{count}} Holes can't be cut",
-      "COUNT_ONE": "{{count}} Hole can't be cut",
+      "COUNT": "{{count}} Cutting Problems",
+      "COUNT_ONE": "{{count}} Cutting Problem",
       "SHOW_HOLE": "Show {{note}} at Column {{column}} on the Tape",
       "NONE": "None"
     },
@@ -44,7 +44,8 @@
       "TOO_CLOSE_PREVIOUS": "{{note}} at Column {{column}}: the gap to the previous Hole at Column {{previous}} is {{gap}} mm, the Minimum Gap is {{minimum}} mm.",
       "NO_PIPE": "{{note}} at Column {{column}}: the Organ has no Pipe for this note.",
       "TOO_SHORT": "{{note}} at Column {{column}}: the Hole is {{length}} mm long, the Minimum Hole Length is {{minimum}} mm.",
-      "TOO_CLOSE": "{{note}} at Column {{column}}: the gap to the next Hole at Column {{next}} is {{gap}} mm, the Minimum Gap is {{minimum}} mm."
+      "TOO_CLOSE": "{{note}} at Column {{column}}: the gap to the next Hole at Column {{next}} is {{gap}} mm, the Minimum Gap is {{minimum}} mm.",
+      "NO_JOIN": "Columns {{first}}–{{last}} are longer than the working length of {{plotter}} ({{length}} mm) with no place for a Join"
     },
     "EXPORT": {
       "DIALOG_TITLE": "Export for the Plotter",
@@ -53,7 +54,16 @@
       "FAILED": "Saving failed: {{reason}}",
       "RETRY": "Retry",
       "PROBLEMS_TITLE": "This Tape can't be cut yet",
-      "PROBLEMS_CLOSE": "Close"
+      "PROBLEMS_CLOSE": "Close",
+      "TOO_WIDE": "This Tape is too wide for the Plotter's working width",
+      "PIECES_DIALOG_TITLE": "Save the Tape pieces in a folder",
+      "PIECES_DIALOG_BUTTON": "Save here",
+      "PIECES_REPLACE_MESSAGE": "Some of these files already exist. Replace them?",
+      "PIECES_REPLACE": "Replace",
+      "PIECES_CANCEL": "Cancel",
+      "PIECES_SAVED": "Saved {{count}} files in {{folder}}",
+      "PIECES_FAILED": "Couldn't save {{file}}: {{reason}}",
+      "PIECE_LABEL": "{{number}} of {{count}}"
     },
     "NAV": "Tapes",
     "VIEW": {
@@ -104,12 +114,12 @@
       "NEW_ORGAN": "Describe an Organ",
       "ORGAN": "Organ",
       "CHOOSE_ORGAN": "Choose an Organ",
-      "CHOOSE_SONG": "Choose a MIDI file",
+      "CHOOSE_SONG": "Choose a Song Source",
       "NAME": "Name of the Tape",
       "COLUMN_LENGTH": "Column length",
       "TRANSPOSITION": "Semitones",
       "CREATE": "Create Tape",
-      "SUBTITLE": "Choose a MIDI file, the Organ and the Parts. The Fit shows how the Song meets the Pipes before the Tape is created.",
+      "SUBTITLE": "Choose a Song Source, the Organ and the Parts. The Fit shows how the Song meets the Pipes before the Tape is created.",
       "GROUP_SONG": "Song",
       "GROUP_ORGAN": "Organ",
       "GROUP_TRANSPOSITION": "Transposition",
@@ -123,7 +133,9 @@
       "STATE_PROBLEMS": "{{count}} problems prevent creating the Tape",
       "STATE_PROBLEM_ONE": "1 problem prevents creating the Tape",
       "STATE_READY": "{{columns}} Columns, {{length}} mm of Tape",
-      "STATE_READY_ONE": "1 Column, {{length}} mm of Tape"
+      "STATE_READY_ONE": "1 Column, {{length}} mm of Tape",
+      "SCORE_HINT": "MIDI or MusicXML. Only a PDF or printed Scores?",
+      "SCORE_HINT_LINK": "How to get MusicXML"
     },
     "TRANSPOSITION": {
       "USE_PROPOSAL": "Use proposal",
@@ -134,10 +146,16 @@
       "PROPOSAL_ONE": "The proposal is {{semitones}} semitone: it puts the most Notes directly on a Pipe."
     },
     "SONG_REJECTION": {
-      "NOT_A_MIDI_FILE": "This file is not a MIDI file, or it is damaged or larger than 16 MiB.",
+      "NOT_A_MIDI_FILE": "This file is not a MIDI file, or it is damaged.",
       "FORMAT_2": "This MIDI file has several independent sequences (format 2). Save it as format 0 or 1 and try again.",
       "NOT_TIMED_IN_BEATS": "This MIDI file is timed in clock time (SMPTE) rather than in beats, so its Notes can't be placed on Columns.",
-      "NO_NOTES": "This MIDI file has no Notes in any Part that can go onto a Tape."
+      "NO_NOTES": "This MIDI file has no Notes in any Part that can go onto a Tape.",
+      "TOO_LARGE": "This file, or the Score inside it, is larger than 16 MiB.",
+      "NOT_A_SONG_SOURCE": "This file is neither a MIDI file nor a MusicXML Score.",
+      "PDF": "A PDF can't be read directly. Recognise its Notes with an outside tool and export them as MusicXML.",
+      "NOT_A_SCORE": "This file is not a readable MusicXML Score.",
+      "DAMAGED_ARCHIVE": "This compressed Score can't be read; it may be damaged.",
+      "NO_SCORE_IN_ARCHIVE": "This compressed Score contains no MusicXML Score."
     },
     "PARTS": {
       "TITLE": "Parts",
@@ -151,7 +169,7 @@
       "MATCHING_A_PIPE": "Notes matching a Pipe",
       "MOVED_BY_OCTAVES": "Notes moved by octaves",
       "UNPLAYABLE": "Unplayable Notes",
-      "EMPTY": "Choose a MIDI file and an Organ to see how the Song fits its Pipes.",
+      "EMPTY": "Choose a Song Source and an Organ to see how the Song fits its Pipes.",
       "UNPLAYABLE_WARNING": "{{count}} Unplayable Notes: no Pipe plays them, not even moved by octaves, so they are left off the Tape. Another Transposition may fit better.",
       "UNPLAYABLE_WARNING_ONE": "1 Unplayable Note: no Pipe plays it, not even moved by octaves, so it is left off the Tape. Another Transposition may fit better."
     },
@@ -180,12 +198,15 @@
         "SHORTENED": "Hole on Pipe {{pipe}} at Column {{column}} shortened from {{from}} to {{to}} Columns",
         "REPETITION_MERGED": "Repeated Holes on Pipe {{pipe}} at Column {{column}} merged, Column {{lost}} lost"
       },
-      "MOVED_NOTE_ONE": "{{note}} moved by 1 octave to Pipe {{pipe}} (Part {{part}}, Column {{column}})"
+      "MOVED_NOTE_ONE": "{{note}} moved by 1 octave to Pipe {{pipe}} (Part {{part}}, Column {{column}})",
+      "GRACE_NOTES_LEFT_OUT": "Grace notes left out",
+      "ORNAMENTS_LEFT_OUT": "Ornaments left out"
     },
     "SECTION": {
       "TOGGLE": "Show or hide the Tape details",
       "TITLE": "Tape",
       "ORGAN": "Organ",
+      "METRE": "Metre",
       "COLUMN_LENGTH": "Column length",
       "COLUMNS": "Columns",
       "LENGTH": "Length",
@@ -237,6 +258,19 @@
       "APPLY": "Transpose",
       "CANCEL": "Cancel"
     },
+    "RECORD": {
+      "BUTTON": "Record",
+      "PROGRESS": "Recording… {{percent}} %",
+      "SAVED": "Saved: {{name}}",
+      "FAILED": "Recording failed: {{reason}}",
+      "RETRY": "Retry",
+      "DIALOG_TITLE": "Record to a file",
+      "WAV_FILTER": "WAV audio",
+      "MP3_FILTER": "MP3 audio",
+      "NO_TAPE_PER_TURN": "Set the Organ's Tape per Crank turn to record this Tape",
+      "WHILE_PREVIEW": "Stop the Preview to record this Tape",
+      "TOO_LARGE": "the Recording is too large"
+    },
     "PREVIEW": {
       "PLAY": "Preview",
       "STOP": "Stop preview",
@@ -248,9 +282,74 @@
       "LENGTH": "Plays for {{time}}",
       "EDITING_PAUSED": "Editing is paused while the Preview plays",
       "UNAVAILABLE": "Set the Organ's Tape per Crank turn to hear this Tape",
+      "WHILE_RECORDING": "Wait for the Recording to finish",
       "OPEN_ORGAN": "Open the Organ",
       "CRANK_SPEED_SLIDER": "Crank speed",
       "OUTSIDE_RANGE": "Outside this Organ's Crank speed range ({{slowest}}–{{fastest}} turns/min)."
+    },
+    "SCORE_HOW_TO": {
+      "TITLE": "How to get MusicXML from printed Scores",
+      "STEP_1": "Install Audiveris, a music recognition tool.",
+      "STEP_2": "Open the PDF or the scan of your Score in Audiveris and let it recognise the Notes.",
+      "STEP_3": "Check and correct the result in a notation program such as MuseScore.",
+      "STEP_4": "Export the Score as MusicXML (.musicxml, .xml or .mxl).",
+      "STEP_5": "Choose the MusicXML file here.",
+      "CLOSE": "Close"
+    },
+    "METRE": {
+      "SEPARATOR": ", ",
+      "TIME_SIGNATURE": "{{beats}}/{{beatType}}",
+      "MAJOR": "{{key}} major",
+      "MINOR": "{{key}} minor",
+      "UPBEAT": "upbeat {{fraction}}",
+      "TONIC": {
+        "MAJOR": {
+          "0": "C",
+          "1": "G",
+          "2": "D",
+          "3": "A",
+          "4": "E",
+          "5": "B",
+          "6": "F♯",
+          "7": "C♯",
+          "M7": "C♭",
+          "M6": "G♭",
+          "M5": "D♭",
+          "M4": "A♭",
+          "M3": "E♭",
+          "M2": "B♭",
+          "M1": "F"
+        },
+        "MINOR": {
+          "0": "A",
+          "1": "E",
+          "2": "B",
+          "3": "F♯",
+          "4": "C♯",
+          "5": "G♯",
+          "6": "D♯",
+          "7": "A♯",
+          "M7": "A♭",
+          "M6": "E♭",
+          "M5": "B♭",
+          "M4": "F",
+          "M3": "C",
+          "M2": "G",
+          "M1": "D"
+        }
+      }
+    },
+    "PLOTTER": {
+      "NONE": "No Plotter",
+      "PICKER_LABEL": "Plotter",
+      "DESCRIBE": "Describe a Plotter…",
+      "PIECES": "Cut in {{count}} Tape pieces",
+      "PIECES_ONE": "Fits in one Tape piece",
+      "ROLL": "Roll plotter: one Tape piece",
+      "NO_JOIN": "Can't be cut in Tape pieces: see Cutting Problems",
+      "TOO_WIDE": "The Tape is {{tapeWidth}} mm wide, the Plotter's working width is {{workingWidth}} mm",
+      "TOO_WIDE_ACTION": "Pick a wider Plotter, or change the working width of this Plotter.",
+      "EDIT_PICKED": "Change this Plotter"
     }
   },
   "ORGAN": {
@@ -383,5 +482,45 @@
     "MINIMIZE": "Minimize",
     "CLOSE": "Close",
     "QUIT": "Quit"
+  },
+  "PLOTTER": {
+    "NAV": "Plotters",
+    "LIST": {
+      "TITLE": "Plotters",
+      "SUBTITLE": "Each Plotter cuts a Tape in Tape pieces that fit its Working area.",
+      "EMPTY": "No Plotters yet. Describe the plotter you cut Tapes with.",
+      "NEW": "Describe a Plotter",
+      "NAME": "Name",
+      "WORKING_AREA": "Working area",
+      "WORKING_AREA_VALUE": "{{length}} × {{width}} mm",
+      "ROLL_WIDTH": "roll, {{width}} mm wide",
+      "OVERLAP": "Overlap",
+      "OVERLAP_VALUE": "{{overlap}} mm",
+      "MORE_ACTIONS": "More actions for {{name}}"
+    },
+    "EDITOR": {
+      "TITLE_NEW": "New Plotter",
+      "TITLE": "Plotter",
+      "NAME": "Name",
+      "FORMAT": "Format",
+      "WORKING_WIDTH": "Working width",
+      "WORKING_LENGTH": "Working length",
+      "OVERLAP": "Overlap",
+      "ROLL": "Roll plotter (cuts any length)",
+      "SAVE": "Save"
+    },
+    "ERROR": {
+      "NAME_REQUIRED": "Please enter a name.",
+      "VALUE_REQUIRED": "Please enter a value.",
+      "MUST_BE_POSITIVE": "Must be greater than 0.",
+      "OVERLAP_NOT_BELOW_WORKING_LENGTH": "The Overlap must be shorter than the working length."
+    },
+    "REMOVE": {
+      "ACTION": "Remove Plotter"
+    },
+    "STORAGE": {
+      "LOAD_PROBLEM": "Your Plotters couldn't be loaded. The file was kept at {{backupPath}}. Your Organs still work.",
+      "SAVE_PROBLEM": "Your Plotters couldn't be saved: {{reason}}"
+    }
   }
 }

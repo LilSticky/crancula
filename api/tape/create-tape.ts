@@ -1,5 +1,6 @@
 import {minimumHoleLength, millimetres, type Millimetres, type Organ} from '../organ/organ';
 import {err, ok, type Result} from '../result';
+import type {LeftOut} from '../song/read-song-source';
 import type {PartIndex, Song} from '../song/song';
 import type {ImportSummary} from './import-summary';
 import {fixHoles, holeLimitsOf, mergeOverlaps} from './hole-fixes';
@@ -23,6 +24,8 @@ export interface CreateTapeInput {
   readonly name: string;
   /** In millimetres; checked here. */
   readonly columnLength: number;
+  /** Only for a Song from a Score: one entry per Part. Summed over the selected Parts into the Import Summary. */
+  readonly leftOut?: ReadonlyMap<PartIndex, LeftOut>;
 }
 
 export type TapeViolationCode =
@@ -48,6 +51,19 @@ function valid<T>(value: T | undefined, what: string): T {
 
 function validPartIndices(song: Song, selectedParts: ReadonlySet<PartIndex>): ReadonlySet<PartIndex> {
   return new Set([...selectedParts].filter((index) => index < song.parts.length));
+}
+
+/** The grace notes and ornaments left out of the selected Parts. */
+function leftOutOf(leftOut: ReadonlyMap<PartIndex, LeftOut>, selectedParts: ReadonlySet<PartIndex>): LeftOut {
+  let graceNotes = 0;
+  let ornaments = 0;
+  for (const [index, counts] of leftOut) {
+    if (selectedParts.has(index)) {
+      graceNotes += counts.graceNotes;
+      ornaments += counts.ornaments;
+    }
+  }
+  return {graceNotes, ornaments};
 }
 
 function violationsOf(input: CreateTapeInput, selectedParts: ReadonlySet<PartIndex>): TapeViolation[] {
@@ -116,6 +132,7 @@ export function createTape(input: CreateTapeInput): Result<CreatedTape, readonly
       movedByOctaves,
       unplayableNotes,
       holesFixed: [...merged.changes, ...fixed.changes],
+      ...(input.leftOut === undefined ? {} : {leftOut: leftOutOf(input.leftOut, selectedParts)}),
     },
   });
 }

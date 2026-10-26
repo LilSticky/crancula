@@ -22,6 +22,12 @@ const songRejections: Record<SongRejection, true> = {
   'format-2': true,
   'not-timed-in-beats': true,
   'no-notes': true,
+  'too-large': true,
+  'not-a-song-source': true,
+  pdf: true,
+  'not-a-score': true,
+  'damaged-archive': true,
+  'no-score-in-archive': true,
 };
 const tapeViolationCodes: Record<TapeViolationCode, true> = {
   'name-required': true,
@@ -47,6 +53,7 @@ const cuttingProblemCodes: Record<CuttingProblemCode, true> = {
   'no-pipe': true,
   'too-short': true,
   'too-close': true,
+  'no-join': true,
 };
 
 function keysUnder(tree: TranslationTree, path: string): readonly string[] {
@@ -178,4 +185,84 @@ describe('Tape texts', () => {
       }
     });
   }
+});
+
+const scoreHowToKeys = ['TITLE', 'STEP_1', 'STEP_2', 'STEP_3', 'STEP_4', 'STEP_5', 'CLOSE'] as const;
+const summaryRowKeys = ['GRACE_NOTES_LEFT_OUT', 'ORNAMENTS_LEFT_OUT'] as const;
+const metreModes = ['MAJOR', 'MINOR'] as const;
+const metreTonics = ['0', '1', '2', '3', '4', '5', '6', '7', 'M1', 'M2', 'M3', 'M4', 'M5', 'M6', 'M7'] as const;
+
+describe('Song wording in German', () => {
+  it('no German TAPE text calls a Song Lied, as the dictionary calls it Stück', () => {
+    const german = [...leavesUnder(de, 'TAPE'), 'ORGAN.LIST.NEXT_STEP'].map((key) => ({key, text: textAt(de, key) ?? ''}));
+
+    expect(german.filter(({text}) => /\bLied(er)?\b/.test(text)).map(({key}) => key)).toEqual([]);
+  });
+});
+
+describe('Song Source rejection texts (U6, U7)', () => {
+  const notAMidiFile = 'TAPE.SONG_REJECTION.NOT_A_MIDI_FILE';
+
+  for (const [language, tree] of [['English', en], ['German', de]] as const) {
+    it(`${language} NOT_A_MIDI_FILE does not mention a size or 16 MiB, since too-large says that`, () => {
+      expect(textAt(tree as TranslationTree, notAMidiFile)).toBeTruthy();
+      expect(textAt(tree as TranslationTree, notAMidiFile)).not.toMatch(/MiB|larger|größer/i);
+    });
+  }
+
+  it('the German texts under TAPE.SONG_REJECTION say "Notendatei" nowhere', () => {
+    const german = leavesUnder(de, 'TAPE.SONG_REJECTION').map((key) => textAt(de, key) ?? '');
+
+    expect(german.filter((text) => /Notendatei/.test(text))).toEqual([]);
+  });
+});
+
+describe('Score import texts (US6)', () => {
+  for (const key of scoreHowToKeys) {
+    const path = `TAPE.SCORE_HOW_TO.${key}`;
+
+    it(`${path} has an English and a German text`, () => {
+      expect(textAt(en as TranslationTree, path)).toBeTruthy();
+      expect(textAt(de, path)).toBeTruthy();
+    });
+  }
+
+  for (const row of summaryRowKeys) {
+    const path = `TAPE.SUMMARY.${row}`;
+
+    it(`${path} has an English and a German text`, () => {
+      expect(textAt(en as TranslationTree, path)).toBeTruthy();
+      expect(textAt(de, path)).toBeTruthy();
+    });
+  }
+
+  for (const mode of metreModes) {
+    for (const tonic of metreTonics) {
+      const path = `TAPE.METRE.TONIC.${mode}.${tonic}`;
+
+      it(`${path} has an English and a German text`, () => {
+        expect(textAt(en as TranslationTree, path)).toBeTruthy();
+        expect(textAt(de, path)).toBeTruthy();
+      });
+    }
+  }
+
+  for (const section of ['TAPE.SONG_REJECTION', 'TAPE.SCORE_HOW_TO', 'TAPE.SUMMARY', 'TAPE.METRE', 'TAPE.IMPORT']) {
+    it(`the German texts under ${section} use no Song, Part or Scores`, () => {
+      const german = leavesUnder(de, section).map((key) => textAt(de, key) ?? '');
+      for (const text of german) {
+        expect(text).not.toMatch(/\b(Songs?|Parts?|Scores?)\b/);
+      }
+    });
+  }
+
+  it('the German Score texts use Stimme, Noten and Notenquelle', () => {
+    const german = [...leavesUnder(de, 'TAPE.SUMMARY'), ...leavesUnder(de, 'TAPE.SCORE_HOW_TO'), ...leavesUnder(de, 'TAPE.IMPORT')]
+      .map((key) => textAt(de, key) ?? '')
+      .join(' ');
+
+    for (const word of ['Stimme', 'Noten', 'Notenquelle']) {
+      expect(german).toContain(word);
+    }
+  });
 });

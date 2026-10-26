@@ -1,8 +1,16 @@
 import type {EditCommand} from './edit-command';
 import type {Language} from './language';
 import type {SvgSaveRequest, SvgSaveResult} from './svg-save-request';
+import type {SvgPiecesSaveRequest, SvgPiecesSaveResult} from './svg-pieces-save-request';
+import type {
+  RecordingChooseRequest,
+  RecordingChooseResult,
+  RecordingWriteRequest,
+  RecordingWriteResult,
+} from '../recording/recording-save-request';
 import type {OrganLibrarySnapshot} from '../organ/organ-library-snapshot';
 import type {TapeLibrarySnapshot} from '../tape/tape-library-snapshot';
+import type {PlotterLibrarySnapshot} from '../plotter/plotter-library-snapshot';
 
 export type SnapshotLoadResult<S> =
   /** The snapshot file was read and is valid. */
@@ -23,6 +31,8 @@ export type OrganLibraryLoadResult = SnapshotLoadResult<OrganLibrarySnapshot>;
 export type OrganLibrarySaveResult = SnapshotSaveResult;
 export type TapeLibraryLoadResult = SnapshotLoadResult<TapeLibrarySnapshot>;
 export type TapeLibrarySaveResult = SnapshotSaveResult;
+export type PlotterLibraryLoadResult = SnapshotLoadResult<PlotterLibrarySnapshot>;
+export type PlotterLibrarySaveResult = SnapshotSaveResult;
 
 export type SetLanguageResult =
   | {readonly status: 'set'}
@@ -41,9 +51,21 @@ export interface CranculaApi {
     load(): Promise<TapeLibraryLoadResult>;
     save(snapshot: TapeLibrarySnapshot): Promise<TapeLibrarySaveResult>;
   };
+  readonly plotters: {
+    load(): Promise<PlotterLibraryLoadResult>;
+    save(snapshot: PlotterLibrarySnapshot): Promise<PlotterLibrarySaveResult>;
+  };
   readonly plotter: {
     /** Shows the save dialog and writes `request.svg` where the user chooses. */
     saveSvg(request: SvgSaveRequest): Promise<SvgSaveResult>;
+    /** Asks for a folder, asks once before replacing, and writes every Tape piece into it (ADR 28). */
+    savePieces(request: SvgPiecesSaveRequest): Promise<SvgPiecesSaveResult>;
+  };
+  readonly recording: {
+    /** Shows the save dialog for a Recording; the chosen target is the only place its bytes may be written. */
+    chooseFile(request: RecordingChooseRequest): Promise<RecordingChooseResult>;
+    /** Writes the rendered Recording to the target `chooseFile` returned. */
+    writeFile(request: RecordingWriteRequest): Promise<RecordingWriteResult>;
   };
   readonly app: {
     /** Tells the main process the language, so it can translate the application menu. */

@@ -1,4 +1,4 @@
-import {addHole, noteName, tapeGeometry, type Hole, type Organ, type Tape, type TapeGeometry} from '@api/index';
+import {addHole, noteName, tapeGeometry, type Hole, type NoJoinProblem, type Organ, type Tape, type TapeGeometry, type TapePieces} from '@api/index';
 import {formatNumber} from '../../shared/format-number';
 import {gripBars, gripRects, MIN_GRIP_PX, type Rect} from './hole-drag';
 import {pixelsPerMillimetre} from './pixels-per-millimetre';
@@ -140,6 +140,29 @@ export function gripsOf(holes: readonly (SelectableHole & Rect & {readonly selec
   if (only === undefined) return undefined;
   // The drawing is in px already, so one unit is one screen px.
   return {hole: {row: only.row, start: only.start}, bars: gripBars(only), hits: gripRects(only, 1)};
+}
+
+/**
+ * The Joins of a cut in px: a line at each Join, after the Column it follows counted from 1, and the Overlap band behind it.
+ * Nothing is drawn while no cut into Tape pieces exists (no Plotter, too wide, or a stretch with no Join).
+ */
+export function joinMarks(cut: TapePieces | undefined, scale: number) {
+  if (cut?.kind !== 'pieces') return [];
+  return cut.pieces.flatMap(({join}) => {
+    if (join === undefined) return [];
+    const x = join.at * scale;
+    return [{after: join.after, x, overlap: {x, width: (join.overlapEnd - join.at) * scale}}];
+  });
+}
+
+/** A band over the Columns of each stretch with no place for a Join, its first and last Column counted from 1, in px. */
+export function stretchMarks(stretches: readonly NoJoinProblem[], geometry: TapeGeometry, scale: number) {
+  return stretches.map(({start, last}) => ({
+    first: start + 1,
+    last: last + 1,
+    x: (geometry.leadIn + start * geometry.columnLength) * scale,
+    width: (last - start + 1) * geometry.columnLength * scale,
+  }));
 }
 
 /** Space between a Hole and its Cutting Problem ring, in px. */

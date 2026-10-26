@@ -17,7 +17,7 @@ import {BreakpointObserver} from '@angular/cdk/layout';
 import {toSignal} from '@angular/core/rxjs-interop';
 import {ActivatedRoute, Router, RouterLink} from '@angular/router';
 import {map} from 'rxjs';
-import {column, columnDuration, cuttingProblems, holesWithCuttingProblems, noteName, type HoleRef, type ImportSummary, type Organ, type Tape, tapeGeometry, type TapeGeometry, type Transposed} from '@api/index';
+import {column, columnDuration, cuttingProblems, holesWithCuttingProblems, noteName, type HoleRef, type ImportSummary, type NoJoinProblem, type Organ, type SongMetre, songMetre, type Tape, tapeGeometry, tapePieces, type TapeGeometry, type TapePieces, type Transposed} from '@api/index';
 import {canTranspose, holeRefsOf, selectionOfRefs} from './transpose-selection';
 import {crankSpeedChangeTo} from './crank-speed-change';
 import {holeAt, moveSpot, sameSpot, spotAt, type Spot, type TapeSelection} from './spot';
@@ -26,6 +26,7 @@ import {TransposeDialogComponent, type TransposeDialogData} from './transpose-di
 import {MatButton, MatIconButton} from '@angular/material/button';
 import {MatButtonToggle, MatButtonToggleGroup} from '@angular/material/button-toggle';
 import {MatIcon} from '@angular/material/icon';
+import {MatProgressSpinner} from '@angular/material/progress-spinner';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {MatTooltip} from '@angular/material/tooltip';
 import {TranslatePipe, TranslateService} from '@ngx-translate/core';
@@ -66,12 +67,15 @@ import {selectedHoleView} from './selected-hole/selected-hole-view';
 import {stageMetrics} from './stage-metrics';
 import {TapeEditor} from './tape-editor';
 import {TapePreview} from '../preview/tape-preview';
+import {TapeRecorder} from '../recording/tape-recorder';
 import {PreviewSectionComponent} from '../preview/preview-section/preview-section.component';
-import {columnMarks, drawingParams, drawingWidth, ghostRect, gripsOf, holeMarks, holeRects, outline, overviewOf, rowLabels, RULER_HEIGHT, sectionView, spotRect} from './tape-drawing';
+import {columnMarks, drawingParams, drawingWidth, ghostRect, gripsOf, holeMarks, holeRects, joinMarks, outline, overviewOf, rowLabels, RULER_HEIGHT, sectionView, spotRect, stretchMarks} from './tape-drawing';
 import {TapeSectionComponent} from './tape-section/tape-section.component';
 import {TapeStatusLineComponent, type PointerText} from './tape-status-line/tape-status-line.component';
 import {overviewFrame, scrollLeftFor} from './overview-frame';
 import {PlotterExport} from './plotter-export';
+import {PlotterSectionComponent} from './plotter-section/plotter-section.component';
+import {PlotterPreference} from '../../plotter/plotter-preference';
 import {pointerAt} from './pointer-at';
 import {pixelsPerMillimetre, type Zoom} from './pixels-per-millimetre';
 import {visibleColumns} from './visible-columns';
@@ -146,12 +150,15 @@ const PLAYHEAD_GRIP_WIDTH = 44;
 /** The shell's query: below this width the side panel gives way to a toggle. */
 const COMPACT_QUERY = '(max-width: 1179.98px)';
 
+/** The query for the window width below which German labels crowd the page head actions into icons. */
+const GERMAN_ACTIONS_QUERY = '(max-width: 1439.98px)';
+
 /** One Tape. Right after an import, the navigation state carries the Import Summary. */
 @Component({
   selector: 'cranc-tape-view',
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [TapeEditor, TapePreview],
-  imports: [ImportSummaryComponent, TranslatePipe, RouterLink, PageHeadComponent, MatButton, MatIconButton, MatTooltip, MatButtonToggle, MatButtonToggleGroup, MatIcon, AddHoleComponent, CuttingProblemsComponent, SelectedHoleComponent, TapeSectionComponent, PreviewSectionComponent, TapeStatusLineComponent],
+  imports: [ImportSummaryComponent, TranslatePipe, RouterLink, PageHeadComponent, MatButton, MatIconButton, MatTooltip, MatButtonToggle, MatButtonToggleGroup, MatIcon, MatProgressSpinner, AddHoleComponent, CuttingProblemsComponent, SelectedHoleComponent, TapeSectionComponent, PlotterSectionComponent, PreviewSectionComponent, TapeStatusLineComponent],
   templateUrl: './tape-view.component.html',
   styleUrl: './tape-view.component.scss',
   host: {'(keydown)': 'onViewKeydown($event)'},
@@ -162,6 +169,7 @@ export class TapeViewComponent {
   private readonly router = inject(Router);
   protected readonly editor = inject(TapeEditor);
   protected readonly preview = inject(TapePreview);
+  protected readonly recorder = inject(TapeRecorder);
   private readonly platform = inject(PLATFORM);
   /** The shortcuts of Undo and Redo as the tooltips name them. */
   protected readonly shortcuts = shortcutsOf(this.platform);
@@ -193,6 +201,7 @@ export class TapeViewComponent {
   protected readonly frameRect = signal<{readonly x: number; readonly y: number; readonly width: number; readonly height: number} | undefined>(undefined);
   protected readonly dragging = this.holeDrag.dragging;
   protected readonly plotterExport = inject(PlotterExport);
+  private readonly plotterPreference = inject(PlotterPreference);
   private readonly language = inject(LanguagePreference).language;
   protected readonly rulerHeight = RULER_HEIGHT;
   protected readonly zooms: readonly {readonly zoom: Zoom; readonly label: string}[] = [
@@ -207,6 +216,14 @@ export class TapeViewComponent {
   protected readonly compact = toSignal(this.breakpoints.observe(COMPACT_QUERY).pipe(map((state) => state.matches)), {
     initialValue: this.breakpoints.isMatched(COMPACT_QUERY),
   });
+  private readonly translateLanguage = toSignal(this.translate.onLangChange.pipe(map((event) => event.lang)), {
+    initialValue: this.translate.getCurrentLang() ?? 'en',
+  });
+  private readonly germanNarrow = toSignal(this.breakpoints.observe(GERMAN_ACTIONS_QUERY).pipe(map((state) => state.matches)), {
+    initialValue: this.breakpoints.isMatched(GERMAN_ACTIONS_QUERY),
+  });
+  /** Whether the page head actions show their icons only: when the window is compact, or German labels would crowd them. */
+  protected readonly compactActions = computed(() => this.compact() || (this.translateLanguage() === 'de' && this.germanNarrow()));
   protected readonly sidePanelOpen = signal(false);
   protected readonly saveProblem = this.library.saveProblem;
   private readonly pointer = signal<{readonly column: number; readonly mm: number; readonly row: number | undefined} | undefined>(undefined);
@@ -233,6 +250,7 @@ export class TapeViewComponent {
   private readonly scrollElement = viewChild<ElementRef<HTMLElement>>('scroll');
   private readonly stage = stageMetrics(this.scrollElement);
   private readonly drawingSvg = viewChild<ElementRef<SVGSVGElement>>('tapeSvg');
+  private readonly cuttingProblemsSection = viewChild(CuttingProblemsComponent);
   private readonly selection = signal<TapeSelection>({holes: []});
   /** The Holes selected, or none while a Spot is. */
   private readonly holeSelection = computed((): HoleSelection => {
@@ -245,6 +263,8 @@ export class TapeViewComponent {
     return 'spot' in selection ? selection.spot : undefined;
   });
   private scrollToSelection = false;
+  /** The first Column, counted from 1, of a chosen stretch whose mark is brought into view on the next render. */
+  private stretchInView: number | undefined;
 
   protected readonly importSummary = signal(importSummaryOf(this.router.currentNavigation()?.extras.state));
   private readonly id = toSignal(inject(ActivatedRoute).paramMap.pipe(map((params) => params.get('id'))), {
@@ -253,6 +273,13 @@ export class TapeViewComponent {
   protected readonly tape = computed(() => {
     const id = this.id();
     return id === null ? undefined : this.library.tapeEntities().find((tape) => tape.id === id);
+  });
+
+  /** The metre of the Tape's Song: its first Time signature, Key and upbeat; nothing while the Song is not found. */
+  protected readonly metre = computed<SongMetre>(() => {
+    const songId = this.tape()?.songId;
+    const song = this.library.songEntities().find((candidate) => candidate.id === songId);
+    return song ? songMetre(song) : {};
   });
 
   /** The Tape as drawn: the would-be Tape while a Hole is dragged. */
@@ -290,6 +317,23 @@ export class TapeViewComponent {
     const tape = this.shownTape();
     const organ = this.organ();
     return tape === undefined || organ === undefined ? undefined : tapeGeometry(tape, organ);
+  });
+
+  /** The Tape pieces of the shown Tape (the would-be Tape while dragging) for the picked Plotter, as the drawing and the Plotter section show them. */
+  protected readonly shownCut = computed((): TapePieces | undefined => {
+    const geometry = this.geometry();
+    const plotter = this.plotterPreference.picked();
+    return geometry === undefined || plotter === undefined ? undefined : tapePieces(geometry, plotter);
+  });
+
+  /** The stretches of the shown Tape that no Join of the picked Plotter cuts within its working length; none without a Plotter. */
+  protected readonly stretchProblems = computed((): readonly NoJoinProblem[] => {
+    const cut = this.shownCut();
+    const plotter = this.plotterPreference.picked();
+    if (cut?.kind !== 'no-join' || plotter === undefined || plotter.roll) return [];
+    return cut.stretches.map(
+      ({first, last}): NoJoinProblem => ({code: 'no-join', start: first, last, plotterName: plotter.name, workingLengthMm: plotter.workingLength}),
+    );
   });
 
   protected readonly scale = computed(() => {
@@ -382,6 +426,8 @@ export class TapeViewComponent {
         this.shownSelection(),
       ),
       ...columnMarks(tape, geometry, scale, range),
+      joins: joinMarks(this.shownCut(), scale),
+      stretches: stretchMarks(this.stretchProblems(), geometry, scale),
       ...outline(geometry, scale),
       // The Whole Tape fills the stage without a scroll, so only the other zooms leave room for the end grip.
       svgWidth: drawingWidth(geometry, scale, this.zoom() !== 'whole'),
@@ -389,10 +435,33 @@ export class TapeViewComponent {
     };
   });
 
+  /** The translation key of why Record is unavailable, or `undefined` when the Tape can be recorded now. */
+  protected readonly recordBlockedBy = computed((): string | undefined => {
+    const tape = this.tape();
+    const organ = this.organ();
+    if (tape === undefined || organ === undefined || columnDuration(tape, organ) === undefined) return 'TAPE.RECORD.NO_TAPE_PER_TURN';
+    if (this.preview.playing()) return 'TAPE.RECORD.WHILE_PREVIEW';
+    return undefined;
+  });
+
+  /** The percent of a Recording that is rendering or encoding; `undefined` in the other steps. */
+  protected readonly recordPercent = computed((): number | undefined => {
+    const state = this.recorder.state();
+    return state.status === 'rendering' || state.status === 'encoding' ? Math.round(state.progress * 100) : undefined;
+  });
+
+  protected record(): void {
+    // The button stays focusable with its reason, so a click reaches here while it is blocked: it does nothing then.
+    if (this.recordBlockedBy() !== undefined || this.recorder.recording()) return;
+    const tape = this.tape();
+    const organ = this.organ();
+    if (tape !== undefined && organ !== undefined) void this.recorder.record(tape, organ);
+  }
+
   protected exportTape(): void {
     const tape = this.tape();
     const organ = this.organ();
-    if (tape !== undefined && organ !== undefined) void this.plotterExport.export(tape, organ);
+    if (tape !== undefined && organ !== undefined) void this.plotterExport.export(tape, organ, this.plotterPreference.picked());
   }
 
   protected readonly canTranspose = computed(() => {
@@ -431,6 +500,17 @@ export class TapeViewComponent {
     if (row === undefined || row < 0) return;
     this.selection.set({holes: [{row: row + 1, start: hole.start}]});
     this.scrollToSelection = true;
+  }
+
+  /** Selects nothing and brings the first Column of a stretch, where its mark is drawn, into view. */
+  protected chooseStretch(stretch: NoJoinProblem): void {
+    this.selection.set({holes: []});
+    this.stretchInView = stretch.start + 1;
+  }
+
+  /** Shows the Cutting Problems section in the side panel and focuses it, for the Plotter section's link to them. */
+  protected revealCuttingProblems(): void {
+    this.cuttingProblemsSection()?.reveal();
   }
 
   /** Whether the Organ can play the Tape: it needs a Tape per Crank turn. */
@@ -534,6 +614,9 @@ export class TapeViewComponent {
       this.preview.stop();
       return;
     }
+    // The button stays focusable with its reason, so a click reaches here while it is unavailable: it does nothing then.
+    // A Recording renders the Tape on its own; the Preview waits for it.
+    if (!this.previewAvailable() || this.recorder.recording()) return;
     this.playFromPlayhead();
   }
 
@@ -1069,6 +1152,12 @@ export class TapeViewComponent {
       const element = this.scrollElement()?.nativeElement;
       if (element === undefined) return;
       this.stage.readStage(element);
+      if (this.stretchInView !== undefined) {
+        const first = this.stretchInView;
+        this.stretchInView = undefined;
+        element.querySelector(`[data-testid="stretch-mark"][data-first="${first}"]`)?.scrollIntoView({block: 'nearest', inline: 'start'});
+        return;
+      }
       if (!this.scrollToSelection) return;
       const selected = element.querySelector('rect.selected');
       if (selected !== null) {

@@ -2,7 +2,7 @@ import {TestBed} from '@angular/core/testing';
 import {MAT_DIALOG_DATA, MatDialogRef} from '@angular/material/dialog';
 import {TranslateService} from '@ngx-translate/core';
 import {vi} from 'vitest';
-import {provideTestTranslations} from '../../../../testing/test-translations';
+import {provideTestTranslations} from '../../../../../testing/test-translations';
 import type {LeaveProblem, UnsavedChanges} from '../leave-unsaved.guard';
 import {LeaveUnsavedDialogComponent} from './leave-unsaved-dialog.component';
 

@@ -1,9 +1,10 @@
-import {mkdtemp, readdir} from 'node:fs/promises';
+import {mkdtemp, readdir, rm, writeFile} from 'node:fs/promises';
 import {readFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {expect, test} from '@playwright/test';
 import {encodeSmf} from '../api/song/midi/smf-test-helper';
+import {scoreXml, type ScoreSpec} from '../api/song/musicxml/score-test-helper';
 import {launchApp} from './support/launch-app';
 import {melodyC3ToC5, notAMidiFile, type MidiFilePayload} from './support/midi-file';
 import {saveOrgan} from './support/organ-editor';
@@ -137,7 +138,7 @@ test.describe('I can edit a Tape in German', () => {
       await window.locator('[data-testid="tape-scroll"] svg').focus();
       await window.keyboard.press('Shift+ArrowLeft');
       await expect(window.getByTestId('cutting-problem')).toHaveCount(1);
-      await expect(window.getByTestId('cutting-problems-count')).toContainText('kann nicht geschnitten werden');
+      await expect(window.getByTestId('cutting-problems-count')).toContainText('Schnittproblem');
       await expect(window.getByTestId('cutting-problem')).toContainText('Mindestlochlänge');
       await collect();
 
@@ -189,14 +190,14 @@ test.describe('I can bring a Song onto a Tape in German', () => {
     };
 
     await window.getByRole('link', {name: 'Lochbänder'}).click();
-    await window.getByRole('link', {name: 'Ein Lied auf ein Lochband bringen'}).click();
+    await window.getByRole('link', {name: 'Ein Stück auf ein Lochband bringen'}).click();
     await expect(window.getByTestId('import-form')).toBeVisible();
     await collect();
 
     await window.getByTestId('song-file').setInputFiles(notAMidiFile());
-    await expect(window.getByTestId('song-rejection')).toHaveAttribute('data-code', 'not-a-midi-file');
+    await expect(window.getByTestId('song-rejection')).toHaveAttribute('data-code', 'not-a-song-source');
     const rejection = (await window.getByTestId('song-rejection').innerText()).trim();
-    expect(rejection).toContain('keine MIDI-Datei');
+    expect(rejection).toContain('weder eine MIDI-Datei noch MusicXML-Noten');
     await collect();
 
     await window.getByTestId('song-file').setInputFiles(melodyC3ToC5());
@@ -247,7 +248,7 @@ test.describe('I can transpose Holes in German', () => {
       await holeAt(window, second.row, second.start).click({modifiers: [process.platform === 'darwin' ? 'Meta' : 'Control']});
       await expect(window.getByTestId('selection-count')).toHaveText('2 Löcher ausgewählt');
 
-      await expect(window.getByTestId('transpose')).toHaveText(germanTapeText('TRANSPOSE', 'BUTTON'));
+      await expect(window.getByTestId('transpose')).toHaveAccessibleName(germanTapeText('TRANSPOSE', 'BUTTON'));
       await window.getByTestId('transpose').click();
       const dialog = window.getByRole('dialog');
       await expect(window.getByTestId('transpose-dialog')).toBeVisible();
@@ -260,6 +261,86 @@ test.describe('I can transpose Holes in German', () => {
       expect(await window.locator('body').innerText()).not.toMatch(/\bTAPE\.[A-Z_.]+/);
     } finally {
       await app.close();
+    }
+  });
+});
+
+/**
+ * A Score of one Part on one staff: a grace Note before the first Note, and a Note with a trill mark. Its Notes lie
+ * within the Pipes C4 to C5, so the Import Summary is the only thing that explains what was left out.
+ */
+const ORNAMENTED: ScoreSpec = {
+  workTitle: 'Verzierungen',
+  parts: [
+    {
+      name: 'Klavier',
+      measures: [
+        {
+          number: 1,
+          entries: [
+            {kind: 'attributes', divisions: 1, time: {beats: 4, beatType: 4}, clef: {sign: 'G', line: 2}},
+            {kind: 'note', pitch: {step: 'C', octave: 5}, grace: true, staff: 1, voice: 1},
+            {kind: 'note', pitch: {step: 'G', octave: 4}, duration: 1, staff: 1, voice: 1, ornaments: ['trill-mark']},
+            {kind: 'note', pitch: {step: 'A', octave: 4}, duration: 1, staff: 1, voice: 1},
+            {kind: 'note', pitch: {step: 'B', octave: 4}, duration: 1, staff: 1, voice: 1},
+            {kind: 'note', pitch: {step: 'C', octave: 5}, duration: 1, staff: 1, voice: 1},
+          ],
+        },
+      ],
+    },
+  ],
+};
+
+test.describe('I can import a Score in German', () => {
+  test('shows the Score import, its Import Summary and the how-to in German, without translation keys', async () => {
+    test.setTimeout(120_000);
+    const folder = await mkdtemp(join(tmpdir(), 'crancula-german-score-'));
+    const musicXmlPath = join(folder, 'verzierungen.musicxml');
+    await writeFile(musicXmlPath, scoreXml(ORNAMENTED));
+
+    const {app, window} = await launchApp();
+    try {
+      await defineOctaveOrgan(window, 'Drehorgel');
+      await window.getByTestId('language-switch').locator('[data-language="de"]').click();
+      const seen: string[] = [];
+      const collect = async (): Promise<void> => {
+        seen.push(await window.locator('body').innerText());
+      };
+
+      await window.getByRole('link', {name: 'Lochbänder'}).click();
+      await window.getByRole('link', {name: 'Ein Stück auf ein Lochband bringen'}).click();
+      await expect(window.getByTestId('choose-song')).toContainText('Notenquelle wählen');
+      await expect(window.getByTestId('score-how-to-open')).toContainText('So kommst du zu MusicXML');
+      await collect();
+
+      await window.getByTestId('score-how-to-open').click();
+      const howTo = window.getByRole('dialog');
+      await expect(howTo).toContainText(germanTapeText('SCORE_HOW_TO', 'TITLE'));
+      await expect(howTo.getByRole('listitem')).toHaveCount(5);
+      await expect(window.getByTestId('score-how-to-close')).toContainText(germanTapeText('SCORE_HOW_TO', 'CLOSE'));
+      await collect();
+      await window.getByTestId('score-how-to-close').click();
+      await expect(howTo).toHaveCount(0);
+
+      await window.getByTestId('song-file').setInputFiles(musicXmlPath);
+      await expect(window.getByTestId('song-file-name')).toHaveText('verzierungen.musicxml');
+      await window.getByTestId('name').fill('Verzierungen');
+      await window.getByTestId('create-tape').click();
+      await expect(window.getByTestId('tape-name').getByRole('heading', {level: 1})).toHaveText('Verzierungen');
+
+      const summary = window.getByTestId('import-summary');
+      await expect(summary).toBeVisible();
+      await expect(summary).toContainText(germanTapeText('SUMMARY', 'GRACE_NOTES_LEFT_OUT'));
+      await expect(summary).toContainText(germanTapeText('SUMMARY', 'ORNAMENTS_LEFT_OUT'));
+      await expect(summary.getByTestId('grace-notes-left-out-value')).toHaveText('1');
+      await expect(summary.getByTestId('ornaments-left-out-value')).toHaveText('1');
+      await collect();
+
+      expect(seen.join('\n')).not.toMatch(/\bTAPE\.[A-Z_.]+/);
+      expect(await window.locator('body').innerText()).not.toMatch(/\bTAPE\.[A-Z_.]+/);
+    } finally {
+      await app.close();
+      await rm(folder, {recursive: true, force: true});
     }
   });
 });

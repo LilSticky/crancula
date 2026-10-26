@@ -8,9 +8,9 @@ import {defaultSelectedParts} from '../song/song';
 import {createTape} from './create-tape';
 import {DEFAULT_CRANK_SPEED} from './crank-speed';
 import {proposeTransposition} from './transposition';
-import {cuttingProblems, holesWithCuttingProblems} from './cutting-problems';
+import {cuttingProblems, holesWithCuttingProblems, type CuttingProblem} from './cutting-problems';
 import {column, columnCount, type Hole, type Tape, type TapeFields, type TapeId} from './tape';
-import {tapeOf as validTapeOf} from './tape-fixture';
+import {plotterOf, referenceOrgan, referencePlotter, tapeOf as validTapeOf} from './tape-fixture';
 
 function defined<T>(value: T | undefined, what: string): T {
   if (value === undefined) throw new Error(`invalid test value: ${what}`);
@@ -231,5 +231,94 @@ describe('holesWithCuttingProblems', () => {
     const tape = tapeOf(organ, 2.5, [hole(first, 0, 1), hole(first, 2, 6), hole(second, 20, 21)]);
 
     expect(holesWithCuttingProblems(cuttingProblems(tape, organ))).toHaveLength(3);
+  });
+});
+
+/** A Tape on the reference Organ of spec 003: Column length 3 mm and 200 Columns unless `length` says otherwise. */
+function referenceTapeOf(holes: readonly Hole[], length = 200): Tape {
+  return validTapeOf({...tapeFields(referenceOrgan(), 3, holes), length: defined(columnCount(length), `length ${length}`)});
+}
+
+describe('cuttingProblems with a sheet Plotter (FR-015, FR-018)', () => {
+  it('reports a stretch that needs a Join but has none as no-join, naming its Columns, the Plotter and its working length', () => {
+    // Story 3: a Hole in row 1 from Column 1, 100 Columns long; the first possible Join is after Column 101.
+    const tape = referenceTapeOf([hole(first, 0, 100)]);
+
+    expect(cuttingProblems(tape, referenceOrgan(), referencePlotter())).toEqual([
+      {code: 'no-join', start: 0, last: 100, plotterName: 'Cutting mat', workingLengthMm: 300},
+    ]);
+  });
+
+  it('reports no Cutting Problem for the 70-Column Hole of the same Story', () => {
+    const tape = referenceTapeOf([hole(first, 0, 70)]);
+
+    expect(cuttingProblems(tape, referenceOrgan(), referencePlotter())).toEqual([]);
+  });
+
+  it('lists a no-join after the Hole problems at the same start', () => {
+    const tape = referenceTapeOf([hole(unknown, 0, 1), hole(first, 0, 100)]);
+
+    expect(cuttingProblems(tape, referenceOrgan(), referencePlotter()).map((problem) => problem.code)).toEqual([
+      'no-pipe',
+      'no-join',
+    ]);
+  });
+
+  it('is the same as without a Plotter when the Plotter is a roll Plotter', () => {
+    const tape = referenceTapeOf([hole(first, 0, 100)]);
+    const roll = plotterOf({name: 'Roll', workingWidth: 120, roll: true, workingLength: null, overlap: null});
+
+    expect(cuttingProblems(tape, referenceOrgan(), roll)).toEqual(cuttingProblems(tape, referenceOrgan()));
+  });
+
+  it('is the same as without a Plotter when the Plotter is narrower than the Organ (FR-017)', () => {
+    const tape = referenceTapeOf([hole(first, 0, 100)]);
+    const narrow = plotterOf({name: 'Narrow', workingWidth: 90, roll: false, workingLength: 300, overlap: 20});
+
+    expect(cuttingProblems(tape, referenceOrgan(), narrow)).toEqual(cuttingProblems(tape, referenceOrgan()));
+  });
+
+  it('reports no stretch without a Plotter', () => {
+    const tape = referenceTapeOf([hole(first, 0, 100)]);
+
+    expect(cuttingProblems(tape, referenceOrgan())).toEqual([]);
+  });
+});
+
+describe('holesWithCuttingProblems and no-join', () => {
+  it('ignores a no-join problem: it marks no Hole', () => {
+    const problems: readonly CuttingProblem[] = [
+      {
+        code: 'no-join',
+        start: defined(column(0), 'Column 0'),
+        last: defined(column(100), 'Column 100'),
+        plotterName: 'Cutting mat',
+        workingLengthMm: 300,
+      },
+    ];
+
+    expect(holesWithCuttingProblems(problems)).toEqual([]);
+  });
+});
+
+describe('cuttingProblems on a 10-minute Tape (SC-005)', () => {
+  it('finds the stretch of a Tape with about 10 000 Columns and 2 700 Holes within 0.2 s', () => {
+    // Row 1 has the 100-Column Hole from Column 1; rows 2 to 10 have 3-Column Holes every 33 Columns from Column 133
+    // on, which leave a Join possible between them and no other stretch.
+    const holes: Hole[] = [hole(first, 0, 100)];
+    for (let row = 1; row < 10; row += 1) {
+      const pipe = defined(midiNoteNumber(60 + row), `Pipe of row ${row + 1}`);
+      for (let start = 132 + row; start + 3 <= 10000; start += 33) holes.push(hole(pipe, start, start + 3));
+    }
+    const tape = referenceTapeOf(holes, 10000);
+
+    const started = performance.now();
+    const problems = cuttingProblems(tape, referenceOrgan(), referencePlotter());
+    const elapsed = performance.now() - started;
+
+    expect(problems.filter((problem) => problem.code === 'no-join')).toEqual([
+      {code: 'no-join', start: 0, last: 100, plotterName: 'Cutting mat', workingLengthMm: 300},
+    ]);
+    expect(elapsed).toBeLessThan(200);
   });
 });

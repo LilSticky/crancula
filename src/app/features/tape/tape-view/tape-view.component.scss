@@ -73,11 +73,23 @@ cranc-page-head button[mat-icon-button] {
   flex: none;
 }
 [data-testid='preview-toggle'],
+[data-testid='record'],
 [data-testid='export'] {
   white-space: nowrap;
 }
+/* Below the compact breakpoint the page head actions show their icon; the label is the accessible name and tooltip. */
+.icon-only {
+  width: 40px;
+  min-width: 40px;
+  padding: 0;
+  justify-content: center;
+}
+.icon-only mat-icon {
+  margin: 0;
+}
 .zoom,
 [data-testid='preview-toggle'],
+[data-testid='record'],
 [data-testid='export'],
 [data-testid='transpose'],
 [data-testid='side-panel-toggle'] {
@@ -122,6 +134,41 @@ cranc-page-head button[mat-icon-button] {
   stroke-width: 2;
   stroke-dasharray: 4 3;
   pointer-events: none;
+}
+.join {
+  stroke: var(--cr-select);
+  stroke-width: 2;
+  stroke-dasharray: 6 3;
+  pointer-events: none;
+}
+/* The Overlap band: a hatch in the Join colour (the fill is the pattern #overlap-hatch) and 1 px edges, both 5.6:1 on the Tape. */
+.overlap {
+  pointer-events: none;
+}
+.overlap-edge {
+  stroke: var(--cr-select);
+  stroke-width: 1;
+  pointer-events: none;
+}
+.overlap-hatch {
+  stroke: var(--cr-select);
+  stroke-width: 1.5;
+  stroke-opacity: 0.5;
+}
+/* The stretch no Join cuts: the warning tint and hatch (the fill is the pattern #stretch-hatch) and a 2 px outline. */
+.stretch-mark {
+  stroke: var(--cr-problem);
+  stroke-width: 2;
+  pointer-events: none;
+}
+.stretch-ground {
+  fill: var(--cr-problem);
+  fill-opacity: 0.2;
+}
+.stretch-hatch {
+  stroke: var(--cr-problem);
+  stroke-width: 1.5;
+  stroke-opacity: 0.6;
 }
 .cutting-problem-glyph {
   fill: var(--cr-problem);

@@ -97,7 +97,9 @@ describe('OrganLibrary', () => {
       return {
         organs: {load: () => inMemory.organs.load(), save: () => Promise.resolve(result)},
         tapes: inMemory.tapes,
+        plotters: inMemory.plotters,
         plotter: inMemory.plotter,
+        recording: inMemory.recording,
         app: inMemory.app,
         edit: inMemory.edit,
       };
@@ -145,7 +147,9 @@ describe('OrganLibrary', () => {
           save: (snapshot) => (next.status === 'saved' ? inMemory.organs.save(snapshot) : Promise.resolve(next)),
         },
         tapes: inMemory.tapes,
+        plotters: inMemory.plotters,
         plotter: inMemory.plotter,
+        recording: inMemory.recording,
         app: inMemory.app,
         edit: inMemory.edit,
       };

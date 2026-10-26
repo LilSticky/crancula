@@ -1,0 +1,70 @@
+<div class="plotter-editor">
+  <cranc-page-head [title]="(id() ? 'PLOTTER.EDITOR.TITLE' : 'PLOTTER.EDITOR.TITLE_NEW') | translate"/>
+
+  <mat-card appearance="outlined">
+    <div class="fields">
+      <mat-form-field class="full-width">
+        <mat-label>{{ 'PLOTTER.EDITOR.NAME' | translate }}</mat-label>
+        <input matInput data-testid="plotter-name" [formField]="plotter.name"/>
+        <ng-container ngProjectAs="mat-error">
+          @for (message of shownMessages(plotter.name); track message.key) {
+            <mat-error data-testid="violation" data-path="name">{{ message.key | translate: message.params }}</mat-error>
+          }
+        </ng-container>
+      </mat-form-field>
+
+      <mat-form-field class="full-width">
+        <mat-label>{{ 'PLOTTER.EDITOR.FORMAT' | translate }}</mat-label>
+        <mat-select data-testid="plotter-format" value="svg">
+          <mat-option value="svg">SVG</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-slide-toggle class="full-width" data-testid="plotter-roll" [formField]="plotter.roll">
+        {{ 'PLOTTER.EDITOR.ROLL' | translate }}
+      </mat-slide-toggle>
+
+      <mat-form-field>
+        <mat-label>{{ 'PLOTTER.EDITOR.WORKING_WIDTH' | translate }}</mat-label>
+        <input matInput crancDecimalInput data-testid="plotter-working-width" [formField]="plotter.workingWidth"/>
+        <span matTextSuffix>mm</span>
+        <ng-container ngProjectAs="mat-error">
+          @for (message of shownMessages(plotter.workingWidth); track message.key) {
+            <mat-error data-testid="violation" data-path="workingWidth">{{ message.key | translate: message.params }}</mat-error>
+          }
+        </ng-container>
+      </mat-form-field>
+
+      @if (!plotter.roll().value()) {
+        <mat-form-field>
+          <mat-label>{{ 'PLOTTER.EDITOR.WORKING_LENGTH' | translate }}</mat-label>
+          <input matInput crancDecimalInput data-testid="plotter-working-length" [formField]="plotter.workingLength"/>
+          <span matTextSuffix>mm</span>
+          <ng-container ngProjectAs="mat-error">
+            @for (message of shownMessages(plotter.workingLength); track message.key) {
+              <mat-error data-testid="violation" data-path="workingLength">{{ message.key | translate: message.params }}</mat-error>
+            }
+          </ng-container>
+        </mat-form-field>
+
+        <mat-form-field>
+          <mat-label>{{ 'PLOTTER.EDITOR.OVERLAP' | translate }}</mat-label>
+          <input matInput crancDecimalInput data-testid="plotter-overlap" [formField]="plotter.overlap"/>
+          <span matTextSuffix>mm</span>
+          <ng-container ngProjectAs="mat-error">
+            @for (message of shownMessages(plotter.overlap); track message.key) {
+              <mat-error data-testid="violation" data-path="overlap">{{ message.key | translate: message.params }}</mat-error>
+            }
+          </ng-container>
+        </mat-form-field>
+      }
+    </div>
+
+    <div class="actions">
+      <button matButton="filled" type="button" data-testid="save-plotter" [disabled]="saveDisabled()" (click)="save()">
+        <mat-icon>save</mat-icon>
+        {{ 'PLOTTER.EDITOR.SAVE' | translate }}
+      </button>
+    </div>
+  </mat-card>
+</div>

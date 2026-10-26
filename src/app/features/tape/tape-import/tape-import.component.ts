@@ -4,6 +4,7 @@ import {ErrorStateMatcher} from '@angular/material/core';
 import {MatButton, MatIconButton} from '@angular/material/button';
 import {MatCard} from '@angular/material/card';
 import {MatCheckbox} from '@angular/material/checkbox';
+import {MatDialog} from '@angular/material/dialog';
 import {MatChip} from '@angular/material/chips';
 import {MatTooltip} from '@angular/material/tooltip';
 import {MatError, MatFormField, MatInput, MatLabel, MatSuffix} from '@angular/material/input';
@@ -15,12 +16,16 @@ import {
   defaultSelectedParts,
   fitAndNotesOf,
   type FitNotes,
-  MAXIMUM_MIDI_FILE_SIZE,
   type Organ,
   type PartIndex,
+  MAXIMUM_SONG_SOURCE_SIZE,
   prefilledColumnLength,
   proposeTransposition,
-  readMidiSong,
+  readSongSource,
+  type Result,
+  type SongMetre,
+  type SongReading,
+  songMetre,
   tapeLengthInMillimetres,
   transposition,
   type Song,
@@ -45,6 +50,8 @@ import {
 } from './tape-import-form';
 import {TapeFitCardComponent} from './tape-fit-card/tape-fit-card.component';
 import {TapePreviewComponent} from './tape-preview/tape-preview.component';
+import {keepsMetre, SongMetreComponent} from '../song-metre/song-metre.component';
+import {ScoreHowToDialogComponent} from './score-how-to-dialog/score-how-to-dialog.component';
 
 /** A translation key and its parameters. */
 interface Readiness {
@@ -57,11 +64,11 @@ const DEFAULT_PREVIEW_WIDTH = 400;
 
 const NO_SONG_DRAFT: TapeImportDraft = {name: '', columnLength: null, transposition: null};
 
-/** Brings a MIDI Song onto a Tape: choose an Organ and a file, check the proposal, create. */
+/** Brings a Song onto a Tape from a MIDI file or a Score: choose an Organ and a file, check the proposal, create. */
 @Component({
   selector: 'cranc-tape-import',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslatePipe, RouterLink, MatFormField, MatLabel, MatInput, MatError, MatButton, MatIconButton, MatCheckbox, MatIcon, MatCard, MatChip, MatTooltip, MatSuffix, FormField, DecimalInputDirective, PageHeadComponent, ActionBarComponent, TapeFitCardComponent, TapePreviewComponent],
+  imports: [TranslatePipe, RouterLink, MatFormField, MatLabel, MatInput, MatError, MatButton, MatIconButton, MatCheckbox, MatIcon, MatCard, MatChip, MatTooltip, MatSuffix, FormField, DecimalInputDirective, PageHeadComponent, ActionBarComponent, TapeFitCardComponent, TapePreviewComponent, SongMetreComponent],
   templateUrl: './tape-import.component.html',
   providers: [{provide: ErrorStateMatcher, useClass: ShownViolationMatcher}],
   styleUrl: './tape-import.component.scss',
@@ -71,6 +78,7 @@ export class TapeImportComponent {
   protected readonly tapes = inject(TapeLibrary);
   private readonly router = inject(Router);
   private readonly pendingTasks = inject(PendingTasks);
+  private readonly dialog = inject(MatDialog);
   private readonly language = inject(LanguagePreference).language;
 
   protected readonly organList = this.organs.entities;
@@ -82,7 +90,9 @@ export class TapeImportComponent {
   });
   private readonly organ = computed<Organ | undefined>(() => this.organs.entityMap()[this.organId()]);
 
-  protected readonly song = signal<Song | null>(null);
+  /** The chosen Song Source as read: its Song and, for a Score, what it left out. */
+  protected readonly reading = signal<SongReading | null>(null);
+  protected readonly song = computed<Song | null>(() => this.reading()?.song ?? null);
   protected readonly rejection = signal<SongRejection | null>(null);
   /** The name of the chosen file, which can differ from the Song's name. */
   protected readonly fileName = signal('');
@@ -99,6 +109,15 @@ export class TapeImportComponent {
       : null;
   });
 
+  /** The metre the Song keeps: its first Time signature, Key and upbeat; nothing without a Song. */
+  protected readonly metre = computed<SongMetre>(() => {
+    const song = this.song();
+    return song ? songMetre(song) : {};
+  });
+
+  /** Whether the song facts show the metre, after a middle dot that separates it from the counts. */
+  protected readonly metreShown = computed(() => keepsMetre(this.metre()));
+
   /** The selected Parts; a new Song starts with its default Parts. */
   protected readonly selectedParts = linkedSignal<Song | null, ReadonlySet<PartIndex>>({
     source: this.song,
@@ -108,7 +127,9 @@ export class TapeImportComponent {
   protected readonly context = computed<TapeImportContext | null>(() => {
     const song = this.song();
     const organ = this.organ();
-    return song && organ ? {song, organ, selectedParts: this.selectedParts()} : null;
+    return song && organ
+      ? {song, organ, selectedParts: this.selectedParts(), leftOut: this.reading()?.leftOut}
+      : null;
   });
 
   /** The draft starts from the Song's name, the Column length of the Organ and the proposed Transposition. */
@@ -242,19 +263,25 @@ export class TapeImportComponent {
   private async readSong(input: HTMLInputElement): Promise<void> {
     const file = input.files?.[0];
     if (!file) return;
-    const result =
-      file.size > MAXIMUM_MIDI_FILE_SIZE
-        ? ({ok: false, error: 'not-a-midi-file'} as const)
-        : readMidiSong(new Uint8Array(await file.arrayBuffer()), file.name);
+    // The size is checked before the bytes are read, so a file of any size never fills the memory.
+    const result: Result<SongReading, SongRejection> =
+      file.size > MAXIMUM_SONG_SOURCE_SIZE
+        ? {ok: false, error: 'too-large'}
+        : readSongSource(new Uint8Array(await file.arrayBuffer()), file.name);
     if (result.ok) {
       this.rejection.set(null);
       this.fileName.set(file.name);
-      this.song.set(result.value);
+      this.reading.set(result.value);
     } else {
       this.rejection.set(result.error);
-      this.song.set(null);
+      this.reading.set(null);
     }
     input.value = '';
+  }
+
+  /** Opens the how-to for getting MusicXML from a printed or PDF Score. */
+  protected openScoreHowTo(): void {
+    this.dialog.open(ScoreHowToDialogComponent);
   }
 
   protected isSelected(index: number): boolean {

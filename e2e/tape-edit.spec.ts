@@ -62,7 +62,7 @@ test.describe('Editing a Tape by hand', () => {
     await first.app.close();
 
     const stored = JSON.parse(await readFile(join(first.userDataDir, 'snapshots', 'tapes.json'), 'utf8')) as StoredTapes;
-    expect(stored.version).toBe(2);
+    expect(stored.version).toBe(3);
     const holes = stored.tapes[0]?.holes ?? [];
     expect(holes).toHaveLength(original.length - 1);
     for (const hole of holes) {
@@ -144,7 +144,7 @@ test.describe('Editing a Tape by hand', () => {
 
       await expect(window.getByTestId('hole-mark')).toHaveCount(1);
       await expect(window.getByTestId('cutting-problems').getByTestId('cutting-problem')).toHaveCount(1);
-      await expect(window.getByTestId('cutting-problems-count')).toHaveText(/^\s*1 Hole can't be cut\s*$/);
+      await expect(window.getByTestId('cutting-problems-count')).toHaveText(/^\s*1 Cutting Problem\s*$/);
 
       // Choosing the entry selects the Hole.
       await pressOnDrawing(window, 'Escape');

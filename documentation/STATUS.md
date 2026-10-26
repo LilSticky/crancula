@@ -6,9 +6,68 @@ Issues: [GitHub](https://github.com/LilSticky/crancula/issues)
 
 ## Current slice
 
-No slice in progress.
+None in progress.
 
-**Next step:** Record a tape ([discovery/later.md](discovery/later.md), section 1, slice 2).
+**Next step:** [Read a tape as Scores](https://github.com/LilSticky/crancula/issues/169) ([#169](https://github.com/LilSticky/crancula/issues/169),
+later slice, draft PR open): export the Tape as MusicXML, Bars from the Song's Time signature.
+
+**Known broken:** [#175](https://github.com/LilSticky/crancula/issues/175): `api/` is not covered by `npm run lint`
+(`ng lint` only covers `src/` and `e2e/`, pre-existing).
+
+**Open:** real MuseScore and Audiveris files not checked by hand (010 T063, needs the user's files). Tape pieces not checked by
+hand either: piece SVGs in Inkscape and a real Tape glued (011 T062, needs the user).
+
+**Done:** [Cut a tape in pieces](../specs/011-cut-a-tape-in-pieces/spec.md) ([#168](https://github.com/LilSticky/crancula/issues/168), v0.4,
+branch `011-cut-a-tape-in-pieces`, PR [#174](https://github.com/LilSticky/crancula/pull/174)): Plotters are described like Organs
+(`plotters.json`, list, editor, sheet or roll plotter). The Plotter is picked in the Tape view and remembered per machine. A Tape
+longer than the Plotter's Working area is cut in Tape pieces at the furthest Joins, each with an Overlap for gluing; the pieces are
+saved into one folder (`plotter:save-svg-pieces`, [ADR 28](adr/0028-tape-pieces-saved-into-one-folder-by-main.md)).
+A stretch without a Join and a Plotter too narrow for the Tape are Cutting Problems and refuse the export. Joins, Overlaps and
+stretches are drawn on the Tape. Dictionary: Sheet plotter (Bogenplotter), added with user approval 2026-10-26; the count reads
+"N Cutting Problems". Reviews ([audit.md](../specs/011-cut-a-tape-in-pieces/audit.md),
+[ux-review.md](../specs/011-cut-a-tape-in-pieces/ux-review.md)) fixed; follow-ups [#180](https://github.com/LilSticky/crancula/issues/180)
+and [#181](https://github.com/LilSticky/crancula/issues/181). Gate: 1530 node (1 skipped: dangling link, needs symlink rights on Windows) and 1732 Angular unit tests, lint, i18n (432 keys), build; e2e `tape-pieces`, `plotter-library`, `tape-edit`, `tape-german`, `boundary` green locally; full e2e in CI.
+**Not checked by hand yet**: piece SVGs in Inkscape and a real Tape glued (T062, needs the user).
+
+**Done:** [Export clipped at 1280 px in German (#177)](https://github.com/LilSticky/crancula/issues/177) (2026-10-26, branch
+`177-tape-toolbar-german`): in German the Tape view's page head actions (Preview, Transpose, Record, Export) show as icons
+below 1440 px, with their labels as accessible names and tooltips; English keeps 1180 px, and the side panel stays on 1180 px.
+New e2e in `e2e/tape-layout.spec.ts` at 1280×800 in German. Gate: 1527 Angular unit tests, lint, `tape-layout` e2e (#177 and
+one-row tests) locally; full e2e in CI.
+
+**Done:** [Bring Scores onto a tape](../specs/010-bring-scores-onto-a-tape/spec.md) ([#167](https://github.com/LilSticky/crancula/issues/167), v0.3,
+branch `010-bring-scores-onto-a-tape`, PR [#176](https://github.com/LilSticky/crancula/pull/176)): a MusicXML Score (`.musicxml`, `.xml`,
+`.mxl`) becomes a Song with one Part per staff. Repeats, endings, D.C./D.S., fine and coda are played out (after a jump, repeats are
+skipped); ties are joined; grace notes and ornaments are left out and counted in the Import Summary. Songs from Scores and MIDI keep
+Time signatures, Keys and upbeat (Tape snapshot v3), shown read-only as the Metre on the import screen and in the Tape details. PDF and
+printed Scores get a how-to dialog. Own XML reader, fflate 0.8.3 for `.mxl`, [ADR 27](adr/0027-own-musicxml-reader-in-the-domain.md).
+Decisions: a sounding pitch outside 0–127 folds by octaves; an unpitched Note without pitch is E4. Dictionary: Metre, Part = one staff
+or instrument, Score (singular), German Import Summary words; German Song texts now "Stück". Reviews ([audit.md](../specs/010-bring-scores-onto-a-tape/audit.md),
+[ux-review.md](../specs/010-bring-scores-onto-a-tape/ux-review.md)) fixed; follow-ups [#175](https://github.com/LilSticky/crancula/issues/175),
+[#177](https://github.com/LilSticky/crancula/issues/177), [#178](https://github.com/LilSticky/crancula/issues/178). Gate: 1284 node and
+1523 Angular unit tests, lint, i18n; full e2e 161 green locally, CI on three OSes. **Not checked by hand yet**: real MuseScore and
+Audiveris files (T063).
+
+**Done:** [Record a tape](../specs/009-record-a-tape/spec.md) ([#165](https://github.com/LilSticky/crancula/issues/165), v0.2,
+branch `009-record-a-tape`, PR [#166](https://github.com/LilSticky/crancula/pull/166)): save the whole Tape at its Crank speed as a
+WAV or MP3 Recording. WAV is mono 44.1 kHz 16 bit; MP3 is 128 kbit/s via LAME (LGPL, unmodified) in a Worker. The
+Recording is rendered offline with the Preview voices; two IPC calls (`recording.chooseFile`, `recording.writeFile`)
+with a single-use target, [ADR 26](adr/0026-recording-rendered-offline-saved-by-main.md). Record is disabled without a
+Tape per Crank turn or while the Preview plays; the page head actions are icon-only below 1180 px so Record fits at
+1024 px. Reviews (electron, angular, UX, spec audit, [audit.md](../specs/009-record-a-tape/audit.md)) fixed; open
+follow-ups [#172](https://github.com/LilSticky/crancula/issues/172) and [#173](https://github.com/LilSticky/crancula/issues/173).
+Gate: 1009 node and 1435 Angular unit tests, lint, i18n; e2e `record-a-tape`, `boundary` and `tape-layout` green locally,
+full e2e in CI. **Sound not checked by hand yet**: the user has not listened to a Recording (WAV or MP3).
+
+**Done:** Discovery of the later slices (2026-10-25, branch `docs/later-slices-discovery`): user decisions 15–28 in
+[discovery/later.md](discovery/later.md), their terms in the dictionary, slice issues
+[#167](https://github.com/LilSticky/crancula/issues/167) (Bring Scores onto a tape),
+[#168](https://github.com/LilSticky/crancula/issues/168) (Cut a tape in pieces),
+[#169](https://github.com/LilSticky/crancula/issues/169) (Read a tape as Scores) and
+[#170](https://github.com/LilSticky/crancula/issues/170) (Cut several tapes side by side, discovery still to do).
+Slice 011 (Cut a tape in pieces) is planned and has tasks ([specs/011](../specs/011-cut-a-tape-in-pieces/tasks.md),
+[ADR 28](adr/0028-tape-pieces-saved-into-one-folder-by-main.md)). The Project board now holds
+every issue (29 were missing); its built-in auto-add workflow is on (it adds only new issues, so the older ones had to be added by hand).
 
 **Done:** [Ready-made Organs (#162)](https://github.com/LilSticky/crancula/issues/162) (2026-10-24, branch
 `claude/issue-162-20261024-2112`): the term is Preset (German Vorlage); a new Organ offers the Presets as starting
@@ -100,7 +159,6 @@ own, so a longer antivirus lock left `tapes.json` with the old name. The retry n
 about 2.5 s). Not proven from the CI trace (an Electron trace has no app log); reopen if it recurs.
 
 **Done:** flaky Transpose e2e on Windows ([#133](https://github.com/LilSticky/crancula/issues/133), PR #134): keyboard tests wait for focus to enter the dialog before tabbing.
-
 
 **Done:** menu Undo and Redo act on the Tape ([#122](https://github.com/LilSticky/crancula/issues/122), PR #135, 2026-10-22, branch
 `122-menu-undo-redo`). The menu sends an Edit Command over `edit:command`; text fields keep their own undo, the

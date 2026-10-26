@@ -15,11 +15,14 @@
         <mat-button-toggle [value]="option.zoom">{{ option.label | translate }}</mat-button-toggle>
       }
     </mat-button-toggle-group>
-    @if (compact()) {<button pageHeadActions mat-stroked-button type="button" data-testid="side-panel-toggle" [attr.aria-expanded]="sidePanelOpen()" (click)="toggleSidePanel()">{{ 'TAPE.VIEW.DETAILS' | translate }}</button>}
+    @if (compact()) {<button pageHeadActions mat-stroked-button type="button" class="icon-only" data-testid="side-panel-toggle" [attr.aria-label]="'TAPE.VIEW.DETAILS' | translate" [matTooltip]="'TAPE.VIEW.DETAILS' | translate" [attr.aria-expanded]="sidePanelOpen()" (click)="toggleSidePanel()"><mat-icon aria-hidden="true">view_sidebar</mat-icon></button>}
     <ng-container ngProjectAs="[pageHeadActions]">
-      <button mat-stroked-button type="button" data-testid="preview-toggle" [disabled]="!previewAvailable()" disabledInteractive [attr.aria-describedby]="previewAvailable() ? null : 'preview-unavailable-reason'" (click)="togglePreview()">
+      @let previewLabel = (preview.playing() ? 'TAPE.PREVIEW.STOP' : 'TAPE.PREVIEW.PLAY') | translate;
+      <button mat-stroked-button type="button" data-testid="preview-toggle" [class.icon-only]="compactActions()" [disabled]="!previewAvailable() || recorder.recording()" [disabledInteractive]="true" [attr.aria-label]="compactActions() ? previewLabel : null" [matTooltip]="recorder.recording() ? ('TAPE.PREVIEW.WHILE_RECORDING' | translate) : compactActions() ? previewLabel : ''" [attr.aria-describedby]="previewAvailable() ? null : 'preview-unavailable-reason'" (click)="togglePreview()">
         <mat-icon aria-hidden="true">{{ preview.playing() ? 'stop' : 'play_arrow' }}</mat-icon>
-        {{ (preview.playing() ? 'TAPE.PREVIEW.STOP' : 'TAPE.PREVIEW.PLAY') | translate }}
+        @if (!compactActions()) {
+          {{ previewLabel }}
+        }
       </button>
       <button mat-icon-button type="button" data-testid="undo" [attr.aria-label]="'TAPE.EDIT.UNDO_TOOLTIP' | translate: {shortcut: shortcuts.undo}" [matTooltip]="'TAPE.EDIT.UNDO_TOOLTIP' | translate: {shortcut: shortcuts.undo}" [disabled]="!editor.canUndo() || editingPaused()" (click)="undo()">
         <mat-icon aria-hidden="true">undo</mat-icon>
@@ -27,13 +30,29 @@
       <button mat-icon-button type="button" data-testid="redo" [attr.aria-label]="'TAPE.EDIT.REDO_TOOLTIP' | translate: {shortcut: shortcuts.redo}" [matTooltip]="'TAPE.EDIT.REDO_TOOLTIP' | translate: {shortcut: shortcuts.redo}" [disabled]="!editor.canRedo() || editingPaused()" (click)="redo()">
         <mat-icon aria-hidden="true">redo</mat-icon>
       </button>
-      <button mat-stroked-button type="button" data-testid="transpose" [disabled]="!canTranspose() || editingPaused()" (click)="transpose()">{{ 'TAPE.TRANSPOSE.BUTTON' | translate }}</button>
-      @if (compact()) {
-        <button mat-icon-button type="button" data-testid="export" [attr.aria-label]="'TAPE.VIEW.EXPORT' | translate" [matTooltip]="'TAPE.VIEW.EXPORT' | translate" [disabled]="plotterExport.saving()" (click)="exportTape()">
+      @let transposeLabel = 'TAPE.TRANSPOSE.BUTTON' | translate;
+      <button mat-stroked-button type="button" data-testid="transpose" [class.icon-only]="compactActions()" [disabled]="!canTranspose() || editingPaused()" [attr.aria-label]="compactActions() ? transposeLabel : null" [matTooltip]="compactActions() ? transposeLabel : ''" (click)="transpose()">
+        @if (compactActions()) {
+          <mat-icon aria-hidden="true">swap_vert</mat-icon>
+        } @else {
+          {{ transposeLabel }}
+        }
+      </button>
+      @let recordBlocked = recordBlockedBy();
+      @let recordLabel = (recordPercent() === undefined ? 'TAPE.RECORD.BUTTON' : 'TAPE.RECORD.PROGRESS') | translate: {percent: recordPercent()};
+      <button mat-stroked-button type="button" data-testid="record" [class.icon-only]="compactActions()" [disabled]="recordBlocked !== undefined" [disabledInteractive]="true" [attr.aria-disabled]="recordBlocked !== undefined || recorder.recording() ? 'true' : null" [attr.aria-busy]="recorder.recording() ? 'true' : null" [attr.aria-label]="compactActions() ? recordLabel : null" [matTooltip]="recordBlocked !== undefined ? (recordBlocked | translate) : compactActions() ? recordLabel : ''" (click)="record()">
+        @if (!recorder.recording()) {<mat-icon aria-hidden="true">fiber_manual_record</mat-icon>}
+        @if (recorder.recording()) {<mat-progress-spinner diameter="18" [mode]="recordPercent() === undefined ? 'indeterminate' : 'determinate'" [value]="recordPercent() ?? 0" aria-hidden="true" />}
+        @if (!compactActions()) {
+          {{ recordLabel }}
+        }
+      </button>
+      @if (compactActions()) {
+        <button mat-icon-button type="button" class="icon-only" data-testid="export" [attr.aria-label]="'TAPE.VIEW.EXPORT' | translate" [matTooltip]="'TAPE.VIEW.EXPORT' | translate" [disabled]="plotterExport.saving()" (click)="exportTape()">
           <mat-icon aria-hidden="true">content_cut</mat-icon>
         </button>
       }
-      @if (!compact()) {
+      @if (!compactActions()) {
         <button mat-stroked-button type="button" data-testid="export" [disabled]="plotterExport.saving()" (click)="exportTape()">
           <mat-icon aria-hidden="true">content_cut</mat-icon>
           {{ 'TAPE.VIEW.EXPORT' | translate }}
@@ -57,6 +76,13 @@
               <line class="ruler" [attr.x1]="tick * scale()" [attr.x2]="tick * scale()" y1="8" [attr.y2]="tick === 0 ? 0 : 4" />
             }
           </pattern>
+          <pattern id="overlap-hatch" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(45)">
+            <line class="overlap-hatch" x1="0" y1="0" x2="0" y2="6" />
+          </pattern>
+          <pattern id="stretch-hatch" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(45)">
+            <rect class="stretch-ground" width="6" height="6" />
+            <line class="stretch-hatch" x1="0" y1="0" x2="0" y2="6" />
+          </pattern>
         </defs>
         <rect data-testid="ruler" [attr.x]="drawing.leadIn" [attr.y]="rulerHeight - 8" [attr.width]="drawing.bodyWidth" height="8" fill="url(#ruler-ticks)" (click)="onRulerClick($event, tapeSvg)" />
         @for (number of drawing.rulerNumbers; track number.mm) {
@@ -75,6 +101,15 @@
           }
           @for (mark of drawing.marks; track mark.column) {
             <line class="mark" [class.strong]="mark.strong" data-testid="column-mark" [attr.x1]="mark.x" [attr.x2]="mark.x" y1="0" [attr.y2]="drawing.height" />
+          }
+          @for (join of drawing.joins; track join.after) {
+            <rect class="overlap" data-testid="overlap" aria-hidden="true" fill="url(#overlap-hatch)" y="0" [attr.x]="join.overlap.x" [attr.width]="join.overlap.width" [attr.height]="drawing.height" />
+            <line class="overlap-edge" aria-hidden="true" [attr.x1]="join.overlap.x" [attr.x2]="join.overlap.x" y1="0" [attr.y2]="drawing.height" />
+            <line class="overlap-edge" aria-hidden="true" [attr.x1]="join.overlap.x + join.overlap.width" [attr.x2]="join.overlap.x + join.overlap.width" y1="0" [attr.y2]="drawing.height" />
+            <line class="join" data-testid="join" aria-hidden="true" [attr.data-after]="join.after" [attr.x1]="join.x" [attr.x2]="join.x" y1="0" [attr.y2]="drawing.height" />
+          }
+          @for (stretch of drawing.stretches; track stretch.first) {
+            <rect class="stretch-mark" data-testid="stretch-mark" aria-hidden="true" fill="url(#stretch-hatch)" [attr.data-first]="stretch.first" [attr.data-last]="stretch.last" y="0" [attr.x]="stretch.x" [attr.width]="stretch.width" [attr.height]="drawing.height" />
           }
           @for (hole of drawing.holes; track hole.row + ':' + hole.start) {
             <rect
@@ -160,12 +195,13 @@
   @if (!compact() || sidePanelOpen()) {
   <aside class="side-panel" data-testid="side-panel" (keydown)="onSidePanelKeydown($event)" [attr.aria-label]="'TAPE.VIEW.SIDE_PANEL' | translate">
     <cranc-selected-hole [inspection]="inspection()" [selectionCount]="shownSelection().length" />
-    <cranc-cutting-problems [holes]="holesWithProblems()" (chosen)="chooseProblem($event)" />
+    <cranc-cutting-problems [holes]="holesWithProblems()" [stretches]="stretchProblems()" (chosen)="chooseProblem($event)" (stretchChosen)="chooseStretch($event)" />
     @if (tape(); as tape) {
       @if (organ(); as organ) {
         <cranc-add-hole [organ]="organ" [tape]="tape" [selected]="selectedHoleRef()" [spot]="spotSelected()" [editingPaused]="editingPaused()" (added)="addFromForm($event)" />
       }
-      <cranc-tape-section [view]="drawing.section" [tape]="tape" [organ]="drawing.organ" [editingPaused]="editingPaused()" (columnLengthChange)="onColumnLengthChange($event)" />
+      <cranc-tape-section [view]="drawing.section" [tape]="tape" [organ]="drawing.organ" [metre]="metre()" [editingPaused]="editingPaused()" (columnLengthChange)="onColumnLengthChange($event)" />
+      <cranc-plotter-section [pieces]="shownCut()" (cuttingProblemsRequested)="revealCuttingProblems()" />
       @if (!previewAvailable()) {
         <p class="preview-unavailable" data-testid="preview-unavailable">
           {{ 'TAPE.PREVIEW.UNAVAILABLE' | translate }}

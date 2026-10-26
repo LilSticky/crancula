@@ -1,4 +1,5 @@
-import type {Slot, TapeGeometry} from './tape-geometry';
+import type {Slot} from './tape-geometry';
+import type {CutGeometry} from './tape-piece-geometry';
 
 const STROKE = 'fill="none" stroke="#000000" stroke-width="0.1"/>';
 
@@ -19,7 +20,7 @@ function holePath(slot: Slot): string {
 }
 
 /** The cut lines of a Tape as an SVG in millimetres: Holes in `slots` order, the Tape Outline last. */
-export function plotterSvg(geometry: TapeGeometry): string {
+export function plotterSvg(geometry: CutGeometry): string {
   const {outline} = geometry;
   const width = num(geometry.totalLength);
   const height = num(geometry.width);

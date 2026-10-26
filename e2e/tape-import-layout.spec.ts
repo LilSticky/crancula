@@ -283,3 +283,38 @@ test.describe('The Fit disclosures with the real keyboard', () => {
     }
   });
 });
+
+test.describe('The Song rejection on the import screen at 1280 x 800 (#167)', () => {
+  for (const language of ['en', 'de'] as const) {
+    test(`${language}: the error icon is centred on the first line of the message`, async () => {
+      const launched = await launchApp();
+      const {app, window} = launched;
+      try {
+        await resizeWindowOrSkip(launched, 1280, 800, true);
+        await defineOctaveOrgan(window, 'Octave organ');
+        await window.getByRole('link', {name: 'Tapes'}).click();
+        await window.getByTestId('new-tape').click();
+        await window.getByTestId('song-file').setInputFiles({name: 'score.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.7\n')});
+        if (language === 'de') await window.getByTestId('language-switch').locator('[data-language="de"]').click();
+        const rejection = window.getByTestId('song-rejection');
+        await expect(rejection).toHaveAttribute('data-code', 'pdf');
+
+        const centres = await rejection.evaluate((paragraph) => {
+          const icon = paragraph.querySelector('mat-icon');
+          const text = [...paragraph.childNodes].find((node): node is Text => node instanceof Text && (node.textContent ?? '').trim() !== '');
+          if (!icon || !text) return null;
+          const range = document.createRange();
+          range.selectNodeContents(text);
+          const firstLine = range.getClientRects()[0];
+          if (!firstLine) return null;
+          const iconBox = icon.getBoundingClientRect();
+          return {icon: iconBox.top + iconBox.height / 2, line: firstLine.top + firstLine.height / 2};
+        });
+        expect(centres, 'icon and first line of the message').not.toBeNull();
+        expect(Math.abs((centres?.icon ?? 0) - (centres?.line ?? 0)), `icon centre ${centres?.icon} vs first line centre ${centres?.line}`).toBeLessThanOrEqual(2);
+      } finally {
+        await app.close();
+      }
+    });
+  }
+});

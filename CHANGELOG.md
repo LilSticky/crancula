@@ -9,6 +9,15 @@ as its GitHub Release notes.
 ## [Unreleased]
 
 ### Added
+- Describe Plotters like Organs: a sheet plotter cuts within its working length and width, a roll plotter within its working width. Plotters are kept in a list and edited in an editor.
+- Pick a Plotter in the Tape view; the choice is remembered on this computer. The Tape itself does not change.
+- A Tape longer than the Plotter's working length is exported in Tape pieces, cut at the furthest Joins, each piece with an Overlap for gluing. The pieces are saved into one folder. Joins, Overlaps and the stretches are drawn on the Tape.
+- A stretch of Tape without a Join, or a Plotter too narrow for the Tape, is a Cutting Problem, and the export is refused until it is fixed.
+- Bring a MusicXML Score onto a Tape (`.musicxml`, `.xml` or `.mxl`): each staff becomes a Part. Repeats, endings, D.C., D.S., fine and coda are played out; ties are joined. Time signatures, Keys and upbeat are kept, and the Metre is shown on the import screen and in the Tape details.
+- Grace notes and ornaments are left out of a Score and counted in the import summary.
+- A PDF or printed Score cannot be read directly: a how-to dialog explains how to get MusicXML from it.
+- Record a Tape as a WAV or MP3 file to listen to without Crancula: choose Record in the Tape view.
+  The file holds the whole Tape at its Crank speed, and the Tape is not changed.
 - Edit a Tape by touch: tap an empty place to select a Spot, tap it again to add a Hole. A selected
   Hole has grips beside its ends to lengthen or shorten it; drag a Hole to move it, double-tap it to
   remove it. A finger drag on empty Tape scrolls; the mouse still draws a selection frame.
@@ -18,6 +27,7 @@ as its GitHub Release notes.
   takes 1–300.
 
 ### Changed
+- The import button says "Choose a Song Source": a MIDI file or a MusicXML Score.
 - A double-click on a Hole now removes it (two taps on one Hole).
 
 ## [0.2.0] - 2026-10-24

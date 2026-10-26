@@ -1,0 +1,40 @@
+:host {
+  display: block;
+}
+
+h2 {
+  margin: 0 0 0.5rem;
+}
+
+.plotter-text {
+  margin: 0.5rem 0 0;
+}
+
+/* A problem with the picked Plotter: the reason, what to do, and a link to the Plotter, in the error colour. */
+.problem {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin: 0.5rem 0 0;
+  color: var(--mat-sys-error);
+
+  mat-icon {
+    flex: none;
+  }
+
+  p {
+    margin: 0 0 0.25rem;
+  }
+}
+
+/* A text link that is a button: the Cutting Problems section it names. */
+.link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--cr-select-on-page);
+  font: inherit;
+  text-align: left;
+  text-decoration: underline;
+  cursor: pointer;
+}

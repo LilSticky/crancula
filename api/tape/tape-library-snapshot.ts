@@ -3,9 +3,15 @@ import {crankSpeed, DEFAULT_CRANK_SPEED, type CrankSpeed} from './crank-speed';
 import {midiNoteNumber} from '../organ/midi-note-number';
 import {millimetres, organId} from '../organ/organ';
 import {
+  beatTypeOf,
+  fifthsOf,
+  type Key,
+  type Mode,
+  modeOf,
   type Part,
   type PartIndex,
   type Song,
+  type TimeSignature,
   note,
   part,
   partIndex,
@@ -13,6 +19,7 @@ import {
   songId,
   tick,
   ticksPerQuarter,
+  type Tick,
 } from '../song/song';
 import {
   type Hole,
@@ -31,6 +38,12 @@ export interface SongSnapshot {
   readonly name: string;
   readonly ticksPerQuarter: number;
   readonly parts: readonly PartSnapshot[];
+  /** `[start, beats, beatType]`, starts increasing; omitted when empty (version 3). */
+  readonly timeSignatures?: readonly (readonly [number, number, number])[];
+  /** Integer Tick > 0, shorter than the first Bar; omitted when none (version 3). */
+  readonly upbeat?: number;
+  /** `[start, fifths, mode]`, starts increasing; omitted when empty (version 3). */
+  readonly keys?: readonly (readonly [number, number, Mode])[];
 }
 
 export interface PartSnapshot {
@@ -54,9 +67,9 @@ export interface TapeSnapshot {
   readonly holes: readonly (readonly [number, number, number])[];
 }
 
-/** Snapshot file format, version 2, stored at `<userData>/snapshots/tapes.json` (ADR 8, ADR 20). */
+/** Snapshot file format, version 3, stored at `<userData>/snapshots/tapes.json` (ADR 8, ADR 20). */
 export interface TapeLibrarySnapshot {
-  readonly version: 2;
+  readonly version: 3;
   readonly songs: readonly SongSnapshot[];
   readonly tapes: readonly TapeSnapshot[];
 }
@@ -71,7 +84,7 @@ export interface TapeLibrary {
 export function toTapeLibrarySnapshot(tapes: readonly Tape[], songs: readonly Song[]): TapeLibrarySnapshot {
   const referenced = new Set(tapes.map((tape) => tape.songId));
   return {
-    version: 2,
+    version: 3,
     songs: songs.filter((candidate) => referenced.has(candidate.id)).map(toSongSnapshot),
     tapes: tapes.map(toTapeSnapshot),
   };
@@ -87,6 +100,11 @@ function toSongSnapshot(source: Song): SongSnapshot {
       percussion: entry.percussion,
       notes: entry.notes.map((n) => [n.noteNumber, n.start, n.duration] as const),
     })),
+    ...(source.timeSignatures.length === 0
+      ? {}
+      : {timeSignatures: source.timeSignatures.map((each) => [each.start, each.beats, each.beatType] as const)}),
+    ...(source.upbeat === undefined ? {} : {upbeat: source.upbeat}),
+    ...(source.keys.length === 0 ? {} : {keys: source.keys.map((each) => [each.start, each.fifths, each.mode] as const)}),
   };
 }
 
@@ -113,16 +131,16 @@ function toTapeSnapshot(tape: Tape): TapeSnapshot {
  */
 export function parseTapeLibrarySnapshot(input: unknown): Result<TapeLibrary, string> {
   if (!isRecord(input)) return err('snapshot is not an object');
-  // Version 1 stored no Crank speed; its Tapes read at the default (ADR 20).
   const version = input['version'];
-  if (version !== 1 && version !== 2) return err(`unsupported snapshot version ${String(version)}`);
+  if (version !== 1 && version !== 2 && version !== 3) return err(`unsupported snapshot version ${String(version)}`);
   const {songs, tapes} = input;
   if (!Array.isArray(songs)) return err('songs is not a list');
   if (!Array.isArray(tapes)) return err('tapes is not a list');
 
   const parsedSongs: Song[] = [];
   for (const [index, entry] of (songs as unknown[]).entries()) {
-    const parsed = parseSong(entry);
+    // Versions 1 and 2 stored no Time signatures, upbeat or Keys (ADR 20).
+    const parsed = parseSong(entry, version === 3);
     if (!parsed.ok) return err(`Song ${index}: ${parsed.error}`);
     if (parsedSongs.some((other) => other.id === parsed.value.id)) {
       return err(`Song ${index}: duplicate id ${parsed.value.id}`);
@@ -132,7 +150,8 @@ export function parseTapeLibrarySnapshot(input: unknown): Result<TapeLibrary, st
 
   const parsedTapes: Tape[] = [];
   for (const [index, entry] of (tapes as unknown[]).entries()) {
-    const parsed = parseTape(entry, parsedSongs, version === 2);
+    // Version 1 stored no Crank speed; its Tapes read at the default (ADR 20).
+    const parsed = parseTape(entry, parsedSongs, version !== 1);
     if (!parsed.ok) return err(`Tape ${index}: ${parsed.error}`);
     if (parsedTapes.some((other) => other.id === parsed.value.id)) {
       return err(`Tape ${index}: duplicate id ${parsed.value.id}`);
@@ -145,7 +164,7 @@ export function parseTapeLibrarySnapshot(input: unknown): Result<TapeLibrary, st
   return ok({songs: parsedSongs, tapes: parsedTapes});
 }
 
-function parseSong(input: unknown): Result<Song, string> {
+function parseSong(input: unknown, hasMetre: boolean): Result<Song, string> {
   if (!isRecord(input)) return err('not an object');
   const {id, name, parts} = input;
   const brandedId = typeof id === 'string' ? songId(id) : undefined;
@@ -162,8 +181,68 @@ function parseSong(input: unknown): Result<Song, string> {
     parsedParts.push(parsed.value);
   }
 
-  const result = song({id: brandedId, name, ticksPerQuarter: ticks, parts: parsedParts});
-  return result ? ok(result) : err('name is blank or there is no Part');
+  const metre = hasMetre ? parseMetre(input) : ok(NO_METRE);
+  if (!metre.ok) return metre;
+  const result = song({id: brandedId, name, ticksPerQuarter: ticks, parts: parsedParts, ...metre.value});
+  return result ? ok(result) : err('name is blank, there is no Part, or the metre breaks a rule');
+}
+
+/** The Time signatures, upbeat and Keys of a Song; a Song that keeps none has these. */
+interface Metre {
+  readonly timeSignatures: readonly TimeSignature[];
+  readonly upbeat: Tick | undefined;
+  readonly keys: readonly Key[];
+}
+
+const NO_METRE: Metre = {timeSignatures: [], upbeat: undefined, keys: []};
+
+function parseMetre(input: Record<string, unknown>): Result<Metre, string> {
+  const timeSignatures = parseTimeSignatures(input['timeSignatures']);
+  if (!timeSignatures.ok) return timeSignatures;
+  const upbeat = parseUpbeat(input['upbeat']);
+  if (!upbeat.ok) return upbeat;
+  const keys = parseKeys(input['keys']);
+  if (!keys.ok) return keys;
+  return ok({timeSignatures: timeSignatures.value, upbeat: upbeat.value, keys: keys.value});
+}
+
+function parseTimeSignatures(input: unknown): Result<TimeSignature[], string> {
+  if (input === undefined) return ok([]);
+  if (!Array.isArray(input)) return err('timeSignatures is not a list');
+  const parsed: TimeSignature[] = [];
+  for (const entry of input as unknown[]) {
+    const triple = numberTriple(entry);
+    const start = triple ? tick(triple[0]) : undefined;
+    const beatType = triple ? beatTypeOf(triple[2]) : undefined;
+    if (triple === undefined || start === undefined || beatType === undefined) {
+      return err('a Time signature is not [start, beats, beatType] with a beat type of 1, 2, 4, 8, 16, 32 or 64');
+    }
+    parsed.push({start, beats: triple[1], beatType});
+  }
+  return ok(parsed);
+}
+
+function parseUpbeat(input: unknown): Result<Tick | undefined, string> {
+  if (input === undefined) return ok(undefined);
+  const upbeat = typeof input === 'number' ? tick(input) : undefined;
+  return upbeat === undefined ? err('upbeat is not an integer Tick') : ok(upbeat);
+}
+
+function parseKeys(input: unknown): Result<Key[], string> {
+  if (input === undefined) return ok([]);
+  if (!Array.isArray(input)) return err('keys is not a list');
+  const parsed: Key[] = [];
+  for (const entry of input as unknown[]) {
+    const fields = Array.isArray(entry) && entry.length === 3 ? (entry as unknown[]) : undefined;
+    const start = typeof fields?.[0] === 'number' ? tick(fields[0]) : undefined;
+    const fifths = typeof fields?.[1] === 'number' ? fifthsOf(fields[1]) : undefined;
+    const mode = modeOf(fields?.[2]);
+    if (start === undefined || fifths === undefined || mode === undefined) {
+      return err('a Key is not [start, fifths, "major" or "minor"]');
+    }
+    parsed.push({start, fifths, mode});
+  }
+  return ok(parsed);
 }
 
 function parsePart(input: unknown): Result<Part, string> {

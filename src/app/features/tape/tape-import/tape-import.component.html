@@ -12,14 +12,14 @@
       <section class="group">
         <h2 class="group-title" data-testid="group-title">{{ 'TAPE.IMPORT.GROUP_SONG' | translate }}</h2>
         <div class="file">
-          <input #songFile type="file" hidden accept=".mid,.midi" data-testid="song-file" (change)="chooseSong(songFile)"/>
+          <input #songFile type="file" hidden accept=".mid,.midi,.musicxml,.xml,.mxl,.pdf" data-testid="song-file" (change)="chooseSong(songFile)"/>
           @if (song()) {
             <mat-chip>
               <mat-icon matChipAvatar>music_note</mat-icon>
               <span data-testid="song-file-name">{{ fileName() }}</span>
             </mat-chip>
             @if (songFacts(); as facts) {
-              <span data-testid="song-facts">{{ (facts.parts === 1 ? 'TAPE.IMPORT.PARTS_COUNT_ONE' : 'TAPE.IMPORT.PARTS_COUNT') | translate: {count: facts.parts} }}, {{ (facts.notes === 1 ? 'TAPE.IMPORT.NOTES_COUNT_ONE' : 'TAPE.IMPORT.NOTES_COUNT') | translate: {count: facts.notes} }}</span>
+              <span data-testid="song-facts">{{ (facts.parts === 1 ? 'TAPE.IMPORT.PARTS_COUNT_ONE' : 'TAPE.IMPORT.PARTS_COUNT') | translate: {count: facts.parts} }}, {{ (facts.notes === 1 ? 'TAPE.IMPORT.NOTES_COUNT_ONE' : 'TAPE.IMPORT.NOTES_COUNT') | translate: {count: facts.notes} }}@if (metreShown()) {<span class="facts-separator" aria-hidden="true" data-testid="song-facts-separator">·</span>}<cranc-song-metre [metre]="metre()" /></span>
             }
           }
           <button [matButton]="song() ? 'text' : 'tonal'" type="button" data-testid="choose-song" (click)="songFile.click()">
@@ -27,10 +27,20 @@
             {{ (song() ? 'TAPE.IMPORT.CHOOSE_OTHER_SONG' : 'TAPE.IMPORT.CHOOSE_SONG') | translate }}
           </button>
         </div>
+        @if (song() === null && rejection() === null) {
+          <p class="score-hint" data-testid="score-how-to-hint">
+            <mat-icon aria-hidden="true">info</mat-icon>
+            <span>{{ 'TAPE.IMPORT.SCORE_HINT' | translate }}</span>
+            <button matButton type="button" data-testid="score-how-to-open" (click)="openScoreHowTo()"><mat-icon aria-hidden="true">help</mat-icon>{{ 'TAPE.IMPORT.SCORE_HINT_LINK' | translate }}</button>
+          </p>
+        }
         @if (rejection(); as code) {
           <p class="rejection" data-testid="song-rejection" [attr.data-code]="code">
             <mat-icon>error</mat-icon>
             {{ 'TAPE.SONG_REJECTION.' + code.toUpperCase().replaceAll('-', '_') | translate }}
+            @if (code === 'pdf') {
+              <button matButton type="button" data-testid="score-how-to-open" (click)="openScoreHowTo()"><mat-icon aria-hidden="true">help</mat-icon>{{ 'TAPE.IMPORT.SCORE_HINT_LINK' | translate }}</button>
+            }
           </p>
         }
       </section>

@@ -7,6 +7,7 @@ import {RouterOutlet} from '@angular/router';
 import {TranslateService} from '@ngx-translate/core';
 import {firstValueFrom, map} from 'rxjs';
 import {OrganLibrary} from './features/organ/organ-library.store';
+import {PlotterLibrary} from './features/plotter/plotter-library.store';
 import {TapeLibrary} from './features/tape/tape-library.store';
 import {RailComponent} from './features/rail/rail.component';
 
@@ -38,6 +39,7 @@ const COMPACT_QUERY = '(max-width: 1179.98px)';
 export class AppComponent {
   private readonly library = inject(OrganLibrary);
   private readonly tapes = inject(TapeLibrary);
+  private readonly plotters = inject(PlotterLibrary);
   private readonly snackBar = inject(MatSnackBar);
   private readonly translate = inject(TranslateService);
   private readonly breakpoints = inject(BreakpointObserver);
@@ -56,6 +58,14 @@ export class AppComponent {
     effect(() => {
       const problem = this.library.saveProblem();
       if (problem) untracked(() => void this.notify('ORGAN.STORAGE.SAVE_PROBLEM', {reason: problem.reason}));
+    });
+    effect(() => {
+      const problem = this.plotters.loadProblem();
+      if (problem) untracked(() => void this.notify('PLOTTER.STORAGE.LOAD_PROBLEM', {backupPath: problem.backupPath}));
+    });
+    effect(() => {
+      const problem = this.plotters.saveProblem();
+      if (problem) untracked(() => void this.notify('PLOTTER.STORAGE.SAVE_PROBLEM', {reason: problem.reason}));
     });
     effect(() => {
       const problem = this.tapes.loadProblem();
