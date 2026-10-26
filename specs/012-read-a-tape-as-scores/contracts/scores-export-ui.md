@@ -8,10 +8,14 @@ and `de.json` under `TAPE.SCORES.*` (FR-019); German wording uses "Noten" for Sc
 
 | Where | What | `data-testid` |
 |-------|------|---------------|
-| Tape view page head, after "Export for the Plotter" | "Export as Scores" (`TAPE.VIEW.EXPORT_SCORES`, icon `queue_music`); icon-only with the label as accessible name and tooltip when `compactActions()` | `export-scores` |
+| Tape view page head, fourth action after Preview, Transpose and Record | "Export" menu trigger (`TAPE.VIEW.EXPORT_MENU`, new key: "Export" / "Export"); icon-only with the label as accessible name and tooltip when `compactActions()` | `export-menu` |
+| Export menu, in this order | "Export for the Plotter" (`TAPE.VIEW.EXPORT`) and "Export as Scores" (`TAPE.VIEW.EXPORT_SCORES`, icon `queue_music`) | `export` (Plotter), `export-scores` |
 
-Enabled for every opened Tape: with Cutting Problems, while the Preview plays, while recording (FR-001,
-FR-017). Disabled only while `ScoresExport.saving()`. It does not stop the Preview and adds no undo step.
+Decision 2026-10-26: one Export menu replaces the two page head buttons, so the page head keeps four actions
+(Preview, Transpose, Record, Export). The trigger is enabled for every opened Tape: with Cutting Problems, while
+the Preview plays, while recording (FR-001, FR-017). Each menu item is disabled only while its own save runs:
+"Export for the Plotter" while `PlotterExport.saving()`, "Export as Scores" while `ScoresExport.saving()`. Choosing
+"Export as Scores" does not stop the Preview and adds no undo step.
 
 ## Export dialog (`ScoresExportDialogComponent`, `data-testid="scores-export-dialog"`)
 
@@ -54,5 +58,5 @@ Violations show as `mat-error` under their field: `TAPE.SCORES.ERROR.BEATS`, `.B
 
 ## Layout
 
-The page head must still fit in one row at the `tape-layout` e2e widths: labelled at 1180 px in English and
-1440 px in German, icon-only below. If not, both breakpoints in `tape-view.component.ts` move up (R14).
+The page head (Preview, Transpose, Record, Export) must still fit in one row at the `tape-layout` e2e widths:
+labelled at 1180 px in English and 1440 px in German, icon-only below. If not, both breakpoints in `tape-view.component.ts` move up (R14).

@@ -15,6 +15,7 @@ import {
 import {stubSaveDialog} from './support/save-dialog';
 import {resizeWindowOrSkip} from './support/window-size';
 import {createTapeFromSong,defineOctaveOrgan, songRepeatingC4} from './support/tape-creation';
+import {exportForPlotter} from './support/tape-export-menu';
 
 const byPlace = (a: DrawnHole, b: DrawnHole): number => a.row - b.row || a.start - b.start;
 
@@ -153,7 +154,7 @@ test.describe('Editing a Tape by hand', () => {
       await expect(holeAt(window, target.row, target.start)).toHaveClass(/selected/);
 
       // Export is refused with the cutting problems dialog, without the save dialog.
-      await window.getByTestId('export').click();
+      await exportForPlotter(window);
       await expect(window.getByRole('dialog').getByTestId('export-problem')).toHaveCount(1);
       expect(await dialog.calls()).toHaveLength(0);
     } finally {

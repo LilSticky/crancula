@@ -74,7 +74,7 @@ cranc-page-head button[mat-icon-button] {
 }
 [data-testid='preview-toggle'],
 [data-testid='record'],
-[data-testid='export'] {
+[data-testid='export-menu'] {
   white-space: nowrap;
 }
 /* Below the compact breakpoint the page head actions show their icon; the label is the accessible name and tooltip. */
@@ -90,7 +90,7 @@ cranc-page-head button[mat-icon-button] {
 .zoom,
 [data-testid='preview-toggle'],
 [data-testid='record'],
-[data-testid='export'],
+[data-testid='export-menu'],
 [data-testid='transpose'],
 [data-testid='side-panel-toggle'] {
   --mat-button-toggle-height: 40px;

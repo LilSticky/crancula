@@ -152,12 +152,14 @@ the file back and compare Bars, pitches, key and tempo mark.
   the translated dialog texts; `saved` → `TAPE.SCORES.SAVED` with the path; `cancelled` → nothing; `failed`,
   `rejected` or a throw → `TAPE.SCORES.FAILED` with the reason and "Try again"; `saving` true while running.
 - [x] T029 [US1] Green: `scores-export.ts` (`ScoresExport`, like `PlotterExport`).
-- [x] T030 [P] [US1] Red: `tape-view.component.spec.ts`: "Export as Scores" (`export-scores`) after "Export for
-  the Plotter", labelled and icon-only (`compactActions`), enabled with Cutting Problems and while the Preview
-  plays, the Preview not stopped and no undo step after an export; disabled while `saving` (FR-001, FR-017).
-- [x] T031 [US1] Green: the action in `tape-view.component.{ts,html}`, passing the Tape, Organ and the Song from
-  `TapeLibrary`.
-- [ ] T032 [US1] e2e Red then Green: `e2e/read-a-tape-as-scores.spec.ts`: import a 3/4 MusicXML Score with an
+- [x] T030 [P] [US1] Red: `tape-view.component.spec.ts`: "Export as Scores" (`export-scores`) as an item of the Export
+  menu (`export-menu`) after "Export for the Plotter" (`export`), labelled and icon-only trigger (`compactActions`),
+  enabled with Cutting Problems and while the Preview plays, the Preview not stopped and no undo step after an
+  export; disabled while `saving` (FR-001, FR-017). Reopened 2026-10-26: one Export menu replaces the two page head
+  buttons (four page head actions); the trigger label is the new key `TAPE.VIEW.EXPORT_MENU`.
+- [x] T031 [US1] Green: the Export menu (`export-menu`) with both items in `tape-view.component.{ts,html}`, passing the
+  Tape, Organ and the Song from `TapeLibrary`. Reopened with T030 (2026-10-26).
+- [x] T032 [US1] e2e Red then Green: `e2e/read-a-tape-as-scores.spec.ts`: import a 3/4 MusicXML Score with an
   upbeat in G major (fixture under `e2e/support/`), stub `dialog.showSaveDialog` in main, export with the
   prefill, read the written file: `<time>` 3/4, implicit Bar 0, `<fifths>1`, tempo mark; export again while the
   Preview plays; cancel the export dialog → no file. `e2e/boundary.spec.ts` lists the `scores` key. Run by
@@ -230,7 +232,7 @@ again and see 4/4 and no upbeat.
   6/8 and 1 × 1/8 returns that choice; each violation shows its `mat-error` and disables Export; a 3/64 Song shows
   `SONG_METRE_NOT_ON_COLUMNS` and 4/4; reopening shows the prefill again (nothing stored) (Story 4.1–4.5).
 - [x] T048 [US4] Green: Time signature and upbeat fields in `scores-export-dialog.component.ts`.
-- [ ] T049 [US4] e2e: extend `e2e/read-a-tape-as-scores.spec.ts`: a Tape composed from scratch exported in 6/8
+- [x] T049 [US4] e2e: extend `e2e/read-a-tape-as-scores.spec.ts`: a Tape composed from scratch exported in 6/8
   with an upbeat of one eighth → first Bar 4 Columns (duration 4), then 24; reopening shows 4/4. (`test-first`,
   then `implementer`)
 
@@ -242,8 +244,9 @@ again and see 4/4 and no upbeat.
   `TAPE.VIEW.EXPORT_SCORES` key used in the dialog and flow exists in en and de; with German, the dialog and
   messages show no key; the suggested file name is the Tape's name in both (Story 5.1, SC-007).
 - [x] T051 [US5] Green: fix texts; `npm run i18n:check` green.
-- [ ] T052 [US5] e2e: `e2e/tape-layout.spec.ts`: the page head with five actions in one row at 1180 px (en) and
-  1440 px (de), icon-only below; raise `COMPACT_QUERY` / `GERMAN_ACTIONS_QUERY` in `tape-view.component.ts` if
+- [x] T052 [US5] e2e: `e2e/tape-layout.spec.ts`: the page head with four actions (Preview, Transpose, Record, Export
+  menu) in one row at 1180 px (en) and 1440 px (de), icon-only below (2026-10-26: the Export menu replaces the two
+  export buttons); raise `COMPACT_QUERY` / `GERMAN_ACTIONS_QUERY` in `tape-view.component.ts` if
   needed (R14). (`test-first`, then `implementer`)
 
 **Checkpoint**: commit; STATUS.

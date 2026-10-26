@@ -8,6 +8,7 @@ import {melodyC3ToC5, melodyC5ToC3, type MidiFilePayload} from './support/midi-f
 import {saveOrgan} from './support/organ-editor';
 import {createTapeFromSong, defineOctaveOrgan} from './support/tape-creation';
 import {stubSaveDialog, type SaveDialogStub} from './support/save-dialog';
+import {exportForPlotter, expectExportItemEnabled} from './support/tape-export-menu';
 
 /** The Tape width of the Organ `defineOctaveOrgan` makes, in mm. */
 const TAPE_WIDTH = 120;
@@ -60,9 +61,9 @@ test.describe('Export a Tape that can not be cut (part 2)', () => {
       await saveOrgan(launched.window);
       await launched.window.getByRole('link', {name: 'Tapes'}).click();
       await launched.window.getByTestId('tape').click();
-      await expect(launched.window.getByTestId('export')).toBeEnabled();
+      await expectExportItemEnabled(launched.window, 'export');
 
-      await launched.window.getByTestId('export').click();
+      await exportForPlotter(launched.window);
 
       const problems = launched.window.getByRole('dialog');
       await expect(problems).toContainText(await englishText('PROBLEMS_TITLE'));
@@ -90,7 +91,7 @@ test.describe('Export a Tape in cut order', () => {
       await defineOctaveOrgan(launched.window, 'Octave organ');
       await createTapeFromSong(launched.window, 'Descent', melodyC5ToC3());
 
-      await launched.window.getByTestId('export').click();
+      await exportForPlotter(launched.window);
 
       // The file exists before writeFile has finished; the snackbar appears only once it has.
       await expect(launched.window.locator('.mat-mdc-snack-bar-container').filter({hasText: target})).toBeVisible();
@@ -131,14 +132,14 @@ test.describe('Export a Tape for the Plotter', () => {
   test('opens the dialog at Waltz.svg in the Documents folder with the English title', async () => {
     await dialog.answerWith('cancel');
 
-    await launched.window.getByTestId('export').click();
+    await exportForPlotter(launched.window);
 
     await expect.poll(async () => (await dialog.calls()).length).toBe(1);
     const documents = await launched.app.evaluate(({app}) => app.getPath('documents'));
     const [call] = await dialog.calls();
     expect(call?.defaultPath).toBe(join(documents, 'Waltz.svg'));
     expect(call?.title).toBe(await englishText('DIALOG_TITLE'));
-    await expect(launched.window.getByTestId('export')).toBeEnabled();
+    await expectExportItemEnabled(launched.window, 'export');
   });
 
   test('writes one SVG in mm with a path per Hole and the Tape Outline last, names the path, and leaves the Tape library alone', async () => {
@@ -146,7 +147,7 @@ test.describe('Export a Tape for the Plotter', () => {
     const tapesBefore = await readTapesFile(launched.userDataDir);
     await dialog.answerWith(target);
 
-    await launched.window.getByTestId('export').click();
+    await exportForPlotter(launched.window);
 
     await expect(launched.window.locator('.mat-mdc-snack-bar-container').filter({hasText: target})).toBeVisible();
     expect(await readdir(folder)).toEqual(['Waltz.svg']);
@@ -171,7 +172,7 @@ test.describe('Export a Tape for the Plotter', () => {
     const target = join(folder, 'Waltz again.svg');
     await dialog.answerWith(target);
 
-    await launched.window.getByTestId('export').click();
+    await exportForPlotter(launched.window);
 
     await expect.poll(async () => (await readdir(folder)).sort()).toEqual(['Waltz again.svg', 'Waltz.svg']);
   });
@@ -180,14 +181,14 @@ test.describe('Export a Tape for the Plotter', () => {
     const before = (await readdir(folder)).sort();
     await dialog.answerWith(join(folder, 'missing', 'Waltz.svg'));
 
-    await launched.window.getByTestId('export').click();
+    await exportForPlotter(launched.window);
 
     await expect(launched.window.locator('.mat-mdc-snack-bar-container').filter({hasText: 'ENOENT'})).toBeVisible();
     expect((await readdir(folder)).sort()).toEqual(before);
 
     const retry = join(folder, 'Retry.svg');
     await dialog.answerWith(retry);
-    await launched.window.getByTestId('export').click();
+    await exportForPlotter(launched.window);
     await expect.poll(async () => (await readdir(folder)).includes('Retry.svg')).toBe(true);
   });
 });

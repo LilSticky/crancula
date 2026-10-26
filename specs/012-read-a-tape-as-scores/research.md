@@ -245,18 +245,21 @@ choose/write of recordings (ADR 26; needed there only because rendering takes lo
 
 ## R14. Where the command lives
 
-**Decision**: a fifth page head action in the Tape view, "Export as Scores" (`TAPE.VIEW.EXPORT_SCORES`, icon
-`queue_music`), after "Export for the Plotter", in both the labelled and the icon-only form. It is enabled
-for every Tape, also with Cutting Problems, while the Preview plays and while recording (FR-001, FR-017);
-only disabled while a Scores save runs. The `e2e/tape-layout.spec.ts` one-row checks at 1180 px (English)
-and 1440 px (German) are rerun; if five labelled actions no longer fit in one row, the two compact
+**Decision**: one Export menu in the Tape view page head, the fourth action after Preview, Transpose and Record
+(decided by the user 2026-10-26). The trigger (`data-testid="export-menu"`, `TAPE.VIEW.EXPORT_MENU`, "Export" in
+both languages) is labelled, or icon-only with the label as accessible name and tooltip when `compactActions()`.
+Its items, in order: "Export for the Plotter" (`export`, `TAPE.VIEW.EXPORT`, disabled while
+`PlotterExport.saving()`) and "Export as Scores" (`export-scores`, `TAPE.VIEW.EXPORT_SCORES`, icon `queue_music`,
+disabled while `ScoresExport.saving()`). The trigger is enabled for every Tape, also with Cutting Problems, while
+the Preview plays and while recording (FR-001, FR-017). The `e2e/tape-layout.spec.ts` one-row checks at 1180 px
+(English) and 1440 px (German) are rerun with four actions; if they no longer fit in one row, the two compact
 breakpoints in `tape-view.component.ts` are raised to where they do.
 
-**Rationale**: the spec puts it next to "Export for the Plotter"; a menu over both exports would change the
-existing export's tests and flow.
+**Rationale**: one menu over both exports keeps the page head to four actions, so the labelled form fits the
+one-row checks where five did not; the Plotter export moves one click deeper, which the user accepted.
 
-**Alternatives**: an export menu (one more click for the Plotter, the most used command); the Tape list (spec:
-later).
+**Alternatives**: a fifth page head action next to "Export for the Plotter" (rejected: five actions crowd the
+page head); the Tape list (spec: later).
 
 ## R15. Inputs and performance
 

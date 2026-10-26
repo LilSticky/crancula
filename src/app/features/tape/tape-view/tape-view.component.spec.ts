@@ -53,6 +53,7 @@ import {TapeRecorder, type RecordingState} from '../recording/tape-recorder';
 import {PREVIEW_SOUND, type PreviewSound, type PreviewVoice} from '../preview/preview-sound';
 import {type HarnessLoader} from '@angular/cdk/testing';
 import {MatSelectHarness} from '@angular/material/select/testing';
+import {MatMenuHarness, MatMenuItemHarness} from '@angular/material/menu/testing';
 import {PlotterLibrary} from '../../plotter/plotter-library.store';
 import {PlotterPreference} from '../../plotter/plotter-preference';
 
@@ -73,6 +74,17 @@ const SCALE = pixelsPerMillimetre('1:1', 0, 0);
 function required<T>(value: T | null | undefined, what: string): T {
   if (value === null || value === undefined) throw new Error(`missing ${what}`);
   return value;
+}
+
+/** The Export menu of the page head: its trigger opens it, its items (export, export-scores) show only while it is open. */
+const exportMenu = (loader: () => HarnessLoader): Promise<MatMenuHarness> =>
+  loader().getHarness(MatMenuHarness.with({selector: '[data-testid="export-menu"]'}));
+
+/** The item of the Export menu with this testid, after opening the menu. */
+async function exportMenuItem(loader: () => HarnessLoader, testId: 'export' | 'export-scores'): Promise<MatMenuItemHarness> {
+  const menu = await exportMenu(loader);
+  await menu.open();
+  return required((await menu.getItems({selector: `[data-testid="${testId}"]`}))[0], `${testId} in the Export menu`);
 }
 
 /** Whether the Preview toggle reads Stop preview: the state is told by its label, not by a pressed state. */
@@ -506,24 +518,24 @@ describe('TapeViewComponent', () => {
       expect(link?.classList).toContain('mat-mdc-button');
     });
 
-    it('offers Export for the Plotter as an enabled outlined button without a later-release note', async () => {
+    it('offers one Export menu as an enabled outlined button in the page head, in place of the two exports', async () => {
       const {tape, open, view} = await render();
 
       await open(`/tapes/${tape.id}`);
 
-      const exportButton = view()?.querySelector<HTMLButtonElement>('[data-testid="page-head-actions"] [data-testid="export"]');
-      expect(exportButton?.disabled).toBe(false);
-      expect(exportButton?.textContent).toContain('content_cut');
-      expect(exportButton?.textContent).toContain('Export for the Plotter');
-      expect(exportButton?.className).toContain('mat-mdc-outlined-button');
-      expect(view()?.querySelector('[data-testid="export-later"]')).toBeNull();
+      const trigger = view()?.querySelector<HTMLButtonElement>('[data-testid="page-head-actions"] [data-testid="export-menu"]');
+      expect(trigger?.disabled).toBe(false);
+      expect(trigger?.textContent).toContain('Export');
+      expect(trigger?.className).toContain('mat-mdc-outlined-button');
+      expect(view()?.querySelector('[data-testid="page-head-actions"] [data-testid="export"]')).toBeNull();
+      expect(view()?.querySelector('[data-testid="page-head-actions"] [data-testid="export-scores"]')).toBeNull();
     });
 
-    it('exports the shown Tape with its Organ when Export for the Plotter is pressed', async () => {
-      const {tape, organ, open, view, settle, plotterExport} = await render();
+    it('exports the shown Tape with its Organ when Export for the Plotter is chosen from the Export menu', async () => {
+      const {tape, organ, open, loader, settle, plotterExport} = await render();
       await open(`/tapes/${tape.id}`);
 
-      view()?.querySelector<HTMLButtonElement>('[data-testid="export"]')?.click();
+      await (await exportMenuItem(loader, 'export')).click();
       await settle();
 
       expect(plotterExport.export).toHaveBeenCalledTimes(1);
@@ -539,20 +551,20 @@ describe('TapeViewComponent', () => {
 
       afterEach(() => TestBed.inject(MatDialog).closeAll());
 
-      it('keeps Export for the Plotter enabled', async () => {
-        const {tape, open, view} = await render({realExport: true, organNow: widerOrgan});
+      it('keeps Export for the Plotter enabled in the Export menu', async () => {
+        const {tape, open, loader} = await render({realExport: true, organNow: widerOrgan});
 
         await open(`/tapes/${tape.id}`);
 
-        expect(view()?.querySelector<HTMLButtonElement>('[data-testid="export"]')?.disabled).toBe(false);
+        expect(await (await exportMenuItem(loader, 'export')).isDisabled()).toBe(false);
       });
 
-      it('opens the problems dialog when Export for the Plotter is pressed', async () => {
-        const {tape, open, view, settle} = await render({realExport: true, organNow: widerOrgan});
+      it('opens the problems dialog when Export for the Plotter is chosen from the Export menu', async () => {
+        const {tape, open, loader, settle} = await render({realExport: true, organNow: widerOrgan});
         await open(`/tapes/${tape.id}`);
         const dialogOpen = vi.spyOn(TestBed.inject(MatDialog), 'open');
 
-        view()?.querySelector<HTMLButtonElement>('[data-testid="export"]')?.click();
+        await (await exportMenuItem(loader, 'export')).click();
         await settle();
 
         expect(dialogOpen).toHaveBeenCalledTimes(1);
@@ -560,19 +572,17 @@ describe('TapeViewComponent', () => {
       });
     });
 
-    it('disables Export for the Plotter while a save is running', async () => {
-      const {tape, open, view, settle, plotterExport} = await render();
+    it('disables Export for the Plotter in the Export menu while a save is running', async () => {
+      const {tape, open, loader, settle, plotterExport} = await render();
       await open(`/tapes/${tape.id}`);
 
       plotterExport.saving.set(true);
       await settle();
 
-      expect(view()?.querySelector<HTMLButtonElement>('[data-testid="export"]')?.disabled).toBe(true);
+      expect(await (await exportMenuItem(loader, 'export')).isDisabled()).toBe(true);
     });
 
-    describe('the Export as Scores action (T030)', () => {
-      const scoresButton = (view: HTMLElement | null) =>
-        view?.querySelector<HTMLButtonElement>('[data-testid="page-head-actions"] [data-testid="export-scores"]') ?? null;
+    describe('the Export as Scores item of the Export menu (T030)', () => {
       const undoButton = (view: HTMLElement | null) => view?.querySelector<HTMLButtonElement>('[data-testid="undo"]') ?? null;
       // Its Organ's holes were made so wide after the Tape was made that its Holes are shorter than the Minimum Hole Length.
       const widerOrgan = (original: Organ): Organ => ({
@@ -580,27 +590,26 @@ describe('TapeViewComponent', () => {
         id: original.id,
       });
 
-      it('offers Export as Scores as an enabled button after Export for the Plotter', async () => {
-        const {tape, open, view} = await render();
+      it('lists Export as Scores as an enabled item after Export for the Plotter, with the queue_music icon', async () => {
+        const {tape, open, loader} = await render();
 
         await open(`/tapes/${tape.id}`);
 
-        const plotterButton = required(
-          view()?.querySelector<HTMLButtonElement>('[data-testid="page-head-actions"] [data-testid="export"]'),
-          'Export for the Plotter',
-        );
-        const button = required(scoresButton(view()), 'Export as Scores');
-        expect(button.disabled).toBe(false);
-        expect(button.textContent).toContain('queue_music');
-        expect(button.textContent).toContain('Export as Scores');
-        expect(plotterButton.compareDocumentPosition(button) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0);
+        const menu = await exportMenu(loader);
+        await menu.open();
+        const ids = await Promise.all((await menu.getItems()).map(async (item) => (await item.host()).getAttribute('data-testid')));
+        expect(ids).toEqual(['export', 'export-scores']);
+        const scores = await exportMenuItem(loader, 'export-scores');
+        expect(await scores.isDisabled()).toBe(false);
+        expect(await scores.getText()).toContain('Export as Scores');
+        expect(await scores.getText()).toContain('queue_music');
       });
 
-      it('exports the shown Tape with its Organ and its Song when Export as Scores is pressed', async () => {
-        const {tape, organ, song, open, view, settle, scoresExport} = await render();
+      it('exports the shown Tape with its Organ and its Song when Export as Scores is chosen', async () => {
+        const {tape, organ, song, open, loader, settle, scoresExport} = await render();
         await open(`/tapes/${tape.id}`);
 
-        scoresButton(view())?.click();
+        await (await exportMenuItem(loader, 'export-scores')).click();
         await settle();
 
         expect(scoresExport.export).toHaveBeenCalledTimes(1);
@@ -608,46 +617,46 @@ describe('TapeViewComponent', () => {
       });
 
       it('keeps Export as Scores enabled for a Tape that can not be cut', async () => {
-        const {tape, open, view} = await render({realExport: true, organNow: widerOrgan});
+        const {tape, open, loader} = await render({realExport: true, organNow: widerOrgan});
 
         await open(`/tapes/${tape.id}`);
 
-        expect(scoresButton(view())?.disabled).toBe(false);
+        expect(await (await exportMenuItem(loader, 'export-scores')).isDisabled()).toBe(false);
       });
 
       it('keeps Export as Scores enabled while the Preview plays', async () => {
-        const {tape, open, view, settle} = await render({tapePerCrankTurn: 100});
+        const {tape, open, view, loader, settle} = await render({tapePerCrankTurn: 100});
         await open(`/tapes/${tape.id}`);
         required(view()?.querySelector<HTMLButtonElement>('[data-testid="preview-toggle"]'), 'preview toggle').click();
         await settle();
 
         expect(isPreviewing(view())).toBe(true);
-        expect(scoresButton(view())?.disabled).toBe(false);
+        expect(await (await exportMenuItem(loader, 'export-scores')).isDisabled()).toBe(false);
       });
 
-      it('does not stop the Preview when Export as Scores is pressed', async () => {
-        const {tape, open, view, settle, previewSound} = await render({tapePerCrankTurn: 100});
+      it('does not stop the Preview when Export as Scores is chosen', async () => {
+        const {tape, open, view, loader, settle, previewSound} = await render({tapePerCrankTurn: 100});
         await open(`/tapes/${tape.id}`);
         required(view()?.querySelector<HTMLButtonElement>('[data-testid="preview-toggle"]'), 'preview toggle').click();
         await settle();
         const stopsBefore = previewSound.stops.length;
 
-        scoresButton(view())?.click();
+        await (await exportMenuItem(loader, 'export-scores')).click();
         await settle();
 
         expect(isPreviewing(view())).toBe(true);
         expect(previewSound.stops).toHaveLength(stopsBefore);
       });
 
-      it('adds no undo step when Export as Scores is pressed', async () => {
-        const {tape, open, view, settle} = await render();
+      it('adds no undo step when Export as Scores is chosen', async () => {
+        const {tape, open, view, loader, settle} = await render();
         await open(`/tapes/${tape.id}`);
         const tapes = TestBed.inject(TapeLibrary);
         const tapesBefore = tapes.tapeEntities();
         const update = vi.spyOn(tapes, 'update');
         expect(undoButton(view())?.disabled).toBe(true);
 
-        scoresButton(view())?.click();
+        await (await exportMenuItem(loader, 'export-scores')).click();
         await settle();
 
         expect(update).not.toHaveBeenCalled();
@@ -655,14 +664,14 @@ describe('TapeViewComponent', () => {
         expect(undoButton(view())?.disabled).toBe(true);
       });
 
-      it('disables Export as Scores while a save is running', async () => {
-        const {tape, open, view, settle, scoresExport} = await render();
+      it('disables Export as Scores in the Export menu while a save is running', async () => {
+        const {tape, open, loader, settle, scoresExport} = await render();
         await open(`/tapes/${tape.id}`);
 
         scoresExport.saving.set(true);
         await settle();
 
-        expect(scoresButton(view())?.disabled).toBe(true);
+        expect(await (await exportMenuItem(loader, 'export-scores')).isDisabled()).toBe(true);
       });
     });
   });
@@ -1531,7 +1540,7 @@ describe('TapeViewComponent', () => {
         'preview-toggle': 'Preview',
         transpose: 'Transpose…',
         record: 'Record',
-        'export-scores': 'Export as Scores',
+        'export-menu': 'Export',
         'side-panel-toggle': 'Tape details',
       };
       for (const [testId, name] of Object.entries(names)) {
@@ -1550,8 +1559,7 @@ describe('TapeViewComponent', () => {
         'preview-toggle': 'Anhören',
         transpose: 'Transponieren…',
         record: 'Aufnehmen',
-        export: 'Export für den Plotter',
-        'export-scores': 'Als Noten exportieren',
+        'export-menu': 'Export',
       };
       for (const [testId, name] of Object.entries(names)) {
         const button = required(view()?.querySelector<HTMLButtonElement>(`[data-testid="page-head-actions"] [data-testid="${testId}"]`), testId);
@@ -1571,6 +1579,7 @@ describe('TapeViewComponent', () => {
         'preview-toggle': 'Anhören',
         transpose: 'Transponieren…',
         record: 'Aufnehmen',
+        'export-menu': 'Export',
       };
       for (const [testId, name] of Object.entries(names)) {
         const button = required(view()?.querySelector<HTMLButtonElement>(`[data-testid="page-head-actions"] [data-testid="${testId}"]`), testId);
@@ -1603,8 +1612,7 @@ describe('TapeViewComponent', () => {
         'preview-toggle': 'Preview',
         transpose: 'Transpose…',
         record: 'Record',
-        export: 'Export for the Plotter',
-        'export-scores': 'Export as Scores',
+        'export-menu': 'Export',
       };
       for (const [testId, name] of Object.entries(names)) {
         const button = required(view()?.querySelector<HTMLButtonElement>(`[data-testid="page-head-actions"] [data-testid="${testId}"]`), testId);
@@ -1636,18 +1644,18 @@ describe('TapeViewComponent', () => {
       expect(summaryShown()).not.toBeNull();
     });
 
-    describe('the Export for the Plotter button', () => {
+    describe('the Export menu button', () => {
       const exportButton = (view: HTMLElement | null) =>
-        view?.querySelector<HTMLButtonElement>('[data-testid="page-head-actions"] [data-testid="export"]') ?? null;
+        view?.querySelector<HTMLButtonElement>('[data-testid="page-head-actions"] [data-testid="export-menu"]') ?? null;
 
-      it('is an icon button with the scissors icon and an aria-label below 1180 px', async () => {
+      it('is an icon button with an aria-label and no visible text below 1180 px', async () => {
         const {tape, open, view} = await render({windowWidth: 1100});
 
         await open(`/tapes/${tape.id}`);
 
-        expect(exportButton(view())?.getAttribute('aria-label')).toBe('Export for the Plotter');
-        expect(exportButton(view())?.querySelector('mat-icon')?.textContent?.trim()).toBe('content_cut');
-        expect(exportButton(view())?.textContent?.trim()).toBe('content_cut');
+        expect(exportButton(view())?.classList).toContain('icon-only');
+        expect(exportButton(view())?.getAttribute('aria-label')).toBe('Export');
+        expect(exportButton(view())?.textContent).not.toContain('Export');
       });
 
       it('shows the label as a tooltip below 1180 px', async () => {
@@ -1657,7 +1665,7 @@ describe('TapeViewComponent', () => {
         exportButton(view())?.dispatchEvent(new MouseEvent('mouseenter'));
         await settle();
 
-        expect(document.body.querySelector('.mat-mdc-tooltip')?.textContent?.trim()).toBe('Export for the Plotter');
+        expect(document.body.querySelector('.mat-mdc-tooltip')?.textContent?.trim()).toBe('Export');
       });
 
       it('keeps the text label from 1180 px', async () => {
@@ -1665,41 +1673,20 @@ describe('TapeViewComponent', () => {
 
         await open(`/tapes/${tape.id}`);
 
-        expect(exportButton(view())?.textContent).toContain('Export for the Plotter');
+        expect(exportButton(view())?.textContent).toContain('Export');
+        expect(exportButton(view())?.classList).not.toContain('icon-only');
       });
     });
 
-    describe('the Export as Scores button (T030)', () => {
-      const scoresButton = (view: HTMLElement | null) =>
-        view?.querySelector<HTMLButtonElement>('[data-testid="page-head-actions"] [data-testid="export-scores"]') ?? null;
-
-      it('is an icon button with the queue_music icon and an aria-label below 1180 px', async () => {
-        const {tape, open, view} = await render({windowWidth: 1100});
-
+    describe('the Export menu items below 1180 px (T030)', () => {
+      it('keeps the labels of both exports in the menu, which is not icon-only', async () => {
+        const {tape, open, loader} = await render({windowWidth: 1100});
         await open(`/tapes/${tape.id}`);
 
-        expect(scoresButton(view())?.getAttribute('aria-label')).toBe('Export as Scores');
-        expect(scoresButton(view())?.classList).toContain('icon-only');
-        expect(scoresButton(view())?.textContent?.trim()).toBe('queue_music');
-      });
-
-      it('shows the label as a tooltip below 1180 px', async () => {
-        const {tape, open, view, settle} = await render({windowWidth: 1100});
-        await open(`/tapes/${tape.id}`);
-
-        scoresButton(view())?.dispatchEvent(new MouseEvent('mouseenter'));
-        await settle();
-
-        expect(document.body.querySelector('.mat-mdc-tooltip')?.textContent?.trim()).toBe('Export as Scores');
-      });
-
-      it('keeps the text label from 1180 px', async () => {
-        const {tape, open, view} = await render({windowWidth: 1280});
-
-        await open(`/tapes/${tape.id}`);
-
-        expect(scoresButton(view())?.textContent).toContain('Export as Scores');
-        expect(scoresButton(view())?.classList).not.toContain('icon-only');
+        const plotter = await exportMenuItem(loader, 'export');
+        const scores = await exportMenuItem(loader, 'export-scores');
+        expect(await plotter.getText()).toContain('Export for the Plotter');
+        expect(await scores.getText()).toContain('Export as Scores');
       });
     });
 
@@ -2352,7 +2339,7 @@ describe('TapeViewComponent', () => {
       await open(`/tapes/${tape.id}`);
 
       const controls = all(view(), 'button, input, select, textarea, [contenteditable]').filter(
-        (control) => control.closest('[data-testid="zoom"], [data-testid="add-hole"], [data-testid="crank-speed-slider"]') === null && !['export', 'export-scores', 'side-panel-toggle', 'undo', 'redo', 'transpose', 'tape-section-toggle', 'import-summary-toggle', 'column-length-input', 'column-length-apply', 'crank-speed-input', 'crank-speed-apply', 'preview-toggle', 'preview-start-column', 'record'].includes(control.getAttribute('data-testid') ?? ''),
+        (control) => control.closest('[data-testid="zoom"], [data-testid="add-hole"], [data-testid="crank-speed-slider"]') === null && !['export-menu', 'side-panel-toggle', 'undo', 'redo', 'transpose', 'tape-section-toggle', 'import-summary-toggle', 'column-length-input', 'column-length-apply', 'crank-speed-input', 'crank-speed-apply', 'preview-toggle', 'preview-start-column', 'record'].includes(control.getAttribute('data-testid') ?? ''),
       );
       expect(controls).toHaveLength(0);
     });
@@ -3503,7 +3490,7 @@ describe('TapeViewComponent', () => {
       it('undo with Ctrl+Z wherever the focus is in the Tape view, and prevent the default', async () => {
         const {tape, view, settle, opened} = await edited('win32');
 
-        const event = await press(view()?.querySelector('[data-testid="export"]') as Element, {key: 'z', ctrlKey: true}, settle);
+        const event = await press(view()?.querySelector('[data-testid="export-menu"]') as Element, {key: 'z', ctrlKey: true}, settle);
 
         expect(event.defaultPrevented).toBe(true);
         expect(storedHoles(tape.id)).toEqual(opened);
@@ -3677,14 +3664,14 @@ describe('TapeViewComponent', () => {
     });
 
     it('opens the cutting problems dialog when Export for the Plotter is pressed on a Tape with a marked Hole', async () => {
-      const {tape, open, view, settle} = await render({...shortenable, realExport: true});
+      const {tape, open, view, loader, settle} = await render({...shortenable, realExport: true});
       await open(`/tapes/${tape.id}`);
       await select(view(), 24, 10, settle);
       await press(view(), {key: 'ArrowLeft', shiftKey: true}, settle);
       const dialogOpen = vi.spyOn(TestBed.inject(MatDialog), 'open');
 
       try {
-        view()?.querySelector<HTMLButtonElement>('[data-testid="export"]')?.click();
+        await (await exportMenuItem(loader, 'export')).click();
         await settle();
 
         expect(dialogOpen).toHaveBeenCalledTimes(1);
@@ -5047,7 +5034,7 @@ describe('TapeViewComponent', () => {
       await open(`/tapes/${tape.id}`);
 
       const record = required(view()?.querySelector<HTMLButtonElement>('[data-testid="page-head-actions"] [data-testid="record"]'), 'record button');
-      const exportButton = required(view()?.querySelector<HTMLButtonElement>('[data-testid="page-head-actions"] [data-testid="export"]'), 'export button');
+      const exportButton = required(view()?.querySelector<HTMLButtonElement>('[data-testid="page-head-actions"] [data-testid="export-menu"]'), 'export menu button');
       expect(record.textContent).toContain('Record');
       expect(record.compareDocumentPosition(exportButton) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0);
     });

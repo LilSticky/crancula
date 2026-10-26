@@ -26,6 +26,7 @@ import {TransposeDialogComponent, type TransposeDialogData} from './transpose-di
 import {MatButton, MatIconButton} from '@angular/material/button';
 import {MatButtonToggle, MatButtonToggleGroup} from '@angular/material/button-toggle';
 import {MatIcon} from '@angular/material/icon';
+import {MatMenu, MatMenuItem, MatMenuTrigger} from '@angular/material/menu';
 import {MatProgressSpinner} from '@angular/material/progress-spinner';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {MatTooltip} from '@angular/material/tooltip';
@@ -159,7 +160,7 @@ const GERMAN_ACTIONS_QUERY = '(max-width: 1439.98px)';
   selector: 'cranc-tape-view',
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [TapeEditor, TapePreview],
-  imports: [ImportSummaryComponent, TranslatePipe, RouterLink, PageHeadComponent, MatButton, MatIconButton, MatTooltip, MatButtonToggle, MatButtonToggleGroup, MatIcon, MatProgressSpinner, AddHoleComponent, CuttingProblemsComponent, SelectedHoleComponent, TapeSectionComponent, PlotterSectionComponent, PreviewSectionComponent, TapeStatusLineComponent],
+  imports: [ImportSummaryComponent, TranslatePipe, RouterLink, PageHeadComponent, MatButton, MatIconButton, MatTooltip, MatButtonToggle, MatButtonToggleGroup, MatIcon, MatMenu, MatMenuItem, MatMenuTrigger, MatProgressSpinner, AddHoleComponent, CuttingProblemsComponent, SelectedHoleComponent, TapeSectionComponent, PlotterSectionComponent, PreviewSectionComponent, TapeStatusLineComponent],
   templateUrl: './tape-view.component.html',
   styleUrl: './tape-view.component.scss',
   host: {'(keydown)': 'onViewKeydown($event)'},

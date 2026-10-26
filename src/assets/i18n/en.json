@@ -75,6 +75,7 @@
       "SUBTITLE": "For the {{organ}}. {{columns}} of {{columnLength}} mm, {{length}} mm of Tape.",
       "COLUMNS_ONE": "{{count}} Column",
       "COLUMNS_OTHER": "{{count}} Columns",
+      "EXPORT_MENU": "Export",
       "EXPORT": "Export for the Plotter",
       "EXPORT_SCORES": "Export as Scores",
       "SIDE_PANEL": "Details",

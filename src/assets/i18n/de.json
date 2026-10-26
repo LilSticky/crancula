@@ -75,6 +75,7 @@
       "SUBTITLE": "Für die {{organ}}. {{columns}} à {{columnLength}} mm, {{length}} mm Lochband.",
       "COLUMNS_ONE": "{{count}} Spalte",
       "COLUMNS_OTHER": "{{count}} Spalten",
+      "EXPORT_MENU": "Export",
       "EXPORT": "Export für den Plotter",
       "EXPORT_SCORES": "Als Noten exportieren",
       "SIDE_PANEL": "Details",

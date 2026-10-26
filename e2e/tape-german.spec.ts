@@ -11,6 +11,7 @@ import {saveOrgan} from './support/organ-editor';
 import {stubSaveDialog} from './support/save-dialog';
 import {createTapeFromSong, defineOctaveOrgan, songRepeatingC4} from './support/tape-creation';
 import {drawnHoles, holeAt, pressOnDrawing} from './support/tape-edit';
+import {exportForPlotter} from './support/tape-export-menu';
 
 /** The German text of `TAPE.EXPORT.<key>`. */
 function germanExportText(key: string): string {
@@ -51,7 +52,7 @@ test.describe('I can export a Tape in German', () => {
       const seen: string[] = [];
 
       await dialog.answerWith(join(folder, 'Waltz.svg'));
-      await window.getByTestId('export').click();
+      await exportForPlotter(window);
       await expect(snackbar.filter({hasText: 'Gespeichert'})).toBeVisible();
       seen.push(await snackbar.last().innerText());
 
@@ -63,7 +64,7 @@ test.describe('I can export a Tape in German', () => {
       expect(await readdir(folder)).toEqual(['Waltz.svg']);
 
       await dialog.answerWith(join(folder, 'missing', 'Waltz.svg'));
-      await window.getByTestId('export').click();
+      await exportForPlotter(window);
       await expect(snackbar.filter({hasText: 'Speichern fehlgeschlagen'})).toBeVisible();
       seen.push(await snackbar.last().innerText());
 
@@ -89,7 +90,7 @@ test.describe('I can export a Tape in German', () => {
       await window.getByTestId('tape').click();
       await window.getByTestId('language-switch').locator('[data-language="de"]').click();
 
-      await window.getByTestId('export').click();
+      await exportForPlotter(window);
 
       const problems = window.getByRole('dialog');
       await expect(problems).toContainText(germanExportText('PROBLEMS_TITLE'));

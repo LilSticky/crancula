@@ -101,8 +101,8 @@ mark with the expected Scores.
 **Acceptance Scenarios**:
 
 1. **Given** a Tape opened in the Tape view, **When** I look at its commands, **Then** "Export as
-   Scores" is available, also when the Tape has Cutting Problems.
-2. **Given** I choose "Export as Scores", **Then** a dialog shows the Time signature, the upbeat and
+   Scores" is available in the Export menu, also when the Tape has Cutting Problems.
+2. **Given** I choose "Export as Scores" in the Export menu, **Then** a dialog shows the Time signature, the upbeat and
    the staves, prefilled (FR-004, FR-005). **When** I confirm, **Then** a save dialog opens with
    "<Tape name>.musicxml" suggested. **When** I save, **Then** one file is written there and I'm told
    where it was saved.
@@ -288,8 +288,8 @@ that no text is shown untranslated.
 
 ### Functional Requirements
 
-- **FR-001**: The Tape view MUST offer "Export as Scores" for every opened Tape, also for one with
-  Cutting Problems.
+- **FR-001**: The Tape view MUST offer "Export as Scores" in its Export menu, next to "Export for the
+  Plotter", for every opened Tape, also for one with Cutting Problems.
 - **FR-002**: Choosing it MUST open an export dialog with the Time signature, the upbeat and the
   staves. Confirming it MUST open a save dialog that suggests "<Tape name>.musicxml", with characters
   the file system doesn't allow in file names replaced. Cancelling either dialog MUST write nothing.
