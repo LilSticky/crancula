@@ -33,8 +33,11 @@ registerPlotterLibraryHandlers(ipcMain, plotterLibraryFile);
 registerPlotterHandlers(
   ipcMain,
   {
-    // Looked up at call time, so e2e tests can replace dialog.showSaveDialog.
+    // Looked up at call time, so e2e tests can replace the dialogs.
     showSaveDialog: (window, options) => dialog.showSaveDialog(window, options),
+    showOpenDialog: (window, options) => dialog.showOpenDialog(window, options),
+    showMessageBox: (window, options) => dialog.showMessageBox(window, options),
+    exists: (filePath) => fs.promises.access(filePath).then(() => true, () => false),
     writeFile: (filePath, text) => fs.promises.writeFile(filePath, text, 'utf8'),
     documentsFolder: () => app.getPath('documents'),
   },

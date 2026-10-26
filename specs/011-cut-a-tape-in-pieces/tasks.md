@@ -100,8 +100,8 @@ expected geometry.
 
 ### Main process
 
-- [ ] T029 [US2] Red: `app/plotter-ipc.spec.ts` (fake effects) for `plotter:save-svg-pieces`: invalid → `rejected`, no dialog; folder dialog with `dialogTitle`, `dialogButton`, `openDirectory`, `createDirectory`, default the last export folder (shared with `saveSvg`) or Documents; cancelled → `cancelled`; existing names → one message box with them in `detail`, answer Cancel → `cancelled`, nothing written; Replace or none existing → all written in order → `saved` with folder and names; a failing write → `failed` with that file, the OS error code and the names written before (FR-024); nothing in `userData` touched.
-- [ ] T030 [US2] Green: `savePieces` handler in `app/plotter-ipc.ts` (`PLOTTER_CHANNELS.savePieces`), new effects `showOpenDialog`, `showMessageBox`, `exists`; wiring in `app/main.ts` with the dialogs looked up at call time; `savePieces` in `app/preload.ts`; in-memory `savePieces` with `failures.plotter.savePieces` in `src/app/core/crancula-api.token.ts`.
+- [x] T029 [US2] Red: `app/plotter-ipc.spec.ts` (fake effects) for `plotter:save-svg-pieces`: invalid → `rejected`, no dialog; folder dialog with `dialogTitle`, `dialogButton`, `openDirectory`, `createDirectory`, default the last export folder (shared with `saveSvg`) or Documents; cancelled → `cancelled`; existing names → one message box with them in `detail`, answer Cancel → `cancelled`, nothing written; Replace or none existing → all written in order → `saved` with folder and names; a failing write → `failed` with that file, the OS error code and the names written before (FR-024); nothing in `userData` touched.
+- [x] T030 [US2] Green: `savePieces` handler in `app/plotter-ipc.ts` (`PLOTTER_CHANNELS.savePieces`), new effects `showOpenDialog`, `showMessageBox`, `exists`; wiring in `app/main.ts` with the dialogs looked up at call time; `savePieces` in `app/preload.ts`; in-memory `savePieces` with `failures.plotter.savePieces` in `src/app/core/crancula-api.token.ts`.
 
 ### UI
 

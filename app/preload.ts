@@ -36,7 +36,7 @@ const tapeChannels: typeof TAPE_LIBRARY_CHANNELS = {load: 'tapes:load', save: 't
 const appChannels: typeof APP_CHANNELS = {setLanguage: 'app:set-language'};
 const editChannels: typeof EDIT_CHANNELS = {command: 'edit:command'};
 const plotterLibraryChannels: typeof PLOTTER_LIBRARY_CHANNELS = {load: 'plotters:load', save: 'plotters:save'};
-const plotterChannels: typeof PLOTTER_CHANNELS = {saveSvg: 'plotter:save-svg'};
+const plotterChannels: typeof PLOTTER_CHANNELS = {saveSvg: 'plotter:save-svg', savePieces: 'plotter:save-svg-pieces'};
 const recordingChannels: typeof RECORDING_CHANNELS = {chooseFile: 'recording:choose-file', writeFile: 'recording:write-file'};
 
 // Mirrors isEditCommand in api/app/edit-command.ts; the sandboxed preload cannot import it at runtime.
@@ -60,9 +60,8 @@ const crancula: CranculaApi = {
   },
   plotter: {
     saveSvg: (request: SvgSaveRequest) => ipcRenderer.invoke(plotterChannels.saveSvg, request) as Promise<SvgSaveResult>,
-    // Stub until the IPC channel is wired (T030).
-    savePieces: (_request: SvgPiecesSaveRequest): Promise<SvgPiecesSaveResult> =>
-      Promise.resolve({status: 'rejected', reason: 'saving Tape pieces is not wired yet'}),
+    savePieces: (request: SvgPiecesSaveRequest) =>
+      ipcRenderer.invoke(plotterChannels.savePieces, request) as Promise<SvgPiecesSaveResult>,
   },
   recording: {
     chooseFile: (request: RecordingChooseRequest) =>

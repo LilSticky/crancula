@@ -3,6 +3,7 @@ import {
   parsePlotterLibrarySnapshot,
   parseRecordingChooseRequest,
   parseRecordingWriteRequest,
+  parseSvgPiecesSaveRequest,
   parseSvgSaveRequest,
   parseTapeLibrarySnapshot,
   type CranculaApi,
@@ -12,6 +13,7 @@ import {
   type PlotterLibrarySnapshot,
   type RecordingChooseResult,
   type RecordingWriteResult,
+  type SvgPiecesSaveRequest,
   type SvgPiecesSaveResult,
   type SvgSaveRequest,
   type SvgSaveResult,
@@ -30,6 +32,7 @@ export const CRANCULA_API = new InjectionToken<CranculaApi>('CranculaApi', {
 export interface InMemoryCranculaApiFailures {
   readonly plotter?: {
     readonly saveSvg?: 'cancelled' | 'failed';
+    readonly savePieces?: 'cancelled' | 'failed';
   };
   readonly recording?: {
     readonly chooseFile?: 'cancelled';
@@ -43,7 +46,10 @@ export interface InMemoryCranculaApiFailures {
 
 /** The in-memory API, which also reveals what the Plotter was last asked to save. */
 export type InMemoryCranculaApi = CranculaApi & {
-  readonly plotter: CranculaApi['plotter'] & {readonly lastSaveSvgRequest: SvgSaveRequest | undefined};
+  readonly plotter: CranculaApi['plotter'] & {
+    readonly lastSaveSvgRequest: SvgSaveRequest | undefined;
+    readonly lastSavePiecesRequest: SvgPiecesSaveRequest | undefined;
+  };
 };
 
 /** The token the in-memory Recording target carries; a real target is a random UUID. */
@@ -60,6 +66,7 @@ export function createInMemoryCranculaApi(
   let storedTapes = initialTapes;
   let storedPlotters = initialPlotters;
   let lastSaveSvgRequest: SvgSaveRequest | undefined;
+  let lastSavePiecesRequest: SvgPiecesSaveRequest | undefined;
   let chosenFileName: string | undefined;
   return {
     organs: {
@@ -104,9 +111,28 @@ export function createInMemoryCranculaApi(
       get lastSaveSvgRequest(): SvgSaveRequest | undefined {
         return lastSaveSvgRequest;
       },
-      // Stub until the IPC channel is wired (T030).
-      savePieces: (): Promise<SvgPiecesSaveResult> =>
-        Promise.resolve({status: 'rejected', reason: 'saving Tape pieces is not wired yet'}),
+      get lastSavePiecesRequest(): SvgPiecesSaveRequest | undefined {
+        return lastSavePiecesRequest;
+      },
+      savePieces: (request): Promise<SvgPiecesSaveResult> => {
+        const parsed = parseSvgPiecesSaveRequest(request);
+        if (!parsed.ok) return Promise.resolve({status: 'rejected', reason: parsed.error});
+        lastSavePiecesRequest = parsed.value;
+        if (failures.plotter?.savePieces === 'cancelled') return Promise.resolve({status: 'cancelled'});
+        if (failures.plotter?.savePieces === 'failed') {
+          return Promise.resolve({
+            status: 'failed',
+            fileName: parsed.value.pieces[0]?.fileName ?? '',
+            reason: 'the Tape pieces could not be written',
+            written: [],
+          });
+        }
+        return Promise.resolve({
+          status: 'saved',
+          folderPath: 'in-memory',
+          fileNames: parsed.value.pieces.map((piece) => piece.fileName),
+        });
+      },
       saveSvg: (request): Promise<SvgSaveResult> => {
         const parsed = parseSvgSaveRequest(request);
         if (!parsed.ok) return Promise.resolve({status: 'rejected', reason: parsed.error});
