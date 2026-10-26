@@ -97,5 +97,13 @@
   {{ 'TAPE.SUMMARY.NONE' | translate }}
 }
 </dd>
+
+@if (summary.leftOut; as leftOut) {
+<dt>{{ 'TAPE.SUMMARY.GRACE_NOTES_LEFT_OUT' | translate }}</dt>
+<dd data-testid="grace-notes-left-out-value">{{ leftOut.graceNotes }}</dd>
+
+<dt>{{ 'TAPE.SUMMARY.ORNAMENTS_LEFT_OUT' | translate }}</dt>
+<dd data-testid="ornaments-left-out-value">{{ leftOut.ornaments }}</dd>
+}
 </dl>
 }

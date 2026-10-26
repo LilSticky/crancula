@@ -6,11 +6,12 @@ import {MatIcon} from '@angular/material/icon';
 import {MatError, MatFormField, MatInput, MatLabel, MatSuffix} from '@angular/material/input';
 import {RouterLink} from '@angular/router';
 import {TranslatePipe} from '@ngx-translate/core';
-import {changeColumnLength, cuttingProblems, type Organ, type Tape} from '@api/index';
+import {changeColumnLength, cuttingProblems, type Organ, type SongMetre, type Tape} from '@api/index';
 import {DecimalInputDirective} from '../../../shared/decimal-input.directive';
 import {formatNumber} from '../../../shared/format-number';
 import {LanguagePreference} from '../../../shared/language-preference';
 import {type ColumnLengthChange, columnLengthChangeTo} from '../column-length-change';
+import {keepsMetre, SongMetreComponent} from '../../song-metre/song-metre.component';
 
 /** What the Tape section tells, with numbers already formatted for the language of the user. */
 export interface TapeSectionView {
@@ -44,7 +45,7 @@ class ColumnLengthErrorMatcher extends ErrorStateMatcher {
 @Component({
   selector: 'cranc-tape-section',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MatButton, MatIconButton, MatIcon, MatError, MatFormField, MatInput, MatLabel, MatSuffix, DecimalInputDirective, FormField, RouterLink, TranslatePipe],
+  imports: [MatButton, MatIconButton, MatIcon, MatError, MatFormField, MatInput, MatLabel, MatSuffix, DecimalInputDirective, FormField, RouterLink, TranslatePipe, SongMetreComponent],
   providers: [{provide: ErrorStateMatcher, useClass: ColumnLengthErrorMatcher}],
   template: `
     <section data-testid="tape-section">
@@ -58,6 +59,10 @@ class ColumnLengthErrorMatcher extends ErrorStateMatcher {
       <dl id="tape-section-content">
         <dt>{{ 'TAPE.SECTION.ORGAN' | translate }}</dt>
         <dd><a matButton [routerLink]="['/organs', view().organId]">{{ view().organName }}</a></dd>
+        @if (metreShown()) {
+          <dt>{{ 'TAPE.SECTION.METRE' | translate }}</dt>
+          <dd><cranc-song-metre [metre]="metre()" /></dd>
+        }
         <dt>{{ 'TAPE.SECTION.COLUMN_LENGTH' | translate }}</dt>
         <dd class="column-length">
           <mat-form-field subscriptSizing="dynamic">
@@ -146,12 +151,15 @@ export class TapeSectionComponent {
   readonly tape = input.required<Tape>();
   /** The Organ of the Tape, to count its Cutting Problems. */
   readonly organ = input.required<Organ>();
+  /** The first Time signature, Key and upbeat of the Tape's Song; the row is left out when it keeps none. */
+  readonly metre = input<SongMetre>({});
   /** Whether editing is paused (the Preview plays): the Column length can't be applied meanwhile. */
   readonly editingPaused = input(false);
   /** The Tape with the Column length the user applied; the Tape view saves it. */
   readonly columnLengthChange = output<Tape>();
 
   protected readonly expanded = signal(true);
+  protected readonly metreShown = computed(() => keepsMetre(this.metre()));
   private readonly applyButton = viewChild<string, ElementRef<HTMLButtonElement>>('applyButton', {read: ElementRef});
   private readonly language = inject(LanguagePreference).language;
 

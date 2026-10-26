@@ -191,4 +191,35 @@ describe('ImportSummaryComponent', () => {
     expect(all('unplayable-note')).toEqual([]);
     expect(all('hole-fixed')).toEqual([]);
   });
+
+  it('shows the grace notes and the ornaments left out as counts, zero included (US3, FR-011)', async () => {
+    const {one} = await render({...SUMMARY, leftOut: {graceNotes: 2, ornaments: 0}});
+
+    expect(one('grace-notes-left-out-value')?.textContent?.trim()).toBe('2');
+    expect(one('ornaments-left-out-value')?.textContent?.trim()).toBe('0');
+  });
+
+  it('labels the two left-out rows Grace notes left out and Ornaments left out, after Holes fixed', async () => {
+    const {element} = await render({...SUMMARY, leftOut: {graceNotes: 2, ornaments: 1}});
+
+    expect([...element.querySelectorAll('dt')].map((term) => term.textContent?.trim())).toEqual([
+      'Transposition',
+      'Notes moved by octaves',
+      'Unplayable Notes',
+      'Holes fixed',
+      'Grace notes left out',
+      'Ornaments left out',
+    ]);
+  });
+
+  it('shows the left-out rows for a Song from a Score and no left-out rows for a Song from MIDI', async () => {
+    const fromScore = await render({...SUMMARY, leftOut: {graceNotes: 2, ornaments: 1}});
+    expect(fromScore.one('grace-notes-left-out-value')).toBeDefined();
+    expect(fromScore.one('ornaments-left-out-value')).toBeDefined();
+
+    TestBed.resetTestingModule();
+    const fromMidi = await render(SUMMARY);
+    expect(fromMidi.one('grace-notes-left-out-value')).toBeUndefined();
+    expect(fromMidi.one('ornaments-left-out-value')).toBeUndefined();
+  });
 });

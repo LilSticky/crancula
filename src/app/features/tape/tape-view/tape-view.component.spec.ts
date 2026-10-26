@@ -111,6 +111,8 @@ interface RenderOptions {
   readonly columnLength?: number;
   /** The language of the texts; English when not given. */
   readonly language?: 'en' | 'de';
+  /** The Lead of the Song has a Time signature of 3/4 and the Key of G major in its meta events. */
+  readonly metre?: boolean;
   /** Writing the Tape library fails. */
   readonly saveFails?: boolean;
   /** Uses the real PlotterExport (and the real problems dialog) instead of a stub. */
@@ -168,6 +170,12 @@ function stubBreakpointObserver(width: number): Pick<BreakpointObserver, 'observ
     isMatched: (value: string | readonly string[]): boolean => queries(value).some(matches),
   };
 }
+
+/** A Time signature of 3/4 and the Key of G major at Tick 0. */
+const METRE_EVENTS = [
+  {delta: 0, event: {type: 'timeSignature' as const, beats: 3, beatType: 4}},
+  {delta: 0, event: {type: 'keySignature' as const, fifths: 1, mode: 'major' as const}},
+];
 
 async function render(options: RenderOptions = {}) {
   const inMemory = createInMemoryCranculaApi(undefined, undefined, options.saveFails ? {tapes: {save: 'failed'}} : {});
@@ -246,6 +254,7 @@ async function render(options: RenderOptions = {}) {
     ].map(({name, channel}) => ({
       events: [
         {delta: 0, event: {type: 'trackName' as const, text: name}},
+        ...(options.metre && channel === 0 ? METRE_EVENTS : []),
         ...[61, 63, 65].flatMap((note) => [
           {delta: 0, event: {type: 'noteOn' as const, channel, note, velocity: 80}},
           {delta: TICKS_PER_QUARTER, event: {type: 'noteOff' as const, channel, note, velocity: 0}},
@@ -598,6 +607,19 @@ describe('TapeViewComponent', () => {
       await open(`/tapes/${tape.id}`);
 
       expect(texts(section(view()) as HTMLElement | null, 'selected-part')).toEqual(['Lead']);
+    });
+  });
+
+  describe('the song metre in the Tape details (US4)', () => {
+    it("shows the Time signature and the Key of the Tape's Song in the Tape details, read-only, and nowhere else in the side panel", async () => {
+      const {tape, open, view} = await render({metre: true});
+
+      await open(`/tapes/${tape.id}`);
+
+      const metre = view()?.querySelector('[data-testid="tape-section"] [data-testid="song-metre"]');
+      expect(metre?.textContent?.replace(/\s+/g, ' ').trim()).toBe('3/4, G major');
+      expect(view()?.querySelectorAll('[data-testid="song-metre"]')).toHaveLength(1);
+      expect(view()?.querySelector('[data-testid="side-panel"] > cranc-song-metre')).toBeNull();
     });
   });
 

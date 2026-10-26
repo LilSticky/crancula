@@ -17,6 +17,7 @@ import {
   type Organ,
   type PartIndex,
   type Result,
+  type LeftOut,
   type Song,
   transposition,
   type TapeViolationCode,
@@ -36,6 +37,8 @@ export interface TapeImportContext {
   readonly song: Song;
   readonly organ: Organ;
   readonly selectedParts: ReadonlySet<PartIndex>;
+  /** Only for a Song from a Score: what its Parts left out, per Part. */
+  readonly leftOut?: ReadonlyMap<PartIndex, LeftOut>;
 }
 
 /** A rule of the Tape that the import form reports at a field. `kind` is the code of the domain violation. */
@@ -49,7 +52,7 @@ function isTapeFieldError(error: ValidationError): error is TapeFieldError {
 
 /** The Tape the draft makes, or the codes of the rules it breaks; the only call of `createTape` on this page. */
 export function createTapeFromDraft(
-  {song, organ, selectedParts}: TapeImportContext,
+  {song, organ, selectedParts, leftOut}: TapeImportContext,
   {name, columnLength, transposition: semitones}: TapeImportDraft,
 ): Result<CreatedTape, readonly TapeViolationCode[]> {
   const valid = transposition(semitones ?? Number.NaN);
@@ -61,6 +64,7 @@ export function createTapeFromDraft(
     transposition: valid,
     name,
     columnLength: columnLength ?? Number.NaN,
+    leftOut,
   });
   return result.ok ? result : {ok: false, error: result.error.map(({code}) => code)};
 }
