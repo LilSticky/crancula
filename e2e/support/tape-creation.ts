@@ -39,15 +39,16 @@ export function songRepeatingC4(fileName: string, repeats: number): MidiFilePayl
   return {name: fileName, mimeType: 'audio/midi', buffer: Buffer.from(bytes)};
 }
 
-/** Brings the Song onto a new Tape of the only stored Organ and waits for the Tape to be stored. */
+/** Brings the Song onto a new Tape of the only stored Organ (or of `organName`) and waits for the Tape to be stored. */
 export async function createTapeFromSong(
   window: Page,
   tapeName: string,
   song: MidiFilePayload,
-  options: {readonly columnLength?: string} = {},
+  options: {readonly columnLength?: string; readonly organName?: string} = {},
 ): Promise<void> {
   await window.getByRole('link', {name: 'Tapes'}).click();
   await window.getByTestId('new-tape').click();
+  if (options.organName !== undefined) await window.getByTestId('organ').selectOption({label: options.organName});
   await window.getByTestId('song-file').setInputFiles(song);
   await expect(window.getByTestId('name')).not.toHaveValue(''); // The suggested name arrives once the Song is read.
   await expect(window.getByTestId('song-rejection')).toHaveCount(0);
