@@ -34,6 +34,14 @@ From [the discovery](../../documentation/discovery/later.md), section 5, decisio
 - Terms approved for DICTIONARY.md: Lane (Bahn), Tape spacing (Bandabstand); Plotter and Tape Outline
   mention side-by-side cuts.
 
+### Session 2026-10-27
+
+- Q: Where do I start a side-by-side cut and arrange the Lanes? → A: On its own page, opened from the Tape
+  list after ticking Tapes there ("Cut side by side"); the page holds the Lane list, the roll plotter
+  picker, the free width and Save, and Tapes can be added there.
+- Q: Does the page draw the arrangement to scale or only list the Lanes? → A: A to-scale drawing of the
+  roll (each Lane's Tape Outline, the Tape spacing and the free width) above the Lane list.
+
 ## User Scenarios & Testing *(mandatory)*
 
 The worked examples use the reference Organ of spec 003 (tape width 100 mm, Lead-in 50 mm, Minimum Gap
@@ -73,7 +81,7 @@ file with the expected geometry.
 
 ### User Story 2 - Arrange the lanes (Priority: P1)
 
-Before I save, I see the Lanes in order with each Tape's name, its Organ, its width and length, and the
+Before I save, I see the roll drawn to scale and the Lanes in order with each Tape's name, its Organ, its width and length, and the
 working width still free. I add Tapes, remove them, add the same Tape again for a spare copy, and move a
 Lane up or down.
 
@@ -204,8 +212,9 @@ app's language ("and 2 more" / "und 2 weitere").
 
 #### Choosing the Lanes
 
-- **FR-003**: Users MUST be able to start a side-by-side cut from the Tape library with one or more Tapes
-  picked, and add or remove Tapes there afterwards.
+- **FR-003**: Users MUST be able to tick one or more Tapes in the Tape list and choose "Cut side by side",
+  which opens its own page holding the Lanes in the ticked order; Tapes MUST be addable and removable on
+  that page.
 - **FR-004**: Each Lane MUST hold one Tape; the same Tape MAY be in several Lanes. Users MUST be able to
   move a Lane up or down and remove it.
 - **FR-005**: Only roll plotters MUST be offered. The roll plotter picked in the Tape view (spec 011), if
@@ -218,6 +227,9 @@ app's language ("and 2 more" / "und 2 weitere").
   user MUST be told the width it needs and the free width. A Tape without an Organ MUST NOT be added.
 - **FR-008**: Each Lane MUST show its number, the Tape's name, its Organ, its tape width and its length,
   and be marked when its Tape has a Cutting Problem or no longer fits.
+- **FR-008a**: Above the Lane list, the page MUST draw the roll to scale across the working width: each
+  Lane's Tape Outline in its place, the Tape spacing between them and the free width, updated at once after
+  every change.
 
 #### The cut
 
@@ -270,8 +282,8 @@ app's language ("and 2 more" / "und 2 weitere").
 
 ## Assumptions
 
-- **Entry point**: the Tape library gets a way to pick several Tapes and start a side-by-side cut; the
-  exact screen (dialog or page) is a plan decision, checked by `/speckit-clarify`.
+- **Entry point**: the Tape list gets a way to tick several Tapes; the side-by-side page is its own route
+  (clarified 2026-10-27).
 - **Plotter snapshot**: adding the Tape spacing to roll plotters is a new Plotter snapshot version with a
   migration (ADR 20).
 - **Lane order across the width**: Lane 1 at the top, matching row 1 at the top of the Tape view and the

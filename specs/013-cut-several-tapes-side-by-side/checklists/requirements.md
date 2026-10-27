@@ -31,5 +31,5 @@
 
 ## Notes
 
-- The entry point in the Tape library (dialog or page) is left to `/speckit-clarify`; the Plotter snapshot
+- Entry point and drawing clarified 2026-10-27 (own page from the Tape list, to-scale drawing); the Plotter snapshot
   migration (ADR 20) is named as an assumption, its version is a plan decision.
