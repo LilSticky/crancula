@@ -155,7 +155,16 @@ export {
 } from './preview/performance';
 export {plotterFileName} from './tape/plotter-file-name';
 export {tapePieceFileNames} from './tape/tape-piece-file-name';
-export {DEFAULT_OVERLAP, newPlotterId, plotterId, type Plotter, type PlotterId, type RollPlotter, type SheetPlotter} from './plotter/plotter';
+export {
+  DEFAULT_OVERLAP,
+  DEFAULT_TAPE_SPACING,
+  newPlotterId,
+  plotterId,
+  type Plotter,
+  type PlotterId,
+  type RollPlotter,
+  type SheetPlotter,
+} from './plotter/plotter';
 export {draftOf, emptyPlotterDraft, type PlotterDraft} from './plotter/plotter-draft';
 export {validatePlotter, type PlotterField, type PlotterViolation, type PlotterViolationCode} from './plotter/validate-plotter';
 export {

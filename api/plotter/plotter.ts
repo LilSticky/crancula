@@ -9,6 +9,9 @@ export type PlotterId = string & {readonly [plotterIdBrand]: true};
 /** The Overlap a Plotter starts with, in millimetres: the strip that lies under the next Tape piece. */
 export const DEFAULT_OVERLAP = 20;
 
+/** The Tape spacing a roll Plotter starts with, in millimetres: the blank strip between two Lanes. */
+export const DEFAULT_TAPE_SPACING = 3;
+
 /** What every Plotter has: a name, the file format it cuts and its working width. */
 interface PlotterBase {
   readonly id: PlotterId;
@@ -30,6 +33,8 @@ export interface SheetPlotter extends PlotterBase {
 /** A roll Plotter (a vinyl cutter) cuts near-endless lengths: it has no working length and never splits a Tape. */
 export interface RollPlotter extends PlotterBase {
   readonly roll: true;
+  /** The blank strip between two Lanes in a side-by-side cut. */
+  readonly tapeSpacing: Millimetres;
 }
 
 /** A valid Plotter. Obtain one only through `validatePlotter` or the snapshot parser. */

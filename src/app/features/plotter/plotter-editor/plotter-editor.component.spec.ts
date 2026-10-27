@@ -23,7 +23,7 @@ function render(language: 'en' | 'de' = 'en') {
 
 /** A stored sheet Plotter: "Cutting mat", 120 mm wide, 300 mm long, with the default Overlap of 20 mm. */
 function storedSheet(): Plotter {
-  const draft: PlotterDraft = {id: newPlotterId(), name: 'Cutting mat', workingWidth: 120, roll: false, workingLength: 300, overlap: 20};
+  const draft: PlotterDraft = {id: newPlotterId(), name: 'Cutting mat', workingWidth: 120, roll: false, workingLength: 300, overlap: 20, tapeSpacing: 3};
   const result = validatePlotter(draft);
   if (!result.ok) throw new Error(`invalid test Plotter: ${JSON.stringify(result.error)}`);
   return result.value;

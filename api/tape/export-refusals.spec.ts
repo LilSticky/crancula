@@ -22,7 +22,7 @@ function tapeWithoutPipe() {
 }
 
 /** The reference Plotter, narrower than the 100 mm Tape of the reference Organ. */
-const NARROW_PLOTTER = plotterOf({name: 'Narrow mat', workingWidth: 90, roll: false, workingLength: 300, overlap: 20});
+const NARROW_PLOTTER = plotterOf({name: 'Narrow mat', workingWidth: 90, roll: false, workingLength: 300, overlap: 20, tapeSpacing: 3});
 
 describe('exportRefusals', () => {
   it('is empty for a Tape that can be cut on the Plotter', () => {

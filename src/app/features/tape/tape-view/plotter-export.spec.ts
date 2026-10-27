@@ -49,10 +49,10 @@ const TICKS_PER_QUARTER = 480;
 const LONG_TAPE_RESTS = 60;
 
 /** The reference Plotter of spec 011: a sheet Plotter with working length 300 mm, working width 120 mm and Overlap 20 mm. */
-const REFERENCE_PLOTTER: PlotterDraft = {name: 'Cutting mat', workingWidth: 120, roll: false, workingLength: 300, overlap: 20};
+const REFERENCE_PLOTTER: PlotterDraft = {name: 'Cutting mat', workingWidth: 120, roll: false, workingLength: 300, overlap: 20, tapeSpacing: 3};
 
 /** A roll plotter: it never splits a Tape. */
-const ROLL_PLOTTER: PlotterDraft = {name: 'Vinyl cutter', workingWidth: 120, roll: true, workingLength: null, overlap: 20};
+const ROLL_PLOTTER: PlotterDraft = {name: 'Vinyl cutter', workingWidth: 120, roll: true, workingLength: null, overlap: 20, tapeSpacing: 3};
 
 /** Three quarter notes on three rows, with `restQuarters` rests before each note. */
 function waltz(organ: Organ, restQuarters = 0): {readonly tape: Tape; readonly song: Song} {

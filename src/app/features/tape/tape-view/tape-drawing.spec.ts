@@ -275,7 +275,7 @@ describe('joinMarks', () => {
   });
 
   it('gives no Join for a Tape too wide for the Plotter', () => {
-    const narrow = plotterOf({name: 'Narrow', workingWidth: 50, roll: false, workingLength: 300, overlap: 20});
+    const narrow = plotterOf({name: 'Narrow', workingWidth: 50, roll: false, workingLength: 300, overlap: 20, tapeSpacing: 3});
 
     expect(joinMarks(tapePieces(tapeGeometry(referenceWithoutHoles, referenceOrganForCuts), narrow), 2)).toEqual([]);
   });

@@ -13,7 +13,7 @@ function plotterErrors(errors: readonly unknown[]): PlotterFieldError[] {
 }
 
 /** A sheet Plotter as the editor holds it: 300 mm long, 120 mm wide, 20 mm Overlap. */
-const sheetDraft: PlotterDraft = {name: 'Cutting mat', workingWidth: 120, roll: false, workingLength: 300, overlap: 20};
+const sheetDraft: PlotterDraft = {name: 'Cutting mat', workingWidth: 120, roll: false, workingLength: 300, overlap: 20, tapeSpacing: 3};
 
 describe('plotterFormSchema', () => {
   it('reports no error for a valid sheet Plotter', () => {
@@ -24,7 +24,7 @@ describe('plotterFormSchema', () => {
   });
 
   it('reports no error for a roll plotter that has no working length and no Overlap', () => {
-    const root = plotterForm({name: 'Vinyl cutter', workingWidth: 120, roll: true, workingLength: null, overlap: null});
+    const root = plotterForm({name: 'Vinyl cutter', workingWidth: 120, roll: true, workingLength: null, overlap: null, tapeSpacing: 3});
 
     expect(root().valid()).toBe(true);
   });

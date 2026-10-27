@@ -41,7 +41,7 @@ function defined<T>(value: T | undefined, what: string): T {
 
 /** A sheet Plotter of a working length × working width, named as the user describes it. */
 function sheetPlotter(name: string, workingLength: number, workingWidth: number, overlap = 20): Plotter {
-  const draft: PlotterDraft = {id: newPlotterId(), name, workingWidth, roll: false, workingLength, overlap};
+  const draft: PlotterDraft = {id: newPlotterId(), name, workingWidth, roll: false, workingLength, overlap, tapeSpacing: 3};
   const result = validatePlotter(draft);
   if (!result.ok) throw new Error(`invalid test Plotter: ${JSON.stringify(result.error)}`);
   return result.value;
@@ -49,7 +49,7 @@ function sheetPlotter(name: string, workingLength: number, workingWidth: number,
 
 /** A roll plotter (a vinyl cutter) of a working width. */
 function rollPlotter(name: string, workingWidth: number): Plotter {
-  const draft: PlotterDraft = {id: newPlotterId(), name, workingWidth, roll: true, workingLength: null, overlap: null};
+  const draft: PlotterDraft = {id: newPlotterId(), name, workingWidth, roll: true, workingLength: null, overlap: null, tapeSpacing: 3};
   const result = validatePlotter(draft);
   if (!result.ok) throw new Error(`invalid test Plotter: ${JSON.stringify(result.error)}`);
   return result.value;

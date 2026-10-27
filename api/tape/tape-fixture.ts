@@ -66,5 +66,5 @@ export function plotterOf(draft: PlotterDraft): Plotter {
 
 /** For specs: the reference Plotter of spec 011: a sheet Plotter with working length 300 mm, working width 120 mm and Overlap 20 mm. */
 export function referencePlotter(): Plotter {
-  return plotterOf({name: 'Cutting mat', workingWidth: 120, roll: false, workingLength: 300, overlap: 20});
+  return plotterOf({name: 'Cutting mat', workingWidth: 120, roll: false, workingLength: 300, overlap: 20, tapeSpacing: 3});
 }

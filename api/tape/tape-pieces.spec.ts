@@ -266,7 +266,7 @@ describe('tapePieces', () => {
 
     it('makes the stretch from Column 1 to the first possible Join a problem when Lead-in and Overlap reach the working length', () => {
       // Lead-in 50 mm + Overlap 20 mm = 70 mm, at least the working length of 60 mm: no Join after the tip fits.
-      const short = plotterOf({name: 'Short', workingWidth: 120, roll: false, workingLength: 60, overlap: 20});
+      const short = plotterOf({name: 'Short', workingWidth: 120, roll: false, workingLength: 60, overlap: 20, tapeSpacing: 3});
       const expected: TapePieces = {kind: 'no-join', stretches: [{first: col(0), last: col(0)}]};
 
       expect(piecesOf(tapeWith(organ, 3, 200), organ, short)).toEqual(expected);
@@ -282,14 +282,14 @@ describe('tapePieces', () => {
 
   describe('when the Plotter is narrower than the tape', () => {
     it('gives too-wide with both widths and nothing else', () => {
-      const narrow = plotterOf({name: 'Narrow', workingWidth: 90, roll: false, workingLength: 300, overlap: 20});
+      const narrow = plotterOf({name: 'Narrow', workingWidth: 90, roll: false, workingLength: 300, overlap: 20, tapeSpacing: 3});
       const expected: TapePieces = {kind: 'too-wide', tapeWidth: 100, workingWidth: 90};
 
       expect(piecesOf(tapeWith(organ, 3, 200), organ, narrow)).toEqual(expected);
     });
 
     it('fits a Tape exactly as wide as the working width (FR-017)', () => {
-      const exact = plotterOf({name: 'Exact', workingWidth: 100, roll: false, workingLength: 300, overlap: 20});
+      const exact = plotterOf({name: 'Exact', workingWidth: 100, roll: false, workingLength: 300, overlap: 20, tapeSpacing: 3});
 
       expect(piecesOf(tapeWith(organ, 3, 200), organ, exact)).toEqual(referenceCut);
     });
@@ -297,7 +297,7 @@ describe('tapePieces', () => {
 
   describe('when the Plotter is a roll Plotter', () => {
     it('gives the reference Tape as one Tape piece of 652 mm, however long it is (FR-011)', () => {
-      const roll = plotterOf({name: 'Vinyl cutter', workingWidth: 120, roll: true, workingLength: null, overlap: null});
+      const roll = plotterOf({name: 'Vinyl cutter', workingWidth: 120, roll: true, workingLength: null, overlap: null, tapeSpacing: 3});
 
       expect(piecesOf(referenceTape(organ), organ, roll)).toEqual({
         kind: 'pieces',
@@ -306,7 +306,7 @@ describe('tapePieces', () => {
     });
 
     it('gives too-wide with both widths when the roll Plotter is narrower than the Tape (scenario 2)', () => {
-      const narrowRoll = plotterOf({name: 'Narrow roll', workingWidth: 90, roll: true, workingLength: null, overlap: null});
+      const narrowRoll = plotterOf({name: 'Narrow roll', workingWidth: 90, roll: true, workingLength: null, overlap: null, tapeSpacing: 3});
       const expected: TapePieces = {kind: 'too-wide', tapeWidth: 100, workingWidth: 90};
 
       expect(piecesOf(referenceTape(organ), organ, narrowRoll)).toEqual(expected);
@@ -319,7 +319,7 @@ describe('tapePieces', () => {
       for (let seed = 1; seed <= GENERATED_CASES; seed += 1) {
         const {organ: generatedOrgan, tape, workingLength, overlap} = generatedCase(seed);
         const geometry = tapeGeometry(tape, generatedOrgan);
-        const generatedPlotter = plotterOf({name: 'Generated', workingWidth: 120, roll: false, workingLength, overlap});
+        const generatedPlotter = plotterOf({name: 'Generated', workingWidth: 120, roll: false, workingLength, overlap, tapeSpacing: 3});
         const result = tapePieces(geometry, generatedPlotter);
         const expected = fewestPieces(geometry, tape.length, workingLength, overlap);
 

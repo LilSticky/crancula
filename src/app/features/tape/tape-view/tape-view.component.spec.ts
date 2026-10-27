@@ -61,7 +61,7 @@ const PLOTTER_KEY = 'crancula.plotter';
 
 /** A sheet Plotter of 300 mm working width and length, named as the user describes it. */
 function cuttingMat(): Plotter {
-  const draft: PlotterDraft = {id: newPlotterId(), name: 'Cutting mat', workingWidth: 300, roll: false, workingLength: 300, overlap: 20};
+  const draft: PlotterDraft = {id: newPlotterId(), name: 'Cutting mat', workingWidth: 300, roll: false, workingLength: 300, overlap: 20, tapeSpacing: 3};
   const result = validatePlotter(draft);
   if (!result.ok) throw new Error(`invalid test Plotter: ${JSON.stringify(result.error)}`);
   return result.value;
@@ -818,8 +818,8 @@ describe('TapeViewComponent', () => {
     /** A sheet Plotter of 300 mm working length and the given working width, or a roll plotter of that width. */
     function plotterOf(workingWidth: number, roll = false): Plotter {
       const draft: PlotterDraft = roll
-        ? {id: newPlotterId(), name: 'Vinyl cutter', workingWidth, roll: true, workingLength: null, overlap: null}
-        : {id: newPlotterId(), name: 'Cutting mat', workingWidth, roll: false, workingLength: 300, overlap: 20};
+        ? {id: newPlotterId(), name: 'Vinyl cutter', workingWidth, roll: true, workingLength: null, overlap: null, tapeSpacing: 3}
+        : {id: newPlotterId(), name: 'Cutting mat', workingWidth, roll: false, workingLength: 300, overlap: 20, tapeSpacing: 3};
       const result = validatePlotter(draft);
       if (!result.ok) throw new Error(`invalid test Plotter: ${JSON.stringify(result.error)}`);
       return result.value;
@@ -1064,7 +1064,7 @@ describe('TapeViewComponent', () => {
 
     /** A sheet Plotter with the given id, working length and working width 300 mm, named "Cutting mat". */
     function sheet(id: Plotter['id'], workingLength: number): Plotter {
-      const draft: PlotterDraft = {id, name: 'Cutting mat', workingWidth: 300, roll: false, workingLength, overlap: 20};
+      const draft: PlotterDraft = {id, name: 'Cutting mat', workingWidth: 300, roll: false, workingLength, overlap: 20, tapeSpacing: 3};
       const result = validatePlotter(draft);
       if (!result.ok) throw new Error(`invalid test Plotter: ${JSON.stringify(result.error)}`);
       return result.value;
