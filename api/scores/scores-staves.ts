@@ -61,6 +61,25 @@ export function staffRange(staff: Pick<Staff, 'from' | 'below'>): StaffRange {
   };
 }
 
+/** The Pipes a staff plays: the lowest and the highest of them, and how many there are (FR-005). */
+export interface StaffPipes {
+  readonly lowest: MidiNoteNumber;
+  readonly highest: MidiNoteNumber;
+  readonly count: number;
+}
+
+/** The Pipes of the Organ that the staff holds, or undefined when it holds none. */
+export function staffPipes(staff: Pick<Staff, 'from' | 'below'>, organ: Organ): StaffPipes | undefined {
+  const pitches = organ.pipes
+    .map((pipe) => pipe.note)
+    .filter((pitch) => holds(staff, pitch))
+    .sort((a, b) => a - b);
+  const lowest = pitches[0];
+  const highest = pitches.at(-1);
+  if (lowest === undefined || highest === undefined) return undefined;
+  return { lowest, highest, count: pitches.length };
+}
+
 /** The middle of the lowest and highest of `pitches`, or undefined when there are none. */
 function middleOf(pitches: readonly number[]): number | undefined {
   if (pitches.length === 0) return undefined;

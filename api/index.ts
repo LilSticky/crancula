@@ -206,5 +206,5 @@ export {
 } from './scores/scores-choices';
 export {scoresFileName} from './scores/scores-file-name';
 export {scoresTempo} from './scores/scores-tempo';
-export {scoresStaves, staffOf, staffRange, type Clef, type Staff, type StaffRange} from './scores/scores-staves';
+export {scoresStaves, staffOf, staffPipes, staffRange, type Clef, type Staff, type StaffPipes, type StaffRange} from './scores/scores-staves';
 export {scoresMusicXml, type ScoresInput} from './scores/scores-musicxml';

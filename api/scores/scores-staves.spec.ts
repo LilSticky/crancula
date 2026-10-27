@@ -14,7 +14,7 @@ import {midiNoteNumber, type MidiNoteNumber} from '../organ/midi-note-number';
 import {organId, type Organ} from '../organ/organ';
 import {validateOrgan} from '../organ/validate-organ';
 import {column, columnCount} from '../tape/tape';
-import {scoresStaves, staffOf, staffRange, type Staff} from './scores-staves';
+import {scoresStaves, staffOf, staffPipes, staffRange, type Staff} from './scores-staves';
 
 const ORGAN_ID = '7d1f3a52-6c4e-4b8a-9f01-2e3d4c5b6a79';
 
@@ -167,5 +167,28 @@ describe('scoresStaves gives an octave clef when most notes of a staff need thre
     const staves = scoresStaves([], organWithPipes([60, 62]), []);
 
     expect(staves.map(({clef}) => clef)).toEqual(['treble']);
+  });
+});
+
+describe('staffPipes gives the Pipes a staff plays, from its lowest to its highest (FR-005, UX must 1)', () => {
+  it('gives the lowest and the highest of the Pipes a staff holds, and how many it holds', () => {
+    const organ = organWithPipes([48, 60, 62, 84]);
+    const top = defined(scoresStaves([midi(60)], organ, [])[0], 'top staff');
+
+    expect(staffPipes(top, organ)).toEqual({lowest: 60, highest: 84, count: 3});
+  });
+
+  it('gives the Pipes of the bottom staff only, not those of the staff above it', () => {
+    const organ = organWithPipes([48, 60, 62, 84]);
+    const bottom = defined(scoresStaves([midi(60)], organ, []).at(-1), 'bottom staff');
+
+    expect(staffPipes(bottom, organ)).toEqual({lowest: 48, highest: 48, count: 1});
+  });
+
+  it('gives nothing for a staff that holds no Pipe of the Organ', () => {
+    const organ = organWithPipes([72, 74]);
+    const bottom = defined(scoresStaves([midi(60)], organ, []).at(-1), 'bottom staff');
+
+    expect(staffPipes(bottom, organ)).toBeUndefined();
   });
 });
