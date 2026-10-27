@@ -102,6 +102,8 @@ html {
   @include mat.form-field-overrides((
     outlined-container-shape: 4px,
     outlined-focus-outline-color: var(--mat-sys-primary),
+    // Idle outline #7a7063 is 3.16:1 on the light dialog surface #d6d0c4 (3:1 for a UI part); dark keeps #8a8072.
+    outlined-outline-color: light-dark(#7a7063, #8a8072),
   ));
 
   // Ledgers (Organ list, Tape list, Parts): quiet ruled tables.
