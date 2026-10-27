@@ -14,6 +14,12 @@
     }
   </mat-select>
 </mat-form-field>
+@if (rollPlotters().length === 0) {
+  <div class="no-plotter">
+    <p role="status" data-testid="side-by-side-no-plotter">{{ 'TAPE.SIDE_BY_SIDE.NO_ROLL_PLOTTER' | translate }}</p>
+    <a matButton="outlined" routerLink="/plotters/new" data-testid="side-by-side-describe-plotter">{{ 'TAPE.SIDE_BY_SIDE.DESCRIBE_PLOTTER' | translate }}</a>
+  </div>
+}
 @if (cut(); as cut) {
   <p class="free" role="status" data-testid="side-by-side-free">
     @if (cut.freeWidth < 0) {

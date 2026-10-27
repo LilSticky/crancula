@@ -122,9 +122,9 @@ refusal naming "Waltz" and its problem; fix it and save.
 **Independent Test**: set the Vinyl cutter's Tape spacing to 5 mm, restart, see 5; cut side by side and see
 "Waltz" from 105 to 165 mm.
 
-- [ ] T034 [P] [US4] Red: `src/app/features/plotter/plotter-editor/plotter-form.spec.ts` and `plotter-editor.component.spec.ts`: `plotter-tape-spacing` (hint `TAPE_SPACING_HINT`) shown only while `plotter-roll` is on, 3 in a new Plotter (Story 4 scenario 1), hidden for a sheet Plotter (scenario 3); "2,5" reads as 2.5; −1 shows `PLOTTER.ERROR.MUST_NOT_BE_NEGATIVE` and empty shows `VALUE_REQUIRED` under the field with `data-path="tapeSpacing"`, Save blocked; 0 saves (scenario 2); `plotter-list.component.spec.ts`: a roll plotter row reads "roll, 300 mm wide, Tape spacing 3 mm".
-- [ ] T035 [US4] Green: the field in `plotter-form.ts` and `plotter-editor.component.ts` / `.html` (shared decimal-input directive); the roll text in `src/app/features/plotter/plotter-list/plotter-list.component.ts`.
-- [ ] T036 [US4] Red→Green: extend `e2e/side-by-side.spec.ts` (or `e2e/plotter-library.spec.ts`): set the Vinyl cutter's Tape spacing to 5 mm, restart, the field shows 5 (scenario 5).
+- [x] T034 [P] [US4] Red: `src/app/features/plotter/plotter-editor/plotter-form.spec.ts` and `plotter-editor.component.spec.ts`: `plotter-tape-spacing` (hint `TAPE_SPACING_HINT`) shown only while `plotter-roll` is on, 3 in a new Plotter (Story 4 scenario 1), hidden for a sheet Plotter (scenario 3); "2,5" reads as 2.5; −1 shows `PLOTTER.ERROR.MUST_NOT_BE_NEGATIVE` and empty shows `VALUE_REQUIRED` under the field with `data-path="tapeSpacing"`, Save blocked; 0 saves (scenario 2); `plotter-list.component.spec.ts`: a roll plotter row reads "roll, 300 mm wide, Tape spacing 3 mm".
+- [x] T035 [US4] Green: the field in `plotter-form.ts` and `plotter-editor.component.ts` / `.html` (shared decimal-input directive); the roll text in `src/app/features/plotter/plotter-list/plotter-list.component.ts`.
+- [x] T036 [US4] Red→Green: extend `e2e/side-by-side.spec.ts` (or `e2e/plotter-library.spec.ts`): set the Vinyl cutter's Tape spacing to 5 mm, restart, the field shows 5 (scenario 5).
 
 **Checkpoint**: commit; STATUS.
 
@@ -135,8 +135,8 @@ refusal naming "Waltz" and its problem; fix it and save.
 **Independent Test**: with only a sheet Plotter, the page says there is no roll plotter and links to
 "Describe a Plotter…"; describe one and it is picked.
 
-- [ ] T037 [US5] Red: `side-by-side.component.spec.ts`: the picker starts with `PlotterPreference.picked()` when it is a roll plotter (scenario 1), ignores a picked sheet Plotter, starts with none when several roll plotters and no roll preference; picking doesn't call `PlotterPreference.pick` (research R5); no roll plotter → `side-by-side-no-plotter` (role `status`) and `side-by-side-describe-plotter` linking to `/plotters/new`, Lanes still listed, no drawing and no free width (scenario 2); switching to a 150 mm roll plotter recomputes the free width and marks Waltz's Lane, Save refused naming it (scenario 3); the picked roll plotter removed or turned into a sheet Plotter reads as none and Save is refused with `NO_PLOTTER` (edge case).
-- [ ] T038 [US5] Green: the start pick, the no-roll-plotter state and the describe link in `side-by-side.component.ts` / `.html`.
+- [x] T037 [US5] Red: `side-by-side.component.spec.ts`: the picker starts with `PlotterPreference.picked()` when it is a roll plotter (scenario 1), ignores a picked sheet Plotter, starts with none when several roll plotters and no roll preference; picking doesn't call `PlotterPreference.pick` (research R5); no roll plotter → `side-by-side-no-plotter` (role `status`) and `side-by-side-describe-plotter` linking to `/plotters/new`, Lanes still listed, no drawing and no free width (scenario 2); switching to a 150 mm roll plotter recomputes the free width and marks Waltz's Lane, Save refused naming it (scenario 3); the picked roll plotter removed or turned into a sheet Plotter reads as none and Save is refused with `NO_PLOTTER` (edge case).
+- [x] T038 [US5] Green: the start pick, the no-roll-plotter state and the describe link in `side-by-side.component.ts` / `.html`.
 
 **Checkpoint**: commit; STATUS.
 

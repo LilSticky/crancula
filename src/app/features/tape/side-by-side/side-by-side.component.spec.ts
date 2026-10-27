@@ -1,6 +1,7 @@
-import {Component} from '@angular/core';
+import {ApplicationRef, Component} from '@angular/core';
 import {TestbedHarnessEnvironment} from '@angular/cdk/testing/testbed';
 import {ComponentFixture, TestBed} from '@angular/core/testing';
+import {MatDialog} from '@angular/material/dialog';
 import {MatMenuHarness} from '@angular/material/menu/testing';
 import {MatSelectHarness} from '@angular/material/select/testing';
 import {provideRouter, Router} from '@angular/router';
@@ -35,6 +36,7 @@ import {provideTestTranslations} from '../../../../testing/test-translations';
 import {formatNumber} from '../../shared/format-number';
 import {OrganLibrary} from '../../organ/organ-library.store';
 import {PlotterLibrary} from '../../plotter/plotter-library.store';
+import {PlotterPreference} from '../../plotter/plotter-preference';
 import {TapeLibrary} from '../tape-library.store';
 import {SideBySideComponent} from './side-by-side.component';
 
@@ -84,12 +86,12 @@ function plotterOf(draft: PlotterDraft): Plotter {
   return result.value;
 }
 
-/** The roll plotter "Vinyl cutter": working width 300 mm, Tape spacing 3 mm. */
-function rollPlotter(): RollPlotter {
+/** A roll plotter, "Vinyl cutter" with a working width of 300 mm unless named otherwise; Tape spacing 3 mm. */
+function rollPlotter(name = 'Vinyl cutter', workingWidth = 300): RollPlotter {
   const plotter = plotterOf({
     id: newPlotterId(),
-    name: 'Vinyl cutter',
-    workingWidth: 300,
+    name,
+    workingWidth,
     roll: true,
     workingLength: null,
     overlap: null,
@@ -543,5 +545,149 @@ describe('SideBySideComponent', () => {
     fixture.detectChanges();
 
     expect(rows(element).map((row) => textIn(row, 'lane-tape'))).toEqual(['Waltz']);
+  });
+
+  describe('the roll plotter picked on the page (Story 5)', () => {
+    afterEach(() => TestBed.inject(MatDialog).closeAll());
+
+    /** The picker of the page, a roll plotter select by name. */
+    async function pickerOf(fixture: ComponentFixture<SideBySideComponent>) {
+      return TestbedHarnessEnvironment.loader(fixture).getHarness(MatSelectHarness.with({selector: '[data-testid="side-by-side-plotter"]'}));
+    }
+
+    /** The texts the Cutting Problems dialog lists now, in order. */
+    function dialogEntries(): string[] {
+      TestBed.inject(ApplicationRef).tick();
+      return [...document.querySelectorAll('[data-testid="export-problem"]')].map((item) => (item.textContent ?? '').replace(/\s+/g, ' ').trim());
+    }
+
+    /** The same Plotter as a sheet Plotter: the stored roll plotter, edited into a sheet. */
+    function asSheet(plotter: RollPlotter): Plotter {
+      return plotterOf({
+        id: plotter.id,
+        name: plotter.name,
+        workingWidth: plotter.workingWidth,
+        roll: false,
+        workingLength: 300,
+        overlap: 20,
+        tapeSpacing: 3,
+      });
+    }
+
+    it('starts with the roll plotter the Tape view picked', async () => {
+      const vinyl = rollPlotter();
+      const narrow = rollPlotter('Narrow cutter', 150);
+      const view = await setUp([vinyl, narrow]);
+      TestBed.inject(PlotterPreference).pick(vinyl.id);
+
+      const {fixture} = await open(view, [view.reference]);
+
+      expect(await (await pickerOf(fixture)).getValueText()).toBe('Vinyl cutter');
+    });
+
+    it('ignores a picked sheet Plotter, and starts with none when several roll plotters are there', async () => {
+      const sheet = sheetPlotter();
+      const view = await setUp([sheet, rollPlotter(), rollPlotter('Narrow cutter', 150)]);
+      TestBed.inject(PlotterPreference).pick(sheet.id);
+
+      const {fixture, element} = await open(view, [view.reference]);
+
+      expect(await (await pickerOf(fixture)).getValueText()).toBe('');
+      expect(element.querySelector('[data-testid="side-by-side-drawing"]')).toBeNull();
+    });
+
+    it('starts with none when several roll plotters are there and the Tape view picked none', async () => {
+      const view = await setUp([rollPlotter(), rollPlotter('Narrow cutter', 150)]);
+
+      const {fixture, element} = await open(view, [view.reference]);
+
+      expect(await (await pickerOf(fixture)).getValueText()).toBe('');
+      expect(element.querySelector('[data-testid="side-by-side-drawing"]')).toBeNull();
+    });
+
+    it('does not write the Tape view preference when a roll plotter is picked on the page', async () => {
+      const view = await setUp([rollPlotter(), rollPlotter('Narrow cutter', 150)]);
+      const pick = vi.spyOn(TestBed.inject(PlotterPreference), 'pick');
+      const {fixture} = await open(view, [view.reference]);
+
+      await (await pickerOf(fixture)).clickOptions({text: 'Narrow cutter'});
+
+      expect(await (await pickerOf(fixture)).getValueText()).toBe('Narrow cutter');
+      expect(pick).not.toHaveBeenCalled();
+    });
+
+    it('says there is no roll plotter and links to the Plotter editor, and still lists the Lanes', async () => {
+      const view = await setUp([sheetPlotter()]);
+
+      const {element} = await open(view, [view.reference]);
+
+      const status = element.querySelector('[data-testid="side-by-side-no-plotter"]');
+      expect(status?.getAttribute('role')).toBe('status');
+      expect(status?.textContent?.trim()).toBe('No roll plotter yet. Cutting side by side needs a roll plotter, such as a vinyl cutter.');
+      const link = element.querySelector('[data-testid="side-by-side-describe-plotter"]');
+      expect(link?.textContent?.trim()).toBe('Describe a Plotter…');
+      expect(link?.getAttribute('href')).toBe('/plotters/new');
+      expect(rows(element).map((row) => textIn(row, 'lane-tape'))).toEqual(['Reference']);
+      expect(element.querySelector('[data-testid="side-by-side-drawing"]')).toBeNull();
+      expect(element.querySelector('[data-testid="side-by-side-free"]')).toBeNull();
+    });
+
+    it('recomputes the free width and marks the Lane that no longer fits when a narrower roll plotter is picked', async () => {
+      const view = await setUp([rollPlotter(), rollPlotter('Narrow cutter', 150)]);
+      const {fixture, element} = await open(view, [view.reference, view.waltz]);
+
+      await (await pickerOf(fixture)).clickOptions({text: 'Narrow cutter'});
+      fixture.detectChanges();
+
+      expect(freeText(element)).toBe('13 mm too wide');
+      expect(markIn(rows(element)[1], 'lane-does-not-fit')?.textContent?.trim()).toBe('Does not fit');
+      expect(markIn(rows(element)[0], 'lane-does-not-fit')).toBeNull();
+    });
+
+    it('refuses to save the Lane that no longer fits, naming it, and saves no file', async () => {
+      const view = await setUp([rollPlotter(), rollPlotter('Narrow cutter', 150)]);
+      const {fixture, element} = await open(view, [view.reference, view.waltz]);
+      await (await pickerOf(fixture)).clickOptions({text: 'Narrow cutter'});
+      const saveSvg = vi.spyOn(view.api.plotter, 'saveSvg');
+
+      await press(fixture, saveButton(element));
+
+      expect(dialogEntries()).toEqual(['Lane 2: Waltz needs 63 mm, only 50 mm free']);
+      expect(saveSvg).not.toHaveBeenCalled();
+    });
+
+    it('reads as no Plotter when the picked roll plotter is removed, and refuses to save without one', async () => {
+      const vinyl = rollPlotter();
+      const view = await setUp([vinyl, rollPlotter('Narrow cutter', 150)]);
+      TestBed.inject(PlotterPreference).pick(vinyl.id);
+      const {fixture, element} = await open(view, [view.reference]);
+      expect(await (await pickerOf(fixture)).getValueText()).toBe('Vinyl cutter');
+      const saveSvg = vi.spyOn(view.api.plotter, 'saveSvg');
+
+      await TestBed.inject(PlotterLibrary).remove(vinyl.id);
+      fixture.detectChanges();
+      expect(await (await pickerOf(fixture)).getValueText()).toBe('');
+      await press(fixture, saveButton(element));
+
+      expect(dialogEntries()).toEqual(['No roll plotter is picked: pick one to cut side by side.']);
+      expect(saveSvg).not.toHaveBeenCalled();
+    });
+
+    it('reads as no Plotter when the picked roll plotter is turned into a sheet Plotter, and refuses to save without one', async () => {
+      const vinyl = rollPlotter();
+      const view = await setUp([vinyl, rollPlotter('Narrow cutter', 150)]);
+      TestBed.inject(PlotterPreference).pick(vinyl.id);
+      const {fixture, element} = await open(view, [view.reference]);
+      expect(await (await pickerOf(fixture)).getValueText()).toBe('Vinyl cutter');
+      const saveSvg = vi.spyOn(view.api.plotter, 'saveSvg');
+
+      await TestBed.inject(PlotterLibrary).put(asSheet(vinyl));
+      fixture.detectChanges();
+      expect(await (await pickerOf(fixture)).getValueText()).toBe('');
+      await press(fixture, saveButton(element));
+
+      expect(dialogEntries()).toEqual(['No roll plotter is picked: pick one to cut side by side.']);
+      expect(saveSvg).not.toHaveBeenCalled();
+    });
   });
 });

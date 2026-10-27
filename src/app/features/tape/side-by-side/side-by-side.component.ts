@@ -5,7 +5,7 @@ import {MatIcon} from '@angular/material/icon';
 import {MatFormField, MatLabel} from '@angular/material/form-field';
 import {MatMenu, MatMenuItem, MatMenuTrigger} from '@angular/material/menu';
 import {MatOption, MatSelect} from '@angular/material/select';
-import {ActivatedRoute} from '@angular/router';
+import {ActivatedRoute, RouterLink} from '@angular/router';
 import {TranslatePipe} from '@ngx-translate/core';
 import {
   cuttingProblems,
@@ -29,6 +29,7 @@ import {LanguagePreference} from '../../shared/language-preference';
 import {byName, tapesByOrgan} from '../../shared/ledger-order';
 import {OrganLibrary} from '../../organ/organ-library.store';
 import {PlotterLibrary} from '../../plotter/plotter-library.store';
+import {PlotterPreference} from '../../plotter/plotter-preference';
 import {TapeLibrary} from '../tape-library.store';
 import {rollDrawing, type RollDrawing} from './side-by-side-drawing';
 import {laneTapeIds} from './lane-query';
@@ -105,6 +106,7 @@ function blockedBy(organ: Organ | undefined, room: LaneRoom | undefined, number:
     MatOption,
     MatSelect,
     PageHeadComponent,
+    RouterLink,
     TranslatePipe,
   ],
   templateUrl: './side-by-side.component.html',
@@ -116,6 +118,7 @@ export class SideBySideComponent {
   private readonly organs = inject(OrganLibrary);
   private readonly library = inject(PlotterLibrary);
   protected readonly exporter = inject(SideBySideExport);
+  private readonly preference = inject(PlotterPreference);
   private readonly language = inject(LanguagePreference).language;
 
   private lastKey = -1;
@@ -125,8 +128,11 @@ export class SideBySideComponent {
     laneTapeIds(this.route.snapshot.queryParamMap).map((tapeId) => ({key: this.newKey(), tapeId})),
   );
 
-  /** The roll Plotter the user picked; undefined until a pick, which starts with the only roll Plotter. */
-  private readonly pickedId = signal<PlotterId | undefined>(undefined);
+  /**
+   * The roll Plotter picked on this page. It starts with the Plotter the Tape view picked when that is a roll Plotter;
+   * picking here does not write that preference.
+   */
+  private readonly pickedId = signal<PlotterId | undefined>(this.preferredRollId());
 
   protected readonly rollPlotters = computed<readonly RollPlotter[]>(() =>
     byName(
@@ -135,6 +141,7 @@ export class SideBySideComponent {
     ),
   );
 
+  /** The picked roll Plotter, resolved against the library: a removed one, or one turned into a sheet, reads as none. */
   protected readonly plotter = computed<RollPlotter | undefined>(() => {
     const picked = this.pickedId();
     const plotters = this.rollPlotters();
@@ -265,5 +272,11 @@ export class SideBySideComponent {
   private newKey(): number {
     this.lastKey += 1;
     return this.lastKey;
+  }
+
+  /** The Plotter the Tape view picked, when it is a roll Plotter; undefined otherwise. */
+  private preferredRollId(): PlotterId | undefined {
+    const picked = this.preference.picked();
+    return picked?.roll ? picked.id : undefined;
   }
 }
