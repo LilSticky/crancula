@@ -31,6 +31,10 @@ hand either: piece SVGs in Inkscape and a real Tape glued (011 T062, needs the u
 only where it fits), a refusal icon on Export with the too-wide reason as its description, and a hint line and Cancel in the
 Plotter editor. Contrast measurement on rendered pixels split into [#190](https://github.com/LilSticky/crancula/issues/190).
 
+**Done:** [Tape view page head styles (#173)](https://github.com/LilSticky/crancula/issues/173) (2026-10-27): all icon-only page head
+actions are outlined buttons (Undo and Redo included), Preview sits next to Record, and Undo, Redo and Transpose (buttons and
+shortcuts) are disabled while a Recording runs. The German head height and the Crank speed label were already fixed (#177, #156).
+
 **Done:** Discovery of Cut several tapes side by side (2026-10-27, branch `docs/170-discovery`): user decisions 29–34 in
 [discovery/later.md](discovery/later.md) section 5 (any Tapes, copies allowed; one Tape per Lane in the user's order; Tape spacing
 on the roll plotter, default 3 mm; a Tape that doesn't fit can't be added; roll plotters only; chosen at export, nothing stored).
