@@ -17,8 +17,8 @@ class FakeWorker {
 const workers: FakeWorker[] = [];
 
 /** Starts an encode and returns the one Worker it created. */
-function encodeWithWorker(): {readonly pending: Promise<Uint8Array>; readonly worker: FakeWorker} {
-  const pending = new WorkerMp3Encoder().encode(new Float32Array(1), () => undefined);
+function encodeWithWorker(signal?: AbortSignal): {readonly pending: Promise<Uint8Array>; readonly worker: FakeWorker} {
+  const pending = new WorkerMp3Encoder().encode(new Float32Array(1), () => undefined, signal);
   const worker = workers.at(-1);
   if (worker === undefined) throw new Error('invalid test value: no Worker was created');
   return {pending, worker};
@@ -58,6 +58,27 @@ describe('WorkerMp3Encoder', () => {
     worker.onmessageerror?.(new Event('messageerror'));
 
     await expect(pending).rejects.toThrow('the MP3 encoder sent a message it could not read');
+    expect(worker.terminate).toHaveBeenCalledTimes(1);
+  });
+
+  it('terminates the Worker and rejects when the signal aborts while it encodes', async () => {
+    const controller = new AbortController();
+    const {pending, worker} = encodeWithWorker(controller.signal);
+
+    controller.abort();
+
+    await expect(pending).rejects.toThrow('the MP3 encoding was cancelled');
+    expect(worker.terminate).toHaveBeenCalledTimes(1);
+  });
+
+  it('does nothing when the signal aborts after the encode has ended', async () => {
+    const controller = new AbortController();
+    const {pending, worker} = encodeWithWorker(controller.signal);
+    worker.onmessage?.(new MessageEvent('message', {data: {bytes: new Uint8Array([1])}}));
+    await pending;
+
+    controller.abort();
+
     expect(worker.terminate).toHaveBeenCalledTimes(1);
   });
 });
