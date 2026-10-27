@@ -1,0 +1,33 @@
+<cranc-page-head [title]="'TAPE.SIDE_BY_SIDE.TITLE' | translate" [subtitle]="'TAPE.SIDE_BY_SIDE.SUBTITLE' | translate">
+  <ng-container ngProjectAs="[pageHeadActions]">
+    <button matButton="filled" type="button" data-testid="save-side-by-side"
+            [disabled]="savable() === undefined || exporter.saving()" (click)="save()">
+      {{ 'TAPE.SIDE_BY_SIDE.SAVE' | translate }}
+    </button>
+  </ng-container>
+</cranc-page-head>
+<mat-form-field subscriptSizing="dynamic" class="plotter">
+  <mat-label>{{ 'TAPE.PLOTTER.PICKER_LABEL' | translate }}</mat-label>
+  <mat-select data-testid="side-by-side-plotter" [value]="plotter()?.id" (selectionChange)="pick($event.value)">
+    @for (option of rollPlotters(); track option.id) {
+      <mat-option [value]="option.id">{{ option.name }}</mat-option>
+    }
+  </mat-select>
+</mat-form-field>
+<mat-card appearance="outlined">
+  <ol class="lanes">
+    @for (lane of lanes(); track lane.number) {
+      <li data-testid="lane" [attr.data-lane]="lane.number">
+        <span data-testid="lane-number">{{ lane.number }}</span>
+        <span data-testid="lane-tape">{{ lane.tape.name }}</span>
+        <span data-testid="lane-organ">
+          @if (lane.organ; as organ) {
+            {{ organ.name }}
+          } @else {
+            {{ 'TAPE.LIST.ORGAN_NOT_AVAILABLE' | translate }}
+          }
+        </span>
+      </li>
+    }
+  </ol>
+</mat-card>
