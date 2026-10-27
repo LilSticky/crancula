@@ -105,7 +105,7 @@ function validateNotes(draft: OrganDraft, add: AddViolation): MidiNoteNumber[] |
   });
 
   return notes.every((note) => note !== undefined) && new Set(notes).size === notes.length
-    ? (notes as MidiNoteNumber[])
+    ? notes
     : undefined;
 }
 
