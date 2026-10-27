@@ -157,7 +157,7 @@ cranc-page-head [data-testid='redo'] {
 .overlap-hatch {
   stroke: var(--cr-select);
   stroke-width: 1.5;
-  stroke-opacity: 0.5;
+  stroke-opacity: 1;
 }
 /* The stretch no Join cuts: the warning tint and hatch (the fill is the pattern #stretch-hatch) and a 2 px outline. */
 .stretch-mark {
@@ -172,7 +172,7 @@ cranc-page-head [data-testid='redo'] {
 .stretch-hatch {
   stroke: var(--cr-problem);
   stroke-width: 1.5;
-  stroke-opacity: 0.6;
+  stroke-opacity: 1;
 }
 .stretch-label,
 .piece-label {
