@@ -2,7 +2,8 @@ import {type Millimetres, type NoJoinProblem, type Organ, type Tape, midiNoteNum
 import {type Column, type ColumnCount} from '../../../../../api/tape/tape';
 import {referenceOrgan, referencePlotter, referenceTape, plotterOf, tapeOf} from '../../../../../api/tape/tape-fixture';
 import {testOrgan} from '../../../../testing/organs';
-import {columnMarks, drawingWidth, gripsOf, holeMarks, holeRects, joinMarks, outline, rowLabels, sectionView, spotRect, stretchMarks, RULER_HEIGHT} from './tape-drawing';
+import {columnMarks, drawingWidth, gripsOf, holeMarks, holeRects, joinMarks, outline, overviewOf, rowLabels, sectionView, spotRect, stretchMarks, RULER_HEIGHT} from './tape-drawing';
+import {pixelsPerMillimetre} from './pixels-per-millimetre';
 import {gripBars, gripRects} from './hole-drag';
 import type {Spot} from './spot';
 
@@ -284,6 +285,23 @@ describe('joinMarks', () => {
     expect(stuck.kind).toBe('no-join');
 
     expect(joinMarks(stuck, 2)).toEqual([]);
+  });
+});
+
+describe('overviewOf', () => {
+  it('gives a tick in the overview strip at each Join of the cut, where the drawing puts the Join at the whole-Tape scale', () => {
+    const geometry = tapeGeometry(referenceWithoutHoles, referenceOrganForCuts);
+    const cut = tapePieces(geometry, referencePlotter());
+    const scale = pixelsPerMillimetre('whole', 800, geometry.totalLength);
+
+    expect(overviewOf(geometry, 800, cut).joins).toEqual(joinMarks(cut, scale).map(({x}) => x));
+    expect(overviewOf(geometry, 800, cut).joins).toHaveLength(2);
+  });
+
+  it('gives no tick while no cut into Tape pieces exists', () => {
+    const geometry = tapeGeometry(referenceWithoutHoles, referenceOrganForCuts);
+
+    expect(overviewOf(geometry, 800, undefined).joins).toEqual([]);
   });
 });
 

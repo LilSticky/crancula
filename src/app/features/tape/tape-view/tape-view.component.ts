@@ -70,7 +70,7 @@ import {TapeEditor} from './tape-editor';
 import {TapePreview} from '../preview/tape-preview';
 import {TapeRecorder} from '../recording/tape-recorder';
 import {PreviewSectionComponent} from '../preview/preview-section/preview-section.component';
-import {columnMarks, drawingParams, drawingWidth, ghostRect, gripsOf, holeMarks, holeRects, joinMarks, outline, overviewOf, rowLabels, RULER_HEIGHT, sectionView, spotRect, stretchMarks} from './tape-drawing';
+import {columnMarks, drawingParams, drawingWidth, ghostRect, gripsOf, holeMarks, holeRects, joinMarks, outline, overviewOf, pieceLabelMarks, rowLabels, RULER_HEIGHT, sectionView, spotRect, stretchMarks} from './tape-drawing';
 import {TapeSectionComponent} from './tape-section/tape-section.component';
 import {TapeStatusLineComponent, type PointerText} from './tape-status-line/tape-status-line.component';
 import {overviewFrame, scrollLeftFor} from './overview-frame';
@@ -391,7 +391,17 @@ export class TapeViewComponent {
 
   protected readonly overview = computed(() => {
     const geometry = this.geometry();
-    return geometry === undefined ? undefined : overviewOf(geometry, this.stage.stageWidth());
+    return geometry === undefined ? undefined : overviewOf(geometry, this.stage.stageWidth(), this.shownCut());
+  });
+
+  /** Why Export for the Plotter is refused: the Tape is wider than the picked Plotter, in the language's numbers; `undefined` otherwise. */
+  protected readonly exportRefusal = computed(() => {
+    const cut = this.shownCut();
+    if (cut?.kind !== 'too-wide') return undefined;
+    return {
+      tapeWidth: formatNumber(cut.tapeWidth, this.language()),
+      workingWidth: formatNumber(cut.workingWidth, this.language()),
+    };
   });
 
   /** The framed part of the overview strip; changes with every scroll, unlike the overview itself. */
@@ -436,6 +446,7 @@ export class TapeViewComponent {
       ...columnMarks(tape, geometry, scale, range),
       joins: joinMarks(this.shownCut(), scale),
       stretches: stretchMarks(this.stretchProblems(), geometry, scale),
+      pieceLabels: pieceLabelMarks(this.shownCut(), scale),
       ...outline(geometry, scale),
       // The Whole Tape fills the stage without a scroll, so only the other zooms leave room for the end grip.
       svgWidth: drawingWidth(geometry, scale, this.zoom() !== 'whole'),

@@ -95,6 +95,11 @@ export class PlotterEditorComponent implements UnsavedChangesCheck {
     return {problems: result.ok ? [] : result.error.map(toProblem)};
   }
 
+  /** Leaves the editor for the Plotter list without storing the Plotter. */
+  protected cancel(): void {
+    void this.router.navigate(['/plotters']);
+  }
+
   /** Stores the valid Plotter and returns to the Plotter list. */
   protected async save(): Promise<void> {
     const sent = this.draft();

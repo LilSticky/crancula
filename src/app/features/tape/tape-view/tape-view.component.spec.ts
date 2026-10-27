@@ -948,6 +948,107 @@ describe('TapeViewComponent', () => {
         scrollIntoView.mockRestore();
       }
     });
+
+    // 100 Columns of 6 mm (600 mm) without Holes: Joins after Columns 46 and 92, so three Tape pieces for the 300 mm working length.
+    const threePieces: RenderOptions = {holes: [], columns: 100, columnLength: 6};
+
+    it('draws a tick for each Join in the overview strip', async () => {
+      const {tape, open, view} = await render(threePieces);
+      await pick(plotterOf(300));
+      await open(`/tapes/${tape.id}`);
+
+      expect(all(view(), '[data-testid="overview"] [data-testid="overview-join"]')).toHaveLength(2);
+    });
+
+    it('labels each Tape piece with its number and the count of Tape pieces, "1 of 3" to "3 of 3", in the drawing', async () => {
+      const {tape, open, view} = await render(threePieces);
+      await pick(plotterOf(300));
+      await open(`/tapes/${tape.id}`);
+
+      expect(drawn(view(), 'piece-label').map((label) => label.textContent?.trim())).toEqual(['1 of 3', '2 of 3', '3 of 3']);
+    });
+
+    it('centres each piece label between the start of its piece and its Join, or the end cut on the last piece', async () => {
+      const {tape, open, view} = await render(threePieces);
+      await pick(plotterOf(300));
+      await open(`/tapes/${tape.id}`);
+      const joinsX = drawn(view(), 'join').map((join) => Number(join.getAttribute('x1')));
+      const labelsX = drawn(view(), 'piece-label').map((label) => Number(label.getAttribute('x')));
+
+      // The Tape is 600 mm long: the last piece runs from the second Join to the end cut, at 600 mm, not its Overlap.
+      expect(labelsX[0]).toBeCloseTo((joinsX[0] ?? NaN) / 2, 3);
+      expect(labelsX[1]).toBeCloseTo(((joinsX[0] ?? NaN) + (joinsX[1] ?? NaN)) / 2, 3);
+      expect(labelsX[2]).toBeGreaterThan(joinsX[1] ?? NaN);
+    });
+
+    it('clips the stretch label to its stretch, so it runs past neither the band nor its end', async () => {
+      const {tape, open, view} = await render(withStretch);
+      await pick(plotterOf(300));
+      await open(`/tapes/${tape.id}`);
+
+      const mark = required(drawn(view(), 'stretch-mark')[0], 'stretch mark');
+      const label = required(drawn(view(), 'stretch-label')[0], 'stretch label');
+      const clipId = /^url\(#(.+)\)$/.exec(label.getAttribute('clip-path') ?? '')?.[1];
+      const clip = required(view()?.querySelector(`clipPath[id="${clipId}"] rect`), 'stretch label clip');
+      expect(clip.getAttribute('x')).toBe(mark.getAttribute('x'));
+      expect(clip.getAttribute('width')).toBe(mark.getAttribute('width'));
+    });
+
+    it('labels no Tape piece on a roll plotter, where the Tape is a single piece', async () => {
+      const {tape, open, view} = await render(withJoin);
+      await pick(plotterOf(120, true));
+      await open(`/tapes/${tape.id}`);
+
+      expect(drawn(view(), 'piece-label')).toEqual([]);
+    });
+
+    it('labels no Tape piece when the whole Tape fits the working length of the picked sheet Plotter', async () => {
+      const {tape, open, view} = await render({holes: [], columns: 20, columnLength: 3});
+      await pick(plotterOf(300));
+      await open(`/tapes/${tape.id}`);
+
+      expect(drawn(view(), 'piece-label')).toEqual([]);
+    });
+
+    it('labels the no-join stretch "No Join possible" at its first Column, besides its colour', async () => {
+      const {tape, open, view} = await render(withStretch);
+      await pick(plotterOf(300));
+      await open(`/tapes/${tape.id}`);
+
+      const labels = drawn(view(), 'stretch-label');
+      const mark = required(drawn(view(), 'stretch-mark')[0], 'stretch mark');
+      expect(labels.map((label) => label.textContent?.trim())).toEqual(['No Join possible']);
+      expect(labels[0]?.getAttribute('x')).toBe(mark.getAttribute('x'));
+    });
+
+    describe('the refusal of Export for the Plotter while the Tape is wider than the picked Plotter', () => {
+      /** The text of the elements the Export menu button describes itself with, joined by a space. */
+      const describedText = (view: HTMLElement | null, element: Element): string =>
+        (element.getAttribute('aria-describedby') ?? '')
+          .split(' ')
+          .map((id) => view?.querySelector(`[id="${id}"]`)?.textContent?.trim() ?? '')
+          .join(' ')
+          .trim();
+
+      const exportButton = (view: HTMLElement | null) =>
+        required(view?.querySelector('[data-testid="page-head-actions"] [data-testid="export-menu"]'), 'Export menu button');
+
+      it('shows a refusal icon on the Export menu button before it is pressed', async () => {
+        const {tape, open, view} = await render(withJoin);
+        await pick(plotterOf(50));
+        await open(`/tapes/${tape.id}`);
+
+        expect(exportButton(view()).querySelector('mat-icon[data-testid="export-refusal"]')).not.toBeNull();
+      });
+
+      it('describes the refusal of the Export menu button by the Tape width and the working width', async () => {
+        const {tape, open, view} = await render(withJoin);
+        await pick(plotterOf(50));
+        await open(`/tapes/${tape.id}`);
+
+        expect(describedText(view(), exportButton(view()))).toMatch(/^The Tape is \d+ mm wide, the Plotter's working width is 50 mm$/);
+      });
+    });
   });
 
   describe('the Tape pieces and Cutting Problems follow the library (T054)', () => {

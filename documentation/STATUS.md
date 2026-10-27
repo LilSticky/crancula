@@ -24,6 +24,11 @@ discovery done): `/speckit-specify` on branch `013-cut-several-tapes-side-by-sid
 **Open:** real MuseScore and Audiveris files not checked by hand (010 T063, needs the user's files). Tape pieces not checked by
 hand either: piece SVGs in Inkscape and a real Tape glued (011 T062, needs the user).
 
+**Done:** [Tape pieces UX follow-ups (#181)](https://github.com/LilSticky/crancula/issues/181) (2026-10-27): Join ticks in the overview strip,
+"1 of 3" piece labels between the Joins (none for a single piece), a "No Join possible" label on a stretch without a Join (shown
+only where it fits), a refusal icon on Export with the too-wide reason as its description, and a hint line and Cancel in the
+Plotter editor. Contrast measurement on rendered pixels split into [#190](https://github.com/LilSticky/crancula/issues/190).
+
 **Done:** Discovery of Cut several tapes side by side (2026-10-27, branch `docs/170-discovery`): user decisions 29–34 in
 [discovery/later.md](discovery/later.md) section 5 (any Tapes, copies allowed; one Tape per Lane in the user's order; Tape spacing
 on the roll plotter, default 3 mm; a Tape that doesn't fit can't be added; roll plotters only; chosen at export, nothing stored).

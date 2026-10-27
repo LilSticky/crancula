@@ -165,6 +165,14 @@ export function stretchMarks(stretches: readonly NoJoinProblem[], geometry: Tape
   }));
 }
 
+/** The label of each Tape piece of `cut`, at the middle of the piece, in px; nothing unless the Tape is cut into several pieces. */
+export function pieceLabelMarks(cut: TapePieces | undefined, scale: number) {
+  if (cut?.kind !== 'pieces' || cut.pieces.length < 2) return [];
+  const count = cut.pieces.length;
+  // The Overlap is left out of the centre: it lies under the next piece, not in this one.
+  return cut.pieces.map(({number, start, end, join}) => ({number, count, x: ((start + (join?.at ?? end)) / 2) * scale}));
+}
+
 /** Space between a Hole and its Cutting Problem ring, in px. */
 const RING_GAP_PX = 2;
 
@@ -253,8 +261,8 @@ export function outline(geometry: TapeGeometry, scale: number) {
   };
 }
 
-/** The whole Tape at `stageWidth`, for the overview strip. */
-export function overviewOf(geometry: TapeGeometry, stageWidth: number) {
+/** The whole Tape at `stageWidth`, for the overview strip; `joins` are the px x of each Join of `cut`. */
+export function overviewOf(geometry: TapeGeometry, stageWidth: number, cut: TapePieces | undefined) {
   const scale = pixelsPerMillimetre('whole', stageWidth, geometry.totalLength);
   const shape = outline(geometry, scale);
   return {
@@ -263,6 +271,7 @@ export function overviewOf(geometry: TapeGeometry, stageWidth: number) {
     leadIn: shape.leadIn,
     leadInPath: shape.leadInPath,
     bodyWidth: shape.bodyWidth,
+    joins: joinMarks(cut, scale).map(({x}) => x),
     holesPath: geometry.slots
       .map((slot) => {
         const x = slot.x * scale;

@@ -1,5 +1,5 @@
 <div class="plotter-editor">
-  <cranc-page-head [title]="(id() ? 'PLOTTER.EDITOR.TITLE' : 'PLOTTER.EDITOR.TITLE_NEW') | translate"/>
+  <cranc-page-head [title]="(id() ? 'PLOTTER.EDITOR.TITLE' : 'PLOTTER.EDITOR.TITLE_NEW') | translate" [subtitle]="'PLOTTER.EDITOR.HINT' | translate"/>
 
   <mat-card appearance="outlined">
     <div class="fields">
@@ -61,6 +61,7 @@
     </div>
 
     <div class="actions">
+      <button matButton type="button" data-testid="cancel-plotter" (click)="cancel()">{{ 'PLOTTER.EDITOR.CANCEL' | translate }}</button>
       <button matButton="filled" type="button" data-testid="save-plotter" [disabled]="saveDisabled()" (click)="save()">
         <mat-icon>save</mat-icon>
         {{ 'PLOTTER.EDITOR.SAVE' | translate }}

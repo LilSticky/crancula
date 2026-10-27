@@ -83,6 +83,7 @@
       "DETAILS": "Lochbanddetails",
       "STATUS_COLUMN": "Spalte {{column}} bei {{mm}} mm",
       "STATUS_ROW": "Zeile {{row}}, {{note}}",
+      "NO_JOIN_LABEL": "Keine Klebestelle möglich",
       "SAVED": "Gespeichert"
     },
     "LIST": {
@@ -552,13 +553,15 @@
     "EDITOR": {
       "TITLE_NEW": "Neuer Plotter",
       "TITLE": "Plotter",
+      "HINT": "Arbeitsbereich: die größte Länge und Breite, die er in einem Schnitt schneidet. Klebezugabe: der Streifen, der unter dem nächsten Bandstück verklebt wird.",
       "NAME": "Name",
       "FORMAT": "Format",
       "WORKING_WIDTH": "Arbeitsbreite",
       "WORKING_LENGTH": "Arbeitslänge",
       "OVERLAP": "Klebezugabe",
       "ROLL": "Rollenplotter (schneidet jede Länge)",
-      "SAVE": "Speichern"
+      "SAVE": "Speichern",
+      "CANCEL": "Abbrechen"
     },
     "ERROR": {
       "NAME_REQUIRED": "Bitte gib einen Namen ein.",
