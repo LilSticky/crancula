@@ -43,6 +43,17 @@ api/organ.
 | 27 | Read a tape as Scores | Time signature without a Song | Asked at every export, prefilled with the Song's Time signature or 4/4 and no upbeat; not stored (keeps decision 14) |
 | 28 | Read a tape as Scores | Tempo and key | Tempo mark from the Tape's Crank speed (Column length, Tape per Crank turn); Key from the Song if it keeps one, else C major |
 
+## Decisions (user, 2026-10-27)
+
+| # | Slice | Question | Decision |
+|---|-------|----------|----------|
+| 29 | Cut several tapes side by side | Which Tapes may share a cut | Any Tapes, from any Organ and with mixed tape widths, as long as they fit the working width; the same Tape may be added more than once |
+| 30 | Cut several tapes side by side | Arrangement across the working width | One Tape per Lane, in the order the user picks and can change; no automatic packing; the cut is as long as the longest Tape |
+| 31 | Cut several tapes side by side | Space between neighbouring Tapes | A Tape spacing set on the roll plotter (default 3 mm), the same between all Lanes; no shared cut lines |
+| 32 | Cut several tapes side by side | Tapes that don't fit, Tapes that can't be cut | A Tape that would exceed the working width cannot be added, and the remaining width is shown; a Tape with Cutting Problems blocks the export and is named |
+| 33 | Cut several tapes side by side | Sheet plotters | Roll plotters only; sheet plotters keep one Tape or Tape piece per file; the result is one SVG |
+| 34 | Cut several tapes side by side | Is the arrangement kept | No: chosen at export (Tapes picked in the Tape library, a roll plotter, the Lane order), nothing stored, no new aggregate |
+
 Slice issues: Bring Scores onto a tape [#167](https://github.com/LilSticky/crancula/issues/167), Cut a tape in
 pieces [#168](https://github.com/LilSticky/crancula/issues/168), Read a tape as Scores
 [#169](https://github.com/LilSticky/crancula/issues/169), Cut several tapes side by side
@@ -249,6 +260,45 @@ The roadmap said "a Song" here; the decision is the Tape, since it is what gets 
 - **Tape**: can be exported as Scores (MusicXML) to read or print; exporting does not change the Tape.
 - **Song**: "Converted to scores for human reading" is replaced: the Song is not exported, its Tape is.
 - **Time signature**, **Bar**, **Key**: see section 2.
+
+## 5. Cut several tapes side by side
+
+Decisions 29–34 (user, 2026-10-27). Issue [#170](https://github.com/LilSticky/crancula/issues/170).
+
+### What exists today (facts)
+- A Plotter is a `SheetPlotter | RollPlotter` (`api/plotter/plotter.ts`). A roll plotter has only a working width and
+  never splits a Tape; a Tape wider than the working width is refused (decision 22).
+- The tape width belongs to the Organ (Tape Bed), so Tapes of different Organs can differ in width.
+- `TapeGeometry` gives one Tape's Holes and Tape Outline in mm (ADR 21). The SVG writer draws one Tape, or one Tape
+  piece, per file; cut order: the Holes along the Tape, then the Tape Outline.
+- A Tape with Cutting Problems cannot be exported for the Plotter.
+
+### User capability
+Fill my vinyl cutter's width with several Tapes at once, so that one pass over the roll cuts them all and wastes less
+material.
+
+### Rules
+- Only a roll plotter can be picked, and every Tape needs its Organ.
+- Sum of tape widths + (number of Lanes − 1) × Tape spacing ≤ working width.
+- Every Tape is free of Cutting Problems.
+- Each Lane is the Tape's own `TapeGeometry`, moved across the width; Holes, Lead-in and Tape Outline are unchanged.
+  Lanes are computed by a pure function over the geometries, not inside the SVG writer (ADR 21).
+- Cut order Lane by Lane: all Holes of a Tape, then its Tape Outline, then the next Lane, keeping "outline after all
+  Holes" per Tape.
+- One SVG, as long as the longest Tape and as wide as the used width. The file name is chosen in the save dialog
+  (proposed default "<first tape> and N more.svg"); probably the existing `plotter:save-svg` channel with a wider
+  payload (ADR 4), to be settled in the plan.
+- Exporting changes no Tape.
+
+### Domain events and commands
+- ExportTapesSideBySide(roll plotter, ordered Tapes) → TapesExportedSideBySide.
+- The Tape spacing changes through ChangePlotter → PlotterChanged.
+
+### Terms (approved 2026-10-27, in DICTIONARY.md)
+- **Lane** (Bahn): the strip of the working width one Tape takes in a side-by-side cut.
+- **Tape spacing** (Bandabstand): the blank strip between two Lanes, set on the roll plotter. Not "gap", which means
+  Minimum Gap.
+- Roll plotter and Tape Outline entries mention side-by-side cuts.
 
 ## Model observations (for later plans)
 
