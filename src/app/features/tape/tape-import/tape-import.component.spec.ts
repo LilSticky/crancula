@@ -360,6 +360,20 @@ describe('TapeImportComponent', () => {
     const textOf = (row: HTMLElement | null, testId: string) =>
       row?.querySelector(`[data-testid="${testId}"]`)?.textContent?.trim();
 
+    it('is not rendered while no Song is chosen, also after a rejected file', async () => {
+      const {choose, query, element} = await render({organs: [testOrgan('Street organ', 3)]});
+      const groupTitles = () =>
+        [...element.querySelectorAll('[data-testid="group-title"]')].map((title) => title.textContent?.trim());
+      expect(groupTitles()).toEqual(['Song', 'Organ', 'Transposition']);
+      expect(query('parts')).toBeNull();
+
+      await choose(midiFile(new Uint8Array([1, 2, 3]), 'notes.mid'));
+
+      expect(query('song-rejection')).not.toBeNull();
+      expect(groupTitles()).toEqual(['Song', 'Organ', 'Transposition']);
+      expect(query('parts')).toBeNull();
+    });
+
     it('lists each Part as a row with its name and its number of Notes, and no fieldset', async () => {
       const {choose, partRow, query} = await render({organs: [testOrgan('Street organ', 3)]});
 
@@ -606,7 +620,8 @@ describe('TapeImportComponent', () => {
     });
 
     it('titles the groups of the Song sheet Song, Organ, Parts, Transposition in this order', async () => {
-      const {element, query} = await render({organs: [testOrgan('Street organ', 3)]});
+      const {element, query, choose} = await render({organs: [testOrgan('Street organ', 3)]});
+      await choose(midiFile(melodyBytes()));
 
       const titles = [...(query('song-sheet')?.querySelectorAll('[data-testid="group-title"]') ?? [])].map((title) =>
         title.textContent?.trim(),
