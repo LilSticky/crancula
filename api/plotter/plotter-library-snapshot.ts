@@ -1,8 +1,11 @@
 import {err, ok, type Result} from '../result';
-import {type Plotter, plotterId} from './plotter';
+import {DEFAULT_TAPE_SPACING, type Plotter, plotterId} from './plotter';
 import {validatePlotter} from './validate-plotter';
 
-/** One Plotter in the snapshot file. A roll Plotter has no `workingLength` and no `overlap`. */
+/**
+ * One Plotter in the snapshot file. A roll Plotter has no `workingLength` and no `overlap`, and in version 2 has a
+ * `tapeSpacing`; a sheet Plotter has no `tapeSpacing`.
+ */
 export interface PlotterSnapshot {
   readonly id: string;
   readonly name: string;
@@ -11,16 +14,20 @@ export interface PlotterSnapshot {
   readonly roll: boolean;
   readonly workingLength?: number;
   readonly overlap?: number;
+  readonly tapeSpacing?: number;
 }
 
-/** Snapshot file format, version 1, stored at `<userData>/snapshots/plotters.json` (ADR 8, ADR 28). */
+/**
+ * Snapshot file format, version 2, stored at `<userData>/snapshots/plotters.json` (ADR 8, ADR 20, ADR 28).
+ * Version 1 is still read; it is written back as version 2.
+ */
 export interface PlotterLibrarySnapshot {
-  readonly version: 1;
+  readonly version: 2;
   readonly plotters: readonly PlotterSnapshot[];
 }
 
 export function toPlotterSnapshot(plotters: readonly Plotter[]): PlotterLibrarySnapshot {
-  return {version: 1, plotters: plotters.map(toPlotterEntry)};
+  return {version: 2, plotters: plotters.map(toPlotterEntry)};
 }
 
 function toPlotterEntry(plotter: Plotter): PlotterSnapshot {
@@ -31,7 +38,9 @@ function toPlotterEntry(plotter: Plotter): PlotterSnapshot {
     workingWidth: plotter.workingWidth,
     roll: plotter.roll,
   };
-  return plotter.roll ? fields : {...fields, workingLength: plotter.workingLength, overlap: plotter.overlap};
+  return plotter.roll
+    ? {...fields, tapeSpacing: plotter.tapeSpacing}
+    : {...fields, workingLength: plotter.workingLength, overlap: plotter.overlap};
 }
 
 /**
@@ -41,13 +50,13 @@ function toPlotterEntry(plotter: Plotter): PlotterSnapshot {
 export function parsePlotterLibrarySnapshot(input: unknown): Result<Plotter[], string> {
   if (!isRecord(input)) return err('snapshot is not an object');
   const version = input['version'];
-  if (version !== 1) return err(`unsupported snapshot version ${String(version)}`);
+  if (version !== 1 && version !== 2) return err(`unsupported snapshot version ${String(version)}`);
   const plotters = input['plotters'];
   if (!isList(plotters)) return err('plotters is not a list');
 
   const parsed: Plotter[] = [];
   for (const [index, entry] of plotters.entries()) {
-    const plotter = parsePlotter(entry);
+    const plotter = parsePlotter(entry, version);
     if (!plotter.ok) return err(`Plotter ${index}: ${plotter.error}`);
     if (parsed.some((other) => other.id === plotter.value.id)) {
       return err(`Plotter ${index}: duplicate id ${plotter.value.id}`);
@@ -57,9 +66,9 @@ export function parsePlotterLibrarySnapshot(input: unknown): Result<Plotter[], s
   return ok(parsed);
 }
 
-function parsePlotter(input: unknown): Result<Plotter, string> {
+function parsePlotter(input: unknown, version: 1 | 2): Result<Plotter, string> {
   if (!isRecord(input)) return err('not an object');
-  const {id, name, format, workingWidth, roll, workingLength, overlap} = input;
+  const {id, name, format, workingWidth, roll, workingLength, overlap, tapeSpacing} = input;
 
   const validId = typeof id === 'string' ? plotterId(id) : undefined;
   if (validId === undefined) return err('id is not a UUID');
@@ -69,6 +78,7 @@ function parsePlotter(input: unknown): Result<Plotter, string> {
   if (roll && (workingLength !== undefined || overlap !== undefined)) {
     return err('a roll Plotter has no working length and no Overlap');
   }
+  if (version === 2 && !roll && tapeSpacing !== undefined) return err('a sheet Plotter has no Tape spacing');
 
   const result = validatePlotter({
     id: validId,
@@ -77,6 +87,8 @@ function parsePlotter(input: unknown): Result<Plotter, string> {
     roll,
     workingLength: numberOrNull(workingLength),
     overlap: numberOrNull(overlap),
+    // Version 1 predates the Tape spacing: its roll Plotters get the default, and any stored value is unknown data.
+    tapeSpacing: version === 1 ? DEFAULT_TAPE_SPACING : numberOrNull(tapeSpacing),
   });
   return result.ok ? result : err(result.error.map((violation) => `${violation.path}: ${violation.code}`).join(', '));
 }

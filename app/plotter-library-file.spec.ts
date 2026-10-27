@@ -12,10 +12,10 @@ const ROLL = '7c1d2e3f-4a5b-4c6d-8e9f-0a1b2c3d4e5f';
 
 function snapshot(name: string): PlotterLibrarySnapshot {
   return {
-    version: 1,
+    version: 2,
     plotters: [
       {id: SHEET, name, format: 'svg', workingWidth: 120, roll: false, workingLength: 300, overlap: 20},
-      {id: ROLL, name: 'Vinyl cutter', format: 'svg', workingWidth: 120, roll: true},
+      {id: ROLL, name: 'Vinyl cutter', format: 'svg', workingWidth: 120, roll: true, tapeSpacing: 3},
     ],
   };
 }
@@ -48,13 +48,13 @@ describe('load', () => {
 
   it.each([
     ['broken JSON', '{oops'],
-    ['an unknown version', JSON.stringify({version: 2, plotters: []})],
-    ['an invalid Plotter', JSON.stringify({version: 1, plotters: [{id: SHEET}]})],
+    ['an unknown version', JSON.stringify({version: 3, plotters: []})],
+    ['an invalid Plotter', JSON.stringify({version: 2, plotters: [{id: SHEET}]})],
     [
       'a roll Plotter with a working length',
       JSON.stringify({
-        version: 1,
-        plotters: [{id: ROLL, name: 'Vinyl cutter', format: 'svg', workingWidth: 120, roll: true, workingLength: 300}],
+        version: 2,
+        plotters: [{id: ROLL, name: 'Vinyl cutter', format: 'svg', workingWidth: 120, roll: true, tapeSpacing: 3, workingLength: 300}],
       }),
     ],
   ])('moves a snapshot with %s aside untouched', async (_, content) => {
@@ -93,7 +93,7 @@ describe('save', () => {
     await createPlotterLibraryFile(dir, {debounceMs: 5}).save(snapshot('Cutting mat'));
 
     const written = (await readSnapshot()) as {plotters: Record<string, unknown>[]};
-    expect(written.plotters[1]).toEqual({id: ROLL, name: 'Vinyl cutter', format: 'svg', workingWidth: 120, roll: true});
+    expect(written.plotters[1]).toEqual({id: ROLL, name: 'Vinyl cutter', format: 'svg', workingWidth: 120, roll: true, tapeSpacing: 3});
   });
 
   it('creates the folder if needed', async () => {
