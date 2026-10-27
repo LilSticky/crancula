@@ -48,7 +48,8 @@
         }
       </button>
       @let exportLabel = 'TAPE.VIEW.EXPORT_MENU' | translate;
-      <button mat-stroked-button type="button" data-testid="export-menu" [class.icon-only]="compactActions()" [attr.aria-label]="compactActions() ? exportLabel : null" [matTooltip]="compactActions() ? exportLabel : ''" [matMenuTriggerFor]="exportMenu">
+      <button mat-stroked-button type="button" data-testid="export-menu" [class.icon-only]="compactActions()" [attr.aria-label]="compactActions() ? exportLabel : null" [attr.aria-describedby]="exportRefusal() ? 'export-refusal-reason' : null" [matTooltip]="compactActions() ? exportLabel : ''" [matMenuTriggerFor]="exportMenu">
+        @if (exportRefusal()) {<mat-icon class="refusal" data-testid="export-refusal" aria-hidden="true">error</mat-icon>}
         <mat-icon aria-hidden="true">file_download</mat-icon>
         @if (!compactActions()) {
           {{ exportLabel }}
@@ -89,6 +90,11 @@
             <rect class="stretch-ground" width="6" height="6" />
             <line class="stretch-hatch" x1="0" y1="0" x2="0" y2="6" />
           </pattern>
+          @for (stretch of drawing.stretches; track stretch.first; let index = $index) {
+            <clipPath [id]="'stretch-label-clip-' + index">
+              <rect [attr.x]="stretch.x" y="0" [attr.width]="stretch.width" [attr.height]="drawing.height" />
+            </clipPath>
+          }
         </defs>
         <rect data-testid="ruler" [attr.x]="drawing.leadIn" [attr.y]="rulerHeight - 8" [attr.width]="drawing.bodyWidth" height="8" fill="url(#ruler-ticks)" (click)="onRulerClick($event, tapeSvg)" />
         @for (number of drawing.rulerNumbers; track number.mm) {
@@ -116,6 +122,10 @@
           }
           @for (stretch of drawing.stretches; track stretch.first) {
             <rect class="stretch-mark" data-testid="stretch-mark" aria-hidden="true" fill="url(#stretch-hatch)" [attr.data-first]="stretch.first" [attr.data-last]="stretch.last" y="0" [attr.x]="stretch.x" [attr.width]="stretch.width" [attr.height]="drawing.height" />
+            <text class="stretch-label" data-testid="stretch-label" [attr.x]="stretch.x" y="12" [attr.clip-path]="'url(#stretch-label-clip-' + $index + ')'">{{ 'TAPE.VIEW.NO_JOIN_LABEL' | translate }}</text>
+          }
+          @for (label of drawing.pieceLabels; track label.number) {
+            <text class="piece-label" data-testid="piece-label" [attr.x]="label.x" [attr.y]="drawing.height / 2">{{ 'TAPE.EXPORT.PIECE_LABEL' | translate: {number: label.number, count: label.count} }}</text>
           }
           @for (hole of drawing.holes; track hole.row + ':' + hole.start) {
             <rect
@@ -174,6 +184,9 @@
     }
   </span>
   <span id="preview-unavailable-reason" class="cdk-visually-hidden" data-testid="preview-unavailable-reason">{{ 'TAPE.PREVIEW.UNAVAILABLE' | translate }}</span>
+  @if (exportRefusal(); as refusal) {
+    <span id="export-refusal-reason" class="cdk-visually-hidden" data-testid="export-refusal-reason">{{ 'TAPE.PLOTTER.TOO_WIDE' | translate: refusal }}</span>
+  }
   @if (overview(); as overview) {
     <svg
       #overviewSvg
@@ -191,6 +204,9 @@
       }
       <rect class="tape" [attr.x]="overview.leadIn" y="0" [attr.width]="overview.bodyWidth" [attr.height]="overview.height" />
       <path class="hole" data-testid="overview-holes" [attr.d]="overview.holesPath" />
+      @for (join of overview.joins; track $index) {
+        <line class="overview-join" data-testid="overview-join" [attr.x1]="join" [attr.x2]="join" y1="0" [attr.y2]="overview.height" />
+      }
       @if (overviewMark(); as frame) {
         <rect class="overview-frame" data-testid="overview-frame" [attr.x]="frame.x" y="0" [attr.width]="frame.width" [attr.height]="overview.height" />
       }

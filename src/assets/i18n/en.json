@@ -82,6 +82,7 @@
       "DETAILS": "Tape details",
       "STATUS_COLUMN": "Column {{column}} at {{mm}} mm",
       "STATUS_ROW": "Row {{row}}, {{note}}",
+      "NO_JOIN_LABEL": "No Join possible",
       "SAVED": "Saved"
     },
     "LIST": {
@@ -551,13 +552,15 @@
     "EDITOR": {
       "TITLE_NEW": "New Plotter",
       "TITLE": "Plotter",
+      "HINT": "Working area: the largest length and width it cuts in one go. Overlap: the strip glued under the next Tape piece.",
       "NAME": "Name",
       "FORMAT": "Format",
       "WORKING_WIDTH": "Working width",
       "WORKING_LENGTH": "Working length",
       "OVERLAP": "Overlap",
       "ROLL": "Roll plotter (cuts any length)",
-      "SAVE": "Save"
+      "SAVE": "Save",
+      "CANCEL": "Cancel"
     },
     "ERROR": {
       "NAME_REQUIRED": "Please enter a name.",

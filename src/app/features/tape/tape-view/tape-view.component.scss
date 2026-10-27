@@ -170,6 +170,31 @@ cranc-page-head button[mat-icon-button] {
   stroke-width: 1.5;
   stroke-opacity: 0.6;
 }
+.stretch-label,
+.piece-label {
+  font-size: 11px;
+  font-weight: bold;
+  pointer-events: none;
+}
+.stretch-label {
+  fill: var(--cr-problem);
+}
+.piece-label {
+  fill: var(--cr-select);
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+/* A Join in the overview strip: a 2 px line in the Join colour; non-scaling, as the strip is stretched to its width. */
+.overview-join {
+  vector-effect: non-scaling-stroke;
+  stroke: var(--cr-select);
+  stroke-width: 2;
+  pointer-events: none;
+}
+/* The refusal of Export for the Plotter: an error icon on the Export menu button. */
+.refusal {
+  color: var(--mat-sys-error);
+}
 .cutting-problem-glyph {
   fill: var(--cr-problem);
   font-weight: bold;
