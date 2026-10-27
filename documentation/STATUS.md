@@ -15,11 +15,11 @@ discovery done): `/speckit-specify` on branch `013-cut-several-tapes-side-by-sid
 **Open:** T057 hand check of an exported MusicXML in MuseScore 4 (needs the user; SC-001, SC-002, SC-004). Follow-up
 [#183](https://github.com/LilSticky/crancula/issues/183) (review findings 2, 3, 5, 7, 9, 10 of slice 012).
 
+**Done:** [Scores export dialog UX (#183)](https://github.com/LilSticky/crancula/issues/183) (2026-10-27): Beats and Beat type in one grid with a reserved error line, one row per staff for split notes, an outlined Add a split note button, a summary of the Key and tempo the Scores carry (`scoresKeyAt` in `api/scores`, shared with the export), "Another time signature"; light idle field border raised to 3.16:1. Missing screens split into [#188](https://github.com/LilSticky/crancula/issues/188).
+
 **Known broken:** none. ([#175](https://github.com/LilSticky/crancula/issues/175), 2026-10-27: `npm run lint` now covers `api/`.)
 
 **Done:** [Empty Parts block on the import page (#178)](https://github.com/LilSticky/crancula/issues/178) (2026-10-27): the Parts block shows only once a Song is chosen, also after a rejected file.
-
-**Done:** [Scores export dialog UX (#183)](https://github.com/LilSticky/crancula/issues/183) (2026-10-27): Beats and Beat type in one grid with a reserved error line, one row per staff for split notes, an outlined Add a split note button, a summary of the Key and tempo the Scores carry (`scoresKeyAt` in `api/scores`, shared with the export), "Another time signature"; light idle field border raised to 3.16:1. Missing screens split into [#188](https://github.com/LilSticky/crancula/issues/188).
 
 **Open:** real MuseScore and Audiveris files not checked by hand (010 T063, needs the user's files). Tape pieces not checked by
 hand either: piece SVGs in Inkscape and a real Tape glued (011 T062, needs the user).
