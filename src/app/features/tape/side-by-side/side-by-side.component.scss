@@ -34,7 +34,7 @@
 
     &.overflow {
       stroke: var(--cr-problem);
-      stroke-width: 2px;
+      stroke-width: 3px;
     }
   }
 
@@ -101,5 +101,5 @@
 }
 
 .mark {
-  color: var(--cr-problem);
+  color: var(--mat-sys-error);
 }
