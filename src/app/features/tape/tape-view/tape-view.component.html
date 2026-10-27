@@ -17,25 +17,25 @@
     </mat-button-toggle-group>
     @if (compact()) {<button pageHeadActions mat-stroked-button type="button" class="icon-only" data-testid="side-panel-toggle" [attr.aria-label]="'TAPE.VIEW.DETAILS' | translate" [matTooltip]="'TAPE.VIEW.DETAILS' | translate" [attr.aria-expanded]="sidePanelOpen()" (click)="toggleSidePanel()"><mat-icon aria-hidden="true">view_sidebar</mat-icon></button>}
     <ng-container ngProjectAs="[pageHeadActions]">
+      <button mat-stroked-button type="button" class="icon-only" data-testid="undo" [attr.aria-label]="'TAPE.EDIT.UNDO_TOOLTIP' | translate: {shortcut: shortcuts.undo}" [matTooltip]="'TAPE.EDIT.UNDO_TOOLTIP' | translate: {shortcut: shortcuts.undo}" [disabled]="!editor.canUndo() || editingPaused() || recorder.recording()" (click)="undo()">
+        <mat-icon aria-hidden="true">undo</mat-icon>
+      </button>
+      <button mat-stroked-button type="button" class="icon-only" data-testid="redo" [attr.aria-label]="'TAPE.EDIT.REDO_TOOLTIP' | translate: {shortcut: shortcuts.redo}" [matTooltip]="'TAPE.EDIT.REDO_TOOLTIP' | translate: {shortcut: shortcuts.redo}" [disabled]="!editor.canRedo() || editingPaused() || recorder.recording()" (click)="redo()">
+        <mat-icon aria-hidden="true">redo</mat-icon>
+      </button>
+      @let transposeLabel = 'TAPE.TRANSPOSE.BUTTON' | translate;
+      <button mat-stroked-button type="button" data-testid="transpose" [class.icon-only]="compactActions()" [disabled]="!canTranspose() || editingPaused() || recorder.recording()" [attr.aria-label]="compactActions() ? transposeLabel : null" [matTooltip]="compactActions() ? transposeLabel : ''" (click)="transpose()">
+        @if (compactActions()) {
+          <mat-icon aria-hidden="true">swap_vert</mat-icon>
+        } @else {
+          {{ transposeLabel }}
+        }
+      </button>
       @let previewLabel = (preview.playing() ? 'TAPE.PREVIEW.STOP' : 'TAPE.PREVIEW.PLAY') | translate;
       <button mat-stroked-button type="button" data-testid="preview-toggle" [class.icon-only]="compactActions()" [disabled]="!previewAvailable() || recorder.recording()" [disabledInteractive]="true" [attr.aria-label]="compactActions() ? previewLabel : null" [matTooltip]="recorder.recording() ? ('TAPE.PREVIEW.WHILE_RECORDING' | translate) : compactActions() ? previewLabel : ''" [attr.aria-describedby]="previewAvailable() ? null : 'preview-unavailable-reason'" (click)="togglePreview()">
         <mat-icon aria-hidden="true">{{ preview.playing() ? 'stop' : 'play_arrow' }}</mat-icon>
         @if (!compactActions()) {
           {{ previewLabel }}
-        }
-      </button>
-      <button mat-icon-button type="button" data-testid="undo" [attr.aria-label]="'TAPE.EDIT.UNDO_TOOLTIP' | translate: {shortcut: shortcuts.undo}" [matTooltip]="'TAPE.EDIT.UNDO_TOOLTIP' | translate: {shortcut: shortcuts.undo}" [disabled]="!editor.canUndo() || editingPaused()" (click)="undo()">
-        <mat-icon aria-hidden="true">undo</mat-icon>
-      </button>
-      <button mat-icon-button type="button" data-testid="redo" [attr.aria-label]="'TAPE.EDIT.REDO_TOOLTIP' | translate: {shortcut: shortcuts.redo}" [matTooltip]="'TAPE.EDIT.REDO_TOOLTIP' | translate: {shortcut: shortcuts.redo}" [disabled]="!editor.canRedo() || editingPaused()" (click)="redo()">
-        <mat-icon aria-hidden="true">redo</mat-icon>
-      </button>
-      @let transposeLabel = 'TAPE.TRANSPOSE.BUTTON' | translate;
-      <button mat-stroked-button type="button" data-testid="transpose" [class.icon-only]="compactActions()" [disabled]="!canTranspose() || editingPaused()" [attr.aria-label]="compactActions() ? transposeLabel : null" [matTooltip]="compactActions() ? transposeLabel : ''" (click)="transpose()">
-        @if (compactActions()) {
-          <mat-icon aria-hidden="true">swap_vert</mat-icon>
-        } @else {
-          {{ transposeLabel }}
         }
       </button>
       @let recordBlocked = recordBlockedBy();
