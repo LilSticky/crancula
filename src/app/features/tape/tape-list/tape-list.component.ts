@@ -1,7 +1,8 @@
-import {ChangeDetectionStrategy, Component, computed, inject} from '@angular/core';
+import {ChangeDetectionStrategy, Component, computed, inject, signal} from '@angular/core';
 import {toSignal} from '@angular/core/rxjs-interop';
 import {MatButton, MatIconButton} from '@angular/material/button';
 import {MatCard} from '@angular/material/card';
+import {MatCheckbox} from '@angular/material/checkbox';
 import {MatDialog} from '@angular/material/dialog';
 import {MatIcon} from '@angular/material/icon';
 import {MatMenu, MatMenuItem, MatMenuTrigger} from '@angular/material/menu';
@@ -12,13 +13,14 @@ import {MatTooltip} from '@angular/material/tooltip';
 import {ActivatedRoute, Router, RouterLink} from '@angular/router';
 import {TranslatePipe} from '@ngx-translate/core';
 import {map} from 'rxjs';
-import {type Organ, type Tape, tapeLengthInMillimetres} from '@api/index';
+import {type Organ, type Tape, type TapeId, tapeLengthInMillimetres} from '@api/index';
 import {ConfirmableAction, ConfirmDialogComponent} from '../../shared/components/confirm-dialog/confirm-dialog.component';
 import {PageHeadComponent} from '../../shared/components/page-head/page-head.component';
 import {formatNumber} from '../../shared/format-number';
 import {LanguagePreference} from '../../shared/language-preference';
 import {tapesByOrgan} from '../../shared/ledger-order';
 import {OrganLibrary} from '../../organ/organ-library.store';
+import {laneQueryParams} from '../side-by-side/lane-query';
 import {TapeLibrary} from '../tape-library.store';
 import {RenameTapeDialogComponent} from './rename-tape-dialog/rename-tape-dialog.component';
 
@@ -36,13 +38,18 @@ interface TapeRow {
   selector: 'cranc-tape-list',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    TranslatePipe, RouterLink, MatButton, MatIconButton, MatIcon, MatCard, MatMenu, MatMenuItem, MatMenuTrigger, MatTooltip,
-    MatTable, MatColumnDef, MatHeaderCell, MatHeaderCellDef, MatHeaderRow, MatHeaderRowDef, MatCell, MatCellDef, MatRow, MatRowDef,
-    PageHeadComponent,
+    TranslatePipe, RouterLink, MatButton, MatIconButton, MatIcon, MatCard, MatCheckbox, MatMenu, MatMenuItem, MatMenuTrigger,
+    MatTooltip, MatTable, MatColumnDef, MatHeaderCell, MatHeaderCellDef, MatHeaderRow, MatHeaderRowDef, MatCell, MatCellDef, MatRow,
+    MatRowDef, PageHeadComponent,
   ],
   template: `
     <cranc-page-head [title]="'TAPE.LIST.TITLE' | translate" [subtitle]="'TAPE.LIST.SUBTITLE' | translate">
       <ng-container ngProjectAs="[pageHeadActions]">
+        @if (ticked().length > 0) {
+          <button matButton="outlined" type="button" data-testid="cut-side-by-side" (click)="cutSideBySide()">
+            {{ 'TAPE.LIST.CUT_SIDE_BY_SIDE' | translate: {count: ticked().length} }}
+          </button>
+        }
         @if (rows().length > 0) {
           <a matButton="filled" routerLink="/tapes/new" data-testid="new-tape">
             <mat-icon>add</mat-icon>
@@ -82,6 +89,13 @@ interface TapeRow {
     } @else {
       <mat-card appearance="outlined">
         <table mat-table class="cr-ledger" [dataSource]="rows()" [trackBy]="trackRow">
+          <ng-container matColumnDef="tick">
+            <th mat-header-cell *matHeaderCellDef><span class="cdk-visually-hidden">{{ 'TAPE.SIDE_BY_SIDE.TITLE' | translate }}</span></th>
+            <td mat-cell *matCellDef="let row">
+              <mat-checkbox data-testid="tick-tape" [checked]="isTicked(row.tape.id)" (change)="toggleTick(row.tape.id)"
+                            (click)="$event.stopPropagation()" [aria-label]="'TAPE.LIST.TICK' | translate: {name: row.tape.name}"/>
+            </td>
+          </ng-container>
           <ng-container matColumnDef="name">
             <th mat-header-cell *matHeaderCellDef>{{ 'TAPE.LIST.NAME' | translate }}</th>
             <td mat-cell *matCellDef="let row">
@@ -192,7 +206,10 @@ export class TapeListComponent {
     {initialValue: null},
   );
 
-  protected readonly columnIds = ['name', 'organ', 'columns', 'length', 'actions'];
+  protected readonly columnIds = ['tick', 'name', 'organ', 'columns', 'length', 'actions'];
+
+  /** The Tapes ticked for a side-by-side cut, in the order they were ticked. */
+  protected readonly ticked = signal<readonly TapeId[]>([]);
 
   /** The Organ named by the `organ` query parameter; `undefined` without it or for an unknown id. */
   protected readonly filterOrgan = computed(() => {
@@ -223,6 +240,18 @@ export class TapeListComponent {
 
   protected open(row: TapeRow): void {
     if (row.organ !== undefined) void this.router.navigate(['/tapes', row.tape.id]);
+  }
+
+  protected isTicked(id: TapeId): boolean {
+    return this.ticked().includes(id);
+  }
+
+  protected toggleTick(id: TapeId): void {
+    this.ticked.update((ids) => (ids.includes(id) ? ids.filter((ticked) => ticked !== id) : [...ids, id]));
+  }
+
+  protected cutSideBySide(): void {
+    void this.router.navigate(['/tapes/side-by-side'], {queryParams: laneQueryParams(this.ticked())});
   }
 
   protected showAll(): void {
