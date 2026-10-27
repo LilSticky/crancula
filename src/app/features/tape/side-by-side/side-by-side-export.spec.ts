@@ -81,9 +81,9 @@ function rollPlotter(workingWidth = 300): RollPlotter {
   return plotter;
 }
 
-function setUp(failures: InMemoryCranculaApiFailures = {}) {
+function setUp(failures: InMemoryCranculaApiFailures = {}, language: 'en' | 'de' = 'en') {
   const api: InMemoryCranculaApi = createInMemoryCranculaApi(undefined, undefined, failures);
-  TestBed.configureTestingModule({providers: [provideTestTranslations('en'), {provide: CRANCULA_API, useValue: api}]});
+  TestBed.configureTestingModule({providers: [provideTestTranslations(language), {provide: CRANCULA_API, useValue: api}]});
   const street = testOrgan('Street organ', 3, {tapeBed: {tapeWidth: 100, holeDiameter: 2.5, rowSpacing: 3.5}});
   const barrel = testOrgan('Barrel piano', 3, {tapeBed: {tapeWidth: 60, holeDiameter: 2.5, rowSpacing: 3.5}});
   const lanes: readonly LaneTape[] = [
@@ -144,6 +144,14 @@ describe('SideBySideExport', () => {
       dialogTitle: text(translate, 'TAPE.EXPORT.DIALOG_TITLE'),
       filterName: text(translate, 'TAPE.EXPORT.FILTER_NAME'),
     });
+  });
+
+  it('proposes the German file name, with und weitere, when the export is in German', async () => {
+    const {api, lanes, plotter, plotterExport} = setUp({}, 'de');
+
+    await plotterExport.export(lanes, plotter);
+
+    expect(api.plotter.lastSaveSvgRequest?.suggestedFileName).toBe('Reference und 1 weitere.svg');
   });
 
   it('names the saved path in a snackbar', async () => {

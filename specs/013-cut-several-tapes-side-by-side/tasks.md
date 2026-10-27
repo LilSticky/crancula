@@ -146,7 +146,7 @@ refusal naming "Waltz" and its problem; fix it and save.
 
 **Independent Test**: in German, walk through Stories 1–5; no text is untranslated.
 
-- [ ] T039 [US6] Red→Green: `src/app/features/tape/side-by-side/side-by-side-i18n.spec.ts` (like `tape-i18n.spec.ts` and `plotter-i18n.spec.ts`): every `TAPE.SIDE_BY_SIDE.*`, `TAPE.LIST.TICK`, `TAPE.LIST.CUT_SIDE_BY_SIDE`, `PLOTTER.EDITOR.TAPE_SPACING*` and `PLOTTER.ERROR.MUST_NOT_BE_NEGATIVE` key exists in en and de and is non-empty; every `SideBySideRefusal` code and `PlotterViolationCode` has a text; German uses Bahn, Bandabstand, Arbeitsbreite, Schnittproblem; `side-by-side-export.spec.ts` in German proposes "Reference und 1 weitere.svg" (Story 6, FR-016, SC-006).
+- [x] T039 [US6] Red→Green: `src/app/features/tape/side-by-side/side-by-side-i18n.spec.ts` (like `tape-i18n.spec.ts` and `plotter-i18n.spec.ts`): every `TAPE.SIDE_BY_SIDE.*`, `TAPE.LIST.TICK`, `TAPE.LIST.CUT_SIDE_BY_SIDE`, `PLOTTER.EDITOR.TAPE_SPACING*` and `PLOTTER.ERROR.MUST_NOT_BE_NEGATIVE` key exists in en and de and is non-empty; every `SideBySideRefusal` code and `PlotterViolationCode` has a text; German uses Bahn, Bandabstand, Arbeitsbreite, Schnittproblem; `side-by-side-export.spec.ts` in German proposes "Reference und 1 weitere.svg" (Story 6, FR-016, SC-006).
 
 **Checkpoint**: commit; STATUS.
 
