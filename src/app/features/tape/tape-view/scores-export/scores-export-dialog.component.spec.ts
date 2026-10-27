@@ -1,7 +1,9 @@
 import {TestBed} from '@angular/core/testing';
 import {type HarnessLoader} from '@angular/cdk/testing';
 import {TestbedHarnessEnvironment} from '@angular/cdk/testing/testbed';
+import {By} from '@angular/platform-browser';
 import {MAT_DIALOG_DATA, MatDialogRef} from '@angular/material/dialog';
+import {MatTooltip} from '@angular/material/tooltip';
 import {MatInputHarness} from '@angular/material/input/testing';
 import {MatRadioButtonHarness} from '@angular/material/radio/testing';
 import {MatSelectHarness} from '@angular/material/select/testing';
@@ -344,5 +346,72 @@ describe('ScoresExportDialogComponent asks the Time signature and upbeat (FR-004
     const again = await second.loader.getHarness(MatInputHarness.with({selector: '[data-testid="scores-beats"]'}));
 
     expect(await again.getValue()).toBe('4');
+  });
+});
+
+/** The lines of the staves, from the top. */
+function staffLines(element: HTMLElement): HTMLElement[] {
+  return [...element.querySelectorAll<HTMLElement>('[data-testid="scores-staff"]')];
+}
+
+/** The name of the icon an element shows, or undefined when it shows none. */
+function iconName(element: Element | undefined): string | undefined {
+  return element?.querySelector('mat-icon')?.textContent?.trim();
+}
+
+describe('ScoresExportDialogComponent shows the Pipes each staff plays (FR-005, UX must 1)', () => {
+  it('shows the lowest and highest Pipe of a staff and how many Pipes it holds, not the MIDI extremes', async () => {
+    const organ = testOrgan('Street organ', 4, {pipes: [{note: 48}, {note: 60}, {note: 62}, {note: 84}]});
+    const {element} = await render(songIn3Four(), organ);
+
+    const [top] = staffLines(element);
+    expect(top?.textContent).toContain('C4 to C6');
+    expect(top?.textContent).toContain('3 Pipes');
+    expect(top?.textContent).not.toContain('G9');
+  });
+
+  it('warns with an icon and a text on a staff that holds no Pipe, and keeps Export enabled', async () => {
+    const organ = testOrgan('High organ', 2, {pipes: [{note: 72}, {note: 74}]});
+    const {fixture, element, press, translate} = await render(songIn3Four(), organ);
+    press('scores-split-add');
+    await fixture.whenStable();
+
+    const [top, bottom] = staffLines(element);
+    expect(bottom?.textContent).toContain(String(translate.instant('TAPE.SCORES.STAFF_EMPTY')));
+    expect(iconName(bottom)).toBe('warning');
+    expect(iconName(top)).toBeUndefined();
+    expect(exportDisabled(element)).toBe(false);
+  });
+});
+
+describe('ScoresExportDialogComponent names the dialog after its action and marks its icon buttons (UX should 2)', () => {
+  it('titles the dialog with the name of the menu item, Export as Scores', async () => {
+    const {element, translate} = await render(songIn3Four(), organAcrossMiddleC());
+
+    const title = required(element.querySelector('h2'), 'dialog title');
+    expect(title.textContent?.trim()).toBe(String(translate.instant('TAPE.VIEW.EXPORT_SCORES')));
+  });
+
+  it('marks the Add of a split note with a plus icon', async () => {
+    const {element} = await render(songIn3Four(), organAcrossMiddleC());
+
+    expect(iconName(required(element.querySelector('[data-testid="scores-split-add"]'), 'Add a split note'))).toBe('add');
+  });
+
+  it('shows the removal of a split note as an icon button labelled with its text', async () => {
+    const {element, translate} = await render(songIn3Four(), organAcrossMiddleC());
+    const remove = required(element.querySelector<HTMLButtonElement>('[data-testid="scores-split-remove"]'), 'removal');
+
+    expect(remove.getAttribute('aria-label')).toBe(String(translate.instant('TAPE.SCORES.SPLIT_REMOVE')));
+    const icon = iconName(remove);
+    expect(icon).toBeTruthy();
+    expect(remove.textContent?.trim()).toBe(icon);
+  });
+
+  it('gives the removal of a split note the tooltip with its text', async () => {
+    const {fixture, translate} = await render(songIn3Four(), organAcrossMiddleC());
+    const remove = fixture.debugElement.query(By.css('[data-testid="scores-split-remove"]'));
+
+    expect(remove.injector.get(MatTooltip).message).toBe(String(translate.instant('TAPE.SCORES.SPLIT_REMOVE')));
   });
 });

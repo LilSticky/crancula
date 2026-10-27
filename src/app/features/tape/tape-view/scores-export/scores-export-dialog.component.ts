@@ -1,12 +1,14 @@
 import {ChangeDetectionStrategy, Component, computed, inject, Injectable, signal} from '@angular/core';
 import {type Field, type FieldTree, form, FormField, type ReadonlyFieldTree, type SchemaPath, validateTree, type ValidationError} from '@angular/forms/signals';
 import {ErrorStateMatcher} from '@angular/material/core';
-import {MatButton} from '@angular/material/button';
+import {MatButton, MatIconButton} from '@angular/material/button';
 import {MAT_DIALOG_DATA, MatDialogActions, MatDialogContent, MatDialogRef, MatDialogTitle} from '@angular/material/dialog';
 import {MatError, MatFormField, MatLabel} from '@angular/material/form-field';
+import {MatIcon} from '@angular/material/icon';
 import {MatInput} from '@angular/material/input';
 import {MatOption, MatSelect, MatSelectChange} from '@angular/material/select';
 import {MatRadioButton, MatRadioChange, MatRadioGroup} from '@angular/material/radio';
+import {MatTooltip} from '@angular/material/tooltip';
 import {TranslatePipe} from '@ngx-translate/core';
 import {
   closeGaps,
@@ -18,7 +20,7 @@ import {
   scoresChoicesOf,
   scoresStaves,
   songMetre,
-  staffRange,
+  staffPipes,
   validateScoresChoices,
   type Clef,
   type MidiNoteNumber,
@@ -228,18 +230,21 @@ function nextSplitNoteOf(splitNotes: readonly number[]): MidiNoteNumber | undefi
     MatDialogTitle,
     MatError,
     MatFormField,
+    MatIcon,
+    MatIconButton,
     MatInput,
     MatLabel,
     MatOption,
     MatRadioButton,
     MatRadioGroup,
     MatSelect,
+    MatTooltip,
     TranslatePipe,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [{ provide: ErrorStateMatcher, useClass: ShownViolationMatcher }],
   template: `
-    <h2 mat-dialog-title>{{ 'TAPE.SCORES.TITLE' | translate }}</h2>
+    <h2 mat-dialog-title>{{ 'TAPE.VIEW.EXPORT_SCORES' | translate }}</h2>
     <mat-dialog-content data-testid="scores-export-dialog">
       <h3>{{ 'TAPE.SCORES.TIME_SIGNATURE' | translate }}</h3>
       @if (songMetreText; as metre) {
@@ -309,8 +314,15 @@ function nextSplitNoteOf(splitNotes: readonly number[]): MidiNoteNumber | undefi
               }
             </mat-select>
           </mat-form-field>
-          <button mat-button type="button" data-testid="scores-split-remove" (click)="removeSplitNote(index)">
-            {{ 'TAPE.SCORES.SPLIT_REMOVE' | translate }}
+          <button
+            mat-icon-button
+            type="button"
+            data-testid="scores-split-remove"
+            [attr.aria-label]="'TAPE.SCORES.SPLIT_REMOVE' | translate"
+            [matTooltip]="'TAPE.SCORES.SPLIT_REMOVE' | translate"
+            (click)="removeSplitNote(index)"
+          >
+            <mat-icon>close</mat-icon>
           </button>
         </div>
       }
@@ -324,19 +336,32 @@ function nextSplitNoteOf(splitNotes: readonly number[]): MidiNoteNumber | undefi
         [disabled]="nextSplitNote() === undefined"
         (click)="addSplitNote()"
       >
+        <mat-icon>add</mat-icon>
         {{ 'TAPE.SCORES.SPLIT_ADD' | translate }}
       </button>
       <ul>
         @for (line of staffLines(); track line.number) {
           <li data-testid="scores-staff">
-            {{
-              'TAPE.SCORES.STAFF'
-                | translate: {
-                    number: line.number,
-                    range: ('TAPE.SCORES.RANGE' | translate: {from: line.from, to: line.to}),
-                    clef: (line.clef | translate),
-                  }
-            }}
+            @if (line.pipes; as pipes) {
+              {{
+                'TAPE.SCORES.STAFF'
+                  | translate: {
+                      number: line.number,
+                      range: ('TAPE.SCORES.RANGE' | translate: {from: pipes.from, to: pipes.to, pipes: (pipes.countKey | translate: {count: pipes.count})}),
+                      clef: (line.clef | translate),
+                    }
+              }}
+            } @else {
+              <mat-icon class="warning">warning</mat-icon>
+              {{
+                'TAPE.SCORES.STAFF'
+                  | translate: {
+                      number: line.number,
+                      range: ('TAPE.SCORES.STAFF_EMPTY' | translate),
+                      clef: (line.clef | translate),
+                    }
+              }}
+            }
           </li>
         }
       </ul>
@@ -368,6 +393,11 @@ function nextSplitNoteOf(splitNotes: readonly number[]): MidiNoteNumber | undefi
       margin: 0;
       padding-left: 1.25rem;
     }
+    .warning {
+      color: var(--mat-sys-error);
+      font-size: 1.1rem;
+      vertical-align: text-bottom;
+    }
   `,
 })
 export class ScoresExportDialogComponent {
@@ -398,14 +428,21 @@ export class ScoresExportDialogComponent {
   /** The choices the Scores are written with; undefined while a value is not yet a choice, which keeps Export disabled. */
   protected readonly choices = computed(() => scoresChoicesOf(inputOf(this.model()), this.data.song));
 
-  /** One line per staff from the top: its number, the notes it holds (from, to) and its clef. */
+  /** One line per staff from the top: its number, the Pipes it plays (names and count, undefined when none) and its clef. */
   protected readonly staffLines = computed(() =>
     scoresStaves(pitchesOf(this.model().splitNotes), this.data.organ, this.notes).map((staff) => {
-      const range = staffRange(staff);
+      const pipes = staffPipes(staff, this.data.organ);
       return {
         number: staff.number,
-        from: noteName(range.lowest),
-        to: noteName(range.highest),
+        pipes:
+          pipes === undefined
+            ? undefined
+            : {
+                from: noteName(pipes.lowest),
+                to: noteName(pipes.highest),
+                count: pipes.count,
+                countKey: pipes.count === 1 ? 'TAPE.SCORES.PIPES_ONE' : 'TAPE.SCORES.PIPES',
+              },
         clef: CLEF_KEYS[staff.clef],
       };
     }),

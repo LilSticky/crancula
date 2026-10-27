@@ -280,7 +280,6 @@ describe('Score import texts (US6)', () => {
 /** Every text the Scores export shows: the command, the dialog, its messages (contracts/scores-export-ui.md). */
 const scoresExportKeys = [
   'TAPE.VIEW.EXPORT_SCORES',
-  'TAPE.SCORES.TITLE',
   'TAPE.SCORES.TIME_SIGNATURE',
   'TAPE.SCORES.TIME_SONG',
   'TAPE.SCORES.TIME_OTHER',
@@ -301,6 +300,7 @@ const scoresExportKeys = [
   'TAPE.SCORES.SPLIT_REMOVE',
   'TAPE.SCORES.STAFF',
   'TAPE.SCORES.RANGE',
+  'TAPE.SCORES.STAFF_EMPTY',
   'TAPE.SCORES.CLEF.TREBLE',
   'TAPE.SCORES.CLEF.TREBLE_8VA',
   'TAPE.SCORES.CLEF.BASS',
@@ -374,5 +374,11 @@ describe('Scores export texts (US5, SC-007)', () => {
     expect(api.scores.lastSaveRequest?.suggestedFileName).toBe(scoresFileName(tape.name));
     expect(api.scores.lastSaveRequest?.dialogTitle).toBe(germanText('TAPE.SCORES.DIALOG_TITLE'));
     expect(api.scores.lastSaveRequest?.filterName).toBe(germanText('TAPE.SCORES.FILTER_NAME'));
+  });
+});
+
+describe('German beat count error (UX nit 3)', () => {
+  it('words the beat count error without a doubled "von"', () => {
+    expect(germanText('TAPE.SCORES.ERROR.BEATS')).toBe('Gib eine ganze Zahl von 1 bis 99 ein.');
   });
 });

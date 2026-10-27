@@ -354,7 +354,6 @@
       "EDIT_PICKED": "Change this Plotter"
     },
     "SCORES": {
-      "TITLE": "Scores",
       "TIME_SIGNATURE": "Time signature",
       "TIME_SONG": "As in the Song: {{metre}}",
       "TIME_OTHER": "Another one",
@@ -376,7 +375,10 @@
       "SPLIT_ADD": "Add a split note",
       "SPLIT_REMOVE": "Remove this split note",
       "STAFF": "Staff {{number}}: {{range}}, {{clef}}",
-      "RANGE": "{{from}} to {{to}}",
+      "RANGE": "{{from}} to {{to}}, {{pipes}}",
+      "PIPES": "{{count}} Pipes",
+      "PIPES_ONE": "1 Pipe",
+      "STAFF_EMPTY": "no Pipes, stays empty",
       "CLEF": {
         "TREBLE": "treble clef",
         "TREBLE_8VA": "treble clef, 8va",
