@@ -260,7 +260,7 @@
 # Working area
 * The largest length (working length) and width (working width) a Plotter cuts in one go
 * A roll plotter has only a working width
-* German: Arbeitsbereich
+* German: Arbeitsbereich (working width: Arbeitsbreite, working length: Arbeitslänge)
 
 # Tape piece
 * A part of a Tape cut on its own, ending at a Join; glued to the next Tape piece
