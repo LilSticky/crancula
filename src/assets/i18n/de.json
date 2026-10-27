@@ -59,6 +59,7 @@
       "PIECES_DIALOG_TITLE": "Bandstücke in einem Ordner speichern",
       "PIECES_DIALOG_BUTTON": "Hier speichern",
       "PIECES_REPLACE_MESSAGE": "Einige dieser Dateien gibt es schon. Sollen sie ersetzt werden?",
+      "PIECES_REPLACE_MORE": "… und {count} weitere",
       "PIECES_REPLACE": "Ersetzen",
       "PIECES_CANCEL": "Abbrechen",
       "PIECES_SAVED": "{{count}} Dateien in {{folder}} gespeichert",

@@ -97,6 +97,7 @@ export class PlotterExport {
       dialogTitle: this.text('TAPE.EXPORT.PIECES_DIALOG_TITLE'),
       dialogButton: this.text('TAPE.EXPORT.PIECES_DIALOG_BUTTON'),
       replaceMessage: this.text('TAPE.EXPORT.PIECES_REPLACE_MESSAGE'),
+      replaceMoreLine: this.text('TAPE.EXPORT.PIECES_REPLACE_MORE'),
       replaceButton: this.text('TAPE.EXPORT.PIECES_REPLACE'),
       cancelButton: this.text('TAPE.EXPORT.PIECES_CANCEL'),
     });

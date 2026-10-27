@@ -148,6 +148,7 @@ describe('createInMemoryCranculaApi', () => {
       dialogTitle: 'Choose the folder for the Tape pieces',
       dialogButton: 'Save here',
       replaceMessage: 'Some of these files already exist. Replace them?',
+      replaceMoreLine: '… and {count} more',
       replaceButton: 'Replace',
       cancelButton: 'Cancel',
     };

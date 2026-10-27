@@ -37,6 +37,7 @@ const piecesRequest = {
   dialogTitle: 'Choose the folder for the Tape pieces',
   dialogButton: 'Save here',
   replaceMessage: 'Some of these files already exist. Replace them?',
+  replaceMoreLine: '… and {count} more',
   replaceButton: 'Replace',
   cancelButton: 'Cancel',
 };
@@ -328,6 +329,28 @@ describe('registerPlotterHandlers: savePieces', () => {
       defaultId: 1,
       cancelId: 1,
     });
+  });
+
+  it('lists the first 10 existing names and a more line with the count of the rest when more than 10 exist', async () => {
+    const fileNames = Array.from({length: 11}, (_, index) => `Waltz ${index + 1} of 11.svg`);
+    for (const fileName of fileNames) await writeFile(join(folder, fileName), 'old', 'utf8');
+    folderAnswers.push({canceled: false, filePaths: [folder]});
+    messageAnswers.push({response: 1, checkboxChecked: false});
+
+    await savePieces({...piecesRequest, pieces: fileNames.map((fileName) => ({fileName, svg: svgOf(fileName)}))});
+
+    expect(messageBoxCalls[0]?.detail).toBe([...fileNames.slice(0, 10), '… and 1 more'].join('\n'));
+  });
+
+  it('lists every existing name and no more line when 10 or fewer exist', async () => {
+    const fileNames = Array.from({length: 10}, (_, index) => `Waltz ${index + 1} of 10.svg`);
+    for (const fileName of fileNames) await writeFile(join(folder, fileName), 'old', 'utf8');
+    folderAnswers.push({canceled: false, filePaths: [folder]});
+    messageAnswers.push({response: 1, checkboxChecked: false});
+
+    await savePieces({...piecesRequest, pieces: fileNames.map((fileName) => ({fileName, svg: svgOf(fileName)}))});
+
+    expect(messageBoxCalls[0]?.detail).toBe(fileNames.join('\n'));
   });
 
   it('answers cancelled and keeps every existing file unchanged when the replace question is answered Cancel', async () => {

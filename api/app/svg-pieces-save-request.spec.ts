@@ -12,11 +12,27 @@ const valid = {
   dialogTitle: 'Export for the Plotter',
   dialogButton: 'Save here',
   replaceMessage: 'Some of these files already exist. Replace them?',
+  replaceMoreLine: '… and {count} more',
   replaceButton: 'Replace',
   cancelButton: 'Cancel',
 };
 
-const TEXT_FIELDS = ['dialogTitle', 'dialogButton', 'replaceMessage', 'replaceButton', 'cancelButton'] as const;
+const TEXT_FIELDS = [
+  'dialogTitle',
+  'dialogButton',
+  'replaceMessage',
+  'replaceMoreLine',
+  'replaceButton',
+  'cancelButton',
+] as const;
+
+const MORE_COUNT_PLACEHOLDER = '{count}';
+
+/** A text of `length` characters that is valid for `field`: the more line must hold the placeholder once. */
+function textOfLength(field: (typeof TEXT_FIELDS)[number], length: number): string {
+  if (field !== 'replaceMoreLine') return 'a'.repeat(length);
+  return `${MORE_COUNT_PLACEHOLDER}${'a'.repeat(length - MORE_COUNT_PLACEHOLDER.length)}`;
+}
 
 function errorOf(input: unknown): string {
   const result = parseSvgPiecesSaveRequest(input);
@@ -132,14 +148,25 @@ describe('parseSvgPiecesSaveRequest', () => {
   describe.each(TEXT_FIELDS)('%s', (field) => {
     it('rejects empty, over 200 characters and control characters', () => {
       expect(errorOf({...valid, [field]: ''})).toContain(field);
-      expect(errorOf({...valid, [field]: 'a'.repeat(201)})).toContain(field);
+      expect(errorOf({...valid, [field]: textOfLength(field, 201)})).toContain(field);
       expect(errorOf({...valid, [field]: 'a\u0000b'})).toContain(field);
       expect(errorOf({...valid, [field]: 'a\nb'})).toContain(field);
     });
 
-    it('accepts 1 and 200 characters', () => {
-      expect(parseSvgPiecesSaveRequest({...valid, [field]: 'a'}).ok).toBe(true);
-      expect(parseSvgPiecesSaveRequest({...valid, [field]: 'a'.repeat(200)}).ok).toBe(true);
+    it('accepts the shortest and 200 characters', () => {
+      const shortest = field === 'replaceMoreLine' ? MORE_COUNT_PLACEHOLDER : 'a';
+      expect(parseSvgPiecesSaveRequest({...valid, [field]: shortest}).ok).toBe(true);
+      expect(parseSvgPiecesSaveRequest({...valid, [field]: textOfLength(field, 200)}).ok).toBe(true);
+    });
+  });
+
+  describe('replaceMoreLine', () => {
+    it('rejects a line without the {count} placeholder', () => {
+      expect(errorOf({...valid, replaceMoreLine: '… and more'})).toContain('replaceMoreLine');
+    });
+
+    it('rejects a line with the {count} placeholder more than once', () => {
+      expect(errorOf({...valid, replaceMoreLine: '… {count} and {count} more'})).toContain('replaceMoreLine');
     });
   });
 });

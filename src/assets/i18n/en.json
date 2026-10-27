@@ -59,6 +59,7 @@
       "PIECES_DIALOG_TITLE": "Save the Tape pieces in a folder",
       "PIECES_DIALOG_BUTTON": "Save here",
       "PIECES_REPLACE_MESSAGE": "Some of these files already exist. Replace them?",
+      "PIECES_REPLACE_MORE": "… and {count} more",
       "PIECES_REPLACE": "Replace",
       "PIECES_CANCEL": "Cancel",
       "PIECES_SAVED": "Saved {{count}} files in {{folder}}",

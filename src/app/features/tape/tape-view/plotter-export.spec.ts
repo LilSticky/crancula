@@ -138,6 +138,7 @@ function expectedPiecesRequest(
     dialogTitle: text(translate, 'TAPE.EXPORT.PIECES_DIALOG_TITLE'),
     dialogButton: text(translate, 'TAPE.EXPORT.PIECES_DIALOG_BUTTON'),
     replaceMessage: text(translate, 'TAPE.EXPORT.PIECES_REPLACE_MESSAGE'),
+    replaceMoreLine: text(translate, 'TAPE.EXPORT.PIECES_REPLACE_MORE'),
     replaceButton: text(translate, 'TAPE.EXPORT.PIECES_REPLACE'),
     cancelButton: text(translate, 'TAPE.EXPORT.PIECES_CANCEL'),
   };
@@ -340,6 +341,17 @@ describe('PlotterExport', () => {
 
       expect(api.plotter.lastSavePiecesRequest).toEqual(expectedPiecesRequest(tape, organ, plotter, translate));
       expect(api.plotter.lastSaveSvgRequest).toBeUndefined();
+    });
+
+    it('sends the translated more line with the count left as a placeholder for the main process to fill in', async () => {
+      const {api, organ, tape, plotterExport} = await setUp({}, LONG_TAPE_RESTS);
+      const plotter = plotterOf(REFERENCE_PLOTTER);
+
+      await plotterExport.export(tape, organ, plotter);
+
+      const moreLine = api.plotter.lastSavePiecesRequest?.replaceMoreLine;
+      expect(moreLine).toContain('{count}');
+      expect(moreLine).not.toBe('TAPE.EXPORT.PIECES_REPLACE_MORE');
     });
 
     it('tells the folder and the number of files in a snackbar when the pieces were saved', async () => {
