@@ -12,6 +12,7 @@ module.exports = tseslint.config(
       parserOptions: {
         project: [
           './tsconfig.serve.json',
+          './tsconfig.node.json',
           './src/tsconfig.app.json',
           './src/tsconfig.spec.json',
           './tsconfig.worker.json',
@@ -27,6 +28,7 @@ module.exports = tseslint.config(
     processor: angular.processInlineTemplates,
     rules: {
       '@typescript-eslint/no-empty-function': 'off',
+      '@typescript-eslint/no-unused-vars': ['error', { ignoreRestSiblings: true }],
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-unsafe-assignment': 'off',
       '@typescript-eslint/no-unsafe-call': 'off',
