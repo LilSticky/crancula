@@ -1,7 +1,7 @@
 <cranc-page-head [title]="'TAPE.SIDE_BY_SIDE.TITLE' | translate" [subtitle]="'TAPE.SIDE_BY_SIDE.SUBTITLE' | translate">
   <ng-container ngProjectAs="[pageHeadActions]">
     <button matButton="filled" type="button" data-testid="save-side-by-side"
-            [disabled]="savable() === undefined || exporter.saving()" (click)="save()">
+            [disabled]="exporter.saving()" (click)="save()">
       {{ 'TAPE.SIDE_BY_SIDE.SAVE' | translate }}
     </button>
   </ng-container>
@@ -68,6 +68,13 @@
             {{ 'TAPE.LIST.ORGAN_NOT_AVAILABLE' | translate }}
           }
         </span>
+        @let problems = problemCounts().get(row.tape.id) ?? 0;
+        @if (problems > 0) {
+          <span data-testid="lane-problems" class="mark">{{ 'TAPE.SIDE_BY_SIDE.LANE_PROBLEMS' | translate: {count: number(problems)} }}</span>
+        }
+        @if (lanesPastWidth().has(row.number)) {
+          <span data-testid="lane-does-not-fit" class="mark">{{ 'TAPE.SIDE_BY_SIDE.LANE_DOES_NOT_FIT' | translate }}</span>
+        }
         @if (row.geometry; as geometry) {
           <span data-testid="lane-width" class="measure">{{ 'TAPE.SIDE_BY_SIDE.LANE_WIDTH' | translate: {width: number(geometry.width)} }}</span>
           <span data-testid="lane-length" class="measure">{{ 'TAPE.SIDE_BY_SIDE.LANE_LENGTH' | translate: {length: number(geometry.totalLength)} }}</span>
@@ -99,11 +106,11 @@
       {{ group.organName ?? ('TAPE.LIST.ORGAN_NOT_AVAILABLE' | translate) }}
     </div>
     @for (option of group.options; track option.tape.id) {
-      <button mat-menu-item type="button" data-testid="add-lane-tape" [disabled]="option.doesNotFit !== undefined"
+      <button mat-menu-item type="button" data-testid="add-lane-tape" [disabled]="option.blocked !== undefined"
               (click)="add(option.tape)">
         <span>{{ option.name }}</span>
-        @if (option.doesNotFit; as fit) {
-          <span class="hint">{{ 'TAPE.SIDE_BY_SIDE.DOES_NOT_FIT' | translate: fit }}</span>
+        @if (option.blocked; as blocked) {
+          <span class="hint">{{ blocked.key | translate: blocked.params }}</span>
         }
       </button>
     }

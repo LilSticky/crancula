@@ -1,11 +1,16 @@
+import {ApplicationRef} from '@angular/core';
 import {TestBed} from '@angular/core/testing';
+import {MatDialog} from '@angular/material/dialog';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {TranslateService} from '@ngx-translate/core';
 import {vi} from 'vitest';
 import {
+  column,
+  columnCount,
   createTape,
   defaultSelectedParts,
   type LaneTape,
+  midiNoteNumber,
   newPlotterId,
   type Organ,
   proposeTransposition,
@@ -16,6 +21,7 @@ import {
   type Tape,
   validatePlotter,
 } from '@api/index';
+import {tapeOf} from '@api/tape/tape-fixture';
 import {encodeSmf} from '../../../../../api/song/midi/smf-test-helper';
 import {
   CRANCULA_API,
@@ -58,12 +64,12 @@ function tapeNamed(organ: Organ, name: string): Tape {
   return created.value.tape;
 }
 
-/** The roll plotter "Vinyl cutter": working width 300 mm, Tape spacing 3 mm. */
-function rollPlotter(): RollPlotter {
+/** The roll plotter "Vinyl cutter": working width 300 mm unless given, Tape spacing 3 mm. */
+function rollPlotter(workingWidth = 300): RollPlotter {
   const result = validatePlotter({
     id: newPlotterId(),
     name: 'Vinyl cutter',
-    workingWidth: 300,
+    workingWidth,
     roll: true,
     workingLength: null,
     overlap: null,
@@ -90,6 +96,8 @@ function setUp(failures: InMemoryCranculaApiFailures = {}) {
   return {
     api,
     lanes,
+    street,
+    barrel,
     plotter,
     translate,
     snackBar,
@@ -100,6 +108,26 @@ function setUp(failures: InMemoryCranculaApiFailures = {}) {
 
 function text(translate: TranslateService, key: string, params?: Record<string, string>): string {
   return String(translate.instant(key, params));
+}
+
+function defined<T>(value: T | undefined, what: string): T {
+  if (value === undefined) throw new Error(`invalid test value: ${what}`);
+  return value;
+}
+
+/** The Waltz with one Hole on note 70, which no Pipe of its Organ has: one Cutting Problem, at Column 1. */
+function waltzWithoutPipe(waltz: Tape): Tape {
+  return tapeOf({
+    ...waltz,
+    holes: [
+      ...waltz.holes,
+      {
+        pipe: defined(midiNoteNumber(70), 'note 70'),
+        start: defined(column(0), 'start'),
+        length: defined(columnCount(3), 'length'),
+      },
+    ],
+  });
 }
 
 describe('SideBySideExport', () => {
@@ -209,5 +237,55 @@ describe('SideBySideExport', () => {
     expect(saveTapes).not.toHaveBeenCalled();
     expect(saveOrgans).not.toHaveBeenCalled();
     expect(savePlotters).not.toHaveBeenCalled();
+  });
+
+  describe('for Lanes that can not be cut together (Story 3)', () => {
+    afterEach(() => TestBed.inject(MatDialog).closeAll());
+
+    /** The texts the Cutting Problems dialog lists now, in order. */
+    function dialogEntries(): string[] {
+      TestBed.inject(ApplicationRef).tick();
+      return [...document.querySelectorAll('[data-testid="export-problem"]')].map((item) =>
+        (item.textContent ?? '').replace(/\s+/g, ' ').trim(),
+      );
+    }
+
+    it('opens the Cutting Problems dialog with one entry per reason, the Lane that does not fit first, and saves nothing', async () => {
+      const {api, lanes, street, barrel, plotterExport} = setUp();
+      const reference = defined(lanes.at(0), 'reference Lane').tape;
+      const cannotBeCut: readonly LaneTape[] = [
+        {tape: reference, organ: street},
+        {tape: waltzWithoutPipe(defined(lanes.at(1), 'waltz Lane').tape), organ: barrel},
+      ];
+      const saveSvg = vi.spyOn(api.plotter, 'saveSvg');
+
+      await plotterExport.export(cannotBeCut, rollPlotter(150));
+
+      expect(dialogEntries()).toEqual([
+        'Lane 2: Waltz needs 63 mm, only 50 mm free',
+        'Waltz: A#4 at Column 1: the Organ has no Pipe for this note.',
+      ]);
+      expect(saveSvg).not.toHaveBeenCalled();
+    });
+
+    it('names a Tape with a Cutting Problem and saves no file, shows no snackbar', async () => {
+      const {api, lanes, street, barrel, snackBar, plotterExport} = setUp();
+      const reference = defined(lanes.at(0), 'reference Lane').tape;
+      const waltz = waltzWithoutPipe(defined(lanes.at(1), 'waltz Lane').tape);
+      const saveSvg = vi.spyOn(api.plotter, 'saveSvg');
+
+      await plotterExport.export(
+        [
+          {tape: reference, organ: street},
+          {tape: waltz, organ: barrel},
+        ],
+        rollPlotter(),
+      );
+
+      expect(dialogEntries()).toEqual(['Waltz: A#4 at Column 1: the Organ has no Pipe for this note.']);
+      expect(saveSvg).not.toHaveBeenCalled();
+      expect(snackBar).not.toHaveBeenCalled();
+      expect(plotterExport.saving()).toBe(false);
+    });
   });
 });

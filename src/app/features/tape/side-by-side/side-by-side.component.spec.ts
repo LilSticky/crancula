@@ -7,8 +7,11 @@ import {provideRouter, Router} from '@angular/router';
 import {TranslateService} from '@ngx-translate/core';
 import {vi} from 'vitest';
 import {
+  column,
+  columnCount,
   createTape,
   defaultSelectedParts,
+  midiNoteNumber,
   millimetres,
   newPlotterId,
   type Organ,
@@ -24,6 +27,7 @@ import {
   type Tape,
   validatePlotter,
 } from '@api/index';
+import {tapeOf} from '@api/tape/tape-fixture';
 import {encodeSmf} from '../../../../../api/song/midi/smf-test-helper';
 import {CRANCULA_API, createInMemoryCranculaApi, type InMemoryCranculaApi} from '../../../core/crancula-api.token';
 import {testOrgan} from '../../../../testing/organs';
@@ -212,6 +216,20 @@ async function menuItemStartingWith(fixture: ComponentFixture<SideBySideComponen
   const texts = await Promise.all(items.map((item) => item.getText()));
   const found = texts.findIndex((text) => text.startsWith(name));
   return required(found < 0 ? undefined : items.at(found), `add menu item for ${name}`);
+}
+
+/** The Tape with one Hole on note 70, which no Pipe of its Organ has: one Cutting Problem. */
+function withoutPipe(tape: Tape): Tape {
+  const note = midiNoteNumber(70);
+  const start = column(0);
+  const length = columnCount(3);
+  if (note === undefined || start === undefined || length === undefined) throw new Error('invalid test Hole');
+  return tapeOf({...tape, holes: [...tape.holes, {pipe: note, start, length}]});
+}
+
+/** The mark of the Lane row with `testId`, or null when the row has none. */
+function markIn(row: HTMLElement, testId: string): HTMLElement | null {
+  return row.querySelector<HTMLElement>(`[data-testid="${testId}"]`);
 }
 
 /** The Organ of a Tape with its tape width changed to `width`, keeping its id and name. */
@@ -486,6 +504,35 @@ describe('SideBySideComponent', () => {
     fixture.detectChanges();
 
     expect(textIn(rows(element)[0], 'lane-width')).toBe('80 mm wide');
+  });
+
+  it('marks a Lane whose Tape has Cutting Problems with their count, before Save is tried', async () => {
+    const view = await setUp();
+    await TestBed.inject(TapeLibrary).update(withoutPipe(view.waltz));
+    const {element} = await open(view, [view.reference, view.waltz]);
+
+    expect(markIn(rows(element)[1], 'lane-problems')?.textContent?.trim()).toBe('1 Cutting Problems');
+    expect(markIn(rows(element)[0], 'lane-problems')).toBeNull();
+  });
+
+  it('marks the Lane that does not fit the working width, and only that Lane', async () => {
+    const view = await setUp();
+    const {element} = await open(view, [view.reference, view.reference, view.reference]);
+
+    expect(markIn(rows(element)[2], 'lane-does-not-fit')?.textContent?.trim()).toBe('Does not fit');
+    expect(markIn(rows(element)[0], 'lane-does-not-fit')).toBeNull();
+    expect(markIn(rows(element)[1], 'lane-does-not-fit')).toBeNull();
+  });
+
+  it('disables a Tape whose Organ is gone in the add menu, saying it has no Organ', async () => {
+    const view = await setUp();
+    await TestBed.inject(OrganLibrary).remove(view.barrel.id);
+    const {fixture} = await open(view, [view.reference]);
+
+    const waltz = await menuItemStartingWith(fixture, 'Waltz');
+
+    expect(await waltz.isDisabled()).toBe(true);
+    expect(await waltz.getText()).toContain('has no Organ');
   });
 
   it('drops the Lanes of a removed Tape at once', async () => {

@@ -92,7 +92,8 @@ interface TapeRow {
           <ng-container matColumnDef="tick">
             <th mat-header-cell *matHeaderCellDef><span class="cdk-visually-hidden">{{ 'TAPE.SIDE_BY_SIDE.TITLE' | translate }}</span></th>
             <td mat-cell *matCellDef="let row">
-              <mat-checkbox data-testid="tick-tape" [checked]="isTicked(row.tape.id)" (change)="toggleTick(row.tape.id)"
+              <mat-checkbox data-testid="tick-tape" [checked]="isTicked(row.tape.id)" [disabled]="row.organ === undefined"
+                            (change)="toggleTick(row.tape.id)"
                             (click)="$event.stopPropagation()" [aria-label]="'TAPE.LIST.TICK' | translate: {name: row.tape.name}"/>
             </td>
           </ng-container>

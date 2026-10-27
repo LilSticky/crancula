@@ -8,9 +8,12 @@ import {MatOption, MatSelect} from '@angular/material/select';
 import {ActivatedRoute} from '@angular/router';
 import {TranslatePipe} from '@ngx-translate/core';
 import {
+  cuttingProblems,
   laneRoom,
   sideBySideCut,
+  sideBySideRefusals,
   tapeGeometry,
+  type LaneRoom,
   type LaneTape,
   type Organ,
   type PlotterId,
@@ -46,12 +49,18 @@ interface LaneRow {
   readonly geometry: TapeGeometry | undefined;
 }
 
-/** A Tape offered in the add menu; `doesNotFit` names the width it needs when it cannot go after the last Lane. */
+/** Why a Tape can not be added now, as a translation key with its parameters. */
+interface AddBlock {
+  readonly key: string;
+  readonly params: Readonly<Record<string, string>>;
+}
+
+/** A Tape offered in the add menu; `blocked` says why it can not be added after the last Lane, `undefined` when it can. */
 interface AddOption {
   readonly tape: Tape;
   readonly name: string;
   readonly organ: Organ | undefined;
-  readonly doesNotFit: {readonly needed: string; readonly free: string} | undefined;
+  readonly blocked: AddBlock | undefined;
 }
 
 /** The add menu's Tapes under one Organ heading. */
@@ -67,6 +76,16 @@ function swapped<T>(list: readonly T[], from: number, to: number): readonly T[] 
   const other = to < 0 ? undefined : list.at(to);
   if (moving === undefined || other === undefined) return list;
   return list.map((item, index) => (index === from ? other : index === to ? moving : item));
+}
+
+/** Why a Tape can not be added after the last Lane: it has no Organ, or its Lane would pass the working width. */
+function blockedBy(organ: Organ | undefined, room: LaneRoom | undefined, number: (value: number) => string): AddBlock | undefined {
+  if (organ === undefined) return {key: 'TAPE.SIDE_BY_SIDE.NO_ORGAN', params: {}};
+  if (room === undefined || room.fits) return undefined;
+  return {
+    key: 'TAPE.SIDE_BY_SIDE.DOES_NOT_FIT',
+    params: {needed: number(room.needed), free: number(Math.max(0, room.free))},
+  };
 }
 
 /** Cuts the Tapes of the URL side by side on one roll Plotter, one Lane per Tape, in the order of the URL. */
@@ -147,6 +166,26 @@ export class SideBySideComponent {
     return ready.length === rows.length ? sideBySideCut(ready, plotter) : undefined;
   });
 
+  /** Every reason the Lanes can not be saved, in the order they are listed; empty when Save would write the file. */
+  protected readonly refusals = computed(() => sideBySideRefusals(this.rows(), this.plotter()));
+
+  /** The numbers of the Lanes past the working width, marked in the list. */
+  protected readonly lanesPastWidth = computed<ReadonlySet<number>>(
+    () =>
+      new Set(
+        this.refusals().flatMap((refusal) => (refusal.code === 'lane-does-not-fit' ? [refusal.lane] : [])),
+      ),
+  );
+
+  /** The Cutting Problems of each Tape in the Lanes, counted once per Tape however many Lanes it is in. */
+  protected readonly problemCounts = computed<ReadonlyMap<TapeId, number>>(() => {
+    const counts = new Map<TapeId, number>();
+    for (const {tape, organ} of this.rows()) {
+      if (organ !== undefined && !counts.has(tape.id)) counts.set(tape.id, cuttingProblems(tape, organ).length);
+    }
+    return counts;
+  });
+
   /** What Save cuts: the cut, once there is at least one Lane. */
   protected readonly savable = computed<SideBySideCut | undefined>(() => {
     const cut = this.cut();
@@ -169,7 +208,7 @@ export class SideBySideComponent {
     };
   });
 
-  /** The Tapes of the library in the add menu, under their Organ; a Tape that does not fit after the last Lane is disabled. */
+  /** The Tapes of the library in the add menu, under their Organ; a Tape without an Organ or that does not fit is disabled. */
   protected readonly addGroups = computed<readonly AddGroup[]>(() => {
     const cut = this.cut();
     const organs = this.organs.entities();
@@ -183,15 +222,7 @@ export class SideBySideComponent {
     );
     const options = candidates.map(({tape, name, organ}): AddOption => {
       const room = cut !== undefined && organ !== undefined ? laneRoom(cut, organ.tapeBed.tapeWidth) : undefined;
-      return {
-        tape,
-        name,
-        organ,
-        doesNotFit:
-          room === undefined || room.fits
-            ? undefined
-            : {needed: this.number(room.needed), free: this.number(room.free)},
-      };
+      return {tape, name, organ, blocked: blockedBy(organ, room, (value) => this.number(value))};
     });
     return options.reduce<AddGroup[]>((groups, option) => {
       const key = option.organ?.id ?? '';
@@ -208,8 +239,7 @@ export class SideBySideComponent {
   }
 
   protected save(): void {
-    const cut = this.savable();
-    if (cut !== undefined) void this.exporter.export(cut.lanes, cut.plotter);
+    void this.exporter.export(this.rows(), this.plotter());
   }
 
   protected add(tape: Tape): void {

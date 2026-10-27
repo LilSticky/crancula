@@ -530,6 +530,13 @@ describe('TapeListComponent', () => {
       expect(tickOf(element, 'Melody').checked).toBe(false);
     });
 
+    it('disables the tick box of a Tape whose Organ is not available', async () => {
+      const {add, element} = await render();
+      await add(testOrgan('Lost organ', 3), 'Melody', false);
+
+      expect(tickOf(element, 'Melody').disabled).toBe(true);
+    });
+
     it('does not open the Tape when its tick box is clicked', async () => {
       const {add, element, router, fixture} = await render();
       await add(testOrgan('Street organ', 3), 'Melody');
