@@ -13,6 +13,8 @@ export interface SvgPiecesSaveRequest {
   readonly dialogTitle: string;
   readonly dialogButton: string;
   readonly replaceMessage: string;
+  /** Translated; holds a literal {count} that the main process replaces with the number of names not listed. */
+  readonly replaceMoreLine: string;
   readonly replaceButton: string;
   readonly cancelButton: string;
 }
@@ -32,10 +34,19 @@ export type SvgPiecesSaveResult =
       readonly written: readonly string[];
     };
 
-const FIELDS = ['pieces', 'dialogTitle', 'dialogButton', 'replaceMessage', 'replaceButton', 'cancelButton'] as const;
+const FIELDS = [
+  'pieces',
+  'dialogTitle',
+  'dialogButton',
+  'replaceMessage',
+  'replaceMoreLine',
+  'replaceButton',
+  'cancelButton',
+] as const;
 const PIECE_FIELDS = ['fileName', 'svg'] as const;
 const MINIMUM_PIECES = 2;
 const MAXIMUM_PIECES = 999;
+const MORE_COUNT_PLACEHOLDER = '{count}';
 
 /** A plain object with exactly `fields`; `path` names it in the reason. */
 function recordOf(input: unknown, fields: readonly string[], path: string): Result<Record<string, unknown>, string> {
@@ -56,6 +67,16 @@ function textOf(field: string, value: unknown): Result<string, string> {
     return err(`request.${field} must be 1 to ${MAXIMUM_LABEL_LENGTH} characters without control characters`);
   }
   return ok(value);
+}
+
+/** The translated more line; it holds the `{count}` placeholder exactly once, where main writes the count. */
+function moreLineOf(value: unknown): Result<string, string> {
+  const line = textOf('replaceMoreLine', value);
+  if (!line.ok) return line;
+  if (line.value.split(MORE_COUNT_PLACEHOLDER).length !== 2) {
+    return err(`request.replaceMoreLine must contain ${MORE_COUNT_PLACEHOLDER} exactly once`);
+  }
+  return line;
 }
 
 function piecesOf(value: unknown): Result<readonly SvgPiece[], string> {
@@ -102,6 +123,8 @@ export function parseSvgPiecesSaveRequest(input: unknown): Result<SvgPiecesSaveR
   if (!dialogButton.ok) return err(dialogButton.error);
   const replaceMessage = textOf('replaceMessage', record.value.replaceMessage);
   if (!replaceMessage.ok) return err(replaceMessage.error);
+  const replaceMoreLine = moreLineOf(record.value.replaceMoreLine);
+  if (!replaceMoreLine.ok) return err(replaceMoreLine.error);
   const replaceButton = textOf('replaceButton', record.value.replaceButton);
   if (!replaceButton.ok) return err(replaceButton.error);
   const cancelButton = textOf('cancelButton', record.value.cancelButton);
@@ -111,6 +134,7 @@ export function parseSvgPiecesSaveRequest(input: unknown): Result<SvgPiecesSaveR
     dialogTitle: dialogTitle.value,
     dialogButton: dialogButton.value,
     replaceMessage: replaceMessage.value,
+    replaceMoreLine: replaceMoreLine.value,
     replaceButton: replaceButton.value,
     cancelButton: cancelButton.value,
   });

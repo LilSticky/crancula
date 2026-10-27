@@ -74,6 +74,7 @@ describe('Tape piece texts', () => {
         'PIECES_FAILED',
         'PIECES_REPLACE',
         'PIECES_REPLACE_MESSAGE',
+        'PIECES_REPLACE_MORE',
         'PIECES_SAVED',
         'PIECE_LABEL',
         'TOO_WIDE',

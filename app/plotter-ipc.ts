@@ -32,6 +32,17 @@ function errorCode(error: unknown): string {
   return 'UNKNOWN';
 }
 
+/** The most existing names the replace question lists; the rest are counted in the more line. */
+const MAXIMUM_LISTED_NAMES = 10;
+
+/** The detail of the replace question: the first names, then the more line with the count of the rest. */
+function replaceDetail(existing: readonly string[], moreLine: string): string {
+  const listed = existing.slice(0, MAXIMUM_LISTED_NAMES);
+  const rest = existing.length - listed.length;
+  if (rest > 0) listed.push(moreLine.replace('{count}', String(rest)));
+  return listed.join('\n');
+}
+
 /** The path of a validated piece name inside `folder`; the base name keeps it inside the folder. */
 function pathIn(folder: string, fileName: string): string {
   return join(folder, basename(fileName));
@@ -96,7 +107,7 @@ export function registerPlotterHandlers(
       const replace = await effects.showMessageBox(window, {
         type: 'question',
         message: request.replaceMessage,
-        detail: existing.join('\n'),
+        detail: replaceDetail(existing, request.replaceMoreLine),
         buttons: [request.replaceButton, request.cancelButton],
         defaultId: 1,
         cancelId: 1,
