@@ -6,8 +6,13 @@ Issues: [GitHub](https://github.com/LilSticky/crancula/issues)
 
 ## Current slice
 
-[Cut several tapes side by side](../specs/013-cut-several-tapes-side-by-side/spec.md) ([#170](https://github.com/LilSticky/crancula/issues/170),
-branch `013-cut-several-tapes-side-by-side`): implemented (T001–T042), pending merge. Tick Tapes in the Tape list, "Cut side by side"
+None in progress.
+
+**Next step:** [#163](https://github.com/LilSticky/crancula/issues/163) (Off-centre rows on a Tape Bed, discovery with the user
+first), or the hand checks below.
+
+**Done:** [Cut several tapes side by side](../specs/013-cut-several-tapes-side-by-side/spec.md) ([#170](https://github.com/LilSticky/crancula/issues/170),
+branch `013-cut-several-tapes-side-by-side`): merged (PR [#199](https://github.com/LilSticky/crancula/pull/199), 2026-10-28; CI green on three OSes). Tick Tapes in the Tape list, "Cut side by side"
 opens its own page (`/tapes/side-by-side`) with a roll plotter picker, a fit-to-width drawing of the roll, the Lane list
 (move, remove, add, copies allowed) and the free width; saving writes one SVG through the existing `plotter:save-svg` channel,
 one Tape per Lane, Tape spacing apart, Lane by Lane. Refusals (no roll plotter, no Lane, no Organ, a Lane that doesn't fit,
@@ -17,9 +22,6 @@ Reviews: [review-angular.md](../specs/013-cut-several-tapes-side-by-side/review-
 [audit.md](../specs/013-cut-several-tapes-side-by-side/audit.md) clean, [ux-review.md](../specs/013-cut-several-tapes-side-by-side/ux-review.md)
 38/50 with the major finding fixed (fit-to-width); follow-ups [#198](https://github.com/LilSticky/crancula/issues/198).
 **Not checked by hand yet**: a side-by-side SVG in Inkscape and on the vinyl cutter (T043, needs the user).
-
-**Next step:** merge the slice 013 pull request when CI is green; then [#163](https://github.com/LilSticky/crancula/issues/163)
-(Off-centre rows on a Tape Bed, discovery first) or the hand checks.
 
 **Open:** T057 hand check of an exported MusicXML in MuseScore 4 (needs the user; SC-001, SC-002, SC-004). Follow-up
 [#183](https://github.com/LilSticky/crancula/issues/183) (review findings 2, 3, 5, 7, 9, 10 of slice 012).
