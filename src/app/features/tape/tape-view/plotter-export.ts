@@ -18,11 +18,9 @@ import {
   type TapePiece,
 } from '@api/index';
 import {CRANCULA_API} from '../../../core/crancula-api.token';
+import {SAVED_DURATION} from '../../shared/saved-duration';
 import {cuttingProblemText, type ProblemText} from './cutting-problem-text';
 import {CuttingProblemsDialogComponent} from './cutting-problems-dialog/cutting-problems-dialog.component';
-
-/** How long the "saved" snackbar stays, in ms. */
-const SAVED_DURATION = 6000;
 
 /** Saves a Tape as the Plotter file, or as Tape pieces for a sheet Plotter, through the main process and tells the user how it went. */
 @Injectable({providedIn: 'root'})

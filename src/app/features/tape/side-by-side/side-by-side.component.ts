@@ -4,17 +4,16 @@ import {MatCard} from '@angular/material/card';
 import {MatIcon} from '@angular/material/icon';
 import {MatFormField, MatLabel} from '@angular/material/form-field';
 import {MatMenu, MatMenuItem, MatMenuTrigger} from '@angular/material/menu';
-import {MatOption, MatSelect} from '@angular/material/select';
+import {MatOption, MatSelect, type MatSelectChange} from '@angular/material/select';
 import {ActivatedRoute, RouterLink} from '@angular/router';
 import {TranslatePipe} from '@ngx-translate/core';
 import {
   cuttingProblems,
   laneRoom,
-  sideBySideCut,
+  sideBySideLayout,
   sideBySideRefusals,
   tapeGeometry,
   type LaneRoom,
-  type LaneTape,
   type Organ,
   type PlotterId,
   type RollPlotter,
@@ -165,13 +164,7 @@ export class SideBySideComponent {
   });
 
   /** The cut of the Lanes on the picked roll Plotter; undefined without a plotter or while a Lane has no Organ. */
-  protected readonly cut = computed<SideBySideCut | undefined>(() => {
-    const plotter = this.plotter();
-    const rows = this.rows();
-    if (plotter === undefined) return undefined;
-    const ready = rows.flatMap(({tape, organ}): LaneTape[] => (organ === undefined ? [] : [{tape, organ}]));
-    return ready.length === rows.length ? sideBySideCut(ready, plotter) : undefined;
-  });
+  protected readonly cut = computed<SideBySideCut | undefined>(() => sideBySideLayout(this.rows(), this.plotter()));
 
   /** Every reason the Lanes can not be saved, in the order they are listed; empty when Save would write the file. */
   protected readonly refusals = computed(() => sideBySideRefusals(this.rows(), this.plotter()));
@@ -204,6 +197,11 @@ export class SideBySideComponent {
     const cut = this.savable();
     return cut === undefined ? undefined : rollDrawing(cut);
   });
+
+  /** The drawing's accessible name: "1 Lane" in the singular, the plural otherwise. */
+  protected readonly drawingKey = computed(() =>
+    this.savable()?.lanes.length === 1 ? 'TAPE.SIDE_BY_SIDE.DRAWING_ONE' : 'TAPE.SIDE_BY_SIDE.DRAWING',
+  );
 
   /** The numbers of the drawing's accessible name; the free width is never negative there. */
   protected readonly drawingParams = computed(() => {
@@ -241,8 +239,8 @@ export class SideBySideComponent {
     }, []);
   });
 
-  protected pick(id: PlotterId | undefined): void {
-    this.pickedId.set(id);
+  protected pick(change: MatSelectChange<PlotterId>): void {
+    this.pickedId.set(change.value);
   }
 
   protected save(): void {

@@ -156,6 +156,7 @@ export {
 export {plotterFileName} from './tape/plotter-file-name';
 export {sideBySideFileName} from './tape/side-by-side-file-name';
 export {sideBySideRefusals, type LaneInput, type SideBySideRefusal} from './tape/side-by-side-refusals';
+export {sideBySideLayout, sideBySidePlan, type SideBySidePlan} from './tape/side-by-side-plan';
 export {tapePieceFileNames} from './tape/tape-piece-file-name';
 export {
   DEFAULT_OVERLAP,

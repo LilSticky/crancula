@@ -165,6 +165,15 @@ describe('SideBySideExport', () => {
     );
   });
 
+  it('keeps the saved path in a snackbar for six seconds, as the Plotter export does', async () => {
+    const {lanes, plotter, snackBar, plotterExport} = setUp();
+
+    await plotterExport.export(lanes, plotter);
+
+    const [, , config] = snackBar.mock.calls[0] ?? [];
+    expect(config?.duration).toBe(6000);
+  });
+
   it('shows no snackbar when the dialog was cancelled', async () => {
     const {lanes, plotter, snackBar, plotterExport} = setUp({plotter: {saveSvg: 'cancelled'}});
 
@@ -294,6 +303,16 @@ describe('SideBySideExport', () => {
       expect(saveSvg).not.toHaveBeenCalled();
       expect(snackBar).not.toHaveBeenCalled();
       expect(plotterExport.saving()).toBe(false);
+    });
+
+    it('never opens the Cutting Problems dialog empty for a refused save', async () => {
+      const {api, lanes, plotterExport} = setUp();
+      const saveSvg = vi.spyOn(api.plotter, 'saveSvg');
+
+      await plotterExport.export(lanes, undefined);
+
+      expect(dialogEntries()).toEqual(['No roll plotter is picked: pick one to cut side by side.']);
+      expect(saveSvg).not.toHaveBeenCalled();
     });
   });
 });

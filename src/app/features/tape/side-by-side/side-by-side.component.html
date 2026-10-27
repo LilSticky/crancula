@@ -8,7 +8,7 @@
 </cranc-page-head>
 <mat-form-field subscriptSizing="dynamic" class="plotter">
   <mat-label>{{ 'TAPE.PLOTTER.PICKER_LABEL' | translate }}</mat-label>
-  <mat-select data-testid="side-by-side-plotter" [value]="plotter()?.id" (selectionChange)="pick($event.value)">
+  <mat-select data-testid="side-by-side-plotter" [value]="plotter()?.id" (selectionChange)="pick($event)">
     @for (option of rollPlotters(); track option.id) {
       <mat-option [value]="option.id">{{ option.name }}</mat-option>
     }
@@ -32,7 +32,7 @@
 @if (drawing(); as drawing) {
   <div class="drawing-frame">
     <svg data-testid="side-by-side-drawing" class="drawing" role="img"
-         [attr.aria-label]="'TAPE.SIDE_BY_SIDE.DRAWING' | translate: drawingParams()"
+         [attr.aria-label]="drawingKey() | translate: drawingParams()"
          [attr.viewBox]="drawing.viewBox"
          [style.width]="'calc(' + drawing.length + ' * var(--cr-mm))'"
          [style.height]="'calc(' + drawing.height + ' * var(--cr-mm))'">
@@ -76,7 +76,7 @@
         </span>
         @let problems = problemCounts().get(row.tape.id) ?? 0;
         @if (problems > 0) {
-          <span data-testid="lane-problems" class="mark">{{ 'TAPE.SIDE_BY_SIDE.LANE_PROBLEMS' | translate: {count: number(problems)} }}</span>
+          <span data-testid="lane-problems" class="mark">{{ (problems === 1 ? 'TAPE.SIDE_BY_SIDE.LANE_PROBLEMS_ONE' : 'TAPE.SIDE_BY_SIDE.LANE_PROBLEMS') | translate: {count: number(problems)} }}</span>
         }
         @if (lanesPastWidth().has(row.number)) {
           <span data-testid="lane-does-not-fit" class="mark">{{ 'TAPE.SIDE_BY_SIDE.LANE_DOES_NOT_FIT' | translate }}</span>
@@ -108,17 +108,19 @@
 </mat-card>
 <mat-menu #addMenu="matMenu">
   @for (group of addGroups(); track group.key) {
-    <div class="organ-heading" role="presentation">
-      {{ group.organName ?? ('TAPE.LIST.ORGAN_NOT_AVAILABLE' | translate) }}
+    <div role="group" [attr.aria-label]="group.organName ?? ('TAPE.LIST.ORGAN_NOT_AVAILABLE' | translate)">
+      <div class="organ-heading" aria-hidden="true">
+        {{ group.organName ?? ('TAPE.LIST.ORGAN_NOT_AVAILABLE' | translate) }}
+      </div>
+      @for (option of group.options; track option.tape.id) {
+        <button mat-menu-item type="button" data-testid="add-lane-tape" [disabled]="option.blocked !== undefined"
+                (click)="add(option.tape)">
+          <span>{{ option.name }}</span>
+          @if (option.blocked; as blocked) {
+            <span class="hint">{{ blocked.key | translate: blocked.params }}</span>
+          }
+        </button>
+      }
     </div>
-    @for (option of group.options; track option.tape.id) {
-      <button mat-menu-item type="button" data-testid="add-lane-tape" [disabled]="option.blocked !== undefined"
-              (click)="add(option.tape)">
-        <span>{{ option.name }}</span>
-        @if (option.blocked; as blocked) {
-          <span class="hint">{{ blocked.key | translate: blocked.params }}</span>
-        }
-      </button>
-    }
   }
 </mat-menu>

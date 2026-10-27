@@ -23,3 +23,9 @@ Reviewer: `angular-reviewer`, 2026-10-27, diff `origin/main...013-cut-several-ta
 ## Fixed
 
 See the commit after this file.
+- 1: saved snackbar uses the shared `SAVED_DURATION` (6 s, `src/app/features/shared/saved-duration.ts`), as plotter-export does.
+- 2: `sideBySidePlan` (`api/tape/side-by-side-plan.ts`) decides the save for export; `sideBySideLayout` gives the component its display cut from the same organ rule. `savableCut` and the component's own derivation are gone.
+- 3: `LANE_PROBLEMS_ONE` and `DRAWING_ONE` keys in en and de, picked by count.
+- 4: `pick` takes `MatSelectChange<PlotterId>`.
+- 5: tape-list counts and cuts only ticked Tapes among the current rows (`shownTicked`).
+- 6: add menu groups are `role="group"` named by their Organ; the heading is `aria-hidden`.

@@ -4,8 +4,10 @@ import {ComponentFixture, TestBed} from '@angular/core/testing';
 import {MatDialog} from '@angular/material/dialog';
 import {MatMenuHarness} from '@angular/material/menu/testing';
 import {MatSelectHarness} from '@angular/material/select/testing';
+import {MatSnackBar} from '@angular/material/snack-bar';
 import {provideRouter, Router} from '@angular/router';
 import {TranslateService} from '@ngx-translate/core';
+import {of} from 'rxjs';
 import {vi} from 'vitest';
 import {
   column,
@@ -42,6 +44,7 @@ import {SideBySideComponent} from './side-by-side.component';
 
 const TICKS_PER_QUARTER = 480;
 const PLOTTER_KEY = 'crancula.plotter';
+const LANGUAGE_KEY = 'crancula.language';
 
 @Component({selector: 'cranc-stub', template: ''})
 class StubComponent {}
@@ -118,7 +121,13 @@ async function setUp(plotters: readonly Plotter[] = [rollPlotter()]) {
   localStorage.removeItem(PLOTTER_KEY);
   const api: InMemoryCranculaApi = createInMemoryCranculaApi();
   TestBed.configureTestingModule({
-    providers: [provideRouter(stubRoutes), provideTestTranslations('en'), {provide: CRANCULA_API, useValue: api}],
+    providers: [
+      provideRouter(stubRoutes),
+      provideTestTranslations('en'),
+      {provide: CRANCULA_API, useValue: api},
+      // The saved notice runs a six-second timer that would hold whenStable; the spec does not read it.
+      {provide: MatSnackBar, useValue: {open: () => ({onAction: () => of()})}},
+    ],
   });
   const street = testOrgan('Street organ', 3, {tapeBed: {tapeWidth: 100, holeDiameter: 2.5, rowSpacing: 3.5}});
   const barrel = testOrgan('Barrel piano', 3, {tapeBed: {tapeWidth: 60, holeDiameter: 2.5, rowSpacing: 3.5}});
@@ -243,6 +252,7 @@ describe('SideBySideComponent', () => {
   afterEach(() => {
     vi.restoreAllMocks();
     localStorage.removeItem(PLOTTER_KEY);
+    localStorage.removeItem(LANGUAGE_KEY);
   });
 
   it('lists a row per Lane in the order of the Tapes in the URL, with its number, Tape and Organ', async () => {
@@ -513,8 +523,49 @@ describe('SideBySideComponent', () => {
     await TestBed.inject(TapeLibrary).update(withoutPipe(view.waltz));
     const {element} = await open(view, [view.reference, view.waltz]);
 
-    expect(markIn(rows(element)[1], 'lane-problems')?.textContent?.trim()).toBe('1 Cutting Problems');
+    expect(markIn(rows(element)[1], 'lane-problems')?.textContent?.trim()).toBe('1 Cutting Problem');
     expect(markIn(rows(element)[0], 'lane-problems')).toBeNull();
+  });
+
+  it('names one Lane in the drawing as "1 Lane", not "1 Lanes"', async () => {
+    const view = await setUp();
+    const {element} = await open(view, [view.reference]);
+
+    expect(drawingOf(element).getAttribute('aria-label')).toBe('1 Lane, 100 mm used, 200 mm free');
+  });
+
+  it('marks one Cutting Problem as "1 Schnittproblem" in German', async () => {
+    localStorage.setItem(LANGUAGE_KEY, 'de');
+    const view = await setUp();
+    await TestBed.inject(TapeLibrary).update(withoutPipe(view.waltz));
+    const {element} = await open(view, [view.waltz]);
+
+    expect(markIn(rows(element)[0], 'lane-problems')?.textContent?.trim()).toBe('1 Schnittproblem');
+  });
+
+  it('names one Lane in the drawing as "1 Bahn" in German', async () => {
+    localStorage.setItem(LANGUAGE_KEY, 'de');
+    const view = await setUp();
+    const {element} = await open(view, [view.waltz]);
+
+    expect(drawingOf(element).getAttribute('aria-label')).toBe('1 Bahn, 60 mm belegt, 240 mm frei');
+  });
+
+  it('groups the Tapes of the add menu under a group named for their Organ', async () => {
+    const view = await setUp();
+    const {fixture} = await open(view, []);
+    await openAddMenu(fixture);
+
+    const groups = [...document.querySelectorAll<HTMLElement>('[role="group"][aria-label]')].map((group) => ({
+      name: group.getAttribute('aria-label'),
+      items: [...group.querySelectorAll<HTMLElement>('[data-testid="add-lane-tape"]')].map((item) =>
+        (item.textContent ?? '').replace(/\s+/g, ' ').trim(),
+      ),
+    }));
+    expect(groups).toEqual([
+      {name: 'Barrel piano', items: ['Waltz']},
+      {name: 'Street organ', items: ['Reference']},
+    ]);
   });
 
   it('marks the Lane that does not fit the working width, and only that Lane', async () => {

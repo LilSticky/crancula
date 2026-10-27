@@ -45,9 +45,9 @@ interface TapeRow {
   template: `
     <cranc-page-head [title]="'TAPE.LIST.TITLE' | translate" [subtitle]="'TAPE.LIST.SUBTITLE' | translate">
       <ng-container ngProjectAs="[pageHeadActions]">
-        @if (ticked().length > 0) {
+        @if (shownTicked().length > 0) {
           <button matButton="outlined" type="button" data-testid="cut-side-by-side" (click)="cutSideBySide()">
-            {{ 'TAPE.LIST.CUT_SIDE_BY_SIDE' | translate: {count: ticked().length} }}
+            {{ 'TAPE.LIST.CUT_SIDE_BY_SIDE' | translate: {count: shownTicked().length} }}
           </button>
         }
         @if (rows().length > 0) {
@@ -212,6 +212,12 @@ export class TapeListComponent {
   /** The Tapes ticked for a side-by-side cut, in the order they were ticked. */
   protected readonly ticked = signal<readonly TapeId[]>([]);
 
+  /** The ticked Tapes the list still shows: a ticked Tape that the Organ filter hides or that is gone is not cut. */
+  protected readonly shownTicked = computed<readonly TapeId[]>(() => {
+    const shown = new Set(this.rows().map((row) => row.tape.id));
+    return this.ticked().filter((id) => shown.has(id));
+  });
+
   /** The Organ named by the `organ` query parameter; `undefined` without it or for an unknown id. */
   protected readonly filterOrgan = computed(() => {
     const id = this.organParameter();
@@ -252,7 +258,7 @@ export class TapeListComponent {
   }
 
   protected cutSideBySide(): void {
-    void this.router.navigate(['/tapes/side-by-side'], {queryParams: laneQueryParams(this.ticked())});
+    void this.router.navigate(['/tapes/side-by-side'], {queryParams: laneQueryParams(this.shownTicked())});
   }
 
   protected showAll(): void {

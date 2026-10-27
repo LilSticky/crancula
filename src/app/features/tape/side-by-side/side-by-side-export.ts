@@ -4,25 +4,17 @@ import {MatSnackBar} from '@angular/material/snack-bar';
 import {TranslateService} from '@ngx-translate/core';
 import {
   type LaneInput,
-  type LaneTape,
   type RollPlotter,
   type SideBySideRefusal,
-  sideBySideCut,
   sideBySideFileName,
-  sideBySideRefusals,
+  sideBySidePlan,
   sideBySideSvg,
 } from '@api/index';
 import {CRANCULA_API} from '../../../core/crancula-api.token';
 import {formatNumber} from '../../shared/format-number';
+import {SAVED_DURATION} from '../../shared/saved-duration';
 import {cuttingProblemText, type ProblemText} from '../tape-view/cutting-problem-text';
 import {CuttingProblemsDialogComponent} from '../tape-view/cutting-problems-dialog/cutting-problems-dialog.component';
-
-/** A cut that can be saved: a roll Plotter, and a Lane with its Organ for every Lane, the first one among them. */
-interface SavableCut {
-  readonly first: LaneTape;
-  readonly lanes: readonly LaneTape[];
-  readonly plotter: RollPlotter;
-}
 
 /** Saves a side-by-side cut as one SVG file on a roll Plotter, through the main process, and tells the user how it went. */
 @Injectable({providedIn: 'root'})
@@ -42,32 +34,33 @@ export class SideBySideExport {
    */
   async export(lanes: readonly LaneInput[], plotter: RollPlotter | undefined): Promise<void> {
     if (this.savingState()) return;
-    const refusals = sideBySideRefusals(lanes, plotter);
-    const cut = refusals.length === 0 ? savableCut(lanes, plotter) : undefined;
-    if (cut === undefined) {
-      this.dialog.open(CuttingProblemsDialogComponent, {data: this.problemTexts(refusals)});
+    const plan = sideBySidePlan(lanes, plotter);
+    if (!plan.ok) {
+      this.dialog.open(CuttingProblemsDialogComponent, {data: this.problemTexts(plan.refusals)});
       return;
     }
+    const [first] = plan.cut.lanes;
+    // A plan that is ok has at least one Lane; the guard only narrows the type.
+    if (first === undefined) return;
     this.savingState.set(true);
     try {
       const result = await this.api.plotter.saveSvg({
-        suggestedFileName: sideBySideFileName(cut.first.tape.name, cut.lanes.length, (count) =>
+        suggestedFileName: sideBySideFileName(first.tape.name, plan.cut.lanes.length, (count) =>
           this.text('TAPE.SIDE_BY_SIDE.FILE_NAME_MORE', {count}),
         ),
-        svg: sideBySideSvg(sideBySideCut(cut.lanes, cut.plotter)),
+        svg: sideBySideSvg(plan.cut),
         dialogTitle: this.text('TAPE.EXPORT.DIALOG_TITLE'),
         filterName: this.text('TAPE.EXPORT.FILTER_NAME'),
       });
       switch (result.status) {
         case 'saved':
-          // Stays until dismissed, so the path can be read; no dismiss timer is left running.
-          this.snackBar.open(this.text('TAPE.EXPORT.SAVED', {name: result.filePath}), undefined, {duration: 0});
+          this.snackBar.open(this.text('TAPE.EXPORT.SAVED', {name: result.filePath}), undefined, {duration: SAVED_DURATION});
           break;
         case 'cancelled':
           break;
         case 'failed':
         case 'rejected':
-          this.showFailure(this.text('TAPE.EXPORT.FAILED', {reason: result.reason}), cut);
+          this.showFailure(this.text('TAPE.EXPORT.FAILED', {reason: result.reason}), lanes, plan.cut.plotter);
           break;
       }
     } finally {
@@ -76,11 +69,11 @@ export class SideBySideExport {
   }
 
   /** Shows `message` until dismissed; Retry saves the same cut again. */
-  private showFailure(message: string, cut: SavableCut): void {
+  private showFailure(message: string, lanes: readonly LaneInput[], plotter: RollPlotter): void {
     this.snackBar
       .open(message, this.text('TAPE.EXPORT.RETRY'), {duration: 0})
       .onAction()
-      .subscribe(() => void this.export(cut.lanes, cut.plotter));
+      .subscribe(() => void this.export(lanes, plotter));
   }
 
   /** The refusals as translated entries, in their order; each Cutting Problem is named after its Tape. */
@@ -122,16 +115,4 @@ export class SideBySideExport {
   private text(key: string, params?: Record<string, string>): string {
     return String(this.translate.instant(key, params));
   }
-}
-
-/** The cut as it can be saved, or undefined while a Lane has no Organ or there is no roll Plotter or no Lane. */
-function savableCut(lanes: readonly LaneInput[], plotter: RollPlotter | undefined): SavableCut | undefined {
-  if (plotter === undefined) return undefined;
-  const ready: LaneTape[] = [];
-  for (const {tape, organ} of lanes) {
-    if (organ === undefined) return undefined;
-    ready.push({tape, organ});
-  }
-  const [first] = ready;
-  return first === undefined ? undefined : {first, lanes: ready, plotter};
 }

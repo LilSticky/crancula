@@ -600,6 +600,46 @@ describe('TapeListComponent', () => {
       expect(router.url).toBe(`/tapes/side-by-side?tape=${waltz.id}`);
       expect(router.url).not.toContain(melody.id);
     });
+
+    it('counts and cuts only the ticked Tapes the Organ filter still shows', async () => {
+      const {add, element, router, fixture} = await render();
+      const melody = await add(testOrgan('Street organ', 3), 'Melody');
+      const waltz = await add(testOrgan('Barrel piano', 3), 'Waltz');
+      tickOf(element, 'Melody').click();
+      tickOf(element, 'Waltz').click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      await router.navigateByUrl(`/tapes?organ=${waltz.organId}`);
+      fixture.detectChanges();
+      await fixture.whenStable();
+      expect(collapse(cutButton(element).textContent)).toBe('Cut side by side (1)');
+      cutButton(element).click();
+      await fixture.whenStable();
+
+      expect(router.url).toBe(`/tapes/side-by-side?tape=${waltz.id}`);
+      expect(router.url).not.toContain(melody.id);
+    });
+
+    it('counts and cuts only the ticked Tapes that are still in the library', async () => {
+      const {add, element, router, fixture} = await render();
+      const organ = testOrgan('Street organ', 3);
+      const melody = await add(organ, 'Melody');
+      const waltz = await add(organ, 'Waltz');
+      tickOf(element, 'Melody').click();
+      tickOf(element, 'Waltz').click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      await TestBed.inject(TapeLibrary).remove(melody.id);
+      fixture.detectChanges();
+      await fixture.whenStable();
+      expect(collapse(cutButton(element).textContent)).toBe('Cut side by side (1)');
+      cutButton(element).click();
+      await fixture.whenStable();
+
+      expect(router.url).toBe(`/tapes/side-by-side?tape=${waltz.id}`);
+    });
   });
 
   describe('without Tapes', () => {
