@@ -1,10 +1,10 @@
-import type {Key, Song, Tick, TicksPerQuarter, TimeSignature} from '../song/song';
+import type {Song, Tick, TicksPerQuarter, TimeSignature} from '../song/song';
 import {columnOfTick} from '../tape/quantisation';
 import type {Column, ColumnCount, Tape} from '../tape/tape';
 import type {ChosenTimeSignature, ScoresChoices} from './scores-choices';
+import {scoresKeyAt, type KeyFields} from './scores-key';
 
 type MetreFields = Pick<TimeSignature, 'beats' | 'beatType'>;
-type KeyFields = Pick<Key, 'fifths' | 'mode'>;
 
 /** A Bar of the Scores: number 0 for the upbeat, then 1, 2, …; the last one is full (FR-011). */
 export interface Bar {
@@ -27,8 +27,6 @@ interface Change<T> {
 
 /** The Time signature of a Tape without one at Column 0 (research R3). */
 const COMMON_TIME: MetreFields = {beats: 4, beatType: 4};
-/** The Key of a Tape without a Song, or a Song without Keys (research R4). */
-const C_MAJOR: KeyFields = {fifths: 0, mode: 'major'};
 
 /** Columns in a full Bar: 32 Columns make a whole note (research R3). */
 export function fullBarColumns(timeSignature: MetreFields): number {
@@ -92,7 +90,6 @@ function sameKey(a: KeyFields, b: KeyFields): boolean {
  */
 export function scoresBars(tape: Tape, song: Song | undefined, choices: ScoresChoices): readonly Bar[] {
   const metre = metreChangesOf(song, choices.timeSignature);
-  const keys = song === undefined ? [] : changesOf(song.keys, song.ticksPerQuarter, ({fifths, mode}) => ({fifths, mode}));
 
   const bars: Bar[] = [];
   let start = 0;
@@ -101,7 +98,7 @@ export function scoresBars(tape: Tape, song: Song | undefined, choices: ScoresCh
     const timeSignature = valueAt(metre, COMMON_TIME, start);
     const nominal = number === 0 ? choices.upbeat : fullBarColumns(timeSignature);
     const length = Math.min(nominal, nextChangeAfter(metre, start) - start);
-    const key = valueAt(keys, C_MAJOR, start + length - 1);
+    const key = scoresKeyAt(song, start + length - 1);
     const previous = bars.at(-1);
     bars.push({
       number,
