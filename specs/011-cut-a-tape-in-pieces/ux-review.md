@@ -68,3 +68,25 @@ The paper stays tan in dark mode, so both schemes behave alike: the fills fail, 
 - The empty Plotter list guides onward with one primary action and a scissors icon that matches the rail.
 - The Plotter list's "300 × 120 mm" / "roll, 90 mm wide" summary is compact and in millimetres.
 - German texts fit; the compact page-head icons keep the Tape the visual centre in 26b.
+
+## Contrast measured (#190)
+
+Measured on the rendered pixels of `npm run ux:screens` at 1×, Whole Tape: `26-tape-view-joins` (+ `-dark`) for the Overlap
+band, `27-tape-view-no-join-stretch` (+ `-dark`) for the stretch. Ink is the hatch: the Overlap pixels with blue over red
+(b − r > −15), the stretch pixels with r − g > 40 (drops the label, Holes and row guides). Neighbour is the Tape next to the
+mark (mode). Ratio is WCAG 2 on sRGB relative luminance. Criterion: the **p10** ink pixel (the darkest 10 %, so one
+anti-aliased peak does not decide it) at ≥ 3:1 against the Tape.
+
+| Mark (light / dark) | Before: p10 ink | After: p10 ink | Before: darkest / mean | After: darkest / mean |
+|---------------------|-----------------|----------------|------------------------|-----------------------|
+| Overlap hatch | 2.15:1 (#8f948b) / 2.01:1 (#878c85) | **3.40:1** (#627382) / **3.05:1** (#526f90) | 2.99 / 1.81 ; 2.71 / 1.74 | 4.31 / 2.43 ; 3.81 / 2.28 |
+| Stretch hatch | 2.80:1 (#a67359) / 2.59:1 (#9a6f51) | **4.23:1** (#925041) / **3.77:1** (#8f4c3d) | 4.55 / 2.33 ; 4.00 / 2.18 | 6.30 / 2.92 ; 5.57 / 2.68 |
+| Stretch ground (tint, 0.2) | 1.38:1 (#d2b38a) / 1.35:1 (#c5a67d) | unchanged | – | – |
+
+Tape neighbour: #e8d6a4 (light), #d8c593 (dark). The fix is the hatch stroke opacity, not a colour token: `.overlap-hatch`
+0.5 → 1 and `.stretch-hatch` 0.6 → 1 in `tape-view.component.scss`. Both schemes use the same token, so both move.
+
+Remaining, by design: the mean over the band stays at 2.3–2.9:1 because the hatch has gaps; the lines carry the 3:1.
+The Overlap edges are 1 px solid Join colour (5.6:1 as a solid colour), and the stretch outline is 2 px oxblood (4.9:1 in
+the review above). The stretch ground tint stays at 1.4:1: it is a hint, and the hatch and the outline mark the stretch.
+Not re-measured: the 1:1 captures (`26c-…`, `26b-…`), which use the same tokens at a different scale.
