@@ -37,7 +37,7 @@ async function launchElectron(options: LaunchOptions): Promise<ElectronApplicati
 
 /**
  * Starts the built Electron app with its own `userData` folder (`CRANCULA_USER_DATA`).
- * The window stays hidden (`CRANCULA_HEADLESS`) unless `HEADED=1` is set.
+ * The window stays hidden (`CRANCULA_HEADLESS`) unless `HEADED=1` is set; sound is always muted.
  */
 export async function launchApp(userDataDir?: string): Promise<LaunchedApp> {
   const dir = userDataDir ?? (await mkdtemp(join(tmpdir(), 'crancula-e2e-')));
@@ -48,7 +48,8 @@ export async function launchApp(userDataDir?: string): Promise<LaunchedApp> {
   env['CRANCULA_USER_DATA'] = dir;
   if (process.env['HEADED'] !== '1') env['CRANCULA_HEADLESS'] = '1';
   const app = await launchElectron({
-    args: [join(__dirname, '../../app/main.mjs')],
+    // Chromium's switch silences Previews and Recordings; the audio graph still runs, so their tests still hold.
+    args: ['--mute-audio', join(__dirname, '../../app/main.mjs')],
     env,
   });
   const window = await app.firstWindow();

@@ -53,6 +53,9 @@ runs out and is ignored, and the chosen target stays open in main until the next
 now captures 30e (equal split notes), 30f (metre not on Columns), 30g (saved) and 30h (failed), each in en, dark and German; all
 screens retaken.
 
+**Done:** [Muted e2e runs (#196)](https://github.com/LilSticky/crancula/issues/196) (2026-10-27): the e2e launcher starts Electron
+with `--mute-audio`, so `npm run e2e` and `npm run ux:screens` no longer play Previews through the speakers.
+
 **Done (PR [#182](https://github.com/LilSticky/crancula/pull/182), merged):** [Read a tape as Scores](../specs/012-read-a-tape-as-scores/spec.md)
 ([#169](https://github.com/LilSticky/crancula/issues/169), branch `012-read-a-tape-as-scores`): the Tape exports as MusicXML from the new
 Export menu, with staves split by notes, clefs, Key, tempo and Time signature. T056 (gate run) is not ticked: its e2e
