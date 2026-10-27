@@ -9,7 +9,8 @@ Issues: [GitHub](https://github.com/LilSticky/crancula/issues)
 None in progress.
 
 **Next step:** [Cut several tapes side by side](https://github.com/LilSticky/crancula/issues/170) ([#170](https://github.com/LilSticky/crancula/issues/170),
-later slice; discovery still to do).
+discovery done): `/speckit-specify` on branch `013-cut-several-tapes-side-by-side`, from
+[discovery/later.md section 5](discovery/later.md) (decisions 29–34).
 
 **Open:** T057 hand check of an exported MusicXML in MuseScore 4 (needs the user; SC-001, SC-002, SC-004). Follow-up
 [#183](https://github.com/LilSticky/crancula/issues/183) (review findings 2, 3, 5, 7, 9, 10 of slice 012).
@@ -19,7 +20,12 @@ later slice; discovery still to do).
 **Open:** real MuseScore and Audiveris files not checked by hand (010 T063, needs the user's files). Tape pieces not checked by
 hand either: piece SVGs in Inkscape and a real Tape glued (011 T062, needs the user).
 
-**Done (pending merge of PR [#182](https://github.com/LilSticky/crancula/pull/182)):** [Read a tape as Scores](../specs/012-read-a-tape-as-scores/spec.md)
+**Done:** Discovery of Cut several tapes side by side (2026-10-27, branch `docs/170-discovery`): user decisions 29–34 in
+[discovery/later.md](discovery/later.md) section 5 (any Tapes, copies allowed; one Tape per Lane in the user's order; Tape spacing
+on the roll plotter, default 3 mm; a Tape that doesn't fit can't be added; roll plotters only; chosen at export, nothing stored).
+Dictionary: Lane (Bahn) and Tape spacing (Bandabstand), approved by the user 2026-10-27.
+
+**Done (PR [#182](https://github.com/LilSticky/crancula/pull/182), merged):** [Read a tape as Scores](../specs/012-read-a-tape-as-scores/spec.md)
 ([#169](https://github.com/LilSticky/crancula/issues/169), branch `012-read-a-tape-as-scores`): the Tape exports as MusicXML from the new
 Export menu, with staves split by notes, clefs, Key, tempo and Time signature. T056 (gate run) is not ticked: its e2e
 results are not recorded here yet.
