@@ -1653,6 +1653,34 @@ describe('TapeViewComponent', () => {
       }
     });
 
+    describe('the icon-only page head actions share one button appearance (#173)', () => {
+      const headActions = ['preview-toggle', 'undo', 'redo', 'transpose', 'record', 'export-menu'] as const;
+      /** The Material appearance classes of a button, such as mat-mdc-outlined-button or mat-mdc-icon-button; not the base class. */
+      const appearanceOf = (button: HTMLElement): string =>
+        [...button.classList].filter((name) => /^mat-(?:mdc-)?(?:[a-z]+-)?button$/.test(name)).join(' ');
+      const compactRenders: readonly {readonly name: string; readonly options: RenderOptions; readonly iconOnlyActions: readonly string[]}[] = [
+        {name: 'below 1180 px', options: {windowWidth: 1100, tapePerCrankTurn: 100}, iconOnlyActions: ['side-panel-toggle', ...headActions]},
+        {name: 'in German below 1440 px', options: {windowWidth: 1280, tapePerCrankTurn: 100, language: 'de'}, iconOnlyActions: headActions},
+      ];
+
+      for (const {name, options, iconOnlyActions} of compactRenders) {
+        it(`gives every icon-only action the same button appearance ${name}`, async () => {
+          const {tape, open, view} = await render(options);
+          await open(`/tapes/${tape.id}`);
+
+          const [reference] = iconOnlyActions;
+          const expected = appearanceOf(
+            required(view()?.querySelector<HTMLElement>(`[data-testid="page-head-actions"] [data-testid="${reference}"]`), reference),
+          );
+          expect(expected).not.toBe('');
+          for (const testId of iconOnlyActions) {
+            const button = required(view()?.querySelector<HTMLElement>(`[data-testid="page-head-actions"] [data-testid="${testId}"]`), testId);
+            expect(appearanceOf(button), testId).toBe(expected);
+          }
+        });
+      }
+    });
+
     it('shows the page head actions as icons in German at 1280 px, with their German labels as accessible names', async () => {
       const {tape, open, view} = await render({windowWidth: 1280, tapePerCrankTurn: 100, language: 'de'});
       await open(`/tapes/${tape.id}`);
@@ -3392,12 +3420,13 @@ describe('TapeViewComponent', () => {
     };
 
     describe('the buttons in the page head', () => {
-      it('are Material icon buttons with the undo and redo icons', async () => {
+      it('are outlined icon buttons with the undo and redo icons', async () => {
         const {view} = await setup();
 
         for (const [testId, icon] of [['undo', 'undo'], ['redo', 'redo']] as const) {
           const element = button(view(), testId);
-          expect(element?.classList).toContain('mat-mdc-icon-button');
+          expect(element?.classList).toContain('mat-mdc-outlined-button');
+          expect(element?.classList).toContain('icon-only');
           expect(element?.querySelector('mat-icon')?.textContent?.trim()).toBe(icon);
         }
       });
@@ -3433,7 +3462,7 @@ describe('TapeViewComponent', () => {
         for (const testId of ['undo', 'redo'] as const) {
           const target = button(view(), testId);
           if (!target) throw new Error(`no ${testId} button`);
-          const token = getComputedStyle(target).getPropertyValue('--mat-icon-button-disabled-icon-color').trim();
+          const token = getComputedStyle(target).getPropertyValue('--mat-button-outlined-disabled-label-text-color').trim();
           const share = /^color-mix\(in srgb,\s*var\(--mat-sys-on-surface\)\s+(\d+)%/.exec(token)?.[1];
           const strongEnough = token === 'var(--mat-sys-on-surface-variant)' || (share !== undefined && Number(share) >= 60);
           expect(strongEnough, `${testId}: disabled icon colour token is "${token}"`).toBe(true);
@@ -5235,6 +5264,50 @@ describe('TapeViewComponent', () => {
         const spinner = required(record.querySelector('mat-progress-spinner'), 'spinner');
         expect(spinner.getAttribute('aria-valuenow')).toBe('20');
         expect(record.textContent?.replace(/\s+/g, ' ')).toContain('Recording… 20 %');
+      });
+
+      it('disables Undo, Redo and Transpose while it records', async () => {
+        const {tape, open, view, settle, recordingState} = await render({holes: [{row: 1, start: 0, length: 10}], tapePerCrankTurn: 100});
+        await open(`/tapes/${tape.id}`);
+        const field = required(view()?.querySelector<HTMLInputElement>('[data-testid="column-length-input"]'), 'Column length field');
+        field.value = '5';
+        field.dispatchEvent(new Event('input', {bubbles: true}));
+        await settle();
+        required(view()?.querySelector<HTMLButtonElement>('[data-testid="column-length-apply"]'), 'Column length Apply').click();
+        await settle();
+        const pageHead = (testId: string) =>
+          required(view()?.querySelector<HTMLButtonElement>(`[data-testid="page-head-actions"] [data-testid="${testId}"]`), testId);
+        expect(pageHead('undo').disabled).toBe(false);
+        expect(pageHead('transpose').disabled).toBe(false);
+
+        recordingState.set({status: 'rendering', progress: 0.2});
+        await settle();
+
+        for (const testId of ['undo', 'redo', 'transpose'] as const) {
+          expect(pageHead(testId).disabled, testId).toBe(true);
+        }
+      });
+
+      it('ignores the Undo shortcut while it records', async () => {
+        const {tape, open, view, settle, recordingState} = await render({holes: [{row: 1, start: 0, length: 10}], tapePerCrankTurn: 100});
+        await open(`/tapes/${tape.id}`);
+        const field = required(view()?.querySelector<HTMLInputElement>('[data-testid="column-length-input"]'), 'Column length field');
+        field.value = '5';
+        field.dispatchEvent(new Event('input', {bubbles: true}));
+        await settle();
+        required(view()?.querySelector<HTMLButtonElement>('[data-testid="column-length-apply"]'), 'Column length Apply').click();
+        await settle();
+        const stored = () => TestBed.inject(TapeLibrary).tapeEntities().find((candidate) => candidate.id === tape.id);
+        const edited = stored();
+
+        recordingState.set({status: 'rendering', progress: 0.2});
+        await settle();
+        required(view()?.querySelector<SVGSVGElement>('[data-testid="tape-scroll"] svg'), 'Tape drawing').dispatchEvent(
+          new KeyboardEvent('keydown', {key: 'z', ctrlKey: true, bubbles: true, cancelable: true}),
+        );
+        await settle();
+
+        expect(stored()).toEqual(edited);
       });
 
       it('keeps the normal colours of the button: not disabled, but aria-disabled and aria-busy', async () => {

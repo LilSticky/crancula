@@ -28,9 +28,9 @@
 cranc-page-head.compact {
   padding-bottom: 8px;
 }
-cranc-page-head button[mat-icon-button] {
-  --mat-icon-button-state-layer-size: 40px;
-  --mat-icon-button-disabled-icon-color: var(--mat-sys-on-surface-variant);
+cranc-page-head [data-testid='undo'],
+cranc-page-head [data-testid='redo'] {
+  --mat-button-outlined-disabled-label-text-color: var(--mat-sys-on-surface-variant);
 }
 .stage.compact .overview {
   height: 36px;
@@ -89,6 +89,8 @@ cranc-page-head button[mat-icon-button] {
   margin: 0;
 }
 .zoom,
+[data-testid='undo'],
+[data-testid='redo'],
 [data-testid='preview-toggle'],
 [data-testid='record'],
 [data-testid='cancel-record'],

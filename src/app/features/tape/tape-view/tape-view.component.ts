@@ -23,7 +23,7 @@ import {crankSpeedChangeTo} from './crank-speed-change';
 import {holeAt, moveSpot, sameSpot, spotAt, type Spot, type TapeSelection} from './spot';
 import {MatDialog} from '@angular/material/dialog';
 import {TransposeDialogComponent, type TransposeDialogData} from './transpose-dialog/transpose-dialog.component';
-import {MatButton, MatIconButton} from '@angular/material/button';
+import {MatButton} from '@angular/material/button';
 import {MatButtonToggle, MatButtonToggleGroup} from '@angular/material/button-toggle';
 import {MatIcon} from '@angular/material/icon';
 import {MatMenu, MatMenuItem, MatMenuTrigger} from '@angular/material/menu';
@@ -160,7 +160,7 @@ const GERMAN_ACTIONS_QUERY = '(max-width: 1439.98px)';
   selector: 'cranc-tape-view',
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [TapeEditor, TapePreview],
-  imports: [ImportSummaryComponent, TranslatePipe, RouterLink, PageHeadComponent, MatButton, MatIconButton, MatTooltip, MatButtonToggle, MatButtonToggleGroup, MatIcon, MatMenu, MatMenuItem, MatMenuTrigger, MatProgressSpinner, AddHoleComponent, CuttingProblemsComponent, SelectedHoleComponent, TapeSectionComponent, PlotterSectionComponent, PreviewSectionComponent, TapeStatusLineComponent],
+  imports: [ImportSummaryComponent, TranslatePipe, RouterLink, PageHeadComponent, MatButton, MatTooltip, MatButtonToggle, MatButtonToggleGroup, MatIcon, MatMenu, MatMenuItem, MatMenuTrigger, MatProgressSpinner, AddHoleComponent, CuttingProblemsComponent, SelectedHoleComponent, TapeSectionComponent, PlotterSectionComponent, PreviewSectionComponent, TapeStatusLineComponent],
   templateUrl: './tape-view.component.html',
   styleUrl: './tape-view.component.scss',
   host: {'(keydown)': 'onViewKeydown($event)'},
@@ -662,13 +662,13 @@ export class TapeViewComponent {
   }
 
   protected undo(): void {
-    if (this.editingPaused() || !this.editor.canUndo()) return;
+    if (this.editingPaused() || this.recorder.recording() || !this.editor.canUndo()) return;
     void this.editor.undo();
     this.restoreSelection(); // The editor moves its history before it saves.
   }
 
   protected redo(): void {
-    if (this.editingPaused() || !this.editor.canRedo()) return;
+    if (this.editingPaused() || this.recorder.recording() || !this.editor.canRedo()) return;
     void this.editor.redo();
     this.restoreSelection(); // The editor moves its history before it saves.
   }
