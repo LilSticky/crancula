@@ -104,7 +104,38 @@
       "RENAME": "Rename",
       "DELETE": "Delete Tape",
       "ORGAN_NOT_AVAILABLE": "Organ not available",
-      "LENGTH_MM": "{{length}} mm"
+      "LENGTH_MM": "{{length}} mm",
+      "TICK": "Pick {{name}} for a side-by-side cut",
+      "CUT_SIDE_BY_SIDE": "Cut side by side ({{count}})"
+    },
+    "SIDE_BY_SIDE": {
+      "TITLE": "Cut side by side",
+      "SUBTITLE": "Tapes cut in one pass on one roll plotter, one Lane per Tape, Tape spacing apart.",
+      "SAVE": "Save",
+      "NO_ROLL_PLOTTER": "No roll plotter yet. Cutting side by side needs a roll plotter, such as a vinyl cutter.",
+      "DESCRIBE_PLOTTER": "Describe a Plotter…",
+      "FREE": "{{free}} mm of {{working}} mm free",
+      "OVER": "{{over}} mm too wide",
+      "DRAWING": "{{lanes}} Lanes, {{used}} mm used, {{free}} mm free",
+      "LANE_WIDTH": "{{width}} mm wide",
+      "LANE_LENGTH": "{{length}} mm long",
+      "LANE_PROBLEMS": "{{count}} Cutting Problems",
+      "LANE_DOES_NOT_FIT": "Does not fit",
+      "LANE_UP": "Move Lane {{lane}} ({{tape}}) up",
+      "LANE_DOWN": "Move Lane {{lane}} ({{tape}}) down",
+      "LANE_REMOVE": "Remove Lane {{lane}} ({{tape}})",
+      "EMPTY": "No Lanes yet. Tick Tapes in the Tape list and cut them side by side, or add a Tape.",
+      "ADD": "Add a Tape",
+      "NO_ORGAN": "has no Organ",
+      "DOES_NOT_FIT": "needs {{needed}} mm, only {{free}} mm free",
+      "FILE_NAME_MORE": "and {{count}} more",
+      "REFUSAL": {
+        "NO_PLOTTER": "No roll plotter is picked: pick one to cut side by side.",
+        "NO_LANE": "No Lane yet: add a Tape first.",
+        "NO_ORGAN": "Lane {{lane}}: {{tape}} has no Organ",
+        "DOES_NOT_FIT": "Lane {{lane}}: {{tape}} needs {{needed}} mm, only {{free}} mm free"
+      },
+      "TAPE_PROBLEM": "{{tape}}: {{problem}}"
     },
     "STORAGE": {
       "LOAD_PROBLEM": "Your Tapes couldn't be loaded. The file was kept at {{backupPath}}. Your Organs still work.",
@@ -549,6 +580,7 @@
       "WORKING_AREA": "Working area",
       "WORKING_AREA_VALUE": "{{length}} × {{width}} mm",
       "ROLL_WIDTH": "roll, {{width}} mm wide",
+      "ROLL_TAPE_SPACING": "roll, {{width}} mm wide, Tape spacing {{spacing}} mm",
       "OVERLAP": "Overlap",
       "OVERLAP_VALUE": "{{overlap}} mm",
       "MORE_ACTIONS": "More actions for {{name}}"
@@ -563,6 +595,8 @@
       "WORKING_LENGTH": "Working length",
       "OVERLAP": "Overlap",
       "ROLL": "Roll plotter (cuts any length)",
+      "TAPE_SPACING": "Tape spacing",
+      "TAPE_SPACING_HINT": "Blank strip between Tapes cut side by side",
       "SAVE": "Save",
       "CANCEL": "Cancel"
     },
@@ -570,6 +604,7 @@
       "NAME_REQUIRED": "Please enter a name.",
       "VALUE_REQUIRED": "Please enter a value.",
       "MUST_BE_POSITIVE": "Must be greater than 0.",
+      "MUST_NOT_BE_NEGATIVE": "Must not be negative.",
       "OVERLAP_NOT_BELOW_WORKING_LENGTH": "The Overlap must be shorter than the working length."
     },
     "REMOVE": {

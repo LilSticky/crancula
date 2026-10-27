@@ -104,7 +104,38 @@
       "RENAME": "Umbenennen",
       "DELETE": "Lochband löschen",
       "ORGAN_NOT_AVAILABLE": "Drehorgel nicht verfügbar",
-      "LENGTH_MM": "{{length}} mm"
+      "LENGTH_MM": "{{length}} mm",
+      "TICK": "{{name}} für einen Schnitt nebeneinander auswählen",
+      "CUT_SIDE_BY_SIDE": "Nebeneinander schneiden ({{count}})"
+    },
+    "SIDE_BY_SIDE": {
+      "TITLE": "Nebeneinander schneiden",
+      "SUBTITLE": "Lochbänder in einem Schnitt auf einem Rollenplotter, eine Bahn je Lochband, mit Bandabstand dazwischen.",
+      "SAVE": "Speichern",
+      "NO_ROLL_PLOTTER": "Noch kein Rollenplotter. Zum Nebeneinander-Schneiden braucht es einen Rollenplotter, etwa einen Schneideplotter.",
+      "DESCRIBE_PLOTTER": "Plotter beschreiben…",
+      "FREE": "{{free}} mm von {{working}} mm frei",
+      "OVER": "{{over}} mm zu breit",
+      "DRAWING": "{{lanes}} Bahnen, {{used}} mm belegt, {{free}} mm frei",
+      "LANE_WIDTH": "{{width}} mm breit",
+      "LANE_LENGTH": "{{length}} mm lang",
+      "LANE_PROBLEMS": "{{count}} Schnittprobleme",
+      "LANE_DOES_NOT_FIT": "Passt nicht",
+      "LANE_UP": "Bahn {{lane}} ({{tape}}) nach oben verschieben",
+      "LANE_DOWN": "Bahn {{lane}} ({{tape}}) nach unten verschieben",
+      "LANE_REMOVE": "Bahn {{lane}} ({{tape}}) entfernen",
+      "EMPTY": "Noch keine Bahnen. Hake Lochbänder in der Liste an und schneide sie nebeneinander, oder füge ein Lochband hinzu.",
+      "ADD": "Lochband hinzufügen",
+      "NO_ORGAN": "hat keine Drehorgel",
+      "DOES_NOT_FIT": "braucht {{needed}} mm, frei sind nur {{free}} mm",
+      "FILE_NAME_MORE": "und {{count}} weitere",
+      "REFUSAL": {
+        "NO_PLOTTER": "Kein Rollenplotter gewählt: Wähle einen, um nebeneinander zu schneiden.",
+        "NO_LANE": "Noch keine Bahn: Füge zuerst ein Lochband hinzu.",
+        "NO_ORGAN": "Bahn {{lane}}: {{tape}} hat keine Drehorgel",
+        "DOES_NOT_FIT": "Bahn {{lane}}: {{tape}} braucht {{needed}} mm, frei sind nur {{free}} mm"
+      },
+      "TAPE_PROBLEM": "{{tape}}: {{problem}}"
     },
     "STORAGE": {
       "LOAD_PROBLEM": "Deine Lochbänder konnten nicht geladen werden. Die Datei wurde unter {{backupPath}} aufbewahrt. Deine Drehorgeln funktionieren weiterhin.",
@@ -549,6 +580,7 @@
       "WORKING_AREA": "Arbeitsbereich",
       "WORKING_AREA_VALUE": "{{length}} × {{width}} mm",
       "ROLL_WIDTH": "Rolle, {{width}} mm breit",
+      "ROLL_TAPE_SPACING": "Rolle, {{width}} mm breit, Bandabstand {{spacing}} mm",
       "OVERLAP": "Klebezugabe",
       "OVERLAP_VALUE": "{{overlap}} mm",
       "MORE_ACTIONS": "Weitere Aktionen für {{name}}"
@@ -563,6 +595,8 @@
       "WORKING_LENGTH": "Arbeitslänge",
       "OVERLAP": "Klebezugabe",
       "ROLL": "Rollenplotter (schneidet jede Länge)",
+      "TAPE_SPACING": "Bandabstand",
+      "TAPE_SPACING_HINT": "Leerstreifen zwischen Lochbändern, die nebeneinander geschnitten werden",
       "SAVE": "Speichern",
       "CANCEL": "Abbrechen"
     },
@@ -570,6 +604,7 @@
       "NAME_REQUIRED": "Bitte gib einen Namen ein.",
       "VALUE_REQUIRED": "Bitte gib einen Wert ein.",
       "MUST_BE_POSITIVE": "Muss größer als 0 sein.",
+      "MUST_NOT_BE_NEGATIVE": "Darf nicht negativ sein.",
       "OVERLAP_NOT_BELOW_WORKING_LENGTH": "Die Klebezugabe muss kürzer als die Arbeitslänge sein."
     },
     "REMOVE": {
