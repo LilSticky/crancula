@@ -263,6 +263,8 @@
     "RECORD": {
       "BUTTON": "Aufnehmen",
       "PROGRESS": "Aufnahme… {{percent}} %",
+      "CANCEL": "Abbrechen",
+      "CANCELLED": "Aufnahme abgebrochen",
       "SAVED": "Gespeichert: {{name}}",
       "FAILED": "Aufnahme fehlgeschlagen: {{reason}}",
       "RETRY": "Erneut versuchen",

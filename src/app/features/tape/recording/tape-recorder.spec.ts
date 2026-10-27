@@ -64,6 +64,8 @@ import {TapeRecorder} from './tape-recorder';
  *     readonly state: Signal<RecordingState>;
  *     readonly recording: Signal<boolean>;                          // true in every state but idle
  *     record(tape: Tape, organ: Organ): Promise<void>;              // a second call while recording does nothing
+ *     cancel(): void;                                               // while rendering or encoding: nothing is encoded or written,
+ *                                                                   // the state goes idle, a snackbar says it was cancelled
  *   }
  */
 
@@ -251,7 +253,7 @@ describe('TapeRecorder', () => {
 
     await recorder.record(tape, organ);
 
-    expect(encode).toHaveBeenCalledWith(SAMPLES, expect.any(Function));
+    expect(encode).toHaveBeenCalledWith(SAMPLES, expect.any(Function), expect.any(AbortSignal));
     expect(write).toHaveBeenCalledWith({target: TARGET, bytes: MP3_BYTES});
   });
 
@@ -376,6 +378,126 @@ describe('TapeRecorder', () => {
     expect(render).not.toHaveBeenCalled();
     expect(snackBar).not.toHaveBeenCalled();
     expect(recorder.state()).toEqual({status: 'idle'});
+  });
+
+  it('cancels a Recording that renders: it is neither encoded nor written, and the service goes idle', async () => {
+    const {api, organ, tape, render, encode, recorder} = await setUp();
+    const held = holdNextRender(render);
+    const write = vi.spyOn(api.recording, 'writeFile');
+    const pending = recorder.record(tape, organ);
+    await vi.waitFor(() => {
+      expect(render).toHaveBeenCalled();
+    });
+
+    recorder.cancel();
+    held.finish(SAMPLES);
+    await pending;
+
+    expect(encode).not.toHaveBeenCalled();
+    expect(write).not.toHaveBeenCalled();
+    expect(recorder.state()).toEqual({status: 'idle'});
+  });
+
+  it('ignores the progress of a cancelled render', async () => {
+    const {organ, tape, render, recorder} = await setUp();
+    const held = holdNextRender(render);
+    const pending = recorder.record(tape, organ);
+    await vi.waitFor(() => {
+      expect(render).toHaveBeenCalled();
+    });
+    held.progress(0.5);
+
+    recorder.cancel();
+    held.progress(0.7);
+
+    expect(recorder.state()).toEqual({status: 'idle'});
+    held.finish(SAMPLES);
+    await pending;
+  });
+
+  it('aborts the encode of a cancelled Recording, so the encoder can stop its Worker', async () => {
+    const {api, organ, tape, encode, recorder} = await setUp();
+    vi.spyOn(api.recording, 'chooseFile').mockResolvedValueOnce(chosen(TARGET, 'mp3', 'Waltz.mp3'));
+    const held = holdNextEncode(encode);
+    const pending = recorder.record(tape, organ);
+    await vi.waitFor(() => {
+      expect(encode).toHaveBeenCalled();
+    });
+    const signal = defined(encode.mock.calls[0]?.[2], 'encode signal');
+    expect(signal.aborted).toBe(false);
+
+    recorder.cancel();
+
+    expect(signal.aborted).toBe(true);
+    held.finish(MP3_BYTES);
+    await pending;
+  });
+
+  it('cancels a Recording that encodes: nothing is written', async () => {
+    const {api, organ, tape, encode, recorder} = await setUp();
+    vi.spyOn(api.recording, 'chooseFile').mockResolvedValueOnce(chosen(TARGET, 'mp3', 'Waltz.mp3'));
+    const held = holdNextEncode(encode);
+    const write = vi.spyOn(api.recording, 'writeFile');
+    const pending = recorder.record(tape, organ);
+    await vi.waitFor(() => {
+      expect(encode).toHaveBeenCalled();
+    });
+
+    recorder.cancel();
+    held.finish(MP3_BYTES);
+    await pending;
+
+    expect(write).not.toHaveBeenCalled();
+    expect(recorder.state()).toEqual({status: 'idle'});
+  });
+
+  it('shows a snackbar that the Recording was cancelled, when Cancel is pressed while it renders', async () => {
+    const {organ, tape, render, snackBar, recorder} = await setUp();
+    const held = holdNextRender(render);
+    const pending = recorder.record(tape, organ);
+    await vi.waitFor(() => {
+      expect(render).toHaveBeenCalled();
+    });
+
+    recorder.cancel();
+
+    expect(snackBar).toHaveBeenCalledTimes(1);
+    expect(snackBar.mock.calls[0]?.[0]).toContain('cancelled');
+    expect(snackBar.mock.calls[0]?.[2]?.duration).toBe(6000);
+    held.finish(SAMPLES);
+    await pending;
+  });
+
+  it('does nothing when Cancel is called while no Recording runs', async () => {
+    const {snackBar, recorder} = await setUp();
+
+    recorder.cancel();
+
+    expect(snackBar).not.toHaveBeenCalled();
+    expect(recorder.state()).toEqual({status: 'idle'});
+  });
+
+  it('keeps a later Recording running when the cancelled one ends', async () => {
+    const {organ, tape, render, recorder} = await setUp();
+    const cancelled = holdNextRender(render);
+    const cancelledRecording = recorder.record(tape, organ);
+    await vi.waitFor(() => {
+      expect(render).toHaveBeenCalledTimes(1);
+    });
+    recorder.cancel();
+    const later = holdNextRender(render);
+    const laterRecording = recorder.record(tape, organ);
+    await vi.waitFor(() => {
+      expect(render).toHaveBeenCalledTimes(2);
+    });
+
+    cancelled.finish(SAMPLES);
+    await cancelledRecording;
+
+    expect(recorder.recording()).toBe(true);
+    later.finish(SAMPLES);
+    await laterRecording;
+    expect(recorder.recording()).toBe(false);
   });
 
   it('leaves the Tape and the Tape library unchanged', async () => {

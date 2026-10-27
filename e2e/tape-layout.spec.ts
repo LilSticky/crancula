@@ -1,7 +1,11 @@
+import {mkdtemp} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
 import {expect, test, type Locator, type Page} from '@playwright/test';
 import {launchApp, type LaunchedApp} from './support/launch-app';
 import {melodyC3ToC5} from './support/midi-file';
 import {STREET_ORGAN, saveOrgan} from './support/organ-editor';
+import {stubSaveDialog} from './support/save-dialog';
 import {createTapeFromSong, songRepeatingC4} from './support/tape-creation';
 import {resizeWindow, resizeWindowOrSkip} from './support/window-size';
 
@@ -563,6 +567,58 @@ test.describe('The Tape view page head with four labelled actions in one row (sp
       expect(await visibleLabelOf(action), `${id} label`).toBe('');
       await expect(action).toHaveAttribute('aria-label', /.+/);
     }
+    await app.close();
+  });
+});
+
+/** Starts a Recording of the open Tape to a WAV in a new folder, and returns once Cancel shows: the Tape renders. */
+async function startRecordingWhileItRenders({app, window}: LaunchedApp): Promise<void> {
+  const dialog = await stubSaveDialog(app);
+  await dialog.answerWith(join(await mkdtemp(join(tmpdir(), 'crancula-cancel-')), 'long.wav'));
+  await window.getByTestId('record').click();
+  await expect(window.getByTestId('page-head-actions').getByTestId('cancel-record')).toBeVisible();
+}
+
+/** Checks that Cancel sits in the row of the page head actions, on one line and inside the head. */
+async function expectCancelInTheRow(window: Page): Promise<void> {
+  const head = window.getByTestId('page-head-actions');
+  const cancel = head.getByTestId('cancel-record');
+  await expect(cancel).toBeVisible();
+  const recordTop = (await boxOf(head.getByTestId('record'))).top;
+  const cancelBox = await boxOf(cancel);
+  expect(Math.abs(cancelBox.top - recordTop), 'cancel top against record top').toBeLessThanOrEqual(2);
+  const textHeight = await cancel.evaluate((element) => element.querySelector('.mdc-button__label')?.getBoundingClientRect().height ?? 0);
+  expect(textHeight, 'cancel text height (one line)').toBeLessThanOrEqual(30);
+  expect(await head.evaluate((element) => element.scrollWidth - element.clientWidth), 'page head overflow').toBeLessThanOrEqual(1);
+}
+
+test.describe('The page head while a Recording renders (#172)', () => {
+  test('English at 1180 px: Cancel shows with its label in the row of the labelled actions', async () => {
+    const launched = await launchApp();
+    const {app, window} = launched;
+    await resizeWindowOrSkip(launched, 1180, 800, true);
+    await defineOrganWithLeadIn(window, {tapePerCrankTurn: '100'});
+    await createTapeFromSong(window, 'Long', songRepeatingC4('long.mid', 300), {columnLength: '5'});
+    await startRecordingWhileItRenders(launched);
+
+    await expectLabelledActionsInOneRow(window);
+    await expectCancelInTheRow(window);
+    expect(await visibleLabelOf(window.getByTestId('page-head-actions').getByTestId('cancel-record'))).toBe('Cancel');
+    await app.close();
+  });
+
+  test('German at 1440 px: Cancel shows with its label in the row of the labelled actions', async () => {
+    const launched = await launchApp();
+    const {app, window} = launched;
+    await resizeWindowOrSkip(launched, 1440, 900, true);
+    await defineOrganWithLeadIn(window, {tapePerCrankTurn: '100'});
+    await createTapeFromSong(window, 'Long', songRepeatingC4('long.mid', 300), {columnLength: '5'});
+    await window.getByTestId('language-switch').locator('[data-language="de"]').click();
+    await startRecordingWhileItRenders(launched);
+
+    await expectLabelledActionsInOneRow(window);
+    await expectCancelInTheRow(window);
+    expect(await visibleLabelOf(window.getByTestId('page-head-actions').getByTestId('cancel-record'))).toBe('Abbrechen');
     await app.close();
   });
 });
