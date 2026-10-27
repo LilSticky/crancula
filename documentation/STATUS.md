@@ -6,11 +6,10 @@ Issues: [GitHub](https://github.com/LilSticky/crancula/issues)
 
 ## Current slice
 
-None in progress.
+[Cut several tapes side by side](../specs/013-cut-several-tapes-side-by-side/spec.md) ([#170](https://github.com/LilSticky/crancula/issues/170),
+branch `013-cut-several-tapes-side-by-side`): spec, clarify, plan and [tasks](../specs/013-cut-several-tapes-side-by-side/tasks.md) done.
 
-**Next step:** [Cut several tapes side by side](https://github.com/LilSticky/crancula/issues/170) ([#170](https://github.com/LilSticky/crancula/issues/170),
-discovery done): `/speckit-specify` on branch `013-cut-several-tapes-side-by-side`, from
-[discovery/later.md section 5](discovery/later.md) (decisions 29–34).
+**Next step:** `/speckit-implement` from T001.
 
 **Open:** T057 hand check of an exported MusicXML in MuseScore 4 (needs the user; SC-001, SC-002, SC-004). Follow-up
 [#183](https://github.com/LilSticky/crancula/issues/183) (review findings 2, 3, 5, 7, 9, 10 of slice 012).
