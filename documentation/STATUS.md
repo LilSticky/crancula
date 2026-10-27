@@ -41,6 +41,10 @@ Tape view page head while the Recording renders or encodes; nothing is written, 
 runs out and is ignored, and the chosen target stays open in main until the next save dialog. Layout e2e at 1180 px (en) and
 1440 px (de) while recording.
 
+**Done:** [Missing Scores export screens (#188)](https://github.com/LilSticky/crancula/issues/188) (2026-10-27): `npm run ux:screens`
+now captures 30e (equal split notes), 30f (metre not on Columns), 30g (saved) and 30h (failed), each in en, dark and German; all
+screens retaken.
+
 **Done (PR [#182](https://github.com/LilSticky/crancula/pull/182), merged):** [Read a tape as Scores](../specs/012-read-a-tape-as-scores/spec.md)
 ([#169](https://github.com/LilSticky/crancula/issues/169), branch `012-read-a-tape-as-scores`): the Tape exports as MusicXML from the new
 Export menu, with staves split by notes, clefs, Key, tempo and Time signature. T056 (gate run) is not ticked: its e2e
