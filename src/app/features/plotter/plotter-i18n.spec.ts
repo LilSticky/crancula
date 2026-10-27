@@ -111,4 +111,8 @@ describe('Plotter German wording', () => {
   it('names the Overlap with Klebezugabe', () => {
     expect(germanTexts(['PLOTTER.LIST.OVERLAP', 'PLOTTER.EDITOR.OVERLAP'])).toContain('Klebezugabe');
   });
+
+  it('has its own Cancel text for the Plotter editor, Abbrechen', () => {
+    expect(germanTexts(['PLOTTER.EDITOR.CANCEL'])).toBe('Abbrechen');
+  });
 });

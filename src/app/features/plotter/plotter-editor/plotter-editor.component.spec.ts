@@ -82,6 +82,28 @@ describe('PlotterEditorComponent', () => {
     expect(element.querySelector('cranc-page-head h1')?.textContent?.trim()).toBe('New Plotter');
   });
 
+  it('says in a hint line under the title what the Working area and the Overlap are', async () => {
+    const {open: openEditor} = render();
+    const {element} = await openEditor();
+
+    expect(element.querySelector('cranc-page-head p')?.textContent?.trim()).toBe(
+      'Working area: the largest length and width it cuts in one go. Overlap: the strip glued under the next Tape piece.',
+    );
+  });
+
+  it('has a Cancel action that returns to the Plotter list without storing the Plotter', async () => {
+    const {open: openEditor, library, navigate} = render();
+    const {element} = await openEditor();
+    const put = vi.spyOn(library, 'put');
+    const cancel = element.querySelector<HTMLButtonElement>('[data-testid="cancel-plotter"]');
+
+    expect(cancel?.textContent?.trim()).toBe('Cancel');
+    cancel?.click();
+
+    expect(navigate.mock.calls[0]?.[0]).toEqual(['/plotters']);
+    expect(put).not.toHaveBeenCalled();
+  });
+
   it('has empty name, working width and working length, and the default Overlap of 20 mm', async () => {
     const {open: openEditor} = render();
     const {field} = await openEditor();
