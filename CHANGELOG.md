@@ -9,6 +9,12 @@ as its GitHub Release notes.
 ## [Unreleased]
 
 ### Added
+- Cut several Tapes side by side on a roll plotter: tick them in the Tape list, choose "Cut side by side", order the Lanes and save one SVG. Tapes of different Organs and widths can share a cut, and the same Tape can be added twice. A drawing shows the roll and the width still free; a Tape that doesn't fit or has Cutting Problems is named and nothing is saved.
+- A roll plotter has a Tape spacing (3 mm unless changed): the blank strip between two Tapes cut side by side.
+
+### Changed
+- The Plotter list file (`plotters.json`) moves to version 2 to keep the Tape spacing. Older Plotter lists are read with 3 mm; an older Crancula can't read the new file.
+
 - Export a Tape as Scores (MusicXML) from the new Export menu: staves are split by notes, with clefs, Key, tempo and Time signature.
 - Describe Plotters like Organs: a sheet plotter cuts within its working length and width, a roll plotter within its working width. Plotters are kept in a list and edited in an editor.
 - Pick a Plotter in the Tape view; the choice is remembered on this computer. The Tape itself does not change.
