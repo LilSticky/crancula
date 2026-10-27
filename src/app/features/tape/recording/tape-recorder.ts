@@ -17,8 +17,8 @@ import {CRANCULA_API} from '../../../core/crancula-api.token';
 import {MP3_ENCODER} from './mp3-encoder';
 import {RECORDING_RENDERER, type RecordingScore} from './recording-renderer';
 
-/** How long the "saved" snackbar stays, in ms. */
-const SAVED_DURATION = 6000;
+/** How long the "saved" and "cancelled" snackbars stay, in ms. */
+const NOTICE_DURATION = 6000;
 
 /** Where a Recording is in its steps; `progress` is a fraction from 0 to 1. */
 export type RecordingState =
@@ -42,6 +42,10 @@ export class TapeRecorder {
   private readonly snackBar = inject(MatSnackBar);
   private readonly translate = inject(TranslateService);
   private readonly stateSignal = signal<RecordingState>(IDLE);
+  /** Counts the Recordings started and cancelled; a run whose number is no longer current has been cancelled. */
+  private generation = 0;
+  /** Aborts the encode of the Recording that runs; a finished or cancelled one ignores it. */
+  private encodeAbort: AbortController | undefined;
 
   /** The step the Recording is in; `idle` when none runs. */
   readonly state = this.stateSignal.asReadonly();
@@ -55,6 +59,8 @@ export class TapeRecorder {
     const columnSeconds = columnDuration(tape, organ);
     if (columnSeconds === undefined) return;
     const retry = () => void this.record(tape, organ);
+    const generation = ++this.generation;
+    const isCurrent = () => generation === this.generation;
     this.stateSignal.set({status: 'choosing'});
     try {
       const choice = await this.api.recording.chooseFile({
@@ -69,7 +75,8 @@ export class TapeRecorder {
         return;
       }
       const score: RecordingScore = {notes: tapePerformance(tape, organ), columns: tape.length, columnSeconds};
-      const bytes = await this.render(score, choice.format);
+      const bytes = await this.render(score, choice.format, isCurrent);
+      if (bytes === undefined) return;
       if (bytes.length > MAXIMUM_RECORDING_BYTES) {
         this.showFailure(this.text('TAPE.RECORD.TOO_LARGE'), retry);
         return;
@@ -77,28 +84,51 @@ export class TapeRecorder {
       this.stateSignal.set({status: 'writing'});
       const result = await this.api.recording.writeFile({target: choice.target, bytes});
       if (result.status === 'saved') {
-        this.snackBar.open(this.text('TAPE.RECORD.SAVED', {name: result.filePath}), undefined, {duration: SAVED_DURATION});
+        this.snackBar.open(this.text('TAPE.RECORD.SAVED', {name: result.filePath}), undefined, {duration: NOTICE_DURATION});
       } else {
         this.showFailure(result.reason, retry);
       }
     } catch (error: unknown) {
-      this.showFailure(error instanceof Error ? error.message : String(error), retry);
+      if (isCurrent()) this.showFailure(error instanceof Error ? error.message : String(error), retry);
     } finally {
-      this.stateSignal.set(IDLE);
+      if (isCurrent()) this.stateSignal.set(IDLE);
     }
   }
 
-  /** The file bytes of the Recording: the rendered samples as WAV, or the encoder's MP3. */
-  private async render(score: RecordingScore, format: RecordingFormat): Promise<Uint8Array> {
+  /**
+   * Stops the Recording while it renders or encodes: nothing is encoded or written, and the service goes idle.
+   * The offline render cannot be aborted, so its result is just ignored; an encode is aborted. Does nothing in the
+   * other steps.
+   */
+  cancel(): void {
+    const status = this.stateSignal().status;
+    if (status !== 'rendering' && status !== 'encoding') return;
+    // The write target chosen for this Recording stays open in main until the next chooseFile closes it (ADR 26).
+    this.generation++;
+    this.encodeAbort?.abort();
+    this.stateSignal.set(IDLE);
+    this.snackBar.open(this.text('TAPE.RECORD.CANCELLED'), undefined, {duration: NOTICE_DURATION});
+  }
+
+  /** The file bytes of the Recording: the rendered samples as WAV, or the encoder's MP3; `undefined` once cancelled. */
+  private async render(score: RecordingScore, format: RecordingFormat, isCurrent: () => boolean): Promise<Uint8Array | undefined> {
     this.stateSignal.set({status: 'rendering', progress: 0});
     const samples = await this.renderer.render(score, (progress) => {
-      this.stateSignal.set({status: 'rendering', progress});
+      if (isCurrent()) this.stateSignal.set({status: 'rendering', progress});
     });
+    if (!isCurrent()) return undefined;
     if (format === 'wav') return wavFile(pcm16(samples), RECORDING_SAMPLE_RATE);
     this.stateSignal.set({status: 'encoding', progress: 0});
-    return this.encoder.encode(samples, (progress) => {
-      this.stateSignal.set({status: 'encoding', progress});
-    });
+    const abort = new AbortController();
+    this.encodeAbort = abort;
+    const bytes = await this.encoder.encode(
+      samples,
+      (progress) => {
+        if (isCurrent()) this.stateSignal.set({status: 'encoding', progress});
+      },
+      abort.signal,
+    );
+    return isCurrent() ? bytes : undefined;
   }
 
   private showFailure(reason: string, retry: () => void): void {

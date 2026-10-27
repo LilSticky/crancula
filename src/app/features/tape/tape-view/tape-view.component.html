@@ -47,6 +47,16 @@
           {{ recordLabel }}
         }
       </button>
+      @if (recordCancellable()) {
+        @let cancelLabel = 'TAPE.RECORD.CANCEL' | translate;
+        <button mat-stroked-button type="button" data-testid="cancel-record" [class.icon-only]="compactActions()" [attr.aria-label]="compactActions() ? cancelLabel : null" [matTooltip]="compactActions() ? cancelLabel : ''" (click)="recorder.cancel()">
+          @if (compactActions()) {
+            <mat-icon aria-hidden="true">close</mat-icon>
+          } @else {
+            {{ cancelLabel }}
+          }
+        </button>
+      }
       @let exportLabel = 'TAPE.VIEW.EXPORT_MENU' | translate;
       <button mat-stroked-button type="button" data-testid="export-menu" [class.icon-only]="compactActions()" [attr.aria-label]="compactActions() ? exportLabel : null" [attr.aria-describedby]="exportRefusal() ? 'export-refusal-reason' : null" [matTooltip]="compactActions() ? exportLabel : ''" [matMenuTriggerFor]="exportMenu">
         @if (exportRefusal()) {<mat-icon class="refusal" data-testid="export-refusal" aria-hidden="true">error</mat-icon>}

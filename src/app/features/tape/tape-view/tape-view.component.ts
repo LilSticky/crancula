@@ -469,6 +469,12 @@ export class TapeViewComponent {
     return state.status === 'rendering' || state.status === 'encoding' ? Math.round(state.progress * 100) : undefined;
   });
 
+  /** Whether a Recording can be cancelled now: while it renders or encodes. */
+  protected readonly recordCancellable = computed((): boolean => {
+    const status = this.recorder.state().status;
+    return status === 'rendering' || status === 'encoding';
+  });
+
   protected record(): void {
     // The button stays focusable with its reason, so a click reaches here while it is blocked: it does nothing then.
     if (this.recordBlockedBy() !== undefined || this.recorder.recording()) return;

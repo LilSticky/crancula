@@ -36,6 +36,11 @@ Plotter editor. Contrast measurement on rendered pixels split into [#190](https:
 on the roll plotter, default 3 mm; a Tape that doesn't fit can't be added; roll plotters only; chosen at export, nothing stored).
 Dictionary: Lane (Bahn) and Tape spacing (Bandabstand), approved by the user 2026-10-27.
 
+**Done:** [Cancel a running Recording (#172)](https://github.com/LilSticky/crancula/issues/172) (2026-10-27): a Cancel action in the
+Tape view page head while the Recording renders or encodes; nothing is written, the MP3 Worker is terminated, the offline render
+runs out and is ignored, and the chosen target stays open in main until the next save dialog. Layout e2e at 1180 px (en) and
+1440 px (de) while recording.
+
 **Done (PR [#182](https://github.com/LilSticky/crancula/pull/182), merged):** [Read a tape as Scores](../specs/012-read-a-tape-as-scores/spec.md)
 ([#169](https://github.com/LilSticky/crancula/issues/169), branch `012-read-a-tape-as-scores`): the Tape exports as MusicXML from the new
 Export menu, with staves split by notes, clefs, Key, tempo and Time signature. T056 (gate run) is not ticked: its e2e

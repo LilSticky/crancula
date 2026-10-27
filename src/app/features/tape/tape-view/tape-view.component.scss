@@ -74,6 +74,7 @@ cranc-page-head button[mat-icon-button] {
 }
 [data-testid='preview-toggle'],
 [data-testid='record'],
+[data-testid='cancel-record'],
 [data-testid='export-menu'] {
   white-space: nowrap;
 }
@@ -90,6 +91,7 @@ cranc-page-head button[mat-icon-button] {
 .zoom,
 [data-testid='preview-toggle'],
 [data-testid='record'],
+[data-testid='cancel-record'],
 [data-testid='export-menu'],
 [data-testid='transpose'],
 [data-testid='side-panel-toggle'] {

@@ -251,7 +251,8 @@ async function render(options: RenderOptions = {}) {
     state: recordingState.asReadonly(),
     recording: computed(() => recordingState().status !== 'idle'),
     record: vi.fn((): Promise<void> => Promise.resolve()),
-  } satisfies Pick<TapeRecorder, 'state' | 'recording' | 'record'>;
+    cancel: vi.fn((): void => undefined),
+  } satisfies Pick<TapeRecorder, 'state' | 'recording' | 'record' | 'cancel'>;
   TestBed.configureTestingModule({
     providers: [
       ...(options.realExport
@@ -5177,6 +5178,46 @@ describe('TapeViewComponent', () => {
         expect(record.textContent?.replace(/\s+/g, ' ')).toContain('Record');
         expect(record.textContent).not.toContain('%');
       }
+    });
+
+    describe('cancelling a Recording (#172)', () => {
+      const cancelButton = (view: HTMLElement | null) => view?.querySelector<HTMLButtonElement>('[data-testid="cancel-record"]') ?? null;
+
+      it('shows a Cancel button while the Recording renders or encodes', async () => {
+        const {tape, open, view, settle, recordingState} = await render({tapePerCrankTurn: 100});
+        await open(`/tapes/${tape.id}`);
+
+        for (const status of ['rendering', 'encoding'] as const) {
+          recordingState.set({status, progress: 0.3});
+          await settle();
+
+          expect(required(cancelButton(view()), 'cancel button').textContent?.replace(/\s+/g, ' ')).toContain('Cancel');
+        }
+      });
+
+      it('hides the Cancel button while idle, while the file is chosen and while writing', async () => {
+        const {tape, open, view, settle, recordingState} = await render({tapePerCrankTurn: 100});
+        await open(`/tapes/${tape.id}`);
+
+        for (const status of ['idle', 'choosing', 'writing'] as const) {
+          recordingState.set({status});
+          await settle();
+
+          expect(cancelButton(view())).toBeNull();
+        }
+      });
+
+      it('cancels the Recording when Cancel is pressed', async () => {
+        const {tape, open, view, settle, recordingState, recorder} = await render({tapePerCrankTurn: 100});
+        await open(`/tapes/${tape.id}`);
+        recordingState.set({status: 'rendering', progress: 0.3});
+        await settle();
+
+        required(cancelButton(view()), 'cancel button').click();
+        await settle();
+
+        expect(recorder.cancel).toHaveBeenCalledTimes(1);
+      });
     });
 
     describe('while it records (UX review 1 to 3)', () => {
