@@ -10,7 +10,7 @@ All except 35b in light and `-dark`.
 | 4  | 4  | 4  | 4  | 3  | 3  | 4  | 3  | 4  | 5   | 38/50 |
 
 ## Findings
-1. **[sev 3] H6 · 34, 35** — The drawing is at 1:1 (`--cr-mm`), so one 100 mm Lane fills the window, the second Lane and the Lane list start below the fold, and the overflow message sits far from the drawing. Follow-up: a "fit to width" zoom (default) with 1:1 as the other choice, as on the Tape view.
+1. **[sev 3] H6 · 34, 35 (fixed: fit to width is the default, max 40vh; the 1:1 choice is still open)** — The drawing is at 1:1 (`--cr-mm`), so one 100 mm Lane fills the window, the second Lane and the Lane list start below the fold, and the overflow message sits far from the drawing. Follow-up: a "fit to width" zoom (default) with 1:1 as the other choice, as on the Tape view.
 2. **[sev 3] H8 · 35c-dark (fixed)** — Lane marks ("4 Cutting Problems", "Does not fit") used oxblood `--cr-problem` on the dark sheet, about 1.6:1. Now `--mat-sys-error`, which follows the scheme.
 3. **[sev 2] H6 · 35-dark (partly fixed)** — The oxblood overflow outline barely shows where it lies on the dark bench. No single colour has 3:1 against both manila and the dark paper, so the outline is now 3 px; the text marks carry the meaning too. Follow-up: a second, light inner stroke, or a hatched fill for the part past the working width.
 4. **[sev 2] H5 · 32** — Without a roll plotter, Save stays enabled. Follow-up: disable it, and say why.

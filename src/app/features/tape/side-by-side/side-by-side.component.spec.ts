@@ -429,6 +429,17 @@ describe('SideBySideComponent', () => {
     expect(drawing.querySelector('[data-testid="working-width-line"]')).not.toBeNull();
   });
 
+  it('fits the drawing to the page width by default: its mm viewBox, the fit-width class and no fixed size', async () => {
+    const view = await setUp();
+    const {element} = await open(view, [view.reference, view.waltz]);
+    const drawing = drawingOf(element);
+
+    expect(drawing.getAttribute('viewBox')).toMatch(/^0 0 [\d.]+ [\d.]+$/);
+    expect(drawing.classList.contains('fit-width')).toBe(true);
+    expect(drawing.style.width).toBe('');
+    expect(drawing.style.height).toBe('');
+  });
+
   it('hides the inner marks of the drawing from assistive technology', async () => {
     const view = await setUp();
     const {element} = await open(view, [view.reference, view.waltz]);

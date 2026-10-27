@@ -17,6 +17,12 @@
 .drawing {
   display: block;
 
+  &.fit-width {
+    width: 100%;
+    height: auto;
+    max-height: 40vh;
+  }
+
   .paper {
     fill: var(--cr-paper);
   }

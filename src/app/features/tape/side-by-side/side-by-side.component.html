@@ -31,11 +31,9 @@
 }
 @if (drawing(); as drawing) {
   <div class="drawing-frame">
-    <svg data-testid="side-by-side-drawing" class="drawing" role="img"
+    <svg data-testid="side-by-side-drawing" class="drawing fit-width" role="img"
          [attr.aria-label]="drawingKey() | translate: drawingParams()"
-         [attr.viewBox]="drawing.viewBox"
-         [style.width]="'calc(' + drawing.length + ' * var(--cr-mm))'"
-         [style.height]="'calc(' + drawing.height + ' * var(--cr-mm))'">
+         [attr.viewBox]="drawing.viewBox">
       <rect class="paper" x="0" y="0" [attr.width]="drawing.length" [attr.height]="drawing.height" />
       @if (drawing.freeBand; as band) {
         <rect data-testid="free-band" aria-hidden="true" class="free-band" x="0"
