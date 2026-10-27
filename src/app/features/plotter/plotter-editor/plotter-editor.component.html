@@ -35,7 +35,19 @@
         </ng-container>
       </mat-form-field>
 
-      @if (!plotter.roll().value()) {
+      @if (plotter.roll().value()) {
+        <mat-form-field>
+          <mat-label>{{ 'PLOTTER.EDITOR.TAPE_SPACING' | translate }}</mat-label>
+          <input matInput crancDecimalInput data-testid="plotter-tape-spacing" [formField]="plotter.tapeSpacing"/>
+          <span matTextSuffix>mm</span>
+          <mat-hint>{{ 'PLOTTER.EDITOR.TAPE_SPACING_HINT' | translate }}</mat-hint>
+          <ng-container ngProjectAs="mat-error">
+            @for (message of shownMessages(plotter.tapeSpacing); track message.key) {
+              <mat-error data-testid="violation" data-path="tapeSpacing">{{ message.key | translate: message.params }}</mat-error>
+            }
+          </ng-container>
+        </mat-form-field>
+      } @else {
         <mat-form-field>
           <mat-label>{{ 'PLOTTER.EDITOR.WORKING_LENGTH' | translate }}</mat-label>
           <input matInput crancDecimalInput data-testid="plotter-working-length" [formField]="plotter.workingLength"/>

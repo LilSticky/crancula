@@ -579,7 +579,6 @@
       "NAME": "Name",
       "WORKING_AREA": "Working area",
       "WORKING_AREA_VALUE": "{{length}} × {{width}} mm",
-      "ROLL_WIDTH": "roll, {{width}} mm wide",
       "ROLL_TAPE_SPACING": "roll, {{width}} mm wide, Tape spacing {{spacing}} mm",
       "OVERLAP": "Overlap",
       "OVERLAP_VALUE": "{{overlap}} mm",

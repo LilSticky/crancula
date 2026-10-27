@@ -133,7 +133,8 @@ export class PlotterListComponent {
     return byName(this.library.entities(), language).map((plotter): PlotterRow => {
       const width = formatNumber(plotter.workingWidth, language);
       if (plotter.roll) {
-        return {plotter, workingArea: {key: 'PLOTTER.LIST.ROLL_WIDTH', params: {width}}, overlap: null};
+        const spacing = formatNumber(plotter.tapeSpacing, language);
+        return {plotter, workingArea: {key: 'PLOTTER.LIST.ROLL_TAPE_SPACING', params: {width, spacing}}, overlap: null};
       }
       return {
         plotter,

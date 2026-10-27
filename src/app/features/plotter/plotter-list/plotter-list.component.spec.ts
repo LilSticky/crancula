@@ -115,6 +115,15 @@ describe('PlotterListComponent', () => {
     expect(row).not.toMatch(/\b20 mm/);
   });
 
+  it('names the Tape spacing of a roll plotter after its width', async () => {
+    const {fixture, library, element} = await render();
+    await library.put(rollPlotter('Vinyl cutter', 300));
+    await fixture.whenStable();
+
+    const [row] = rowTexts(element);
+    expect(row).toContain('roll, 300 mm wide, Tape spacing 3 mm');
+  });
+
   it('shows a dash in the Overlap cell of a roll plotter, so the column does not look broken', async () => {
     const {fixture, library, element} = await render();
     await library.put(rollPlotter('Vinyl cutter', 120));

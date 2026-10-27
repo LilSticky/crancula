@@ -51,4 +51,27 @@ describe('plotterFormSchema', () => {
     expect(error?.violation.params).toEqual({workingLength: 300});
     expect(root.workingLength().errors()).toEqual([]);
   });
+
+  describe('the Tape spacing of a roll plotter', () => {
+    const rollDraft: PlotterDraft = {name: 'Vinyl cutter', workingWidth: 300, roll: true, workingLength: null, overlap: null, tapeSpacing: 3};
+
+    it('puts a negative Tape spacing on the Tape spacing field', () => {
+      const root = plotterForm({...rollDraft, tapeSpacing: -1});
+
+      expect(plotterErrors(root.tapeSpacing().errors()).map(({kind}) => kind)).toEqual(['must-not-be-negative']);
+      expect(root().valid()).toBe(false);
+    });
+
+    it('asks for a Tape spacing that is missing', () => {
+      const root = plotterForm({...rollDraft, tapeSpacing: null});
+
+      expect(plotterErrors(root.tapeSpacing().errors()).map(({kind}) => kind)).toEqual(['value-required']);
+    });
+
+    it('accepts a Tape spacing of 0, which lets Tapes touch', () => {
+      const root = plotterForm({...rollDraft, tapeSpacing: 0});
+
+      expect(root().valid()).toBe(true);
+    });
+  });
 });

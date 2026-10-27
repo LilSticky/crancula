@@ -442,4 +442,88 @@ describe('PlotterEditorComponent', () => {
       expect(fixture.componentInstance['plotter'].roll().dirty()).toBe(true);
     });
   });
+
+  describe('Tape spacing of a roll plotter (Story 4)', () => {
+    /** Opens a new Plotter with the roll on, named "Vinyl cutter" with a working width of 300 mm. */
+    async function openRollPlotter() {
+      const {open: openEditor, library} = render();
+      const opened = await openEditor();
+      await (await opened.rollToggle()).check();
+      await opened.type(opened.field('plotter-name'), 'Vinyl cutter');
+      await opened.type(opened.field('plotter-working-width'), '300');
+      return {...opened, library};
+    }
+
+    /** A stored roll plotter "Vinyl cutter", 300 mm wide, with a Tape spacing of 5 mm. */
+    function storedRoll(): Plotter {
+      const draft: PlotterDraft = {id: newPlotterId(), name: 'Vinyl cutter', workingWidth: 300, roll: true, workingLength: null, overlap: null, tapeSpacing: 5};
+      const result = validatePlotter(draft);
+      if (!result.ok) throw new Error(`invalid test Plotter: ${JSON.stringify(result.error)}`);
+      return result.value;
+    }
+
+    it('does not ask for a Tape spacing while the Plotter is a sheet', async () => {
+      const {open: openEditor} = render();
+      const {element} = await openEditor();
+
+      expect(element.querySelector('[data-testid="plotter-tape-spacing"]')).toBeNull();
+    });
+
+    it('shows a new roll plotter with a Tape spacing of 3 and the hint under the field', async () => {
+      const {field, element} = await openRollPlotter();
+
+      expect(field('plotter-tape-spacing').value).toBe('3');
+      expect(field('plotter-tape-spacing').closest('mat-form-field')?.textContent).toContain(
+        'Blank strip between Tapes cut side by side',
+      );
+      expect(element.querySelector('[data-testid="plotter-working-length"]')).toBeNull();
+    });
+
+    it('reads a Tape spacing typed as "2,5" as 2.5', async () => {
+      const {field, type, save, library} = await openRollPlotter();
+
+      await type(field('plotter-tape-spacing'), '2,5');
+      await save();
+
+      expect(library.entities()).toEqual([expect.objectContaining({roll: true, tapeSpacing: 2.5})]);
+    });
+
+    it('shows a negative Tape spacing under its field and keeps Save disabled', async () => {
+      const {field, type, violationAt, saveButton} = await openRollPlotter();
+
+      await type(field('plotter-tape-spacing'), '-1');
+
+      expect(violationAt('tapeSpacing')).toEqual(['Must not be negative.']);
+      expect(saveButton().disabled).toBe(true);
+    });
+
+    it('asks for a Tape spacing once it was cleared, and keeps Save disabled', async () => {
+      const {field, type, violationAt, saveButton} = await openRollPlotter();
+
+      await type(field('plotter-tape-spacing'), '1');
+      await type(field('plotter-tape-spacing'), '');
+
+      expect(violationAt('tapeSpacing')).toEqual(['Please enter a value.']);
+      expect(saveButton().disabled).toBe(true);
+    });
+
+    it('saves a Tape spacing of 0, which lets Tapes touch', async () => {
+      const {field, type, save, library} = await openRollPlotter();
+
+      await type(field('plotter-tape-spacing'), '0');
+      await save();
+
+      expect(library.entities()).toEqual([expect.objectContaining({roll: true, tapeSpacing: 0})]);
+    });
+
+    it('shows the stored Tape spacing of a roll plotter when it is opened', async () => {
+      const {open: openEditor, library} = render();
+      const stored = storedRoll();
+      await library.put(stored);
+
+      const {field} = await openEditor(stored.id);
+
+      expect(field('plotter-tape-spacing').value).toBe('5');
+    });
+  });
 });
