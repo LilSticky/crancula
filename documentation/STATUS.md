@@ -14,8 +14,7 @@ later slice; discovery still to do).
 **Open:** T057 hand check of an exported MusicXML in MuseScore 4 (needs the user; SC-001, SC-002, SC-004). Follow-up
 [#183](https://github.com/LilSticky/crancula/issues/183) (review findings 2, 3, 5, 7, 9, 10 of slice 012).
 
-**Known broken:** [#175](https://github.com/LilSticky/crancula/issues/175): `api/` is not covered by `npm run lint`
-(`ng lint` only covers `src/` and `e2e/`, pre-existing).
+**Known broken:** none. ([#175](https://github.com/LilSticky/crancula/issues/175), 2026-10-27: `npm run lint` now covers `api/`.)
 
 **Open:** real MuseScore and Audiveris files not checked by hand (010 T063, needs the user's files). Tape pieces not checked by
 hand either: piece SVGs in Inkscape and a real Tape glued (011 T062, needs the user).

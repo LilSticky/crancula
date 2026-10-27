@@ -6,7 +6,7 @@ import {streamXml} from './scores-notes-xml';
 import {scoresBars, type Bar} from './scores-bars';
 import type {ScoresChoices} from './scores-choices';
 import {piecesIn} from './scores-pieces';
-import {scoresStaves, staffOf, type Clef, type Staff} from './scores-staves';
+import {scoresStaves, staffOf, type Staff} from './scores-staves';
 import {scoresTempo} from './scores-tempo';
 import type {Piece} from './scores-pieces';
 import {element, type Lines} from './scores-xml';

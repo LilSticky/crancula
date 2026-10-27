@@ -6,7 +6,6 @@ import {
   newSongId,
   note,
   type Key,
-  type Note,
   part,
   type Part,
   song,
