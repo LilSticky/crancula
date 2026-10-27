@@ -52,7 +52,7 @@ Decided by the user on 2026-10-23 ([discovery](discovery/later.md)): one capabil
 | v0.3 | Bring Scores onto a tape ([#167](https://github.com/LilSticky/crancula/issues/167)) | import MusicXML (one Part per staff, repeats played out); PDF and printed Scores through an outside recognition tool | Song | MusicXML reader | done ([#167](https://github.com/LilSticky/crancula/issues/167)) |
 | v0.4 | Cut a tape in pieces ([#168](https://github.com/LilSticky/crancula/issues/168)) | describe a Plotter (name, format, Working area, or a roll plotter that never splits a Tape) and cut a Tape longer than the working length in Tape pieces with a glue Overlap | Plotter, Tape | Plotter editor, snapshot, SVG | done ([#168](https://github.com/LilSticky/crancula/issues/168)) |
 | later | Cut several tapes side by side ([#170](https://github.com/LilSticky/crancula/issues/170)) | lay several Tapes side by side across a roll plotter's working width in one cut | Plotter, Tape | SVG | planned |
-| later | Read a tape as Scores ([#169](https://github.com/LilSticky/crancula/issues/169)) | export the Tape as MusicXML, Bars from the Song's Time signature | Tape, Song | MusicXML writer | planned |
+| later | Read a tape as Scores ([#169](https://github.com/LilSticky/crancula/issues/169)) | export the Tape as MusicXML, Bars from the Song's Time signature | Tape, Song | MusicXML writer | done ([#169](https://github.com/LilSticky/crancula/issues/169), PR [#182](https://github.com/LilSticky/crancula/pull/182), pending merge) |
 
 ## Later (unordered)
 

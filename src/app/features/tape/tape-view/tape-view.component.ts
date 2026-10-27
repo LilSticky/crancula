@@ -26,6 +26,7 @@ import {TransposeDialogComponent, type TransposeDialogData} from './transpose-di
 import {MatButton, MatIconButton} from '@angular/material/button';
 import {MatButtonToggle, MatButtonToggleGroup} from '@angular/material/button-toggle';
 import {MatIcon} from '@angular/material/icon';
+import {MatMenu, MatMenuItem, MatMenuTrigger} from '@angular/material/menu';
 import {MatProgressSpinner} from '@angular/material/progress-spinner';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {MatTooltip} from '@angular/material/tooltip';
@@ -74,6 +75,7 @@ import {TapeSectionComponent} from './tape-section/tape-section.component';
 import {TapeStatusLineComponent, type PointerText} from './tape-status-line/tape-status-line.component';
 import {overviewFrame, scrollLeftFor} from './overview-frame';
 import {PlotterExport} from './plotter-export';
+import {ScoresExport} from './scores-export/scores-export';
 import {PlotterSectionComponent} from './plotter-section/plotter-section.component';
 import {PlotterPreference} from '../../plotter/plotter-preference';
 import {pointerAt} from './pointer-at';
@@ -158,7 +160,7 @@ const GERMAN_ACTIONS_QUERY = '(max-width: 1439.98px)';
   selector: 'cranc-tape-view',
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [TapeEditor, TapePreview],
-  imports: [ImportSummaryComponent, TranslatePipe, RouterLink, PageHeadComponent, MatButton, MatIconButton, MatTooltip, MatButtonToggle, MatButtonToggleGroup, MatIcon, MatProgressSpinner, AddHoleComponent, CuttingProblemsComponent, SelectedHoleComponent, TapeSectionComponent, PlotterSectionComponent, PreviewSectionComponent, TapeStatusLineComponent],
+  imports: [ImportSummaryComponent, TranslatePipe, RouterLink, PageHeadComponent, MatButton, MatIconButton, MatTooltip, MatButtonToggle, MatButtonToggleGroup, MatIcon, MatMenu, MatMenuItem, MatMenuTrigger, MatProgressSpinner, AddHoleComponent, CuttingProblemsComponent, SelectedHoleComponent, TapeSectionComponent, PlotterSectionComponent, PreviewSectionComponent, TapeStatusLineComponent],
   templateUrl: './tape-view.component.html',
   styleUrl: './tape-view.component.scss',
   host: {'(keydown)': 'onViewKeydown($event)'},
@@ -201,6 +203,7 @@ export class TapeViewComponent {
   protected readonly frameRect = signal<{readonly x: number; readonly y: number; readonly width: number; readonly height: number} | undefined>(undefined);
   protected readonly dragging = this.holeDrag.dragging;
   protected readonly plotterExport = inject(PlotterExport);
+  protected readonly scoresExport = inject(ScoresExport);
   private readonly plotterPreference = inject(PlotterPreference);
   private readonly language = inject(LanguagePreference).language;
   protected readonly rulerHeight = RULER_HEIGHT;
@@ -277,9 +280,14 @@ export class TapeViewComponent {
 
   /** The metre of the Tape's Song: its first Time signature, Key and upbeat; nothing while the Song is not found. */
   protected readonly metre = computed<SongMetre>(() => {
-    const songId = this.tape()?.songId;
-    const song = this.library.songEntities().find((candidate) => candidate.id === songId);
+    const song = this.song();
     return song ? songMetre(song) : {};
+  });
+
+  /** The Song of the shown Tape; undefined while the Tape has none in the library. */
+  private readonly song = computed(() => {
+    const songId = this.tape()?.songId;
+    return this.library.songEntities().find((candidate) => candidate.id === songId);
   });
 
   /** The Tape as drawn: the would-be Tape while a Hole is dragged. */
@@ -462,6 +470,12 @@ export class TapeViewComponent {
     const tape = this.tape();
     const organ = this.organ();
     if (tape !== undefined && organ !== undefined) void this.plotterExport.export(tape, organ, this.plotterPreference.picked());
+  }
+
+  protected exportScores(): void {
+    const tape = this.tape();
+    const organ = this.organ();
+    if (tape !== undefined && organ !== undefined) void this.scoresExport.export(tape, organ, this.song());
   }
 
   protected readonly canTranspose = computed(() => {

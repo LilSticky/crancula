@@ -436,7 +436,7 @@ test.describe('The Tape view in German at 1280 x 800 (#177)', () => {
     const head = window.getByTestId('page-head-actions');
     expect(await head.evaluate((element) => element.scrollWidth - element.clientWidth), 'page head overflow').toBeLessThanOrEqual(1);
 
-    const exportButton = await boxOf(head.getByTestId('export'));
+    const exportButton = await boxOf(head.getByTestId('export-menu'));
     const viewport = await window.evaluate(() => ({width: globalThis.innerWidth}));
     expect(exportButton.right, `Export right edge ${exportButton.right} vs viewport width ${viewport.width}`).toBeLessThanOrEqual(viewport.width);
 
@@ -480,6 +480,89 @@ test.describe('The Tape view at 1024 x 700 (#156)', () => {
     await expect(panel).toBeVisible();
     const overflow = await panel.evaluate((element) => element.scrollWidth - element.clientWidth);
     expect(overflow, 'side panel horizontal overflow in px (scrollWidth - clientWidth)').toBeLessThanOrEqual(1);
+    await app.close();
+  });
+});
+
+/** The four page head actions with a text label of their own, in the order of the page head. */
+const LABELLED_PAGE_HEAD_ACTIONS = ['preview-toggle', 'transpose', 'record', 'export-menu'] as const;
+
+/** The text a page head action shows, without its icon (the icon's ligature is not a label). */
+const visibleLabelOf = (locator: Locator): Promise<string> =>
+  locator.evaluate((element) => {
+    const copy = element.cloneNode(true) as Element;
+    for (const icon of copy.querySelectorAll('mat-icon')) icon.remove();
+    return copy.textContent?.trim() ?? '';
+  });
+
+/** Checks that the four labelled actions are visible, share one row and do not overflow the page head. */
+async function expectLabelledActionsInOneRow(window: Page): Promise<void> {
+  const head = window.getByTestId('page-head-actions');
+  const tops: number[] = [];
+  for (const id of LABELLED_PAGE_HEAD_ACTIONS) {
+    const action = head.getByTestId(id);
+    await expect(action).toBeVisible();
+    expect(await visibleLabelOf(action), `${id} label`).not.toBe('');
+    tops.push((await boxOf(action)).top);
+  }
+  expect(Math.max(...tops) - Math.min(...tops), `tops ${JSON.stringify(tops)}`).toBeLessThanOrEqual(2);
+  expect(await head.evaluate((element) => element.scrollWidth - element.clientWidth), 'page head overflow').toBeLessThanOrEqual(1);
+}
+
+test.describe('The Tape view page head with four labelled actions in one row (spec 012, R14)', () => {
+  test('English at 1180 px: the four actions show their labels in one row', async () => {
+    const launched = await launchApp();
+    const {app, window} = launched;
+    await resizeWindowOrSkip(launched, 1180, 800, true);
+    await defineOrganWithLeadIn(window, {tapePerCrankTurn: '100'});
+    await createTapeFromSong(window, 'Scale', melodyC3ToC5(), {columnLength: '5'});
+
+    await expectLabelledActionsInOneRow(window);
+    await app.close();
+  });
+
+  test('German at 1440 px: the four actions show their labels in one row', async () => {
+    const launched = await launchApp();
+    const {app, window} = launched;
+    await resizeWindowOrSkip(launched, 1440, 900, true);
+    await defineOrganWithLeadIn(window, {tapePerCrankTurn: '100'});
+    await createTapeFromSong(window, 'Scale', melodyC3ToC5(), {columnLength: '5'});
+    await window.getByTestId('language-switch').locator('[data-language="de"]').click();
+
+    await expectLabelledActionsInOneRow(window);
+    await app.close();
+  });
+
+  test('English below 1180 px: the four actions are icon-only, each named by its aria-label', async () => {
+    const launched = await launchApp();
+    const {app, window} = launched;
+    await resizeWindowOrSkip(launched, 1179, 800, true);
+    await defineOrganWithLeadIn(window, {tapePerCrankTurn: '100'});
+    await createTapeFromSong(window, 'Scale', melodyC3ToC5(), {columnLength: '5'});
+
+    for (const id of LABELLED_PAGE_HEAD_ACTIONS) {
+      const action = window.getByTestId('page-head-actions').getByTestId(id);
+      await expect(action).toBeVisible();
+      expect(await visibleLabelOf(action), `${id} label`).toBe('');
+      await expect(action).toHaveAttribute('aria-label', /.+/);
+    }
+    await app.close();
+  });
+
+  test('German below 1440 px: the four actions are icon-only, each named by its aria-label', async () => {
+    const launched = await launchApp();
+    const {app, window} = launched;
+    await resizeWindowOrSkip(launched, 1439, 900, true);
+    await defineOrganWithLeadIn(window, {tapePerCrankTurn: '100'});
+    await createTapeFromSong(window, 'Scale', melodyC3ToC5(), {columnLength: '5'});
+    await window.getByTestId('language-switch').locator('[data-language="de"]').click();
+
+    for (const id of LABELLED_PAGE_HEAD_ACTIONS) {
+      const action = window.getByTestId('page-head-actions').getByTestId(id);
+      await expect(action).toBeVisible();
+      expect(await visibleLabelOf(action), `${id} label`).toBe('');
+      await expect(action).toHaveAttribute('aria-label', /.+/);
+    }
     await app.close();
   });
 });

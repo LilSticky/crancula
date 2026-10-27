@@ -33,11 +33,14 @@ export type {
   SetLanguageResult,
   SnapshotLoadResult,
   SnapshotSaveResult,
+  ScoresSaveRequest,
+  ScoresSaveResult,
   SvgSaveRequest,
   SvgSaveResult,
   TapeLibraryLoadResult,
   TapeLibrarySaveResult,
 } from './app/crancula-api';
+export {parseScoresSaveRequest} from './app/scores-save-request';
 export {parseSvgSaveRequest} from './app/svg-save-request';
 export {
   parseSvgPiecesSaveRequest,
@@ -185,3 +188,23 @@ export {plotterSvg} from './tape/plotter-svg';
 export {pieceGeometry, type CutGeometry} from './tape/tape-piece-geometry';
 export {tapeGeometry, type Point, type Slot, type TapeGeometry, type TapeOutline} from './tape/tape-geometry';
 export {tapePieces, type Join, type JoinlessStretch, type TapePiece, type TapePieces} from './tape/tape-pieces';
+export {closeGaps, minimumGapColumns, type ScoresNote} from './scores/close-gaps';
+export {noteValues, type NoteType, type NoteValue} from './scores/note-values';
+export {spell, type Spelling, type Step} from './scores/spell';
+export {assignVoices, type Chord, type StaffVoices, type VoiceNumber} from './scores/voices';
+export {scoresBars, songKeepsBarsOnColumns, type Bar} from './scores/scores-bars';
+export {
+  prefilledScoresChoices,
+  SCORES_BEAT_TYPES,
+  scoresChoicesOf,
+  validateScoresChoices,
+  type ChosenTimeSignature,
+  type ScoresBeatType,
+  type ScoresChoices,
+  type ScoresChoicesInput,
+  type ScoresChoicesViolation,
+} from './scores/scores-choices';
+export {scoresFileName} from './scores/scores-file-name';
+export {scoresTempo} from './scores/scores-tempo';
+export {scoresStaves, staffOf, staffPipes, staffRange, type Clef, type Staff, type StaffPipes, type StaffRange} from './scores/scores-staves';
+export {scoresMusicXml, type ScoresInput} from './scores/scores-musicxml';

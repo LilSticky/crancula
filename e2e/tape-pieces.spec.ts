@@ -19,6 +19,7 @@ import {stubSaveDialog, type SaveDialogStub} from './support/save-dialog';
 import {createTapeFromSong} from './support/tape-creation';
 import {drawnHoles, holeAt, pressOnDrawing} from './support/tape-edit';
 import {resizeWindowOrSkip} from './support/window-size';
+import {exportForPlotter, expectExportItemEnabled} from './support/tape-export-menu';
 
 const TICKS_PER_QUARTER = 480;
 
@@ -162,7 +163,7 @@ test.describe('Cut a long Tape in pieces on the picked Plotter', () => {
     await expect(window.getByTestId('plotter-pieces')).toContainText('3 Tape pieces');
     await folders.answerWith({canceled: false, filePaths: [folder]});
 
-    await window.getByTestId('export').click();
+    await exportForPlotter(window);
 
     await expect(window.locator('.mat-mdc-snack-bar-container').filter({hasText: folder})).toBeVisible();
     const [call] = await folders.calls();
@@ -182,10 +183,10 @@ test.describe('Cut a long Tape in pieces on the picked Plotter', () => {
     await folders.answerWith({canceled: false, filePaths: [folder]});
     await messageBox.answerWith({response: 1});
 
-    await window.getByTestId('export').click();
+    await exportForPlotter(window);
 
     await expect.poll(async () => (await messageBox.calls()).length).toBe(1);
-    await expect(window.getByTestId('export')).toBeEnabled();
+    await expectExportItemEnabled(window, 'export');
     const [question] = await messageBox.calls();
     expect(question?.detail).toBe('Waltz 1 of 3.svg\nWaltz 3 of 3.svg');
     expect((await readdir(folder)).sort()).toEqual(before);
@@ -201,7 +202,7 @@ test.describe('Cut a long Tape in pieces on the picked Plotter', () => {
     await saves.answerWith(target);
     const folderCallsBefore = (await folders.calls()).length;
 
-    await window.getByTestId('export').click();
+    await exportForPlotter(window);
 
     await expect(window.locator('.mat-mdc-snack-bar-container').filter({hasText: target})).toBeVisible();
     expect(await folders.calls()).toHaveLength(folderCallsBefore);
@@ -222,7 +223,7 @@ test.describe('Cut a long Tape in pieces on the picked Plotter', () => {
 
     await openTape(window, 'Waltz');
     await expect(window.getByTestId('plotter-picker')).toContainText('Cutting mat');
-    await window.getByTestId('export').click();
+    await exportForPlotter(window);
 
     await expect(window.locator('.mat-mdc-snack-bar-container').filter({hasText: restartFolder})).toBeVisible();
     expect((await readdir(restartFolder)).sort()).toEqual(['Waltz 1 of 3.svg', 'Waltz 2 of 3.svg', 'Waltz 3 of 3.svg']);
@@ -244,7 +245,7 @@ test.describe('Cut a long Tape in pieces on the picked Plotter', () => {
 
     const savesBefore = (await saves.calls()).length;
     const foldersBefore = (await folders.calls()).length;
-    await window.getByTestId('export').click();
+    await exportForPlotter(window);
     await expect(window.getByRole('dialog').getByTestId('export-problem')).toHaveCount(1);
     await expect(window.getByRole('dialog').getByTestId('export-problem')).toContainText('Columns 1–101');
     expect(await saves.calls()).toHaveLength(savesBefore);
@@ -267,7 +268,7 @@ test.describe('Cut a long Tape in pieces on the picked Plotter', () => {
 
     const foldersBefore = (await folders.calls()).length;
     await folders.answerWith({canceled: false, filePaths: [folder]});
-    await window.getByTestId('export').click();
+    await exportForPlotter(window);
     await expect(window.locator('.mat-mdc-snack-bar-container').filter({hasText: folder})).toBeVisible();
     expect(await folders.calls()).toHaveLength(foldersBefore + 1);
     const pieces = (await readdir(folder)).filter((name) => /^Held \d+ of \d+\.svg$/.test(name));
@@ -331,7 +332,7 @@ test.describe('Cut a Tape on a roll plotter', () => {
     const target = join(folder, 'Reel.svg');
     await saves.answerWith(target);
 
-    await window.getByTestId('export').click();
+    await exportForPlotter(window);
 
     await expect(window.locator('.mat-mdc-snack-bar-container').filter({hasText: target})).toBeVisible();
     const [call] = (await saves.calls()).slice(-1);
@@ -352,7 +353,7 @@ test.describe('Cut a Tape on a roll plotter', () => {
     await expect(window.getByTestId('plotter-too-wide')).toContainText('The Tape is 100 mm wide');
     const savesBefore = (await saves.calls()).length;
 
-    await window.getByTestId('export').click();
+    await exportForPlotter(window);
 
     await expect(window.getByRole('dialog').getByTestId('export-problem')).toHaveCount(1);
     await expect(window.getByRole('dialog').getByTestId('export-problem')).toContainText('too wide for the Plotter');
@@ -381,7 +382,7 @@ test.describe('Cut a Tape in pieces in German', () => {
       await expect(window.getByTestId('cutting-problems-count')).toHaveText(/^\s*1 Schnittproblem\s*$/);
       await expect(window.getByTestId('cutting-problem-stretch')).toContainText('Spalten 1–101');
       await expect(window.getByTestId('cutting-problem-stretch')).toContainText('Klebestelle');
-      await window.getByTestId('export').click();
+      await exportForPlotter(window);
       await expect(window.getByRole('dialog').getByTestId('export-problem')).toContainText('Spalten 1–101');
       await window.getByRole('dialog').getByRole('button', {name: 'Schließen'}).click();
 
@@ -396,7 +397,7 @@ test.describe('Cut a Tape in pieces in German', () => {
       await expect(window.getByTestId('plotter-pieces')).toContainText('In 3 Bandstücke schneiden');
       await folders.answerWith({canceled: false, filePaths: [folder]});
 
-      await window.getByTestId('export').click();
+      await exportForPlotter(window);
 
       await expect(window.locator('.mat-mdc-snack-bar-container').filter({hasText: folder})).toBeVisible();
       expect((await readdir(folder)).sort()).toEqual(['Waltz 1 von 3.svg', 'Waltz 2 von 3.svg', 'Waltz 3 von 3.svg']);

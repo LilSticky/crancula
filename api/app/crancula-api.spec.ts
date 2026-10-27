@@ -3,6 +3,8 @@ import type {
   CranculaApi,
   OrganLibraryLoadResult,
   OrganLibrarySaveResult,
+  ScoresSaveRequest,
+  ScoresSaveResult,
   SetLanguageResult,
   SvgSaveRequest,
   SvgSaveResult,
@@ -54,6 +56,21 @@ describe('CranculaApi', () => {
 
   it('describes every Plotter file save outcome', () => {
     expectTypeOf<SvgSaveResult>().toEqualTypeOf<
+      | {readonly status: 'saved'; readonly filePath: string}
+      | {readonly status: 'cancelled'}
+      | {readonly status: 'rejected'; readonly reason: string}
+      | {readonly status: 'failed'; readonly reason: string}
+    >();
+  });
+
+  it('saves the Scores file', () => {
+    expectTypeOf<CranculaApi['scores']['save']>().toEqualTypeOf<
+      (request: ScoresSaveRequest) => Promise<ScoresSaveResult>
+    >();
+  });
+
+  it('describes every Scores file save outcome', () => {
+    expectTypeOf<ScoresSaveResult>().toEqualTypeOf<
       | {readonly status: 'saved'; readonly filePath: string}
       | {readonly status: 'cancelled'}
       | {readonly status: 'rejected'; readonly reason: string}

@@ -3,6 +3,7 @@ import {
   parsePlotterLibrarySnapshot,
   parseRecordingChooseRequest,
   parseRecordingWriteRequest,
+  parseScoresSaveRequest,
   parseSvgPiecesSaveRequest,
   parseSvgSaveRequest,
   parseTapeLibrarySnapshot,
@@ -13,6 +14,8 @@ import {
   type PlotterLibrarySnapshot,
   type RecordingChooseResult,
   type RecordingWriteResult,
+  type ScoresSaveRequest,
+  type ScoresSaveResult,
   type SvgPiecesSaveRequest,
   type SvgPiecesSaveResult,
   type SvgSaveRequest,
@@ -34,6 +37,9 @@ export interface InMemoryCranculaApiFailures {
     readonly saveSvg?: 'cancelled' | 'failed';
     readonly savePieces?: 'cancelled' | 'failed';
   };
+  readonly scores?: {
+    readonly save?: 'cancelled' | 'failed';
+  };
   readonly recording?: {
     readonly chooseFile?: 'cancelled';
     readonly writeFile?: 'failed';
@@ -44,11 +50,14 @@ export interface InMemoryCranculaApiFailures {
   };
 }
 
-/** The in-memory API, which also reveals what the Plotter was last asked to save. */
+/** The in-memory API, which also reveals what the Plotter and the Scores were last asked to save. */
 export type InMemoryCranculaApi = CranculaApi & {
   readonly plotter: CranculaApi['plotter'] & {
     readonly lastSaveSvgRequest: SvgSaveRequest | undefined;
     readonly lastSavePiecesRequest: SvgPiecesSaveRequest | undefined;
+  };
+  readonly scores: CranculaApi['scores'] & {
+    readonly lastSaveRequest: ScoresSaveRequest | undefined;
   };
 };
 
@@ -67,6 +76,7 @@ export function createInMemoryCranculaApi(
   let storedPlotters = initialPlotters;
   let lastSaveSvgRequest: SvgSaveRequest | undefined;
   let lastSavePiecesRequest: SvgPiecesSaveRequest | undefined;
+  let lastScoresSaveRequest: ScoresSaveRequest | undefined;
   let chosenFileName: string | undefined;
   return {
     organs: {
@@ -140,6 +150,21 @@ export function createInMemoryCranculaApi(
         if (failures.plotter?.saveSvg === 'cancelled') return Promise.resolve({status: 'cancelled'});
         if (failures.plotter?.saveSvg === 'failed') {
           return Promise.resolve({status: 'failed', reason: 'the Plotter file could not be written'});
+        }
+        return Promise.resolve({status: 'saved', filePath: `in-memory/${parsed.value.suggestedFileName}`});
+      },
+    },
+    scores: {
+      get lastSaveRequest(): ScoresSaveRequest | undefined {
+        return lastScoresSaveRequest;
+      },
+      save: (request): Promise<ScoresSaveResult> => {
+        const parsed = parseScoresSaveRequest(request);
+        if (!parsed.ok) return Promise.resolve({status: 'rejected', reason: parsed.error});
+        lastScoresSaveRequest = parsed.value;
+        if (failures.scores?.save === 'cancelled') return Promise.resolve({status: 'cancelled'});
+        if (failures.scores?.save === 'failed') {
+          return Promise.resolve({status: 'failed', reason: 'the Scores file could not be written'});
         }
         return Promise.resolve({status: 'saved', filePath: `in-memory/${parsed.value.suggestedFileName}`});
       },

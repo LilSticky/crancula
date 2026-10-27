@@ -1,6 +1,16 @@
+import {ApplicationRef} from '@angular/core';
+import {TestBed} from '@angular/core/testing';
+import {MAT_DIALOG_DATA, MatDialogRef} from '@angular/material/dialog';
 import type {CuttingProblemCode, HoleFix, HoleProblem, SongRejection, TapeViolationCode} from '@api/index';
+import {scoresFileName} from '@api/index';
+import {referenceOrgan, referenceTape} from '@api/tape/tape-fixture';
+import {vi} from 'vitest';
 import de from '../../../assets/i18n/de.json';
 import en from '../../../assets/i18n/en.json';
+import {CRANCULA_API, createInMemoryCranculaApi} from '../../core/crancula-api.token';
+import {provideTestTranslations} from '../../../testing/test-translations';
+import {ScoresExport} from './tape-view/scores-export/scores-export';
+import {ScoresExportDialogComponent} from './tape-view/scores-export/scores-export-dialog.component';
 
 type TranslationTree = { readonly [key: string]: string | TranslationTree };
 
@@ -264,5 +274,111 @@ describe('Score import texts (US6)', () => {
     for (const word of ['Stimme', 'Noten', 'Notenquelle']) {
       expect(german).toContain(word);
     }
+  });
+});
+
+/** Every text the Scores export shows: the command, the dialog, its messages (contracts/scores-export-ui.md). */
+const scoresExportKeys = [
+  'TAPE.VIEW.EXPORT_SCORES',
+  'TAPE.SCORES.TIME_SIGNATURE',
+  'TAPE.SCORES.TIME_SONG',
+  'TAPE.SCORES.TIME_OTHER',
+  'TAPE.SCORES.BEATS',
+  'TAPE.SCORES.BEAT_TYPE',
+  'TAPE.SCORES.UPBEAT',
+  'TAPE.SCORES.UPBEAT_COUNT',
+  'TAPE.SCORES.UPBEAT_VALUE',
+  'TAPE.SCORES.NOTE_VALUE.1',
+  'TAPE.SCORES.NOTE_VALUE.2',
+  'TAPE.SCORES.NOTE_VALUE.4',
+  'TAPE.SCORES.NOTE_VALUE.8',
+  'TAPE.SCORES.NOTE_VALUE.16',
+  'TAPE.SCORES.NOTE_VALUE.32',
+  'TAPE.SCORES.STAVES',
+  'TAPE.SCORES.SPLIT_NOTE',
+  'TAPE.SCORES.SPLIT_ADD',
+  'TAPE.SCORES.SPLIT_REMOVE',
+  'TAPE.SCORES.STAFF',
+  'TAPE.SCORES.RANGE',
+  'TAPE.SCORES.STAFF_EMPTY',
+  'TAPE.SCORES.CLEF.TREBLE',
+  'TAPE.SCORES.CLEF.TREBLE_8VA',
+  'TAPE.SCORES.CLEF.BASS',
+  'TAPE.SCORES.CLEF.BASS_8VB',
+  'TAPE.SCORES.SONG_METRE_NOT_ON_COLUMNS',
+  'TAPE.SCORES.ERROR.BEATS',
+  'TAPE.SCORES.ERROR.BEAT_TYPE',
+  'TAPE.SCORES.ERROR.UPBEAT',
+  'TAPE.SCORES.ERROR.UPBEAT_TOO_LONG',
+  'TAPE.SCORES.ERROR.SPLIT_NOTES',
+  'TAPE.SCORES.CONFIRM',
+  'TAPE.SCORES.CANCEL',
+  'TAPE.SCORES.DIALOG_TITLE',
+  'TAPE.SCORES.FILTER_NAME',
+  'TAPE.SCORES.SAVED',
+  'TAPE.SCORES.FAILED',
+  'TAPE.SCORES.RETRY',
+] as const;
+
+function germanText(key: string): string {
+  return textAt(de, key) ?? '';
+}
+
+describe('Scores export texts (US5, SC-007)', () => {
+  for (const key of scoresExportKeys) {
+    it(`${key} has an English and a German text that differ`, () => {
+      const english = textAt(en, key);
+      expect(english).toBeTruthy();
+      expect(germanText(key)).toBeTruthy();
+      expect(germanText(key)).not.toBe(english);
+    });
+  }
+
+  it('shows no TAPE.SCORES key in the dialog in German, and its German labels for the beat count and beat type', async () => {
+    TestBed.configureTestingModule({
+      providers: [
+        provideTestTranslations('de'),
+        {provide: MatDialogRef, useValue: {close: vi.fn()}},
+        {
+          provide: MAT_DIALOG_DATA,
+          useValue: {tape: referenceTape(referenceOrgan()), organ: referenceOrgan(), song: undefined, rememberedSplitNotes: undefined},
+        },
+      ],
+    });
+    const fixture = TestBed.createComponent(ScoresExportDialogComponent);
+    fixture.autoDetectChanges();
+    await fixture.whenStable();
+    const element: HTMLElement = fixture.nativeElement as HTMLElement;
+
+    expect(element.textContent).not.toMatch(/TAPE\.[A-Z_.]+/);
+    expect(element.textContent).toContain(germanText('TAPE.SCORES.BEATS'));
+    expect(element.textContent).toContain(germanText('TAPE.SCORES.BEAT_TYPE'));
+  });
+
+  it('words the upbeat error without Columns, as the field counts note values (en and de)', () => {
+    expect(textAt(en, 'TAPE.SCORES.ERROR.UPBEAT')).toBe('Enter a whole number, 0 or more.');
+    expect(germanText('TAPE.SCORES.ERROR.UPBEAT')).toBe('Gib eine ganze Zahl ab 0 ein.');
+  });
+
+  it("suggests the Tape's name as the file name and sends German dialog texts when the export is in German", async () => {
+    const api = createInMemoryCranculaApi(undefined, undefined, {});
+    TestBed.configureTestingModule({providers: [provideTestTranslations('de'), {provide: CRANCULA_API, useValue: api}]});
+    const organ = referenceOrgan();
+    const tape = referenceTape(organ);
+    const pending = TestBed.inject(ScoresExport).export(tape, organ, undefined);
+    TestBed.inject(ApplicationRef).tick();
+    const confirm = document.querySelector<HTMLButtonElement>('[data-testid="scores-confirm"]');
+    confirm?.click();
+    await pending;
+
+    expect(api.scores.lastSaveRequest?.suggestedFileName).toBe(scoresFileName(tape.name));
+    expect(api.scores.lastSaveRequest?.dialogTitle).toBe(germanText('TAPE.SCORES.DIALOG_TITLE'));
+    expect(api.scores.lastSaveRequest?.filterName).toBe(germanText('TAPE.SCORES.FILTER_NAME'));
+  });
+});
+
+describe('German beat count error (UX nit 3)', () => {
+  it('words the beat count error without a doubled "von"', () => {
+    expect(germanText('TAPE.SCORES.ERROR.BEATS')).toBe('Gib eine ganze Zahl von 1 bis 99 ein.');
   });
 });

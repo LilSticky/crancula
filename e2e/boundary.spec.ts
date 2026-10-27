@@ -35,11 +35,11 @@ test.describe('Electron boundary', () => {
     expect(result).toEqual({status: 'empty'});
   });
 
-  test('exposes no members beyond app, edit, organs, plotter, plotters, recording and tapes', async () => {
+  test('exposes no members beyond app, edit, organs, plotter, plotters, recording, scores and tapes', async () => {
     const keys = await launched.window.evaluate(() =>
       Object.keys((window as {crancula?: object}).crancula ?? {}).sort(),
     );
-    expect(keys).toEqual(['app', 'edit', 'organs', 'plotter', 'plotters', 'recording', 'tapes']);
+    expect(keys).toEqual(['app', 'edit', 'organs', 'plotter', 'plotters', 'recording', 'scores', 'tapes']);
   });
 
   test('exposes the Recording methods and rejects a forged write without opening a dialog', async () => {
@@ -100,5 +100,23 @@ test.describe('Electron boundary', () => {
     expect(result).toEqual({status: 'rejected', reason: expect.any(String)});
     const calls = await launched.app.evaluate(() => (globalThis as {dialogCalls?: number}).dialogCalls);
     expect(calls).toBe(0);
+  });
+
+  test('exposes scores.save and rejects a forged file name without opening a dialog', async () => {
+    const dialog = await stubSaveDialog(launched.app);
+
+    const result = await launched.window.evaluate(async () => {
+      const scores = (window as {crancula?: {scores?: {save?: unknown}}}).crancula?.scores;
+      if (typeof scores?.save !== 'function') return 'missing';
+      return (scores.save as (request: unknown) => Promise<unknown>)({
+        suggestedFileName: '../evil.musicxml',
+        musicXml: '<?xml version="1.0"?><score-partwise version="4.0"></score-partwise>',
+        dialogTitle: 'Export as Scores',
+        filterName: 'MusicXML file',
+      });
+    });
+
+    expect(result).toEqual({status: 'rejected', reason: expect.any(String)});
+    expect(await dialog.calls()).toHaveLength(0);
   });
 });

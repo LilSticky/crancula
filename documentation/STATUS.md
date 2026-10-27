@@ -8,14 +8,22 @@ Issues: [GitHub](https://github.com/LilSticky/crancula/issues)
 
 None in progress.
 
-**Next step:** [Read a tape as Scores](https://github.com/LilSticky/crancula/issues/169) ([#169](https://github.com/LilSticky/crancula/issues/169),
-later slice, draft PR open): export the Tape as MusicXML, Bars from the Song's Time signature.
+**Next step:** [Cut several tapes side by side](https://github.com/LilSticky/crancula/issues/170) ([#170](https://github.com/LilSticky/crancula/issues/170),
+later slice; discovery still to do).
+
+**Open:** T057 hand check of an exported MusicXML in MuseScore 4 (needs the user; SC-001, SC-002, SC-004). Follow-up
+[#183](https://github.com/LilSticky/crancula/issues/183) (review findings 2, 3, 5, 7, 9, 10 of slice 012).
 
 **Known broken:** [#175](https://github.com/LilSticky/crancula/issues/175): `api/` is not covered by `npm run lint`
 (`ng lint` only covers `src/` and `e2e/`, pre-existing).
 
 **Open:** real MuseScore and Audiveris files not checked by hand (010 T063, needs the user's files). Tape pieces not checked by
 hand either: piece SVGs in Inkscape and a real Tape glued (011 T062, needs the user).
+
+**Done (pending merge of PR [#182](https://github.com/LilSticky/crancula/pull/182)):** [Read a tape as Scores](../specs/012-read-a-tape-as-scores/spec.md)
+([#169](https://github.com/LilSticky/crancula/issues/169), branch `012-read-a-tape-as-scores`): the Tape exports as MusicXML from the new
+Export menu, with staves split by notes, clefs, Key, tempo and Time signature. T056 (gate run) is not ticked: its e2e
+results are not recorded here yet.
 
 **Done:** [Cut a tape in pieces](../specs/011-cut-a-tape-in-pieces/spec.md) ([#168](https://github.com/LilSticky/crancula/issues/168), v0.4,
 branch `011-cut-a-tape-in-pieces`, PR [#174](https://github.com/LilSticky/crancula/pull/174)): Plotters are described like Organs

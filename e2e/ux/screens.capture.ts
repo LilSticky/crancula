@@ -9,6 +9,7 @@ import {defineStreetOrgan, saveOrgan} from '../support/organ-editor';
 import {stubSaveDialog} from '../support/save-dialog';
 import {createTapeFromSong, defineOctaveOrgan} from '../support/tape-creation';
 import {columnWidth, drawnHoles, holeAt} from '../support/tape-edit';
+import {exportForPlotter, expectExportItemEnabled} from '../support/tape-export-menu';
 
 /** Where the `ux-review` skill expects the screens of the running app. */
 const SCREENS = process.env['UX_SCREENS_DIR'] ?? join(__dirname, '../../documentation/design/screens/current');
@@ -247,8 +248,8 @@ test.describe('UX screens', () => {
     await saveOrgan(window);
     await window.getByRole('link', {name: 'Tapes'}).click();
     await window.getByTestId('tape').filter({hasText: 'Blip'}).click();
-    await expect(window.getByTestId('export')).toBeEnabled();
-    await window.getByTestId('export').click();
+    await expectExportItemEnabled(window, 'export');
+    await exportForPlotter(window);
     await expect(window.getByTestId('export-problem')).toHaveCount(1);
     // The dialog fades and scales in; settle it before the screenshot.
     await window.waitForFunction(() => {

@@ -9,6 +9,7 @@ as its GitHub Release notes.
 ## [Unreleased]
 
 ### Added
+- Export a Tape as Scores (MusicXML) from the new Export menu: staves are split by notes, with clefs, Key, tempo and Time signature.
 - Describe Plotters like Organs: a sheet plotter cuts within its working length and width, a roll plotter within its working width. Plotters are kept in a list and edited in an editor.
 - Pick a Plotter in the Tape view; the choice is remembered on this computer. The Tape itself does not change.
 - A Tape longer than the Plotter's working length is exported in Tape pieces, cut at the furthest Joins, each piece with an Overlap for gluing. The pieces are saved into one folder. Joins, Overlaps and the stretches are drawn on the Tape.

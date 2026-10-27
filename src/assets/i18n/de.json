@@ -75,7 +75,9 @@
       "SUBTITLE": "Für die {{organ}}. {{columns}} à {{columnLength}} mm, {{length}} mm Lochband.",
       "COLUMNS_ONE": "{{count}} Spalte",
       "COLUMNS_OTHER": "{{count}} Spalten",
+      "EXPORT_MENU": "Export",
       "EXPORT": "Export für den Plotter",
+      "EXPORT_SCORES": "Als Noten exportieren",
       "SIDE_PANEL": "Details",
       "DETAILS": "Lochbanddetails",
       "STATUS_COLUMN": "Spalte {{column}} bei {{mm}} mm",
@@ -350,6 +352,54 @@
       "TOO_WIDE": "Das Lochband ist {{tapeWidth}} mm breit, die Arbeitsbreite des Plotters ist {{workingWidth}} mm",
       "TOO_WIDE_ACTION": "Wähle einen breiteren Plotter oder ändere die Arbeitsbreite dieses Plotters.",
       "EDIT_PICKED": "Diesen Plotter ändern"
+    },
+    "SCORES": {
+      "TIME_SIGNATURE": "Taktart",
+      "TIME_SONG": "Wie im Stück: {{metre}}",
+      "TIME_OTHER": "Andere",
+      "BEATS": "Schläge",
+      "BEAT_TYPE": "Schlagwert",
+      "UPBEAT": "Auftakt",
+      "UPBEAT_COUNT": "Auftakt, Anzahl",
+      "UPBEAT_VALUE": "Auftakt, Notenwert",
+      "NOTE_VALUE": {
+        "1": "Ganze",
+        "2": "Halbe",
+        "4": "Viertel",
+        "8": "Achtel",
+        "16": "Sechzehntel",
+        "32": "Zweiunddreißigstel"
+      },
+      "STAVES": "Notensysteme",
+      "SPLIT_NOTE": "Teilungston",
+      "SPLIT_ADD": "Teilungston hinzufügen",
+      "SPLIT_REMOVE": "Diesen Teilungston entfernen",
+      "STAFF": "Notensystem {{number}}: {{range}}, {{clef}}",
+      "RANGE": "{{from}} bis {{to}}, {{pipes}}",
+      "PIPES": "{{count}} Pfeifen",
+      "PIPES_ONE": "1 Pfeife",
+      "STAFF_EMPTY": "keine Pfeifen, bleibt leer",
+      "CLEF": {
+        "TREBLE": "Violinschlüssel",
+        "TREBLE_8VA": "Violinschlüssel, 8va",
+        "BASS": "Bassschlüssel",
+        "BASS_8VB": "Bassschlüssel, 8vb"
+      },
+      "SONG_METRE_NOT_ON_COLUMNS": "Die Taktart des Stücks liegt nicht auf ganzen Spalten und kann nicht übernommen werden.",
+      "ERROR": {
+        "BEATS": "Gib eine ganze Zahl von 1 bis 99 ein.",
+        "BEAT_TYPE": "Wähle 1, 2, 4, 8, 16 oder 32.",
+        "UPBEAT": "Gib eine ganze Zahl ab 0 ein.",
+        "UPBEAT_TOO_LONG": "Der Auftakt muss kürzer als der erste Takt sein.",
+        "SPLIT_NOTES": "Jeder Teilungston muss verschieden sein."
+      },
+      "CONFIRM": "Exportieren",
+      "CANCEL": "Abbrechen",
+      "DIALOG_TITLE": "Als Noten exportieren",
+      "FILTER_NAME": "MusicXML-Datei",
+      "SAVED": "Gespeichert: {{name}}",
+      "FAILED": "Noten konnten nicht exportiert werden: {{reason}}",
+      "RETRY": "Erneut versuchen"
     }
   },
   "ORGAN": {

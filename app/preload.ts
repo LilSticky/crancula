@@ -14,6 +14,8 @@ import type {
   RecordingChooseResult,
   RecordingWriteRequest,
   RecordingWriteResult,
+  ScoresSaveRequest,
+  ScoresSaveResult,
   SetLanguageResult,
   SvgPiecesSaveRequest,
   SvgPiecesSaveResult,
@@ -29,6 +31,7 @@ import type {ORGAN_LIBRARY_CHANNELS} from './organ-library-ipc';
 import type {PLOTTER_CHANNELS} from './plotter-ipc';
 import type {PLOTTER_LIBRARY_CHANNELS} from './plotter-library-ipc';
 import type {RECORDING_CHANNELS} from './recording-ipc';
+import type {SCORES_CHANNELS} from './scores-ipc';
 import type {TAPE_LIBRARY_CHANNELS} from './tape-library-ipc';
 
 const channels: typeof ORGAN_LIBRARY_CHANNELS = {load: 'organs:load', save: 'organs:save'};
@@ -38,6 +41,7 @@ const editChannels: typeof EDIT_CHANNELS = {command: 'edit:command'};
 const plotterLibraryChannels: typeof PLOTTER_LIBRARY_CHANNELS = {load: 'plotters:load', save: 'plotters:save'};
 const plotterChannels: typeof PLOTTER_CHANNELS = {saveSvg: 'plotter:save-svg', savePieces: 'plotter:save-svg-pieces'};
 const recordingChannels: typeof RECORDING_CHANNELS = {chooseFile: 'recording:choose-file', writeFile: 'recording:write-file'};
+const scoresChannels: typeof SCORES_CHANNELS = {save: 'scores:save'};
 
 // Mirrors isEditCommand in api/app/edit-command.ts; the sandboxed preload cannot import it at runtime.
 function isEditCommandPayload(value: unknown): value is EditCommand {
@@ -62,6 +66,9 @@ const crancula: CranculaApi = {
     saveSvg: (request: SvgSaveRequest) => ipcRenderer.invoke(plotterChannels.saveSvg, request) as Promise<SvgSaveResult>,
     savePieces: (request: SvgPiecesSaveRequest) =>
       ipcRenderer.invoke(plotterChannels.savePieces, request) as Promise<SvgPiecesSaveResult>,
+  },
+  scores: {
+    save: (request: ScoresSaveRequest) => ipcRenderer.invoke(scoresChannels.save, request) as Promise<ScoresSaveResult>,
   },
   recording: {
     chooseFile: (request: RecordingChooseRequest) =>

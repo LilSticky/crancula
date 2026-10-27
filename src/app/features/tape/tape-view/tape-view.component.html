@@ -47,17 +47,23 @@
           {{ recordLabel }}
         }
       </button>
-      @if (compactActions()) {
-        <button mat-icon-button type="button" class="icon-only" data-testid="export" [attr.aria-label]="'TAPE.VIEW.EXPORT' | translate" [matTooltip]="'TAPE.VIEW.EXPORT' | translate" [disabled]="plotterExport.saving()" (click)="exportTape()">
+      @let exportLabel = 'TAPE.VIEW.EXPORT_MENU' | translate;
+      <button mat-stroked-button type="button" data-testid="export-menu" [class.icon-only]="compactActions()" [attr.aria-label]="compactActions() ? exportLabel : null" [matTooltip]="compactActions() ? exportLabel : ''" [matMenuTriggerFor]="exportMenu">
+        <mat-icon aria-hidden="true">file_download</mat-icon>
+        @if (!compactActions()) {
+          {{ exportLabel }}
+        }
+      </button>
+      <mat-menu #exportMenu="matMenu">
+        <button mat-menu-item type="button" data-testid="export" [disabled]="plotterExport.saving()" (click)="exportTape()">
           <mat-icon aria-hidden="true">content_cut</mat-icon>
+          <span>{{ 'TAPE.VIEW.EXPORT' | translate }}</span>
         </button>
-      }
-      @if (!compactActions()) {
-        <button mat-stroked-button type="button" data-testid="export" [disabled]="plotterExport.saving()" (click)="exportTape()">
-          <mat-icon aria-hidden="true">content_cut</mat-icon>
-          {{ 'TAPE.VIEW.EXPORT' | translate }}
+        <button mat-menu-item type="button" data-testid="export-scores" [disabled]="scoresExport.saving()" (click)="exportScores()">
+          <mat-icon aria-hidden="true">queue_music</mat-icon>
+          <span>{{ 'TAPE.VIEW.EXPORT_SCORES' | translate }}</span>
         </button>
-      }
+      </mat-menu>
     </ng-container>
   </cranc-page-head>
   <div class="layout" [class.compact]="compact()" [class.panel-open]="sidePanelOpen()">

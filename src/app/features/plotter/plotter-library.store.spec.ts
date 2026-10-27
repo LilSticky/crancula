@@ -94,6 +94,7 @@ describe('PlotterLibrary', () => {
         recording: inMemory.recording,
         app: inMemory.app,
         edit: inMemory.edit,
+        scores: inMemory.scores,
       };
     }
 
@@ -144,6 +145,7 @@ describe('PlotterLibrary', () => {
         recording: inMemory.recording,
         app: inMemory.app,
         edit: inMemory.edit,
+        scores: inMemory.scores,
       };
       const {library} = setup(api);
 
