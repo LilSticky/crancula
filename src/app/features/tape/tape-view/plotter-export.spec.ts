@@ -40,6 +40,7 @@ import {
 import {testOrgan} from '../../../../testing/organs';
 import {provideTestTranslations} from '../../../../testing/test-translations';
 import {TapeLibrary} from '../tape-library.store';
+import {cuttingProblemText} from './cutting-problem-text';
 import {CuttingProblemsDialogComponent} from './cutting-problems-dialog/cutting-problems-dialog.component';
 import {PlotterExport} from './plotter-export';
 
@@ -49,10 +50,10 @@ const TICKS_PER_QUARTER = 480;
 const LONG_TAPE_RESTS = 60;
 
 /** The reference Plotter of spec 011: a sheet Plotter with working length 300 mm, working width 120 mm and Overlap 20 mm. */
-const REFERENCE_PLOTTER: PlotterDraft = {name: 'Cutting mat', workingWidth: 120, roll: false, workingLength: 300, overlap: 20};
+const REFERENCE_PLOTTER: PlotterDraft = {name: 'Cutting mat', workingWidth: 120, roll: false, workingLength: 300, overlap: 20, tapeSpacing: 3};
 
 /** A roll plotter: it never splits a Tape. */
-const ROLL_PLOTTER: PlotterDraft = {name: 'Vinyl cutter', workingWidth: 120, roll: true, workingLength: null, overlap: 20};
+const ROLL_PLOTTER: PlotterDraft = {name: 'Vinyl cutter', workingWidth: 120, roll: true, workingLength: null, overlap: 20, tapeSpacing: 3};
 
 /** Three quarter notes on three rows, with `restQuarters` rests before each note. */
 function waltz(organ: Organ, restQuarters = 0): {readonly tape: Tape; readonly song: Song} {
@@ -255,7 +256,39 @@ describe('PlotterExport', () => {
       expect(problems.length).toBeGreaterThan(0);
       expect(open).toHaveBeenCalledTimes(1);
       expect(open.mock.calls[0]?.[0]).toBe(CuttingProblemsDialogComponent);
-      expect(open.mock.calls[0]?.[1]?.data).toEqual(problems);
+      expect(open.mock.calls[0]?.[1]?.data).toEqual(problems.map((problem) => cuttingProblemText(problem, 'en')));
+    });
+
+    it('passes the dialog the translated entries of the refusals, the too-wide reason first, texts unchanged', async () => {
+      const {translate, plotterExport} = await setUp();
+      const organ = testOrgan('Street organ', 3, {tapeBed: {tapeWidth: 140, holeDiameter: 30, rowSpacing: 30}});
+      const plotter = plotterOf(REFERENCE_PLOTTER);
+      const pipe = defined(organ.pipes[0], 'first Pipe').note;
+      const tape = tapeOnOrgan(organ, 100, [
+        {pipe, start: defined(column(10), 'start'), length: defined(columnCount(2), 'hole length')},
+      ]);
+      const open = vi.spyOn(TestBed.inject(MatDialog), 'open');
+      const problems = cuttingProblems(tape, organ, plotter);
+
+      await plotterExport.export(tape, organ, plotter);
+
+      expect(open.mock.calls[0]?.[1]?.data).toEqual([
+        {key: 'TAPE.EXPORT.TOO_WIDE', params: {}},
+        ...problems.map((problem) => cuttingProblemText(problem, 'en')),
+      ]);
+      expect(text(translate, 'TAPE.EXPORT.TOO_WIDE')).toBe(
+        "This Tape is too wide for the Plotter's working width",
+      );
+    });
+
+    it('passes the dialog only the too-wide entry for a Tape wider than the working width', async () => {
+      const {plotterExport} = await setUp();
+      const organ = testOrgan('Street organ', 3, {tapeBed: {tapeWidth: 140, holeDiameter: 30, rowSpacing: 30}});
+      const open = vi.spyOn(TestBed.inject(MatDialog), 'open');
+
+      await plotterExport.export(tapeOnOrgan(organ, 100), organ, plotterOf(REFERENCE_PLOTTER));
+
+      expect(open.mock.calls[0]?.[1]?.data).toEqual([{key: 'TAPE.EXPORT.TOO_WIDE', params: {}}]);
     });
 
     it('never asks the Plotter to save, shows no snackbar and leaves the Tape library unchanged', async () => {

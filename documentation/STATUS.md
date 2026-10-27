@@ -6,11 +6,20 @@ Issues: [GitHub](https://github.com/LilSticky/crancula/issues)
 
 ## Current slice
 
-None in progress.
+[Cut several tapes side by side](../specs/013-cut-several-tapes-side-by-side/spec.md) ([#170](https://github.com/LilSticky/crancula/issues/170),
+branch `013-cut-several-tapes-side-by-side`): implemented (T001–T042), pending merge. Tick Tapes in the Tape list, "Cut side by side"
+opens its own page (`/tapes/side-by-side`) with a roll plotter picker, a fit-to-width drawing of the roll, the Lane list
+(move, remove, add, copies allowed) and the free width; saving writes one SVG through the existing `plotter:save-svg` channel,
+one Tape per Lane, Tape spacing apart, Lane by Lane. Refusals (no roll plotter, no Lane, no Organ, a Lane that doesn't fit,
+Cutting Problems per Tape) come from one domain plan (`sideBySidePlan`). Roll plotters gain a Tape spacing (3 mm), `plotters.json`
+v2 with v1 migration (ADR 20). Dictionary: German working width/length (Arbeitsbreite, Arbeitslänge) approved 2026-10-27.
+Reviews: [review-angular.md](../specs/013-cut-several-tapes-side-by-side/review-angular.md) fixed,
+[audit.md](../specs/013-cut-several-tapes-side-by-side/audit.md) clean, [ux-review.md](../specs/013-cut-several-tapes-side-by-side/ux-review.md)
+38/50 with the major finding fixed (fit-to-width); follow-ups [#198](https://github.com/LilSticky/crancula/issues/198).
+**Not checked by hand yet**: a side-by-side SVG in Inkscape and on the vinyl cutter (T043, needs the user).
 
-**Next step:** [Cut several tapes side by side](https://github.com/LilSticky/crancula/issues/170) ([#170](https://github.com/LilSticky/crancula/issues/170),
-discovery done): `/speckit-specify` on branch `013-cut-several-tapes-side-by-side`, from
-[discovery/later.md section 5](discovery/later.md) (decisions 29–34).
+**Next step:** merge the slice 013 pull request when CI is green; then [#163](https://github.com/LilSticky/crancula/issues/163)
+(Off-centre rows on a Tape Bed, discovery first) or the hand checks.
 
 **Open:** T057 hand check of an exported MusicXML in MuseScore 4 (needs the user; SC-001, SC-002, SC-004). Follow-up
 [#183](https://github.com/LilSticky/crancula/issues/183) (review findings 2, 3, 5, 7, 9, 10 of slice 012).

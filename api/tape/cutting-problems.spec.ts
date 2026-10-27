@@ -266,14 +266,14 @@ describe('cuttingProblems with a sheet Plotter (FR-015, FR-018)', () => {
 
   it('is the same as without a Plotter when the Plotter is a roll Plotter', () => {
     const tape = referenceTapeOf([hole(first, 0, 100)]);
-    const roll = plotterOf({name: 'Roll', workingWidth: 120, roll: true, workingLength: null, overlap: null});
+    const roll = plotterOf({name: 'Roll', workingWidth: 120, roll: true, workingLength: null, overlap: null, tapeSpacing: 3});
 
     expect(cuttingProblems(tape, referenceOrgan(), roll)).toEqual(cuttingProblems(tape, referenceOrgan()));
   });
 
   it('is the same as without a Plotter when the Plotter is narrower than the Organ (FR-017)', () => {
     const tape = referenceTapeOf([hole(first, 0, 100)]);
-    const narrow = plotterOf({name: 'Narrow', workingWidth: 90, roll: false, workingLength: 300, overlap: 20});
+    const narrow = plotterOf({name: 'Narrow', workingWidth: 90, roll: false, workingLength: 300, overlap: 20, tapeSpacing: 3});
 
     expect(cuttingProblems(tape, referenceOrgan(), narrow)).toEqual(cuttingProblems(tape, referenceOrgan()));
   });

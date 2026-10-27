@@ -1,0 +1,124 @@
+<cranc-page-head [title]="'TAPE.SIDE_BY_SIDE.TITLE' | translate" [subtitle]="'TAPE.SIDE_BY_SIDE.SUBTITLE' | translate">
+  <ng-container ngProjectAs="[pageHeadActions]">
+    <button matButton="filled" type="button" data-testid="save-side-by-side"
+            [disabled]="exporter.saving()" (click)="save()">
+      {{ 'TAPE.SIDE_BY_SIDE.SAVE' | translate }}
+    </button>
+  </ng-container>
+</cranc-page-head>
+<mat-form-field subscriptSizing="dynamic" class="plotter">
+  <mat-label>{{ 'TAPE.PLOTTER.PICKER_LABEL' | translate }}</mat-label>
+  <mat-select data-testid="side-by-side-plotter" [value]="plotter()?.id" (selectionChange)="pick($event)">
+    @for (option of rollPlotters(); track option.id) {
+      <mat-option [value]="option.id">{{ option.name }}</mat-option>
+    }
+  </mat-select>
+</mat-form-field>
+@if (rollPlotters().length === 0) {
+  <div class="no-plotter">
+    <p role="status" data-testid="side-by-side-no-plotter">{{ 'TAPE.SIDE_BY_SIDE.NO_ROLL_PLOTTER' | translate }}</p>
+    <a matButton="outlined" routerLink="/plotters/new" data-testid="side-by-side-describe-plotter">{{ 'TAPE.SIDE_BY_SIDE.DESCRIBE_PLOTTER' | translate }}</a>
+  </div>
+}
+@if (cut(); as cut) {
+  <p class="free" role="status" data-testid="side-by-side-free">
+    @if (cut.freeWidth < 0) {
+      {{ 'TAPE.SIDE_BY_SIDE.OVER' | translate: {over: number(-cut.freeWidth)} }}
+    } @else {
+      {{ 'TAPE.SIDE_BY_SIDE.FREE' | translate: {free: number(cut.freeWidth), working: number(cut.plotter.workingWidth)} }}
+    }
+  </p>
+}
+@if (drawing(); as drawing) {
+  <div class="drawing-frame">
+    <svg data-testid="side-by-side-drawing" class="drawing fit-width" role="img"
+         [attr.aria-label]="drawingKey() | translate: drawingParams()"
+         [attr.viewBox]="drawing.viewBox">
+      <rect class="paper" x="0" y="0" [attr.width]="drawing.length" [attr.height]="drawing.height" />
+      @if (drawing.freeBand; as band) {
+        <rect data-testid="free-band" aria-hidden="true" class="free-band" x="0"
+              [attr.y]="band.top" [attr.width]="drawing.length" [attr.height]="band.bottom - band.top" />
+      }
+      @for (lane of drawing.lanes; track lane.number) {
+        <path data-testid="lane-outline" aria-hidden="true" class="lane-outline" [class.overflow]="lane.overflow"
+              [attr.data-lane]="lane.number" [attr.d]="lane.outline" />
+        <path data-testid="lane-holes" aria-hidden="true" class="lane-holes" [attr.data-lane]="lane.number"
+              [attr.d]="lane.holes" />
+        <text aria-hidden="true" class="lane-number" x="1" [attr.y]="lane.centre">{{ lane.number }}</text>
+      }
+      <line data-testid="working-width-line" aria-hidden="true" class="working-width" x1="0"
+            [attr.x2]="drawing.length" [attr.y1]="drawing.workingWidthY" [attr.y2]="drawing.workingWidthY" />
+    </svg>
+  </div>
+}
+<mat-card appearance="outlined">
+  <div class="lanes-head">
+    <button matButton="outlined" type="button" data-testid="add-lane" [matMenuTriggerFor]="addMenu">
+      {{ 'TAPE.SIDE_BY_SIDE.ADD' | translate }}
+    </button>
+  </div>
+  @if (rows().length === 0) {
+    <p class="empty" data-testid="side-by-side-empty">{{ 'TAPE.SIDE_BY_SIDE.EMPTY' | translate }}</p>
+  }
+  <ol class="lanes">
+    @for (row of rows(); track row.key) {
+      <li data-testid="lane" [attr.data-lane]="row.number" class="lane">
+        <span data-testid="lane-number">{{ row.number }}</span>
+        <span data-testid="lane-tape">{{ row.tape.name }}</span>
+        <span data-testid="lane-organ">
+          @if (row.organ; as organ) {
+            {{ organ.name }}
+          } @else {
+            {{ 'TAPE.LIST.ORGAN_NOT_AVAILABLE' | translate }}
+          }
+        </span>
+        @let problems = problemCounts().get(row.tape.id) ?? 0;
+        @if (problems > 0) {
+          <span data-testid="lane-problems" class="mark">{{ (problems === 1 ? 'TAPE.SIDE_BY_SIDE.LANE_PROBLEMS_ONE' : 'TAPE.SIDE_BY_SIDE.LANE_PROBLEMS') | translate: {count: number(problems)} }}</span>
+        }
+        @if (lanesPastWidth().has(row.number)) {
+          <span data-testid="lane-does-not-fit" class="mark">{{ 'TAPE.SIDE_BY_SIDE.LANE_DOES_NOT_FIT' | translate }}</span>
+        }
+        @if (row.geometry; as geometry) {
+          <span data-testid="lane-width" class="measure">{{ 'TAPE.SIDE_BY_SIDE.LANE_WIDTH' | translate: {width: number(geometry.width)} }}</span>
+          <span data-testid="lane-length" class="measure">{{ 'TAPE.SIDE_BY_SIDE.LANE_LENGTH' | translate: {length: number(geometry.totalLength)} }}</span>
+        }
+        <span class="actions">
+          <button matIconButton type="button" data-testid="lane-up" [disabled]="row.number === 1"
+                  [attr.aria-label]="'TAPE.SIDE_BY_SIDE.LANE_UP' | translate: {lane: row.number, tape: row.tape.name}"
+                  (click)="move(row.key, -1)">
+            <mat-icon>arrow_upward</mat-icon>
+          </button>
+          <button matIconButton type="button" data-testid="lane-down" [disabled]="row.number === rows().length"
+                  [attr.aria-label]="'TAPE.SIDE_BY_SIDE.LANE_DOWN' | translate: {lane: row.number, tape: row.tape.name}"
+                  (click)="move(row.key, 1)">
+            <mat-icon>arrow_downward</mat-icon>
+          </button>
+          <button matIconButton type="button" data-testid="lane-remove"
+                  [attr.aria-label]="'TAPE.SIDE_BY_SIDE.LANE_REMOVE' | translate: {lane: row.number, tape: row.tape.name}"
+                  (click)="remove(row.key)">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </span>
+      </li>
+    }
+  </ol>
+</mat-card>
+<mat-menu #addMenu="matMenu">
+  @for (group of addGroups(); track group.key) {
+    <div role="group" [attr.aria-label]="group.organName ?? ('TAPE.LIST.ORGAN_NOT_AVAILABLE' | translate)">
+      <div class="organ-heading" aria-hidden="true">
+        {{ group.organName ?? ('TAPE.LIST.ORGAN_NOT_AVAILABLE' | translate) }}
+      </div>
+      @for (option of group.options; track option.tape.id) {
+        <button mat-menu-item type="button" data-testid="add-lane-tape" [disabled]="option.blocked !== undefined"
+                (click)="add(option.tape)">
+          <span>{{ option.name }}</span>
+          @if (option.blocked; as blocked) {
+            <span class="hint">{{ blocked.key | translate: blocked.params }}</span>
+          }
+        </button>
+      }
+    </div>
+  }
+</mat-menu>

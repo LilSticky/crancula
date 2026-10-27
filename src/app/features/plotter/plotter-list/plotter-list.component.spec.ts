@@ -14,7 +14,7 @@ import {PlotterListComponent} from './plotter-list.component';
 
 /** A sheet Plotter of a working length × working width, named as the user describes it. */
 function sheetPlotter(name: string, workingLength: number, workingWidth: number, overlap = 20): Plotter {
-  const draft: PlotterDraft = {id: newPlotterId(), name, workingWidth, roll: false, workingLength, overlap};
+  const draft: PlotterDraft = {id: newPlotterId(), name, workingWidth, roll: false, workingLength, overlap, tapeSpacing: 3};
   const result = validatePlotter(draft);
   if (!result.ok) throw new Error(`invalid test Plotter: ${JSON.stringify(result.error)}`);
   return result.value;
@@ -22,7 +22,7 @@ function sheetPlotter(name: string, workingLength: number, workingWidth: number,
 
 /** A roll plotter (a vinyl cutter) of a working width. */
 function rollPlotter(name: string, workingWidth: number): Plotter {
-  const draft: PlotterDraft = {id: newPlotterId(), name, workingWidth, roll: true, workingLength: null, overlap: null};
+  const draft: PlotterDraft = {id: newPlotterId(), name, workingWidth, roll: true, workingLength: null, overlap: null, tapeSpacing: 3};
   const result = validatePlotter(draft);
   if (!result.ok) throw new Error(`invalid test Plotter: ${JSON.stringify(result.error)}`);
   return result.value;
@@ -113,6 +113,15 @@ describe('PlotterListComponent', () => {
     const [row] = rowTexts(element);
     expect(row).toContain('roll, 120 mm wide');
     expect(row).not.toMatch(/\b20 mm/);
+  });
+
+  it('names the Tape spacing of a roll plotter after its width', async () => {
+    const {fixture, library, element} = await render();
+    await library.put(rollPlotter('Vinyl cutter', 300));
+    await fixture.whenStable();
+
+    const [row] = rowTexts(element);
+    expect(row).toContain('roll, 300 mm wide, Tape spacing 3 mm');
   });
 
   it('shows a dash in the Overlap cell of a roll plotter, so the column does not look broken', async () => {

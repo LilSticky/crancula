@@ -13,7 +13,7 @@ function plotterErrors(errors: readonly unknown[]): PlotterFieldError[] {
 }
 
 /** A sheet Plotter as the editor holds it: 300 mm long, 120 mm wide, 20 mm Overlap. */
-const sheetDraft: PlotterDraft = {name: 'Cutting mat', workingWidth: 120, roll: false, workingLength: 300, overlap: 20};
+const sheetDraft: PlotterDraft = {name: 'Cutting mat', workingWidth: 120, roll: false, workingLength: 300, overlap: 20, tapeSpacing: 3};
 
 describe('plotterFormSchema', () => {
   it('reports no error for a valid sheet Plotter', () => {
@@ -24,7 +24,7 @@ describe('plotterFormSchema', () => {
   });
 
   it('reports no error for a roll plotter that has no working length and no Overlap', () => {
-    const root = plotterForm({name: 'Vinyl cutter', workingWidth: 120, roll: true, workingLength: null, overlap: null});
+    const root = plotterForm({name: 'Vinyl cutter', workingWidth: 120, roll: true, workingLength: null, overlap: null, tapeSpacing: 3});
 
     expect(root().valid()).toBe(true);
   });
@@ -50,5 +50,28 @@ describe('plotterFormSchema', () => {
     expect(error?.kind).toBe('overlap-not-below-working-length');
     expect(error?.violation.params).toEqual({workingLength: 300});
     expect(root.workingLength().errors()).toEqual([]);
+  });
+
+  describe('the Tape spacing of a roll plotter', () => {
+    const rollDraft: PlotterDraft = {name: 'Vinyl cutter', workingWidth: 300, roll: true, workingLength: null, overlap: null, tapeSpacing: 3};
+
+    it('puts a negative Tape spacing on the Tape spacing field', () => {
+      const root = plotterForm({...rollDraft, tapeSpacing: -1});
+
+      expect(plotterErrors(root.tapeSpacing().errors()).map(({kind}) => kind)).toEqual(['must-not-be-negative']);
+      expect(root().valid()).toBe(false);
+    });
+
+    it('asks for a Tape spacing that is missing', () => {
+      const root = plotterForm({...rollDraft, tapeSpacing: null});
+
+      expect(plotterErrors(root.tapeSpacing().errors()).map(({kind}) => kind)).toEqual(['value-required']);
+    });
+
+    it('accepts a Tape spacing of 0, which lets Tapes touch', () => {
+      const root = plotterForm({...rollDraft, tapeSpacing: 0});
+
+      expect(root().valid()).toBe(true);
+    });
   });
 });

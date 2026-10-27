@@ -3,12 +3,14 @@ import {describe, expect, it} from 'vitest';
 import {midiNoteNumber} from '../organ/midi-note-number';
 import type {Millimetres} from '../organ/organ';
 import {validateOrgan} from '../organ/validate-organ';
-import {plotterSvg} from './plotter-svg';
+import type {RollPlotter} from '../plotter/plotter';
+import {plotterSvg, sideBySideSvg} from './plotter-svg';
 import {type Column, type ColumnCount, type Hole, type Tape} from './tape';
-import {referenceOrgan, referencePlotter, referenceTape, tapeOf} from './tape-fixture';
+import {plotterOf, referenceOrgan, referencePlotter, referenceTape, tapeOf} from './tape-fixture';
 import {tapeGeometry, type Slot, type TapeGeometry} from './tape-geometry';
 import {pieceGeometry, type CutGeometry} from './tape-piece-geometry';
 import {tapePieces} from './tape-pieces';
+import {sideBySideCut, type LaneTape} from './side-by-side-cut';
 
 const STROKE = 'fill="none" stroke="#000000" stroke-width="0.1"/>';
 
@@ -350,5 +352,122 @@ describe('plotterSvg', () => {
     expect(typeof svg).toBe('string');
     expect(paths(svg)).toHaveLength(holes.length + 1);
     expect(elapsed).toBeLessThan(5000);
+  });
+});
+
+/** The Vinyl cutter of spec 013: a roll Plotter, working width 300 mm, Tape spacing 3 mm unless given. */
+function rollPlotterOf(tapeSpacing = 3): RollPlotter {
+  const plotter = plotterOf({
+    name: 'Vinyl cutter',
+    workingWidth: 300,
+    roll: true,
+    workingLength: null,
+    overlap: null,
+    tapeSpacing,
+  });
+  if (!plotter.roll) throw new Error('expected a roll Plotter');
+  return plotter;
+}
+
+/** Organ B of spec 013: 60 mm tape, 3 mm holes, 4 mm rows, Minimum Gap 2 mm, Lead-in 20 mm. */
+function organB(): LaneTape['organ'] {
+  const organ = validateOrgan({
+    name: 'Organ B',
+    tapeBed: {tapeWidth: 60, holeDiameter: 3, rowSpacing: 4},
+    minimumGap: 2,
+    leadIn: 20,
+    slowestCrankSpeed: 30,
+    fastestCrankSpeed: 120,
+    tapePerCrankTurn: null,
+    pipes: [{note: 60}, {note: 62}],
+  });
+  if (!organ.ok) throw new Error('invalid Organ B');
+  return organ.value;
+}
+
+/** "Waltz" of spec 013: 60 mm wide, 400 mm long; its Holes are cut in row 2 at 0 and row 1 at Column 10. */
+function waltz(): LaneTape {
+  const organ = organB();
+  const rowOne = midiNoteNumber(60);
+  const rowTwo = midiNoteNumber(62);
+  if (rowOne === undefined || rowTwo === undefined) throw new Error('not a note');
+  const tape = tapeOf({
+    id: '00000000-0000-4000-8000-0000000000b1' as Tape['id'],
+    name: 'Waltz',
+    organId: organ.id,
+    songId: undefined,
+    selectedParts: undefined,
+    transposition: 0 as Tape['transposition'],
+    columnLength: 3 as Millimetres,
+    length: 126 as ColumnCount,
+    holes: [
+      {pipe: rowOne, start: 10 as Column, length: 2 as ColumnCount},
+      {pipe: rowTwo, start: 0 as Column, length: 3 as ColumnCount},
+    ],
+  });
+  return {tape, organ};
+}
+
+/** The starting point (the M of the path) of every path line, as numbers. */
+function startsOf(svg: string): readonly (readonly [number, number])[] {
+  return paths(svg).map((line) => {
+    const match = /d="M([-\d.]+),([-\d.]+)/.exec(line);
+    return [Number(match?.[1]), Number(match?.[2])] as const;
+  });
+}
+
+describe('sideBySideSvg', () => {
+  it('writes the two-Lane cut at 652 × 163 mm with the viewBox in mm (Story 1 scenario 3, contract worked example)', () => {
+    const organA = referenceOrgan();
+    const svg = sideBySideSvg(sideBySideCut([{tape: referenceTape(organA), organ: organA}, waltz()], rollPlotterOf()));
+    const [declaration, root] = lines(svg);
+
+    expect(declaration).toBe('<?xml version="1.0" encoding="UTF-8"?>');
+    expect(root).toBe(
+      '<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="652mm" height="163mm" viewBox="0 0 652 163">',
+    );
+    expect(lines(svg).at(-1)).toBe('</svg>');
+  });
+
+  it('writes the Tape Outline of Lane 1 from the top edge and of Lane 2 from 103 to 163 mm (contract worked example)', () => {
+    const organA = referenceOrgan();
+    const svg = sideBySideSvg(
+      sideBySideCut([{tape: referenceTape(organA), organ: organA}, waltz()], rollPlotterOf()),
+    );
+    const outlines = paths(svg).filter((line) => line.includes('d="M0,'));
+
+    expect(outlines).toEqual([
+      `  <path d="M0,0 H652 V100 H50 Z" ${STROKE}`,
+      `  <path d="M0,103 H400 V163 H20 Z" ${STROKE}`,
+    ]);
+  });
+
+  it('writes Lane by Lane: Lane 1 Holes in cut order, its Outline, then Lane 2 Holes moved down, its Outline (Story 1 scenario 3, FR-011)', () => {
+    const organA = referenceOrgan();
+    const referenceTapeA = referenceTape(organA);
+    const second = waltz();
+    const svg = sideBySideSvg(sideBySideCut([{tape: referenceTapeA, organ: organA}, second], rollPlotterOf()));
+
+    const holeStarts = (geometry: TapeGeometry, top: number): (readonly [number, number])[] =>
+      geometry.slots.map((slot) => [slot.x + slot.radius, slot.y + top]);
+    const firstGeometry = tapeGeometry(referenceTapeA, organA);
+    const secondGeometry = tapeGeometry(second.tape, second.organ);
+    expect(startsOf(svg)).toEqual([
+      ...holeStarts(firstGeometry, 0),
+      [0, 0],
+      ...holeStarts(secondGeometry, 103),
+      [0, 103],
+    ]);
+  });
+
+  it('writes one Lane exactly as the single-Tape file of the same Tape (Story 2 scenario 5)', () => {
+    const organ = referenceOrgan();
+    const tape = referenceTape(organ);
+    const fixture = readFileSync(new URL('./plotter-svg.reference.svg', import.meta.url), 'utf8');
+
+    const svg = sideBySideSvg(sideBySideCut([{tape, organ}], rollPlotterOf()));
+
+    expect(svg).toBe(plotterSvg(tapeGeometry(tape, organ)));
+    expect(svg).toBe(fixture);
   });
 });

@@ -18,7 +18,7 @@ import {TapeLibrary} from './features/tape/tape-library.store';
 
 /** A valid sheet Plotter with the given name. */
 function testPlotter(name: string): Plotter {
-  const result = validatePlotter({name, workingWidth: 120, roll: false, workingLength: 300, overlap: 20});
+  const result = validatePlotter({name, workingWidth: 120, roll: false, workingLength: 300, overlap: 20, tapeSpacing: 3});
   if (!result.ok) throw new Error('invalid test Plotter');
   return result.value;
 }

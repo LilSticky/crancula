@@ -14,7 +14,7 @@ import {CRANCULA_API, createInMemoryCranculaApi} from '../../core/crancula-api.t
 import {PlotterLibrary, providePlotterLibrary} from './plotter-library.store';
 
 function plotter(name: string, id: PlotterId = newPlotterId()): Plotter {
-  const draft: PlotterDraft = {id, name, workingWidth: 300, roll: false, workingLength: 120, overlap: 20};
+  const draft: PlotterDraft = {id, name, workingWidth: 300, roll: false, workingLength: 120, overlap: 20, tapeSpacing: 3};
   const result = validatePlotter(draft);
   if (!result.ok) throw new Error('invalid test Plotter');
   return result.value;

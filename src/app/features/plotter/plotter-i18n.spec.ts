@@ -37,6 +37,7 @@ const plotterViolationCodes: Record<PlotterViolationCode, true> = {
   'name-required': true,
   'value-required': true,
   'must-be-positive': true,
+  'must-not-be-negative': true,
   'overlap-not-below-working-length': true,
 };
 

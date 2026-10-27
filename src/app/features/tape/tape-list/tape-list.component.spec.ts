@@ -31,6 +31,7 @@ class StubComponent {}
 const stubRoutes = [
   {path: 'tapes', component: StubComponent},
   {path: 'tapes/new', component: StubComponent},
+  {path: 'tapes/side-by-side', component: StubComponent},
   {path: 'tapes/:id', component: StubComponent},
   {path: 'organs/new', component: StubComponent},
   {path: 'organs/:id', component: StubComponent},
@@ -501,6 +502,143 @@ describe('TapeListComponent', () => {
       expect(link?.getAttribute('href')).toBe('/tapes/new');
       expect(element.querySelectorAll('[data-testid="new-tape"]')).toHaveLength(1);
       expect(element.querySelector('[data-testid="empty-state"]')).toBeNull();
+    });
+  });
+
+  describe('ticking Tapes for a side-by-side cut', () => {
+    /** The tick box of the Tape named `name`; Material puts the aria-label on its input. */
+    function tickOf(element: HTMLElement, name: string): HTMLInputElement {
+      const input = element.querySelector<HTMLInputElement>(
+        `[data-testid="tick-tape"] input[aria-label="Pick ${name} for a side-by-side cut"]`,
+      );
+      if (!input) throw new Error(`no tick box for ${name}`);
+      return input;
+    }
+
+    function cutButton(element: HTMLElement): HTMLElement {
+      const button = element.querySelector<HTMLElement>('[data-testid="cut-side-by-side"]');
+      if (!button) throw new Error('no cut-side-by-side button');
+      return button;
+    }
+
+    it('has a tick box named for the Tape in the first column of its row', async () => {
+      const {add, element} = await render();
+      await add(testOrgan('Street organ', 3), 'Melody');
+
+      expect(element.querySelector('[data-testid="tick-tape"]')).not.toBeNull();
+      expect(element.querySelector('[data-testid="tape"] td')?.querySelector('[data-testid="tick-tape"]')).not.toBeNull();
+      expect(tickOf(element, 'Melody').checked).toBe(false);
+    });
+
+    it('disables the tick box of a Tape whose Organ is not available', async () => {
+      const {add, element} = await render();
+      await add(testOrgan('Lost organ', 3), 'Melody', false);
+
+      expect(tickOf(element, 'Melody').disabled).toBe(true);
+    });
+
+    it('does not open the Tape when its tick box is clicked', async () => {
+      const {add, element, router, fixture} = await render();
+      await add(testOrgan('Street organ', 3), 'Melody');
+
+      tickOf(element, 'Melody').click();
+      await fixture.whenStable();
+
+      expect(tickOf(element, 'Melody').checked).toBe(true);
+      expect(router.url).toBe('/');
+    });
+
+    it('shows "Cut side by side (n)" with one or more ticks and not without', async () => {
+      const organ = testOrgan('Street organ', 3);
+      const {add, element, fixture} = await render();
+      await add(organ, 'Melody');
+      await add(organ, 'Waltz');
+      expect(element.querySelector('[data-testid="cut-side-by-side"]')).toBeNull();
+
+      tickOf(element, 'Melody').click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      expect(collapse(cutButton(element).textContent)).toBe('Cut side by side (1)');
+
+      tickOf(element, 'Waltz').click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      expect(collapse(cutButton(element).textContent)).toBe('Cut side by side (2)');
+    });
+
+    it('navigates to the side-by-side page with the ticked Tapes in the order they were ticked', async () => {
+      const organ = testOrgan('Street organ', 3);
+      const {add, element, router, fixture} = await render();
+      const melody = await add(organ, 'Melody');
+      const waltz = await add(organ, 'Waltz');
+
+      tickOf(element, 'Waltz').click();
+      tickOf(element, 'Melody').click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      cutButton(element).click();
+      await fixture.whenStable();
+
+      expect(router.url).toBe(`/tapes/side-by-side?tape=${waltz.id}&tape=${melody.id}`);
+    });
+
+    it('leaves a Tape out of the cut when it is unticked again', async () => {
+      const organ = testOrgan('Street organ', 3);
+      const {add, element, router, fixture} = await render();
+      const melody = await add(organ, 'Melody');
+      const waltz = await add(organ, 'Waltz');
+
+      tickOf(element, 'Melody').click();
+      tickOf(element, 'Waltz').click();
+      tickOf(element, 'Melody').click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      expect(collapse(cutButton(element).textContent)).toBe('Cut side by side (1)');
+      cutButton(element).click();
+      await fixture.whenStable();
+
+      expect(router.url).toBe(`/tapes/side-by-side?tape=${waltz.id}`);
+      expect(router.url).not.toContain(melody.id);
+    });
+
+    it('counts and cuts only the ticked Tapes the Organ filter still shows', async () => {
+      const {add, element, router, fixture} = await render();
+      const melody = await add(testOrgan('Street organ', 3), 'Melody');
+      const waltz = await add(testOrgan('Barrel piano', 3), 'Waltz');
+      tickOf(element, 'Melody').click();
+      tickOf(element, 'Waltz').click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      await router.navigateByUrl(`/tapes?organ=${waltz.organId}`);
+      fixture.detectChanges();
+      await fixture.whenStable();
+      expect(collapse(cutButton(element).textContent)).toBe('Cut side by side (1)');
+      cutButton(element).click();
+      await fixture.whenStable();
+
+      expect(router.url).toBe(`/tapes/side-by-side?tape=${waltz.id}`);
+      expect(router.url).not.toContain(melody.id);
+    });
+
+    it('counts and cuts only the ticked Tapes that are still in the library', async () => {
+      const {add, element, router, fixture} = await render();
+      const organ = testOrgan('Street organ', 3);
+      const melody = await add(organ, 'Melody');
+      const waltz = await add(organ, 'Waltz');
+      tickOf(element, 'Melody').click();
+      tickOf(element, 'Waltz').click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      await TestBed.inject(TapeLibrary).remove(melody.id);
+      fixture.detectChanges();
+      await fixture.whenStable();
+      expect(collapse(cutButton(element).textContent)).toBe('Cut side by side (1)');
+      cutButton(element).click();
+      await fixture.whenStable();
+
+      expect(router.url).toBe(`/tapes/side-by-side?tape=${waltz.id}`);
     });
   });
 

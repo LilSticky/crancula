@@ -96,6 +96,7 @@ flowchart LR
 - [x] **Crank a tape**: hear a Tape at an adjustable Crank speed, with a playhead, before cutting it ([#149](https://github.com/LilSticky/crancula/issues/149))
 - [x] **Describe a plotter**: describe sheet and roll Plotters, pick one in the Tape view ([#168](https://github.com/LilSticky/crancula/issues/168))
 - [x] **Cut a tape in pieces**: a Tape longer than the Plotter's working length is exported in Tape pieces with an Overlap for gluing ([#168](https://github.com/LilSticky/crancula/issues/168))
+- [x] **Cut several tapes side by side**: tick Tapes in the Tape list and cut them in one pass on a roll plotter, one Tape per Lane, Tape spacing apart ([#170](https://github.com/LilSticky/crancula/issues/170))
 - [x] Downloadable releases for Windows, macOS and Linux ([#11](https://github.com/LilSticky/crancula/issues/11))
 
 What changed in each version is under [Releases](#releases).

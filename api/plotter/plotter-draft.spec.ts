@@ -19,13 +19,14 @@ function plotterOf(draft: PlotterDraft): Plotter {
 }
 
 describe('emptyPlotterDraft', () => {
-  it('is a sheet Plotter with the default Overlap and nothing else filled in', () => {
+  it('is a sheet Plotter with the default Overlap and Tape spacing and nothing else filled in', () => {
     expect(emptyPlotterDraft()).toEqual({
       name: '',
       workingWidth: null,
       roll: false,
       workingLength: null,
       overlap: 20,
+      tapeSpacing: 3,
     });
   });
 });
@@ -48,6 +49,7 @@ describe('draftOf', () => {
       roll: false,
       workingLength: 300,
       overlap: 35,
+      tapeSpacing: 3,
     });
   });
 
@@ -65,6 +67,31 @@ describe('draftOf', () => {
     expect(draft.workingWidth).toBe(120);
     expect(draft.workingLength).toBeNull();
     expect(draft.overlap).toBe(20);
+  });
+
+  it('copies the Tape spacing of a roll Plotter', () => {
+    const plotter = plotterOf({
+      ...emptyPlotterDraft(),
+      name: 'Vinyl cutter',
+      workingWidth: 300,
+      roll: true,
+      tapeSpacing: 5,
+    });
+
+    expect(draftOf(plotter).tapeSpacing).toBe(5);
+  });
+
+  it('sets the default Tape spacing for a sheet Plotter', () => {
+    const plotter = plotterOf({
+      ...emptyPlotterDraft(),
+      name: 'Cutting mat',
+      workingWidth: 120,
+      workingLength: 300,
+      overlap: 20,
+      tapeSpacing: 5,
+    });
+
+    expect(draftOf(plotter).tapeSpacing).toBe(3);
   });
 
   it('gives a draft that validates to the same Plotter', () => {
@@ -99,5 +126,22 @@ describe('switching roll', () => {
     expect(validatePlotter(switchedOn).ok).toBe(true);
     const result = validatePlotter(switchedOff);
     expect(result.ok && result.value).toMatchObject({roll: false, workingLength: 300, overlap: 35});
+  });
+
+  it('keeps the Tape spacing when roll is switched off and back on', () => {
+    const roll: PlotterDraft = {
+      ...emptyPlotterDraft(),
+      name: 'Vinyl cutter',
+      workingWidth: 300,
+      roll: true,
+      tapeSpacing: 5,
+    };
+
+    const switchedOff = {...roll, roll: false};
+    const switchedOnAgain = {...switchedOff, roll: true};
+
+    expect(switchedOff.tapeSpacing).toBe(5);
+    const result = validatePlotter(switchedOnAgain);
+    expect(result.ok && result.value).toMatchObject({roll: true, tapeSpacing: 5});
   });
 });

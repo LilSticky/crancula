@@ -1,0 +1,111 @@
+.plotter {
+  width: 100%;
+  max-width: 360px;
+  margin-bottom: 16px;
+}
+
+.free {
+  margin: 0 0 16px;
+}
+
+.drawing-frame {
+  overflow-x: auto;
+  margin-bottom: 16px;
+  border: 1px solid var(--cr-paper-edge);
+}
+
+.drawing {
+  display: block;
+
+  &.fit-width {
+    width: 100%;
+    height: auto;
+    max-height: 40vh;
+  }
+
+  .paper {
+    fill: var(--cr-paper);
+  }
+
+  .free-band {
+    fill: var(--cr-paper-edge);
+    fill-opacity: 0.5;
+  }
+
+  .lane-outline {
+    fill: var(--cr-tape);
+    stroke: var(--cr-tape-edge);
+    stroke-width: 1px;
+    vector-effect: non-scaling-stroke;
+
+    &.overflow {
+      stroke: var(--cr-problem);
+      stroke-width: 3px;
+    }
+  }
+
+  .lane-holes {
+    fill: var(--cr-hole);
+  }
+
+  .lane-number {
+    fill: var(--cr-brass);
+    font-size: 4px;
+    dominant-baseline: middle;
+  }
+
+  .working-width {
+    stroke: var(--cr-brass);
+    stroke-width: 1px;
+    stroke-dasharray: 4 2;
+    vector-effect: non-scaling-stroke;
+  }
+}
+
+.lanes-head {
+  display: flex;
+  justify-content: flex-end;
+  padding: 8px 16px 0;
+}
+
+.empty {
+  margin: 0;
+  padding: 8px 16px;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.lanes {
+  margin: 0;
+  padding: 8px 16px;
+  list-style: none;
+}
+
+.lane {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 0;
+
+  .measure {
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  .actions {
+    display: flex;
+    margin-left: auto;
+  }
+}
+
+.organ-heading {
+  padding: 8px 16px 4px;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.hint {
+  margin-left: 8px;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.mark {
+  color: var(--mat-sys-error);
+}

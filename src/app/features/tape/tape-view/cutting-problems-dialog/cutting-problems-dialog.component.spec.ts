@@ -1,42 +1,22 @@
 import {TestBed} from '@angular/core/testing';
 import {MAT_DIALOG_DATA, MatDialogRef} from '@angular/material/dialog';
-import {column, type CuttingProblem, midiNoteNumber, type MidiNoteNumber, type Millimetres} from '@api/index';
 import {vi} from 'vitest';
 import {provideTestTranslations} from '../../../../../testing/test-translations';
+import {type ProblemText} from '../cutting-problem-text';
 import {CuttingProblemsDialogComponent} from './cutting-problems-dialog.component';
 
-function note(value: number): MidiNoteNumber {
-  const result = midiNoteNumber(value);
-  if (result === undefined) throw new Error(`invalid test note ${value}`);
-  return result;
-}
-
-function col(value: number) {
-  const result = column(value);
-  if (result === undefined) throw new Error(`invalid test Column ${value}`);
-  return result;
-}
-
-const mm = (value: number): Millimetres => value as Millimetres;
-
-const NO_PIPE: CuttingProblem = {code: 'no-pipe', pipe: note(70), start: col(4)}; // Column 5, A#4
-const TOO_SHORT: CuttingProblem = {
-  code: 'too-short',
-  pipe: note(60), // C4
-  start: col(10), // Column 11
-  lengthMm: 2.5,
-  minimumHoleLengthMm: mm(3.3),
+const NO_PIPE: ProblemText = {key: 'TAPE.CUTTING_PROBLEM.NO_PIPE', params: {note: 'A#4', column: '5'}};
+const TOO_SHORT: ProblemText = {
+  key: 'TAPE.CUTTING_PROBLEM.TOO_SHORT',
+  params: {note: 'C4', column: '11', length: '2.5', minimum: '3.3'},
 };
-const TOO_CLOSE: CuttingProblem = {
-  code: 'too-close',
-  pipe: note(62), // D4
-  start: col(20), // Column 21
-  nextStart: col(24), // Column 25
-  gapMm: 1.2,
-  minimumGapMm: mm(1.7),
+const TOO_CLOSE: ProblemText = {
+  key: 'TAPE.CUTTING_PROBLEM.TOO_CLOSE',
+  params: {note: 'D4', column: '21', next: '25', gap: '1.2', minimum: '1.7'},
 };
+const TOO_WIDE: ProblemText = {key: 'TAPE.EXPORT.TOO_WIDE', params: {}};
 
-async function render(problems: readonly CuttingProblem[], language: 'en' | 'de' = 'en') {
+async function render(problems: readonly ProblemText[], language: 'en' | 'de' = 'en') {
   const close = vi.fn<(result?: undefined) => void>();
   TestBed.configureTestingModule({
     providers: [
@@ -65,52 +45,43 @@ describe('CuttingProblemsDialogComponent', () => {
     );
   });
 
-  it('lists one entry per problem, in the given order, every one of them', async () => {
-    const {entries} = await render([TOO_SHORT, TOO_CLOSE, NO_PIPE, { ...TOO_SHORT, start: col(30) }]);
+  it('lists one entry per problem text, in the given order, every one of them', async () => {
+    const {entries} = await render([TOO_WIDE, TOO_SHORT, TOO_CLOSE, NO_PIPE]);
 
     expect(entries()).toHaveLength(4);
+    expect(entries()[0]).toBe('This Tape is too wide for the Plotter\'s working width');
   });
 
-  it('names the note and counts the start Column from 1 for each problem', async () => {
+  it('translates each entry with the parameters it was given', async () => {
     const {entries} = await render([TOO_SHORT, TOO_CLOSE, NO_PIPE]);
 
-    const [tooShort, tooClose, noPipe] = entries();
-    expect(tooShort).toContain('C4');
-    expect(tooShort).toMatch(/\b11\b/);
-    expect(tooClose).toContain('D4');
-    expect(tooClose).toMatch(/\b21\b/);
-    expect(noPipe).toContain('A#4');
-    expect(noPipe).toMatch(/\b5\b/);
+    expect(entries()[0]).toBe('C4 at Column 11: the Hole is 2.5 mm long, the Minimum Hole Length is 3.3 mm.');
+    expect(entries()[1]).toBe(
+      'D4 at Column 21: the gap to the next Hole at Column 25 is 1.2 mm, the Minimum Gap is 1.7 mm.',
+    );
+    expect(entries()[2]).toBe('A#4 at Column 5: the Organ has no Pipe for this note.');
   });
 
-  it('gives a too-short Hole its length and the Minimum Hole Length in mm', async () => {
-    const {entries} = await render([TOO_SHORT]);
-
-    expect(entries()[0]).toContain('2.5');
-    expect(entries()[0]).toContain('3.3');
-  });
-
-  it('gives a too-close Hole the gap, the Minimum Gap and the next Hole\'s Column counted from 1', async () => {
-    const {entries} = await render([TOO_CLOSE]);
-
-    expect(entries()[0]).toContain('1.2');
-    expect(entries()[0]).toContain('1.7');
-    expect(entries()[0]).toMatch(/\b25\b/);
-  });
-
-  it('writes the mm values with the decimal comma in German', async () => {
+  it('shows the German text of each key with the parameters as given', async () => {
     const {entries} = await render([TOO_SHORT, TOO_CLOSE], 'de');
 
-    expect(entries()[0]).toContain('3,3');
-    expect(entries()[0]).not.toContain('3.3');
-    expect(entries()[1]).toContain('1,2');
+    expect(entries()[0]).toBe('C4 in Spalte 11: Das Loch ist 2.5 mm lang, die Mindestlochlänge beträgt 3.3 mm.');
+    expect(entries()[1]).toContain('Abstand zum nächsten Loch in Spalte 25');
   });
 
-  it('words each of the three reasons differently, with every text translated', async () => {
-    const {element, entries} = await render([TOO_SHORT, TOO_CLOSE, NO_PIPE]);
+  it('shows no raw translation key in any entry or in the dialog', async () => {
+    const {element, entries} = await render([TOO_WIDE, TOO_SHORT, TOO_CLOSE, NO_PIPE]);
+
+    for (const entry of entries()) {
+      expect(entry).not.toMatch(/TAPE\.(EXPORT|CUTTING_PROBLEM)/);
+    }
+    expect(element.textContent).not.toMatch(/TAPE\.(EXPORT|CUTTING_PROBLEM)/);
+  });
+
+  it('words each of the three reasons differently', async () => {
+    const {entries} = await render([TOO_SHORT, TOO_CLOSE, NO_PIPE]);
 
     expect(new Set(entries().map((entry) => entry.replace(/[\d.,]+/g, '#'))).size).toBe(3);
-    expect(element.textContent).not.toMatch(/TAPE\.(EXPORT|CUTTING_PROBLEM)/);
   });
 
   it('shows the list inside the scrolling dialog content', async () => {

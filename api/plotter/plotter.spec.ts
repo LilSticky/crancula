@@ -1,5 +1,5 @@
 import {describe, expect, it} from 'vitest';
-import {DEFAULT_OVERLAP, newPlotterId, plotterId} from './plotter';
+import {DEFAULT_OVERLAP, DEFAULT_TAPE_SPACING, newPlotterId, plotterId} from './plotter';
 
 describe('plotterId', () => {
   it('accepts a UUID', () => {
@@ -25,5 +25,11 @@ describe('newPlotterId', () => {
 describe('DEFAULT_OVERLAP', () => {
   it('is 20 mm', () => {
     expect(DEFAULT_OVERLAP).toBe(20);
+  });
+});
+
+describe('DEFAULT_TAPE_SPACING', () => {
+  it('is 3 mm', () => {
+    expect(DEFAULT_TAPE_SPACING).toBe(3);
   });
 });

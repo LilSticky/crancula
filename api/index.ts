@@ -154,8 +154,20 @@ export {
   type PreviewNote,
 } from './preview/performance';
 export {plotterFileName} from './tape/plotter-file-name';
+export {sideBySideFileName} from './tape/side-by-side-file-name';
+export {sideBySideRefusals, type LaneInput, type SideBySideRefusal} from './tape/side-by-side-refusals';
+export {sideBySideLayout, sideBySidePlan, type SideBySidePlan} from './tape/side-by-side-plan';
 export {tapePieceFileNames} from './tape/tape-piece-file-name';
-export {DEFAULT_OVERLAP, newPlotterId, plotterId, type Plotter, type PlotterId, type RollPlotter, type SheetPlotter} from './plotter/plotter';
+export {
+  DEFAULT_OVERLAP,
+  DEFAULT_TAPE_SPACING,
+  newPlotterId,
+  plotterId,
+  type Plotter,
+  type PlotterId,
+  type RollPlotter,
+  type SheetPlotter,
+} from './plotter/plotter';
 export {draftOf, emptyPlotterDraft, type PlotterDraft} from './plotter/plotter-draft';
 export {validatePlotter, type PlotterField, type PlotterViolation, type PlotterViolationCode} from './plotter/validate-plotter';
 export {
@@ -184,7 +196,16 @@ export {
   type RecordingWriteResult,
 } from './recording/recording-save-request';
 export {previewNoteWindows, type TimedPreviewNote} from './preview/preview-note-windows';
-export {plotterSvg} from './tape/plotter-svg';
+export {plotterSvg, sideBySideSvg} from './tape/plotter-svg';
+export {
+  laneGeometry,
+  laneRoom,
+  sideBySideCut,
+  type Lane,
+  type LaneRoom,
+  type LaneTape,
+  type SideBySideCut,
+} from './tape/side-by-side-cut';
 export {pieceGeometry, type CutGeometry} from './tape/tape-piece-geometry';
 export {tapeGeometry, type Point, type Slot, type TapeGeometry, type TapeOutline} from './tape/tape-geometry';
 export {tapePieces, type Join, type JoinlessStretch, type TapePiece, type TapePieces} from './tape/tape-pieces';

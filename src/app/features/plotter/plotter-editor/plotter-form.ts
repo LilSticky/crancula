@@ -44,6 +44,7 @@ export const PLOTTER_FIELD_LABEL_KEYS: Readonly<Record<PlotterField, string>> = 
   workingWidth: 'PLOTTER.EDITOR.WORKING_WIDTH',
   workingLength: 'PLOTTER.EDITOR.WORKING_LENGTH',
   overlap: 'PLOTTER.EDITOR.OVERLAP',
+  tapeSpacing: 'PLOTTER.EDITOR.TAPE_SPACING',
 };
 
 /** The message that tells the user which rule a violation breaks. */

@@ -121,3 +121,26 @@ test.describe('Cutting mat', () => {
     await app.close();
   });
 });
+
+test.describe('Vinyl cutter', () => {
+  test('keeps the Tape spacing set in its editor after a restart', async () => {
+    const first = await launchApp();
+    const {window} = first;
+    await window.getByRole('link', {name: 'Plotters'}).click();
+    await window.getByTestId('new-plotter').click();
+    await window.getByTestId('plotter-name').fill('Vinyl cutter');
+    await window.getByTestId('plotter-roll').getByRole('switch').click();
+    await window.getByTestId('plotter-working-width').fill('300');
+    await window.getByTestId('plotter-tape-spacing').fill('5');
+    await window.getByTestId('save-plotter').click();
+    await expect(window).toHaveURL(/#?\/plotters$/);
+    await first.app.close();
+
+    const {app, window: restarted} = await launchApp(first.userDataDir);
+    await restarted.getByRole('link', {name: 'Plotters'}).click();
+    await restarted.getByTestId('plotter-row').click();
+
+    await expect(restarted.getByTestId('plotter-tape-spacing')).toHaveValue('5');
+    await app.close();
+  });
+});

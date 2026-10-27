@@ -10,6 +10,7 @@ import {
   tapeGeometry,
   tapePieceFileNames,
   tapePieces,
+  type ExportRefusal,
   type Organ,
   type Plotter,
   type SvgPiece,
@@ -17,10 +18,9 @@ import {
   type TapePiece,
 } from '@api/index';
 import {CRANCULA_API} from '../../../core/crancula-api.token';
+import {SAVED_DURATION} from '../../shared/saved-duration';
+import {cuttingProblemText, type ProblemText} from './cutting-problem-text';
 import {CuttingProblemsDialogComponent} from './cutting-problems-dialog/cutting-problems-dialog.component';
-
-/** How long the "saved" snackbar stays, in ms. */
-const SAVED_DURATION = 6000;
 
 /** Saves a Tape as the Plotter file, or as Tape pieces for a sheet Plotter, through the main process and tells the user how it went. */
 @Injectable({providedIn: 'root'})
@@ -39,7 +39,7 @@ export class PlotterExport {
     if (this.savingState()) return;
     const refusals = exportRefusals(tape, organ, plotter);
     if (refusals.length > 0) {
-      this.dialog.open(CuttingProblemsDialogComponent, {data: refusals});
+      this.dialog.open(CuttingProblemsDialogComponent, {data: this.problemTexts(refusals)});
       return;
     }
     this.savingState.set(true);
@@ -131,6 +131,14 @@ export class PlotterExport {
       .open(message, this.text('TAPE.EXPORT.RETRY'), {duration: 0})
       .onAction()
       .subscribe(() => void this.export(tape, organ, plotter));
+  }
+
+  /** The refusals as translated entries, the too-wide reason first, then each Cutting Problem in the current language. */
+  private problemTexts(refusals: readonly ExportRefusal[]): readonly ProblemText[] {
+    const language = this.translate.getCurrentLang() ?? 'en';
+    return refusals.map((refusal): ProblemText =>
+      refusal.code === 'too-wide' ? {key: 'TAPE.EXPORT.TOO_WIDE', params: {}} : cuttingProblemText(refusal, language),
+    );
   }
 
   private text(key: string, params?: Record<string, string>): string {

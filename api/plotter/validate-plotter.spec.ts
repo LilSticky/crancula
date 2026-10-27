@@ -48,14 +48,22 @@ describe('validatePlotter', () => {
       expect(result.ok && plotterId(result.value.id)).toBeTruthy();
     });
 
-    it('becomes a roll Plotter that has only a working width', () => {
-      const result = validatePlotter(rollDraft({workingWidth: 120}));
+    it('becomes a roll Plotter with a working width and a Tape spacing, and no working length or Overlap', () => {
+      const result = validatePlotter(rollDraft({workingWidth: 120, tapeSpacing: 3}));
 
       expect(result.ok).toBe(true);
       if (!result.ok) return;
-      expect(result.value).toMatchObject({format: 'svg', roll: true, workingWidth: 120});
+      expect(result.value).toMatchObject({format: 'svg', roll: true, workingWidth: 120, tapeSpacing: 3});
       expect(result.value).not.toHaveProperty('workingLength');
       expect(result.value).not.toHaveProperty('overlap');
+    });
+
+    it('becomes a sheet Plotter without a Tape spacing', () => {
+      const result = validatePlotter(validDraft({tapeSpacing: 5}));
+
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.value).not.toHaveProperty('tapeSpacing');
     });
 
     it('accepts decimals', () => {
@@ -131,6 +139,28 @@ describe('validatePlotter', () => {
 
     it('still requires a name', () => {
       expect(violationsOf(rollDraft({name: ''}))).toEqual([{code: 'name-required', path: 'name'}]);
+    });
+
+    it.each([null, Number.NaN, Number.POSITIVE_INFINITY])('requires a Tape spacing, given %s', (tapeSpacing) => {
+      expect(violationsOf(rollDraft({tapeSpacing}))).toEqual([{code: 'value-required', path: 'tapeSpacing'}]);
+    });
+
+    it.each([-1, -0.5])('rejects a Tape spacing of %d as negative', (tapeSpacing) => {
+      expect(violationsOf(rollDraft({tapeSpacing}))).toEqual([{code: 'must-not-be-negative', path: 'tapeSpacing'}]);
+    });
+
+    it('accepts a Tape spacing of 0, so that Tapes touch', () => {
+      expect(violationsOf(rollDraft({tapeSpacing: 0}))).toEqual([]);
+    });
+
+    it('accepts decimals as a Tape spacing', () => {
+      expect(violationsOf(rollDraft({tapeSpacing: 2.5}))).toEqual([]);
+    });
+  });
+
+  describe('a sheet Plotter', () => {
+    it.each([null, Number.NaN, -1])('does not check its Tape spacing, given %s', (tapeSpacing) => {
+      expect(violationsOf(validDraft({tapeSpacing}))).toEqual([]);
     });
   });
 });

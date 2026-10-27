@@ -1,4 +1,4 @@
-import {DEFAULT_OVERLAP, type Plotter, type PlotterId} from './plotter';
+import {DEFAULT_OVERLAP, DEFAULT_TAPE_SPACING, type Plotter, type PlotterId} from './plotter';
 
 /** A Plotter as entered in the editor. It may be invalid; see `validatePlotter`. */
 export interface PlotterDraft {
@@ -11,10 +11,19 @@ export interface PlotterDraft {
   readonly workingLength: number | null;
   /** Kept while roll is on, like the working length. */
   readonly overlap: number | null;
+  /** Kept while roll is off, like the working length; not checked then. */
+  readonly tapeSpacing: number | null;
 }
 
 export function emptyPlotterDraft(): PlotterDraft {
-  return {name: '', workingWidth: null, roll: false, workingLength: null, overlap: DEFAULT_OVERLAP};
+  return {
+    name: '',
+    workingWidth: null,
+    roll: false,
+    workingLength: null,
+    overlap: DEFAULT_OVERLAP,
+    tapeSpacing: DEFAULT_TAPE_SPACING,
+  };
 }
 
 export function draftOf(plotter: Plotter): PlotterDraft {
@@ -26,6 +35,7 @@ export function draftOf(plotter: Plotter): PlotterDraft {
       roll: true,
       workingLength: null,
       overlap: DEFAULT_OVERLAP,
+      tapeSpacing: plotter.tapeSpacing,
     };
   }
   return {
@@ -35,5 +45,6 @@ export function draftOf(plotter: Plotter): PlotterDraft {
     roll: false,
     workingLength: plotter.workingLength,
     overlap: plotter.overlap,
+    tapeSpacing: DEFAULT_TAPE_SPACING,
   };
 }
