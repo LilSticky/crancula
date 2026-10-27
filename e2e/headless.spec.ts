@@ -40,3 +40,21 @@ test.describe('Headless run', () => {
     expect(framesInHalfASecond).toBeGreaterThan(3);
   });
 });
+
+test.describe('Sound in e2e runs', () => {
+  let launched: LaunchedApp;
+
+  test.beforeAll(async () => {
+    launched = await launchApp();
+  });
+
+  test.afterAll(async () => {
+    await launched.app.close();
+  });
+
+  // Previews and Recordings would otherwise play through the speakers while the suite runs.
+  test('is muted', async () => {
+    const muted = await launched.app.evaluate(({app}) => app.commandLine.hasSwitch('mute-audio'));
+    expect(muted).toBe(true);
+  });
+});
