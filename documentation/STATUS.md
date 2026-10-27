@@ -17,7 +17,11 @@ discovery done): `/speckit-specify` on branch `013-cut-several-tapes-side-by-sid
 
 **Known broken:** none. ([#175](https://github.com/LilSticky/crancula/issues/175), 2026-10-27: `npm run lint` now covers `api/`.)
 
+<<<<<<< HEAD
 **Done:** [Empty Parts block on the import page (#178)](https://github.com/LilSticky/crancula/issues/178) (2026-10-27): the Parts block shows only once a Song is chosen, also after a rejected file.
+=======
+**Done:** [Replace question lists every Tape piece (#180)](https://github.com/LilSticky/crancula/issues/180) (2026-10-27): the replace message box lists the first 10 existing names and "… and K more" (`replaceMoreLine` in the Tape pieces save request, validated to hold `{count}` once).
+>>>>>>> 1e6ec1b (docs(status): replace question lists at most 10 names (#180))
 
 **Open:** real MuseScore and Audiveris files not checked by hand (010 T063, needs the user's files). Tape pieces not checked by
 hand either: piece SVGs in Inkscape and a real Tape glued (011 T062, needs the user).
