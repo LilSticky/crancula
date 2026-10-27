@@ -252,7 +252,7 @@ again and see 4/4 and no upbeat.
 
 ## Phase 8: Polish & Cross-Cutting
 
-- [ ] T053 [P] Extend `npm run ux:screens` (`e2e/ux/`) with the export dialog (with a Song, without, with an
+- [x] T053 [P] Extend `npm run ux:screens` (findings 2, 3, 5, 7, 9, 10 moved to [#183](https://github.com/LilSticky/crancula/issues/183)) (`e2e/ux/`) with the export dialog (with a Song, without, with an
   error, with three staves) in light and dark; run the `ux-review` skill → `specs/012-read-a-tape-as-scores/ux-review.md`;
   fix findings via `implementer`.
 - [ ] T054 [P] Reviews, read-only and in parallel: `angular-reviewer` (`src/`), `electron-reviewer` (`app/`,
@@ -264,11 +264,11 @@ again and see 4/4 and no upbeat.
 - [ ] T056 Gate: `npm run test`, `npm run lint`, `npm run i18n:check`, `npm run build` green;
   `e2e/read-a-tape-as-scores.spec.ts`, `e2e/tape-layout.spec.ts`, `e2e/tape-export.spec.ts`,
   `e2e/boundary.spec.ts` green locally; full e2e green in CI on Linux, Windows and macOS (ADR 13).
-- [ ] T057 Hand check by the user ([quickstart.md](quickstart.md) "By hand"): open an exported file in
+- [ ] T057 (open for the user, not ticked) Hand check by the user ([quickstart.md](quickstart.md) "By hand"): open an exported file in
   MuseScore 4; Bars, upbeat, key, tempo mark, clefs and octave clefs, voices, ties, accidentals, beaming; play it
   next to the Preview (SC-001, SC-002, SC-004). Record the result in STATUS; open issues for anything off; if not
   done before merging, say so in STATUS and the pull request.
-- [ ] T058 `documentation/STATUS.md`, `documentation/ROADMAP.md` (Read a tape as Scores done), `CHANGELOG.md`
+- [x] T058 `documentation/STATUS.md`, `documentation/ROADMAP.md` (Read a tape as Scores done), `CHANGELOG.md`
   `[Unreleased]` (export a Tape as Scores for MuseScore), README feature list; pull request with `Closes #169`.
   (`housekeeper` for STATUS/ROADMAP)
 
