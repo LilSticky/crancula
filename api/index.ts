@@ -154,6 +154,7 @@ export {
   type PreviewNote,
 } from './preview/performance';
 export {plotterFileName} from './tape/plotter-file-name';
+export {sideBySideFileName} from './tape/side-by-side-file-name';
 export {tapePieceFileNames} from './tape/tape-piece-file-name';
 export {
   DEFAULT_OVERLAP,
@@ -193,7 +194,16 @@ export {
   type RecordingWriteResult,
 } from './recording/recording-save-request';
 export {previewNoteWindows, type TimedPreviewNote} from './preview/preview-note-windows';
-export {plotterSvg} from './tape/plotter-svg';
+export {plotterSvg, sideBySideSvg} from './tape/plotter-svg';
+export {
+  laneGeometry,
+  laneRoom,
+  sideBySideCut,
+  type Lane,
+  type LaneRoom,
+  type LaneTape,
+  type SideBySideCut,
+} from './tape/side-by-side-cut';
 export {pieceGeometry, type CutGeometry} from './tape/tape-piece-geometry';
 export {tapeGeometry, type Point, type Slot, type TapeGeometry, type TapeOutline} from './tape/tape-geometry';
 export {tapePieces, type Join, type JoinlessStretch, type TapePiece, type TapePieces} from './tape/tape-pieces';
