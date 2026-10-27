@@ -17,6 +17,10 @@ discovery done): `/speckit-specify` on branch `013-cut-several-tapes-side-by-sid
 
 **Done:** [Scores export dialog UX (#183)](https://github.com/LilSticky/crancula/issues/183) (2026-10-27): Beats and Beat type in one grid with a reserved error line, one row per staff for split notes, an outlined Add a split note button, a summary of the Key and tempo the Scores carry (`scoresKeyAt` in `api/scores`, shared with the export), "Another time signature"; light idle field border raised to 3.16:1. Missing screens split into [#188](https://github.com/LilSticky/crancula/issues/188).
 
+**Done:** [Tape pieces contrast measured (#190)](https://github.com/LilSticky/crancula/issues/190) (2026-10-27): measured on rendered
+pixels, the Overlap hatch was 2.15:1 (light) / 2.01:1 (dark) and the stretch hatch 2.80:1 / 2.59:1 against the Tape; full stroke
+opacity raises them to 3.40 / 3.05 and 4.23 / 3.77. Table in [ux-review.md](../specs/011-cut-a-tape-in-pieces/ux-review.md).
+
 **Known broken:** none. ([#175](https://github.com/LilSticky/crancula/issues/175), 2026-10-27: `npm run lint` now covers `api/`.)
 
 **Done:** [Empty Parts block on the import page (#178)](https://github.com/LilSticky/crancula/issues/178) (2026-10-27): the Parts block shows only once a Song is chosen, also after a rejected file.
