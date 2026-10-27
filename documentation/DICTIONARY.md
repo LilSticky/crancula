@@ -189,6 +189,7 @@
 * The cut around a Tape: both long edges, the Lead-in's diagonal (a square cut at Column 1 when the Lead-in is 0) and a square end cut one Minimum Gap after the last Column, so no Hole touches it (no blank tail beyond that)
 * The Tape is cut out of a wider sheet or roll; the Plotter cuts the Tape Outline after all Holes
 * A Tape cut in Tape pieces: each Tape piece has its own outline, square at a Join
+* Several Tapes cut side by side: one Tape Outline per Tape, Tape spacing apart
 * German: Bandumriss
 
 # Minimum Gap
@@ -244,6 +245,7 @@
 * Machine that punches a Tape from an exported file (SVG; other formats such as DXF or HPGL only for a concrete device)
 * Described once by the user, like an Organ: name, format, Working area, Overlap length and whether it is a roll plotter
 * A roll plotter (a vinyl cutter) cuts near-endless lengths: it has no working length and never splits a Tape
+* A roll plotter can cut several Tapes side by side, each in its own Lane, Tape spacing apart
 * Cuts a Tape longer than its working length in Tape pieces; refuses a Tape wider than its working width
 * Without a described Plotter, a Tape is exported as one file
 * First target: a vinyl cutter that cuts long sheets
@@ -275,6 +277,17 @@
 * Repeats the Holes of the stretch it lies under, so both layers are cut through
 * Its length is set on the Plotter (20 mm unless changed)
 * German: Klebezugabe
+
+# Lane
+* The strip of a roll plotter's working width one Tape takes in a side-by-side cut
+* One Tape per Lane, in the order the user picks
+* German: Bahn
+
+# Tape spacing
+* The blank strip between two Lanes in a side-by-side cut
+* Set on the roll plotter (3 mm unless changed); the same between all Lanes
+* Not "gap", which means the Minimum Gap
+* German: Bandabstand
 
 # Barrel
 * Physical cylinder the Tape is rolled up on; no rules in Crancula
