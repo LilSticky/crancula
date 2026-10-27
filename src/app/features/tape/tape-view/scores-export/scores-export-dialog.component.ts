@@ -10,6 +10,7 @@ import {MatOption, MatSelect, MatSelectChange} from '@angular/material/select';
 import {MatRadioButton, MatRadioChange, MatRadioGroup} from '@angular/material/radio';
 import {MatTooltip} from '@angular/material/tooltip';
 import {TranslatePipe} from '@ngx-translate/core';
+import {metreParts, type MetrePart} from '../../song-metre/metre-parts';
 import {
   closeGaps,
   midiNoteNumber,
@@ -17,8 +18,11 @@ import {
   noteName,
   prefilledScoresChoices,
   SCORES_BEAT_TYPES,
+  scoresBars,
   scoresChoicesOf,
+  scoresKeyAt,
   scoresStaves,
+  scoresTempo,
   songMetre,
   staffPipes,
   validateScoresChoices,
@@ -30,6 +34,7 @@ import {
   type ScoresChoicesInput,
   type ScoresChoicesViolation,
   type Song,
+  type SongMetre,
   type Tape,
 } from '@api/index';
 
@@ -86,6 +91,9 @@ const NOTE_VALUE_KEYS: Readonly<Record<ScoresBeatType, string>> = {
   32: 'TAPE.SCORES.NOTE_VALUE.32',
 };
 
+/** The Key part of a metre: its mode and the translation key of its tonic. */
+type KeyPart = Extract<MetrePart, { kind: 'key' }>;
+
 /** A MIDI note with its name, as the split note selects offer it. */
 interface PitchOption {
   readonly pitch: MidiNoteNumber;
@@ -111,6 +119,11 @@ class ShownViolationMatcher extends ErrorStateMatcher {
   override isSignalErrorState(field: Field<unknown> | null): boolean {
     return field !== null && field().errors().some(isScoresFieldError);
   }
+}
+
+/** The Key part of a Key, as the metre keeps it: its mode and the translation key of its tonic. */
+function keyPartOf(key: NonNullable<SongMetre['key']>): KeyPart | undefined {
+  return metreParts({key}).find((part): part is KeyPart => part.kind === 'key');
 }
 
 /** The first Time signature of the Song as "3/4"; undefined without a Song or without a Time signature. */
@@ -246,6 +259,19 @@ function nextSplitNoteOf(splitNotes: readonly number[]): MidiNoteNumber | undefi
   template: `
     <h2 mat-dialog-title>{{ 'TAPE.VIEW.EXPORT_SCORES' | translate }}</h2>
     <mat-dialog-content data-testid="scores-export-dialog">
+      @if (keyPart() || tempo !== undefined) {
+        <p class="cr-readonly summary" data-testid="scores-summary">
+          @if (keyPart(); as key) {
+            <span>{{ (key.mode === 'major' ? 'TAPE.METRE.MAJOR' : 'TAPE.METRE.MINOR') | translate: {key: (key.tonicKey | translate)} }}</span>
+            @if (tempo !== undefined) {
+              <span>{{ 'TAPE.METRE.SEPARATOR' | translate }}</span>
+            }
+          }
+          @if (tempo !== undefined) {
+            <span>{{ 'TAPE.SCORES.TEMPO' | translate: {tempo} }}</span>
+          }
+        </p>
+      }
       <h3>{{ 'TAPE.SCORES.TIME_SIGNATURE' | translate }}</h3>
       @if (songMetreText; as metre) {
         <mat-radio-group
@@ -263,8 +289,8 @@ function nextSplitNoteOf(splitNotes: readonly number[]): MidiNoteNumber | undefi
         <p class="hint" data-testid="scores-song-metre-hint">{{ 'TAPE.SCORES.SONG_METRE_NOT_ON_COLUMNS' | translate }}</p>
       }
       @if (fields.timeChoice().value() === 'other') {
-        <div class="time-fields">
-          <mat-form-field>
+        <div class="time-fields" data-testid="scores-time-fields">
+          <mat-form-field subscriptSizing="fixed">
             <mat-label>{{ 'TAPE.SCORES.BEATS' | translate }}</mat-label>
             <input matInput type="number" step="1" data-testid="scores-beats" [formField]="fields.beats" />
             <ng-container ngProjectAs="mat-error">
@@ -273,7 +299,7 @@ function nextSplitNoteOf(splitNotes: readonly number[]): MidiNoteNumber | undefi
               }
             </ng-container>
           </mat-form-field>
-          <mat-form-field>
+          <mat-form-field subscriptSizing="fixed">
             <mat-label>{{ 'TAPE.SCORES.BEAT_TYPE' | translate }}</mat-label>
             <mat-select data-testid="scores-beat-type" [value]="fields.beatType().value()" (selectionChange)="beatTypeChosen($event)">
               @for (value of noteValues; track value) {
@@ -304,34 +330,63 @@ function nextSplitNoteOf(splitNotes: readonly number[]): MidiNoteNumber | undefi
       </mat-form-field>
 
       <h3>{{ 'TAPE.SCORES.STAVES' | translate }}</h3>
-      @for (value of fields.splitNotes().value(); track $index; let index = $index) {
-        <div class="split-note">
-          <mat-form-field>
-            <mat-label>{{ 'TAPE.SCORES.SPLIT_NOTE' | translate }}</mat-label>
-            <mat-select data-testid="scores-split-note" [value]="value" (selectionChange)="splitChosen(index, $event)">
-              @for (option of pitchOptions; track option.pitch) {
-                <mat-option [value]="option.pitch">{{ option.name }}</mat-option>
+      <ul class="staves">
+        @for (line of staffLines(); track line.number) {
+          <li class="staff">
+            <div class="staff-line" data-testid="scores-staff">
+              @if (line.split; as split) {
+                <mat-form-field>
+                  <mat-label>{{ 'TAPE.SCORES.SPLIT_NOTE' | translate }}</mat-label>
+                  <mat-select data-testid="scores-split-note" [value]="split.note" (selectionChange)="splitChosen(split.index, $event)">
+                    @for (option of pitchOptions; track option.pitch) {
+                      <mat-option [value]="option.pitch">{{ option.name }}</mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
               }
-            </mat-select>
-          </mat-form-field>
-          <button
-            mat-icon-button
-            type="button"
-            data-testid="scores-split-remove"
-            [attr.aria-label]="'TAPE.SCORES.SPLIT_REMOVE' | translate"
-            [matTooltip]="'TAPE.SCORES.SPLIT_REMOVE' | translate"
-            (click)="removeSplitNote(index)"
-          >
-            <mat-icon>close</mat-icon>
-          </button>
-        </div>
-      }
+              @if (line.pipes; as pipes) {
+                {{
+                  'TAPE.SCORES.STAFF'
+                    | translate: {
+                        number: line.number,
+                        range: ('TAPE.SCORES.RANGE' | translate: {from: pipes.from, to: pipes.to, pipes: (pipes.countKey | translate: {count: pipes.count})}),
+                        clef: (line.clef | translate),
+                      }
+                }}
+              } @else {
+                <mat-icon class="warning">warning</mat-icon>
+                {{
+                  'TAPE.SCORES.STAFF'
+                    | translate: {
+                        number: line.number,
+                        range: ('TAPE.SCORES.STAFF_EMPTY' | translate),
+                        clef: (line.clef | translate),
+                      }
+                }}
+              }
+            </div>
+            @if (line.split; as split) {
+              <button
+                mat-icon-button
+                type="button"
+                data-testid="scores-split-remove"
+                [attr.aria-label]="'TAPE.SCORES.SPLIT_REMOVE' | translate"
+                [matTooltip]="'TAPE.SCORES.SPLIT_REMOVE' | translate"
+                (click)="removeSplitNote(split.index)"
+              >
+                <mat-icon>close</mat-icon>
+              </button>
+            }
+          </li>
+        }
+      </ul>
       @if (shownMessageKey(fields.splitNotes); as key) {
         <mat-error>{{ key | translate }}</mat-error>
       }
       <button
-        mat-button
+        mat-stroked-button
         type="button"
+        class="add-split"
         data-testid="scores-split-add"
         [disabled]="nextSplitNote() === undefined"
         (click)="addSplitNote()"
@@ -339,32 +394,6 @@ function nextSplitNoteOf(splitNotes: readonly number[]): MidiNoteNumber | undefi
         <mat-icon>add</mat-icon>
         {{ 'TAPE.SCORES.SPLIT_ADD' | translate }}
       </button>
-      <ul>
-        @for (line of staffLines(); track line.number) {
-          <li data-testid="scores-staff">
-            @if (line.pipes; as pipes) {
-              {{
-                'TAPE.SCORES.STAFF'
-                  | translate: {
-                      number: line.number,
-                      range: ('TAPE.SCORES.RANGE' | translate: {from: pipes.from, to: pipes.to, pipes: (pipes.countKey | translate: {count: pipes.count})}),
-                      clef: (line.clef | translate),
-                    }
-              }}
-            } @else {
-              <mat-icon class="warning">warning</mat-icon>
-              {{
-                'TAPE.SCORES.STAFF'
-                  | translate: {
-                      number: line.number,
-                      range: ('TAPE.SCORES.STAFF_EMPTY' | translate),
-                      clef: (line.clef | translate),
-                    }
-              }}
-            }
-          </li>
-        }
-      </ul>
     </mat-dialog-content>
     <mat-dialog-actions align="end">
       <button mat-button type="button" data-testid="scores-cancel" (click)="cancel()">{{ 'TAPE.SCORES.CANCEL' | translate }}</button>
@@ -379,19 +408,41 @@ function nextSplitNoteOf(splitNotes: readonly number[]): MidiNoteNumber | undefi
       margin-right: 0.5rem;
     }
     .time-fields {
-      display: flex;
-      flex-wrap: wrap;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px 12px;
+    }
+    .time-fields mat-form-field,
+    .staff-line mat-form-field {
+      margin-right: 0;
+    }
+    .summary {
+      margin: 0 0 0.5rem;
     }
     .hint {
       margin: 0.25rem 0;
     }
-    .split-note {
+    .staves {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+    .staff {
       display: flex;
       align-items: center;
+      gap: 8px;
     }
-    ul {
-      margin: 0;
-      padding-left: 1.25rem;
+    .staff-line {
+      display: flex;
+      align-items: center;
+      flex: 1;
+      gap: 8px;
+    }
+    .add-split {
+      margin-top: 0.5rem;
     }
     .warning {
       color: var(--mat-sys-error);
@@ -407,6 +458,15 @@ export class ScoresExportDialogComponent {
   protected readonly noteValueKeys = NOTE_VALUE_KEYS;
   protected readonly pitchOptions = PITCH_OPTIONS;
   protected readonly shownMessageKey = shownMessageKey;
+  /** The Key the Scores carry, the one in force at the end of the first Bar; undefined while no Scores can be written. */
+  protected readonly keyPart = computed(() => {
+    const choices = this.choices();
+    const first = choices === undefined ? undefined : scoresBars(this.data.tape, this.data.song, choices).at(0);
+    if (first === undefined) return undefined;
+    return keyPartOf(scoresKeyAt(this.data.song, first.start + first.length - 1));
+  });
+  /** The tempo the Scores carry, from the Crank speed; undefined when the Tape has none. */
+  protected readonly tempo = scoresTempo(this.data.tape, this.data.organ);
 
   private readonly prefilled = prefilledScoresChoices(this.data.organ, this.data.song, this.data.rememberedSplitNotes);
   private readonly notes = closeGaps(this.data.tape.holes, minimumGapColumns(this.data.organ, this.data.tape.columnLength));
@@ -428,12 +488,18 @@ export class ScoresExportDialogComponent {
   /** The choices the Scores are written with; undefined while a value is not yet a choice, which keeps Export disabled. */
   protected readonly choices = computed(() => scoresChoicesOf(inputOf(this.model()), this.data.song));
 
-  /** One line per staff from the top: its number, the Pipes it plays (names and count, undefined when none) and its clef. */
-  protected readonly staffLines = computed(() =>
-    scoresStaves(pitchesOf(this.model().splitNotes), this.data.organ, this.notes).map((staff) => {
+  /**
+   * One line per staff from the top: its number, the Pipes it plays (names and count, undefined when none), its clef,
+   * and the split note it starts from with its index in the dialog's rows (undefined for the lowest staff).
+   */
+  protected readonly staffLines = computed(() => {
+    const splitNotes = this.model().splitNotes;
+    return scoresStaves(pitchesOf(splitNotes), this.data.organ, this.notes).map((staff, index) => {
       const pipes = staffPipes(staff, this.data.organ);
+      const splitNote = splitNotes.at(index);
       return {
         number: staff.number,
+        split: splitNote === undefined ? undefined : {index, note: splitNote},
         pipes:
           pipes === undefined
             ? undefined
@@ -445,8 +511,8 @@ export class ScoresExportDialogComponent {
               },
         clef: CLEF_KEYS[staff.clef],
       };
-    }),
-  );
+    });
+  });
 
   protected timeChoiceChosen(change: MatRadioChange): void {
     const choice: unknown = change.value;

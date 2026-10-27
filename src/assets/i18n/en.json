@@ -358,7 +358,7 @@
     "SCORES": {
       "TIME_SIGNATURE": "Time signature",
       "TIME_SONG": "As in the Song: {{metre}}",
-      "TIME_OTHER": "Another one",
+      "TIME_OTHER": "Another time signature",
       "BEATS": "Beats",
       "BEAT_TYPE": "Beat type",
       "UPBEAT": "Upbeat",
@@ -381,6 +381,7 @@
       "PIPES": "{{count}} Pipes",
       "PIPES_ONE": "1 Pipe",
       "STAFF_EMPTY": "no Pipes, stays empty",
+      "TEMPO": "Tempo from the Crank speed: ♩ = {{tempo}}",
       "CLEF": {
         "TREBLE": "treble clef",
         "TREBLE_8VA": "treble clef, 8va",

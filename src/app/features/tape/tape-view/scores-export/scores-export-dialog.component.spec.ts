@@ -1,19 +1,22 @@
-import {TestBed} from '@angular/core/testing';
+import {type ComponentFixture, TestBed} from '@angular/core/testing';
 import {type HarnessLoader} from '@angular/cdk/testing';
 import {TestbedHarnessEnvironment} from '@angular/cdk/testing/testbed';
 import {By} from '@angular/platform-browser';
+import {MatButtonHarness} from '@angular/material/button/testing';
 import {MAT_DIALOG_DATA, MatDialogRef} from '@angular/material/dialog';
+import {MatFormField} from '@angular/material/form-field';
 import {MatTooltip} from '@angular/material/tooltip';
 import {MatInputHarness} from '@angular/material/input/testing';
 import {MatRadioButtonHarness} from '@angular/material/radio/testing';
 import {MatSelectHarness} from '@angular/material/select/testing';
 import {TranslateService} from '@ngx-translate/core';
-import {midiNoteNumber, noteName, type Organ, type ScoresChoices} from '@api/index';
+import {midiNoteNumber, noteName, scoresTempo, type Organ, type ScoresChoices} from '@api/index';
 import {referenceTape} from '@api/tape/tape-fixture';
-import {note, part, song, songId, tick, ticksPerQuarter, type BeatType, type Song} from '@api/song/song';
+import {fifthsOf, note, part, song, songId, tick, ticksPerQuarter, type BeatType, type Key, type Song} from '@api/song/song';
 import {vi} from 'vitest';
 import {testOrgan} from '../../../../../testing/organs';
 import {provideTestTranslations} from '../../../../../testing/test-translations';
+import {provideFormFieldDefaults} from '../../../shared/form-field-defaults';
 import {ScoresExportDialogComponent} from './scores-export-dialog.component';
 
 const QUARTER = 480;
@@ -33,8 +36,14 @@ function songIn3Four(upbeat?: number): Song {
   return songWithMetre(3, 4, upbeat);
 }
 
+/** A Song in 3/4 from Tick 0 in G major from Tick 0, with no upbeat. */
+function songInGMajor(): Song {
+  const major: Key = {start: defined(tick(0), 'start'), fifths: defined(fifthsOf(1), 'fifths'), mode: 'major'};
+  return songWithMetre(3, 4, undefined, [major]);
+}
+
 /** A Song in the given Time signature from Tick 0 with the given upbeat in Ticks (a quarter is 480), if any. */
-function songWithMetre(beats: number, beatType: BeatType, upbeat?: number): Song {
+function songWithMetre(beats: number, beatType: BeatType, upbeat?: number, keys: readonly Key[] = []): Song {
   const melody = defined(
     part({
       name: 'Melody',
@@ -60,6 +69,7 @@ function songWithMetre(beats: number, beatType: BeatType, upbeat?: number): Song
       parts: [melody],
       timeSignatures: [{start: defined(tick(0), 'start'), beats, beatType}],
       upbeat: upbeat === undefined ? undefined : defined(tick(upbeat), 'upbeat'),
+      keys,
     }),
     'song',
   );
@@ -70,12 +80,12 @@ function organAcrossMiddleC(): Organ {
   return testOrgan('Street organ', 2, {pipes: [{note: 52}, {note: 72}]});
 }
 
-async function render(songOf: Song | undefined, organ: Organ) {
+async function render(songOf: Song | undefined, organ: Organ, lang: 'en' | 'de' = 'en') {
   // Renders the dialog with no remembered split notes; the prefill comes from the Organ (FR-005).
   const close = vi.fn<(result?: ScoresChoices) => void>();
   TestBed.configureTestingModule({
     providers: [
-      provideTestTranslations('en'),
+      provideTestTranslations(lang),
       {provide: MatDialogRef, useValue: {close}},
       {
         provide: MAT_DIALOG_DATA,
@@ -413,5 +423,78 @@ describe('ScoresExportDialogComponent names the dialog after its action and mark
     const remove = fixture.debugElement.query(By.css('[data-testid="scores-split-remove"]'));
 
     expect(remove.injector.get(MatTooltip).message).toBe(String(translate.instant('TAPE.SCORES.SPLIT_REMOVE')));
+  });
+});
+
+/** The subscript sizing the mat-form-field around the control with the test id gives its error line. */
+function subscriptSizingOf(fixture: ComponentFixture<ScoresExportDialogComponent>, testId: string): string {
+  return fixture.debugElement.query(By.css(`[data-testid="${testId}"]`)).injector.get(MatFormField).subscriptSizing;
+}
+
+describe('ScoresExportDialogComponent lays out the Time signature fields so they do not jump (UX should 2)', () => {
+  beforeEach(() => {
+    // The app's form field defaults: the error line of a field takes its room only when the error shows.
+    TestBed.configureTestingModule({providers: [provideFormFieldDefaults()]});
+  });
+
+  it('puts Beats and Beat type in two columns of one grid', async () => {
+    const {element, loader} = await render(songIn3Four(), organAcrossMiddleC());
+    const another = await loader.getHarness(MatRadioButtonHarness.with({selector: '[data-testid="scores-time-other"]'}));
+    await another.check();
+
+    const fields = required(element.querySelector<HTMLElement>('[data-testid="scores-time-fields"]'), 'Beats and Beat type');
+    expect(getComputedStyle(fields).gridTemplateColumns.split(' ')).toHaveLength(2);
+  });
+
+  it('reserves the error line of Beats and Beat type', async () => {
+    const {fixture, loader} = await render(songIn3Four(), organAcrossMiddleC());
+    const another = await loader.getHarness(MatRadioButtonHarness.with({selector: '[data-testid="scores-time-other"]'}));
+    await another.check();
+
+    expect(subscriptSizingOf(fixture, 'scores-beats')).toBe('fixed');
+    expect(subscriptSizingOf(fixture, 'scores-beat-type')).toBe('fixed');
+  });
+});
+
+describe('ScoresExportDialogComponent puts the split notes in one row per staff (UX should 3, 5)', () => {
+  it('shows the split note of a staff in the row of that staff', async () => {
+    const {element} = await render(songIn3Four(), organAcrossMiddleC());
+
+    const [top] = staffLines(element);
+    expect(top?.querySelector('[data-testid="scores-split-note"]')).not.toBeNull();
+  });
+
+  it('shows Add a split note as an outlined button', async () => {
+    const {loader} = await render(songIn3Four(), organAcrossMiddleC());
+
+    await loader.getHarness(MatButtonHarness.with({selector: '[data-testid="scores-split-add"]', appearance: 'outlined'}));
+  });
+});
+
+describe('ScoresExportDialogComponent summarises the Key and the tempo the Scores carry (UX should 7)', () => {
+  it('shows the Key of the Song and the tempo of the Crank speed in a summary line', async () => {
+    const organ = testOrgan('Street organ', 2, {pipes: [{note: 52}, {note: 72}], tapePerCrankTurn: 100});
+    const {element, translate} = await render(songInGMajor(), organ);
+
+    const summary = required(element.querySelector('[data-testid="scores-summary"]'), 'summary line');
+    const key = String(translate.instant('TAPE.METRE.MAJOR', {key: translate.instant('TAPE.METRE.TONIC.MAJOR.1')}));
+    expect(summary.textContent).toContain(key);
+    expect(summary.textContent).toContain(String(defined(scoresTempo(referenceTape(organ), organ), 'tempo')));
+  });
+});
+
+describe('ScoresExportDialogComponent words "Another one" as a Time signature (UX nit 9)', () => {
+  it('names the choice "Another time signature" in English', async () => {
+    const {element} = await render(songIn3Four(), organAcrossMiddleC());
+
+    const choice = required(element.querySelector('[data-testid="scores-time-other"]'), 'Another choice');
+    expect(choice.textContent?.trim()).toBe('Another time signature');
+  });
+
+  it('names the choice "Andere Taktart" in German', async () => {
+    const {element} = await render(songIn3Four(), organAcrossMiddleC(), 'de');
+
+    const choice = required(element.querySelector('[data-testid="scores-time-other"]'), 'Andere choice');
+    expect(choice.textContent?.trim()).toBe('Andere Taktart');
   });
 });

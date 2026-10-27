@@ -358,7 +358,7 @@
     "SCORES": {
       "TIME_SIGNATURE": "Taktart",
       "TIME_SONG": "Wie im Stück: {{metre}}",
-      "TIME_OTHER": "Andere",
+      "TIME_OTHER": "Andere Taktart",
       "BEATS": "Schläge",
       "BEAT_TYPE": "Schlagwert",
       "UPBEAT": "Auftakt",
@@ -381,6 +381,7 @@
       "PIPES": "{{count}} Pfeifen",
       "PIPES_ONE": "1 Pfeife",
       "STAFF_EMPTY": "keine Pfeifen, bleibt leer",
+      "TEMPO": "Tempo aus der Kurbelgeschwindigkeit: ♩ = {{tempo}}",
       "CLEF": {
         "TREBLE": "Violinschlüssel",
         "TREBLE_8VA": "Violinschlüssel, 8va",
