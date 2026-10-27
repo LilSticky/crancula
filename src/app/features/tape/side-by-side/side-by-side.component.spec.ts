@@ -1,6 +1,7 @@
 import {Component} from '@angular/core';
 import {TestbedHarnessEnvironment} from '@angular/cdk/testing/testbed';
-import {TestBed} from '@angular/core/testing';
+import {ComponentFixture, TestBed} from '@angular/core/testing';
+import {MatMenuHarness} from '@angular/material/menu/testing';
 import {MatSelectHarness} from '@angular/material/select/testing';
 import {provideRouter, Router} from '@angular/router';
 import {TranslateService} from '@ngx-translate/core';
@@ -8,6 +9,7 @@ import {vi} from 'vitest';
 import {
   createTape,
   defaultSelectedParts,
+  millimetres,
   newPlotterId,
   type Organ,
   type Plotter,
@@ -18,6 +20,7 @@ import {
   type Song,
   sideBySideCut,
   sideBySideSvg,
+  tapeGeometry,
   type Tape,
   validatePlotter,
 } from '@api/index';
@@ -25,6 +28,7 @@ import {encodeSmf} from '../../../../../api/song/midi/smf-test-helper';
 import {CRANCULA_API, createInMemoryCranculaApi, type InMemoryCranculaApi} from '../../../core/crancula-api.token';
 import {testOrgan} from '../../../../testing/organs';
 import {provideTestTranslations} from '../../../../testing/test-translations';
+import {formatNumber} from '../../shared/format-number';
 import {OrganLibrary} from '../../organ/organ-library.store';
 import {PlotterLibrary} from '../../plotter/plotter-library.store';
 import {TapeLibrary} from '../tape-library.store';
@@ -156,6 +160,65 @@ function saveButton(element: HTMLElement): HTMLButtonElement {
   return button;
 }
 
+function required<T>(value: T | null | undefined, what: string): T {
+  if (value === null || value === undefined) throw new Error(`no ${what}`);
+  return value;
+}
+
+function freeText(element: HTMLElement): string | undefined {
+  return element.querySelector('[data-testid="side-by-side-free"]')?.textContent?.trim();
+}
+
+function drawingOf(element: HTMLElement): HTMLElement {
+  return required(element.querySelector<HTMLElement>('[data-testid="side-by-side-drawing"]'), 'side-by-side-drawing');
+}
+
+function laneMark(element: HTMLElement, testId: string, lane: number): HTMLElement {
+  return required(
+    element.querySelector<HTMLElement>(`[data-testid="${testId}"][data-lane="${lane}"]`),
+    `${testId} of Lane ${lane}`,
+  );
+}
+
+function buttonIn(row: HTMLElement, testId: string): HTMLButtonElement {
+  return required(row.querySelector<HTMLButtonElement>(`[data-testid="${testId}"]`), testId);
+}
+
+/** Clicks a control and lets the page settle. */
+async function press(fixture: ComponentFixture<SideBySideComponent>, button: HTMLButtonElement): Promise<void> {
+  button.click();
+  fixture.detectChanges();
+  await fixture.whenStable();
+  fixture.detectChanges();
+}
+
+async function openAddMenu(fixture: ComponentFixture<SideBySideComponent>): Promise<MatMenuHarness> {
+  const menu = await TestbedHarnessEnvironment.loader(fixture).getHarness(
+    MatMenuHarness.with({selector: '[data-testid="add-lane"]'}),
+  );
+  await menu.open();
+  return menu;
+}
+
+/** The add menu's items, by Tape name, opened from the page. */
+async function addMenuItems(fixture: ComponentFixture<SideBySideComponent>) {
+  const menu = await openAddMenu(fixture);
+  return menu.getItems({selector: '[data-testid="add-lane-tape"]'});
+}
+
+/** The add menu item whose text starts with the Tape's name, the disabled ones included (their text has a hint). */
+async function menuItemStartingWith(fixture: ComponentFixture<SideBySideComponent>, name: string) {
+  const items = await addMenuItems(fixture);
+  const texts = await Promise.all(items.map((item) => item.getText()));
+  const found = texts.findIndex((text) => text.startsWith(name));
+  return required(found < 0 ? undefined : items.at(found), `add menu item for ${name}`);
+}
+
+/** The Organ of a Tape with its tape width changed to `width`, keeping its id and name. */
+function widened(organ: Organ, width: number): Organ {
+  return {...organ, tapeBed: {...organ.tapeBed, tapeWidth: required(millimetres(width), 'valid width')}};
+}
+
 describe('SideBySideComponent', () => {
   afterEach(() => {
     vi.restoreAllMocks();
@@ -252,5 +315,186 @@ describe('SideBySideComponent', () => {
 
     expect(setItem).not.toHaveBeenCalled();
     expect(removeItem).not.toHaveBeenCalled();
+  });
+
+  it('shows the free width of the roll plotter after one Lane', async () => {
+    const view = await setUp();
+    const {element} = await open(view, [view.reference]);
+
+    expect(freeText(element)).toBe('200 mm of 300 mm free');
+  });
+
+  it('shows the free width after a Tape is added as a Lane from the add menu', async () => {
+    const view = await setUp();
+    const {fixture, element} = await open(view, [view.reference]);
+
+    const waltz = await menuItemStartingWith(fixture, 'Waltz');
+    await waltz.click();
+    fixture.detectChanges();
+
+    expect(rows(element).map((row) => textIn(row, 'lane-tape'))).toEqual(['Reference', 'Waltz']);
+    expect(freeText(element)).toBe('137 mm of 300 mm free');
+  });
+
+  it('shows how many mm too wide the Lanes are when they pass the working width', async () => {
+    const view = await setUp();
+    const {element} = await open(view, [view.reference, view.reference, view.reference]);
+
+    expect(freeText(element)).toBe('6 mm too wide');
+  });
+
+  it('flags the Lane past the working width as overflow in the drawing', async () => {
+    const view = await setUp();
+    const {element} = await open(view, [view.reference, view.reference, view.reference]);
+
+    expect(laneMark(element, 'lane-outline', 3).classList.contains('overflow')).toBe(true);
+    expect(laneMark(element, 'lane-outline', 1).classList.contains('overflow')).toBe(false);
+  });
+
+  it('lists every Tape in the add menu, grouped by Organ', async () => {
+    const view = await setUp();
+    const {fixture} = await open(view, []);
+
+    const items = await addMenuItems(fixture);
+
+    expect(await Promise.all(items.map((item) => item.getText()))).toEqual(['Waltz', 'Reference']);
+  });
+
+  it('adds a Tape that is already in a Lane as a new Lane', async () => {
+    const view = await setUp();
+    const {fixture, element} = await open(view, [view.reference]);
+
+    const reference = await menuItemStartingWith(fixture, 'Reference');
+    await reference.click();
+    fixture.detectChanges();
+
+    expect(rows(element).map((row) => row.getAttribute('data-lane'))).toEqual(['1', '2']);
+    expect(rows(element).map((row) => textIn(row, 'lane-tape'))).toEqual(['Reference', 'Reference']);
+  });
+
+  it('disables a Tape that does not fit, naming the width it needs and the free width', async () => {
+    const view = await setUp();
+    const {fixture} = await open(view, [view.reference, view.reference, view.waltz]);
+
+    const reference = await menuItemStartingWith(fixture, 'Reference');
+
+    expect(await reference.isDisabled()).toBe(true);
+    expect(await reference.getText()).toContain('needs 103 mm, only 34 mm free');
+  });
+
+  it('draws each Lane, the free band and the working-width line in the drawing', async () => {
+    const view = await setUp();
+    const {element} = await open(view, [view.reference, view.waltz]);
+    const drawing = drawingOf(element);
+
+    expect(drawing.getAttribute('role')).toBe('img');
+    expect(drawing.getAttribute('aria-label')).toBe('2 Lanes, 163 mm used, 137 mm free');
+    expect([...drawing.querySelectorAll('[data-testid="lane-outline"]')].map((mark) => mark.getAttribute('data-lane'))).toEqual(
+      ['1', '2'],
+    );
+    expect([...drawing.querySelectorAll('[data-testid="lane-holes"]')].map((mark) => mark.getAttribute('data-lane'))).toEqual(
+      ['1', '2'],
+    );
+    expect(drawing.querySelector('[data-testid="free-band"]')).not.toBeNull();
+    expect(drawing.querySelector('[data-testid="working-width-line"]')).not.toBeNull();
+  });
+
+  it('hides the inner marks of the drawing from assistive technology', async () => {
+    const view = await setUp();
+    const {element} = await open(view, [view.reference, view.waltz]);
+    const drawing = drawingOf(element);
+
+    for (const testId of ['lane-outline', 'lane-holes', 'free-band', 'working-width-line']) {
+      for (const mark of drawing.querySelectorAll(`[data-testid="${testId}"]`)) {
+        expect(mark.getAttribute('aria-hidden')).toBe('true');
+      }
+    }
+  });
+
+  it('shows the width and the length of each Lane in the number format of the app', async () => {
+    const view = await setUp();
+    const {element} = await open(view, [view.reference]);
+    const length = formatNumber(tapeGeometry(view.reference, view.street).totalLength, 'en');
+
+    expect(textIn(rows(element)[0], 'lane-width')).toBe('100 mm wide');
+    expect(textIn(rows(element)[0], 'lane-length')).toBe(`${length} mm long`);
+  });
+
+  it('moves a Lane up, renumbers the Lanes and updates the drawing at once', async () => {
+    const view = await setUp();
+    const {fixture, element} = await open(view, [view.reference, view.waltz]);
+    const before = laneMark(element, 'lane-outline', 1).getAttribute('d');
+
+    await press(fixture, buttonIn(rows(element)[1], 'lane-up'));
+
+    expect(rows(element).map((row) => textIn(row, 'lane-tape'))).toEqual(['Waltz', 'Reference']);
+    expect(rows(element).map((row) => row.getAttribute('data-lane'))).toEqual(['1', '2']);
+    expect(freeText(element)).toBe('137 mm of 300 mm free');
+    expect(laneMark(element, 'lane-outline', 1).getAttribute('d')).not.toBe(before);
+  });
+
+  it('disables moving the first Lane up and the last Lane down', async () => {
+    const view = await setUp();
+    const {element} = await open(view, [view.reference, view.waltz]);
+
+    expect(buttonIn(rows(element)[0], 'lane-up').disabled).toBe(true);
+    expect(buttonIn(rows(element)[1], 'lane-down').disabled).toBe(true);
+    expect(buttonIn(rows(element)[0], 'lane-down').disabled).toBe(false);
+  });
+
+  it('removes a Lane, renumbers the others and updates the free width at once', async () => {
+    const view = await setUp();
+    const {fixture, element} = await open(view, [view.reference, view.waltz]);
+
+    await press(fixture, buttonIn(rows(element)[0], 'lane-remove'));
+
+    expect(rows(element).map((row) => textIn(row, 'lane-tape'))).toEqual(['Waltz']);
+    expect(rows(element).map((row) => row.getAttribute('data-lane'))).toEqual(['1']);
+    expect(freeText(element)).toBe('240 mm of 300 mm free');
+  });
+
+  it('allows saving with one Lane', async () => {
+    const view = await setUp();
+    const {element} = await open(view, [view.reference]);
+
+    expect(saveButton(element).disabled).toBe(false);
+  });
+
+  it('shows the empty text when there are no Lanes', async () => {
+    const view = await setUp();
+    const {element} = await open(view, []);
+
+    expect(element.querySelector('[data-testid="side-by-side-empty"]')).not.toBeNull();
+    expect(rows(element)).toEqual([]);
+  });
+
+  it('shows a renamed Tape at once', async () => {
+    const view = await setUp();
+    const {fixture, element} = await open(view, [view.reference]);
+
+    await TestBed.inject(TapeLibrary).rename(view.reference.id, 'Renamed');
+    fixture.detectChanges();
+
+    expect(textIn(rows(element)[0], 'lane-tape')).toBe('Renamed');
+  });
+
+  it('shows a changed Organ at once', async () => {
+    const view = await setUp();
+    const {fixture, element} = await open(view, [view.reference]);
+
+    await TestBed.inject(OrganLibrary).put(widened(view.street, 80));
+    fixture.detectChanges();
+
+    expect(textIn(rows(element)[0], 'lane-width')).toBe('80 mm wide');
+  });
+
+  it('drops the Lanes of a removed Tape at once', async () => {
+    const view = await setUp();
+    const {fixture, element} = await open(view, [view.reference, view.waltz]);
+
+    await TestBed.inject(TapeLibrary).remove(view.reference.id);
+    fixture.detectChanges();
+
+    expect(rows(element).map((row) => textIn(row, 'lane-tape'))).toEqual(['Waltz']);
   });
 });

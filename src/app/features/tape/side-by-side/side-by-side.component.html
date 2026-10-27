@@ -14,20 +14,98 @@
     }
   </mat-select>
 </mat-form-field>
+@if (cut(); as cut) {
+  <p class="free" role="status" data-testid="side-by-side-free">
+    @if (cut.freeWidth < 0) {
+      {{ 'TAPE.SIDE_BY_SIDE.OVER' | translate: {over: number(-cut.freeWidth)} }}
+    } @else {
+      {{ 'TAPE.SIDE_BY_SIDE.FREE' | translate: {free: number(cut.freeWidth), working: number(cut.plotter.workingWidth)} }}
+    }
+  </p>
+}
+@if (drawing(); as drawing) {
+  <div class="drawing-frame">
+    <svg data-testid="side-by-side-drawing" class="drawing" role="img"
+         [attr.aria-label]="'TAPE.SIDE_BY_SIDE.DRAWING' | translate: drawingParams()"
+         [attr.viewBox]="drawing.viewBox"
+         [style.width]="'calc(' + drawing.length + ' * var(--cr-mm))'"
+         [style.height]="'calc(' + drawing.height + ' * var(--cr-mm))'">
+      <rect class="paper" x="0" y="0" [attr.width]="drawing.length" [attr.height]="drawing.height" />
+      @if (drawing.freeBand; as band) {
+        <rect data-testid="free-band" aria-hidden="true" class="free-band" x="0"
+              [attr.y]="band.top" [attr.width]="drawing.length" [attr.height]="band.bottom - band.top" />
+      }
+      @for (lane of drawing.lanes; track lane.number) {
+        <path data-testid="lane-outline" aria-hidden="true" class="lane-outline" [class.overflow]="lane.overflow"
+              [attr.data-lane]="lane.number" [attr.d]="lane.outline" />
+        <path data-testid="lane-holes" aria-hidden="true" class="lane-holes" [attr.data-lane]="lane.number"
+              [attr.d]="lane.holes" />
+        <text aria-hidden="true" class="lane-number" x="1" [attr.y]="lane.centre">{{ lane.number }}</text>
+      }
+      <line data-testid="working-width-line" aria-hidden="true" class="working-width" x1="0"
+            [attr.x2]="drawing.length" [attr.y1]="drawing.workingWidthY" [attr.y2]="drawing.workingWidthY" />
+    </svg>
+  </div>
+}
 <mat-card appearance="outlined">
+  <div class="lanes-head">
+    <button matButton="outlined" type="button" data-testid="add-lane" [matMenuTriggerFor]="addMenu">
+      {{ 'TAPE.SIDE_BY_SIDE.ADD' | translate }}
+    </button>
+  </div>
+  @if (rows().length === 0) {
+    <p class="empty" data-testid="side-by-side-empty">{{ 'TAPE.SIDE_BY_SIDE.EMPTY' | translate }}</p>
+  }
   <ol class="lanes">
-    @for (lane of lanes(); track lane.number) {
-      <li data-testid="lane" [attr.data-lane]="lane.number">
-        <span data-testid="lane-number">{{ lane.number }}</span>
-        <span data-testid="lane-tape">{{ lane.tape.name }}</span>
+    @for (row of rows(); track row.key) {
+      <li data-testid="lane" [attr.data-lane]="row.number" class="lane">
+        <span data-testid="lane-number">{{ row.number }}</span>
+        <span data-testid="lane-tape">{{ row.tape.name }}</span>
         <span data-testid="lane-organ">
-          @if (lane.organ; as organ) {
+          @if (row.organ; as organ) {
             {{ organ.name }}
           } @else {
             {{ 'TAPE.LIST.ORGAN_NOT_AVAILABLE' | translate }}
           }
         </span>
+        @if (row.geometry; as geometry) {
+          <span data-testid="lane-width" class="measure">{{ 'TAPE.SIDE_BY_SIDE.LANE_WIDTH' | translate: {width: number(geometry.width)} }}</span>
+          <span data-testid="lane-length" class="measure">{{ 'TAPE.SIDE_BY_SIDE.LANE_LENGTH' | translate: {length: number(geometry.totalLength)} }}</span>
+        }
+        <span class="actions">
+          <button matIconButton type="button" data-testid="lane-up" [disabled]="row.number === 1"
+                  [attr.aria-label]="'TAPE.SIDE_BY_SIDE.LANE_UP' | translate: {lane: row.number, tape: row.tape.name}"
+                  (click)="move(row.key, -1)">
+            <mat-icon>arrow_upward</mat-icon>
+          </button>
+          <button matIconButton type="button" data-testid="lane-down" [disabled]="row.number === rows().length"
+                  [attr.aria-label]="'TAPE.SIDE_BY_SIDE.LANE_DOWN' | translate: {lane: row.number, tape: row.tape.name}"
+                  (click)="move(row.key, 1)">
+            <mat-icon>arrow_downward</mat-icon>
+          </button>
+          <button matIconButton type="button" data-testid="lane-remove"
+                  [attr.aria-label]="'TAPE.SIDE_BY_SIDE.LANE_REMOVE' | translate: {lane: row.number, tape: row.tape.name}"
+                  (click)="remove(row.key)">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </span>
       </li>
     }
   </ol>
 </mat-card>
+<mat-menu #addMenu="matMenu">
+  @for (group of addGroups(); track group.key) {
+    <div class="organ-heading" role="presentation">
+      {{ group.organName ?? ('TAPE.LIST.ORGAN_NOT_AVAILABLE' | translate) }}
+    </div>
+    @for (option of group.options; track option.tape.id) {
+      <button mat-menu-item type="button" data-testid="add-lane-tape" [disabled]="option.doesNotFit !== undefined"
+              (click)="add(option.tape)">
+        <span>{{ option.name }}</span>
+        @if (option.doesNotFit; as fit) {
+          <span class="hint">{{ 'TAPE.SIDE_BY_SIDE.DOES_NOT_FIT' | translate: fit }}</span>
+        }
+      </button>
+    }
+  }
+</mat-menu>
