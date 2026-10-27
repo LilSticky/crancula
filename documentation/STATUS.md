@@ -15,6 +15,7 @@ later slice; discovery still to do).
 [#183](https://github.com/LilSticky/crancula/issues/183) (review findings 2, 3, 5, 7, 9, 10 of slice 012).
 
 **Known broken:** none. ([#175](https://github.com/LilSticky/crancula/issues/175), 2026-10-27: `npm run lint` now covers `api/`.)
+
 **Done:** [Empty Parts block on the import page (#178)](https://github.com/LilSticky/crancula/issues/178) (2026-10-27): the Parts block shows only once a Song is chosen, also after a rejected file.
 
 **Open:** real MuseScore and Audiveris files not checked by hand (010 T063, needs the user's files). Tape pieces not checked by
