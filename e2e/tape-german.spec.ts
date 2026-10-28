@@ -87,7 +87,7 @@ test.describe('I can export a Tape in German', () => {
       await window.getByTestId('row-spacing').fill('4');
       await saveOrgan(window);
       await window.getByRole('link', {name: 'Tapes'}).click();
-      await window.getByTestId('tape').click();
+      await window.getByTestId('open-tape').click();
       await window.getByTestId('language-switch').locator('[data-language="de"]').click();
 
       await exportForPlotter(window);
