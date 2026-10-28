@@ -140,6 +140,9 @@ export class SideBySideComponent {
     ),
   );
 
+  /** Whether the library has no roll Plotter: Save is disabled and the reason is shown. */
+  protected readonly noRollPlotter = computed(() => this.rollPlotters().length === 0);
+
   /** The picked roll Plotter, resolved against the library: a removed one, or one turned into a sheet, reads as none. */
   protected readonly plotter = computed<RollPlotter | undefined>(() => {
     const picked = this.pickedId();

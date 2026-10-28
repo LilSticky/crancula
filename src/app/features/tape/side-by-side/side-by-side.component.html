@@ -1,11 +1,18 @@
 <cranc-page-head [title]="'TAPE.SIDE_BY_SIDE.TITLE' | translate" [subtitle]="'TAPE.SIDE_BY_SIDE.SUBTITLE' | translate">
   <ng-container ngProjectAs="[pageHeadActions]">
     <button matButton="filled" type="button" data-testid="save-side-by-side"
-            [disabled]="exporter.saving()" (click)="save()">
+            [disabled]="exporter.saving() || noRollPlotter()"
+            [attr.aria-describedby]="noRollPlotter() ? 'no-roll-plotter-reason' : null" (click)="save()">
       {{ 'TAPE.SIDE_BY_SIDE.SAVE' | translate }}
     </button>
   </ng-container>
 </cranc-page-head>
+@if (noRollPlotter()) {
+  <div class="no-plotter">
+    <p id="no-roll-plotter-reason" role="status" data-testid="side-by-side-no-plotter">{{ 'TAPE.SIDE_BY_SIDE.NO_ROLL_PLOTTER' | translate }}</p>
+    <a matButton="outlined" routerLink="/plotters/new" data-testid="side-by-side-describe-plotter">{{ 'TAPE.SIDE_BY_SIDE.DESCRIBE_PLOTTER' | translate }}</a>
+  </div>
+}
 <mat-form-field subscriptSizing="dynamic" class="plotter">
   <mat-label>{{ 'TAPE.PLOTTER.PICKER_LABEL' | translate }}</mat-label>
   <mat-select data-testid="side-by-side-plotter" [value]="plotter()?.id" (selectionChange)="pick($event)">
@@ -14,12 +21,6 @@
     }
   </mat-select>
 </mat-form-field>
-@if (rollPlotters().length === 0) {
-  <div class="no-plotter">
-    <p role="status" data-testid="side-by-side-no-plotter">{{ 'TAPE.SIDE_BY_SIDE.NO_ROLL_PLOTTER' | translate }}</p>
-    <a matButton="outlined" routerLink="/plotters/new" data-testid="side-by-side-describe-plotter">{{ 'TAPE.SIDE_BY_SIDE.DESCRIBE_PLOTTER' | translate }}</a>
-  </div>
-}
 @if (cut(); as cut) {
   <p class="free" role="status" data-testid="side-by-side-free">
     @if (cut.freeWidth < 0) {

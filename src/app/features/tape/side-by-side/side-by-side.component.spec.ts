@@ -694,6 +694,37 @@ describe('SideBySideComponent', () => {
       expect(element.querySelector('[data-testid="side-by-side-free"]')).toBeNull();
     });
 
+    it('disables Save while there is no roll plotter', async () => {
+      const view = await setUp([sheetPlotter()]);
+
+      const {element} = await open(view, [view.reference]);
+
+      expect(saveButton(element).disabled).toBe(true);
+    });
+
+    it('describes the disabled Save by the reason that there is no roll plotter', async () => {
+      const view = await setUp([sheetPlotter()]);
+
+      const {element} = await open(view, [view.reference]);
+
+      const described = (saveButton(element).getAttribute('aria-describedby') ?? '')
+        .split(/\s+/)
+        .map((id) => element.querySelector(`[id="${id}"]`)?.textContent?.trim() ?? '');
+      expect(described).toContain('No roll plotter yet. Cutting side by side needs a roll plotter, such as a vinyl cutter.');
+    });
+
+    it('puts the no-roll-plotter message and the Describe a Plotter link before the plotter picker', async () => {
+      const view = await setUp([sheetPlotter()]);
+
+      const {element} = await open(view, [view.reference]);
+
+      const message = required(element.querySelector<HTMLElement>('[data-testid="side-by-side-no-plotter"]'), 'no-plotter message');
+      const link = required(element.querySelector<HTMLElement>('[data-testid="side-by-side-describe-plotter"]'), 'Describe a Plotter link');
+      const picker = required(element.querySelector<HTMLElement>('[data-testid="side-by-side-plotter"]'), 'plotter picker');
+      expect(message.compareDocumentPosition(picker) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0);
+      expect(link.compareDocumentPosition(picker) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0);
+    });
+
     it('recomputes the free width and marks the Lane that no longer fits when a narrower roll plotter is picked', async () => {
       const view = await setUp([rollPlotter(), rollPlotter('Narrow cutter', 150)]);
       const {fixture, element} = await open(view, [view.reference, view.waltz]);
