@@ -44,7 +44,7 @@
 
 - **Decision**: an optional "Guide margin" field after "Spacing between rows", suffix mm, hint "Guide edge to
   the centre of row 1; empty: rows centred". The read-only Border field shows one value with the hint "On each
-  side, the rows are centred" when centred, and "8.5 mm guide side · 25.35 mm far side" with the hint "Guide
+  side, the rows are centred" when centred, and "8.5 mm guide side · 25.35 mm far side" with the hint "The guide
   side is row 1's edge" otherwise. Fit and drawing texts gain `_OFF_CENTRE` variants naming both Borders. The
   drawing's strips use `borders.guide` (top) and `borders.far` (bottom).
 - **Rationale**: keeps centred Organs exactly as today (no visual change for existing users).

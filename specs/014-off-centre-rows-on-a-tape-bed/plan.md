@@ -88,7 +88,7 @@ src/app/features/organ/
 src/app/features/tape/tape-view/
 ├── tape-drawing.ts             # outline().borders from Borders
 └── pointer-at.ts               # one-row fallback (R6)
-src/assets/i18n/{en,de}.json    # ORGAN.EDITOR.GUIDE_MARGIN(_HINT), BORDER_*, FIT_OFF_CENTRE*, TAPE_BED_DRAWING_OFF_CENTRE*, ORGAN.ERROR.GUIDE_MARGIN_*
+src/assets/i18n/{en,de}.json    # ORGAN.EDITOR.GUIDE_MARGIN(_HINT), BORDER_*, FIT_OFF_CENTRE*, TAPE_BED_DRAWING_OFF_CENTRE*, ORGAN.VIOLATION.GUIDE_MARGIN_*
 e2e/organ-guide-margin.spec.ts  # Stories 1–3 in real Electron
 ```
 
