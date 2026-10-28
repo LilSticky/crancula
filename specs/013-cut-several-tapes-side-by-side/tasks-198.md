@@ -20,4 +20,4 @@ TDD per task (`tdd` skill): a failing Vitest component test first, e2e only wher
   width, length), so rows with and without marks line up.
 - [x] F7 (finding 8) Plotter editor: the Tape spacing hint no longer makes the field row uneven (hint in the card
   subtitle, or a hint line under both fields).
-- [ ] F8 i18n parity, lint, tests; `npm run ux:screens` for the side-by-side, Tape list and Plotter editor screens.
+- [x] F8 i18n parity, lint, tests; `npm run ux:screens` for the side-by-side, Tape list and Plotter editor screens.
