@@ -19,7 +19,7 @@ Offer 2–3 alternatives when the name itself is the question. Stop here if the 
 
 ## 2. Update the dictionary
 
-Edit `documentation/DICTIONARY.md`: one `# Term` heading per term, short `*` bullets, referencing other terms by their exact names. Keep the order (related terms near each other). Commit alone: `docs(dictionary): add <Term>` / `clarify <Term>` / `rename <Old> to <New>`.
+Edit `documentation/DICTIONARY.md`: one `## Term` heading per term under the `# Group` of its domain (Organ, Song, Bringing a Song onto a Tape, Tape, Playing, Cutting), short `*` bullets, referencing other terms by their exact names. Keep related terms near each other in their group; a term that fits no group is a domain question for the user. Commit alone: `docs(dictionary): add <Term>` / `clarify <Term>` / `rename <Old> to <New>`.
 
 ## 3. Carry a rename through
 
