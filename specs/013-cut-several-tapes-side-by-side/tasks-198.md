@@ -14,10 +14,10 @@ TDD per task (`tdd` skill): a failing Vitest component test first, e2e only wher
 - [x] F4 (finding 5) Tape list: a header checkbox (all / none, with an accessible label) over the tick column.
   "Bring a Song onto a Tape" stays the filled button while nothing is ticked; once Tapes are ticked,
   "Cut side by side (n)" is the filled one and "Bring a Song onto a Tape" is outlined.
-- [ ] F5 (finding 6) Tape list: the count of Cutting Problems per Tape, shown only when there are any, using the same
+- [x] F5 (finding 6) Tape list: the count of Cutting Problems per Tape, shown only when there are any, using the same
   domain function as the Lane list.
-- [ ] F6 (finding 7) Lane list rows as a table-like grid with fixed measure columns (number, Tape, Organ, marks,
+- [x] F6 (finding 7) Lane list rows as a table-like grid with fixed measure columns (number, Tape, Organ, marks,
   width, length), so rows with and without marks line up.
-- [ ] F7 (finding 8) Plotter editor: the Tape spacing hint no longer makes the field row uneven (hint in the card
+- [x] F7 (finding 8) Plotter editor: the Tape spacing hint no longer makes the field row uneven (hint in the card
   subtitle, or a hint line under both fields).
 - [ ] F8 i18n parity, lint, tests; `npm run ux:screens` for the side-by-side, Tape list and Plotter editor screens.
