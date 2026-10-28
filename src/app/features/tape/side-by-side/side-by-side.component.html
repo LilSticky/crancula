@@ -64,27 +64,35 @@
   <ol class="lanes">
     @for (row of rows(); track row.key) {
       <li data-testid="lane" [attr.data-lane]="row.number" class="lane">
-        <span data-testid="lane-number">{{ row.number }}</span>
-        <span data-testid="lane-tape">{{ row.tape.name }}</span>
-        <span data-testid="lane-organ">
+        <span data-column="number" data-testid="lane-number">{{ row.number }}</span>
+        <span data-column="tape" data-testid="lane-tape">{{ row.tape.name }}</span>
+        <span data-column="organ" data-testid="lane-organ">
           @if (row.organ; as organ) {
             {{ organ.name }}
           } @else {
             {{ 'TAPE.LIST.ORGAN_NOT_AVAILABLE' | translate }}
           }
         </span>
-        @let problems = problemCounts().get(row.tape.id) ?? 0;
-        @if (problems > 0) {
-          <span data-testid="lane-problems" class="mark">{{ (problems === 1 ? 'TAPE.SIDE_BY_SIDE.LANE_PROBLEMS_ONE' : 'TAPE.SIDE_BY_SIDE.LANE_PROBLEMS') | translate: {count: number(problems)} }}</span>
-        }
-        @if (lanesPastWidth().has(row.number)) {
-          <span data-testid="lane-does-not-fit" class="mark">{{ 'TAPE.SIDE_BY_SIDE.LANE_DOES_NOT_FIT' | translate }}</span>
-        }
-        @if (row.geometry; as geometry) {
-          <span data-testid="lane-width" class="measure">{{ 'TAPE.SIDE_BY_SIDE.LANE_WIDTH' | translate: {width: number(geometry.width)} }}</span>
-          <span data-testid="lane-length" class="measure">{{ 'TAPE.SIDE_BY_SIDE.LANE_LENGTH' | translate: {length: number(geometry.totalLength)} }}</span>
-        }
-        <span class="actions">
+        <span data-column="marks" class="marks">
+          @let problems = problemCounts().get(row.tape.id) ?? 0;
+          @if (problems > 0) {
+            <span data-testid="lane-problems" class="mark">{{ (problems === 1 ? 'TAPE.SIDE_BY_SIDE.LANE_PROBLEMS_ONE' : 'TAPE.SIDE_BY_SIDE.LANE_PROBLEMS') | translate: {count: number(problems)} }}</span>
+          }
+          @if (lanesPastWidth().has(row.number)) {
+            <span data-testid="lane-does-not-fit" class="mark">{{ 'TAPE.SIDE_BY_SIDE.LANE_DOES_NOT_FIT' | translate }}</span>
+          }
+        </span>
+        <span data-column="width" class="measure">
+          @if (row.geometry; as geometry) {
+            <span data-testid="lane-width">{{ 'TAPE.SIDE_BY_SIDE.LANE_WIDTH' | translate: {width: number(geometry.width)} }}</span>
+          }
+        </span>
+        <span data-column="length" class="measure">
+          @if (row.geometry; as geometry) {
+            <span data-testid="lane-length">{{ 'TAPE.SIDE_BY_SIDE.LANE_LENGTH' | translate: {length: number(geometry.totalLength)} }}</span>
+          }
+        </span>
+        <span data-column="actions" class="actions">
           <button matIconButton type="button" data-testid="lane-up" [disabled]="row.number === 1"
                   [attr.aria-label]="'TAPE.SIDE_BY_SIDE.LANE_UP' | translate: {lane: row.number, tape: row.tape.name}"
                   (click)="move(row.key, -1)">

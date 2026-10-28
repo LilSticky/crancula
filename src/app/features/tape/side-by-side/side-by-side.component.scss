@@ -81,10 +81,17 @@
 }
 
 .lane {
-  display: flex;
+  display: grid;
+  grid-template-columns: 2em minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) 8rem 8rem auto;
   align-items: center;
-  gap: 16px;
+  column-gap: 16px;
   padding: 8px 0;
+
+  .marks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
 
   .measure {
     color: var(--mat-sys-on-surface-variant);
@@ -92,7 +99,6 @@
 
   .actions {
     display: flex;
-    margin-left: auto;
   }
 }
 

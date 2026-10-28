@@ -238,6 +238,19 @@ function withoutPipe(tape: Tape): Tape {
   return tapeOf({...tape, holes: [...tape.holes, {pipe: note, start, length}]});
 }
 
+/** The measure columns of a Lane row, in order; every row has all of them, empty or not. */
+const MEASURE_COLUMNS = ['number', 'tape', 'organ', 'marks', 'width', 'length', 'actions'];
+
+/** The column names of the cells of a Lane row, in order. */
+function columnsOf(row: HTMLElement): string[] {
+  return [...row.children].map((cell) => cell.getAttribute('data-column') ?? '');
+}
+
+/** The cell of the Lane row in the measure column `column`, or null when the row has none. */
+function cellIn(row: HTMLElement, column: string): HTMLElement | null {
+  return row.querySelector<HTMLElement>(`:scope > [data-column="${column}"]`);
+}
+
 /** The mark of the Lane row with `testId`, or null when the row has none. */
 function markIn(row: HTMLElement, testId: string): HTMLElement | null {
   return row.querySelector<HTMLElement>(`[data-testid="${testId}"]`);
@@ -459,6 +472,27 @@ describe('SideBySideComponent', () => {
 
     expect(textIn(rows(element)[0], 'lane-width')).toBe('100 mm wide');
     expect(textIn(rows(element)[0], 'lane-length')).toBe(`${length} mm long`);
+  });
+
+  it('lays every Lane out in the same measure columns, with an empty marks cell for a Lane without marks', async () => {
+    const view = await setUp();
+    await TestBed.inject(TapeLibrary).update(withoutPipe(view.waltz));
+    const {element} = await open(view, [view.reference, view.waltz]);
+
+    expect(rows(element).map(columnsOf)).toEqual([MEASURE_COLUMNS, MEASURE_COLUMNS]);
+    expect(required(cellIn(rows(element)[0], 'marks'), 'the marks cell').textContent?.trim()).toBe('');
+    expect(textIn(rows(element)[1], 'lane-problems')).toBe('1 Cutting Problem');
+  });
+
+  it('keeps the same measure columns for a Lane whose Organ is not available', async () => {
+    const view = await setUp();
+    await TestBed.inject(OrganLibrary).remove(view.barrel.id);
+    const {element} = await open(view, [view.reference, view.waltz]);
+
+    expect(rows(element).map(columnsOf)).toEqual([MEASURE_COLUMNS, MEASURE_COLUMNS]);
+    expect(textIn(rows(element)[1], 'lane-organ')).toBe('Organ not available');
+    expect(required(cellIn(rows(element)[1], 'width'), 'the width cell').textContent?.trim()).toBe('');
+    expect(required(cellIn(rows(element)[1], 'length'), 'the length cell').textContent?.trim()).toBe('');
   });
 
   it('moves a Lane up, renumbers the Lanes and updates the drawing at once', async () => {
