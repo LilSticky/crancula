@@ -2,455 +2,63 @@
 
 Where work stands right now. Updated in every change (constitution, principle VI).
 Plan: [ROADMAP.md](ROADMAP.md) · Decisions: [adr/](adr/README.md) · Language: [DICTIONARY.md](DICTIONARY.md) ·
-Issues: [GitHub](https://github.com/LilSticky/crancula/issues)
+Issues: [GitHub](https://github.com/LilSticky/crancula/issues) · What shipped: [CHANGELOG.md](../CHANGELOG.md)
+
+Finished work is not kept here: it lives in the [CHANGELOG](../CHANGELOG.md), the [ROADMAP](ROADMAP.md), the slice folders
+in `specs/` and the Git history. Cleaned up on 2026-10-28.
 
 ## Current slice
 
 [014 Off-centre rows on a Tape Bed (#163)](../specs/014-off-centre-rows-on-a-tape-bed/spec.md), PR [#202](https://github.com/LilSticky/crancula/pull/202), implemented; reviews fixed ([review-angular.md](../specs/014-off-centre-rows-on-a-tape-bed/review-angular.md), [audit.md](../specs/014-off-centre-rows-on-a-tape-bed/audit.md)).
+An optional Guide margin on the Tape Bed (guide edge to the centre of row 1; empty means centred); the Border is per side
+(guide side, far side). Organs snapshot v6; v1–5 load centred ([ADR 20](adr/0020-snapshots-migrated-on-read.md)). Presets
+20er and 31er carry Guide margins 10 and 11 mm.
 
 **Next step:** merge PR [#202](https://github.com/LilSticky/crancula/pull/202) once CI is green, then [#198](https://github.com/LilSticky/crancula/issues/198) (side-by-side UX follow-ups).
+Nothing has been released since v0.2.0 (2026-10-24); `[Unreleased]` in the CHANGELOG holds Presets, Record, Scores in and
+out, Plotters and Tape pieces, side by side and the Guide margin, so a release (`/release`) is due.
 
-**Done:** Off-centre rows on a Tape Bed ([#163](https://github.com/LilSticky/crancula/issues/163), branch `014-off-centre-rows-on-a-tape-bed`, PR [#202](https://github.com/LilSticky/crancula/pull/202)): an optional Guide margin on the Tape Bed (guide edge to the centre of row 1; empty means centred). The Border is per side: guide side (Führungsseite) and far side (Gegenseite), in the Organ editor and the Tape view. Organs snapshot v6 (`organs.json`); v1–5 load centred ([ADR 20](adr/0020-snapshots-migrated-on-read.md)). Presets 20er and 31er carry Guide margins 10 and 11 mm. Dictionary: guide side and far side, approved by the user 2026-10-28.
+**Open in slice 014:** T017 (`ux:screens` and `ux-review` of the Organ editor), a small field change.
 
-**Open:** T017 (`ux:screens` and `ux-review` of the Organ editor) not done; a small field change. T021 hand check (cut and play a 20er Tape with the Guide margin, needs the user).
+## Not checked by hand yet
 
-**Done:** Discovery of Off-centre rows on a Tape Bed (2026-10-28, branch `docs/163-discovery`): the user enters a
-Guide margin (guide edge to the centre of row 1), row 1's edge is the guide edge, empty means centred. Dictionary: Guide
-margin (Führungsrand), approved by the user 2026-10-28; Border is now per side.
+These need the user, a real file or a real machine; the automated tests pass.
 
-**Done:** [Cut several tapes side by side](../specs/013-cut-several-tapes-side-by-side/spec.md) ([#170](https://github.com/LilSticky/crancula/issues/170),
-branch `013-cut-several-tapes-side-by-side`): merged (PR [#199](https://github.com/LilSticky/crancula/pull/199), 2026-10-28; CI green on three OSes). Tick Tapes in the Tape list, "Cut side by side"
-opens its own page (`/tapes/side-by-side`) with a roll plotter picker, a fit-to-width drawing of the roll, the Lane list
-(move, remove, add, copies allowed) and the free width; saving writes one SVG through the existing `plotter:save-svg` channel,
-one Tape per Lane, Tape spacing apart, Lane by Lane. Refusals (no roll plotter, no Lane, no Organ, a Lane that doesn't fit,
-Cutting Problems per Tape) come from one domain plan (`sideBySidePlan`). Roll plotters gain a Tape spacing (3 mm), `plotters.json`
-v2 with v1 migration (ADR 20). Dictionary: German working width/length (Arbeitsbreite, Arbeitslänge) approved 2026-10-27.
-Reviews: [review-angular.md](../specs/013-cut-several-tapes-side-by-side/review-angular.md) fixed,
-[audit.md](../specs/013-cut-several-tapes-side-by-side/audit.md) clean, [ux-review.md](../specs/013-cut-several-tapes-side-by-side/ux-review.md)
-38/50 with the major finding fixed (fit-to-width); follow-ups [#198](https://github.com/LilSticky/crancula/issues/198).
-**Not checked by hand yet**: a side-by-side SVG in Inkscape and on the vinyl cutter (T043, needs the user).
+- 014 T021: cut and play a 20er Tape with the Guide margin.
+- 013 T043: a side-by-side SVG in Inkscape and on the vinyl cutter.
+- 012 T057: an exported MusicXML in MuseScore 4 (SC-001, SC-002, SC-004). T056 (gate run) is unticked: its e2e results
+  were not recorded.
+- 011 T062: Tape piece SVGs in Inkscape, and a real Tape glued from pieces.
+- 010 T063: real MuseScore and Audiveris files.
+- 009: listening to a Recording (WAV and MP3).
+- [#122](https://github.com/LilSticky/crancula/issues/122): menu Undo and Redo on a real Mac.
 
-**Open:** T057 hand check of an exported MusicXML in MuseScore 4 (needs the user; SC-001, SC-002, SC-004). Follow-up
-[#183](https://github.com/LilSticky/crancula/issues/183) (review findings 2, 3, 5, 7, 9, 10 of slice 012).
+## Follow-ups
 
-**Done:** [Scores export dialog UX (#183)](https://github.com/LilSticky/crancula/issues/183) (2026-10-27): Beats and Beat type in one grid with a reserved error line, one row per staff for split notes, an outlined Add a split note button, a summary of the Key and tempo the Scores carry (`scoresKeyAt` in `api/scores`, shared with the export), "Another time signature"; light idle field border raised to 3.16:1. Missing screens split into [#188](https://github.com/LilSticky/crancula/issues/188).
-
-**Done:** [Tape pieces contrast measured (#190)](https://github.com/LilSticky/crancula/issues/190) (2026-10-27): measured on rendered
-pixels, the Overlap hatch was 2.15:1 (light) / 2.01:1 (dark) and the stretch hatch 2.80:1 / 2.59:1 against the Tape; full stroke
-opacity raises them to 3.40 / 3.05 and 4.23 / 3.77. Table in [ux-review.md](../specs/011-cut-a-tape-in-pieces/ux-review.md).
-
-**Known broken:** none. ([#175](https://github.com/LilSticky/crancula/issues/175), 2026-10-27: `npm run lint` now covers `api/`.)
-
-**Done:** [Empty Parts block on the import page (#178)](https://github.com/LilSticky/crancula/issues/178) (2026-10-27): the Parts block shows only once a Song is chosen, also after a rejected file.
-
-**Done:** [Replace question lists every Tape piece (#180)](https://github.com/LilSticky/crancula/issues/180) (2026-10-27): the replace message box lists the first 10 existing names and "… and K more" (`replaceMoreLine` in the Tape pieces save request, validated to hold `{count}` once).
-
-**Open:** real MuseScore and Audiveris files not checked by hand (010 T063, needs the user's files). Tape pieces not checked by
-hand either: piece SVGs in Inkscape and a real Tape glued (011 T062, needs the user).
-
-**Done:** [Tape pieces UX follow-ups (#181)](https://github.com/LilSticky/crancula/issues/181) (2026-10-27): Join ticks in the overview strip,
-"1 of 3" piece labels between the Joins (none for a single piece), a "No Join possible" label on a stretch without a Join (shown
-only where it fits), a refusal icon on Export with the too-wide reason as its description, and a hint line and Cancel in the
-Plotter editor. Contrast measurement on rendered pixels split into [#190](https://github.com/LilSticky/crancula/issues/190).
-
-**Done:** [Tape view page head styles (#173)](https://github.com/LilSticky/crancula/issues/173) (2026-10-27): all icon-only page head
-actions are outlined buttons (Undo and Redo included), Preview sits next to Record, and Undo, Redo and Transpose (buttons and
-shortcuts) are disabled while a Recording runs. The German head height and the Crank speed label were already fixed (#177, #156).
-
-**Done:** Discovery of Cut several tapes side by side (2026-10-27, branch `docs/170-discovery`): user decisions 29–34 in
-[discovery/later.md](discovery/later.md) section 5 (any Tapes, copies allowed; one Tape per Lane in the user's order; Tape spacing
-on the roll plotter, default 3 mm; a Tape that doesn't fit can't be added; roll plotters only; chosen at export, nothing stored).
-Dictionary: Lane (Bahn) and Tape spacing (Bandabstand), approved by the user 2026-10-27.
-
-**Done:** [Cancel a running Recording (#172)](https://github.com/LilSticky/crancula/issues/172) (2026-10-27): a Cancel action in the
-Tape view page head while the Recording renders or encodes; nothing is written, the MP3 Worker is terminated, the offline render
-runs out and is ignored, and the chosen target stays open in main until the next save dialog. Layout e2e at 1180 px (en) and
-1440 px (de) while recording.
-
-**Done:** [Missing Scores export screens (#188)](https://github.com/LilSticky/crancula/issues/188) (2026-10-27): `npm run ux:screens`
-now captures 30e (equal split notes), 30f (metre not on Columns), 30g (saved) and 30h (failed), each in en, dark and German; all
-screens retaken.
-
-**Done:** [Muted e2e runs (#196)](https://github.com/LilSticky/crancula/issues/196) (2026-10-27): the e2e launcher starts Electron
-with `--mute-audio`, so `npm run e2e` and `npm run ux:screens` no longer play Previews through the speakers.
-
-**Done (PR [#182](https://github.com/LilSticky/crancula/pull/182), merged):** [Read a tape as Scores](../specs/012-read-a-tape-as-scores/spec.md)
-([#169](https://github.com/LilSticky/crancula/issues/169), branch `012-read-a-tape-as-scores`): the Tape exports as MusicXML from the new
-Export menu, with staves split by notes, clefs, Key, tempo and Time signature. T056 (gate run) is not ticked: its e2e
-results are not recorded here yet.
-
-**Done:** [Cut a tape in pieces](../specs/011-cut-a-tape-in-pieces/spec.md) ([#168](https://github.com/LilSticky/crancula/issues/168), v0.4,
-branch `011-cut-a-tape-in-pieces`, PR [#174](https://github.com/LilSticky/crancula/pull/174)): Plotters are described like Organs
-(`plotters.json`, list, editor, sheet or roll plotter). The Plotter is picked in the Tape view and remembered per machine. A Tape
-longer than the Plotter's Working area is cut in Tape pieces at the furthest Joins, each with an Overlap for gluing; the pieces are
-saved into one folder (`plotter:save-svg-pieces`, [ADR 28](adr/0028-tape-pieces-saved-into-one-folder-by-main.md)).
-A stretch without a Join and a Plotter too narrow for the Tape are Cutting Problems and refuse the export. Joins, Overlaps and
-stretches are drawn on the Tape. Dictionary: Sheet plotter (Bogenplotter), added with user approval 2026-10-26; the count reads
-"N Cutting Problems". Reviews ([audit.md](../specs/011-cut-a-tape-in-pieces/audit.md),
-[ux-review.md](../specs/011-cut-a-tape-in-pieces/ux-review.md)) fixed; follow-ups [#180](https://github.com/LilSticky/crancula/issues/180)
-and [#181](https://github.com/LilSticky/crancula/issues/181). Gate: 1530 node (1 skipped: dangling link, needs symlink rights on Windows) and 1732 Angular unit tests, lint, i18n (432 keys), build; e2e `tape-pieces`, `plotter-library`, `tape-edit`, `tape-german`, `boundary` green locally; full e2e in CI.
-**Not checked by hand yet**: piece SVGs in Inkscape and a real Tape glued (T062, needs the user).
-
-**Done:** [Export clipped at 1280 px in German (#177)](https://github.com/LilSticky/crancula/issues/177) (2026-10-26, branch
-`177-tape-toolbar-german`): in German the Tape view's page head actions (Preview, Transpose, Record, Export) show as icons
-below 1440 px, with their labels as accessible names and tooltips; English keeps 1180 px, and the side panel stays on 1180 px.
-New e2e in `e2e/tape-layout.spec.ts` at 1280×800 in German. Gate: 1527 Angular unit tests, lint, `tape-layout` e2e (#177 and
-one-row tests) locally; full e2e in CI.
-
-**Done:** [Bring Scores onto a tape](../specs/010-bring-scores-onto-a-tape/spec.md) ([#167](https://github.com/LilSticky/crancula/issues/167), v0.3,
-branch `010-bring-scores-onto-a-tape`, PR [#176](https://github.com/LilSticky/crancula/pull/176)): a MusicXML Score (`.musicxml`, `.xml`,
-`.mxl`) becomes a Song with one Part per staff. Repeats, endings, D.C./D.S., fine and coda are played out (after a jump, repeats are
-skipped); ties are joined; grace notes and ornaments are left out and counted in the Import Summary. Songs from Scores and MIDI keep
-Time signatures, Keys and upbeat (Tape snapshot v3), shown read-only as the Metre on the import screen and in the Tape details. PDF and
-printed Scores get a how-to dialog. Own XML reader, fflate 0.8.3 for `.mxl`, [ADR 27](adr/0027-own-musicxml-reader-in-the-domain.md).
-Decisions: a sounding pitch outside 0–127 folds by octaves; an unpitched Note without pitch is E4. Dictionary: Metre, Part = one staff
-or instrument, Score (singular), German Import Summary words; German Song texts now "Stück". Reviews ([audit.md](../specs/010-bring-scores-onto-a-tape/audit.md),
-[ux-review.md](../specs/010-bring-scores-onto-a-tape/ux-review.md)) fixed; follow-ups [#175](https://github.com/LilSticky/crancula/issues/175),
-[#177](https://github.com/LilSticky/crancula/issues/177), [#178](https://github.com/LilSticky/crancula/issues/178). Gate: 1284 node and
-1523 Angular unit tests, lint, i18n; full e2e 161 green locally, CI on three OSes. **Not checked by hand yet**: real MuseScore and
-Audiveris files (T063).
-
-**Done:** [Record a tape](../specs/009-record-a-tape/spec.md) ([#165](https://github.com/LilSticky/crancula/issues/165), v0.2,
-branch `009-record-a-tape`, PR [#166](https://github.com/LilSticky/crancula/pull/166)): save the whole Tape at its Crank speed as a
-WAV or MP3 Recording. WAV is mono 44.1 kHz 16 bit; MP3 is 128 kbit/s via LAME (LGPL, unmodified) in a Worker. The
-Recording is rendered offline with the Preview voices; two IPC calls (`recording.chooseFile`, `recording.writeFile`)
-with a single-use target, [ADR 26](adr/0026-recording-rendered-offline-saved-by-main.md). Record is disabled without a
-Tape per Crank turn or while the Preview plays; the page head actions are icon-only below 1180 px so Record fits at
-1024 px. Reviews (electron, angular, UX, spec audit, [audit.md](../specs/009-record-a-tape/audit.md)) fixed; open
-follow-ups [#172](https://github.com/LilSticky/crancula/issues/172) and [#173](https://github.com/LilSticky/crancula/issues/173).
-Gate: 1009 node and 1435 Angular unit tests, lint, i18n; e2e `record-a-tape`, `boundary` and `tape-layout` green locally,
-full e2e in CI. **Sound not checked by hand yet**: the user has not listened to a Recording (WAV or MP3).
-
-**Done:** Discovery of the later slices (2026-10-25, branch `docs/later-slices-discovery`): user decisions 15–28 in
-[discovery/later.md](discovery/later.md), their terms in the dictionary, slice issues
-[#167](https://github.com/LilSticky/crancula/issues/167) (Bring Scores onto a tape),
-[#168](https://github.com/LilSticky/crancula/issues/168) (Cut a tape in pieces),
-[#169](https://github.com/LilSticky/crancula/issues/169) (Read a tape as Scores) and
-[#170](https://github.com/LilSticky/crancula/issues/170) (Cut several tapes side by side, discovery still to do).
-Slice 011 (Cut a tape in pieces) is planned and has tasks ([specs/011](../specs/011-cut-a-tape-in-pieces/tasks.md),
-[ADR 28](adr/0028-tape-pieces-saved-into-one-folder-by-main.md)). The Project board now holds
-every issue (29 were missing); its built-in auto-add workflow is on (it adds only new issues, so the older ones had to be added by hand).
-
-**Done:** [Ready-made Organs (#162)](https://github.com/LilSticky/crancula/issues/162) (2026-10-24, branch
-`claude/issue-162-20261024-2112`): the term is Preset (German Vorlage); a new Organ offers the Presets as starting
-points (buttons in the Organ editor's page head). `api/organ/organ-preset.ts` holds the 20er-Drehorgel (Carl Frei,
-F-based, 110 mm, 3 mm holes, 3.85 mm rows) and the 31er-Drehorgel (Raffin, 140 mm, 2.5 mm holes, 3.86 mm rows). Notes
-and Tape Bed come from Wally Venable's MIDIBoek gamma files. **Guessed** (user-approved): Minimum Gap 3 mm, Lead-in
-30 mm, Tape per Crank turn 70 mm, Crank speed 40–90. The real 20er rows are off-centre; the Preset is centred until
-[#163](https://github.com/LilSticky/crancula/issues/163). Kept small: no `specs/` folder and no new e2e (unit and
-component tests cover it). Gate: 1378 Vitest tests and lint green locally.
-
-**Done:** [Stop preview label wraps at 1280 px (#159)](https://github.com/LilSticky/crancula/issues/159) (2026-10-24,
-branch `159-stop-preview-label`): the Preview toggle no longer wraps, in English and German (`white-space: nowrap`, as
-Export). New e2e in `e2e/tape-layout.spec.ts` measures the toggle while a Preview plays at 1280×800. Gate: 1375 Angular
-unit tests, lint, `tape-layout` e2e locally; full e2e in CI.
-
-**Done:** [Touch review follow-ups (#156)](https://github.com/LilSticky/crancula/issues/156) (2026-10-24, branch
-`156-touch-review-follow-ups`): a Hole under a cell is looked up in the Tape (`holeCovering` in `api`); the Spot is
-`aria-hidden` and the review nits are fixed; a touch ended by `lostpointercapture` no longer blocks touch edits, and a
-moved capture keeps the touch (review finding). The Crank speed toast is dropped (user decision, 2026-10-24). The
-Crank speed label fits in German. The zoom segment and side panel at 1024 px were already fine since #151 and now have
-regression e2e. Dark-mode playhead grip on the page raised from 2.15:1 to 4.1:1 via `--cr-select-on-page` (grips and
-playhead on the Tape were already 4.8:1). `ux:screens` captures 08h, 08i and 08j, with no leftover toast. Gate: 883
-node and 1375 Angular unit tests, lint, i18n (317 keys); e2e in CI.
-
-**Done:** [UX findings in #151](https://github.com/LilSticky/crancula/issues/151) (2026-10-24, branch
-`151-preview-ux-findings`): the German page head no longer clips the 2:1 zoom toggle; the Export button stays on one
-line; the Tape section's Organ row sits on one baseline with a gap before Parts on the Tape; the Tape per Crank turn
-label and Lead-in height finding no longer reproduces at 1440×900 (regression e2e added). The README fixture now has a
-Tape per Crank turn and the README screenshots are retaken. New layout e2e: `e2e/tape-layout.spec.ts` and
-`e2e/organ-layout.spec.ts`.
-
-**Done:** [Edit a tape by touch](../specs/008-edit-a-tape-by-touch/spec.md)
-([#152](https://github.com/LilSticky/crancula/issues/152), v0.2, merged 2026-10-24, branch `008-edit-a-tape-by-touch`,
-PR [#155](https://github.com/LilSticky/crancula/pull/155)): all five stories. Tap selects a Spot and a second tap adds
-a Hole; grips outside the selected Hole, double-tap removes; a finger drag on empty Tape scrolls, two fingers edit
-nothing; drag the playhead; a Crank speed range per Organ (Organ snapshot v5, older Organs 30–120) with a Crank speed
-slider. [ADR 25](adr/0025-one-gesture-model-for-all-pointer-types.md): one gesture model for all pointer types.
-Reviewed (angular, UX, spec audit) and fixed; open follow-ups in
-[#156](https://github.com/LilSticky/crancula/issues/156), notes in [audit.md](../specs/008-edit-a-tape-by-touch/audit.md).
-Gate: 879 node and 1369 Angular unit tests, lint, i18n (317 keys); e2e green in CI on Linux, Windows and macOS.
-
-**Done:** [Crank a tape](../specs/007-crank-a-tape/spec.md) ([#149](https://github.com/LilSticky/crancula/issues/149),
-v0.2, 2026-10-24, branch `007-crank-a-tape`, PR #150): Preview a Tape with a synthesised tone per Pipe and a
-playhead (toolbar button or Space), from any Column (ruler or field); each Tape keeps an undoable Crank speed
-(1–300 turns per minute, 60 to begin with; Tape snapshot v2); an Organ may describe its Tape per Crank turn
-(Organ snapshot v4; older Organs have none until entered, and their Tapes can't be heard). Editing waits while it
-plays. [ADR 24](adr/0024-preview-synthesised-with-web-audio.md): Web Audio in the renderer behind a port, look-ahead
-scheduler on the audio clock. Review findings fixed; accepted test gaps in
-[audit.md](../specs/007-crank-a-tape/audit.md). T044 (ux-review) not done: [#151](https://github.com/LilSticky/crancula/issues/151). Gate: 844 node
-and 1270 Angular unit tests, lint, i18n (309 keys); e2e in CI. Sound itself is not tested automatically; the user
-listened to a Preview by hand on Windows on 2026-10-24 and it works ([quickstart](../specs/007-crank-a-tape/quickstart.md)).
-
-**Done:** v0.2.0 released (2026-10-24, [CHANGELOG](../CHANGELOG.md#020---2026-10-24)): Crank a tape (Preview, Crank
-speed, Tape per Crank turn). README describes v0.2.0 but keeps the v0.1.1 screenshots: the retaken ones showed the
-layout bugs listed in #151.
-
-**Done:** [Adjust a tape](../specs/006-adjust-a-tape/spec.md) ([#107](https://github.com/LilSticky/crancula/issues/107),
-2026-10-23, branch `006-adjust-a-tape`, PR #143), the last part of Edit a tape
-[#103](https://github.com/LilSticky/crancula/issues/103), which is now done with
-[#105](https://github.com/LilSticky/crancula/issues/105), [#106](https://github.com/LilSticky/crancula/issues/106) and #107.
-The Column length is a field in the Tape section of the side panel; Apply or Enter changes the Tape, and a hint shows
-the Cutting Problems now and after the change. One undo step; German comma input. Review fixes: Cutting Problems are
-counted once per Tape, and the section gets the saved Tape, not the drag preview. The field no longer makes the side
-panel scroll sideways (e2e at 1280×800 and 1024×700). UX capture 08g; review notes in
-[audit.md](../specs/006-adjust-a-tape/audit.md). Gate: 778 node and 1151 Angular unit tests, lint, i18n (295 keys)
-and the full e2e suite green in CI on Linux, Windows and macOS.
-
-**Done:** v0.1.1 released (2026-10-23, [CHANGELOG](../CHANGELOG.md#011---2026-10-23)): Edit a tape (place Holes
-by hand, transpose Holes, change the Column length, undo and redo), Rename a Tape, the live Tape preview on the import
-screen, and fixes. README describes v0.1.1 with new screenshots.
-
-**Done:** discovery for the roadmap's "Later" items (2026-10-23, [discovery/later.md](discovery/later.md)): 14
-decisions by the user. Order and versions: v0.2 Crank a tape (turns per minute, the Organ gains Tape per Crank turn,
-synthesised tone, playhead) and Record a tape; v0.3 Bring Scores onto a tape (MusicXML only, one Part per staff,
-repeats played out); v0.4 Cut a tape in pieces (a described Plotter, Hole-free Joins with a glue overlap); then Read a
-tape as Scores. DXF/HPGL wait for a device. Open: the minor-versus-patch rule for releases.
-
-**Done:** flaky Electron launch on Linux CI ([#145](https://github.com/LilSticky/crancula/issues/145), 2026-10-23):
-one launch in ~117 failed with "Missing X server or $DISPLAY" although Xvfb was up. `launchApp` now retries only that
-error (3 attempts, 500 and 1000 ms apart); other launch failures still fail. The retry path is verified by review
-only; reopen if it recurs.
-
-**Done:** Air Demand dropped from scope (2026-10-22, user decision): it came from a misunderstanding and was never
-meant to be built; removed from ROADMAP, README and the constitution (1.1.3).
-
-**Done:** flaky tape-rename e2e on Windows ([#139](https://github.com/LilSticky/crancula/issues/139), 2026-10-22): a
-blocked snapshot rename (EPERM/EBUSY/EACCES) was retried only 10 × 40 ms, and a failed write is never retried on its
-own, so a longer antivirus lock left `tapes.json` with the old name. The retry now doubles its wait (7 attempts,
-about 2.5 s). Not proven from the CI trace (an Electron trace has no app log); reopen if it recurs.
-
-**Done:** flaky Transpose e2e on Windows ([#133](https://github.com/LilSticky/crancula/issues/133), PR #134): keyboard tests wait for focus to enter the dialog before tabbing.
-
-**Done:** menu Undo and Redo act on the Tape ([#122](https://github.com/LilSticky/crancula/issues/122), PR #135, 2026-10-22, branch
-`122-menu-undo-redo`). The menu sends an Edit Command over `edit:command`; text fields keep their own undo, the
-Tape view handles the rest, and a dialog that is open stops it. Design: [discovery/menu-undo-redo.md](discovery/menu-undo-redo.md).
-Gate: 765 node + 1114 Angular unit tests, lint, i18n and 113 e2e green. Known gap: not tried on a real Mac yet.
-
-**Done:** Transpose holes ([#106](https://github.com/LilSticky/crancula/issues/106), part of Edit a tape
-[#103](https://github.com/LilSticky/crancula/issues/103), branch `005-transpose-holes`, PR #130, 2026-10-22): transpose all or
-the selected Holes by semitones, in a dialog that shows the outcome (octave moves, removals, merges) before it
-applies. Several Holes are selected by Ctrl/Cmd-click, frame drag, Ctrl/Cmd+Arrow and Ctrl/Cmd+A; each
-transposition is one undo. Gate: 1092 unit tests (Angular) and 737 node tests, lint and i18n green; 105 e2e green locally.
-Also: the `test-first` agent runs on Haiku ([#129](https://github.com/LilSticky/crancula/issues/129), PR #128); the
-`implementer` too, and `angular-reviewer`/`electron-reviewer` on Opus ([#132](https://github.com/LilSticky/crancula/issues/132), PR #131).
-
-**Done:** [Tape view UX findings 14–18](https://github.com/LilSticky/crancula/issues/121) (2026-10-20, branch
-`121-tape-view-ux`): sections editable first in the side panel, with Tape details and Import Summary collapsible.
-A Cutting Problem mark shows a "!" glyph also on a selected Hole; handle hit areas are at least 24 px. Pipe and
-Column sit on one row in Add a Hole, with a Column hint. Cutting Problems entries have accessible names, an icon and
-a hover state; Selected Hole warnings are shorter. Undo and Redo icons are disabled in on-surface-variant (their
-labels already name the shortcut). Gate: 1037 unit tests, lint, i18n, build and e2e/tape-edit green locally; full
-e2e in CI.
-
-**Done:** [Place holes by hand](../specs/004-place-holes-by-hand/spec.md)
-([#105](https://github.com/LilSticky/crancula/issues/105), part of Edit a tape
-[#103](https://github.com/LilSticky/crancula/issues/103), branch `004-place-holes-by-hand`, PR #108, merged 2026-10-20 as 973f89f):
-all 76 tasks in [tasks](../specs/004-place-holes-by-hand/tasks.md). Move, resize, add and remove Holes by pointer and
-keyboard; Cutting Problems as you edit; undo and redo; the Tape grows. Decisions in
-[discovery/edit-a-tape.md](discovery/edit-a-tape.md) and [ADR 22](adr/0022-tape-edits-as-domain-commands.md). A
-refused drop shows a ghost (`hole-ghost`) at the pointer. Polish (Phase 9) and the `spec-auditor` pass found no
-gaps; ux-review 38/50 (captures 08d–08f). Findings 14–18 are in [#121](https://github.com/LilSticky/crancula/issues/121)
-(T077–T086). Gate: lint, i18n (273 keys), 1016 Angular and 714 node unit tests, build and 104 e2e green locally.
-
-**Done:** [Bring a song onto a tape](../specs/002-bring-a-song-onto-a-tape/spec.md)
-([#2](https://github.com/LilSticky/crancula/issues/2), PR #51, 2026-10-14): all 78 tasks. MIDI Song
-import, Tape domain (Quantisation, Transposition, Fit, Hole fixes), Tape library snapshot, IPC and
-UI in German and English. Gate: lint, i18n (136 keys), 456 node and 251 Angular tests, build and
-31 e2e green locally. The slice's ADRs are 17 and 18.
-
-**Done:** [Describe my organ](../specs/001-describe-my-organ/spec.md) (PR #15, 2026-10-14). Change from
-the plan: Angular specs in jsdom ([ADR 9](adr/0009-angular-specs-in-jsdom.md)).
-
-**Tech stack updated** (2026-10-14, [#13](https://github.com/LilSticky/crancula/issues/13),
-[ADR 14](adr/0014-current-major-versions-with-dependabot.md)): Angular 22, Material 22, NgRx Signals 22,
-ngx-translate 18, Electron 44, TypeScript 6, Vitest 5, Playwright 1.64, ESLint 10 flat config, Node 24;
-Dependabot opens weekly grouped updates. Migration fixes: ngx-translate 18 standalone `TranslatePipe`,
-`withXhr()` for the HTTP loader, TS 6 `paths` without `baseUrl`, `node16` modules for the main process,
-and a storage problem is reported once again (an effect re-ran on language changes). Local gate:
-lint, i18n, 130 node + 108 Angular tests and 16 e2e green.
-
-Other changes on 2026-10-14: README for organ owners and MIT license; punched-tape logo, favicon and
-app icon; splash for the portable Windows build; fonts ship with the app (#24).
-
-**Organ editor on signal forms** (2026-10-14, [#13](https://github.com/LilSticky/crancula/issues/13),
-research R6 revised): `form()` over `OrganDraft`, `[formField]` inputs, one `validateTree` rule fed by
-`validateOrgan`, a `ShownViolationMatcher` instead of the `crancErrorState` directive. Lint, i18n,
-120 Angular tests and 18 e2e green. Unreadable number text shows "Enter a number.".
-
-**Design guide** (2026-10-15, [#12](https://github.com/LilSticky/crancula/issues/12)):
-[DESIGN-GUIDE.md](DESIGN-GUIDE.md) and [design/theme.scss](design/theme.scss), direction "the organ
-builder's workshop" with borrowings, chosen by the user from four parallel variants
-([COMPARISON.md](design/COMPARISON.md)); the current UI scores 29/50 in the `ux-review` rubric, the
-variants 40–42 (self-reviews). New tooling: `ux-review` skill, `ux-designer` agent, `npm run ux:screens`.
-The Tape is drawn horizontally, row 1 on top (user decision). German for Tape is now Lochband
-(dictionary, UI texts). Applying the guide to the app: [#59](https://github.com/LilSticky/crancula/issues/59).
-
-**Done:** [#62](https://github.com/LilSticky/crancula/issues/62) theme and fonts
-(2026-10-15, PR #70). Noto Sans and Libertinus Serif bundled, Roboto removed.
-Workshop theme with light-dark tokens; the scheme follows the system until #63. `provideFormFieldDefaults()`
-makes fields outlined app-wide, because the theme's density -2 hides fill-field labels (found by the
-ux-review). The Libertinus licence now carries the upstream notice. `ux:screens` waits for dialogs and
-animations. ux-review 30/50 (was 29/50), see [design/screens/current/ux-review.md](design/screens/current/ux-review.md).
-Gate: lint, 253 Angular tests and node tests, 31 e2e green locally.
-
-**Done:** #63 shell and navigation (2026-10-15, PR #71). Walnut rail in a `mat-sidenav`
-shell (icon rail with tooltips below 1180 px; only the content scrolls). Organs is the start page,
-Overview removed. Language and scheme toggles sit in the rail; scheme is System, Light or Dark and is
-remembered in localStorage like the language (`SchemePreference`, `LanguagePreference`). Shared
-`cranc-page-head` on every page, `cranc-action-bar` ready for #64. Toggle outlines on walnut lightened
-to 3:1. ux-review 33/50 (was 30/50), see [design/screens/current/ux-review.md](design/screens/current/ux-review.md).
-Gate: lint, i18n, unit tests and 32 e2e green locally.
-
-**Done:** #74 derived Border (2026-10-15, PR #75, merged 2026-10-15). The Border is derived, not entered:
-(tape width - Row Span) / 2, rows centred, row 1 nearest the top; 0 is valid, negative means the rows
-don't fit. Domain (`border`, `tapeBedFit`, no `border` in `TapeBed`/draft/validation), Organ snapshot
-version 2 without `border` (version 1 still reads, [ADR 20](adr/0020-snapshots-migrated-on-read.md)),
-dictionary (Tape Bed, Border, Row Span), Organ editor shows the Border read-only, spec 001 amended.
-Gate: lint, i18n, 485 node and 315 Angular tests and 34 e2e.
-
-**Done:** #64 Organ editor (2026-10-16, PR #77 merged 2026-10-16). Two sheets: the Tape Bed with a fit
-check and a drawing, plus read-only Border and Minimum Hole Length; the Pipes in a 3-column rack
-(2 columns below 1180 px) with a row menu and Alt+arrow moves. Decimal fields take a comma or a point,
-in the language's notation. Action bar with save state and Discard changes; an error summary on Save;
-Delete and the subtitle sit in the page head; "Organ saved" snackbar; calmer leave dialog. The editor
-fits one screen at 1280×800 and 1024×700. ux-review 36/50 (was 31/50; values in
-[design/screens/current/ux-review.md](design/screens/current/ux-review.md)). #72 fixed on this branch.
-Gate: lint, i18n (162 keys), 486 node and 447 Angular tests, e2e green locally. Follow-up:
-[#76](https://github.com/LilSticky/crancula/issues/76) splits the editor component.
-
-**Done:** #78 Lead-in (2026-10-16, PR #79 merged 2026-10-16). Every Organ has a Lead-in, the blank Tape
-before Column 1 with an angled start (Vorlauf): mm, 0 is valid, negative is not, new Organs start
-empty and required. Organ snapshot version 3 with `leadIn`; versions 1 and 2 load with 0
-([ADR 20](adr/0020-snapshots-migrated-on-read.md)). The Organ editor shows it after Minimum Gap;
-dictionary (Lead-in) and spec 001 (FR-017) amended. Gate: lint, i18n, 495 node and 457 Angular tests,
-44 e2e green locally.
-
-**Done:** #65 Tape view (2026-10-16, PR #81 merged 2026-10-16). Tape at true millimetres with the Lead-in
-(angled start), rows centred with row 1 on top, Holes drawn as cut (slots with half-circle ends). mm
-ruler and Column numbers; zoom Whole Tape / 1:1 / 2:1; overview strip. Side panel with a Tape section,
-Import Summary (Transposition, Notes moved by octaves, Unplayable Notes, Holes fixed; dismissable) and
-Selected Hole inspector (gap to the next Hole or the Tape's end, warnings below Minimum Hole Length /
-Minimum Gap). Keyboard selection; status line with pointer position and save state; Tape details toggle
-below 1180 px; only visible Columns render. User decisions 2026-10-16 recorded in
-[DICTIONARY](DICTIONARY.md) (Hole shape, Import Summary / Importübersicht / Angepasste Löcher, Lead-in /
-Vorlauf). ux-review 38/50 (see [design/screens/current/ux-review.md](design/screens/current/ux-review.md)).
-Gate: lint, i18n (197 keys), 495 node and 585 Angular tests, 56 e2e green locally. On macOS CI the
-21 layout e2e tests skip because the runner's screen is too small; they run on Windows and Linux.
-Follow-up: [#80](https://github.com/LilSticky/crancula/issues/80) splits the Tape view.
-
-**Done:** #66 Organ and Tape lists (2026-10-16, PR #83 merged 2026-10-17). Ledgers (mat-table with column
-headers) sorted by name per language. Organ rows show the Pipe range, Tape Bed facts, a Tape Bed
-miniature and a Tapes link that filters the Tape list; row menus with Delete. The Tape list is grouped
-by Organ with an Organ filter chip. Empty states lead to the next step (describe an Organ first; bring a
-Song onto a Tape); next-step strip. User decisions 2026-10-16: no created date, order by name, Pipe range
-lowest–highest only, Rename a Tape split to [#82](https://github.com/LilSticky/crancula/issues/82).
-ux-review 38/50. Gate: lint, i18n (213 keys), 495 node and 640 Angular tests, 60 e2e green locally.
-
-**Done:** #69 Tape import (2026-10-17, PR #86 merged 2026-10-17). Import screen in two sheets: Song with a
-file chip; Organ with the Pipe range, Parts list, Transposition stepper with the proposal explained; Fit
-as a result card. Each Fit count expands to its Notes before Create, via a new domain function
-`fitNotesOf` that `createTape` shares. Warning when Unplayable Notes are above 0 (Create stays possible).
-Column length in mm in the language's notation. The action bar says why Create is disabled. Empty state
-without an Organ. Fits one screen at 1024×700; long Parts and Note lists scroll inside. Import Summary
-shows "None" for empty items. User decisions 2026-10-17: live Tape preview split to
-[#84](https://github.com/LilSticky/crancula/issues/84); Note lists expandable; German percussion is
-Schlagwerk (dictionary). ux-review 39/50. Gate: lint, i18n (242 keys), 512 node and 696 Angular tests,
-76 e2e green locally. With #69, all sub-issues of [#59](https://github.com/LilSticky/crancula/issues/59)
-(apply the design guide) are done; #59 closes with this pull request.
-
-**Done:** Punch a tape ([#3](https://github.com/LilSticky/crancula/issues/3), PR #87 merged 2026-10-17).
-Export for the Plotter saves the Tape as one 1:1 SVG: Holes as Slots in cut order by start from the
-Lead-in, row 1 first, then the Tape Outline with the Lead-in's diagonal and the end cut one Minimum Gap
-after the last Column. A Tape that can't be cut opens a dialog naming every problem Hole (no Pipe, too
-short, too close); nothing is written. Selected Hole warnings follow the same Column rules. Below 1180 px
-Export is an icon button. German texts. ux-review 40/50 (see [design/screens/current/ux-review.md](design/screens/current/ux-review.md)).
-Gate: lint, i18n (251 keys), 640 node and 746 Angular tests, 84 e2e green locally. Tasks in
-[tasks](../specs/003-punch-a-tape/tasks.md). **Released:** v0.1.0 (2026-10-18). README shows v0.1 with screenshots (`e2e/ux/readme.capture.ts`, `README_SHOTS=1`); open UI bugs from the captures fixed (#96, #97).
-
-Follow-ups:
-[#76](https://github.com/LilSticky/crancula/issues/76), [#80](https://github.com/LilSticky/crancula/issues/80) and
-[#85](https://github.com/LilSticky/crancula/issues/85) (component splits),
-Lead-in label in the Tape drawing (ux-review finding 11, not filed).
-Open issues carry `priority:` and `size:` labels; triage sets them.
-Fixed 2026-10-19: flaky cut-order export e2e ([#99](https://github.com/LilSticky/crancula/issues/99)); it read
-the SVG as soon as the file existed, before `writeFile` finished, and now waits for the success snackbar.
-Done 2026-10-19: Rename a Tape ([#82](https://github.com/LilSticky/crancula/issues/82)) from the Tape list's
-row menu, in a dialog with the name field; a blank name is refused (`renameTape`, `TapeLibrary.rename`).
-Not in the Tape view's page head (left out while Edit a tape works there).
-Done 2026-10-19: ESM main process ([#47](https://github.com/LilSticky/crancula/issues/47),
-[ADR 23](adr/0023-esm-main-process-commonjs-preload.md), supersedes ADR 12): `app/main.mjs` in ESM,
-the sandboxed preload stays CommonJS; electron-reloader 2.0.0, its Dependabot hold removed. Gate: lint,
-802 tests, 91 e2e, a packaged launch and a `--serve` reload checked locally.
-Done 2026-10-19: live Tape preview on the import screen ([#84](https://github.com/LilSticky/crancula/issues/84)):
-`cranc-tape-preview` draws the first Columns from `tapeGeometry`, 160 px tall at any Tape width (user decision:
-a fixed-height strip, not 1:1, which made the Fit card scroll). The Fit sheet scrolls in short windows. It
-uses `outline` from the Tape view but not `holeRects`, which slice 004 changes.
-Fixed 2026-10-19: the import screen's Song sheet spilled under the action bar in short windows
-([#118](https://github.com/LilSticky/crancula/issues/118)); it now scrolls inside itself, and only the Parts list shrinks.
+- [#198](https://github.com/LilSticky/crancula/issues/198): side-by-side UX follow-ups from the slice 013 review.
+- Lead-in label in the Tape drawing (ux-review finding 11, not filed).
 
 ## Known broken / WIP
 
-- Fixed (#97, 2026-10-19): at Whole Tape the ruler numbers and row labels overlapped; the ruler steps
-  10/20/50/100/… mm to keep numbers 40 px apart and crowded rows are labelled every k-th row
-  (`e2e/tape-whole-tape-marks.spec.ts`).
-- Fixed (#96, 2026-10-18): the Pipe rack's MIDI note fields clipped to one digit at 1280 px and their
-  width varied by row; the note field now has a fixed width (`e2e/pipe-note-width.spec.ts`).
-- Fixed (#58, 2026-10-18): saving a snapshot failed for good on Windows when another process held the file open
-  during the atomic rename (EPERM/EBUSY/EACCES); the rename is now retried up to 10 times, 40 ms apart.
-- Fixed (#57, 2026-10-18): View > Reload showed a file-not-found page after any navigation (path URLs under
-  `file://`; it also made `e2e/fonts.spec.ts` flaky). The router uses hash location and the build sets the base
-  href to `./index.html`, so every URL stays on `index.html`.
+None.
+
+Watch: the Linux CI launch retry ([#145](https://github.com/LilSticky/crancula/issues/145)) and the Windows snapshot
+rename retry ([#139](https://github.com/LilSticky/crancula/issues/139)) are verified by review only; reopen if either
+flake recurs. On macOS CI the layout e2e tests skip because the runner's screen is too small; they run on Windows and
+Linux.
 
 ## Open questions
 
-- Release workflow ([#11](https://github.com/LilSticky/crancula/issues/11)): `.github/workflows/release.yml`
-  packages on Linux, Windows and macOS. A pushed tag `v*` also creates a draft GitHub Release; a
-  manual run, or a pull request that changes the workflow or `electron-builder.json`, only builds
-  artifacts. Builds are unsigned. v0.0.1 (2026-10-14) is the first release from a tag; v0.1.0
-  (2026-10-18) completes v0.1. Release with `/release` (ADR 19); notes come from `CHANGELOG.md`.
-  `/release` also brings the README up to date, including its **Releases** list (one row per version).
+None.
 
-## Process changes
+## Standing notes
 
-- 2026-10-17: sessions wrap up before the plan limit cuts them off. The project status line
-  (`.claude/hooks/usage-guard.mjs`) records the 5-hour and 7-day usage; at 95% used
-  (`CRANCULA_USAGE_WRAP_UP` changes it) a PostToolUse hook tells the session once to commit the work in progress,
-  update STATUS with the next step, push and stop. Only Pro/Max sessions get the usage data.
-- 2026-10-15: a machine that last pulled before the 2026-10-14 rewrite has a local `main` with no merge
-  base; reset it to `origin/main` after checking that every local commit subject exists there.
-- 2026-10-15: after every merge the `housekeeper` cleans up the local Git state (pruned remote
-  branches, merged local branches and worktrees, stale build output); part of the workflow in AGENTS.md.
-- 2026-10-14: commits are authored as LilSticky with the GitHub noreply address, set per repository.
-  `main` was rewritten once (force-push with the ruleset paused) to remove `Co-authored-by` lines
-  with a work email; the trees are unchanged, all commit SHAs changed. Open branches were rewritten too.
-- 2026-10-14: branches reach `main` only through pull requests that reference their issues
-  (`Closes #N` / `Refs #N`), then get squash-merged by the agent (ADR 10, constitution 1.1.0).
-- 2026-10-14: the e2e suite runs in CI on Linux, Windows and macOS and replaces the manual
-  walkthrough as proof that a slice runs in Electron (ADR 13, constitution 1.1.1).
-- 2026-10-14: the repository is public, and the ruleset "No direct push to main" enforces ADR 10
-  ([#18](https://github.com/LilSticky/crancula/issues/18)): no direct or force pushes, no deletion,
-  pull request required (no approvals), the three CI checks "Lint, test and build" and
-  "References an issue (ADR 10)" must pass,
-  squash merge only; merged branches are deleted. Merging with red CI is no longer possible.
-- 2026-10-14: e2e runs keep the Electron window out of sight (`CRANCULA_HEADLESS`, set by the e2e
-  launcher); `HEADED=1` shows it, slowed down and traced.
-- 2026-10-14: GitHub issue tooling: issue forms per label, a pull request template, a CI check
-  that the pull request body references an issue, and the Spec Kit `github` extension
-  (`/speckit-github-taskstoissues`). Board automation and the Claude GitHub Action are still open
-  ([AGENTIC-TODO](AGENTIC-TODO.md#github)).
-- 2026-10-14: automatic issue triage ([#34](https://github.com/LilSticky/crancula/issues/34), ADR 15):
-  issue forms add `triage`, the Claude triage Action labels and comments, `/triage` does the same
-  locally; `@claude` works in issues and pull requests. Triage verified on [#37](https://github.com/LilSticky/crancula/issues/37) (labelled, commented, `triage` removed). The first runs failed with HTTP 429 because the Claude subscription had hit its session limit; triage shares the user's subscription quota. The Claude GitHub App is installed (`@claude` works) and the board adds new issues itself.
-- 2026-10-14: Dependabot pull requests skip the issue reference check, and patch and minor updates
-  squash-merge automatically once CI is green; major updates stay manual (ADR 16, amends ADR 10 and 14).
-  The repository setting "Allow auto-merge" is on (checked 2026-10-15); no patch or minor update has
-  merged itself yet.
-- 2026-10-14: Dependabot major updates evaluated ([#49](https://github.com/LilSticky/crancula/issues/49)):
-  `actions/checkout`, `setup-node` and `upload-artifact` moved to v7. Majors of `@types/node` (until the
-  Electron Node runtime moves beyond 24) and `electron-reloader` are held in `dependabot.yml`;
-  `electron-reloader` waits for the ESM main process ([#47](https://github.com/LilSticky/crancula/issues/47)).
-  A flaky macOS e2e test is tracked in [#48](https://github.com/LilSticky/crancula/issues/48).
-- 2026-10-22: TypeScript 7 held in `dependabot.yml` ([#136](https://github.com/LilSticky/crancula/issues/136)):
-  Angular 22 (including 22.3.0-next) requires TypeScript `>=6.0 <6.1`, so `npm ci` failed on #116,
-  which is closed. Remove the hold once Angular's peer range allows 7.
+- Dependabot holds in `dependabot.yml`: TypeScript 7 until Angular's peer range allows it
+  ([#136](https://github.com/LilSticky/crancula/issues/136)); majors of `@types/node` until Electron's Node runtime moves
+  beyond 24. Patch and minor updates squash-merge themselves once CI is green (ADR 16).
+- Sessions wrap up before the plan limit: `.claude/hooks/usage-guard.mjs` tells a session once, at 95% of the 5-hour or
+  7-day usage (`CRANCULA_USAGE_WRAP_UP`), to commit, update STATUS, push and stop.
+- A machine that last pulled before the 2026-10-14 rewrite of `main` has no merge base; reset its local `main` to
+  `origin/main` after checking that every local commit subject exists there.
+- The Claude triage Action shares the user's subscription quota; it fails with HTTP 429 when that limit is hit.
+- The Project board adds new issues itself; issues from before its auto-add workflow were added by hand.
