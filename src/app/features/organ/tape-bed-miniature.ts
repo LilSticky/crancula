@@ -1,4 +1,4 @@
-import {border, type Organ} from '@api/index';
+import {borders, type Organ} from '@api/index';
 
 export interface TapeBedMiniature {
   /** Height of the Tape body in px. */
@@ -11,7 +11,7 @@ export interface TapeBedMiniature {
 export function tapeBedMiniature(organ: Organ, widestTapeWidth: number, heightPx: number): TapeBedMiniature {
   const scale = heightPx / widestTapeWidth;
   const {holeDiameter, rowSpacing, tapeWidth} = organ.tapeBed;
-  const first = border(organ) + holeDiameter / 2;
+  const first = borders(organ).guide + holeDiameter / 2;
   return {
     bodyHeight: tapeWidth * scale,
     rowCentres: organ.pipes.map((_, row) => (first + row * rowSpacing) * scale),

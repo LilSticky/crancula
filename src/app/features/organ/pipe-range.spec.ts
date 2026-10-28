@@ -6,7 +6,7 @@ function organWithNotes(notes: readonly number[]): Organ {
   const draft: OrganDraft = {
     ...emptyOrganDraft(),
     name: 'Street organ',
-    tapeBed: {tapeWidth: 120, holeDiameter: 2.5, rowSpacing: 3.5},
+    tapeBed: {tapeWidth: 120, holeDiameter: 2.5, rowSpacing: 3.5, guideMargin: null},
     minimumGap: 1.5,
     leadIn: 20,
     pipes: notes.map((note) => ({note})),

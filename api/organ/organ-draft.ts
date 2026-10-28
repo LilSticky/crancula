@@ -15,6 +15,8 @@ export interface OrganDraft {
     readonly tapeWidth: number | null;
     readonly holeDiameter: number | null;
     readonly rowSpacing: number | null;
+    /** `null` when the rows are centred. */
+    readonly guideMargin: number | null;
   };
   readonly minimumGap: number | null;
   readonly leadIn: number | null;
@@ -29,7 +31,7 @@ export interface OrganDraft {
 export function emptyOrganDraft(): OrganDraft {
   return {
     name: '',
-    tapeBed: {tapeWidth: null, holeDiameter: null, rowSpacing: null},
+    tapeBed: {tapeWidth: null, holeDiameter: null, rowSpacing: null, guideMargin: null},
     minimumGap: null,
     leadIn: null,
     slowestCrankSpeed: DEFAULT_CRANK_SPEED_RANGE.slowest,
@@ -43,7 +45,7 @@ export function toDraft(organ: Organ): OrganDraft {
   return {
     id: organ.id,
     name: organ.name,
-    tapeBed: {...organ.tapeBed},
+    tapeBed: {...organ.tapeBed, guideMargin: organ.tapeBed.guideMargin ?? null},
     minimumGap: organ.minimumGap,
     leadIn: organ.leadIn,
     slowestCrankSpeed: organ.crankSpeedRange.slowest,

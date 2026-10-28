@@ -35,7 +35,7 @@ describe('emptyOrganDraft', () => {
   it('has no id, no name, no measurements and no Pipes', () => {
     expect(emptyOrganDraft()).toEqual({
       name: '',
-      tapeBed: {tapeWidth: null, holeDiameter: null, rowSpacing: null},
+      tapeBed: {tapeWidth: null, holeDiameter: null, rowSpacing: null, guideMargin: null},
       minimumGap: null,
       leadIn: null,
       slowestCrankSpeed: 30,
@@ -77,7 +77,7 @@ describe('toDraft', () => {
     expect(toDraft(organ)).toEqual({
       id,
       name: 'Street organ',
-      tapeBed: {tapeWidth: 120, holeDiameter: 2.5, rowSpacing: 3.5},
+      tapeBed: {tapeWidth: 120, holeDiameter: 2.5, rowSpacing: 3.5, guideMargin: null},
       minimumGap: 1.5,
       leadIn: 20,
       slowestCrankSpeed: 30,

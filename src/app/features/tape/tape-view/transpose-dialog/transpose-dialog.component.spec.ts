@@ -51,7 +51,7 @@ function ref(pipe: number, first: number): HoleRef {
 function organWith(notes: readonly number[]): Organ {
   const result = validateOrgan({
     name: 'Street organ',
-    tapeBed: {tapeWidth: 120, holeDiameter: 2.5, rowSpacing: 3.5},
+    tapeBed: {tapeWidth: 120, holeDiameter: 2.5, rowSpacing: 3.5, guideMargin: null},
     minimumGap: 1.5,
     leadIn: 20,
     slowestCrankSpeed: 30,

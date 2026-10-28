@@ -1,4 +1,4 @@
-import {border, type Organ} from '../organ/organ';
+import {borders, type Borders, type Organ} from '../organ/organ';
 import type {Tape} from './tape';
 
 /** A drawn Hole, in mm from the tip of the Tape (x, so it includes the Lead-in) and the top edge of the Tape (y). */
@@ -38,7 +38,8 @@ export interface TapeGeometry {
   /** Lead-in, Columns and end gap. */
   readonly totalLength: number;
   readonly width: number;
-  readonly border: number;
+  /** The free strips on the long edges; row 1 starts at the guide side. */
+  readonly borders: Borders;
   /** The distance of each row's centre from the top edge; row 1 first. */
   readonly rowCentres: readonly number[];
   readonly slots: readonly Slot[];
@@ -48,8 +49,8 @@ export interface TapeGeometry {
 /** Where everything on the Tape sits, in mm: what gets cut. */
 export function tapeGeometry(tape: Tape, organ: Organ): TapeGeometry {
   const {holeDiameter, rowSpacing, tapeWidth} = organ.tapeBed;
-  const edge = border(organ);
-  const rowTop = (index: number): number => edge + index * rowSpacing;
+  const edge = borders(organ);
+  const rowTop = (index: number): number => edge.guide + index * rowSpacing;
   const rowOf = new Map(organ.pipes.map((pipe, index) => [pipe.note, index]));
 
   const drawn = tape.holes.flatMap((hole): readonly Slot[] => {
@@ -82,7 +83,7 @@ export function tapeGeometry(tape: Tape, organ: Organ): TapeGeometry {
     endGap,
     totalLength,
     width: tapeWidth,
-    border: edge,
+    borders: edge,
     rowCentres: organ.pipes.map((_, index) => rowTop(index) + holeDiameter / 2),
     slots,
     outline: {

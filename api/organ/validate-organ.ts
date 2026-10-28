@@ -114,15 +114,24 @@ function validateTapeBed(draft: OrganDraft, add: AddViolation): TapeBed | undefi
   const tapeWidth = measurement(tapeBed.tapeWidth, 'tapeBed.tapeWidth', add);
   const holeDiameter = measurement(tapeBed.holeDiameter, 'tapeBed.holeDiameter', add);
   const rowSpacing = measurement(tapeBed.rowSpacing, 'tapeBed.rowSpacing', add);
+  const guideMargin = optionalGuideMargin(tapeBed.guideMargin, add);
 
   if (holeDiameter !== undefined && rowSpacing !== undefined && rowSpacing < holeDiameter) {
     add({code: 'row-spacing-below-hole-diameter', path: 'tapeBed.rowSpacing', params: {holeDiameter}});
     return undefined;
   }
-  if (tapeWidth === undefined || holeDiameter === undefined || rowSpacing === undefined) {
+  if (tapeWidth === undefined || holeDiameter === undefined || rowSpacing === undefined || guideMargin === undefined) {
     return undefined;
   }
-  return {tapeWidth, holeDiameter, rowSpacing};
+  return {tapeWidth, holeDiameter, rowSpacing, ...(guideMargin === null ? {} : {guideMargin})};
+}
+
+/** Absent (`null`, or missing from untyped input) means the rows are centred; a given Guide margin must be finite and above 0. */
+function optionalGuideMargin(value: number | null, add: AddViolation): Millimetres | null | undefined {
+  if (value === null || value === undefined) return null;
+  const valid = Number.isFinite(value) && value > 0 ? millimetres(value) : undefined;
+  if (valid === undefined) add({code: 'must-be-positive', path: 'tapeBed.guideMargin'});
+  return valid;
 }
 
 function measurement(

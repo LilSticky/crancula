@@ -197,7 +197,7 @@ describe('toSnapshot', () => {
   it('writes Organs created by validateOrgan', () => {
     const result = validateOrgan({
       name: 'New',
-      tapeBed: {tapeWidth: 50, holeDiameter: 2, rowSpacing: 3},
+      tapeBed: {tapeWidth: 50, holeDiameter: 2, rowSpacing: 3, guideMargin: null},
       minimumGap: 1,
       leadIn: 15,
       slowestCrankSpeed: 30,

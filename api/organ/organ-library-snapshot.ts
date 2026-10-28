@@ -97,7 +97,7 @@ function parseOrgan(input: unknown, version: SnapshotVersion): Result<Organ, str
   const result = validateOrgan({
     id: organId(id),
     name,
-    tapeBed: {tapeWidth, holeDiameter, rowSpacing},
+    tapeBed: {tapeWidth, holeDiameter, rowSpacing, guideMargin: null},
     minimumGap,
     leadIn,
     slowestCrankSpeed: crankSpeeds.value.slowest,

@@ -21,7 +21,7 @@ export function pointerAt(x: number, y: number, scale: number, geometry: TapeGeo
 
   const index = Math.min(Math.floor(xMm / geometry.columnLength), Math.ceil(geometry.length / geometry.columnLength) - 1);
   const [first, second] = geometry.rowCentres;
-  const halfSpacing = first === undefined || second === undefined ? geometry.border : (second - first) / 2;
+  const halfSpacing = first === undefined || second === undefined ? geometry.borders.guide : (second - first) / 2;
   let row: number | undefined;
   let nearest = Infinity;
   geometry.rowCentres.forEach((centre, rowIndex) => {

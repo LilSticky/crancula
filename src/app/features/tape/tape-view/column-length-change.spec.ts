@@ -29,7 +29,7 @@ const TAPE_ID = '00000000-0000-4000-8000-000000000001' as TapeId;
 function organWith(holeDiameter: number): Organ {
   const result = validateOrgan({
     name: 'Street organ',
-    tapeBed: {tapeWidth: 120, holeDiameter, rowSpacing: holeDiameter + 1},
+    tapeBed: {tapeWidth: 120, holeDiameter, rowSpacing: holeDiameter + 1, guideMargin: null},
     minimumGap: 1.5,
     leadIn: 20,
     slowestCrankSpeed: 30,

@@ -84,8 +84,8 @@ function rollPlotter(workingWidth = 300): RollPlotter {
 function setUp(failures: InMemoryCranculaApiFailures = {}, language: 'en' | 'de' = 'en') {
   const api: InMemoryCranculaApi = createInMemoryCranculaApi(undefined, undefined, failures);
   TestBed.configureTestingModule({providers: [provideTestTranslations(language), {provide: CRANCULA_API, useValue: api}]});
-  const street = testOrgan('Street organ', 3, {tapeBed: {tapeWidth: 100, holeDiameter: 2.5, rowSpacing: 3.5}});
-  const barrel = testOrgan('Barrel piano', 3, {tapeBed: {tapeWidth: 60, holeDiameter: 2.5, rowSpacing: 3.5}});
+  const street = testOrgan('Street organ', 3, {tapeBed: {tapeWidth: 100, holeDiameter: 2.5, rowSpacing: 3.5, guideMargin: null}});
+  const barrel = testOrgan('Barrel piano', 3, {tapeBed: {tapeWidth: 60, holeDiameter: 2.5, rowSpacing: 3.5, guideMargin: null}});
   const lanes: readonly LaneTape[] = [
     {tape: tapeNamed(street, 'Reference'), organ: street},
     {tape: tapeNamed(barrel, 'Waltz'), organ: barrel},

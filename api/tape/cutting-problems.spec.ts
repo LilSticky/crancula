@@ -25,7 +25,7 @@ function mm(value: number): Millimetres {
 function organWith(holeDiameter: number, minimumGap: number): Organ {
   const result = validateOrgan({
     name: 'Street organ',
-    tapeBed: {tapeWidth: 120, holeDiameter, rowSpacing: holeDiameter + 1},
+    tapeBed: {tapeWidth: 120, holeDiameter, rowSpacing: holeDiameter + 1, guideMargin: null},
     minimumGap,
     leadIn: 20,
     slowestCrankSpeed: 30,

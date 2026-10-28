@@ -43,7 +43,7 @@ function hole(pipe: MidiNoteNumber, start: number, length: number): Hole {
 function organWithGap(minimumGap: number): Organ {
   const result = validateOrgan({
     name: 'Reference organ',
-    tapeBed: {tapeWidth: 100, holeDiameter: 3, rowSpacing: 4},
+    tapeBed: {tapeWidth: 100, holeDiameter: 3, rowSpacing: 4, guideMargin: null},
     minimumGap,
     leadIn: 50,
     slowestCrankSpeed: 30,

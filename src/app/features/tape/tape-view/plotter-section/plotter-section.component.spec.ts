@@ -260,7 +260,7 @@ describe('PlotterSectionComponent', () => {
 
     it('says the Tape is too wide for the picked Plotter, instead of the Tape pieces', async () => {
       const wide = testOrgan('Fairground', 1, {
-        tapeBed: {tapeWidth: 140, holeDiameter: 2.5, rowSpacing: 3.5},
+        tapeBed: {tapeWidth: 140, holeDiameter: 2.5, rowSpacing: 3.5, guideMargin: null},
       });
       const {element, library, preference, piecesText, settle} = await render({tape: tapeWith(100, 5), organ: wide});
       const cuttingMat = sheetPlotter('Cutting mat', 300, 120);
@@ -277,7 +277,7 @@ describe('PlotterSectionComponent', () => {
 
     it('marks the too-wide reason with an icon and tells what to do, with a link to the picked Plotter', async () => {
       const wide = testOrgan('Fairground', 1, {
-        tapeBed: {tapeWidth: 140, holeDiameter: 2.5, rowSpacing: 3.5},
+        tapeBed: {tapeWidth: 140, holeDiameter: 2.5, rowSpacing: 3.5, guideMargin: null},
       });
       const {element, library, preference, settle} = await render({tape: tapeWith(100, 5), organ: wide});
       const cuttingMat = sheetPlotter('Cutting mat', 300, 120);

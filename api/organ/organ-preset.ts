@@ -21,7 +21,7 @@ const DREHORGEL_20ER: OrganPreset = {
   name: '20er-Drehorgel',
   draft: {
     name: '20er-Drehorgel',
-    tapeBed: {tapeWidth: 110, holeDiameter: 3, rowSpacing: 3.85},
+    tapeBed: {tapeWidth: 110, holeDiameter: 3, rowSpacing: 3.85, guideMargin: null},
     minimumGap: 3,
     leadIn: 30,
     slowestCrankSpeed: 40,
@@ -41,7 +41,7 @@ const DREHORGEL_31ER: OrganPreset = {
   name: '31er-Drehorgel',
   draft: {
     name: '31er-Drehorgel',
-    tapeBed: {tapeWidth: 140, holeDiameter: 2.5, rowSpacing: 3.86},
+    tapeBed: {tapeWidth: 140, holeDiameter: 2.5, rowSpacing: 3.86, guideMargin: null},
     minimumGap: 3,
     leadIn: 30,
     slowestCrankSpeed: 40,

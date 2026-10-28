@@ -233,7 +233,7 @@ describe('PlotterExport', () => {
   describe('for a Tape that can not be cut', () => {
     // The Organ's holes were made so wide after the Tape was made that its Holes are shorter than the Minimum Hole Length.
     const widerOrgan = (organ: Organ): Organ =>
-      testOrgan(organ.name, 3, {tapeBed: {tapeWidth: 120, holeDiameter: 30, rowSpacing: 30}});
+      testOrgan(organ.name, 3, {tapeBed: {tapeWidth: 120, holeDiameter: 30, rowSpacing: 30, guideMargin: null}});
 
     afterEach(() => TestBed.inject(MatDialog).closeAll());
 
@@ -261,7 +261,7 @@ describe('PlotterExport', () => {
 
     it('passes the dialog the translated entries of the refusals, the too-wide reason first, texts unchanged', async () => {
       const {translate, plotterExport} = await setUp();
-      const organ = testOrgan('Street organ', 3, {tapeBed: {tapeWidth: 140, holeDiameter: 30, rowSpacing: 30}});
+      const organ = testOrgan('Street organ', 3, {tapeBed: {tapeWidth: 140, holeDiameter: 30, rowSpacing: 30, guideMargin: null}});
       const plotter = plotterOf(REFERENCE_PLOTTER);
       const pipe = defined(organ.pipes[0], 'first Pipe').note;
       const tape = tapeOnOrgan(organ, 100, [
@@ -283,7 +283,7 @@ describe('PlotterExport', () => {
 
     it('passes the dialog only the too-wide entry for a Tape wider than the working width', async () => {
       const {plotterExport} = await setUp();
-      const organ = testOrgan('Street organ', 3, {tapeBed: {tapeWidth: 140, holeDiameter: 30, rowSpacing: 30}});
+      const organ = testOrgan('Street organ', 3, {tapeBed: {tapeWidth: 140, holeDiameter: 30, rowSpacing: 30, guideMargin: null}});
       const open = vi.spyOn(TestBed.inject(MatDialog), 'open');
 
       await plotterExport.export(tapeOnOrgan(organ, 100), organ, plotterOf(REFERENCE_PLOTTER));
@@ -455,7 +455,7 @@ describe('PlotterExport', () => {
     }
 
     /** An Organ of 140 mm tape width, wider than the 120 mm working width of the reference Plotter, with 30 mm Holes. */
-    const wideOrgan = (): Organ => testOrgan('Street organ', 3, {tapeBed: {tapeWidth: 140, holeDiameter: 30, rowSpacing: 30}});
+    const wideOrgan = (): Organ => testOrgan('Street organ', 3, {tapeBed: {tapeWidth: 140, holeDiameter: 30, rowSpacing: 30, guideMargin: null}});
 
     it('opens the Cutting Problems dialog with the stretch that has no place for a Join, and saves nothing (FR-019)', async () => {
       const {api, translate, snackBar, plotterExport} = await setUp();

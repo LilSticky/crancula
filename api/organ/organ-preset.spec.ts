@@ -6,7 +6,7 @@ import {validateOrgan} from './validate-organ';
 /** Measures from Wally Venable's MIDIBoek gamma files (issue #162), Annotated-20-Raffin.gam. */
 const DREHORGEL_20ER_DRAFT: OrganDraft = {
   name: '20er-Drehorgel',
-  tapeBed: {tapeWidth: 110, holeDiameter: 3, rowSpacing: 3.85},
+  tapeBed: {tapeWidth: 110, holeDiameter: 3, rowSpacing: 3.85, guideMargin: null},
   minimumGap: 3,
   leadIn: 30,
   slowestCrankSpeed: 40,
@@ -18,7 +18,7 @@ const DREHORGEL_20ER_DRAFT: OrganDraft = {
 /** Measures from Wally Venable's MIDIBoek gamma files (issue #162), 31-raffin-wsv-arranging.gam. */
 const DREHORGEL_31ER_DRAFT: OrganDraft = {
   name: '31er-Drehorgel',
-  tapeBed: {tapeWidth: 140, holeDiameter: 2.5, rowSpacing: 3.86},
+  tapeBed: {tapeWidth: 140, holeDiameter: 2.5, rowSpacing: 3.86, guideMargin: null},
   minimumGap: 3,
   leadIn: 30,
   slowestCrankSpeed: 40,

@@ -211,7 +211,7 @@ describe('OrganEditorComponent', () => {
     it('is shown as the hole diameter with the decimal comma in German', async () => {
       TestBed.configureTestingModule({providers: [provideRouter([]), provideTestTranslations('de')]});
       vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
-      const organ = testOrgan('Street organ', 2, {tapeBed: {tapeWidth: 120, holeDiameter: 2.5, rowSpacing: 3.5}});
+      const organ = testOrgan('Street organ', 2, {tapeBed: {tapeWidth: 120, holeDiameter: 2.5, rowSpacing: 3.5, guideMargin: null}});
       await TestBed.inject(OrganLibrary).put(organ);
       const {field} = await open(organ.id);
 
@@ -1735,7 +1735,7 @@ describe('OrganEditorComponent', () => {
     it.each(mmFields)('%s shows a stored 2.5 as 2.5 in English when not focused', async (testId) => {
       const {open: openEditor, library} = render();
       const organ = testOrgan('Street organ', 2, {
-        tapeBed: {tapeWidth: 120, holeDiameter: 2.5, rowSpacing: 2.5},
+        tapeBed: {tapeWidth: 120, holeDiameter: 2.5, rowSpacing: 2.5, guideMargin: null},
         minimumGap: 2.5,
         leadIn: 2.5,
       });
@@ -1749,7 +1749,7 @@ describe('OrganEditorComponent', () => {
       TestBed.configureTestingModule({providers: [provideRouter([]), provideTestTranslations('de')]});
       vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
       const organ = testOrgan('Street organ', 2, {
-        tapeBed: {tapeWidth: 120, holeDiameter: 2.5, rowSpacing: 2.5},
+        tapeBed: {tapeWidth: 120, holeDiameter: 2.5, rowSpacing: 2.5, guideMargin: null},
         minimumGap: 2.5,
         leadIn: 2.5,
       });

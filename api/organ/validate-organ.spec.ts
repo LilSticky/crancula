@@ -8,7 +8,7 @@ function validDraft(overrides: Partial<OrganDraft> = {}): OrganDraft {
   return {
     ...emptyOrganDraft(),
     name: 'Street organ',
-    tapeBed: {tapeWidth: 120, holeDiameter: 2.5, rowSpacing: 3.5},
+    tapeBed: {tapeWidth: 120, holeDiameter: 2.5, rowSpacing: 3.5, guideMargin: null},
     minimumGap: 1.5,
     leadIn: 20,
     pipes: Array.from({length: 31}, (_, row) => ({note: 53 + row})),
@@ -48,14 +48,14 @@ describe('validateOrgan', () => {
 
     it('accepts a single Pipe and decimals', () => {
       const draft = validDraft({
-        tapeBed: {tapeWidth: 3.1, holeDiameter: 3.1, rowSpacing: 3.1},
+        tapeBed: {tapeWidth: 3.1, holeDiameter: 3.1, rowSpacing: 3.1, guideMargin: null},
         pipes: [{note: 60}],
       });
       expect(violationsOf(draft)).toEqual([]);
     });
 
     it('accepts Pipes whose Row Span equals the tape width exactly (Border 0)', () => {
-      expect(violationsOf(validDraft({tapeBed: {tapeWidth: 107.5, holeDiameter: 2.5, rowSpacing: 3.5}}))).toEqual([]);
+      expect(violationsOf(validDraft({tapeBed: {tapeWidth: 107.5, holeDiameter: 2.5, rowSpacing: 3.5, guideMargin: null}}))).toEqual([]);
     });
   });
 
@@ -166,7 +166,7 @@ describe('validateOrgan', () => {
 
     it('requires every measurement', () => {
       const draft = validDraft({
-        tapeBed: {tapeWidth: null, holeDiameter: null, rowSpacing: null},
+        tapeBed: {tapeWidth: null, holeDiameter: null, rowSpacing: null, guideMargin: null},
         minimumGap: null,
         leadIn: null,
       });
@@ -198,7 +198,7 @@ describe('validateOrgan', () => {
 
     it('requires positive tape width, hole diameter, row spacing and Minimum Gap', () => {
       const draft = validDraft({
-        tapeBed: {tapeWidth: 0, holeDiameter: -1, rowSpacing: 0},
+        tapeBed: {tapeWidth: 0, holeDiameter: -1, rowSpacing: 0, guideMargin: null},
         minimumGap: 0,
       });
       expect(violationsOf(draft)).toEqual([
@@ -210,19 +210,19 @@ describe('validateOrgan', () => {
     });
 
     it('rejects a row spacing smaller than the hole diameter', () => {
-      expect(violationsOf(validDraft({tapeBed: {tapeWidth: 120, holeDiameter: 3, rowSpacing: 2.5}}))).toEqual([
+      expect(violationsOf(validDraft({tapeBed: {tapeWidth: 120, holeDiameter: 3, rowSpacing: 2.5, guideMargin: null}}))).toEqual([
         {code: 'row-spacing-below-hole-diameter', path: 'tapeBed.rowSpacing', params: {holeDiameter: 3}},
       ]);
     });
 
     it('rejects Pipes whose Row Span is just above the tape width', () => {
-      expect(violationsOf(validDraft({tapeBed: {tapeWidth: 107.4, holeDiameter: 2.5, rowSpacing: 3.5}}))).toEqual([
+      expect(violationsOf(validDraft({tapeBed: {tapeWidth: 107.4, holeDiameter: 2.5, rowSpacing: 3.5, guideMargin: null}}))).toEqual([
         {code: 'pipes-exceed-tape-width', path: 'tapeBed.tapeWidth', params: {requiredWidth: 107.5, availableWidth: 107.4}},
       ]);
     });
 
     it('rejects Pipes that do not fit across the tape width', () => {
-      expect(violationsOf(validDraft({tapeBed: {tapeWidth: 100, holeDiameter: 2.5, rowSpacing: 3.5}}))).toEqual([
+      expect(violationsOf(validDraft({tapeBed: {tapeWidth: 100, holeDiameter: 2.5, rowSpacing: 3.5, guideMargin: null}}))).toEqual([
         {code: 'pipes-exceed-tape-width', path: 'tapeBed.tapeWidth', params: {requiredWidth: 107.5, availableWidth: 100}},
       ]);
     });

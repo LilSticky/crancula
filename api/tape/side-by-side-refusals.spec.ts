@@ -34,7 +34,7 @@ function rollPlotter(workingWidth: number): RollPlotter {
 function barrelOrgan(): Organ {
   const result = validateOrgan({
     name: 'Barrel piano',
-    tapeBed: {tapeWidth: 60, holeDiameter: 3, rowSpacing: 4},
+    tapeBed: {tapeWidth: 60, holeDiameter: 3, rowSpacing: 4, guideMargin: null},
     minimumGap: 2,
     leadIn: 50,
     slowestCrankSpeed: 30,

@@ -546,7 +546,7 @@ describe('TapeViewComponent', () => {
     describe('for a Tape that can not be cut', () => {
       // Its Organ's holes were made so wide after the Tape was made that its Holes are shorter than the Minimum Hole Length.
       const widerOrgan = (original: Organ): Organ => ({
-        ...testOrgan(original.name, 3, {tapeBed: {tapeWidth: 120, holeDiameter: 30, rowSpacing: 30}}),
+        ...testOrgan(original.name, 3, {tapeBed: {tapeWidth: 120, holeDiameter: 30, rowSpacing: 30, guideMargin: null}}),
         id: original.id,
       });
 
@@ -587,7 +587,7 @@ describe('TapeViewComponent', () => {
       const undoButton = (view: HTMLElement | null) => view?.querySelector<HTMLButtonElement>('[data-testid="undo"]') ?? null;
       // Its Organ's holes were made so wide after the Tape was made that its Holes are shorter than the Minimum Hole Length.
       const widerOrgan = (original: Organ): Organ => ({
-        ...testOrgan(original.name, 3, {tapeBed: {tapeWidth: 120, holeDiameter: 30, rowSpacing: 30}}),
+        ...testOrgan(original.name, 3, {tapeBed: {tapeWidth: 120, holeDiameter: 30, rowSpacing: 30, guideMargin: null}}),
         id: original.id,
       });
 
@@ -1879,15 +1879,15 @@ describe('TapeViewComponent', () => {
 
     it('draws two Border lines, at the Border from each edge of the Tape', async () => {
       const {tape, organ, open, view} = await render({leadIn: 0});
-      const {border, width} = tapeGeometry(tape, organ);
+      const {borders, width} = tapeGeometry(tape, organ);
 
       await open(`/tapes/${tape.id}`);
 
       const lines = all(view(), 'svg [data-testid="border-line"]');
       const heights = lines.map((line) => numberAttribute(line, 'y1')).sort((a, b) => a - b);
       expect(heights).toHaveLength(2);
-      expect(heights[0]).toBeCloseTo(border * SCALE, 1);
-      expect(heights[1]).toBeCloseTo((width - border) * SCALE, 1);
+      expect(heights[0]).toBeCloseTo(borders.guide * SCALE, 1);
+      expect(heights[1]).toBeCloseTo((width - borders.far) * SCALE, 1);
     });
 
     it('draws no Lead-in and starts the Tape square at Column 1 when the Lead-in is 0', async () => {

@@ -7,7 +7,7 @@ const geometry: TapeGeometry = {
   columnLength: 2.5,
   length: 250,
   width: 40,
-  border: 5,
+  borders: {guide: 5, far: 5},
   rowCentres: [10, 20, 30],
   endGap: 2,
   totalLength: 272,

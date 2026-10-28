@@ -1,12 +1,12 @@
 import {describe, expect, it} from 'vitest';
-import {border, emptyOrganDraft, type Organ, type OrganDraft, rowSpan, validateOrgan} from '@api/index';
+import {borders, emptyOrganDraft, type Organ, type OrganDraft, rowSpan, validateOrgan} from '@api/index';
 import {tapeBedMiniature} from './tape-bed-miniature';
 
 function organ(tapeWidth: number, pipeCount: number): Organ {
   const draft: OrganDraft = {
     ...emptyOrganDraft(),
     name: 'Test organ',
-    tapeBed: {tapeWidth, holeDiameter: 2.5, rowSpacing: 3.5},
+    tapeBed: {tapeWidth, holeDiameter: 2.5, rowSpacing: 3.5, guideMargin: null},
     minimumGap: 1.5,
     leadIn: 20,
     pipes: Array.from({length: pipeCount}, (_, row) => ({note: 53 + row})),
@@ -24,7 +24,7 @@ describe('tapeBedMiniature', () => {
 
     expect(miniature.bodyHeight).toBe(56);
     expect(miniature.rowCentres).toHaveLength(31);
-    expect(miniature.rowCentres[0]).toBeCloseTo(((border(streetOrgan) + 1.25) * 56) / 120, 10);
+    expect(miniature.rowCentres[0]).toBeCloseTo(((borders(streetOrgan).guide + 1.25) * 56) / 120, 10);
     expect(miniature.rowCentres[0]).toBeCloseTo(3.5, 10);
   });
 

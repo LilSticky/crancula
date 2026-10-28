@@ -28,9 +28,9 @@ description: "Tasks for 014 Off-centre rows on a Tape Bed"
 ## Phase 2: Foundational (Borders per side)
 
 - [ ] T002 Red: `api/organ/organ.spec.ts`: `tapeBedFit` returns `{rowSpan, borders: {guide, far}}` for the centred 20er (16.925 both), the guided 20er (8.5 / 25.35) and 31er (9.75 / 11.95); `borders(organ)` likewise; a negative far side when the rows don't fit.
-- [ ] T003 Green: `api/organ/organ.ts`: `TapeBed.guideMargin?: Millimetres`, `Borders`, `tapeBedFit`, `borders` (replaces `border`); `api/index.ts` exports; fix compile errors at every caller by reading `borders.guide` where the old code meant the top edge, without behaviour change yet (R2).
+- [x] T003 Green: `api/organ/organ.ts`: `TapeBed.guideMargin?: Millimetres`, `Borders`, `tapeBedFit`, `borders` (replaces `border`); `api/index.ts` exports; fix compile errors at every caller by reading `borders.guide` where the old code meant the top edge, without behaviour change yet (R2).
 - [ ] T004 Red: `api/tape/tape-geometry.spec.ts`: a guided 20er Organ puts row 1's centre at 10 mm and row 20's at 83.15 mm; `geometry.borders` is `{guide: 8.5, far: 25.35}`; a centred Organ unchanged.
-- [ ] T005 Green: `api/tape/tape-geometry.ts` uses `borders` (field `borders` replaces `border`); callers `tape-drawing.ts` `outline().borders` = `[guide × scale, (width − far) × scale]`.
+- [x] T005 Green: `api/tape/tape-geometry.ts` uses `borders` (field `borders` replaces `border`); callers `tape-drawing.ts` `outline().borders` = `[guide × scale, (width − far) × scale]`.
 
 ## Phase 3: US1 Enter a Guide margin (P1)
 

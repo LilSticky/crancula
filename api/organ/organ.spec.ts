@@ -2,7 +2,7 @@ import {DEFAULT_CRANK_SPEED_RANGE} from './crank-speed-range';
 import {describe, expect, it} from 'vitest';
 import {
   asValidOrgan,
-  border,
+  borders,
   millimetres,
   minimumHoleLength,
   newOrganId,
@@ -20,6 +20,12 @@ function mm(value: number) {
 }
 
 const tapeBed: TapeBed = {tapeWidth: mm(120), holeDiameter: mm(2.5), rowSpacing: mm(3.5)};
+
+/** The 20er reference: 110 mm tape, 3 mm holes, 3.85 mm rows, 20 Pipes. */
+const twentyBed: TapeBed = {tapeWidth: mm(110), holeDiameter: mm(3), rowSpacing: mm(3.85)};
+
+/** The 31er reference: 140 mm tape, 2.5 mm holes, 3.86 mm rows, 31 Pipes. */
+const thirtyOneBed: TapeBed = {tapeWidth: mm(140), holeDiameter: mm(2.5), rowSpacing: mm(3.86)};
 
 describe('millimetres', () => {
   it.each([0, 0.5, 120])('accepts %d', (value) => {
@@ -57,7 +63,7 @@ describe('rowSpan', () => {
   });
 });
 
-describe('border', () => {
+describe('borders', () => {
   function organWith(bed: TapeBed, pipeCount: number) {
     return asValidOrgan({
       id: newOrganId(),
@@ -70,27 +76,89 @@ describe('border', () => {
     });
   }
 
-  it('is 6.25 mm for the street organ (120 / 2.5 / 3.5, 31 Pipes)', () => {
-    expect(border(organWith(tapeBed, 31))).toBeCloseTo(6.25);
+  it('is 6.25 mm on each side for the street organ (120 / 2.5 / 3.5, 31 Pipes)', () => {
+    const {guide, far} = borders(organWith(tapeBed, 31));
+
+    expect(guide).toBeCloseTo(6.25);
+    expect(far).toBeCloseTo(6.25);
   });
 
-  it('is 0 when the rows exactly fill the tape width', () => {
+  it('is 0 on each side when the rows exactly fill the tape width', () => {
     const fullBed: TapeBed = {tapeWidth: mm(107.5), holeDiameter: mm(2.5), rowSpacing: mm(3.5)};
-    expect(border(organWith(fullBed, 31))).toBe(0);
+    const {guide, far} = borders(organWith(fullBed, 31));
+
+    expect(guide).toBe(0);
+    expect(far).toBe(0);
+  });
+
+  it('centres the 20er rows at 16.925 mm on each side without a Guide margin', () => {
+    const {guide, far} = borders(organWith(twentyBed, 20));
+
+    expect(guide).toBeCloseTo(16.925);
+    expect(far).toBeCloseTo(16.925);
+  });
+
+  it('puts the guide side at 8.5 mm and the far side at 25.35 mm for the 20er with a Guide margin of 10 mm', () => {
+    const {guide, far} = borders(organWith({...twentyBed, guideMargin: mm(10)}, 20));
+
+    expect(guide).toBeCloseTo(8.5);
+    expect(far).toBeCloseTo(25.35);
+  });
+
+  it('puts the guide side at 9.75 mm and the far side at 11.95 mm for the 31er with a Guide margin of 11 mm', () => {
+    const {guide, far} = borders(organWith({...thirtyOneBed, guideMargin: mm(11)}, 31));
+
+    expect(guide).toBeCloseTo(9.75);
+    expect(far).toBeCloseTo(11.95);
   });
 });
 
 describe('tapeBedFit', () => {
-  it('gives the Row Span and the Border of a fitting Tape Bed', () => {
+  it('gives the Row Span and the Borders of a fitting Tape Bed', () => {
     const fit = tapeBedFit(tapeBed, 31);
+
     expect(fit.rowSpan).toBeCloseTo(107.5);
-    expect(fit.border).toBeCloseTo(6.25);
+    expect(fit.borders.guide).toBeCloseTo(6.25);
+    expect(fit.borders.far).toBeCloseTo(6.25);
   });
 
-  it('gives a negative Border when the rows do not fit', () => {
-    const fit = tapeBedFit({tapeWidth: 100, holeDiameter: 2.5, rowSpacing: 3.5}, 31);
+  it('centres the 20er rows: Row Span 76.15 mm, 16.925 mm on each side without a Guide margin', () => {
+    const fit = tapeBedFit(twentyBed, 20);
+
+    expect(fit.rowSpan).toBeCloseTo(76.15);
+    expect(fit.borders.guide).toBeCloseTo(16.925);
+    expect(fit.borders.far).toBeCloseTo(16.925);
+  });
+
+  it('puts the guide side at 8.5 mm and the far side at 25.35 mm for the 20er with a Guide margin of 10 mm', () => {
+    const fit = tapeBedFit({...twentyBed, guideMargin: mm(10)}, 20);
+
+    expect(fit.rowSpan).toBeCloseTo(76.15);
+    expect(fit.borders.guide).toBeCloseTo(8.5);
+    expect(fit.borders.far).toBeCloseTo(25.35);
+  });
+
+  it('puts the guide side at 9.75 mm and the far side at 11.95 mm for the 31er with a Guide margin of 11 mm', () => {
+    const fit = tapeBedFit({...thirtyOneBed, guideMargin: mm(11)}, 31);
+
+    expect(fit.rowSpan).toBeCloseTo(118.3);
+    expect(fit.borders.guide).toBeCloseTo(9.75);
+    expect(fit.borders.far).toBeCloseTo(11.95);
+  });
+
+  it('gives a negative far side when a Guide margin of 30 mm leaves the 20er rows no room', () => {
+    const fit = tapeBedFit({tapeWidth: mm(100), holeDiameter: mm(3), rowSpacing: mm(3.85), guideMargin: mm(30)}, 20);
+
+    expect(fit.rowSpan).toBeCloseTo(76.15);
+    expect(fit.borders.far).toBeCloseTo(-4.65);
+  });
+
+  it('gives negative Borders when the rows do not fit', () => {
+    const fit = tapeBedFit({tapeWidth: mm(100), holeDiameter: mm(2.5), rowSpacing: mm(3.5)}, 31);
+
     expect(fit.rowSpan).toBeCloseTo(107.5);
-    expect(fit.border).toBeCloseTo(-3.75);
+    expect(fit.borders.guide).toBeCloseTo(-3.75);
+    expect(fit.borders.far).toBeCloseTo(-3.75);
   });
 });
 

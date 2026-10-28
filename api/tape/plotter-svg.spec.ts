@@ -28,7 +28,7 @@ function geometryOf(slots: readonly Slot[], leadIn = 50): TapeGeometry {
     endGap: 2,
     totalLength,
     width: 100,
-    border: 5,
+    borders: {guide: 5, far: 5},
     rowCentres: [],
     slots,
     outline: {
@@ -119,7 +119,7 @@ describe('plotterSvg', () => {
   it('cuts the Holes of a Tape by start from the Lead-in, row 1 first at the same start, then the Outline', () => {
     const organ = validateOrgan({
       name: 'Street organ',
-      tapeBed: {tapeWidth: 120, holeDiameter: 2.5, rowSpacing: 3.5},
+      tapeBed: {tapeWidth: 120, holeDiameter: 2.5, rowSpacing: 3.5, guideMargin: null},
       minimumGap: 1.5,
       leadIn: 20,
       slowestCrankSpeed: 30,
@@ -184,7 +184,7 @@ describe('plotterSvg', () => {
   it('never writes the name of the Tape', () => {
     const organ = validateOrgan({
       name: 'Street organ',
-      tapeBed: {tapeWidth: 120, holeDiameter: 2.5, rowSpacing: 3.5},
+      tapeBed: {tapeWidth: 120, holeDiameter: 2.5, rowSpacing: 3.5, guideMargin: null},
       minimumGap: 1.5,
       leadIn: 20,
       slowestCrankSpeed: 30,
@@ -317,7 +317,7 @@ describe('plotterSvg', () => {
     const pipes = Array.from({length: 31}, (_, row) => ({note: 40 + row}));
     const organ = validateOrgan({
       name: 'Big',
-      tapeBed: {tapeWidth: 120, holeDiameter: 2.5, rowSpacing: 3.5},
+      tapeBed: {tapeWidth: 120, holeDiameter: 2.5, rowSpacing: 3.5, guideMargin: null},
       minimumGap: 1.5,
       leadIn: 20,
       slowestCrankSpeed: 30,
@@ -373,7 +373,7 @@ function rollPlotterOf(tapeSpacing = 3): RollPlotter {
 function organB(): LaneTape['organ'] {
   const organ = validateOrgan({
     name: 'Organ B',
-    tapeBed: {tapeWidth: 60, holeDiameter: 3, rowSpacing: 4},
+    tapeBed: {tapeWidth: 60, holeDiameter: 3, rowSpacing: 4, guideMargin: null},
     minimumGap: 2,
     leadIn: 20,
     slowestCrankSpeed: 30,

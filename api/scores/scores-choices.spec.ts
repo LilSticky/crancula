@@ -48,7 +48,7 @@ function organWithPipes(notes: readonly number[]): Organ {
   const result = validateOrgan({
     id: defined(organId(ORGAN_ID), 'organ id'),
     name: 'Test organ',
-    tapeBed: {tapeWidth: 100, holeDiameter: 3, rowSpacing: 4},
+    tapeBed: {tapeWidth: 100, holeDiameter: 3, rowSpacing: 4, guideMargin: null},
     minimumGap: 2,
     leadIn: 50,
     slowestCrankSpeed: 30,

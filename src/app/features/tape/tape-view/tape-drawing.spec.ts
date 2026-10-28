@@ -220,7 +220,7 @@ describe('outline', () => {
     expect(result.height).toBe(geometry.width * 2);
     expect(result.totalHeight).toBe(RULER_HEIGHT + geometry.width * 2 + 20);
     expect(result.leadIn).toBe(geometry.leadIn * 2);
-    expect(result.borders).toEqual([geometry.border * 2, (geometry.width - geometry.border) * 2]);
+    expect(result.borders).toEqual([geometry.borders.guide * 2, (geometry.width - geometry.borders.far) * 2]);
   });
 
 });

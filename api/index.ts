@@ -1,13 +1,14 @@
 export type {Result} from './result';
 export {midiNoteNumber, noteName, type MidiNoteNumber} from './organ/midi-note-number';
 export {
-  border,
+  borders,
   millimetres,
   minimumHoleLength,
   newOrganId,
   organId,
   rowSpan,
   tapeBedFit,
+  type Borders,
   type Millimetres,
   type Organ,
   type OrganId,

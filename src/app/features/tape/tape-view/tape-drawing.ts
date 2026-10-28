@@ -253,7 +253,7 @@ export function outline(geometry: TapeGeometry, scale: number) {
     leadIn,
     leadInPath: `M${corners.tip.x * scale},${corners.tip.y * scale} H${leadIn} V${corners.columnOneBottom.y * scale} Z`,
     bodyWidth: (geometry.totalLength - geometry.leadIn) * scale,
-    borders: [geometry.border * scale, (geometry.width - geometry.border) * scale],
+    borders: [geometry.borders.guide * scale, (geometry.width - geometry.borders.far) * scale],
     width: geometry.totalLength * scale,
     height,
     totalHeight: RULER_HEIGHT + height + NUMBERS_HEIGHT,

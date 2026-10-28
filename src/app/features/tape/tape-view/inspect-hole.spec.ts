@@ -123,7 +123,7 @@ describe('inspectHole', () => {
     // 0.7 mm Columns against 2.1 mm: 3 * 0.7 is 2.0999999999999996 in floating point, but exactly 3 Columns.
     const precise: Organ = testOrgan('Precise organ', 31, {
       pipes: Array.from({length: 31}, (_, row) => ({note: 58 + 2 * (row + 1)})),
-      tapeBed: {tapeWidth: 120, holeDiameter: 2.1, rowSpacing: 3.5},
+      tapeBed: {tapeWidth: 120, holeDiameter: 2.1, rowSpacing: 3.5, guideMargin: null},
       minimumGap: 2.1,
     });
 

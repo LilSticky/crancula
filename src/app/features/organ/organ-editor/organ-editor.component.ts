@@ -229,7 +229,7 @@ export class OrganEditorComponent implements UnsavedChangesCheck {
   /** The Border the rows leave on each side, in the current language; empty while it is unknown or negative. */
   protected readonly border = computed(() => {
     const fit = this.tapeBedFit();
-    return fit === null || fit.border < 0 ? '' : formatNumber(fit.border, this.language());
+    return fit === null || fit.borders.guide < 0 ? '' : formatNumber(fit.borders.guide, this.language());
   });
 
   /** The numbers of the fit check in the current language; `null` while it can't be computed. */
@@ -242,9 +242,9 @@ export class OrganEditorComponent implements UnsavedChangesCheck {
       count: fit.pipeCount,
       rowSpan: formatNumber(fit.rowSpan, language),
       tapeWidth: formatNumber(fit.tapeWidth, language),
-      border: formatNumber(fit.border, language),
-      tooWide: fit.border < 0,
-      fitKey: `ORGAN.EDITOR.${fit.border < 0 ? 'FIT_TOO_WIDE' : 'FIT'}${one}`,
+      border: formatNumber(fit.borders.guide, language),
+      tooWide: fit.borders.guide < 0,
+      fitKey: `ORGAN.EDITOR.${fit.borders.guide < 0 ? 'FIT_TOO_WIDE' : 'FIT'}${one}`,
       drawingKey: `ORGAN.EDITOR.TAPE_BED_DRAWING${one}`,
     };
   });
@@ -252,9 +252,9 @@ export class OrganEditorComponent implements UnsavedChangesCheck {
   /** The Tape Bed in mm, for the drawing; `null` while a value is missing or the Border would be negative. */
   protected readonly drawing = computed(() => {
     const fit = this.tapeBedFit();
-    if (fit === null || fit.border < 0) return null;
-    const rows = Array.from({length: fit.pipeCount}, (_, row) => fit.border + fit.holeDiameter / 2 + row * fit.rowSpacing);
-    return {tapeWidth: fit.tapeWidth, length: 2 * fit.tapeWidth, border: fit.border, bottomBorderTop: fit.tapeWidth - fit.border, rows};
+    if (fit === null || fit.borders.guide < 0) return null;
+    const rows = Array.from({length: fit.pipeCount}, (_, row) => fit.borders.guide + fit.holeDiameter / 2 + row * fit.rowSpacing);
+    return {tapeWidth: fit.tapeWidth, length: 2 * fit.tapeWidth, border: fit.borders.guide, bottomBorderTop: fit.tapeWidth - fit.borders.guide, rows};
   });
 
   protected readonly minimumHoleLength = computed(() => {

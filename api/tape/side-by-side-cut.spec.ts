@@ -25,7 +25,7 @@ function rollPlotterOf(tapeSpacing = 3, workingWidth = 300): RollPlotter {
 function organOf(name: string, tapeWidth: number, notes: readonly number[], leadIn: number): Organ {
   const result = validateOrgan({
     name,
-    tapeBed: {tapeWidth, holeDiameter: 3, rowSpacing: 4},
+    tapeBed: {tapeWidth, holeDiameter: 3, rowSpacing: 4, guideMargin: null},
     minimumGap: 2,
     leadIn,
     slowestCrankSpeed: 30,
