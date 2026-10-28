@@ -1,6 +1,6 @@
-import {expect, test, type Page} from '@playwright/test';
+import {expect, test, type Locator, type Page} from '@playwright/test';
 import {launchApp} from './support/launch-app';
-import {defineStreetOrgan} from './support/organ-editor';
+import {defineStreetOrgan, saveOrgan} from './support/organ-editor';
 import {resizeWindowOrSkip} from './support/window-size';
 
 interface Box {
@@ -209,6 +209,118 @@ test.describe('The Tape Bed fields at 1440 x 900 (#151)', () => {
       fieldOf(window, testId).evaluate((element) => element.getBoundingClientRect().height);
     const [leadIn, minimumGap] = await Promise.all([height('lead-in'), height('minimum-gap')]);
     expect(leadIn, `Lead-in ${leadIn}px vs Minimum gap ${minimumGap}px`).toBeLessThanOrEqual(minimumGap + 0.5);
+    await app.close();
+  });
+});
+
+test.describe('The Tape Bed card at the README size keeps its labels, heights and fit line (#208)', () => {
+  const fitLinePattern: Record<'en' | 'de', RegExp> = {
+    en: /31 rows take 107[.,]5 mm of the 120 mm tape width/,
+    de: /31 Reihen belegen 107[.,]5 mm der 120 mm Bandbreite/,
+  };
+
+  /** The README screen: the 31er street organ with an empty Guide margin, opened from the Organ list. */
+  async function openStreetOrganLikeTheReadme(window: Page, language: 'en' | 'de'): Promise<void> {
+    await defineStreetOrgan(window);
+    await window.getByTestId('tape-per-crank-turn').fill('50');
+    await saveOrgan(window);
+    await window.getByRole('link', {name: 'Organs'}).click();
+    await window.getByTestId('organ').first().click();
+    await expect(window.getByTestId('save-organ')).toBeVisible();
+    if (language === 'de') await window.getByTestId('language-switch').locator('[data-language="de"]').click();
+  }
+
+  const boxOf = (locator: Locator) =>
+    locator.evaluate((element) => {
+      const {left, top, right, bottom, height} = element.getBoundingClientRect();
+      return {left, top, right, bottom, height};
+    });
+
+  for (const language of ['en', 'de'] as const) {
+    test(`${language}: the Guide margin label does not overlap its mm suffix`, async () => {
+      const launched = await launchApp();
+      const {app, window} = launched;
+      await resizeWindowOrSkip(launched, 1440, 900, true);
+      await openStreetOrganLikeTheReadme(window, language);
+
+      const field = window.locator('mat-form-field').filter({has: window.getByTestId('guide-margin')});
+      const label = await boxOf(field.locator('.mdc-floating-label'));
+      const suffix = await boxOf(field.locator('.mat-mdc-form-field-text-suffix'));
+      const overlaps = label.left < suffix.right - 0.5 && suffix.left < label.right - 0.5 && label.top < suffix.bottom - 0.5 && suffix.top < label.bottom - 0.5;
+      expect(overlaps, `label ${JSON.stringify(label)} overlaps suffix ${JSON.stringify(suffix)}`).toBe(false);
+      await app.close();
+    });
+
+    test(`${language}: Spacing between rows and Guide margin fields are equally tall`, async () => {
+      const launched = await launchApp();
+      const {app, window} = launched;
+      await resizeWindowOrSkip(launched, 1440, 900, true);
+      await openStreetOrganLikeTheReadme(window, language);
+
+      // The visible text field (the box the user types in), not the form field host, which also holds the hint.
+      const inputBox = (testId: string) =>
+        boxOf(window.locator('mat-form-field').filter({has: window.getByTestId(testId)}).locator('.mdc-text-field')).then((box) => box.height);
+      const [rowSpacing, guideMargin] = await Promise.all([inputBox('row-spacing'), inputBox('guide-margin')]);
+      expect(Math.abs(rowSpacing - guideMargin), `Spacing between rows ${rowSpacing}px vs Guide margin ${guideMargin}px`).toBeLessThanOrEqual(0.5);
+      await app.close();
+    });
+
+    test(`${language}: the rows-fit line is fully visible above the save bar`, async () => {
+      const launched = await launchApp();
+      const {app, window} = launched;
+      await resizeWindowOrSkip(launched, 1440, 900, true);
+      await openStreetOrganLikeTheReadme(window, language);
+
+      const fit = window.getByTestId('fit-check');
+      await expect(fit).toHaveText(fitLinePattern[language]);
+      const line = await boxOf(fit);
+      const bar = await boxOf(window.locator('cranc-action-bar'));
+      expect(line.bottom, `fit line bottom ${line.bottom}px vs save bar top ${bar.top}px`).toBeLessThanOrEqual(bar.top + 0.5);
+
+      const clipped = await fit.evaluate((element) => ({
+        horizontal: element.scrollWidth - element.clientWidth,
+        vertical: element.scrollHeight - element.clientHeight,
+      }));
+      expect(clipped.horizontal, 'fit line is cut off horizontally').toBeLessThanOrEqual(0);
+      expect(clipped.vertical, 'fit line is cut off vertically').toBeLessThanOrEqual(0);
+      await app.close();
+    });
+  }
+
+  test('the Name label is not cut off above the fields', async () => {
+    const launched = await launchApp();
+    const {app, window} = launched;
+    await resizeWindowOrSkip(launched, 1440, 900, true);
+    await openStreetOrganLikeTheReadme(window, 'en');
+
+    const nameLabel = await boxOf(window.locator('mat-form-field').filter({has: window.getByTestId('name')}).locator('.mdc-floating-label'));
+    const fields = await boxOf(window.getByTestId('tape-bed-sheet').locator('.fields'));
+    expect(nameLabel.top, `Name label top ${nameLabel.top}px vs fields top ${fields.top}px`).toBeGreaterThanOrEqual(fields.top - 0.5);
+    await app.close();
+  });
+
+  test('at 1280 x 600 the fields keep at least 120 px of height', async () => {
+    const launched = await launchApp();
+    const {app, window} = launched;
+    await resizeWindowOrSkip(launched, 1280, 600, true);
+    await openStreetOrganLikeTheReadme(window, 'en');
+
+    const fields = await boxOf(window.getByTestId('tape-bed-sheet').locator('.fields'));
+    expect(fields.bottom - fields.top, `fields ${fields.bottom - fields.top}px tall`).toBeGreaterThanOrEqual(120);
+    await app.close();
+  });
+
+  test('the Guide margin hint sits within 8 px under its field', async () => {
+    const launched = await launchApp();
+    const {app, window} = launched;
+    await resizeWindowOrSkip(launched, 1440, 900, true);
+    await openStreetOrganLikeTheReadme(window, 'en');
+
+    const textField = await boxOf(window.locator('mat-form-field').filter({has: window.getByTestId('guide-margin')}).locator('.mdc-text-field'));
+    const hint = await boxOf(window.getByTestId('guide-margin-hint'));
+    const gap = hint.top - textField.bottom;
+    expect(gap, `hint ${gap}px under the Guide margin field`).toBeGreaterThanOrEqual(0);
+    expect(gap, `hint ${gap}px under the Guide margin field`).toBeLessThanOrEqual(8);
     await app.close();
   });
 });

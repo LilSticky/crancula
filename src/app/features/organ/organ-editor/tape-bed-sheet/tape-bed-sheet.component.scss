@@ -15,11 +15,15 @@ mat-card {
 }
 
 .fields {
+  flex: 1 1 auto;
+  min-height: 8rem;
+  overflow-y: auto;
   display: grid;
   grid-template-columns: 1fr 1fr;
   column-gap: 16px;
   row-gap: 20px;
-  margin-top: 16px;
+  /* Padding, not margin: the floated labels of the first row reach above the fields and must not be clipped. */
+  padding-top: 16px;
 }
 
 @media (max-width: 1180px) {
@@ -33,7 +37,16 @@ mat-card {
   grid-column: 1 / -1;
 }
 
+/* Pulled up into the row gap so that it reads as part of the Guide margin field above it. */
+.field-hint {
+  margin: -16px 0 0;
+  padding-inline: 16px;
+  font-size: 0.75rem;
+  color: var(--mat-sys-on-surface-variant);
+}
+
 .fit-check {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -45,6 +58,8 @@ mat-card {
 }
 
 .tape-bed-drawing {
+  flex-shrink: 1;
+  min-height: 0;
   display: block;
   width: 100%;
   max-height: 160px;

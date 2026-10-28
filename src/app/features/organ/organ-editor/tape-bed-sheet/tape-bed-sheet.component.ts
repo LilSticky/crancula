@@ -37,6 +37,9 @@ export interface TapeBedDrawing {
   readonly rows: readonly number[];
 }
 
+/** Gives each sheet its own hint id, so that two sheets never share one. */
+let guideMarginHintCount = 0;
+
 /** The Tape Bed sheet of the Organ editor: name and Tape Bed fields, the fit check and the drawing. */
 @Component({
   selector: 'cranc-tape-bed-sheet',
@@ -57,6 +60,9 @@ export class TapeBedSheetComponent {
   readonly drawing = input<TapeBedDrawing | null>(null);
 
   private readonly saveAttempt = inject(SaveAttempt).attempted;
+
+  /** The id of the Guide margin hint, which the Guide margin field names as its description. */
+  protected readonly guideMarginHintId = `guide-margin-hint-${++guideMarginHintCount}`;
 
   /** Whether a Guide margin is set: the Border then names the guide side and the far side. */
   protected readonly guided = computed(() => this.organ().tapeBed.guideMargin().value() !== null);

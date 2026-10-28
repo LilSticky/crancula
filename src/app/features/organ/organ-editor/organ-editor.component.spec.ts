@@ -373,7 +373,9 @@ describe('OrganEditorComponent', () => {
       const {open: openEditor} = render();
       const {field} = await openEditor();
 
-      expect(hintOf(field('guide-margin'))).toBe('Guide edge to the centre of row 1; empty: rows centred');
+      expect(field('guide-margin').closest('.fields')?.querySelector('[data-testid="guide-margin-hint"]')?.textContent?.trim()).toBe(
+        'Guide edge to the centre of row 1; empty: rows centred',
+      );
     });
 
     it('is empty for a centred Organ', async () => {

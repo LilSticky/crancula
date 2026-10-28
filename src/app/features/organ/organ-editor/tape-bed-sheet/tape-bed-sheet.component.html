@@ -41,17 +41,17 @@
         }
       </ng-container>
     </mat-form-field>
-    <mat-form-field>
+    <mat-form-field floatLabel="always">
       <mat-label>{{ 'ORGAN.EDITOR.GUIDE_MARGIN' | translate }}</mat-label>
-      <input matInput crancDecimalInput inputmode="decimal" data-testid="guide-margin" [formField]="organ().tapeBed.guideMargin"/>
+      <input matInput crancDecimalInput inputmode="decimal" data-testid="guide-margin" [attr.aria-describedby]="guideMarginHintId" [formField]="organ().tapeBed.guideMargin"/>
       <span matTextSuffix>mm</span>
-      <mat-hint>{{ 'ORGAN.EDITOR.GUIDE_MARGIN_HINT' | translate }}</mat-hint>
       <ng-container ngProjectAs="mat-error">
         @for (message of messagesAt(organ().tapeBed.guideMargin); track message.key) {
           <mat-error data-testid="violation" data-path="tapeBed.guideMargin">{{ message.key | translate: message.params }}</mat-error>
         }
       </ng-container>
     </mat-form-field>
+    <p class="field-hint full-width" [id]="guideMarginHintId" data-testid="guide-margin-hint">{{ 'ORGAN.EDITOR.GUIDE_MARGIN_HINT' | translate }}</p>
     <mat-form-field>
       <mat-label>{{ 'ORGAN.EDITOR.MINIMUM_GAP' | translate }}</mat-label>
       <input matInput crancDecimalInput data-testid="minimum-gap" [formField]="organ().minimumGap"/>
