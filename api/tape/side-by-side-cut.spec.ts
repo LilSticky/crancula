@@ -25,7 +25,7 @@ function rollPlotterOf(tapeSpacing = 3, workingWidth = 300): RollPlotter {
 function organOf(name: string, tapeWidth: number, notes: readonly number[], leadIn: number): Organ {
   const result = validateOrgan({
     name,
-    tapeBed: {tapeWidth, holeDiameter: 3, rowSpacing: 4},
+    tapeBed: {tapeWidth, holeDiameter: 3, rowSpacing: 4, guideMargin: null},
     minimumGap: 2,
     leadIn,
     slowestCrankSpeed: 30,
@@ -68,6 +68,22 @@ function tapeOn(
 function reference(): LaneTape {
   const organ = referenceOrgan();
   return {tape: referenceTape(organ), organ};
+}
+
+/** Organ A with a Guide margin of 10 mm (rows 8.5 mm from the top edge of the Tape) and the reference Tape on it. */
+function guidedReference(): LaneTape {
+  const result = validateOrgan({
+    name: 'Organ A, guided',
+    tapeBed: {tapeWidth: 100, holeDiameter: 3, rowSpacing: 4, guideMargin: 10},
+    minimumGap: 2,
+    leadIn: 50,
+    slowestCrankSpeed: 30,
+    fastestCrankSpeed: 120,
+    tapePerCrankTurn: null,
+    pipes: Array.from({length: 10}, (_, row) => ({note: 60 + row})),
+  });
+  if (!result.ok) throw new Error('invalid guided Organ A');
+  return {tape: referenceTape(result.value), organ: result.value};
 }
 
 /** Organ B and "Waltz": 60 mm wide, 400 mm long (Lead-in 20 mm, 126 Columns of 3 mm, end gap 2 mm). */
@@ -170,6 +186,17 @@ describe('laneGeometry', () => {
     const cut = sideBySideCut([reference(), waltz()], rollPlotterOf());
 
     cut.lanes.forEach(expectCutAsOwnGeometryMovedBy);
+  });
+
+  it('moves the Holes of a guided Lane by its top edge too: row 1 sits 8.5 mm below the top edge (Guide margin 10 mm)', () => {
+    const cut = sideBySideCut([guidedReference(), waltz()], rollPlotterOf());
+    cut.lanes.forEach(expectCutAsOwnGeometryMovedBy);
+    const first = cut.lanes[0];
+    if (first === undefined) throw new Error('expected Lane 1');
+
+    const rowOne = laneGeometry(first).slots.filter((slot) => slot.row === 1);
+    expect(rowOne.length).toBeGreaterThan(0);
+    for (const slot of rowOne) expect(slot.y).toBeCloseTo(8.5, 9);
   });
 
   it('keeps the Lane 1 geometry at the top edge of the file', () => {

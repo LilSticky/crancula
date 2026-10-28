@@ -117,7 +117,8 @@
 * A Border of 0 is valid: the holes may touch the Tape's edge
 * An Organ whose Border would be negative on either side is invalid: its rows don't fit across the Tape
 * Shown read-only in the Organ editor and drawn in the Tape view
-* German: Rand
+* Its two sides are the guide side (row 1's edge) and the far side
+* German: Rand; guide side: Führungsseite; far side: Gegenseite
 
 # Row Span
 * The width the rows take across the Tape, from the outer edge of row 1's holes to the outer edge of the last row's holes

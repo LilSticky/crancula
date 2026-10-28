@@ -42,6 +42,17 @@
       </ng-container>
     </mat-form-field>
     <mat-form-field>
+      <mat-label>{{ 'ORGAN.EDITOR.GUIDE_MARGIN' | translate }}</mat-label>
+      <input matInput crancDecimalInput inputmode="decimal" data-testid="guide-margin" [formField]="organ().tapeBed.guideMargin"/>
+      <span matTextSuffix>mm</span>
+      <mat-hint>{{ 'ORGAN.EDITOR.GUIDE_MARGIN_HINT' | translate }}</mat-hint>
+      <ng-container ngProjectAs="mat-error">
+        @for (message of messagesAt(organ().tapeBed.guideMargin); track message.key) {
+          <mat-error data-testid="violation" data-path="tapeBed.guideMargin">{{ message.key | translate: message.params }}</mat-error>
+        }
+      </ng-container>
+    </mat-form-field>
+    <mat-form-field>
       <mat-label>{{ 'ORGAN.EDITOR.MINIMUM_GAP' | translate }}</mat-label>
       <input matInput crancDecimalInput data-testid="minimum-gap" [formField]="organ().minimumGap"/>
       <span matTextSuffix>mm</span>
@@ -92,12 +103,26 @@
         }
       </ng-container>
     </mat-form-field>
-    <mat-form-field>
-      <mat-label>{{ 'ORGAN.EDITOR.BORDER' | translate }}</mat-label>
-      <input matInput readonly class="cr-readonly" data-testid="border" [value]="border()"/>
-      <span matTextSuffix>mm</span>
-      <mat-hint>{{ 'ORGAN.EDITOR.BORDER_HINT' | translate }}</mat-hint>
-    </mat-form-field>
+    @if (guided()) {
+      <mat-form-field>
+        <mat-label>{{ 'ORGAN.EDITOR.BORDER_GUIDE_SIDE' | translate }}</mat-label>
+        <input matInput readonly class="cr-readonly" data-testid="border-guide-side" [value]="borderGuideSide()"/>
+        <span matTextSuffix>mm</span>
+        <mat-hint>{{ 'ORGAN.EDITOR.BORDER_SIDES_HINT' | translate }}</mat-hint>
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>{{ 'ORGAN.EDITOR.BORDER_FAR_SIDE' | translate }}</mat-label>
+        <input matInput readonly class="cr-readonly" data-testid="border-far-side" [value]="borderFarSide()"/>
+        <span matTextSuffix>mm</span>
+      </mat-form-field>
+    } @else {
+      <mat-form-field>
+        <mat-label>{{ 'ORGAN.EDITOR.BORDER' | translate }}</mat-label>
+        <input matInput readonly class="cr-readonly" data-testid="border" [value]="border()"/>
+        <span matTextSuffix>mm</span>
+        <mat-hint>{{ 'ORGAN.EDITOR.BORDER_HINT' | translate }}</mat-hint>
+      </mat-form-field>
+    }
     <mat-form-field>
       <mat-label>{{ 'ORGAN.EDITOR.MINIMUM_HOLE_LENGTH' | translate }}</mat-label>
       <input matInput readonly class="cr-readonly" data-testid="minimum-hole-length" [value]="minimumHoleLength()"/>
@@ -119,8 +144,8 @@
            [attr.aria-label]="fit.drawingKey | translate: fit">
         <rect data-testid="tape-bed-tape" x="0" y="0" [attr.width]="bed.length" [attr.height]="bed.tapeWidth"
               fill="var(--cr-tape)" stroke="var(--cr-tape-edge)" stroke-width="0.5"/>
-        <rect data-testid="tape-bed-border" x="0" y="0" [attr.width]="bed.length" [attr.height]="bed.border" fill="var(--cr-tape-guide)"/>
-        <rect data-testid="tape-bed-border" x="0" [attr.y]="bed.bottomBorderTop" [attr.width]="bed.length" [attr.height]="bed.border" fill="var(--cr-tape-guide)"/>
+        <rect data-testid="tape-bed-border" x="0" y="0" [attr.width]="bed.length" [attr.height]="bed.guide" fill="var(--cr-tape-guide)"/>
+        <rect data-testid="tape-bed-border" x="0" [attr.y]="bed.farTop" [attr.width]="bed.length" [attr.height]="bed.far" fill="var(--cr-tape-guide)"/>
         @for (y of bed.rows; track $index) {
           <line data-testid="tape-bed-row" x1="0" [attr.x2]="bed.length" [attr.y1]="y" [attr.y2]="y" stroke="var(--cr-tape-guide-strong)" stroke-width="0.3"/>
         }

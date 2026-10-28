@@ -129,8 +129,8 @@ async function setUp(plotters: readonly Plotter[] = [rollPlotter()]) {
       {provide: MatSnackBar, useValue: {open: () => ({onAction: () => of()})}},
     ],
   });
-  const street = testOrgan('Street organ', 3, {tapeBed: {tapeWidth: 100, holeDiameter: 2.5, rowSpacing: 3.5}});
-  const barrel = testOrgan('Barrel piano', 3, {tapeBed: {tapeWidth: 60, holeDiameter: 2.5, rowSpacing: 3.5}});
+  const street = testOrgan('Street organ', 3, {tapeBed: {tapeWidth: 100, holeDiameter: 2.5, rowSpacing: 3.5, guideMargin: null}});
+  const barrel = testOrgan('Barrel piano', 3, {tapeBed: {tapeWidth: 60, holeDiameter: 2.5, rowSpacing: 3.5, guideMargin: null}});
   const organs = TestBed.inject(OrganLibrary);
   const tapes = TestBed.inject(TapeLibrary);
   const library = TestBed.inject(PlotterLibrary);

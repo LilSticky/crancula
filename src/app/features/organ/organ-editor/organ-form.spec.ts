@@ -45,6 +45,16 @@ describe('organFormSchema', () => {
     expect(organErrors(root.minimumGap().errors()).map(({kind}) => kind)).toEqual(['must-be-positive']);
   });
 
+  it('puts a Guide margin violation on the Guide margin field, with its parameters', () => {
+    const organ = toDraft(testOrgan('Street organ', 20, {tapeBed: {tapeWidth: 110, holeDiameter: 3, rowSpacing: 3.85, guideMargin: null}}));
+    const root = organForm({...organ, tapeBed: {...organ.tapeBed, guideMargin: 1.4}});
+
+    const [error] = organErrors(root.tapeBed.guideMargin().errors());
+
+    expect(error?.kind).toBe('guide-margin-below-half-hole');
+    expect(error?.violation.params).toEqual({min: 1.5});
+  });
+
   it('puts a missing-Pipes violation on the Pipes', () => {
     const root = organForm(emptyOrganDraft());
 
@@ -93,6 +103,17 @@ describe('changedFields', () => {
     };
 
     expect(changedFields(saved, draft)).toEqual(['name', 'tapeBed.tapeWidth', 'tapeBed.rowSpacing', 'minimumGap']);
+  });
+
+  it('names the Guide margin alone when only it changed', () => {
+    expect(changedFields(saved, {...saved, tapeBed: {...saved.tapeBed, guideMargin: 10}})).toEqual(['tapeBed.guideMargin']);
+  });
+
+  it('names the Guide margin before the Minimum Gap', () => {
+    expect(changedFields(saved, {...saved, minimumGap: 9, tapeBed: {...saved.tapeBed, guideMargin: 10}})).toEqual([
+      'tapeBed.guideMargin',
+      'minimumGap',
+    ]);
   });
 
   it('names the Lead-in after the Minimum Gap', () => {
@@ -162,6 +183,14 @@ describe('problemFields', () => {
   it('labels the Tape per Crank turn with its label', () => {
     expect(problemFields([problem('tapePerCrankTurn')])).toEqual([
       {path: 'tapePerCrankTurn', label: {key: 'ORGAN.EDITOR.TAPE_PER_CRANK_TURN', params: {}}},
+    ]);
+  });
+
+  it('labels the Guide margin with its label, after the Spacing between rows and before the Minimum Gap', () => {
+    expect(problemFields([problem('minimumGap'), problem('tapeBed.guideMargin'), problem('tapeBed.rowSpacing')])).toEqual([
+      {path: 'tapeBed.rowSpacing', label: {key: 'ORGAN.EDITOR.ROW_SPACING', params: {}}},
+      {path: 'tapeBed.guideMargin', label: {key: 'ORGAN.EDITOR.GUIDE_MARGIN', params: {}}},
+      {path: 'minimumGap', label: {key: 'ORGAN.EDITOR.MINIMUM_GAP', params: {}}},
     ]);
   });
 

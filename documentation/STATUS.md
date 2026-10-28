@@ -6,10 +6,13 @@ Issues: [GitHub](https://github.com/LilSticky/crancula/issues)
 
 ## Current slice
 
-None in progress.
+[014 Off-centre rows on a Tape Bed (#163)](../specs/014-off-centre-rows-on-a-tape-bed/spec.md), PR [#202](https://github.com/LilSticky/crancula/pull/202), implemented; reviews fixed ([review-angular.md](../specs/014-off-centre-rows-on-a-tape-bed/review-angular.md), [audit.md](../specs/014-off-centre-rows-on-a-tape-bed/audit.md)).
 
-**Next step:** specify slice 014 Off-centre rows on a Tape Bed ([#163](https://github.com/LilSticky/crancula/issues/163))
-with `/speckit-specify`, from decisions 35–38 in [discovery/later.md](discovery/later.md); or the hand checks below.
+**Next step:** merge PR [#202](https://github.com/LilSticky/crancula/pull/202) once CI is green, then [#198](https://github.com/LilSticky/crancula/issues/198) (side-by-side UX follow-ups).
+
+**Done:** Off-centre rows on a Tape Bed ([#163](https://github.com/LilSticky/crancula/issues/163), branch `014-off-centre-rows-on-a-tape-bed`, PR [#202](https://github.com/LilSticky/crancula/pull/202)): an optional Guide margin on the Tape Bed (guide edge to the centre of row 1; empty means centred). The Border is per side: guide side (Führungsseite) and far side (Gegenseite), in the Organ editor and the Tape view. Organs snapshot v6 (`organs.json`); v1–5 load centred ([ADR 20](adr/0020-snapshots-migrated-on-read.md)). Presets 20er and 31er carry Guide margins 10 and 11 mm. Dictionary: guide side and far side, approved by the user 2026-10-28.
+
+**Open:** T017 (`ux:screens` and `ux-review` of the Organ editor) not done; a small field change. T021 hand check (cut and play a 20er Tape with the Guide margin, needs the user).
 
 **Done:** Discovery of Off-centre rows on a Tape Bed (2026-10-28, branch `docs/163-discovery`): the user enters a
 Guide margin (guide edge to the centre of row 1), row 1's edge is the guide edge, empty means centred. Dictionary: Guide

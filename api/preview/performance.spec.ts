@@ -28,7 +28,7 @@ function organOf(tapePerCrankTurn: number | null): Organ {
   const result = validateOrgan({
     ...emptyOrganDraft(),
     name: 'Street organ',
-    tapeBed: {tapeWidth: 120, holeDiameter: 10, rowSpacing: 11},
+    tapeBed: {tapeWidth: 120, holeDiameter: 10, rowSpacing: 11, guideMargin: null},
     minimumGap: 1.5,
     leadIn: 20,
     tapePerCrankTurn,

@@ -22,7 +22,7 @@ export function tapeOf(fields: TapeFixtureFields): Tape {
 export function referenceOrgan(): Organ {
   const result = validateOrgan({
     name: 'Reference organ',
-    tapeBed: {tapeWidth: 100, holeDiameter: 3, rowSpacing: 4},
+    tapeBed: {tapeWidth: 100, holeDiameter: 3, rowSpacing: 4, guideMargin: null},
     minimumGap: 2,
     leadIn: 50,
     slowestCrankSpeed: 30,

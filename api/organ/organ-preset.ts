@@ -12,16 +12,16 @@ export interface OrganPreset {
 /**
  * The 20er-Drehorgel (Carl Frei scale, F-based): F3 to D6 on a 110 mm Tape. Notes, Tape width, 3 mm holes, 3.85 mm
  * row spacing and the 70 mm/s roll speed come from Wally Venable's MIDIBoek gamma file Annotated-20-Raffin.gam. That
- * file puts the rows off-centre (10 mm guide side, 26.9 mm off-side margin to the row centres); Crancula centres the
- * rows until the Tape Bed can be off-centre (#163). Minimum Gap 3 mm is a forum rule of thumb, Lead-in and
- * the Crank values are guesses, and Tape per Crank turn 70 mm assumes 60 turns/min at 70 mm/s (issue #162).
+ * file puts the rows off-centre (10 mm from the guide side, 26.9 mm from the far side to the row centres), so the
+ * Guide margin is 10 mm (#163). Minimum Gap 3 mm is a forum rule of thumb, Lead-in and the Crank values are guesses,
+ * and Tape per Crank turn 70 mm assumes 60 turns/min at 70 mm/s (issue #162).
  */
 const DREHORGEL_20ER: OrganPreset = {
   id: 'drehorgel-20er',
   name: '20er-Drehorgel',
   draft: {
     name: '20er-Drehorgel',
-    tapeBed: {tapeWidth: 110, holeDiameter: 3, rowSpacing: 3.85},
+    tapeBed: {tapeWidth: 110, holeDiameter: 3, rowSpacing: 3.85, guideMargin: 10},
     minimumGap: 3,
     leadIn: 30,
     slowestCrankSpeed: 40,
@@ -41,7 +41,7 @@ const DREHORGEL_31ER: OrganPreset = {
   name: '31er-Drehorgel',
   draft: {
     name: '31er-Drehorgel',
-    tapeBed: {tapeWidth: 140, holeDiameter: 2.5, rowSpacing: 3.86},
+    tapeBed: {tapeWidth: 140, holeDiameter: 2.5, rowSpacing: 3.86, guideMargin: 11},
     minimumGap: 3,
     leadIn: 30,
     slowestCrankSpeed: 40,

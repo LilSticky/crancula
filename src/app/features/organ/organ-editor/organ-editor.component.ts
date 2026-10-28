@@ -19,7 +19,9 @@ import {
   type Organ,
   type OrganDraft,
   removePipe,
+  rowCentres,
   tapeBedFit,
+  tapeBedFits,
   toDraft,
   validateOrgan,
 } from '@api/index';
@@ -36,7 +38,7 @@ import {OrganLibrary} from '../organ-library.store';
 import {pipeRange} from '../pipe-range';
 import {changedFields, FIELD_LABEL_KEYS, type FieldProblem, organFormSchema, organProblems, problemFields, SaveAttempt, ShownViolationMatcher} from './organ-form';
 import {PipeRackComponent} from './pipe-rack/pipe-rack.component';
-import {TapeBedSheetComponent} from './tape-bed-sheet/tape-bed-sheet.component';
+import {type TapeBedDrawing, type TapeBedFitText, TapeBedSheetComponent} from './tape-bed-sheet/tape-bed-sheet.component';
 
 /** Below this width the Pipe rack has 2 columns of compact rows (the same threshold as the shell). */
 const COMPACT_QUERY = '(max-width: 1179.98px)';
@@ -47,6 +49,7 @@ const FIELD_TEST_IDS: Readonly<Record<string, string>> = {
   'tapeBed.tapeWidth': 'tape-width',
   'tapeBed.holeDiameter': 'hole-diameter',
   'tapeBed.rowSpacing': 'row-spacing',
+  'tapeBed.guideMargin': 'guide-margin',
   minimumGap: 'minimum-gap',
   leadIn: 'lead-in',
   tapePerCrankTurn: 'tape-per-crank-turn',
@@ -218,43 +221,71 @@ export class OrganEditorComponent implements UnsavedChangesCheck {
   protected readonly summaryFields = computed(() => (this.saveAttempt() ? problemFields(organProblems(this.organ)) : []));
   protected readonly problemsKey = computed(() => (this.summaryFields().length === 1 ? 'ORGAN.EDITOR.PROBLEM_ONE' : 'ORGAN.EDITOR.PROBLEMS'));
 
+  /** Whether a Guide margin is set; then the rows sit off-centre and the Borders name the guide side and the far side. */
+  private readonly guided = computed(() => this.draft().tapeBed.guideMargin !== null);
+
   /** How the rows fit the Tape Bed; `null` while a value is missing or there are no Pipes. */
   private readonly tapeBedFit = computed(() => {
-    const {tapeWidth, holeDiameter, rowSpacing} = this.draft().tapeBed;
+    const {tapeWidth, holeDiameter, rowSpacing, guideMargin} = this.draft().tapeBed;
     const pipeCount = this.draft().pipes.length;
     if (tapeWidth === null || holeDiameter === null || rowSpacing === null || pipeCount === 0) return null;
-    return {pipeCount, tapeWidth, holeDiameter, rowSpacing, ...tapeBedFit({tapeWidth, holeDiameter, rowSpacing}, pipeCount)};
-  });
-
-  /** The Border the rows leave on each side, in the current language; empty while it is unknown or negative. */
-  protected readonly border = computed(() => {
-    const fit = this.tapeBedFit();
-    return fit === null || fit.border < 0 ? '' : formatNumber(fit.border, this.language());
+    const tapeBed = {tapeWidth, holeDiameter, rowSpacing, ...(guideMargin === null ? {} : {guideMargin})};
+    return {pipeCount, tapeBed, ...tapeBedFit(tapeBed, pipeCount)};
   });
 
   /** The numbers of the fit check in the current language; `null` while it can't be computed. */
-  protected readonly fit = computed(() => {
+  protected readonly fit = computed<TapeBedFitText | null>(() => {
     const fit = this.tapeBedFit();
     if (fit === null) return null;
+    const {tapeWidth} = fit.tapeBed;
+    const tooWide = fit.rowSpan > tapeWidth;
+    // Rows that fit with a Border below 0 are a Guide margin problem: the field's error explains it.
+    if (!tooWide && !tapeBedFits(fit)) return null;
     const language = this.language();
     const one = fit.pipeCount === 1 ? '_ONE' : '';
+    const offCentre = this.guided() ? '_OFF_CENTRE' : '';
+    const guide = formatNumber(fit.borders.guide, language);
     return {
       count: fit.pipeCount,
       rowSpan: formatNumber(fit.rowSpan, language),
-      tapeWidth: formatNumber(fit.tapeWidth, language),
-      border: formatNumber(fit.border, language),
-      tooWide: fit.border < 0,
-      fitKey: `ORGAN.EDITOR.${fit.border < 0 ? 'FIT_TOO_WIDE' : 'FIT'}${one}`,
-      drawingKey: `ORGAN.EDITOR.TAPE_BED_DRAWING${one}`,
+      tapeWidth: formatNumber(tapeWidth, language),
+      border: guide,
+      guide,
+      far: formatNumber(fit.borders.far, language),
+      tooWide,
+      fitKey: tooWide ? `ORGAN.EDITOR.FIT_TOO_WIDE${one}` : `ORGAN.EDITOR.FIT${offCentre}${one}`,
+      drawingKey: `ORGAN.EDITOR.TAPE_BED_DRAWING${offCentre}${one}`,
     };
   });
 
-  /** The Tape Bed in mm, for the drawing; `null` while a value is missing or the Border would be negative. */
-  protected readonly drawing = computed(() => {
+  /** The fit numbers the sheet shows as Borders; `null` while they are unknown or the rows are too wide. */
+  private readonly shownFit = computed(() => {
+    const fit = this.fit();
+    return fit === null || fit.tooWide ? null : fit;
+  });
+
+  /** The centred Border in the current language; empty while a Guide margin is set. */
+  protected readonly border = computed(() => (this.guided() ? '' : (this.shownFit()?.border ?? '')));
+
+  /** The guide side in the current language; empty unless a Guide margin is set. */
+  protected readonly borderGuideSide = computed(() => (this.guided() ? (this.shownFit()?.guide ?? '') : ''));
+
+  /** The far side in the current language; empty unless a Guide margin is set. */
+  protected readonly borderFarSide = computed(() => (this.guided() ? (this.shownFit()?.far ?? '') : ''));
+
+  /** The Tape Bed in mm, for the drawing; `null` while a value is missing or a Border would be negative. */
+  protected readonly drawing = computed<TapeBedDrawing | null>(() => {
     const fit = this.tapeBedFit();
-    if (fit === null || fit.border < 0) return null;
-    const rows = Array.from({length: fit.pipeCount}, (_, row) => fit.border + fit.holeDiameter / 2 + row * fit.rowSpacing);
-    return {tapeWidth: fit.tapeWidth, length: 2 * fit.tapeWidth, border: fit.border, bottomBorderTop: fit.tapeWidth - fit.border, rows};
+    if (fit === null || !tapeBedFits(fit)) return null;
+    const {tapeBed, pipeCount, borders} = fit;
+    return {
+      tapeWidth: tapeBed.tapeWidth,
+      length: 2 * tapeBed.tapeWidth,
+      guide: roundedMm(borders.guide),
+      farTop: roundedMm(tapeBed.tapeWidth - borders.far),
+      far: roundedMm(borders.far),
+      rows: rowCentres(tapeBed, pipeCount).map((centre) => roundedMm(centre)),
+    };
   });
 
   protected readonly minimumHoleLength = computed(() => {
@@ -388,6 +419,11 @@ export class OrganEditorComponent implements UnsavedChangesCheck {
     this.deleted = true;
     await this.router.navigate(['/organs']);
   }
+}
+
+/** A length in mm without the float noise of the subtraction that gave it (25.349999999999994 is 25.35). */
+function roundedMm(value: number): number {
+  return Math.round(value * 1e6) / 1e6;
 }
 
 function toProblem({path, message}: FieldProblem): LeaveProblem {

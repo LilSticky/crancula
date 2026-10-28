@@ -25,7 +25,7 @@ const notOnOrgan = pipeOf(65);
 const organ: Organ = (() => {
   const result = validateOrgan({
     name: 'Street organ',
-    tapeBed: {tapeWidth: 120, holeDiameter: 3, rowSpacing: 4},
+    tapeBed: {tapeWidth: 120, holeDiameter: 3, rowSpacing: 4, guideMargin: null},
     minimumGap: 1,
     leadIn: 20,
     slowestCrankSpeed: 30,
@@ -41,7 +41,7 @@ const organ: Organ = (() => {
 const wideHoleOrgan: Organ = (() => {
   const result = validateOrgan({
     name: 'Street organ',
-    tapeBed: {tapeWidth: 120, holeDiameter: 6.5, rowSpacing: 8},
+    tapeBed: {tapeWidth: 120, holeDiameter: 6.5, rowSpacing: 8, guideMargin: null},
     minimumGap: 1,
     leadIn: 20,
     slowestCrankSpeed: 30,
@@ -424,7 +424,7 @@ describe('performance on a 2,000-Column Tape (SC-002, research R10)', () => {
     const notes = Array.from({length: 31}, (_, row) => 40 + row);
     const organResult = validateOrgan({
       name: 'Big organ',
-      tapeBed: {tapeWidth: 160, holeDiameter: 3, rowSpacing: 4},
+      tapeBed: {tapeWidth: 160, holeDiameter: 3, rowSpacing: 4, guideMargin: null},
       minimumGap: 1,
       leadIn: 20,
       slowestCrankSpeed: 30,

@@ -12,7 +12,12 @@ as its GitHub Release notes.
 - Cut several Tapes side by side on a roll plotter: tick them in the Tape list, choose "Cut side by side", order the Lanes and save one SVG. Tapes of different Organs and widths can share a cut, and the same Tape can be added twice. A drawing shows the roll and the width still free; a Tape that doesn't fit or has Cutting Problems is named and nothing is saved.
 - A roll plotter has a Tape spacing (3 mm unless changed): the blank strip between two Tapes cut side by side.
 
+- An Organ can set a Guide margin in the Organ editor: the distance from the guide edge of the Tape to the centre of row 1. Leave it empty and the rows stay centred, as before.
+- The Border is now shown for each side of the Tape: the guide side (row 1's edge) and the far side. The Tape view draws both.
+- The 20er and 31er Drehorgel Presets fill in their Guide margin (10 mm and 11 mm), so their rows sit where the gamma files place them.
+
 ### Changed
+- Saved Organs move to file version 6 (`organs.json`) the next time you save, to keep the Guide margin. Older Organs load with their rows centred. An older Crancula can't read the upgraded file.
 - The Plotter list file (`plotters.json`) moves to version 2 to keep the Tape spacing. Older Plotter lists are read with 3 mm; an older Crancula can't read the new file.
 
 - Export a Tape as Scores (MusicXML) from the new Export menu: staves are split by notes, with clefs, Key, tempo and Time signature.

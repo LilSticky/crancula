@@ -63,7 +63,7 @@ function organWith(tapePerCrankTurn: number | null, pipes: readonly number[] = R
   const result = validateOrgan({
     id: defined(organId(ORGAN_ID), 'organ id'),
     name: 'Reference organ',
-    tapeBed: {tapeWidth: 100, holeDiameter: 3, rowSpacing: 4},
+    tapeBed: {tapeWidth: 100, holeDiameter: 3, rowSpacing: 4, guideMargin: null},
     minimumGap: 2,
     leadIn: 50,
     slowestCrankSpeed: 30,

@@ -24,7 +24,7 @@ test.describe('My organs are still there after a restart', () => {
     await app.close();
   });
 
-  test('loads a version 1 snapshot with a Border and saves it again as version 5 without it', async () => {
+  test('loads a version 1 snapshot with a Border and saves it again as version 6 without it', async () => {
     const seeded = await launchApp();
     await seeded.app.close();
     const snapshots = join(seeded.userDataDir, 'snapshots');
@@ -61,12 +61,12 @@ test.describe('My organs are still there after a restart', () => {
       version: number;
       organs: {name: string; tapeBed: Record<string, unknown>}[];
     };
-    expect(saved.version).toBe(5);
+    expect(saved.version).toBe(6);
     expect(saved.organs[0].name).toBe('Street organ 2');
     expect(saved.organs[0].tapeBed).not.toHaveProperty('border');
   });
 
-  test('loads a version 2 snapshot with Lead-in 0 and saves it again as version 5 with Lead-in 0', async () => {
+  test('loads a version 2 snapshot with Lead-in 0 and saves it again as version 6 with Lead-in 0', async () => {
     const seeded = await launchApp();
     await seeded.app.close();
     const snapshots = join(seeded.userDataDir, 'snapshots');
@@ -101,7 +101,7 @@ test.describe('My organs are still there after a restart', () => {
       version: number;
       organs: {leadIn: number}[];
     };
-    expect(saved.version).toBe(5);
+    expect(saved.version).toBe(6);
     expect(saved.organs[0].leadIn).toBe(0);
   });
 

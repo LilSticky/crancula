@@ -39,7 +39,7 @@
   }
 
   <div class="sheets">
-    <cranc-tape-bed-sheet [organ]="organ" [border]="border()" [minimumHoleLength]="minimumHoleLength()" [fit]="fit()" [drawing]="drawing()"/>
+    <cranc-tape-bed-sheet [organ]="organ" [border]="border()" [borderGuideSide]="borderGuideSide()" [borderFarSide]="borderFarSide()" [minimumHoleLength]="minimumHoleLength()" [fit]="fit()" [drawing]="drawing()"/>
     <cranc-pipe-rack [organ]="organ" [compact]="compact()" (pipeAdded)="addPipe()" (pipeMoved)="movePipe($event.from, $event.to)" (pipeRemoved)="removePipe($event)"/>
   </div>
 

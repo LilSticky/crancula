@@ -10,7 +10,7 @@ import {tapeGeometry} from './tape-geometry';
 function testOrgan(name: string, pipeCount: number, leadIn: number): Organ {
   const result = validateOrgan({
     name,
-    tapeBed: {tapeWidth: 120, holeDiameter: 2.5, rowSpacing: 3.5},
+    tapeBed: {tapeWidth: 120, holeDiameter: 2.5, rowSpacing: 3.5, guideMargin: null},
     minimumGap: 1.5,
     leadIn,
     slowestCrankSpeed: 30,
@@ -46,13 +46,14 @@ function tapeWith(organ: Organ, holes: readonly Hole[]): Tape {
 }
 
 describe('tapeGeometry', () => {
-  it('measures the Lead-in, the Tape from Column 1 and the Border in mm', () => {
+  it('measures the Lead-in, the Tape from Column 1 and the Borders in mm', () => {
     const geometry = tapeGeometry(tapeWith(streetOrgan, []), streetOrgan);
 
     expect(geometry.leadIn).toBe(20);
     expect(geometry.length).toBe(250);
     expect(geometry.width).toBe(120);
-    expect(geometry.border).toBeCloseTo(6.25);
+    expect(geometry.borders.guide).toBeCloseTo(6.25);
+    expect(geometry.borders.far).toBeCloseTo(6.25);
   });
 
   it('has a Lead-in of 0 for an Organ without one', () => {
@@ -61,14 +62,57 @@ describe('tapeGeometry', () => {
     expect(tapeGeometry(tapeWith(organ, []), organ).leadIn).toBe(0);
   });
 
-  it('centres the rows, row 1 nearest the top edge, leaving the Border on both sides', () => {
-    const {rowCentres, border, width} = tapeGeometry(tapeWith(streetOrgan, []), streetOrgan);
+  it('centres the rows, row 1 nearest the top edge, leaving the Borders on both sides', () => {
+    const {rowCentres, borders, width} = tapeGeometry(tapeWith(streetOrgan, []), streetOrgan);
 
     expect(rowCentres).toHaveLength(31);
     expect(rowCentres[0]).toBeCloseTo(7.5);
     expect(rowCentres[30]).toBeCloseTo(112.5);
     expect(width - (rowCentres[30] ?? 0)).toBeCloseTo(7.5);
-    expect(border).toBeCloseTo(6.25);
+    expect(borders.guide).toBeCloseTo(6.25);
+    expect(borders.far).toBeCloseTo(6.25);
+  });
+
+  describe('on a 20er Tape Bed (110 mm wide, 3 mm holes, 3.85 mm rows, 20 Pipes)', () => {
+    /** A valid 20er Organ: centred when `guideMargin` is null, otherwise its guide edge sits that far from the centre of row 1. */
+    function twentyOrgan(guideMargin: number | null): Organ {
+      const result = validateOrgan({
+        name: 'Twenty',
+        tapeBed: {tapeWidth: 110, holeDiameter: 3, rowSpacing: 3.85, guideMargin},
+        minimumGap: 1.5,
+        leadIn: 0,
+        slowestCrankSpeed: 30,
+        fastestCrankSpeed: 120,
+        tapePerCrankTurn: null,
+        pipes: Array.from({length: 20}, (_, row) => ({note: 60 + 2 * row})),
+      });
+      if (!result.ok) throw new Error(`invalid test Organ: ${JSON.stringify(result.error)}`);
+      return result.value;
+    }
+
+    it('puts row 1 10 mm from the top edge and row 20 at 83.15 mm with a Guide margin of 10 mm', () => {
+      const {rowCentres} = tapeGeometry(tapeWith(twentyOrgan(10), []), twentyOrgan(10));
+
+      expect(rowCentres[0]).toBeCloseTo(10);
+      expect(rowCentres[19]).toBeCloseTo(83.15);
+    });
+
+    it('gives the guide side 8.5 mm and the far side 25.35 mm with a Guide margin of 10 mm', () => {
+      const organ = twentyOrgan(10);
+      const {borders} = tapeGeometry(tapeWith(organ, []), organ);
+
+      expect(borders.guide).toBeCloseTo(8.5);
+      expect(borders.far).toBeCloseTo(25.35);
+    });
+
+    it('keeps the 20er centred without a Guide margin: 16.925 mm on each side, row 1 at 18.425 mm', () => {
+      const organ = twentyOrgan(null);
+      const {rowCentres, borders} = tapeGeometry(tapeWith(organ, []), organ);
+
+      expect(borders.guide).toBeCloseTo(16.925);
+      expect(borders.far).toBeCloseTo(16.925);
+      expect(rowCentres[0]).toBeCloseTo(18.425);
+    });
   });
 
   it('draws a Hole as the slot from its first Column start to its last Column end', () => {
@@ -96,7 +140,7 @@ describe('tapeGeometry', () => {
   it('moves a Hole with its Pipe when the Organ is reordered', () => {
     const reordered = validateOrgan({
       name: 'Reordered',
-      tapeBed: streetOrgan.tapeBed,
+      tapeBed: {...streetOrgan.tapeBed, guideMargin: null},
       minimumGap: streetOrgan.minimumGap,
       leadIn: streetOrgan.leadIn,
       slowestCrankSpeed: 30,
@@ -126,7 +170,7 @@ describe('tapeGeometry', () => {
     it('cuts row 1 first when two Holes start in the same Column', () => {
       const reordered = validateOrgan({
         name: 'Reordered',
-        tapeBed: streetOrgan.tapeBed,
+        tapeBed: {...streetOrgan.tapeBed, guideMargin: null},
         minimumGap: streetOrgan.minimumGap,
         leadIn: streetOrgan.leadIn,
         slowestCrankSpeed: 30,
@@ -149,8 +193,8 @@ describe('tapeGeometry', () => {
       const result = validateOrgan({
         name: 'Reference',
         tapeBed: border0
-          ? {tapeWidth: 100, holeDiameter: 3, rowSpacing: 97 / 3}
-          : {tapeWidth: 100, holeDiameter: 3, rowSpacing: 12},
+          ? {tapeWidth: 100, holeDiameter: 3, rowSpacing: 97 / 3, guideMargin: null}
+          : {tapeWidth: 100, holeDiameter: 3, rowSpacing: 12, guideMargin: null},
         minimumGap,
         leadIn,
         slowestCrankSpeed: 30,
@@ -199,11 +243,12 @@ describe('tapeGeometry', () => {
       expect(tapeGeometry(tape(organ, [hole(60, 0, 4)], 200), organ).length).toBe(600);
     });
 
-    it('puts Slots on the long edges when the Border is 0', () => {
+    it('puts Slots on the long edges when the Borders are 0', () => {
       const organ = reference(50, 2, true);
       const geometry = tapeGeometry(tape(organ, [hole(60, 0, 4), hole(66, 0, 4)], 200), organ);
 
-      expect(geometry.border).toBeCloseTo(0);
+      expect(geometry.borders.guide).toBeCloseTo(0);
+      expect(geometry.borders.far).toBeCloseTo(0);
       expect(geometry.slots[0]?.y).toBeCloseTo(0);
     });
 

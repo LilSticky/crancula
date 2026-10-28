@@ -25,6 +25,18 @@ function organWith(tapePerCrankTurn?: Millimetres): Organ {
   });
 }
 
+function guidedOrgan(guideMargin: Millimetres): Organ {
+  return asValidOrgan({
+    id: newOrganId(),
+    name: 'Street organ',
+    tapeBed: {tapeWidth: mm(110), holeDiameter: mm(3), rowSpacing: mm(3.85), guideMargin},
+    minimumGap: mm(3),
+    leadIn: mm(30),
+    crankSpeedRange: rangeOf(40, 90),
+    pipes: [{note: midiNoteNumber(60) as MidiNoteNumber}],
+  });
+}
+
 function draftWithNotes(...notes: number[]): OrganDraft {
   return {...emptyOrganDraft(), pipes: notes.map((note) => ({note}))};
 }
@@ -35,7 +47,7 @@ describe('emptyOrganDraft', () => {
   it('has no id, no name, no measurements and no Pipes', () => {
     expect(emptyOrganDraft()).toEqual({
       name: '',
-      tapeBed: {tapeWidth: null, holeDiameter: null, rowSpacing: null},
+      tapeBed: {tapeWidth: null, holeDiameter: null, rowSpacing: null, guideMargin: null},
       minimumGap: null,
       leadIn: null,
       slowestCrankSpeed: 30,
@@ -62,6 +74,14 @@ describe('toDraft', () => {
     expect(toDraft(organWith()).tapePerCrankTurn).toBeNull();
   });
 
+  it('copies the Guide margin of a guided Organ', () => {
+    expect(toDraft(guidedOrgan(mm(10))).tapeBed.guideMargin).toBe(10);
+  });
+
+  it('gives null as the Guide margin of a centred Organ', () => {
+    expect(toDraft(organWith()).tapeBed.guideMargin).toBeNull();
+  });
+
   it('copies all fields of a valid Organ', () => {
     const id = newOrganId();
     const organ = asValidOrgan({
@@ -77,7 +97,7 @@ describe('toDraft', () => {
     expect(toDraft(organ)).toEqual({
       id,
       name: 'Street organ',
-      tapeBed: {tapeWidth: 120, holeDiameter: 2.5, rowSpacing: 3.5},
+      tapeBed: {tapeWidth: 120, holeDiameter: 2.5, rowSpacing: 3.5, guideMargin: null},
       minimumGap: 1.5,
       leadIn: 20,
       slowestCrankSpeed: 30,

@@ -1,7 +1,7 @@
 import {describe, expect, it} from 'vitest';
 import {parseOrganLibrarySnapshot, toSnapshot} from './organ-library-snapshot';
 import {validateOrgan} from './validate-organ';
-import type {Organ} from './organ';
+import {borders, type Organ} from './organ';
 
 const ID_A = '3f2b8c1e-9d4a-4f6b-8e2c-1a2b3c4d5e6f';
 const ID_B = '7c1d2e3f-4a5b-4c6d-8e9f-0a1b2c3d4e5f';
@@ -14,6 +14,27 @@ function organSnapshot(id: string, name = 'Street organ') {
 /** An Organ as stored in version 5, with its Crank speed range. */
 function organSnapshotV5(id: string, slowest: number, fastest: number) {
   return {...organSnapshot(id), crankSpeedRange: {slowest, fastest}};
+}
+
+/**
+ * The 20er reference Organ as stored in version 6: 110 mm tape, 3 mm holes, 3.85 mm rows, 20 Pipes.
+ * The Guide margin is left out when undefined; it is untyped because the parser takes untyped input.
+ */
+function organSnapshotV6(id: string, guideMargin?: unknown) {
+  return {
+    id,
+    name: 'Street organ',
+    tapeBed: {
+      tapeWidth: 110,
+      holeDiameter: 3,
+      rowSpacing: 3.85,
+      ...(guideMargin === undefined ? {} : {guideMargin}),
+    },
+    minimumGap: 3,
+    leadIn: 30,
+    crankSpeedRange: {slowest: 30, fastest: 120},
+    pipes: Array.from({length: 20}, (_, row) => ({note: 60 + row})),
+  };
 }
 
 /** An Organ as stored in versions 1 and 2, without a Lead-in. */
@@ -74,7 +95,7 @@ describe('parseOrganLibrarySnapshot', () => {
     ['not an object', 'oops'],
     ['null', null],
     ['a missing version', {organs: []}],
-    ['an unknown version', {version: 6, organs: []}],
+    ['an unknown version', {version: 7, organs: []}],
     ['version 0', {version: 0, organs: []}],
     ['organs that are not a list', {version: 3, organs: {}}],
     ['an Organ that is not an object', {version: 3, organs: [42]}],
@@ -150,6 +171,94 @@ describe('version 5 Crank speed range', () => {
   });
 });
 
+describe('version 6 Guide margin', () => {
+  it('reads version 6 and keeps the Guide margin of the Tape Bed', () => {
+    const parsed = parseOrganLibrarySnapshot({version: 6, organs: [organSnapshotV6(ID_A, 10)]});
+
+    expect(parsed.ok).toBe(true);
+    if (!parsed.ok) return;
+    expect(parsed.value[0].tapeBed.guideMargin).toBe(10);
+  });
+
+  it('reads a version 6 Organ without a Guide margin as centred', () => {
+    const parsed = parseOrganLibrarySnapshot({version: 6, organs: [organSnapshotV6(ID_A)]});
+
+    expect(parsed.ok).toBe(true);
+    if (!parsed.ok) return;
+    expect(parsed.value[0].tapeBed).not.toHaveProperty('guideMargin');
+  });
+
+  it('ignores a stray Guide margin in a version 5 Tape Bed and reads the Organ as centred', () => {
+    const v5 = organSnapshotV5(ID_A, 30, 120);
+    const parsed = parseOrganLibrarySnapshot({version: 5, organs: [{...v5, tapeBed: {...v5.tapeBed, guideMargin: 10}}]});
+
+    expect(parsed.ok).toBe(true);
+    if (!parsed.ok) return;
+    expect(parsed.value[0].tapeBed).not.toHaveProperty('guideMargin');
+  });
+
+  it('refuses a version 6 Guide margin that is not a number', () => {
+    const result = parseOrganLibrarySnapshot({version: 6, organs: [organSnapshotV6(ID_A, '10')]});
+
+    expect(result.ok).toBe(false);
+    expect(result.ok ? '' : result.error).toContain('guideMargin');
+  });
+
+  it('refuses a version 6 Guide margin that the Tape Bed does not allow', () => {
+    const result = parseOrganLibrarySnapshot({version: 6, organs: [organSnapshotV6(ID_A, 35.36)]});
+
+    expect(result.ok).toBe(false);
+    expect(result.ok ? '' : result.error).toContain('guide-margin-too-large');
+  });
+
+  it('writes the Guide margin of the Tape Bed', () => {
+    const parsed = parseOrganLibrarySnapshot({version: 6, organs: [organSnapshotV6(ID_A, 10)]});
+    expect(parsed.ok).toBe(true);
+    if (!parsed.ok) return;
+
+    expect(toSnapshot(parsed.value)).toEqual({version: 6, organs: [organSnapshotV6(ID_A, 10)]});
+  });
+
+  it('leaves the Guide margin out of the Tape Bed when the rows are centred', () => {
+    const parsed = parseOrganLibrarySnapshot({version: 6, organs: [organSnapshotV6(ID_A)]});
+    expect(parsed.ok).toBe(true);
+    if (!parsed.ok) return;
+
+    expect(toSnapshot(parsed.value).organs[0].tapeBed).not.toHaveProperty('guideMargin');
+  });
+
+  it('round-trips a guided Organ through the parser', () => {
+    const parsed = parseOrganLibrarySnapshot({version: 6, organs: [organSnapshotV6(ID_A, 10)]});
+    expect(parsed.ok).toBe(true);
+    if (!parsed.ok) return;
+
+    const json: unknown = JSON.parse(JSON.stringify(toSnapshot(parsed.value)));
+
+    expect(parseOrganLibrarySnapshot(json)).toEqual(parsed);
+  });
+});
+
+describe('a centred Preset Organ stored before the Presets carried a Guide margin (US4.3)', () => {
+  it('reads as centred: 16.925 mm on each side of the 20er-Drehorgel, with no Guide margin', () => {
+    const v5Preset = {
+      ...organSnapshotV5(ID_A, 40, 90),
+      name: '20er-Drehorgel',
+      tapeBed: {tapeWidth: 110, holeDiameter: 3, rowSpacing: 3.85},
+      minimumGap: 3,
+      leadIn: 30,
+      pipes: Array.from({length: 20}, (_, row) => ({note: 53 + row})),
+    };
+    const parsed = parseOrganLibrarySnapshot({version: 5, organs: [v5Preset]});
+
+    expect(parsed.ok).toBe(true);
+    if (!parsed.ok) return;
+    const [organ] = parsed.value;
+    expect(organ.tapeBed).not.toHaveProperty('guideMargin');
+    expect(borders(organ).guide).toBeCloseTo(16.925);
+    expect(borders(organ).far).toBeCloseTo(16.925);
+  });
+});
+
 describe('versions 1 to 3 without a Tape per Crank turn', () => {
   it.each([1, 2, 3])('reads a version %i Organ with no Tape per Crank turn', (version) => {
     const organs = version === 3 ? [organSnapshot(ID_A)] : [organSnapshotV2(ID_A)];
@@ -161,11 +270,11 @@ describe('versions 1 to 3 without a Tape per Crank turn', () => {
 });
 
 describe('toSnapshot', () => {
-  it('writes version 5 and no border', () => {
+  it('writes version 6 and no border', () => {
     const parsed = parseOrganLibrarySnapshot({version: 1, organs: [{...organSnapshot(ID_A), tapeBed: {tapeWidth: 120, holeDiameter: 2.5, rowSpacing: 3.5, border: 6}}]});
     const snapshot = toSnapshot(parsed.ok ? parsed.value : []);
 
-    expect(snapshot.version).toBe(5);
+    expect(snapshot.version).toBe(6);
     expect(JSON.stringify(snapshot)).not.toContain('border');
   });
 
@@ -175,7 +284,7 @@ describe('toSnapshot', () => {
 
     const snapshot = toSnapshot(organs);
 
-    expect(snapshot).toEqual({version: 5, organs: [organSnapshotV5(ID_A, 30, 120)]});
+    expect(snapshot).toEqual({version: 6, organs: [organSnapshotV5(ID_A, 30, 120)]});
     expect(parseOrganLibrarySnapshot(JSON.parse(JSON.stringify(snapshot)))).toEqual(parsed);
   });
 
@@ -183,21 +292,21 @@ describe('toSnapshot', () => {
     const parsed = parseOrganLibrarySnapshot({version: 5, organs: [{...organSnapshotV5(ID_A, 30, 120), tapePerCrankTurn: 100}]});
     const snapshot = toSnapshot(parsed.ok ? parsed.value : []);
 
-    expect(snapshot).toEqual({version: 5, organs: [{...organSnapshotV5(ID_A, 30, 120), tapePerCrankTurn: 100}]});
+    expect(snapshot).toEqual({version: 6, organs: [{...organSnapshotV5(ID_A, 30, 120), tapePerCrankTurn: 100}]});
   });
 
   it('leaves the Tape per Crank turn out when the Organ has none', () => {
     const parsed = parseOrganLibrarySnapshot({version: 3, organs: [organSnapshot(ID_A)]});
     const snapshot = toSnapshot(parsed.ok ? parsed.value : []);
 
-    expect(snapshot.version).toBe(5);
+    expect(snapshot.version).toBe(6);
     expect('tapePerCrankTurn' in snapshot.organs[0]).toBe(false);
   });
 
   it('writes Organs created by validateOrgan', () => {
     const result = validateOrgan({
       name: 'New',
-      tapeBed: {tapeWidth: 50, holeDiameter: 2, rowSpacing: 3},
+      tapeBed: {tapeWidth: 50, holeDiameter: 2, rowSpacing: 3, guideMargin: null},
       minimumGap: 1,
       leadIn: 15,
       slowestCrankSpeed: 30,

@@ -1,7 +1,7 @@
 import {readFileSync} from 'node:fs';
 import {describe, expect, it} from 'vitest';
 import {midiNoteNumber} from '../organ/midi-note-number';
-import type {Millimetres} from '../organ/organ';
+import type {Millimetres, Organ} from '../organ/organ';
 import {validateOrgan} from '../organ/validate-organ';
 import type {RollPlotter} from '../plotter/plotter';
 import {plotterSvg, sideBySideSvg} from './plotter-svg';
@@ -13,6 +13,23 @@ import {tapePieces} from './tape-pieces';
 import {sideBySideCut, type LaneTape} from './side-by-side-cut';
 
 const STROKE = 'fill="none" stroke="#000000" stroke-width="0.1"/>';
+const HOLE_RADIUS = 1.5;
+
+/** The 20er-Drehorgel of spec 014: 110 mm Tape, 3 mm holes, 3.85 mm rows, Guide margin 10 mm, 20 Pipes from note 53. */
+function guidedTwentyOrgan(): Organ {
+  const result = validateOrgan({
+    name: '20er guided',
+    tapeBed: {tapeWidth: 110, holeDiameter: 3, rowSpacing: 3.85, guideMargin: 10},
+    minimumGap: 3,
+    leadIn: 30,
+    slowestCrankSpeed: 40,
+    fastestCrankSpeed: 90,
+    tapePerCrankTurn: 70,
+    pipes: Array.from({length: 20}, (_, row) => ({note: 53 + row})),
+  });
+  if (!result.ok) throw new Error('invalid guided test Organ');
+  return result.value;
+}
 
 function slot(overrides: Partial<Slot>): Slot {
   return {row: 1, start: 0, x: 50, y: 30.5, width: 11, height: 3, radius: 1.5, ...overrides};
@@ -28,7 +45,7 @@ function geometryOf(slots: readonly Slot[], leadIn = 50): TapeGeometry {
     endGap: 2,
     totalLength,
     width: 100,
-    border: 5,
+    borders: {guide: 5, far: 5},
     rowCentres: [],
     slots,
     outline: {
@@ -119,7 +136,7 @@ describe('plotterSvg', () => {
   it('cuts the Holes of a Tape by start from the Lead-in, row 1 first at the same start, then the Outline', () => {
     const organ = validateOrgan({
       name: 'Street organ',
-      tapeBed: {tapeWidth: 120, holeDiameter: 2.5, rowSpacing: 3.5},
+      tapeBed: {tapeWidth: 120, holeDiameter: 2.5, rowSpacing: 3.5, guideMargin: null},
       minimumGap: 1.5,
       leadIn: 20,
       slowestCrankSpeed: 30,
@@ -156,6 +173,34 @@ describe('plotterSvg', () => {
     expect(rowOneY).toBeLessThan(rowTwoY);
   });
 
+  it('puts row 1 of a guided 20er Tape 10 mm from the top edge, its Holes centred on that line (±0.01 mm)', () => {
+    const organ = guidedTwentyOrgan();
+    const row1 = midiNoteNumber(53);
+    if (row1 === undefined) throw new Error('not a note');
+    const tape = tapeOf({
+      id: '00000000-0000-4000-8000-0000000000e1' as Tape['id'],
+      name: 'Guided',
+      organId: organ.id,
+      songId: undefined,
+      selectedParts: undefined,
+      transposition: 0 as Tape['transposition'],
+      columnLength: 3 as Millimetres,
+      length: 100 as ColumnCount,
+      holes: [
+        {pipe: row1, start: 0 as Column, length: 3 as ColumnCount},
+        {pipe: row1, start: 10 as Column, length: 2 as ColumnCount},
+      ],
+    });
+
+    const svg = plotterSvg(tapeGeometry(tape, organ));
+
+    const holeStarts = startsOf(svg).slice(0, -1);
+    expect(holeStarts).toHaveLength(2);
+    for (const [, y] of holeStarts) {
+      expect(Math.abs(y + HOLE_RADIUS - 10)).toBeLessThanOrEqual(0.01);
+    }
+  });
+
   it('writes only the Outline for a Tape without Holes', () => {
     const svg = plotterSvg(geometryOf([]));
 
@@ -184,7 +229,7 @@ describe('plotterSvg', () => {
   it('never writes the name of the Tape', () => {
     const organ = validateOrgan({
       name: 'Street organ',
-      tapeBed: {tapeWidth: 120, holeDiameter: 2.5, rowSpacing: 3.5},
+      tapeBed: {tapeWidth: 120, holeDiameter: 2.5, rowSpacing: 3.5, guideMargin: null},
       minimumGap: 1.5,
       leadIn: 20,
       slowestCrankSpeed: 30,
@@ -317,7 +362,7 @@ describe('plotterSvg', () => {
     const pipes = Array.from({length: 31}, (_, row) => ({note: 40 + row}));
     const organ = validateOrgan({
       name: 'Big',
-      tapeBed: {tapeWidth: 120, holeDiameter: 2.5, rowSpacing: 3.5},
+      tapeBed: {tapeWidth: 120, holeDiameter: 2.5, rowSpacing: 3.5, guideMargin: null},
       minimumGap: 1.5,
       leadIn: 20,
       slowestCrankSpeed: 30,
@@ -373,7 +418,7 @@ function rollPlotterOf(tapeSpacing = 3): RollPlotter {
 function organB(): LaneTape['organ'] {
   const organ = validateOrgan({
     name: 'Organ B',
-    tapeBed: {tapeWidth: 60, holeDiameter: 3, rowSpacing: 4},
+    tapeBed: {tapeWidth: 60, holeDiameter: 3, rowSpacing: 4, guideMargin: null},
     minimumGap: 2,
     leadIn: 20,
     slowestCrankSpeed: 30,

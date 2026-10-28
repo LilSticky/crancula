@@ -44,7 +44,7 @@ function organWithMinimumGap(minimumGap: number): Organ {
   const result = validateOrgan({
     id: defined(organId(ORGAN_ID), 'organ id'),
     name: 'Gap organ',
-    tapeBed: {tapeWidth: 100, holeDiameter: 3, rowSpacing: 4},
+    tapeBed: {tapeWidth: 100, holeDiameter: 3, rowSpacing: 4, guideMargin: null},
     minimumGap,
     leadIn: 50,
     slowestCrankSpeed: 30,

@@ -99,7 +99,7 @@ describe('TapePreviewComponent', () => {
   });
 
   it.each([120, 60])('draws the Tape body 160 px tall for a %s mm wide Tape', (tapeWidth) => {
-    const narrow = testOrgan('Narrow', 3, {tapeBed: {tapeWidth, holeDiameter: 2.5, rowSpacing: 3.5}});
+    const narrow = testOrgan('Narrow', 3, {tapeBed: {tapeWidth, holeDiameter: 2.5, rowSpacing: 3.5, guideMargin: null}});
 
     const {element} = render(narrow, longTape(narrow), 400);
 
