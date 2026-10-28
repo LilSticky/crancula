@@ -11,8 +11,10 @@ in `specs/` and the Git history. Cleaned up on 2026-10-28.
 
 None. The last one, [014 Off-centre rows on a Tape Bed (#163)](../specs/014-off-centre-rows-on-a-tape-bed/spec.md), merged on
 2026-10-28 (PR [#202](https://github.com/LilSticky/crancula/pull/202)): an optional Guide margin on the Tape Bed, the Border per
-side (guide side, far side), Organs snapshot v6, Guide margins on the 20er and 31er Presets. Its T017 (`ux:screens` and
-`ux-review` of the Organ editor, a small field change) was not done.
+side (guide side, far side), Organs snapshot v6, Guide margins on the 20er and 31er Presets. Its T017 (`ux:screens` of the Organ editor) turned up layout
+bugs, fixed in [#208](https://github.com/LilSticky/crancula/issues/208) (PR [#213](https://github.com/LilSticky/crancula/pull/213)):
+unit labels float above their unit, the longest labels span both columns, and the Tape Bed fields scroll inside their
+sheet so the rows-fit line stays above the save bar.
 
 [#198](https://github.com/LilSticky/crancula/issues/198) (side-by-side UX follow-ups, PR [#207](https://github.com/LilSticky/crancula/pull/207)) is merged:
 Whole Tape / 1:1 zoom, hatched overflow, Save disabled with its reason without a roll plotter, an all/none tick box and the
