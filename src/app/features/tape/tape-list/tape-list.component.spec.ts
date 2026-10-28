@@ -590,6 +590,25 @@ describe('TapeListComponent', () => {
       expect(element.querySelector('[data-testid="cut-side-by-side"]')).toBeNull();
     });
 
+    it('shows the header tick box as indeterminate while some, not all, Tapes are ticked', async () => {
+      const organ = testOrgan('Street organ', 3);
+      const {add, element, fixture} = await render();
+      await add(organ, 'Melody');
+      await add(organ, 'Waltz');
+      expect(tickAllOf(element).indeterminate).toBe(false);
+
+      tickOf(element, 'Melody').click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      expect(tickAllOf(element).indeterminate).toBe(true);
+
+      tickOf(element, 'Waltz').click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      expect(tickAllOf(element).indeterminate).toBe(false);
+      expect(tickAllOf(element).checked).toBe(true);
+    });
+
     it('makes Cut side by side the filled button and Bring a Song onto a Tape the outlined one once Tapes are ticked', async () => {
       const {add, element, fixture} = await render();
       await add(testOrgan('Street organ', 3), 'Melody');

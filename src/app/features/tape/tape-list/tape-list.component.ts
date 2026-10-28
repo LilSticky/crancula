@@ -99,7 +99,7 @@ function problemsOf(tape: Tape, organ: Organ | undefined): number {
           <ng-container matColumnDef="tick">
             <th mat-header-cell *matHeaderCellDef>
               <span class="cdk-visually-hidden">{{ 'TAPE.SIDE_BY_SIDE.TITLE' | translate }}</span>
-              <mat-checkbox data-testid="tick-all" [checked]="allTicked()" (change)="toggleAll()"
+              <mat-checkbox data-testid="tick-all" [checked]="allTicked()" [indeterminate]="someTicked()" (change)="toggleAll()"
                             [aria-label]="'TAPE.LIST.TICK_ALL' | translate"/>
             </th>
             <td mat-cell *matCellDef="let row">
@@ -119,7 +119,7 @@ function problemsOf(tape: Tape, organ: Organ | undefined): number {
                 </a>
               }
               @if (row.problems > 0) {
-                <span class="problems" data-testid="tape-problems">{{ (row.problems === 1 ? 'TAPE.CUTTING_PROBLEMS.COUNT_ONE' : 'TAPE.CUTTING_PROBLEMS.COUNT') | translate: {count: row.problems} }}</span>
+                <span class="problems" data-testid="tape-problems">{{ (row.problems === 1 ? 'TAPE.CUTTING_PROBLEMS.COUNT_ONE' : 'TAPE.CUTTING_PROBLEMS.COUNT') | translate: {count: number(row.problems)} }}</span>
               }
             </td>
           </ng-container>
@@ -249,6 +249,12 @@ export class TapeListComponent {
     return tickable.length > 0 && tickable.every((id) => ticked.includes(id));
   });
 
+  /** Whether some, but not all, of the Tapes that can be ticked are ticked: the header tick box then shows indeterminate. */
+  protected readonly someTicked = computed(() => {
+    const ticked = this.ticked();
+    return !this.allTicked() && this.tickable().some((id) => ticked.includes(id));
+  });
+
   /** The Organ named by the `organ` query parameter; `undefined` without it or for an unknown id. */
   protected readonly filterOrgan = computed(() => {
     const id = this.organParameter();
@@ -275,6 +281,11 @@ export class TapeListComponent {
 
   protected trackRow(_index: number, row: TapeRow): string {
     return row.tape.id;
+  }
+
+  /** A number as text in the language of the app. */
+  protected number(value: number): string {
+    return formatNumber(value, this.language());
   }
 
   protected open(row: TapeRow): void {
