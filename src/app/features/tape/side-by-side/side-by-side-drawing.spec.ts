@@ -17,8 +17,6 @@ const ONE_TO_ONE = pixelsPerMillimetre('1:1', 0, 0);
 const SMALL_SCALE = 0.3;
 /** The smallest size on screen of a Lane number, in px. */
 const READABLE_TEXT_PX = 12;
-/** The smallest length on screen of a dash or a gap of the working-width line, in px. */
-const READABLE_DASH_PX = 3;
 
 /** The Vinyl cutter of spec 013: a roll Plotter with working width 300 mm and Tape spacing 3 mm unless given. */
 function rollPlotterOf(workingWidth = 300, tapeSpacing = 3): RollPlotter {
@@ -130,11 +128,11 @@ describe('rollDrawing', () => {
     expect(drawing.labelSize * SMALL_SCALE).toBeGreaterThanOrEqual(READABLE_TEXT_PX);
   });
 
-  it('keeps the dashes and gaps of the working-width line readable on screen when the drawing is small', () => {
-    const {dash, gap} = rollDrawing(cutOf(2), SMALL_SCALE).workingWidthDash;
+  it('draws the overflow hatch at true size while the scale is not known yet, before the stage has a width', () => {
+    const hatch = rollDrawing(cutOf(3), 0).hatchSize;
 
-    expect(dash * SMALL_SCALE).toBeGreaterThanOrEqual(READABLE_DASH_PX);
-    expect(gap * SMALL_SCALE).toBeGreaterThanOrEqual(READABLE_DASH_PX);
+    expect(hatch).toBeGreaterThan(0);
+    expect(hatch).toBe(rollDrawing(cutOf(3), ONE_TO_ONE).hatchSize);
   });
 
   it('flags the Lanes whose far edge passes the working width as overflow', () => {

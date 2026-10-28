@@ -60,9 +60,11 @@
     dominant-baseline: middle;
   }
 
+  /* A static dash: non-scaling strokes take the dash in screen px, so the dash stays the same at every zoom. */
   .working-width {
     stroke: var(--cr-brass);
     stroke-width: 1px;
+    stroke-dasharray: 4 2;
     vector-effect: non-scaling-stroke;
   }
 }

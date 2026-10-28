@@ -7,7 +7,7 @@
   </mat-button-toggle-group>
   <ng-container ngProjectAs="[pageHeadActions]">
     <button matButton="filled" type="button" data-testid="save-side-by-side"
-            [disabled]="exporter.saving() || noRollPlotter()"
+            [disabled]="exporter.saving() || noRollPlotter()" [disabledInteractive]="true"
             [attr.aria-describedby]="noRollPlotter() ? 'no-roll-plotter-reason' : null" (click)="save()">
       {{ 'TAPE.SIDE_BY_SIDE.SAVE' | translate }}
     </button>
@@ -65,8 +65,7 @@
         <text aria-hidden="true" class="lane-number" x="1" [attr.y]="lane.centre" [attr.font-size]="drawing.labelSize">{{ lane.number }}</text>
       }
       <line data-testid="working-width-line" aria-hidden="true" class="working-width" x1="0"
-            [attr.x2]="drawing.length" [attr.y1]="drawing.workingWidthY" [attr.y2]="drawing.workingWidthY"
-            [attr.stroke-dasharray]="drawing.workingWidthDash.dash + ' ' + drawing.workingWidthDash.gap" />
+            [attr.x2]="drawing.length" [attr.y1]="drawing.workingWidthY" [attr.y2]="drawing.workingWidthY" />
     </svg>
   </div>
 }

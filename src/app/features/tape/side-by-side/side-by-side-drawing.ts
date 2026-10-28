@@ -1,16 +1,14 @@
 import {laneGeometry, type Lane, type SideBySideCut} from '@api/index';
+import {pixelsPerMillimetre} from '../tape-view/pixels-per-millimetre';
 
 /** The Lane numbers' size in mm: 4 mm, as drawn before the zoom choice. */
 const LANE_NUMBER_MM = 4;
 /** The smallest size of a Lane number on screen, in px. */
 const READABLE_TEXT_PX = 12;
-/** The dash and the gap of the working-width line in mm: 4 mm and 2 mm, as drawn before the zoom choice. */
-const DASH_MM = 4;
-const GAP_MM = 2;
-/** The smallest length of a dash or a gap of the working-width line on screen, in px. */
-const READABLE_DASH_PX = 3;
 /** The side of one tile of the overflow hatch on screen, in px: the same spacing as the Overlap hatch on Tape pieces. */
 const HATCH_PX = 6;
+/** The scale at true size, used while the stage has no width yet. */
+const TRUE_SIZE_PX_PER_MM = pixelsPerMillimetre('1:1', 0, 0);
 
 /** One Lane as drawn in mm: its Tape Outline and Holes as SVG path data, and whether it passes the working width. */
 export interface LaneDrawing {
@@ -43,15 +41,13 @@ export interface RollDrawing {
   readonly workingWidthY: number;
   /** The size of the Lane numbers in mm: at least 12 px on screen. */
   readonly labelSize: number;
-  /** The dash and the gap of the working-width line in mm: at least 3 px on screen each. */
-  readonly workingWidthDash: {readonly dash: number; readonly gap: number};
   /** The side of one tile of the overflow hatch in mm: 6 px on screen. */
   readonly hatchSize: number;
 }
 
-/** The length in mm that `px` takes on screen at `pixelsPerMillimetre`; 0 before layout, when the scale is 0. */
-function mmOfPx(px: number, pixelsPerMillimetre: number): number {
-  return pixelsPerMillimetre > 0 ? px / pixelsPerMillimetre : 0;
+/** The length in mm that `px` takes on screen at `scale`, in px per mm; `scale` is above 0. */
+function mmOfPx(px: number, scale: number): number {
+  return px / scale;
 }
 
 /** The Lane's Tape Outline as a closed path through its four corners, the way the Tape is cut. */
@@ -79,9 +75,11 @@ function laneDrawing(lane: Lane): LaneDrawing {
 
 /**
  * The side-by-side cut as drawing data: Lanes in mm, the free and overflow bands and the working-width line; no text.
- * `pixelsPerMillimetre` is the scale on screen, so the Lane numbers, the dashes and the hatch stay readable when the roll is small.
+ * `scale` is the scale on screen in px per mm, so the Lane numbers and the hatch stay readable when the roll is small.
+ * While it is 0, before layout, they are sized at true size.
  */
-export function rollDrawing(cut: SideBySideCut, pixelsPerMillimetre: number): RollDrawing {
+export function rollDrawing(cut: SideBySideCut, scale: number): RollDrawing {
+  const onScreen = scale > 0 ? scale : TRUE_SIZE_PX_PER_MM;
   const {workingWidth} = cut.plotter;
   const height = Math.max(workingWidth, cut.usedWidth);
   return {
@@ -92,11 +90,7 @@ export function rollDrawing(cut: SideBySideCut, pixelsPerMillimetre: number): Ro
     freeBand: cut.usedWidth < workingWidth ? {top: cut.usedWidth, bottom: workingWidth} : undefined,
     overflowBand: cut.usedWidth > workingWidth ? {top: workingWidth, bottom: cut.usedWidth} : undefined,
     workingWidthY: workingWidth,
-    labelSize: Math.max(LANE_NUMBER_MM, mmOfPx(READABLE_TEXT_PX, pixelsPerMillimetre)),
-    workingWidthDash: {
-      dash: Math.max(DASH_MM, mmOfPx(READABLE_DASH_PX, pixelsPerMillimetre)),
-      gap: Math.max(GAP_MM, mmOfPx(READABLE_DASH_PX, pixelsPerMillimetre)),
-    },
-    hatchSize: mmOfPx(HATCH_PX, pixelsPerMillimetre),
+    labelSize: Math.max(LANE_NUMBER_MM, mmOfPx(READABLE_TEXT_PX, onScreen)),
+    hatchSize: mmOfPx(HATCH_PX, onScreen),
   };
 }

@@ -280,6 +280,7 @@ export class SideBySideComponent {
   }
 
   protected save(): void {
+    if (this.noRollPlotter()) return;
     void this.exporter.export(this.rows(), this.plotter());
   }
 

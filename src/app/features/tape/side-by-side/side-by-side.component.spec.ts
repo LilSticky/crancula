@@ -363,12 +363,12 @@ describe('SideBySideComponent', () => {
 
     saveButton(element).click();
     fixture.detectChanges();
-    expect(saveButton(element).disabled).toBe(true);
+    expect(saveButton(element).getAttribute('aria-disabled')).toBe('true');
 
     finish();
     await fixture.whenStable();
     fixture.detectChanges();
-    expect(saveButton(element).disabled).toBe(false);
+    expect(saveButton(element).getAttribute('aria-disabled')).toBeNull();
   });
 
   it('writes nothing to localStorage while the Lanes are shown and saved', async () => {
@@ -507,6 +507,22 @@ describe('SideBySideComponent', () => {
     );
     expect(drawing.querySelector('[data-testid="free-band"]')).not.toBeNull();
     expect(drawing.querySelector('[data-testid="working-width-line"]')).not.toBeNull();
+  });
+
+  it('draws the working-width dash the same at Whole Tape and at 1:1: the stylesheet sets it, not the scale', async () => {
+    const view = await setUp();
+    const {fixture, element} = await open(view, [view.reference, view.waltz]);
+    const wholeDash = getComputedStyle(required(element.querySelector<SVGElement>('[data-testid="working-width-line"]'), 'working-width line')).strokeDasharray;
+
+    oneToOneButton(element).click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    const line = required(element.querySelector<SVGElement>('[data-testid="working-width-line"]'), 'working-width line');
+
+    expect(line.hasAttribute('stroke-dasharray')).toBe(false);
+    expect(wholeDash).not.toBe('');
+    expect(getComputedStyle(line).strokeDasharray).toBe(wholeDash);
   });
 
   it('fits the drawing to the page width by default: its mm viewBox, the fit-width class and no fixed size', async () => {
@@ -795,12 +811,24 @@ describe('SideBySideComponent', () => {
       expect(element.querySelector('[data-testid="side-by-side-free"]')).toBeNull();
     });
 
-    it('disables Save while there is no roll plotter', async () => {
+    it('disables Save while there is no roll plotter, and keeps it focusable', async () => {
       const view = await setUp([sheetPlotter()]);
 
       const {element} = await open(view, [view.reference]);
 
-      expect(saveButton(element).disabled).toBe(true);
+      expect(saveButton(element).disabled).toBe(false);
+      expect(saveButton(element).getAttribute('aria-disabled')).toBe('true');
+    });
+
+    it('does nothing when Save is pressed while there is no roll plotter', async () => {
+      const view = await setUp([sheetPlotter()]);
+      const {fixture, element} = await open(view, [view.reference]);
+      const saveSvg = vi.spyOn(view.api.plotter, 'saveSvg');
+
+      await press(fixture, saveButton(element));
+
+      expect(dialogEntries()).toEqual([]);
+      expect(saveSvg).not.toHaveBeenCalled();
     });
 
     it('describes the disabled Save by the reason that there is no roll plotter', async () => {
