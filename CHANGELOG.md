@@ -8,6 +8,8 @@ as its GitHub Release notes.
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-28
+
 ### Added
 - Start a new Organ from a Preset: the 20er-Drehorgel (Carl Frei) or the 31er-Drehorgel (Raffin), offered in the Organ
   editor's page head. Their Pipes and Tape Bed come from the organs' gamma files; Minimum Gap, Lead-in, Tape per Crank
@@ -139,7 +141,8 @@ as its GitHub Release notes.
   application menu.
 - Downloads for Windows (portable `.exe`), macOS (`.dmg`, Apple silicon) and Linux (`.AppImage`).
 
-[Unreleased]: https://github.com/LilSticky/crancula/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/LilSticky/crancula/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/LilSticky/crancula/releases/tag/v0.3.0
 [0.2.0]: https://github.com/LilSticky/crancula/releases/tag/v0.2.0
 [0.1.1]: https://github.com/LilSticky/crancula/releases/tag/v0.1.1
 [0.1.0]: https://github.com/LilSticky/crancula/releases/tag/v0.1.0

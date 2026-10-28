@@ -4,7 +4,7 @@
   "author": {
     "name": "Lil Sticky"
   },
-  "version": "0.2.0",
+  "version": "0.3.0",
   "main": "main.mjs",
   "private": true,
   "include": [
