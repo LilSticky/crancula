@@ -11,6 +11,10 @@ import {type TapeBedDrawing, type TapeBedFitText, TapeBedSheetComponent} from '.
 interface Inputs {
   readonly draft?: OrganDraft;
   readonly border?: string;
+  /** Starts from a draft with a Guide margin (10 mm when the draft has none): the sheet then shows both sides. */
+  readonly guided?: boolean;
+  readonly borderGuideSide?: string;
+  readonly borderFarSide?: string;
   readonly minimumHoleLength?: string;
   readonly fit?: TapeBedFitText | null;
   readonly drawing?: TapeBedDrawing | null;
@@ -22,16 +26,21 @@ const FIT: TapeBedFitText = {
   rowSpan: '3.5',
   tapeWidth: '120',
   border: '58.25',
+  guide: '58.25',
+  far: '58.25',
   tooWide: false,
   fitKey: 'ORGAN.EDITOR.FIT',
   drawingKey: 'ORGAN.EDITOR.TAPE_BED_DRAWING',
 };
 
-const DRAWING: TapeBedDrawing = {tapeWidth: 120, length: 240, border: 58.25, bottomBorderTop: 61.75, rows: [59.5, 63]};
+const DRAWING: TapeBedDrawing = {tapeWidth: 120, length: 240, guide: 58.25, farTop: 61.75, far: 58.25, rows: [59.5, 63]};
 
 async function render({
   draft = toDraft(testOrgan('Positive')),
   border = '',
+  guided = false,
+  borderGuideSide = '',
+  borderFarSide = '',
   minimumHoleLength = '',
   fit = null,
   drawing = null,
@@ -41,10 +50,13 @@ async function render({
   TestBed.configureTestingModule({
     providers: [provideTestTranslations(lang), SaveAttempt, {provide: ErrorStateMatcher, useClass: ShownViolationMatcher}],
   });
-  const organ: FieldTree<OrganDraft> = TestBed.runInInjectionContext(() => form(signal(draft), organFormSchema));
+  const start: OrganDraft = guided ? {...draft, tapeBed: {...draft.tapeBed, guideMargin: draft.tapeBed.guideMargin ?? 10}} : draft;
+  const organ: FieldTree<OrganDraft> = TestBed.runInInjectionContext(() => form(signal(start), organFormSchema));
   const fixture = TestBed.createComponent(TapeBedSheetComponent);
   fixture.componentRef.setInput('organ', organ);
   fixture.componentRef.setInput('border', border);
+  fixture.componentRef.setInput('borderGuideSide', borderGuideSide);
+  fixture.componentRef.setInput('borderFarSide', borderFarSide);
   fixture.componentRef.setInput('minimumHoleLength', minimumHoleLength);
   fixture.componentRef.setInput('fit', fit);
   fixture.componentRef.setInput('drawing', drawing);
@@ -93,6 +105,38 @@ describe('TapeBedSheetComponent', () => {
     expect(element.querySelector('[data-testid="fit-check"]')?.textContent).toContain('2 rows take 3.5 mm of the 120 mm tape width');
     expect(element.querySelectorAll('[data-testid="tape-bed-row"]')).toHaveLength(2);
     expect(element.querySelectorAll('[data-testid="tape-bed-border"]')).toHaveLength(2);
+  });
+
+  describe('with a Guide margin', () => {
+    const labelOf = (element: HTMLElement, testId: string) =>
+      element.querySelector(`[data-testid="${testId}"]`)?.closest('mat-form-field')?.querySelector('mat-label')?.textContent?.trim();
+
+    it('shows the guide side and the far side as two read-only fields and no centred Border', async () => {
+      const {field, element} = await render({guided: true, borderGuideSide: '8.5', borderFarSide: '25.35'});
+
+      expect(field('border-guide-side').value).toBe('8.5');
+      expect(field('border-guide-side').readOnly).toBe(true);
+      expect(field('border-far-side').value).toBe('25.35');
+      expect(field('border-far-side').readOnly).toBe(true);
+      expect(element.querySelector('[data-testid="border"]')).toBeNull();
+    });
+
+    it('labels the two Borders "Border, guide side" and "Border, far side", each with the suffix "mm"', async () => {
+      const {field, element} = await render({guided: true, borderGuideSide: '8.5', borderFarSide: '25.35'});
+
+      expect(labelOf(element, 'border-guide-side')).toBe('Border, guide side');
+      expect(labelOf(element, 'border-far-side')).toBe('Border, far side');
+      for (const testId of ['border-guide-side', 'border-far-side']) {
+        expect(field(testId).closest('mat-form-field')?.querySelector('[matTextSuffix]')?.textContent?.trim()).toBe('mm');
+      }
+    });
+
+    it('labels the two Borders in German as "Rand, Führungsseite" and "Rand, Gegenseite"', async () => {
+      const {element} = await render({guided: true, borderGuideSide: '8,5', borderFarSide: '25,35', lang: 'de'});
+
+      expect(labelOf(element, 'border-guide-side')).toBe('Rand, Führungsseite');
+      expect(labelOf(element, 'border-far-side')).toBe('Rand, Gegenseite');
+    });
   });
 
   it('shows no fit check and no drawing while the fit is unknown', async () => {

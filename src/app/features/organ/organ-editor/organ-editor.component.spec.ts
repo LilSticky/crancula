@@ -414,24 +414,67 @@ describe('OrganEditorComponent', () => {
       expect(hintOf(field('border'))).toBe('On each side, the rows are centred');
     });
 
-    it('shows the guide side and the far side of the Border with a Guide margin of 10 mm', async () => {
+    it('shows the guide side and the far side as two read-only fields with a Guide margin of 10 mm', async () => {
       const {open: openEditor, library} = render();
       const organ = guidedOrgan();
       await library.put(organ);
-      const {element, field} = await openEditor(organ.id);
+      const {field} = await openEditor(organ.id);
 
-      expect(borderOf(element)).toBe('8.5 mm guide side · 25.35 mm far side');
-      expect(hintOf(field('border'))).toContain("row 1's edge");
+      expect(field('border-guide-side').value).toBe('8.5');
+      expect(field('border-far-side').value).toBe('25.35');
+      expect(field('border-guide-side').readOnly).toBe(true);
+      expect(field('border-far-side').readOnly).toBe(true);
     });
 
-    it('shows the guide side and the far side in German with the decimal comma', async () => {
+    it('labels both Borders "Border, guide side" and "Border, far side", each with the suffix "mm"', async () => {
+      const {open: openEditor, library} = render();
+      const organ = guidedOrgan();
+      await library.put(organ);
+      const {field} = await openEditor(organ.id);
+
+      for (const [testId, label] of [
+        ['border-guide-side', 'Border, guide side'],
+        ['border-far-side', 'Border, far side'],
+      ] as const) {
+        const formField = field(testId).closest('mat-form-field');
+        expect(formField?.querySelector('mat-label')?.textContent?.trim()).toBe(label);
+        expect(formField?.querySelector('[matTextSuffix]')?.textContent?.trim()).toBe('mm');
+      }
+    });
+
+    it('hides the one centred Border field while a Guide margin is set', async () => {
+      const {open: openEditor, library} = render();
+      const organ = guidedOrgan();
+      await library.put(organ);
+      const {element} = await openEditor(organ.id);
+
+      expect(element.querySelector('[data-testid="border"]')).toBeNull();
+    });
+
+    it('puts the hint "The guide side is row 1\'s edge" on the guide side field', async () => {
+      const {open: openEditor, library} = render();
+      const organ = guidedOrgan();
+      await library.put(organ);
+      const {field} = await openEditor(organ.id);
+
+      expect(hintOf(field('border-guide-side'))).toBe("The guide side is row 1's edge");
+    });
+
+    it('shows the guide side and the far side in German with the decimal comma and the German labels', async () => {
       TestBed.configureTestingModule({providers: [provideRouter([]), provideTestTranslations('de')]});
       vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
       const organ = guidedOrgan();
       await TestBed.inject(OrganLibrary).put(organ);
-      const {element} = await open(organ.id);
+      const {field} = await open(organ.id);
 
-      expect(borderOf(element)).toBe('8,5 mm Führungsseite · 25,35 mm Gegenseite');
+      expect(field('border-guide-side').value).toBe('8,5');
+      expect(field('border-far-side').value).toBe('25,35');
+      expect(field('border-guide-side').closest('mat-form-field')?.querySelector('mat-label')?.textContent?.trim()).toBe(
+        'Rand, Führungsseite',
+      );
+      expect(field('border-far-side').closest('mat-form-field')?.querySelector('mat-label')?.textContent?.trim()).toBe(
+        'Rand, Gegenseite',
+      );
     });
 
     it('goes back to one centred Border when the Guide margin is cleared', async () => {
@@ -444,6 +487,7 @@ describe('OrganEditorComponent', () => {
 
       expect(borderOf(element)).toBe('16.925');
       expect(hintOf(field('border'))).toBe('On each side, the rows are centred');
+      expect(element.querySelector('[data-testid="border-guide-side"]')).toBeNull();
     });
 
     it('names both Borders in the fit line instead of one border on each side', async () => {

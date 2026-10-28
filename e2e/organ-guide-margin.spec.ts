@@ -10,7 +10,8 @@ import {createTapeFromSong, songRepeatingC4} from './support/tape-creation';
  * guide side is 10 − 2.5 / 2 = 8.75 mm and the far side 120 − 107.5 − 8.75 = 3.75 mm.
  */
 const GUIDE_MARGIN = '10';
-const BORDERS_TEXT = '8.75 mm guide side · 3.75 mm far side';
+const GUIDE_SIDE = '8.75';
+const FAR_SIDE = '3.75';
 const GUIDE_SIDE_MM = 8.75;
 const FAR_SIDE_MM = 3.75;
 const CENTRED_BORDER = '6.25';
@@ -43,7 +44,8 @@ test.describe('I can set a Guide margin for my organs', () => {
 
     await expect(window.getByTestId('name')).toHaveValue(STREET_ORGAN.name);
     await expect(window.getByTestId('guide-margin')).toHaveValue(GUIDE_MARGIN);
-    await expect(window.getByTestId('border')).toHaveValue(BORDERS_TEXT);
+    await expect(window.getByTestId('border-guide-side')).toHaveValue(GUIDE_SIDE);
+    await expect(window.getByTestId('border-far-side')).toHaveValue(FAR_SIDE);
     await app.close();
   });
 

@@ -1,4 +1,4 @@
-import {ChangeDetectionStrategy, Component, inject, input} from '@angular/core';
+import {ChangeDetectionStrategy, Component, computed, inject, input} from '@angular/core';
 import {type FieldTree, FormField} from '@angular/forms/signals';
 import {MatError, MatFormField, MatHint, MatInput, MatLabel, MatSuffix} from '@angular/material/input';
 import {MatCard} from '@angular/material/card';
@@ -14,10 +14,11 @@ export interface TapeBedFitText {
   readonly count: number;
   readonly rowSpan: string;
   readonly tapeWidth: string;
-  /** The Border: the centred one, or the guide side when the rows are off-centre. */
+  /** The Border on each side when the rows are centred; the fit keys name it. */
   readonly border: string;
-  /** The far side, only when the rows are off-centre. */
-  readonly far?: string;
+  /** The guide side and the far side; equal to `border` when the rows are centred. */
+  readonly guide: string;
+  readonly far: string;
   readonly tooWide: boolean;
   readonly fitKey: string;
   readonly drawingKey: string;
@@ -27,11 +28,12 @@ export interface TapeBedFitText {
 export interface TapeBedDrawing {
   readonly tapeWidth: number;
   readonly length: number;
-  /** The strip at the top edge: the guide side, or the Border when centred. */
-  readonly border: number;
-  readonly bottomBorderTop: number;
-  /** The strip at the bottom edge, the far side; as high as `border` when the rows are centred. */
-  readonly bottomBorder?: number;
+  /** The strip at the top edge: the guide side, or the Border on each side when centred. */
+  readonly guide: number;
+  /** The top of the strip at the bottom edge. */
+  readonly farTop: number;
+  /** The strip at the bottom edge: the far side, or the Border on each side when centred. */
+  readonly far: number;
   readonly rows: readonly number[];
 }
 
@@ -45,14 +47,19 @@ export interface TapeBedDrawing {
 })
 export class TapeBedSheetComponent {
   readonly organ = input.required<FieldTree<OrganDraft>>();
+  /** The centred Border, shown when no Guide margin is set. */
   readonly border = input<string>('');
-  /** Whether a Guide margin is set: the Border then names the guide side and the far side. */
-  readonly guided = input<boolean>(false);
+  /** The guide side and the far side, shown when a Guide margin is set. */
+  readonly borderGuideSide = input<string>('');
+  readonly borderFarSide = input<string>('');
   readonly minimumHoleLength = input<string>('');
   readonly fit = input<TapeBedFitText | null>(null);
   readonly drawing = input<TapeBedDrawing | null>(null);
 
   private readonly saveAttempt = inject(SaveAttempt).attempted;
+
+  /** Whether a Guide margin is set: the Border then names the guide side and the far side. */
+  protected readonly guided = computed(() => this.organ().tapeBed.guideMargin().value() !== null);
 
   /** The messages to show at a field now. */
   protected messagesAt(field: FieldTree<unknown>): readonly TranslatableText[] {

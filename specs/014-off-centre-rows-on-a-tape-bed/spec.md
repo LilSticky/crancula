@@ -36,7 +36,7 @@ From [the discovery](../../documentation/discovery/later.md), decisions 35–38:
 ## Why
 
 Real tracker bars do not always centre their rows. The Raffin/Carl Frei 20er gamma file gives 10 mm from the
-guide edge and 26.9 mm from the far edge to the row centres on a 110 mm Tape. A Tape cut with centred rows sits
+guide edge and 26.9 mm from the far side to the row centres on a 110 mm Tape. A Tape cut with centred rows sits
 about 8.5 mm off the real rows and plays wrong notes or none.
 
 ## User Scenarios & Testing *(mandatory)*
@@ -51,7 +51,7 @@ side and the far side. The Tape Bed drawing shows the rows shifted towards the g
 capability.
 
 **Independent Test**: Create an Organ with tape width 110 mm, 20 Pipes, a spacing between rows that gives a Row
-Span ending 26.9 mm from the far edge, and a Guide margin of 10 mm; save, restart the app, and the Organ shows the
+Span ending 26.9 mm from the far side, and a Guide margin of 10 mm; save, restart the app, and the Organ shows the
 Guide margin and both Borders.
 
 **Acceptance Scenarios**:
