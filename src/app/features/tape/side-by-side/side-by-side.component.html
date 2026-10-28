@@ -1,4 +1,10 @@
 <cranc-page-head [title]="'TAPE.SIDE_BY_SIDE.TITLE' | translate" [subtitle]="'TAPE.SIDE_BY_SIDE.SUBTITLE' | translate">
+  <mat-button-toggle-group pageHeadActions class="zoom" hideSingleSelectionIndicator data-testid="zoom"
+                          [attr.aria-label]="'TAPE.VIEW.ZOOM' | translate" [value]="zoom()" (change)="zoomPicked($event)">
+    @for (option of zooms; track option.zoom) {
+      <mat-button-toggle [value]="option.zoom">{{ option.label | translate }}</mat-button-toggle>
+    }
+  </mat-button-toggle-group>
   <ng-container ngProjectAs="[pageHeadActions]">
     <button matButton="filled" type="button" data-testid="save-side-by-side"
             [disabled]="exporter.saving() || noRollPlotter()"
@@ -31,8 +37,9 @@
   </p>
 }
 @if (drawing(); as drawing) {
-  <div class="drawing-frame">
-    <svg data-testid="side-by-side-drawing" class="drawing fit-width" role="img"
+  <div class="drawing-frame" #frame>
+    <svg data-testid="side-by-side-drawing" class="drawing" [class.fit-width]="zoom() === 'whole'" role="img"
+         [attr.width]="drawingWidthPx()"
          [attr.aria-label]="drawingKey() | translate: drawingParams()"
          [attr.viewBox]="drawing.viewBox">
       <rect class="paper" x="0" y="0" [attr.width]="drawing.length" [attr.height]="drawing.height" />
@@ -40,15 +47,26 @@
         <rect data-testid="free-band" aria-hidden="true" class="free-band" x="0"
               [attr.y]="band.top" [attr.width]="drawing.length" [attr.height]="band.bottom - band.top" />
       }
+      @if (drawing.overflowBand; as band) {
+        <defs>
+          <pattern id="overflow-hatch" patternUnits="userSpaceOnUse" [attr.width]="drawing.hatchSize"
+                   [attr.height]="drawing.hatchSize" patternTransform="rotate(45)">
+            <line class="overflow-hatch" x1="0" y1="0" x2="0" [attr.y2]="drawing.hatchSize" />
+          </pattern>
+        </defs>
+        <rect data-testid="overflow-band" aria-hidden="true" class="overflow-band" x="0" fill="url(#overflow-hatch)"
+              [attr.y]="band.top" [attr.width]="drawing.length" [attr.height]="band.bottom - band.top" />
+      }
       @for (lane of drawing.lanes; track lane.number) {
         <path data-testid="lane-outline" aria-hidden="true" class="lane-outline" [class.overflow]="lane.overflow"
               [attr.data-lane]="lane.number" [attr.d]="lane.outline" />
         <path data-testid="lane-holes" aria-hidden="true" class="lane-holes" [attr.data-lane]="lane.number"
               [attr.d]="lane.holes" />
-        <text aria-hidden="true" class="lane-number" x="1" [attr.y]="lane.centre">{{ lane.number }}</text>
+        <text aria-hidden="true" class="lane-number" x="1" [attr.y]="lane.centre" [attr.font-size]="drawing.labelSize">{{ lane.number }}</text>
       }
       <line data-testid="working-width-line" aria-hidden="true" class="working-width" x1="0"
-            [attr.x2]="drawing.length" [attr.y1]="drawing.workingWidthY" [attr.y2]="drawing.workingWidthY" />
+            [attr.x2]="drawing.length" [attr.y1]="drawing.workingWidthY" [attr.y2]="drawing.workingWidthY"
+            [attr.stroke-dasharray]="drawing.workingWidthDash.dash + ' ' + drawing.workingWidthDash.gap" />
     </svg>
   </div>
 }

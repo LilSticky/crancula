@@ -1,5 +1,6 @@
-import {ChangeDetectionStrategy, Component, computed, inject, signal} from '@angular/core';
+import {ChangeDetectionStrategy, Component, computed, inject, signal, viewChild, type ElementRef} from '@angular/core';
 import {MatButton, MatIconButton} from '@angular/material/button';
+import {MatButtonToggle, MatButtonToggleChange, MatButtonToggleGroup} from '@angular/material/button-toggle';
 import {MatCard} from '@angular/material/card';
 import {MatIcon} from '@angular/material/icon';
 import {MatFormField, MatLabel} from '@angular/material/form-field';
@@ -23,6 +24,8 @@ import {
   type TapeId,
 } from '@api/index';
 import {PageHeadComponent} from '../../shared/components/page-head/page-head.component';
+import {pixelsPerMillimetre, type Zoom} from '../tape-view/pixels-per-millimetre';
+import {stageMetrics} from '../tape-view/stage-metrics';
 import {formatNumber} from '../../shared/format-number';
 import {LanguagePreference} from '../../shared/language-preference';
 import {byName, tapesByOrgan} from '../../shared/ledger-order';
@@ -94,6 +97,8 @@ function blockedBy(organ: Organ | undefined, room: LaneRoom | undefined, number:
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     MatButton,
+    MatButtonToggle,
+    MatButtonToggleGroup,
     MatCard,
     MatFormField,
     MatIcon,
@@ -121,6 +126,18 @@ export class SideBySideComponent {
   private readonly language = inject(LanguagePreference).language;
 
   private lastKey = -1;
+
+  /** The drawing's frame, which the Whole Tape zoom fits to its width. */
+  private readonly frame = viewChild<ElementRef<HTMLElement>>('frame');
+  private readonly stage = stageMetrics(this.frame);
+
+  /** The zoom choices in their order; Whole Tape is the default. */
+  protected readonly zooms: readonly {readonly zoom: Zoom; readonly label: string}[] = [
+    {zoom: 'whole', label: 'TAPE.VIEW.ZOOM_WHOLE'},
+    {zoom: '1:1', label: '1:1'},
+  ];
+
+  protected readonly zoom = signal<Zoom>('whole');
 
   /** The Lanes in order; read once from the URL on entry, then changed by add, move and remove. */
   private readonly entries = signal<readonly LaneEntry[]>(
@@ -195,10 +212,21 @@ export class SideBySideComponent {
     return cut !== undefined && cut.lanes.length > 0 ? cut : undefined;
   });
 
+  /** The scale on screen of the drawing: the Whole Tape fits the frame's width, the other zooms are true size. */
+  protected readonly scale = computed(() =>
+    pixelsPerMillimetre(this.zoom(), this.stage.stageWidth(), this.savable()?.length ?? 0),
+  );
+
+  /** The drawing's width in px at 1:1, its true size; undefined for the Whole Tape, which fills the frame. */
+  protected readonly drawingWidthPx = computed<number | undefined>(() => {
+    const cut = this.savable();
+    return this.zoom() === 'whole' || cut === undefined ? undefined : cut.length * this.scale();
+  });
+
   /** The drawing to scale; undefined without a cut or Lanes. */
   protected readonly drawing = computed<RollDrawing | undefined>(() => {
     const cut = this.savable();
-    return cut === undefined ? undefined : rollDrawing(cut);
+    return cut === undefined ? undefined : rollDrawing(cut, this.scale());
   });
 
   /** The drawing's accessible name: "1 Lane" in the singular, the plural otherwise. */
@@ -244,6 +272,11 @@ export class SideBySideComponent {
 
   protected pick(change: MatSelectChange<PlotterId>): void {
     this.pickedId.set(change.value);
+  }
+
+  protected zoomPicked(change: MatButtonToggleChange): void {
+    const option = this.zooms.find((candidate) => candidate.zoom === change.value);
+    if (option !== undefined) this.zoom.set(option.zoom);
   }
 
   protected save(): void {

@@ -31,6 +31,7 @@ import {
   validatePlotter,
 } from '@api/index';
 import {tapeOf} from '@api/tape/tape-fixture';
+import {pixelsPerMillimetre} from '../tape-view/pixels-per-millimetre';
 import {encodeSmf} from '../../../../../api/song/midi/smf-test-helper';
 import {CRANCULA_API, createInMemoryCranculaApi, type InMemoryCranculaApi} from '../../../core/crancula-api.token';
 import {testOrgan} from '../../../../testing/organs';
@@ -159,6 +160,29 @@ async function open(view: Awaited<ReturnType<typeof setUp>>, tapeList: readonly 
   fixture.autoDetectChanges();
   await fixture.whenStable();
   return {fixture, element: fixture.nativeElement as HTMLElement};
+}
+
+/** The drawing of the roll, the SVG to scale. */
+function svgOf(element: HTMLElement): SVGSVGElement {
+  const svg = element.querySelector<SVGSVGElement>('[data-testid="side-by-side-drawing"]');
+  if (!svg) throw new Error('no side-by-side-drawing');
+  return svg;
+}
+
+/** The zoom choices in their order: Whole Tape, then 1:1. */
+function zoomButtons(element: HTMLElement): HTMLButtonElement[] {
+  return [...element.querySelectorAll<HTMLButtonElement>('[data-testid="zoom"] button')];
+}
+
+function oneToOneButton(element: HTMLElement): HTMLButtonElement {
+  const button = zoomButtons(element).at(1);
+  if (!button) throw new Error('no 1:1 zoom button');
+  return button;
+}
+
+/** The id of the pattern a fill refers to, from `url(#id)`; undefined for any other fill. */
+function patternIdOf(fill: string | null): string | undefined {
+  return /^url\(#(.+)\)$/.exec(fill ?? '')?.[1];
 }
 
 function rows(element: HTMLElement): HTMLElement[] {
@@ -392,6 +416,49 @@ describe('SideBySideComponent', () => {
 
     expect(laneMark(element, 'lane-outline', 3).classList.contains('overflow')).toBe(true);
     expect(laneMark(element, 'lane-outline', 1).classList.contains('overflow')).toBe(false);
+  });
+
+  it('offers Whole Tape and 1:1 in a toggle group named Zoom, Whole Tape pressed', async () => {
+    const view = await setUp();
+    const {element} = await open(view, [view.reference]);
+
+    expect(element.querySelector('[data-testid="zoom"]')?.getAttribute('aria-label')).toBe('Zoom');
+    expect(zoomButtons(element).map((button) => button.textContent?.trim())).toEqual(['Whole Tape', '1:1']);
+    expect(zoomButtons(element).map((button) => button.getAttribute('aria-checked'))).toEqual(['true', 'false']);
+  });
+
+  it('draws the drawing at true size at 1:1', async () => {
+    const view = await setUp();
+    const {fixture, element} = await open(view, [view.reference, view.waltz]);
+    const svg = svgOf(element);
+    // The viewBox is the roll in mm: its first two numbers are the origin, the third the length of the Tape.
+    const lengthMm = Number(svg.getAttribute('viewBox')?.split(' ')[2]);
+
+    oneToOneButton(element).click();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    // jsdom does no layout, so the bound width attribute stands in for the rendered width.
+    expect(Number(svg.getAttribute('width'))).toBeCloseTo(lengthMm * pixelsPerMillimetre('1:1', 0, 0), 0);
+  });
+
+  it('hatches the part of the roll past the working width when the Lanes pass it', async () => {
+    const view = await setUp();
+    const {element} = await open(view, [view.reference, view.reference, view.reference]);
+    const band = element.querySelector('[data-testid="overflow-band"]');
+    const patternId = patternIdOf(band?.getAttribute('fill') ?? null);
+
+    expect(band?.getAttribute('aria-hidden')).toBe('true');
+    expect(patternId).toBeDefined();
+    expect(svgOf(element).querySelector(`pattern[id="${patternId ?? ''}"] line`)).not.toBeNull();
+    expect(laneMark(element, 'lane-outline', 3).classList.contains('overflow')).toBe(true);
+  });
+
+  it('draws no hatched part past the working width when the Lanes fit', async () => {
+    const view = await setUp();
+    const {element} = await open(view, [view.reference, view.reference]);
+
+    expect(element.querySelector('[data-testid="overflow-band"]')).toBeNull();
   });
 
   it('lists every Tape in the add menu, grouped by Organ', async () => {

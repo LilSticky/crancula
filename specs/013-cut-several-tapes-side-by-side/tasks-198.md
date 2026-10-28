@@ -4,10 +4,10 @@ Open findings of [ux-review.md](ux-review.md). Decisions by the user on 2026-10-
 [issue comment](https://github.com/LilSticky/crancula/issues/198#issuecomment-6459558220).
 TDD per task (`tdd` skill): a failing Vitest component test first, e2e only where real Electron is needed.
 
-- [ ] F1 (findings 1, 10) Side-by-side drawing: a fit-to-width / 1:1 zoom choice like the Tape view's, fit-to-width
+- [x] F1 (findings 1, 10) Side-by-side drawing: a fit-to-width / 1:1 zoom choice like the Tape view's, fit-to-width
   by default. The Lane numbers and the working-width dashed line stay readable at both zooms (don't scale them with
   the drawing below a readable size).
-- [ ] F2 (finding 3) The part of the roll past the working width gets a hatched fill, like the Overlap hatch on Tape
+- [x] F2 (finding 3) The part of the roll past the working width gets a hatched fill, like the Overlap hatch on Tape
   pieces, visible on light and dark schemes. Keep the outline and the text marks.
 - [x] F3 (findings 4, 9) Without a roll plotter: Save is disabled and says why (reason as its description, like the
   Export refusal icon in Tape pieces); the message and "Describe a Plotter…" button sit before the plotter select.
