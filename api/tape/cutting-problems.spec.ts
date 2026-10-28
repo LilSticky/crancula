@@ -184,6 +184,26 @@ describe('cuttingProblems', () => {
   });
 });
 
+describe('cuttingProblems on a guided 20er', () => {
+  it('reports no Cutting Problem for a Hole on the last row, which sits at the far side of the guided Tape', () => {
+    const guided = validateOrgan({
+      name: '20er-Drehorgel',
+      tapeBed: {tapeWidth: 110, holeDiameter: 3, rowSpacing: 3.85, guideMargin: 10},
+      minimumGap: 3,
+      leadIn: 30,
+      slowestCrankSpeed: 40,
+      fastestCrankSpeed: 90,
+      tapePerCrankTurn: 70,
+      pipes: Array.from({length: 20}, (_, row) => ({note: 53 + row})),
+    });
+    if (!guided.ok) throw new Error(`invalid test Organ: ${JSON.stringify(guided.error)}`);
+    const lastRow = defined(midiNoteNumber(72), 'last Pipe');
+    const tape = tapeOf(guided.value, 2.5, [hole(lastRow, 10, 14)]);
+
+    expect(cuttingProblems(tape, guided.value)).toEqual([]);
+  });
+});
+
 describe('holesWithCuttingProblems', () => {
   it('is empty without problems', () => {
     expect(holesWithCuttingProblems([])).toEqual([]);

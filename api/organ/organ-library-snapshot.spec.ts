@@ -1,7 +1,7 @@
 import {describe, expect, it} from 'vitest';
 import {parseOrganLibrarySnapshot, toSnapshot} from './organ-library-snapshot';
 import {validateOrgan} from './validate-organ';
-import type {Organ} from './organ';
+import {borders, type Organ} from './organ';
 
 const ID_A = '3f2b8c1e-9d4a-4f6b-8e2c-1a2b3c4d5e6f';
 const ID_B = '7c1d2e3f-4a5b-4c6d-8e9f-0a1b2c3d4e5f';
@@ -235,6 +235,27 @@ describe('version 6 Guide margin', () => {
     const json: unknown = JSON.parse(JSON.stringify(toSnapshot(parsed.value)));
 
     expect(parseOrganLibrarySnapshot(json)).toEqual(parsed);
+  });
+});
+
+describe('a centred Preset Organ stored before the Presets carried a Guide margin (US4.3)', () => {
+  it('reads as centred: 16.925 mm on each side of the 20er-Drehorgel, with no Guide margin', () => {
+    const v5Preset = {
+      ...organSnapshotV5(ID_A, 40, 90),
+      name: '20er-Drehorgel',
+      tapeBed: {tapeWidth: 110, holeDiameter: 3, rowSpacing: 3.85},
+      minimumGap: 3,
+      leadIn: 30,
+      pipes: Array.from({length: 20}, (_, row) => ({note: 53 + row})),
+    };
+    const parsed = parseOrganLibrarySnapshot({version: 5, organs: [v5Preset]});
+
+    expect(parsed.ok).toBe(true);
+    if (!parsed.ok) return;
+    const [organ] = parsed.value;
+    expect(organ.tapeBed).not.toHaveProperty('guideMargin');
+    expect(borders(organ).guide).toBeCloseTo(16.925);
+    expect(borders(organ).far).toBeCloseTo(16.925);
   });
 });
 

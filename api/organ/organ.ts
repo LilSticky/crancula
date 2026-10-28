@@ -70,7 +70,7 @@ export function rowSpan(tapeBed: {readonly holeDiameter: number; readonly rowSpa
 export interface Borders {
   /** The strip at the guide edge: the top edge of the Tape, row 1's side. */
   readonly guide: number;
-  /** The strip at the far edge: the bottom edge of the Tape. */
+  /** The strip at the far side: the bottom edge of the Tape. */
   readonly far: number;
 }
 
@@ -105,6 +105,25 @@ export function tapeBedFit(
 /** The free strips on each long edge of the Tape: centred on the Tape Bed, or set by its Guide margin. */
 export function borders(organ: Organ): Borders {
   return tapeBedFit(organ.tapeBed, organ.pipes.length).borders;
+}
+
+/** Whether both Borders are at 0 or more: a Border below zero means the rows run off the Tape. */
+export function tapeBedFits(fit: TapeBedFit): boolean {
+  return fit.borders.guide >= 0 && fit.borders.far >= 0;
+}
+
+/** The distance of each row's centre from the guide edge of the Tape; row 1 first. */
+export function rowCentres(
+  tapeBed: {
+    readonly tapeWidth: number;
+    readonly holeDiameter: number;
+    readonly rowSpacing: number;
+    readonly guideMargin?: number;
+  },
+  pipeCount: number,
+): number[] {
+  const guide = tapeBedFit(tapeBed, pipeCount).borders.guide;
+  return Array.from({length: pipeCount}, (_, row) => guide + tapeBed.holeDiameter / 2 + row * tapeBed.rowSpacing);
 }
 
 /** The shortest Hole an Organ can play: its hole diameter. */

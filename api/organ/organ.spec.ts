@@ -7,8 +7,10 @@ import {
   minimumHoleLength,
   newOrganId,
   organId,
+  rowCentres,
   rowSpan,
   tapeBedFit,
+  tapeBedFits,
   type TapeBed,
 } from './organ';
 import {midiNoteNumber, type MidiNoteNumber} from './midi-note-number';
@@ -159,6 +161,49 @@ describe('tapeBedFit', () => {
     expect(fit.rowSpan).toBeCloseTo(107.5);
     expect(fit.borders.guide).toBeCloseTo(-3.75);
     expect(fit.borders.far).toBeCloseTo(-3.75);
+  });
+});
+
+describe('rowCentres', () => {
+  it('puts row 1 at the Guide margin and steps by the row spacing: the guided 20er starts at 10 mm, step 3.85', () => {
+    const centres = rowCentres({...twentyBed, guideMargin: mm(10)}, 20);
+
+    expect(centres).toHaveLength(20);
+    expect(centres[0]).toBeCloseTo(10);
+    expect(centres[1]).toBeCloseTo(13.85);
+    expect(centres[19]).toBeCloseTo(83.15);
+  });
+
+  it('centres the 20er rows: row 1 starts at 18.425 mm from the top edge without a Guide margin', () => {
+    const centres = rowCentres(twentyBed, 20);
+
+    expect(centres).toHaveLength(20);
+    expect(centres[0]).toBeCloseTo(18.425);
+    expect(centres[1]).toBeCloseTo(18.425 + 3.85);
+  });
+});
+
+describe('tapeBedFits', () => {
+  it('is true for the centred 20er', () => {
+    expect(tapeBedFits(tapeBedFit(twentyBed, 20))).toBe(true);
+  });
+
+  it('is true for the guided 20er with a Guide margin of 10 mm', () => {
+    expect(tapeBedFits(tapeBedFit({...twentyBed, guideMargin: mm(10)}, 20))).toBe(true);
+  });
+
+  it('is false when the guide side Border is below 0: a Guide margin of 1 mm with 3 mm holes', () => {
+    expect(tapeBedFits(tapeBedFit({...twentyBed, guideMargin: mm(1)}, 20))).toBe(false);
+  });
+
+  it('is false when the far side Border is below 0: a Guide margin of 30 mm on a 100 mm Tape', () => {
+    const tooFar: TapeBed = {tapeWidth: mm(100), holeDiameter: mm(3), rowSpacing: mm(3.85), guideMargin: mm(30)};
+
+    expect(tapeBedFits(tapeBedFit(tooFar, 20))).toBe(false);
+  });
+
+  it('is false when the centred rows are wider than the Tape: 31 rows on 100 mm', () => {
+    expect(tapeBedFits(tapeBedFit({tapeWidth: mm(100), holeDiameter: mm(2.5), rowSpacing: mm(3.5)}, 31))).toBe(false);
   });
 });
 
