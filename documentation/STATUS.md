@@ -8,8 +8,12 @@ Issues: [GitHub](https://github.com/LilSticky/crancula/issues)
 
 None in progress.
 
-**Next step:** [#163](https://github.com/LilSticky/crancula/issues/163) (Off-centre rows on a Tape Bed, discovery with the user
-first), or the hand checks below.
+**Next step:** specify slice 014 Off-centre rows on a Tape Bed ([#163](https://github.com/LilSticky/crancula/issues/163))
+with `/speckit-specify`, from decisions 35–38 in [discovery/later.md](discovery/later.md); or the hand checks below.
+
+**Done:** Discovery of Off-centre rows on a Tape Bed (2026-10-28, branch `docs/163-discovery`): the user enters a
+Guide margin (guide edge to the centre of row 1), row 1's edge is the guide edge, empty means centred. Dictionary: Guide
+margin (Führungsrand), approved by the user 2026-10-28; Border is now per side.
 
 **Done:** [Cut several tapes side by side](../specs/013-cut-several-tapes-side-by-side/spec.md) ([#170](https://github.com/LilSticky/crancula/issues/170),
 branch `013-cut-several-tapes-side-by-side`): merged (PR [#199](https://github.com/LilSticky/crancula/pull/199), 2026-10-28; CI green on three OSes). Tick Tapes in the Tape list, "Cut side by side"
