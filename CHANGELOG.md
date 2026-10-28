@@ -9,27 +9,13 @@ as its GitHub Release notes.
 ## [Unreleased]
 
 ### Added
-- Cut several Tapes side by side on a roll plotter: tick them in the Tape list, choose "Cut side by side", order the Lanes and save one SVG. Tapes of different Organs and widths can share a cut, and the same Tape can be added twice. A drawing shows the roll and the width still free; a Tape that doesn't fit or has Cutting Problems is named and nothing is saved.
-- A roll plotter has a Tape spacing (3 mm unless changed): the blank strip between two Tapes cut side by side.
-
-- An Organ can set a Guide margin in the Organ editor: the distance from the guide edge of the Tape to the centre of row 1. Leave it empty and the rows stay centred, as before.
-- The Border is now shown for each side of the Tape: the guide side (row 1's edge) and the far side. The Tape view draws both.
-- The 20er and 31er Drehorgel Presets fill in their Guide margin (10 mm and 11 mm), so their rows sit where the gamma files place them.
-
-### Changed
-- Saved Organs move to file version 6 (`organs.json`) the next time you save, to keep the Guide margin. Older Organs load with their rows centred. An older Crancula can't read the upgraded file.
-- The Plotter list file (`plotters.json`) moves to version 2 to keep the Tape spacing. Older Plotter lists are read with 3 mm; an older Crancula can't read the new file.
-
-- Export a Tape as Scores (MusicXML) from the new Export menu: staves are split by notes, with clefs, Key, tempo and Time signature.
-- Describe Plotters like Organs: a sheet plotter cuts within its working length and width, a roll plotter within its working width. Plotters are kept in a list and edited in an editor.
-- Pick a Plotter in the Tape view; the choice is remembered on this computer. The Tape itself does not change.
-- A Tape longer than the Plotter's working length is exported in Tape pieces, cut at the furthest Joins, each piece with an Overlap for gluing. The pieces are saved into one folder. Joins, Overlaps and the stretches are drawn on the Tape.
-- A stretch of Tape without a Join, or a Plotter too narrow for the Tape, is a Cutting Problem, and the export is refused until it is fixed.
-- Bring a MusicXML Score onto a Tape (`.musicxml`, `.xml` or `.mxl`): each staff becomes a Part. Repeats, endings, D.C., D.S., fine and coda are played out; ties are joined. Time signatures, Keys and upbeat are kept, and the Metre is shown on the import screen and in the Tape details.
-- Grace notes and ornaments are left out of a Score and counted in the import summary.
-- A PDF or printed Score cannot be read directly: a how-to dialog explains how to get MusicXML from it.
-- Record a Tape as a WAV or MP3 file to listen to without Crancula: choose Record in the Tape view.
-  The file holds the whole Tape at its Crank speed, and the Tape is not changed.
+- Start a new Organ from a Preset: the 20er-Drehorgel (Carl Frei) or the 31er-Drehorgel (Raffin), offered in the Organ
+  editor's page head. Their Pipes and Tape Bed come from the organs' gamma files; Minimum Gap, Lead-in, Tape per Crank
+  turn and Crank speed range are reasonable guesses you can change.
+- An Organ can set a Guide margin in the Organ editor: the distance from the guide edge of the Tape to the centre of
+  row 1. Leave it empty and the rows stay centred, as before. The 20er and 31er Presets fill it in (10 mm and 11 mm), so
+  their rows sit where the real organs expect them.
+- The Border is shown for each side of the Tape: the guide side (row 1's edge) and the far side. The Tape view draws both.
 - Edit a Tape by touch: tap an empty place to select a Spot, tap it again to add a Hole. A selected
   Hole has grips beside its ends to lengthen or shorten it; drag a Hole to move it, double-tap it to
   remove it. A finger drag on empty Tape scrolls; the mouse still draws a selection frame.
@@ -37,10 +23,41 @@ as its GitHub Release notes.
 - Each Organ has a Crank speed range, its slowest and fastest Crank speed (30–120 turns per minute
   to begin with). A slider in the Preview sets the Crank speed within it; the number field still
   takes 1–300.
+- Record a Tape as a WAV or MP3 file to listen to without Crancula: choose Record in the Tape view.
+  The file holds the whole Tape at its Crank speed, and the Tape is not changed. Cancel stops a running Recording and
+  writes nothing.
+- Bring a MusicXML Score onto a Tape (`.musicxml`, `.xml` or `.mxl`): each staff becomes a Part. Repeats, endings, D.C.,
+  D.S., fine and coda are played out; ties are joined. Time signatures, Keys and upbeat are kept, and the Metre is shown
+  on the import screen and in the Tape details. Grace notes and ornaments are left out and counted in the Import Summary.
+- A PDF or printed Score cannot be read directly: a how-to dialog explains how to get MusicXML from it.
+- Export a Tape as Scores (MusicXML) from the new Export menu: staves are split by notes, with clefs, Key, tempo and
+  Time signature.
+- Describe your Plotters like Organs: a sheet plotter cuts within its working length and width, a roll plotter within
+  its working width. Pick a Plotter in the Tape view; the choice is remembered on this computer.
+- A Tape longer than the Plotter's working length is exported in Tape pieces, cut at the furthest Joins, each piece
+  with an Overlap for gluing. The pieces are saved into one folder. Joins, Overlaps and the stretches are drawn on the
+  Tape. A stretch without a Join, or a Plotter too narrow for the Tape, is a Cutting Problem and refuses the export.
+- Cut several Tapes side by side on a roll plotter: tick them in the Tape list, choose "Cut side by side", order the
+  Lanes and save one SVG. Tapes of different Organs and widths can share a cut, and the same Tape can be added twice. A
+  drawing shows the roll and the width still free; a Tape that doesn't fit or has Cutting Problems is named and nothing
+  is saved. A roll plotter has a Tape spacing (3 mm unless changed): the blank strip between two Tapes.
 
 ### Changed
 - The import button says "Choose a Song Source": a MIDI file or a MusicXML Score.
 - A double-click on a Hole now removes it (two taps on one Hole).
+- In German, a Song is now called "Stück".
+- Undo, Redo and Transpose are disabled while a Recording runs.
+- Saved files move to new versions the next time you save: Organs to version 6 (`organs.json`, for the Crank speed range
+  and the Guide margin), Tapes to version 3 (`tapes.json`, for the Metre), Plotters to version 2 (`plotters.json`, for
+  the Tape spacing). Older files load as before: Organs with their rows centred and a Crank speed range of 30–120,
+  Plotters with a Tape spacing of 3 mm. Downgrade note: an older Crancula can't read the upgraded files.
+
+### Fixed
+- In German, the Tape view's page head no longer clips Export at 1280 px: its actions show as icons below 1440 px, with
+  their names as tooltips.
+- The Stop preview label and the Export button stay on one line, and the German page head no longer clips the 2:1 zoom.
+- The Crank speed label fits in German, and the playhead grip is easier to see in dark mode.
+- The import screen shows the Parts block only once a Song is chosen.
 
 ## [0.2.0] - 2026-10-24
 
