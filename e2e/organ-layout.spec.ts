@@ -228,7 +228,14 @@ test.describe('The Tape Bed card at the README size keeps its labels, heights an
     await window.getByRole('link', {name: 'Organs'}).click();
     await window.getByTestId('organ').first().click();
     await expect(window.getByTestId('save-organ')).toBeVisible();
-    if (language === 'de') await window.getByTestId('language-switch').locator('[data-language="de"]').click();
+    if (language === 'de') {
+      await window.getByTestId('language-switch').locator('[data-language="de"]').click();
+      // The Tape Bed fields re-render on a language change; wait for the German labels and one more frame before measuring.
+      const rowSpacingLabel = window.locator('mat-form-field').filter({has: window.getByTestId('row-spacing')}).locator('.mdc-floating-label');
+      await expect(rowSpacingLabel).not.toHaveText('Spacing between rows');
+      await expect(rowSpacingLabel).toBeVisible();
+      await window.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    }
   }
 
   const boxOf = (locator: Locator) =>
@@ -261,8 +268,13 @@ test.describe('The Tape Bed card at the README size keeps its labels, heights an
       // The visible text field (the box the user types in), not the form field host, which also holds the hint.
       const inputBox = (testId: string) =>
         boxOf(window.locator('mat-form-field').filter({has: window.getByTestId(testId)}).locator('.mdc-text-field')).then((box) => box.height);
-      const [rowSpacing, guideMargin] = await Promise.all([inputBox('row-spacing'), inputBox('guide-margin')]);
-      expect(Math.abs(rowSpacing - guideMargin), `Spacing between rows ${rowSpacing}px vs Guide margin ${guideMargin}px`).toBeLessThanOrEqual(0.5);
+      // The fields re-render after a language switch, so poll until both boxes are laid out again.
+      await expect
+        .poll(async () => {
+          const [rowSpacing, guideMargin] = await Promise.all([inputBox('row-spacing'), inputBox('guide-margin')]);
+          return rowSpacing > 0 && guideMargin > 0 ? Math.abs(rowSpacing - guideMargin) : Number.POSITIVE_INFINITY;
+        }, {message: 'Spacing between rows and Guide margin text fields differ in height'})
+        .toBeLessThanOrEqual(0.5);
       await app.close();
     });
 
