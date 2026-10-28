@@ -31,14 +31,14 @@ Specs are in `specs/NNN-slice/`.
 | Punch a tape | [#3](https://github.com/LilSticky/crancula/issues/3) | v0.1.0 |
 | Edit a tape: Place holes by hand, Transpose holes, Adjust a tape | [#103](https://github.com/LilSticky/crancula/issues/103) | v0.1.1 |
 | Crank a tape | [#149](https://github.com/LilSticky/crancula/issues/149) | v0.2.0 |
-| Edit a tape by touch | [#152](https://github.com/LilSticky/crancula/issues/152) | unreleased |
-| Ready-made Organs (Presets) | [#162](https://github.com/LilSticky/crancula/issues/162) | unreleased |
-| Record a tape | [#165](https://github.com/LilSticky/crancula/issues/165) | unreleased |
-| Bring Scores onto a tape | [#167](https://github.com/LilSticky/crancula/issues/167) | unreleased |
-| Cut a tape in pieces | [#168](https://github.com/LilSticky/crancula/issues/168) | unreleased |
-| Read a tape as Scores | [#169](https://github.com/LilSticky/crancula/issues/169) | unreleased |
-| Cut several tapes side by side | [#170](https://github.com/LilSticky/crancula/issues/170) | unreleased |
-| Off-centre rows on a Tape Bed | [#163](https://github.com/LilSticky/crancula/issues/163) | unreleased |
+| Edit a tape by touch | [#152](https://github.com/LilSticky/crancula/issues/152) | v0.3.0 |
+| Ready-made Organs (Presets) | [#162](https://github.com/LilSticky/crancula/issues/162) | v0.3.0 |
+| Record a tape | [#165](https://github.com/LilSticky/crancula/issues/165) | v0.3.0 |
+| Bring Scores onto a tape | [#167](https://github.com/LilSticky/crancula/issues/167) | v0.3.0 |
+| Cut a tape in pieces | [#168](https://github.com/LilSticky/crancula/issues/168) | v0.3.0 |
+| Read a tape as Scores | [#169](https://github.com/LilSticky/crancula/issues/169) | v0.3.0 |
+| Cut several tapes side by side | [#170](https://github.com/LilSticky/crancula/issues/170) | v0.3.0 |
+| Off-centre rows on a Tape Bed | [#163](https://github.com/LilSticky/crancula/issues/163) | v0.3.0 |
 
 ## Project infrastructure (not slices)
 

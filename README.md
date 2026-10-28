@@ -8,7 +8,7 @@
 
 <p align="center">
   <a href="https://github.com/LilSticky/crancula/actions/workflows/ci.yml"><img src="https://github.com/LilSticky/crancula/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-  <img src="https://img.shields.io/badge/version-0.2.0-b08fd8" alt="Version 0.2.0">
+  <img src="https://img.shields.io/badge/version-0.3.0-b08fd8" alt="Version 0.3.0">
   <img src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-1a1426" alt="Platforms: Windows, macOS, Linux">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-efe4c8" alt="MIT license"></a>
 </p>
@@ -27,9 +27,9 @@ out as a Tape that fits your Pipes. You then export the Tape as an SVG that a vi
 other Plotter can punch. Feed the Tape into your Organ, turn the Crank, and it plays.
 
 > [!NOTE]
-> **v0.2.0 is out.** Describe your Organ, bring a MIDI Song onto a Tape, edit its Holes by hand,
-> hear it at your Crank speed and export it for your Plotter: the whole way from music to a
-> cuttable Tape works. Crancula is a hobby project, so expect rough edges.
+> **v0.3.0 is out.** Start from a 20er or 31er Preset, bring in a MIDI Song or a MusicXML Score,
+> record the Tape as WAV or MP3, export it as Scores, and cut it in Tape pieces or side by side with
+> other Tapes on a roll plotter. Crancula is a hobby project, so expect rough edges.
 > [Download it](#download) for Windows, macOS or Linux.
 
 <p align="center">
@@ -52,7 +52,7 @@ flowchart LR
     tape --> svg --> plotter --> play
 ```
 
-1. **Describe your Organ.** List its Pipes by the notes they play (C4, D4, …) and measure its
+1. **Describe your Organ**, or start from the 20er or 31er Preset. List its Pipes by the notes they play (C4, D4, …) and measure its
    Tape Bed: tape width, hole diameter and row spacing in mm (Crancula works out the Border). Crancula refuses Organs
    that can't exist, for example duplicate Pipes or more Pipes than fit on the tape.
 2. **Bring a Song onto a Tape.** Choose a Song Source: a MIDI file, or a MusicXML Score (`.musicxml`, `.xml`, `.mxl`)
@@ -65,8 +65,10 @@ flowchart LR
 5. **Record the Tape.** Save the whole Tape at its Crank speed as a WAV or MP3 file to listen to
    without Crancula.
 6. **Punch the Tape.** Export the Tape as a true-to-scale SVG and cut it with your Plotter.
-   A Tape that can't be cut (a Hole too short, or too close to the next) is not exported;
-   Crancula names every problem Hole instead.
+   A Tape longer than the Plotter's working length comes out in Tape pieces to glue together, and
+   several Tapes can share one pass on a roll plotter, side by side. A Tape that can't be cut (a Hole
+   too short, or too close to the next) is not exported; Crancula names every problem Hole instead.
+7. **Read the Tape as Scores.** Export it as MusicXML to open in a notation program.
 
 ## Screenshots
 
@@ -87,13 +89,19 @@ flowchart LR
   </tr>
 </table>
 
-## What's in v0.2.0
+## What's in v0.3.0
 
 - [x] **Describe my organ**: create, edit, reorder and delete Organs, kept across restarts, in English and German
 - [x] **Bring a song onto a tape**: import a MIDI file onto a Tape, with automatic Transposition ([#2](https://github.com/LilSticky/crancula/issues/2))
 - [x] **Punch a tape**: export the Tape as an SVG for a vinyl cutter ([#3](https://github.com/LilSticky/crancula/issues/3))
 - [x] **Edit a tape**: place Holes by hand, transpose Holes, change the Column length, with undo and redo ([#103](https://github.com/LilSticky/crancula/issues/103))
 - [x] **Crank a tape**: hear a Tape at an adjustable Crank speed, with a playhead, before cutting it ([#149](https://github.com/LilSticky/crancula/issues/149))
+- [x] **Edit a tape by touch**: select, add, move, lengthen and remove Holes with a finger ([#152](https://github.com/LilSticky/crancula/issues/152))
+- [x] **Ready-made Organs**: start from the 20er (Carl Frei) or 31er (Raffin) Preset ([#162](https://github.com/LilSticky/crancula/issues/162))
+- [x] **Off-centre rows on a Tape Bed**: a Guide margin from the guide edge to row 1, with the Border per side ([#163](https://github.com/LilSticky/crancula/issues/163))
+- [x] **Record a tape**: save the whole Tape as a WAV or MP3 file ([#165](https://github.com/LilSticky/crancula/issues/165))
+- [x] **Bring Scores onto a tape**: import MusicXML, one Part per staff, repeats played out ([#167](https://github.com/LilSticky/crancula/issues/167))
+- [x] **Read a tape as Scores**: export the Tape as MusicXML ([#169](https://github.com/LilSticky/crancula/issues/169))
 - [x] **Describe a plotter**: describe sheet and roll Plotters, pick one in the Tape view ([#168](https://github.com/LilSticky/crancula/issues/168))
 - [x] **Cut a tape in pieces**: a Tape longer than the Plotter's working length is exported in Tape pieces with an Overlap for gluing ([#168](https://github.com/LilSticky/crancula/issues/168))
 - [x] **Cut several tapes side by side**: tick Tapes in the Tape list and cut them in one pass on a roll plotter, one Tape per Lane, Tape spacing apart ([#170](https://github.com/LilSticky/crancula/issues/170))
@@ -104,9 +112,8 @@ What changed in each version is under [Releases](#releases).
 <details>
 <summary><b>Ideas for later</b></summary>
 
-- More Song Sources: MusicXML, PDF, printed Scores
+- More Song Sources: PDF and printed Scores read directly
 - More Plotter formats: DXF, HPGL
-- Export a Song as audio or as Scores
 
 </details>
 
@@ -137,6 +144,7 @@ All terms, with their German names, are in the [dictionary](documentation/DICTIO
 
 | Version | Date | Highlights |
 |---------|------|------------|
+| [0.3.0](https://github.com/LilSticky/crancula/releases/tag/v0.3.0) | 2026-10-28 | Presets for the 20er and 31er; MusicXML Scores in and out; Record as WAV or MP3; Tape pieces and side-by-side cuts for your Plotter |
 | [0.2.0](https://github.com/LilSticky/crancula/releases/tag/v0.2.0) | 2026-10-24 | Hear a Tape before cutting it: Preview with a playhead; Crank speed per Tape; Tape per Crank turn for the Organ |
 | [0.1.1](https://github.com/LilSticky/crancula/releases/tag/v0.1.1) | 2026-10-23 | Edit a Tape's Holes by hand; transpose Holes; change the Column length; undo and redo |
 | [0.1.0](https://github.com/LilSticky/crancula/releases/tag/v0.1.0) | 2026-10-18 | Export a Tape for the Plotter as SVG; Lead-in; derived Border; a new look |
