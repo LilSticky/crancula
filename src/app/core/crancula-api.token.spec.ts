@@ -25,7 +25,7 @@ const plotterSnapshot: PlotterLibrarySnapshot = {
 };
 
 const snapshot: OrganLibrarySnapshot = {
-  version: 5,
+  version: 6,
   organs: [
     {
       id: '3f2b8c1e-9d4a-4f6b-8e2c-1a2b3c4d5e6f',

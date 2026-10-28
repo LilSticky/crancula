@@ -1,6 +1,6 @@
 import {describe, expect, it} from 'vitest';
 import {emptyOrganDraft, type OrganDraft} from './organ-draft';
-import {organId} from './organ';
+import {borders, organId} from './organ';
 import {type OrganViolation, validateOrgan} from './validate-organ';
 
 /** "Street organ" from the quickstart: 31 Pipes from note 53, has a Row Span of 107.5 mm on 120 mm. */
@@ -132,6 +132,78 @@ describe('validateOrgan', () => {
     ])('rejects a slowest Crank speed %d that is not below the fastest %d', (slowestCrankSpeed, fastestCrankSpeed) => {
       expect(violationsOf(validDraft({slowestCrankSpeed, fastestCrankSpeed}))).toEqual([
         {code: 'slowest-not-below-fastest', path: 'fastestCrankSpeed'},
+      ]);
+    });
+  });
+
+  describe('the Guide margin', () => {
+    /** The 20er reference: 110 mm tape, 3 mm holes, 3.85 mm rows, 20 Pipes; row span 76.15 mm. */
+    function guidedDraft(guideMargin: number | null): OrganDraft {
+      return {
+        ...validDraft(),
+        tapeBed: {tapeWidth: 110, holeDiameter: 3, rowSpacing: 3.85, guideMargin},
+        pipes: Array.from({length: 20}, (_, row) => ({note: 60 + row})),
+      };
+    }
+
+    it('is absent from a centred Organ', () => {
+      const result = validateOrgan(guidedDraft(null));
+
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.value.tapeBed).not.toHaveProperty('guideMargin');
+    });
+
+    it('keeps a given Guide margin', () => {
+      const result = validateOrgan(guidedDraft(10));
+
+      expect(result.ok && result.value.tapeBed.guideMargin).toBe(10);
+    });
+
+    it.each([0, -1, Number.NaN, Number.POSITIVE_INFINITY])('rejects the Guide margin %d as not positive', (guideMargin) => {
+      expect(violationsOf(guidedDraft(guideMargin))).toEqual([{code: 'must-be-positive', path: 'tapeBed.guideMargin'}]);
+    });
+
+    it('rejects a Guide margin below half a Hole', () => {
+      expect(violationsOf(guidedDraft(1.4))).toEqual([
+        {code: 'guide-margin-below-half-hole', path: 'tapeBed.guideMargin', params: {min: 1.5}},
+      ]);
+    });
+
+    it('accepts a Guide margin of half a Hole, which leaves the guide side Border at 0', () => {
+      const result = validateOrgan(guidedDraft(1.5));
+
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(borders(result.value).guide).toBe(0);
+    });
+
+    it('rejects a Guide margin that runs the last row off the far side', () => {
+      expect(violationsOf(guidedDraft(35.36))).toEqual([
+        {code: 'guide-margin-too-large', path: 'tapeBed.guideMargin', params: {max: 35.35}},
+      ]);
+    });
+
+    it('accepts the largest Guide margin, which leaves the far side Border at 0', () => {
+      expect(violationsOf(guidedDraft(35.35))).toEqual([]);
+    });
+
+    it('reports only the Pipes that exceed the tape width when the rows do not fit at all', () => {
+      const draft: OrganDraft = {...guidedDraft(10), tapeBed: {tapeWidth: 70, holeDiameter: 3, rowSpacing: 3.85, guideMargin: 10}};
+
+      expect(violationsOf(draft)).toEqual([
+        {code: 'pipes-exceed-tape-width', path: 'tapeBed.tapeWidth', params: {requiredWidth: 76.15, availableWidth: 70}},
+      ]);
+    });
+
+    it('can report guide-margin-too-large after a Pipe is added to a valid guided Organ', () => {
+      const draft = guidedDraft(35.35);
+      expect(violationsOf(draft)).toEqual([]);
+
+      const withPipe: OrganDraft = {...draft, pipes: [...draft.pipes, {note: 80}]};
+
+      expect(violationsOf(withPipe)).toEqual([
+        {code: 'guide-margin-too-large', path: 'tapeBed.guideMargin', params: {max: 31.5}},
       ]);
     });
   });

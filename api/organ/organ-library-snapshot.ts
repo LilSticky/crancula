@@ -11,6 +11,8 @@ export interface OrganSnapshot {
     readonly tapeWidth: number;
     readonly holeDiameter: number;
     readonly rowSpacing: number;
+    /** Version 6 onwards; absent when the rows are centred. */
+    readonly guideMargin?: number;
   };
   readonly minimumGap: number;
   readonly leadIn: number;
@@ -21,15 +23,15 @@ export interface OrganSnapshot {
   readonly pipes: readonly {readonly note: number}[];
 }
 
-/** Snapshot file format, version 5, stored at `<userData>/snapshots/organs.json` (ADR 8, ADR 20). */
+/** Snapshot file format, version 6, stored at `<userData>/snapshots/organs.json` (ADR 8, ADR 20). */
 export interface OrganLibrarySnapshot {
-  readonly version: 5;
+  readonly version: 6;
   readonly organs: readonly OrganSnapshot[];
 }
 
 export function toSnapshot(organs: readonly Organ[]): OrganLibrarySnapshot {
   return {
-    version: 5,
+    version: 6,
     organs: organs.map((organ) => ({
       id: organ.id,
       name: organ.name,
@@ -53,8 +55,9 @@ export function parseOrganLibrarySnapshot(input: unknown): Result<Organ[], strin
   // Versions 1 and 2 stored no Lead-in; they read with a Lead-in of 0 (ADR 20).
   // Versions 1 to 3 stored no Tape per Crank turn (ADR 20).
   // Versions 1 to 4 stored no Crank speed range; they read with the default range (ADR 20).
+  // Versions 1 to 5 stored no Guide margin; a stray one there is ignored and the rows read as centred (ADR 20).
   const version = input['version'];
-  if (version !== 1 && version !== 2 && version !== 3 && version !== 4 && version !== 5) {
+  if (version !== 1 && version !== 2 && version !== 3 && version !== 4 && version !== 5 && version !== 6) {
     return err(`unsupported snapshot version ${String(version)}`);
   }
   const organs = input['organs'];
@@ -70,7 +73,7 @@ export function parseOrganLibrarySnapshot(input: unknown): Result<Organ[], strin
   return ok(parsed);
 }
 
-type SnapshotVersion = 1 | 2 | 3 | 4 | 5;
+type SnapshotVersion = 1 | 2 | 3 | 4 | 5 | 6;
 
 function parseOrgan(input: unknown, version: SnapshotVersion): Result<Organ, string> {
   if (!isRecord(input)) return err('not an object');
@@ -84,6 +87,8 @@ function parseOrgan(input: unknown, version: SnapshotVersion): Result<Organ, str
   if (typeof name !== 'string') return err('name is not a string');
   if (!isRecord(tapeBed)) return err('tapeBed is not an object');
   const {tapeWidth, holeDiameter, rowSpacing} = tapeBed;
+  const guideMargin = version === 6 ? tapeBed['guideMargin'] : undefined;
+  if (guideMargin !== undefined && !isNumber(guideMargin)) return err('tapeBed.guideMargin is not a number');
   if (!isNumber(tapeWidth) || !isNumber(holeDiameter) || !isNumber(rowSpacing) || !isNumber(minimumGap) || !isNumber(leadIn)) {
     return err('a measurement is not a number');
   }
@@ -97,7 +102,7 @@ function parseOrgan(input: unknown, version: SnapshotVersion): Result<Organ, str
   const result = validateOrgan({
     id: organId(id),
     name,
-    tapeBed: {tapeWidth, holeDiameter, rowSpacing, guideMargin: null},
+    tapeBed: {tapeWidth, holeDiameter, rowSpacing, guideMargin: guideMargin ?? null},
     minimumGap,
     leadIn,
     slowestCrankSpeed: crankSpeeds.value.slowest,
@@ -108,9 +113,9 @@ function parseOrgan(input: unknown, version: SnapshotVersion): Result<Organ, str
   return result.ok ? result : err(result.error.map((violation) => `${violation.path}: ${violation.code}`).join(', '));
 }
 
-/** Version 5 stores the Crank speed range; older versions read with the default range. */
+/** Versions 5 and 6 store the Crank speed range; older versions read with the default range. */
 function storedCrankSpeedRange(input: Record<string, unknown>, version: SnapshotVersion): Result<{slowest: number; fastest: number}, string> {
-  if (version !== 5) return ok(DEFAULT_CRANK_SPEED_RANGE);
+  if (version < 5) return ok(DEFAULT_CRANK_SPEED_RANGE);
   const range = input['crankSpeedRange'];
   if (!isRecord(range)) return err('crankSpeedRange is not an object');
   const {slowest, fastest} = range;

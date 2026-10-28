@@ -35,9 +35,9 @@ description: "Tasks for 014 Off-centre rows on a Tape Bed"
 ## Phase 3: US1 Enter a Guide margin (P1)
 
 - [ ] T006 Red: `api/organ/validate-organ.spec.ts`: Guide margin null → centred Organ without the field; 10 → kept; 0 or negative → `must-be-positive`; 1.4 with a 3 mm hole → `guide-margin-below-half-hole` {min: 1.5}; 1.5 → valid (Border 0); 35.36 on the 20er → `guide-margin-too-large` {max: 35.35}; 35.35 → valid; rows wider than the tape → only `pipes-exceed-tape-width`; adding a Pipe to a valid guided Organ can raise `guide-margin-too-large`. `organ-draft` spec: draft from a guided Organ carries `guideMargin`, empty draft has `null`.
-- [ ] T007 Green: `api/organ/organ-draft.ts`, `api/organ/validate-organ.ts` (R3).
+- [x] T007 Green: `api/organ/organ-draft.ts`, `api/organ/validate-organ.ts` (R3).
 - [ ] T008 Red: `api/organ/organ-library-snapshot.spec.ts`: writes version 6 with `guideMargin` only when set; round trip keeps it; v5 file reads centred and ignores a stray `guideMargin`; v6 with a string `guideMargin` refused; v6 with a too-large one refused. `app/organ-library-file.spec.ts` fixtures to version 6.
-- [ ] T009 Green: `api/organ/organ-library-snapshot.ts` (R4).
+- [x] T009 Green: `api/organ/organ-library-snapshot.ts` (R4).
 - [ ] T010 Red: `src/app/features/organ/organ-editor/*.spec.ts`: the `guide-margin` field after Spacing between rows, optional; `border` shows "16.93" and the centred hint for an empty field, "8.5 mm guide side · 25.35 mm far side" and the sides hint with 10; the fit line and drawing label use the `_OFF_CENTRE` keys; the drawing's top strip is 8.5 mm and the bottom one 25.35 mm high; errors shown at the field after a save attempt; clearing the field centres again; dirty tracking counts the field; German texts.
 - [ ] T011 Green: `organ-form.ts`, `organ-editor.component.ts`, `tape-bed-sheet/*` (R5).
 

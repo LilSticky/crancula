@@ -17,6 +17,8 @@ export type OrganViolationCode =
   | 'must-be-positive'
   | 'must-not-be-negative'
   | 'row-spacing-below-hole-diameter'
+  | 'guide-margin-below-half-hole'
+  | 'guide-margin-too-large'
   | 'pipes-exceed-tape-width'
   | 'tape-per-crank-turn-not-positive';
 
@@ -59,6 +61,11 @@ export function validateOrgan(draft: OrganDraft): Result<Organ, OrganViolation[]
         path: 'tapeBed.tapeWidth',
         params: {requiredWidth: roundMm(required), availableWidth: tapeBed.tapeWidth},
       });
+    } else if (tapeBed.guideMargin !== undefined && notes) {
+      const max = maxGuideMargin(tapeBed, notes.length);
+      if (tapeBed.guideMargin > max + EPSILON_MM) {
+        add({code: 'guide-margin-too-large', path: 'tapeBed.guideMargin', params: {max: roundMm(max)}});
+      }
     }
   }
 
@@ -114,7 +121,7 @@ function validateTapeBed(draft: OrganDraft, add: AddViolation): TapeBed | undefi
   const tapeWidth = measurement(tapeBed.tapeWidth, 'tapeBed.tapeWidth', add);
   const holeDiameter = measurement(tapeBed.holeDiameter, 'tapeBed.holeDiameter', add);
   const rowSpacing = measurement(tapeBed.rowSpacing, 'tapeBed.rowSpacing', add);
-  const guideMargin = optionalGuideMargin(tapeBed.guideMargin, add);
+  const guideMargin = optionalGuideMargin(tapeBed.guideMargin, holeDiameter, add);
 
   if (holeDiameter !== undefined && rowSpacing !== undefined && rowSpacing < holeDiameter) {
     add({code: 'row-spacing-below-hole-diameter', path: 'tapeBed.rowSpacing', params: {holeDiameter}});
@@ -126,12 +133,27 @@ function validateTapeBed(draft: OrganDraft, add: AddViolation): TapeBed | undefi
   return {tapeWidth, holeDiameter, rowSpacing, ...(guideMargin === null ? {} : {guideMargin})};
 }
 
-/** Absent (`null`, or missing from untyped input) means the rows are centred; a given Guide margin must be finite and above 0. */
-function optionalGuideMargin(value: number | null, add: AddViolation): Millimetres | null | undefined {
+/**
+ * Absent (`null`, or missing from untyped input) means the rows are centred. A given Guide margin must be finite,
+ * above 0 and reach at least half a Hole from the guide edge.
+ */
+function optionalGuideMargin(value: number | null, holeDiameter: number | undefined, add: AddViolation): Millimetres | null | undefined {
   if (value === null || value === undefined) return null;
   const valid = Number.isFinite(value) && value > 0 ? millimetres(value) : undefined;
-  if (valid === undefined) add({code: 'must-be-positive', path: 'tapeBed.guideMargin'});
+  if (valid === undefined) {
+    add({code: 'must-be-positive', path: 'tapeBed.guideMargin'});
+    return undefined;
+  }
+  if (holeDiameter !== undefined && value < holeDiameter / 2 - EPSILON_MM) {
+    add({code: 'guide-margin-below-half-hole', path: 'tapeBed.guideMargin', params: {min: roundMm(holeDiameter / 2)}});
+    return undefined;
+  }
   return valid;
+}
+
+/** The largest Guide margin for `pipeCount` Pipes: the far side Border is 0 at this value. */
+function maxGuideMargin(tapeBed: TapeBed, pipeCount: number): number {
+  return tapeBed.tapeWidth - (rowSpan(tapeBed, pipeCount) - tapeBed.holeDiameter / 2);
 }
 
 function measurement(
