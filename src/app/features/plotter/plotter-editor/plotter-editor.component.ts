@@ -2,8 +2,8 @@ import {ChangeDetectionStrategy, Component, computed, inject, input, linkedSigna
 import {type FieldTree, form, FormField} from '@angular/forms/signals';
 import {ErrorStateMatcher} from '@angular/material/core';
 import {MatButton} from '@angular/material/button';
-import {MatCard} from '@angular/material/card';
-import {MatError, MatFormField, MatHint, MatInput, MatLabel, MatSuffix} from '@angular/material/input';
+import {MatCard, MatCardSubtitle} from '@angular/material/card';
+import {MatError, MatFormField, MatInput, MatLabel, MatSuffix} from '@angular/material/input';
 import {MatIcon} from '@angular/material/icon';
 import {MatOption, MatSelect} from '@angular/material/select';
 import {MatSlideToggle} from '@angular/material/slide-toggle';
@@ -20,7 +20,7 @@ import {PLOTTER_FIELD_LABEL_KEYS, plotterFormSchema, shownMessages, ShownViolati
 @Component({
   selector: 'cranc-plotter-editor',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslatePipe, MatButton, MatCard, MatError, MatFormField, MatHint, MatIcon, MatInput, MatLabel, MatOption, MatSelect,
+  imports: [TranslatePipe, MatButton, MatCard, MatCardSubtitle, MatError, MatFormField, MatIcon, MatInput, MatLabel, MatOption, MatSelect,
     MatSlideToggle, MatSuffix, FormField, DecimalInputDirective, PageHeadComponent],
   templateUrl: './plotter-editor.component.html',
   providers: [{provide: ErrorStateMatcher, useClass: ShownViolationMatcher}],

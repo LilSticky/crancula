@@ -2,6 +2,9 @@
   <cranc-page-head [title]="(id() ? 'PLOTTER.EDITOR.TITLE' : 'PLOTTER.EDITOR.TITLE_NEW') | translate" [subtitle]="'PLOTTER.EDITOR.HINT' | translate"/>
 
   <mat-card appearance="outlined">
+    @if (plotter.roll().value()) {
+      <div mat-card-subtitle>{{ 'PLOTTER.EDITOR.TAPE_SPACING_HINT' | translate }}</div>
+    }
     <div class="fields">
       <mat-form-field class="full-width">
         <mat-label>{{ 'PLOTTER.EDITOR.NAME' | translate }}</mat-label>
@@ -40,7 +43,6 @@
           <mat-label>{{ 'PLOTTER.EDITOR.TAPE_SPACING' | translate }}</mat-label>
           <input matInput crancDecimalInput data-testid="plotter-tape-spacing" [formField]="plotter.tapeSpacing"/>
           <span matTextSuffix>mm</span>
-          <mat-hint>{{ 'PLOTTER.EDITOR.TAPE_SPACING_HINT' | translate }}</mat-hint>
           <ng-container ngProjectAs="mat-error">
             @for (message of shownMessages(plotter.tapeSpacing); track message.key) {
               <mat-error data-testid="violation" data-path="tapeSpacing">{{ message.key | translate: message.params }}</mat-error>

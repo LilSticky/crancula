@@ -469,13 +469,14 @@ describe('PlotterEditorComponent', () => {
       expect(element.querySelector('[data-testid="plotter-tape-spacing"]')).toBeNull();
     });
 
-    it('shows a new roll plotter with a Tape spacing of 3 and the hint under the field', async () => {
+    it('shows a new roll plotter with a Tape spacing of 3 and the hint in the card subtitle, under neither field', async () => {
       const {field, element} = await openRollPlotter();
 
       expect(field('plotter-tape-spacing').value).toBe('3');
-      expect(field('plotter-tape-spacing').closest('mat-form-field')?.textContent).toContain(
+      expect(element.querySelector('mat-card [mat-card-subtitle]')?.textContent).toContain(
         'Blank strip between Tapes cut side by side',
       );
+      expect(element.querySelector('mat-card .fields mat-hint')).toBeNull();
       expect(element.querySelector('[data-testid="plotter-working-length"]')).toBeNull();
     });
 
