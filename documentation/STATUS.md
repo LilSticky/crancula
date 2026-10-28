@@ -9,16 +9,14 @@ in `specs/` and the Git history. Cleaned up on 2026-10-28.
 
 ## Current slice
 
-[014 Off-centre rows on a Tape Bed (#163)](../specs/014-off-centre-rows-on-a-tape-bed/spec.md), PR [#202](https://github.com/LilSticky/crancula/pull/202), implemented; reviews fixed ([review-angular.md](../specs/014-off-centre-rows-on-a-tape-bed/review-angular.md), [audit.md](../specs/014-off-centre-rows-on-a-tape-bed/audit.md)).
-An optional Guide margin on the Tape Bed (guide edge to the centre of row 1; empty means centred); the Border is per side
-(guide side, far side). Organs snapshot v6; v1–5 load centred ([ADR 20](adr/0020-snapshots-migrated-on-read.md)). Presets
-20er and 31er carry Guide margins 10 and 11 mm.
+None. The last one, [014 Off-centre rows on a Tape Bed (#163)](../specs/014-off-centre-rows-on-a-tape-bed/spec.md), merged on
+2026-10-28 (PR [#202](https://github.com/LilSticky/crancula/pull/202)): an optional Guide margin on the Tape Bed, the Border per
+side (guide side, far side), Organs snapshot v6, Guide margins on the 20er and 31er Presets. Its T017 (`ux:screens` and
+`ux-review` of the Organ editor, a small field change) was not done.
 
-**Next step:** merge PR [#202](https://github.com/LilSticky/crancula/pull/202) once CI is green, then [#198](https://github.com/LilSticky/crancula/issues/198) (side-by-side UX follow-ups).
+**Next step:** [#198](https://github.com/LilSticky/crancula/issues/198) (side-by-side UX follow-ups).
 Nothing has been released since v0.2.0 (2026-10-24); `[Unreleased]` in the CHANGELOG holds Presets, Record, Scores in and
 out, Plotters and Tape pieces, side by side and the Guide margin, so a release (`/release`) is due.
-
-**Open in slice 014:** T017 (`ux:screens` and `ux-review` of the Organ editor), a small field change.
 
 ## Not checked by hand yet
 

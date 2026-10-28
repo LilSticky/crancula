@@ -11,7 +11,7 @@ States: `planned` · `in progress` · `in review`
 
 | Slice | Lets the user… | Domain | Adapters | State |
 |-------|----------------|--------|----------|-------|
-| Off-centre rows on a Tape Bed ([#163](https://github.com/LilSticky/crancula/issues/163)) | place the rows off-centre on the Tape Bed with an optional Guide margin; the Border is per side (guide side, far side); the 20er and 31er Presets carry their Guide margin | Organ (Guide margin, Borders), Tape | Organ editor, Tape view, snapshot v6 | in review (PR [#202](https://github.com/LilSticky/crancula/pull/202)) |
+| – | No slice is planned; open issues come first. | | | |
 
 ## Later (unordered)
 
@@ -38,6 +38,7 @@ Specs are in `specs/NNN-slice/`.
 | Cut a tape in pieces | [#168](https://github.com/LilSticky/crancula/issues/168) | unreleased |
 | Read a tape as Scores | [#169](https://github.com/LilSticky/crancula/issues/169) | unreleased |
 | Cut several tapes side by side | [#170](https://github.com/LilSticky/crancula/issues/170) | unreleased |
+| Off-centre rows on a Tape Bed | [#163](https://github.com/LilSticky/crancula/issues/163) | unreleased |
 
 ## Project infrastructure (not slices)
 
