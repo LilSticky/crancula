@@ -58,9 +58,9 @@ description: "Tasks for 014 Off-centre rows on a Tape Bed"
 ## Phase 7: Polish and gate
 
 - [ ] T017 [P] `npm run ux:screens` for the Organ editor (centred, guided, error) in en, dark and German; `ux-review` on them; fix findings.
-- [ ] T018 [P] Reviews in parallel: `angular-reviewer` (`src/`), `electron-reviewer` only if `app/` code changed (expected: fixtures only), `spec-auditor` → `audit.md`, `domain-modeler` on Guide margin, Border, guide side, far side in code and texts; fix findings via `implementer`.
+- [x] T018 [P] Reviews in parallel: `angular-reviewer` (`src/`), `electron-reviewer` only if `app/` code changed (expected: fixtures only), `spec-auditor` → `audit.md`, `domain-modeler` on Guide margin, Border, guide side, far side in code and texts; fix findings via `implementer`.
 - [ ] T019 Gate: `npm run test`, `npm run lint`, `npm run i18n:check`, `npm run build` green; e2e green locally and in CI on three OSes (ADR 13).
-- [ ] T020 `documentation/STATUS.md`, `ROADMAP.md`, `CHANGELOG.md` `[Unreleased]` (Guide margin, Presets, `organs.json` version 6 so an older app can't read it, ADR 20); pull request with `Closes #163`.
+- [x] T020 `documentation/STATUS.md`, `ROADMAP.md`, `CHANGELOG.md` `[Unreleased]` (Guide margin, Presets, `organs.json` version 6 so an older app can't read it, ADR 20); pull request with `Closes #163`.
 - [ ] T021 (Needs the user.) Cut and play a 20er Tape with the Guide margin (SC-004); record in STATUS.
 
 ## Dependencies
