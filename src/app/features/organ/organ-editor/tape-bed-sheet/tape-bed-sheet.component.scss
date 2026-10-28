@@ -18,8 +18,11 @@ mat-card {
   flex: 1 1 auto;
   min-height: 8rem;
   overflow-y: auto;
+  overflow-x: hidden;
+  /* A stable gutter keeps the scrollbar from narrowing the columns and cutting the labels. */
+  scrollbar-gutter: stable;
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   column-gap: 16px;
   row-gap: 20px;
   /* Padding, not margin: the floated labels of the first row reach above the fields and must not be clipped. */
@@ -35,6 +38,12 @@ mat-card {
 
 .full-width {
   grid-column: 1 / -1;
+}
+
+/* The inputs have an intrinsic width; the form fields fill their grid track instead, so the full-width ones span both columns. */
+.fields mat-form-field {
+  width: 100%;
+  min-width: 0;
 }
 
 /* Pulled up into the row gap so that it reads as part of the Guide margin field above it. */

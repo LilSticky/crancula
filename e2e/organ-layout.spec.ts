@@ -47,7 +47,7 @@ test.describe('I see the whole Organ editor on one screen', () => {
     await app.close();
   });
 
-  test('1024 x 700: two rack columns, only the Pipes sheet scrolls, Tape Bed sheet and action bar in view', async () => {
+  test('1024 x 700: two rack columns, the sheets scroll inside, Tape Bed sheet, rows-fit line and action bar in view', async () => {
     const launched = await launchApp();
       const {app, window} = launched;
     await resizeWindowOrSkip(launched, 1024, 700, true);
@@ -56,8 +56,9 @@ test.describe('I see the whole Organ editor on one screen', () => {
     expect(await documentOverflow(window)).toEqual({vertical: 0, horizontal: 0});
     expect(await columnCount(window)).toBe(2);
     expect(await scrolls(window, 'pipes-sheet')).toBe(true);
-    expect(await scrolls(window, 'tape-bed-sheet')).toBe(false);
+    // The Tape Bed fields scroll inside their sheet (#208), like the Pipe rack; the rows-fit line below them stays in view.
     expect(await inView(window, 'tape-bed-sheet')).toBe(true);
+    expect(await inView(window, 'fit-check')).toBe(true);
     expect(await inView(window, 'save-organ')).toBe(true);
     await app.close();
   });
@@ -323,4 +324,52 @@ test.describe('The Tape Bed card at the README size keeps its labels, heights an
     expect(gap, `hint ${gap}px under the Guide margin field`).toBeLessThanOrEqual(8);
     await app.close();
   });
+
+  for (const language of ['en', 'de'] as const) {
+    test(`${language}: the Tape Bed fields do not scroll sideways and no field label is cut off`, async () => {
+      const launched = await launchApp();
+      const {app, window} = launched;
+      await resizeWindowOrSkip(launched, 1440, 900, true);
+      await openStreetOrganLikeTheReadme(window, language);
+
+      const fields = await window.getByTestId('tape-bed-sheet').locator('.fields').evaluate((element) => element.scrollWidth - element.clientWidth);
+      expect(fields, `fields scroll ${fields}px sideways`).toBeLessThanOrEqual(0);
+
+      const cutLabels = await window
+        .getByTestId('tape-bed-sheet')
+        .locator('mat-form-field .mdc-floating-label')
+        .evaluateAll((labels) =>
+          labels
+            .filter((label) => {
+              const range = document.createRange();
+              range.selectNodeContents(label);
+              return range.getBoundingClientRect().right > label.getBoundingClientRect().right + 0.5;
+            })
+            .map((label) => label.textContent?.trim() ?? ''),
+        );
+      expect(cutLabels, 'labels cut off').toEqual([]);
+      await app.close();
+    });
+
+    test(`${language}: in a new Organ with errors shown, no unit suffix overlaps its field label`, async () => {
+      const launched = await launchApp();
+      const {app, window} = launched;
+      await resizeWindowOrSkip(launched, 1440, 900, true);
+      await window.getByTestId('new-organ').click();
+      if (language === 'de') await window.getByTestId('language-switch').locator('[data-language="de"]').click();
+      await window.getByTestId('save-organ').click();
+
+      const unitFields = window.getByTestId('tape-bed-sheet').locator('mat-form-field').filter({has: window.locator('.mat-mdc-form-field-text-suffix')});
+      const count = await unitFields.count();
+      expect(count, 'Tape Bed fields with a unit').toBeGreaterThan(0);
+      for (let index = 0; index < count; index += 1) {
+        const field = unitFields.nth(index);
+        const label = await boxOf(field.locator('.mdc-floating-label'));
+        const suffix = await boxOf(field.locator('.mat-mdc-form-field-text-suffix'));
+        const overlaps = label.left < suffix.right - 0.5 && suffix.left < label.right - 0.5 && label.top < suffix.bottom - 0.5 && suffix.top < label.bottom - 0.5;
+        expect(overlaps, `field ${index}: label ${JSON.stringify(label)} overlaps suffix ${JSON.stringify(suffix)}`).toBe(false);
+      }
+      await app.close();
+    });
+  }
 });

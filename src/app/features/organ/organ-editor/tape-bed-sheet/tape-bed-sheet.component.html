@@ -1,134 +1,137 @@
 <mat-card appearance="outlined" data-testid="tape-bed-sheet">
   <h2 class="sheet-title">{{ 'ORGAN.EDITOR.TAPE_BED' | translate }}</h2>
   <div class="fields">
-    <mat-form-field class="full-width">
-      <mat-label>{{ 'ORGAN.EDITOR.NAME' | translate }}</mat-label>
-      <input matInput data-testid="name" [formField]="organ().name"/>
-      <ng-container ngProjectAs="mat-error">
-        @for (message of messagesAt(organ().name); track message.key) {
-          <mat-error data-testid="violation" data-path="name">{{ message.key | translate: message.params }}</mat-error>
-        }
-      </ng-container>
-    </mat-form-field>
+    <!-- Rendered afresh per language: Material sizes a floated label's notch once, so a longer translation would be cut off. -->
+    @for (language of [language()]; track language) {
+      <mat-form-field class="full-width">
+        <mat-label>{{ 'ORGAN.EDITOR.NAME' | translate }}</mat-label>
+        <input matInput data-testid="name" [formField]="organ().name"/>
+        <ng-container ngProjectAs="mat-error">
+          @for (message of messagesAt(organ().name); track message.key) {
+            <mat-error data-testid="violation" data-path="name">{{ message.key | translate: message.params }}</mat-error>
+          }
+        </ng-container>
+      </mat-form-field>
 
-    <mat-form-field>
-      <mat-label>{{ 'ORGAN.EDITOR.TAPE_WIDTH' | translate }}</mat-label>
-      <input matInput crancDecimalInput data-testid="tape-width" [formField]="organ().tapeBed.tapeWidth"/>
-      <span matTextSuffix>mm</span>
-      <ng-container ngProjectAs="mat-error">
-        @for (message of messagesAt(organ().tapeBed.tapeWidth); track message.key) {
-          <mat-error data-testid="violation" data-path="tapeBed.tapeWidth">{{ message.key | translate: message.params }}</mat-error>
-        }
-      </ng-container>
-    </mat-form-field>
-    <mat-form-field>
-      <mat-label>{{ 'ORGAN.EDITOR.HOLE_DIAMETER' | translate }}</mat-label>
-      <input matInput crancDecimalInput data-testid="hole-diameter" [formField]="organ().tapeBed.holeDiameter"/>
-      <span matTextSuffix>mm</span>
-      <ng-container ngProjectAs="mat-error">
-        @for (message of messagesAt(organ().tapeBed.holeDiameter); track message.key) {
-          <mat-error data-testid="violation" data-path="tapeBed.holeDiameter">{{ message.key | translate: message.params }}</mat-error>
-        }
-      </ng-container>
-    </mat-form-field>
-    <mat-form-field>
-      <mat-label>{{ 'ORGAN.EDITOR.ROW_SPACING' | translate }}</mat-label>
-      <input matInput crancDecimalInput data-testid="row-spacing" [formField]="organ().tapeBed.rowSpacing"/>
-      <span matTextSuffix>mm</span>
-      <ng-container ngProjectAs="mat-error">
-        @for (message of messagesAt(organ().tapeBed.rowSpacing); track message.key) {
-          <mat-error data-testid="violation" data-path="tapeBed.rowSpacing">{{ message.key | translate: message.params }}</mat-error>
-        }
-      </ng-container>
-    </mat-form-field>
-    <mat-form-field floatLabel="always">
-      <mat-label>{{ 'ORGAN.EDITOR.GUIDE_MARGIN' | translate }}</mat-label>
-      <input matInput crancDecimalInput inputmode="decimal" data-testid="guide-margin" [attr.aria-describedby]="guideMarginHintId" [formField]="organ().tapeBed.guideMargin"/>
-      <span matTextSuffix>mm</span>
-      <ng-container ngProjectAs="mat-error">
-        @for (message of messagesAt(organ().tapeBed.guideMargin); track message.key) {
-          <mat-error data-testid="violation" data-path="tapeBed.guideMargin">{{ message.key | translate: message.params }}</mat-error>
-        }
-      </ng-container>
-    </mat-form-field>
-    <p class="field-hint full-width" [id]="guideMarginHintId" data-testid="guide-margin-hint">{{ 'ORGAN.EDITOR.GUIDE_MARGIN_HINT' | translate }}</p>
-    <mat-form-field>
-      <mat-label>{{ 'ORGAN.EDITOR.MINIMUM_GAP' | translate }}</mat-label>
-      <input matInput crancDecimalInput data-testid="minimum-gap" [formField]="organ().minimumGap"/>
-      <span matTextSuffix>mm</span>
-      <ng-container ngProjectAs="mat-error">
-        @for (message of messagesAt(organ().minimumGap); track message.key) {
-          <mat-error data-testid="violation" data-path="minimumGap">{{ message.key | translate: message.params }}</mat-error>
-        }
-      </ng-container>
-    </mat-form-field>
-    <mat-form-field>
-      <mat-label>{{ 'ORGAN.EDITOR.LEAD_IN' | translate }}</mat-label>
-      <input matInput crancDecimalInput inputmode="decimal" data-testid="lead-in" [formField]="organ().leadIn"/>
-      <span matTextSuffix>mm</span>
-      <ng-container ngProjectAs="mat-error">
-        @for (message of messagesAt(organ().leadIn); track message.key) {
-          <mat-error data-testid="violation" data-path="leadIn">{{ message.key | translate: message.params }}</mat-error>
-        }
-      </ng-container>
-    </mat-form-field>
-    <mat-form-field class="full-width">
-      <mat-label>{{ 'ORGAN.EDITOR.TAPE_PER_CRANK_TURN' | translate }}</mat-label>
-      <input matInput crancDecimalInput inputmode="decimal" data-testid="tape-per-crank-turn" [formField]="organ().tapePerCrankTurn"/>
-      <span matTextSuffix>mm</span>
-      <mat-hint>{{ 'ORGAN.EDITOR.TAPE_PER_CRANK_TURN_HINT' | translate }}</mat-hint>
-      <ng-container ngProjectAs="mat-error">
-        @for (message of messagesAt(organ().tapePerCrankTurn); track message.key) {
-          <mat-error data-testid="violation" data-path="tapePerCrankTurn">{{ message.key | translate: message.params }}</mat-error>
-        }
-      </ng-container>
-    </mat-form-field>
-    <mat-form-field class="full-width">
-      <mat-label>{{ 'ORGAN.EDITOR.SLOWEST_CRANK_SPEED' | translate }}</mat-label>
-      <input matInput crancDecimalInput inputmode="decimal" data-testid="slowest-crank-speed" [formField]="organ().slowestCrankSpeed"/>
-      <span matTextSuffix>{{ 'ORGAN.EDITOR.CRANK_SPEED_UNIT' | translate }}</span>
-      <ng-container ngProjectAs="mat-error">
-        @for (message of messagesAt(organ().slowestCrankSpeed); track message.key) {
-          <mat-error data-testid="violation" data-path="slowestCrankSpeed">{{ message.key | translate: message.params }}</mat-error>
-        }
-      </ng-container>
-    </mat-form-field>
-    <mat-form-field class="full-width">
-      <mat-label>{{ 'ORGAN.EDITOR.FASTEST_CRANK_SPEED' | translate }}</mat-label>
-      <input matInput crancDecimalInput inputmode="decimal" data-testid="fastest-crank-speed" [formField]="organ().fastestCrankSpeed"/>
-      <span matTextSuffix>{{ 'ORGAN.EDITOR.CRANK_SPEED_UNIT' | translate }}</span>
-      <ng-container ngProjectAs="mat-error">
-        @for (message of messagesAt(organ().fastestCrankSpeed); track message.key) {
-          <mat-error data-testid="violation" data-path="fastestCrankSpeed">{{ message.key | translate: message.params }}</mat-error>
-        }
-      </ng-container>
-    </mat-form-field>
-    @if (guided()) {
-      <mat-form-field>
-        <mat-label>{{ 'ORGAN.EDITOR.BORDER_GUIDE_SIDE' | translate }}</mat-label>
-        <input matInput readonly class="cr-readonly" data-testid="border-guide-side" [value]="borderGuideSide()"/>
+      <mat-form-field floatLabel="always">
+        <mat-label>{{ 'ORGAN.EDITOR.TAPE_WIDTH' | translate }}</mat-label>
+        <input matInput crancDecimalInput data-testid="tape-width" [formField]="organ().tapeBed.tapeWidth"/>
         <span matTextSuffix>mm</span>
-        <mat-hint>{{ 'ORGAN.EDITOR.BORDER_SIDES_HINT' | translate }}</mat-hint>
+        <ng-container ngProjectAs="mat-error">
+          @for (message of messagesAt(organ().tapeBed.tapeWidth); track message.key) {
+            <mat-error data-testid="violation" data-path="tapeBed.tapeWidth">{{ message.key | translate: message.params }}</mat-error>
+          }
+        </ng-container>
       </mat-form-field>
-      <mat-form-field>
-        <mat-label>{{ 'ORGAN.EDITOR.BORDER_FAR_SIDE' | translate }}</mat-label>
-        <input matInput readonly class="cr-readonly" data-testid="border-far-side" [value]="borderFarSide()"/>
+      <mat-form-field floatLabel="always">
+        <mat-label>{{ 'ORGAN.EDITOR.HOLE_DIAMETER' | translate }}</mat-label>
+        <input matInput crancDecimalInput data-testid="hole-diameter" [formField]="organ().tapeBed.holeDiameter"/>
         <span matTextSuffix>mm</span>
+        <ng-container ngProjectAs="mat-error">
+          @for (message of messagesAt(organ().tapeBed.holeDiameter); track message.key) {
+            <mat-error data-testid="violation" data-path="tapeBed.holeDiameter">{{ message.key | translate: message.params }}</mat-error>
+          }
+        </ng-container>
       </mat-form-field>
-    } @else {
-      <mat-form-field>
-        <mat-label>{{ 'ORGAN.EDITOR.BORDER' | translate }}</mat-label>
-        <input matInput readonly class="cr-readonly" data-testid="border" [value]="border()"/>
+      <mat-form-field class="full-width" floatLabel="always">
+        <mat-label>{{ 'ORGAN.EDITOR.ROW_SPACING' | translate }}</mat-label>
+        <input matInput crancDecimalInput data-testid="row-spacing" [formField]="organ().tapeBed.rowSpacing"/>
         <span matTextSuffix>mm</span>
-        <mat-hint>{{ 'ORGAN.EDITOR.BORDER_HINT' | translate }}</mat-hint>
+        <ng-container ngProjectAs="mat-error">
+          @for (message of messagesAt(organ().tapeBed.rowSpacing); track message.key) {
+            <mat-error data-testid="violation" data-path="tapeBed.rowSpacing">{{ message.key | translate: message.params }}</mat-error>
+          }
+        </ng-container>
+      </mat-form-field>
+      <mat-form-field class="full-width" floatLabel="always">
+        <mat-label>{{ 'ORGAN.EDITOR.GUIDE_MARGIN' | translate }}</mat-label>
+        <input matInput crancDecimalInput inputmode="decimal" data-testid="guide-margin" [attr.aria-describedby]="guideMarginHintId" [formField]="organ().tapeBed.guideMargin"/>
+        <span matTextSuffix>mm</span>
+        <ng-container ngProjectAs="mat-error">
+          @for (message of messagesAt(organ().tapeBed.guideMargin); track message.key) {
+            <mat-error data-testid="violation" data-path="tapeBed.guideMargin">{{ message.key | translate: message.params }}</mat-error>
+          }
+        </ng-container>
+      </mat-form-field>
+      <p class="field-hint full-width" [id]="guideMarginHintId" data-testid="guide-margin-hint">{{ 'ORGAN.EDITOR.GUIDE_MARGIN_HINT' | translate }}</p>
+      <mat-form-field floatLabel="always">
+        <mat-label>{{ 'ORGAN.EDITOR.MINIMUM_GAP' | translate }}</mat-label>
+        <input matInput crancDecimalInput data-testid="minimum-gap" [formField]="organ().minimumGap"/>
+        <span matTextSuffix>mm</span>
+        <ng-container ngProjectAs="mat-error">
+          @for (message of messagesAt(organ().minimumGap); track message.key) {
+            <mat-error data-testid="violation" data-path="minimumGap">{{ message.key | translate: message.params }}</mat-error>
+          }
+        </ng-container>
+      </mat-form-field>
+      <mat-form-field floatLabel="always">
+        <mat-label>{{ 'ORGAN.EDITOR.LEAD_IN' | translate }}</mat-label>
+        <input matInput crancDecimalInput inputmode="decimal" data-testid="lead-in" [formField]="organ().leadIn"/>
+        <span matTextSuffix>mm</span>
+        <ng-container ngProjectAs="mat-error">
+          @for (message of messagesAt(organ().leadIn); track message.key) {
+            <mat-error data-testid="violation" data-path="leadIn">{{ message.key | translate: message.params }}</mat-error>
+          }
+        </ng-container>
+      </mat-form-field>
+      <mat-form-field class="full-width" floatLabel="always">
+        <mat-label>{{ 'ORGAN.EDITOR.TAPE_PER_CRANK_TURN' | translate }}</mat-label>
+        <input matInput crancDecimalInput inputmode="decimal" data-testid="tape-per-crank-turn" [formField]="organ().tapePerCrankTurn"/>
+        <span matTextSuffix>mm</span>
+        <mat-hint>{{ 'ORGAN.EDITOR.TAPE_PER_CRANK_TURN_HINT' | translate }}</mat-hint>
+        <ng-container ngProjectAs="mat-error">
+          @for (message of messagesAt(organ().tapePerCrankTurn); track message.key) {
+            <mat-error data-testid="violation" data-path="tapePerCrankTurn">{{ message.key | translate: message.params }}</mat-error>
+          }
+        </ng-container>
+      </mat-form-field>
+      <mat-form-field class="full-width" floatLabel="always">
+        <mat-label>{{ 'ORGAN.EDITOR.SLOWEST_CRANK_SPEED' | translate }}</mat-label>
+        <input matInput crancDecimalInput inputmode="decimal" data-testid="slowest-crank-speed" [formField]="organ().slowestCrankSpeed"/>
+        <span matTextSuffix>{{ 'ORGAN.EDITOR.CRANK_SPEED_UNIT' | translate }}</span>
+        <ng-container ngProjectAs="mat-error">
+          @for (message of messagesAt(organ().slowestCrankSpeed); track message.key) {
+            <mat-error data-testid="violation" data-path="slowestCrankSpeed">{{ message.key | translate: message.params }}</mat-error>
+          }
+        </ng-container>
+      </mat-form-field>
+      <mat-form-field class="full-width" floatLabel="always">
+        <mat-label>{{ 'ORGAN.EDITOR.FASTEST_CRANK_SPEED' | translate }}</mat-label>
+        <input matInput crancDecimalInput inputmode="decimal" data-testid="fastest-crank-speed" [formField]="organ().fastestCrankSpeed"/>
+        <span matTextSuffix>{{ 'ORGAN.EDITOR.CRANK_SPEED_UNIT' | translate }}</span>
+        <ng-container ngProjectAs="mat-error">
+          @for (message of messagesAt(organ().fastestCrankSpeed); track message.key) {
+            <mat-error data-testid="violation" data-path="fastestCrankSpeed">{{ message.key | translate: message.params }}</mat-error>
+          }
+        </ng-container>
+      </mat-form-field>
+      @if (guided()) {
+        <mat-form-field floatLabel="always">
+          <mat-label>{{ 'ORGAN.EDITOR.BORDER_GUIDE_SIDE' | translate }}</mat-label>
+          <input matInput readonly class="cr-readonly" data-testid="border-guide-side" [value]="borderGuideSide()"/>
+          <span matTextSuffix>mm</span>
+          <mat-hint>{{ 'ORGAN.EDITOR.BORDER_SIDES_HINT' | translate }}</mat-hint>
+        </mat-form-field>
+        <mat-form-field floatLabel="always">
+          <mat-label>{{ 'ORGAN.EDITOR.BORDER_FAR_SIDE' | translate }}</mat-label>
+          <input matInput readonly class="cr-readonly" data-testid="border-far-side" [value]="borderFarSide()"/>
+          <span matTextSuffix>mm</span>
+        </mat-form-field>
+      } @else {
+        <mat-form-field class="full-width" floatLabel="always">
+          <mat-label>{{ 'ORGAN.EDITOR.BORDER' | translate }}</mat-label>
+          <input matInput readonly class="cr-readonly" data-testid="border" [value]="border()"/>
+          <span matTextSuffix>mm</span>
+          <mat-hint>{{ 'ORGAN.EDITOR.BORDER_HINT' | translate }}</mat-hint>
+        </mat-form-field>
+      }
+      <mat-form-field class="full-width" floatLabel="always">
+        <mat-label>{{ 'ORGAN.EDITOR.MINIMUM_HOLE_LENGTH' | translate }}</mat-label>
+        <input matInput readonly class="cr-readonly" data-testid="minimum-hole-length" [value]="minimumHoleLength()"/>
+        <span matTextSuffix>mm</span>
+        <mat-hint>{{ 'ORGAN.EDITOR.MINIMUM_HOLE_LENGTH_HINT' | translate }}</mat-hint>
       </mat-form-field>
     }
-    <mat-form-field>
-      <mat-label>{{ 'ORGAN.EDITOR.MINIMUM_HOLE_LENGTH' | translate }}</mat-label>
-      <input matInput readonly class="cr-readonly" data-testid="minimum-hole-length" [value]="minimumHoleLength()"/>
-      <span matTextSuffix>mm</span>
-      <mat-hint>{{ 'ORGAN.EDITOR.MINIMUM_HOLE_LENGTH_HINT' | translate }}</mat-hint>
-    </mat-form-field>
   </div>
   @if (fit(); as fit) {
     <p class="fit-check" data-testid="fit-check" aria-live="polite" [class.error]="fit.tooWide">
