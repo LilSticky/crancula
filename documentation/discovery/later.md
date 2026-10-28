@@ -67,6 +67,18 @@ Open: the rule for minor versus patch releases (Edit a tape shipped as 0.1.1) is
 in the `release` skill or ADR 19. The terms of sections 2-4 were approved by the user on 2026-10-25 and are in
 DICTIONARY.md.
 
+## Decisions (user, 2026-10-28)
+
+| # | Slice | Question | Decision |
+|---|-------|----------|----------|
+| 35 | Off-centre rows on a Tape Bed | What the user enters | The Guide margin: guide edge to the centre of row 1, as gamma files give it (Raffin 20er: 10 mm); the far-side Border stays derived |
+| 36 | Off-centre rows on a Tape Bed | Which edge is the guide edge | Row 1's edge, the top edge in the Tape view; nothing in the view flips, no choice per Tape Bed |
+| 37 | Off-centre rows on a Tape Bed | Default | Empty Guide margin = centred rows; existing Organs migrate unchanged, the field is optional in the Organ editor |
+| 38 | Off-centre rows on a Tape Bed | Term | Guide margin (Führungsrand), approved 2026-10-28; Border becomes per side |
+
+Slice issue: Off-centre rows on a Tape Bed [#163](https://github.com/LilSticky/crancula/issues/163). The 20er Preset
+update waits on [#162](https://github.com/LilSticky/crancula/issues/162).
+
 ## 1. Crank a tape
 
 ### What exists today (facts)
