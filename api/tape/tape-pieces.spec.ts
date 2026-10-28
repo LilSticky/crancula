@@ -164,6 +164,22 @@ describe('tapePieces', () => {
     expect(piecesOf(tapeWith(organ, 3, 200), organ, plotter)).toEqual(referenceCut);
   });
 
+  it('cuts a guided Tape without Holes at the same Joins as the centred one: a Guide margin moves rows, not Joins', () => {
+    const guided = validateOrgan({
+      name: 'Reference organ, guided',
+      tapeBed: {tapeWidth: 100, holeDiameter: 3, rowSpacing: 4, guideMargin: 10},
+      minimumGap: 2,
+      leadIn: 50,
+      slowestCrankSpeed: 30,
+      fastestCrankSpeed: 120,
+      tapePerCrankTurn: null,
+      pipes: Array.from({length: 10}, (_, row) => ({note: 60 + row})),
+    });
+    if (!guided.ok) throw new Error('invalid guided reference Organ');
+
+    expect(piecesOf(tapeWith(guided.value, 3, 200), guided.value, plotter)).toEqual(referenceCut);
+  });
+
   it('keeps a Tape that fits the working length in one piece', () => {
     // 50 mm Lead-in, 80 Columns of 3 mm and the 2 mm end gap: 292 mm.
     expect(piecesOf(tapeWith(organ, 3, 80), organ, plotter)).toEqual({

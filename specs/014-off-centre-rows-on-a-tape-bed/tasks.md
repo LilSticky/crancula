@@ -43,13 +43,13 @@ description: "Tasks for 014 Off-centre rows on a Tape Bed"
 
 ## Phase 4: US2 Tape follows the Guide margin (P1)
 
-- [ ] T012 Red: `api/tape/plotter-svg.spec.ts` (or the existing SVG spec): a guided 20er Tape puts row 1's Hole centres 10 mm from the top edge (± 0.01); a centred Organ's SVG is byte-identical to a stored expectation; `tape-pieces` and `side-by-side-cut` specs: one guided case each. `src/app/features/organ/tape-bed-miniature.spec.ts`: guided row centres. `src/app/features/tape/tape-view/pointer-at.spec.ts`: guided rows hit where drawn; one-row Organ: every y on the Tape hits row 1 (R6).
-- [ ] T013 Green: whatever T012 shows red: `tape-bed-miniature.ts`, `pointer-at.ts` (expected), others only if a test fails.
+- [x] T012 Red: `api/tape/plotter-svg.spec.ts` (or the existing SVG spec): a guided 20er Tape puts row 1's Hole centres 10 mm from the top edge (± 0.01); a centred Organ's SVG is byte-identical to a stored expectation; `tape-pieces` and `side-by-side-cut` specs: one guided case each. `src/app/features/organ/tape-bed-miniature.spec.ts`: guided row centres. `src/app/features/tape/tape-view/pointer-at.spec.ts`: guided rows hit where drawn; one-row Organ: every y on the Tape hits row 1 (R6).
+- [x] T013 Green: whatever T012 shows red: `tape-bed-miniature.ts`, `pointer-at.ts` (expected), others only if a test fails.
 
 ## Phase 5: US4 Presets (P3)
 
-- [ ] T014 Red: `api/organ/organ-preset.spec.ts` and `organ-editor-presets.spec.ts`: 20er fills `guideMargin` 10 (far side 25.35), 31er 11 (far side 11.95).
-- [ ] T015 Green: `api/organ/organ-preset.ts` values and doc comment (R7).
+- [x] T014 Red: `api/organ/organ-preset.spec.ts` and `organ-editor-presets.spec.ts`: 20er fills `guideMargin` 10 (far side 25.35), 31er 11 (far side 11.95).
+- [x] T015 Green: `api/organ/organ-preset.ts` values and doc comment (R7).
 
 ## Phase 6: US1–US3 in Electron
 

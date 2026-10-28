@@ -1,12 +1,13 @@
 import {describe, expect, it} from 'vitest';
 import type {OrganDraft} from './organ-draft';
+import {borders} from './organ';
 import {ORGAN_PRESETS, organPreset} from './organ-preset';
 import {validateOrgan} from './validate-organ';
 
-/** Measures from Wally Venable's MIDIBoek gamma files (issue #162), Annotated-20-Raffin.gam. */
+/** Measures from Wally Venable's MIDIBoek gamma files (issue #162), Annotated-20-Raffin.gam; Guide margin 10 mm (#163). */
 const DREHORGEL_20ER_DRAFT: OrganDraft = {
   name: '20er-Drehorgel',
-  tapeBed: {tapeWidth: 110, holeDiameter: 3, rowSpacing: 3.85, guideMargin: null},
+  tapeBed: {tapeWidth: 110, holeDiameter: 3, rowSpacing: 3.85, guideMargin: 10},
   minimumGap: 3,
   leadIn: 30,
   slowestCrankSpeed: 40,
@@ -15,10 +16,10 @@ const DREHORGEL_20ER_DRAFT: OrganDraft = {
   pipes: [53, 58, 60, 62, 63, 64, 65, 67, 69, 70, 72, 74, 75, 76, 77, 79, 81, 82, 84, 86].map((note) => ({note})),
 };
 
-/** Measures from Wally Venable's MIDIBoek gamma files (issue #162), 31-raffin-wsv-arranging.gam. */
+/** Measures from Wally Venable's MIDIBoek gamma files (issue #162), 31-raffin-wsv-arranging.gam; Guide margin 11 mm (#163). */
 const DREHORGEL_31ER_DRAFT: OrganDraft = {
   name: '31er-Drehorgel',
-  tapeBed: {tapeWidth: 140, holeDiameter: 2.5, rowSpacing: 3.86, guideMargin: null},
+  tapeBed: {tapeWidth: 140, holeDiameter: 2.5, rowSpacing: 3.86, guideMargin: 11},
   minimumGap: 3,
   leadIn: 30,
   slowestCrankSpeed: 40,
@@ -54,6 +55,20 @@ describe('ORGAN_PRESETS', () => {
   it('gives the 20er-Drehorgel the notes F3 to D6 (MIDI 53 to 86)', () => {
     const notes = organPreset('drehorgel-20er')?.draft.pipes.map((pipe) => pipe.note);
     expect([notes?.[0], notes?.at(-1)]).toEqual([53, 86]);
+  });
+
+  it.each([
+    ['drehorgel-20er', 10, 8.5, 25.35],
+    ['drehorgel-31er', 11, 9.75, 11.95],
+  ] as const)('%s starts with a Guide margin of %d mm: guide side %d mm, far side %d mm', (id, guideMargin, guide, far) => {
+    const draft = organPreset(id)?.draft;
+    if (!draft) throw new Error(`no preset ${id}`);
+    const organ = validateOrgan(draft);
+    if (!organ.ok) throw new Error(`invalid preset ${id}`);
+
+    expect(draft.tapeBed.guideMargin).toBe(guideMargin);
+    expect(borders(organ.value).guide).toBeCloseTo(guide, 9);
+    expect(borders(organ.value).far).toBeCloseTo(far, 9);
   });
 
   it.each([

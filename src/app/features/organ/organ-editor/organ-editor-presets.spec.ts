@@ -74,6 +74,18 @@ describe('OrganEditorComponent presets', () => {
     expect(element.querySelectorAll('[data-testid="pipe"]')).toHaveLength(31);
   });
 
+  it.each([
+    ['drehorgel-20er', '10', '8.5 mm guide side · 25.35 mm far side'],
+    ['drehorgel-31er', '11', '9.75 mm guide side · 11.95 mm far side'],
+  ] as const)('fills the Guide margin of %s and shows both Borders of it', async (presetId, guideMargin, border) => {
+    const {choose, field} = await open();
+
+    await choose(presetId);
+
+    expect(field('guide-margin').value).toBe(guideMargin);
+    expect(field('border').value).toBe(border);
+  });
+
   it('does not offer presets for a stored Organ', async () => {
     const organ = testOrgan('Mine');
     await TestBed.inject(OrganLibrary).put(organ);

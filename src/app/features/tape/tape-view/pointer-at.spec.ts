@@ -16,6 +16,23 @@ const geometry: TapeGeometry = {
 };
 const SCALE = 2;
 
+// A Tape 110 mm wide with a Guide margin of 10 mm and 3 mm holes 3.85 mm apart: row 1 at 10 mm, rows 2 and 3 below it.
+const guided: TapeGeometry = {
+  leadIn: 20,
+  columnLength: 2.5,
+  length: 250,
+  width: 110,
+  borders: {guide: 8.5, far: 90.8},
+  rowCentres: [10, 13.85, 17.7],
+  endGap: 2,
+  totalLength: 272,
+  slots: [],
+  outline: {tip: {x: 0, y: 0}, topEnd: {x: 272, y: 0}, bottomEnd: {x: 272, y: 110}, columnOneBottom: {x: 20, y: 110}},
+};
+
+// The same Tape with one row: the only row sits at 10 mm, so every y on the Tape is near it.
+const oneRow: TapeGeometry = {...guided, rowCentres: [10], borders: {guide: 8.5, far: 98.5}};
+
 // x is measured from the left edge of the drawing (the Lead-in included), y from the top edge of the Tape.
 describe('pointerAt', () => {
   it('names the Column the pointer is over, counted from 1 at the end of the Lead-in, and the mm it starts at', () => {
@@ -36,6 +53,20 @@ describe('pointerAt', () => {
     // row 1 centre at 20 px, half a row spacing is 10 px
     expect(pointerAt(100, 2, SCALE, geometry)).toMatchObject({column: expect.any(Number), row: undefined});
     expect(pointerAt(100, 79, SCALE, geometry)?.row).toBeUndefined();
+  });
+
+  it('names on a guided Tape the row that is drawn under the pointer, row 1 at the Guide margin', () => {
+    guided.rowCentres.forEach((centre, index) => {
+      expect(pointerAt(100, centre * SCALE, SCALE, guided)?.row).toBe(index + 1);
+    });
+    // Between the guide edge and row 1, 5 mm from every row: no row.
+    expect(pointerAt(100, 5 * SCALE, SCALE, guided)?.row).toBeUndefined();
+  });
+
+  it('names row 1 at every y on a Tape with one row, the Borders included', () => {
+    for (let y = 0; y <= oneRow.width; y += 1) {
+      expect(pointerAt(40, y * SCALE, SCALE, oneRow)?.row).toBe(1);
+    }
   });
 
   it('names nothing over the Lead-in', () => {
