@@ -46,12 +46,12 @@ interface TapeRow {
     <cranc-page-head [title]="'TAPE.LIST.TITLE' | translate" [subtitle]="'TAPE.LIST.SUBTITLE' | translate">
       <ng-container ngProjectAs="[pageHeadActions]">
         @if (shownTicked().length > 0) {
-          <button matButton="outlined" type="button" data-testid="cut-side-by-side" (click)="cutSideBySide()">
+          <button matButton="filled" type="button" data-testid="cut-side-by-side" (click)="cutSideBySide()">
             {{ 'TAPE.LIST.CUT_SIDE_BY_SIDE' | translate: {count: shownTicked().length} }}
           </button>
         }
         @if (rows().length > 0) {
-          <a matButton="filled" routerLink="/tapes/new" data-testid="new-tape">
+          <a [matButton]="shownTicked().length > 0 ? 'outlined' : 'filled'" routerLink="/tapes/new" data-testid="new-tape">
             <mat-icon>add</mat-icon>
             {{ 'TAPE.LIST.NEW' | translate }}
           </a>
@@ -90,7 +90,11 @@ interface TapeRow {
       <mat-card appearance="outlined">
         <table mat-table class="cr-ledger" [dataSource]="rows()" [trackBy]="trackRow">
           <ng-container matColumnDef="tick">
-            <th mat-header-cell *matHeaderCellDef><span class="cdk-visually-hidden">{{ 'TAPE.SIDE_BY_SIDE.TITLE' | translate }}</span></th>
+            <th mat-header-cell *matHeaderCellDef>
+              <span class="cdk-visually-hidden">{{ 'TAPE.SIDE_BY_SIDE.TITLE' | translate }}</span>
+              <mat-checkbox data-testid="tick-all" [checked]="allTicked()" (change)="toggleAll()"
+                            [aria-label]="'TAPE.LIST.TICK_ALL' | translate"/>
+            </th>
             <td mat-cell *matCellDef="let row">
               <mat-checkbox data-testid="tick-tape" [checked]="isTicked(row.tape.id)" [disabled]="row.organ === undefined"
                             (change)="toggleTick(row.tape.id)"
@@ -218,6 +222,18 @@ export class TapeListComponent {
     return this.ticked().filter((id) => shown.has(id));
   });
 
+  /** The Tapes of the list that can be ticked: those whose Organ is available. */
+  private readonly tickable = computed<readonly TapeId[]>(() =>
+    this.rows().flatMap((row) => (row.organ === undefined ? [] : [row.tape.id])),
+  );
+
+  /** Whether every Tape that can be ticked is ticked; false while there is none. */
+  protected readonly allTicked = computed(() => {
+    const ticked = this.ticked();
+    const tickable = this.tickable();
+    return tickable.length > 0 && tickable.every((id) => ticked.includes(id));
+  });
+
   /** The Organ named by the `organ` query parameter; `undefined` without it or for an unknown id. */
   protected readonly filterOrgan = computed(() => {
     const id = this.organParameter();
@@ -255,6 +271,16 @@ export class TapeListComponent {
 
   protected toggleTick(id: TapeId): void {
     this.ticked.update((ids) => (ids.includes(id) ? ids.filter((ticked) => ticked !== id) : [...ids, id]));
+  }
+
+  /** Ticks every Tape of the list that can be ticked, or unticks them all when they are all ticked. */
+  protected toggleAll(): void {
+    const tickable = this.tickable();
+    if (this.allTicked()) {
+      this.ticked.update((ids) => ids.filter((id) => !tickable.includes(id)));
+    } else {
+      this.ticked.update((ids) => [...ids, ...tickable.filter((id) => !ids.includes(id))]);
+    }
   }
 
   protected cutSideBySide(): void {
