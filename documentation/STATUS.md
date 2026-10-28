@@ -14,7 +14,13 @@ None. The last one, [014 Off-centre rows on a Tape Bed (#163)](../specs/014-off-
 side (guide side, far side), Organs snapshot v6, Guide margins on the 20er and 31er Presets. Its T017 (`ux:screens` and
 `ux-review` of the Organ editor, a small field change) was not done.
 
-**Next step:** [#198](https://github.com/LilSticky/crancula/issues/198) (side-by-side UX follow-ups).
+[#198](https://github.com/LilSticky/crancula/issues/198) (side-by-side UX follow-ups, branch `198-side-by-side-ux`) is done:
+Whole Tape / 1:1 zoom, hatched overflow, Save disabled with its reason without a roll plotter, an all/none tick box and the
+Cutting Problems count in the Tape list, Lane rows in measure columns, the Tape spacing hint in the card subtitle
+([tasks-198.md](../specs/013-cut-several-tapes-side-by-side/tasks-198.md),
+[review-angular-198.md](../specs/013-cut-several-tapes-side-by-side/review-angular-198.md), all fixed).
+
+**Next step:** release v0.3.0 (`/release`; version decided by the user on 2026-10-28, hand checks below stay open).
 Nothing has been released since v0.2.0 (2026-10-24); `[Unreleased]` in the CHANGELOG holds Presets, Record, Scores in and
 out, Plotters and Tape pieces, side by side and the Guide margin, so a release (`/release`) is due.
 
@@ -33,7 +39,6 @@ These need the user, a real file or a real machine; the automated tests pass.
 
 ## Follow-ups
 
-- [#198](https://github.com/LilSticky/crancula/issues/198): side-by-side UX follow-ups from the slice 013 review.
 - Lead-in label in the Tape drawing (ux-review finding 11, not filed).
 
 ## Known broken / WIP

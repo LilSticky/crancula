@@ -13,7 +13,7 @@ import {MatTooltip} from '@angular/material/tooltip';
 import {ActivatedRoute, Router, RouterLink} from '@angular/router';
 import {TranslatePipe} from '@ngx-translate/core';
 import {map} from 'rxjs';
-import {type Organ, type Tape, type TapeId, tapeLengthInMillimetres} from '@api/index';
+import {cuttingProblems, type Organ, type Tape, type TapeId, tapeLengthInMillimetres} from '@api/index';
 import {ConfirmableAction, ConfirmDialogComponent} from '../../shared/components/confirm-dialog/confirm-dialog.component';
 import {PageHeadComponent} from '../../shared/components/page-head/page-head.component';
 import {formatNumber} from '../../shared/format-number';
@@ -30,8 +30,15 @@ interface TapeRow {
   readonly name: string;
   /** `undefined` when the Organ is not available. */
   readonly organ: Organ | undefined;
+  /** The Cutting Problems of the Tape on its Organ; 0 while the Organ is not available. */
+  readonly problems: number;
   readonly columns: string;
   readonly lengthInMillimetres: string;
+}
+
+/** The Cutting Problems of `tape` on its Organ, or 0 while the Organ is not available. */
+function problemsOf(tape: Tape, organ: Organ | undefined): number {
+  return organ === undefined ? 0 : cuttingProblems(tape, organ).length;
 }
 
 @Component({
@@ -46,12 +53,12 @@ interface TapeRow {
     <cranc-page-head [title]="'TAPE.LIST.TITLE' | translate" [subtitle]="'TAPE.LIST.SUBTITLE' | translate">
       <ng-container ngProjectAs="[pageHeadActions]">
         @if (shownTicked().length > 0) {
-          <button matButton="outlined" type="button" data-testid="cut-side-by-side" (click)="cutSideBySide()">
+          <button matButton="filled" type="button" data-testid="cut-side-by-side" (click)="cutSideBySide()">
             {{ 'TAPE.LIST.CUT_SIDE_BY_SIDE' | translate: {count: shownTicked().length} }}
           </button>
         }
         @if (rows().length > 0) {
-          <a matButton="filled" routerLink="/tapes/new" data-testid="new-tape">
+          <a [matButton]="shownTicked().length > 0 ? 'outlined' : 'filled'" routerLink="/tapes/new" data-testid="new-tape">
             <mat-icon>add</mat-icon>
             {{ 'TAPE.LIST.NEW' | translate }}
           </a>
@@ -90,7 +97,11 @@ interface TapeRow {
       <mat-card appearance="outlined">
         <table mat-table class="cr-ledger" [dataSource]="rows()" [trackBy]="trackRow">
           <ng-container matColumnDef="tick">
-            <th mat-header-cell *matHeaderCellDef><span class="cdk-visually-hidden">{{ 'TAPE.SIDE_BY_SIDE.TITLE' | translate }}</span></th>
+            <th mat-header-cell *matHeaderCellDef>
+              <span class="cdk-visually-hidden">{{ 'TAPE.SIDE_BY_SIDE.TITLE' | translate }}</span>
+              <mat-checkbox data-testid="tick-all" [checked]="allTicked()" [indeterminate]="someTicked()" (change)="toggleAll()"
+                            [aria-label]="'TAPE.LIST.TICK_ALL' | translate"/>
+            </th>
             <td mat-cell *matCellDef="let row">
               <mat-checkbox data-testid="tick-tape" [checked]="isTicked(row.tape.id)" [disabled]="row.organ === undefined"
                             (change)="toggleTick(row.tape.id)"
@@ -106,6 +117,9 @@ interface TapeRow {
                 <a class="name" data-testid="open-tape" (click)="$event.stopPropagation()" [routerLink]="['/tapes', row.tape.id]">
                   <span data-testid="tape-name">{{ row.tape.name }}</span>
                 </a>
+              }
+              @if (row.problems > 0) {
+                <span class="problems" data-testid="tape-problems">{{ (row.problems === 1 ? 'TAPE.CUTTING_PROBLEMS.COUNT_ONE' : 'TAPE.CUTTING_PROBLEMS.COUNT') | translate: {count: number(row.problems)} }}</span>
               }
             </td>
           </ng-container>
@@ -173,6 +187,11 @@ interface TapeRow {
       color: var(--mat-sys-on-surface-variant);
     }
 
+    .problems {
+      display: block;
+      color: var(--mat-sys-error);
+    }
+
     .filter {
       display: inline-flex;
       align-items: center;
@@ -218,6 +237,24 @@ export class TapeListComponent {
     return this.ticked().filter((id) => shown.has(id));
   });
 
+  /** The Tapes of the list that can be ticked: those whose Organ is available. */
+  private readonly tickable = computed<readonly TapeId[]>(() =>
+    this.rows().flatMap((row) => (row.organ === undefined ? [] : [row.tape.id])),
+  );
+
+  /** Whether every Tape that can be ticked is ticked; false while there is none. */
+  protected readonly allTicked = computed(() => {
+    const ticked = this.ticked();
+    const tickable = this.tickable();
+    return tickable.length > 0 && tickable.every((id) => ticked.includes(id));
+  });
+
+  /** Whether some, but not all, of the Tapes that can be ticked are ticked: the header tick box then shows indeterminate. */
+  protected readonly someTicked = computed(() => {
+    const ticked = this.ticked();
+    return !this.allTicked() && this.tickable().some((id) => ticked.includes(id));
+  });
+
   /** The Organ named by the `organ` query parameter; `undefined` without it or for an unknown id. */
   protected readonly filterOrgan = computed(() => {
     const id = this.organParameter();
@@ -235,6 +272,7 @@ export class TapeListComponent {
         tape,
         name: tape.name,
         organ: organsById.get(tape.organId),
+        problems: problemsOf(tape, organsById.get(tape.organId)),
         columns: formatNumber(tape.length, language),
         lengthInMillimetres: formatNumber(tapeLengthInMillimetres(tape), language),
       }));
@@ -243,6 +281,11 @@ export class TapeListComponent {
 
   protected trackRow(_index: number, row: TapeRow): string {
     return row.tape.id;
+  }
+
+  /** A number as text in the language of the app. */
+  protected number(value: number): string {
+    return formatNumber(value, this.language());
   }
 
   protected open(row: TapeRow): void {
@@ -255,6 +298,16 @@ export class TapeListComponent {
 
   protected toggleTick(id: TapeId): void {
     this.ticked.update((ids) => (ids.includes(id) ? ids.filter((ticked) => ticked !== id) : [...ids, id]));
+  }
+
+  /** Ticks every Tape of the list that can be ticked, or unticks them all when they are all ticked. */
+  protected toggleAll(): void {
+    const tickable = this.tickable();
+    if (this.allTicked()) {
+      this.ticked.update((ids) => ids.filter((id) => !tickable.includes(id)));
+    } else {
+      this.ticked.update((ids) => [...ids, ...tickable.filter((id) => !ids.includes(id))]);
+    }
   }
 
   protected cutSideBySide(): void {

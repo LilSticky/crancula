@@ -31,6 +31,7 @@ import {
   validatePlotter,
 } from '@api/index';
 import {tapeOf} from '@api/tape/tape-fixture';
+import {pixelsPerMillimetre} from '../tape-view/pixels-per-millimetre';
 import {encodeSmf} from '../../../../../api/song/midi/smf-test-helper';
 import {CRANCULA_API, createInMemoryCranculaApi, type InMemoryCranculaApi} from '../../../core/crancula-api.token';
 import {testOrgan} from '../../../../testing/organs';
@@ -161,6 +162,29 @@ async function open(view: Awaited<ReturnType<typeof setUp>>, tapeList: readonly 
   return {fixture, element: fixture.nativeElement as HTMLElement};
 }
 
+/** The drawing of the roll, the SVG to scale. */
+function svgOf(element: HTMLElement): SVGSVGElement {
+  const svg = element.querySelector<SVGSVGElement>('[data-testid="side-by-side-drawing"]');
+  if (!svg) throw new Error('no side-by-side-drawing');
+  return svg;
+}
+
+/** The zoom choices in their order: Whole Tape, then 1:1. */
+function zoomButtons(element: HTMLElement): HTMLButtonElement[] {
+  return [...element.querySelectorAll<HTMLButtonElement>('[data-testid="zoom"] button')];
+}
+
+function oneToOneButton(element: HTMLElement): HTMLButtonElement {
+  const button = zoomButtons(element).at(1);
+  if (!button) throw new Error('no 1:1 zoom button');
+  return button;
+}
+
+/** The id of the pattern a fill refers to, from `url(#id)`; undefined for any other fill. */
+function patternIdOf(fill: string | null): string | undefined {
+  return /^url\(#(.+)\)$/.exec(fill ?? '')?.[1];
+}
+
 function rows(element: HTMLElement): HTMLElement[] {
   return [...element.querySelectorAll<HTMLElement>('[data-testid="lane"]')];
 }
@@ -236,6 +260,19 @@ function withoutPipe(tape: Tape): Tape {
   const length = columnCount(3);
   if (note === undefined || start === undefined || length === undefined) throw new Error('invalid test Hole');
   return tapeOf({...tape, holes: [...tape.holes, {pipe: note, start, length}]});
+}
+
+/** The measure columns of a Lane row, in order; every row has all of them, empty or not. */
+const MEASURE_COLUMNS = ['number', 'tape', 'organ', 'marks', 'width', 'length', 'actions'];
+
+/** The column names of the cells of a Lane row, in order. */
+function columnsOf(row: HTMLElement): string[] {
+  return [...row.children].map((cell) => cell.getAttribute('data-column') ?? '');
+}
+
+/** The cell of the Lane row in the measure column `column`, or null when the row has none. */
+function cellIn(row: HTMLElement, column: string): HTMLElement | null {
+  return row.querySelector<HTMLElement>(`:scope > [data-column="${column}"]`);
 }
 
 /** The mark of the Lane row with `testId`, or null when the row has none. */
@@ -326,12 +363,12 @@ describe('SideBySideComponent', () => {
 
     saveButton(element).click();
     fixture.detectChanges();
-    expect(saveButton(element).disabled).toBe(true);
+    expect(saveButton(element).getAttribute('aria-disabled')).toBe('true');
 
     finish();
     await fixture.whenStable();
     fixture.detectChanges();
-    expect(saveButton(element).disabled).toBe(false);
+    expect(saveButton(element).getAttribute('aria-disabled')).toBeNull();
   });
 
   it('writes nothing to localStorage while the Lanes are shown and saved', async () => {
@@ -379,6 +416,49 @@ describe('SideBySideComponent', () => {
 
     expect(laneMark(element, 'lane-outline', 3).classList.contains('overflow')).toBe(true);
     expect(laneMark(element, 'lane-outline', 1).classList.contains('overflow')).toBe(false);
+  });
+
+  it('offers Whole Tape and 1:1 in a toggle group named Zoom, Whole Tape pressed', async () => {
+    const view = await setUp();
+    const {element} = await open(view, [view.reference]);
+
+    expect(element.querySelector('[data-testid="zoom"]')?.getAttribute('aria-label')).toBe('Zoom');
+    expect(zoomButtons(element).map((button) => button.textContent?.trim())).toEqual(['Whole Tape', '1:1']);
+    expect(zoomButtons(element).map((button) => button.getAttribute('aria-checked'))).toEqual(['true', 'false']);
+  });
+
+  it('draws the drawing at true size at 1:1', async () => {
+    const view = await setUp();
+    const {fixture, element} = await open(view, [view.reference, view.waltz]);
+    const svg = svgOf(element);
+    // The viewBox is the roll in mm: its first two numbers are the origin, the third the length of the Tape.
+    const lengthMm = Number(svg.getAttribute('viewBox')?.split(' ')[2]);
+
+    oneToOneButton(element).click();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    // jsdom does no layout, so the bound width attribute stands in for the rendered width.
+    expect(Number(svg.getAttribute('width'))).toBeCloseTo(lengthMm * pixelsPerMillimetre('1:1', 0, 0), 0);
+  });
+
+  it('hatches the part of the roll past the working width when the Lanes pass it', async () => {
+    const view = await setUp();
+    const {element} = await open(view, [view.reference, view.reference, view.reference]);
+    const band = element.querySelector('[data-testid="overflow-band"]');
+    const patternId = patternIdOf(band?.getAttribute('fill') ?? null);
+
+    expect(band?.getAttribute('aria-hidden')).toBe('true');
+    expect(patternId).toBeDefined();
+    expect(svgOf(element).querySelector(`pattern[id="${patternId ?? ''}"] line`)).not.toBeNull();
+    expect(laneMark(element, 'lane-outline', 3).classList.contains('overflow')).toBe(true);
+  });
+
+  it('draws no hatched part past the working width when the Lanes fit', async () => {
+    const view = await setUp();
+    const {element} = await open(view, [view.reference, view.reference]);
+
+    expect(element.querySelector('[data-testid="overflow-band"]')).toBeNull();
   });
 
   it('lists every Tape in the add menu, grouped by Organ', async () => {
@@ -429,6 +509,22 @@ describe('SideBySideComponent', () => {
     expect(drawing.querySelector('[data-testid="working-width-line"]')).not.toBeNull();
   });
 
+  it('draws the working-width dash the same at Whole Tape and at 1:1: the stylesheet sets it, not the scale', async () => {
+    const view = await setUp();
+    const {fixture, element} = await open(view, [view.reference, view.waltz]);
+    const wholeDash = getComputedStyle(required(element.querySelector<SVGElement>('[data-testid="working-width-line"]'), 'working-width line')).strokeDasharray;
+
+    oneToOneButton(element).click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    const line = required(element.querySelector<SVGElement>('[data-testid="working-width-line"]'), 'working-width line');
+
+    expect(line.hasAttribute('stroke-dasharray')).toBe(false);
+    expect(wholeDash).not.toBe('');
+    expect(getComputedStyle(line).strokeDasharray).toBe(wholeDash);
+  });
+
   it('fits the drawing to the page width by default: its mm viewBox, the fit-width class and no fixed size', async () => {
     const view = await setUp();
     const {element} = await open(view, [view.reference, view.waltz]);
@@ -459,6 +555,27 @@ describe('SideBySideComponent', () => {
 
     expect(textIn(rows(element)[0], 'lane-width')).toBe('100 mm wide');
     expect(textIn(rows(element)[0], 'lane-length')).toBe(`${length} mm long`);
+  });
+
+  it('lays every Lane out in the same measure columns, with an empty marks cell for a Lane without marks', async () => {
+    const view = await setUp();
+    await TestBed.inject(TapeLibrary).update(withoutPipe(view.waltz));
+    const {element} = await open(view, [view.reference, view.waltz]);
+
+    expect(rows(element).map(columnsOf)).toEqual([MEASURE_COLUMNS, MEASURE_COLUMNS]);
+    expect(required(cellIn(rows(element)[0], 'marks'), 'the marks cell').textContent?.trim()).toBe('');
+    expect(textIn(rows(element)[1], 'lane-problems')).toBe('1 Cutting Problem');
+  });
+
+  it('keeps the same measure columns for a Lane whose Organ is not available', async () => {
+    const view = await setUp();
+    await TestBed.inject(OrganLibrary).remove(view.barrel.id);
+    const {element} = await open(view, [view.reference, view.waltz]);
+
+    expect(rows(element).map(columnsOf)).toEqual([MEASURE_COLUMNS, MEASURE_COLUMNS]);
+    expect(textIn(rows(element)[1], 'lane-organ')).toBe('Organ not available');
+    expect(required(cellIn(rows(element)[1], 'width'), 'the width cell').textContent?.trim()).toBe('');
+    expect(required(cellIn(rows(element)[1], 'length'), 'the length cell').textContent?.trim()).toBe('');
   });
 
   it('moves a Lane up, renumbers the Lanes and updates the drawing at once', async () => {
@@ -692,6 +809,49 @@ describe('SideBySideComponent', () => {
       expect(rows(element).map((row) => textIn(row, 'lane-tape'))).toEqual(['Reference']);
       expect(element.querySelector('[data-testid="side-by-side-drawing"]')).toBeNull();
       expect(element.querySelector('[data-testid="side-by-side-free"]')).toBeNull();
+    });
+
+    it('disables Save while there is no roll plotter, and keeps it focusable', async () => {
+      const view = await setUp([sheetPlotter()]);
+
+      const {element} = await open(view, [view.reference]);
+
+      expect(saveButton(element).disabled).toBe(false);
+      expect(saveButton(element).getAttribute('aria-disabled')).toBe('true');
+    });
+
+    it('does nothing when Save is pressed while there is no roll plotter', async () => {
+      const view = await setUp([sheetPlotter()]);
+      const {fixture, element} = await open(view, [view.reference]);
+      const saveSvg = vi.spyOn(view.api.plotter, 'saveSvg');
+
+      await press(fixture, saveButton(element));
+
+      expect(dialogEntries()).toEqual([]);
+      expect(saveSvg).not.toHaveBeenCalled();
+    });
+
+    it('describes the disabled Save by the reason that there is no roll plotter', async () => {
+      const view = await setUp([sheetPlotter()]);
+
+      const {element} = await open(view, [view.reference]);
+
+      const described = (saveButton(element).getAttribute('aria-describedby') ?? '')
+        .split(/\s+/)
+        .map((id) => element.querySelector(`[id="${id}"]`)?.textContent?.trim() ?? '');
+      expect(described).toContain('No roll plotter yet. Cutting side by side needs a roll plotter, such as a vinyl cutter.');
+    });
+
+    it('puts the no-roll-plotter message and the Describe a Plotter link before the plotter picker', async () => {
+      const view = await setUp([sheetPlotter()]);
+
+      const {element} = await open(view, [view.reference]);
+
+      const message = required(element.querySelector<HTMLElement>('[data-testid="side-by-side-no-plotter"]'), 'no-plotter message');
+      const link = required(element.querySelector<HTMLElement>('[data-testid="side-by-side-describe-plotter"]'), 'Describe a Plotter link');
+      const picker = required(element.querySelector<HTMLElement>('[data-testid="side-by-side-plotter"]'), 'plotter picker');
+      expect(message.compareDocumentPosition(picker) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0);
+      expect(link.compareDocumentPosition(picker) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0);
     });
 
     it('recomputes the free width and marks the Lane that no longer fits when a narrower roll plotter is picked', async () => {

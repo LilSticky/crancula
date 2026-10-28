@@ -6,14 +6,18 @@ import {MatMenuHarness} from '@angular/material/menu/testing';
 import {provideRouter, Router} from '@angular/router';
 import {type Observable, of} from 'rxjs';
 import {
+  column,
+  columnCount,
   createTape,
   defaultSelectedParts,
+  midiNoteNumber,
   type Organ,
   proposeTransposition,
   readMidiSong,
   type Tape,
   tapeLengthInMillimetres,
 } from '@api/index';
+import {tapeOf} from '@api/tape/tape-fixture';
 import {encodeSmf} from '../../../../../api/song/midi/smf-test-helper';
 import {CRANCULA_API, createInMemoryCranculaApi} from '../../../core/crancula-api.token';
 import {testOrgan} from '../../../../testing/organs';
@@ -67,6 +71,14 @@ function tapeFor(organ: Organ, name: string, columnLength = 2.5) {
   return {tape, song};
 }
 
+/** The Tape with one Hole per start column on note 70, which no Pipe of its Organ has: one Cutting Problem each. */
+function withoutPipeHoles(tape: Tape, starts: readonly number[]): Tape {
+  const note = required(midiNoteNumber(70), 'note 70');
+  const length = required(columnCount(1), 'one Column');
+  const holes = starts.map((start) => ({pipe: note, start: required(column(start), `column ${start}`), length}));
+  return tapeOf({...tape, holes: [...tape.holes, ...holes]});
+}
+
 interface RenderOptions {
   readonly dialogConfirms?: boolean;
   readonly language?: 'en' | 'de';
@@ -106,6 +118,11 @@ async function render(options: RenderOptions = {}) {
 }
 
 const collapse = (text: string | null | undefined) => text?.replace(/\s+/g, ' ').trim();
+
+function required<T>(value: T | null | undefined, what: string): T {
+  if (value === null || value === undefined) throw new Error(`no ${what}`);
+  return value;
+}
 
 /** Opens the row menu of the Tape named `name` and clicks the item with `testId`. */
 async function chooseFromRowMenu(fixture: ComponentFixture<TapeListComponent>, name: string, testId: string) {
@@ -521,6 +538,92 @@ describe('TapeListComponent', () => {
       return button;
     }
 
+    /** The tick box in the header of the tick column, for all Tapes at once. */
+    function tickAllOf(element: HTMLElement): HTMLInputElement {
+      const input = element.querySelector<HTMLInputElement>('thead [data-testid="tick-all"] input');
+      if (!input) throw new Error('no header tick box for all Tapes');
+      return input;
+    }
+
+    /** Whether each tick box of a Tape row is checked, in the order of the rows. */
+    function tickStates(element: HTMLElement): boolean[] {
+      return [...element.querySelectorAll<HTMLInputElement>('[data-testid="tick-tape"] input')].map((input) => input.checked);
+    }
+
+    it('has a header tick box over the tick column, with an accessible label for all Tapes', async () => {
+      const {add, element} = await render();
+      await add(testOrgan('Street organ', 3), 'Melody');
+
+      const header = element.querySelector('thead th');
+      expect(header?.querySelector('[data-testid="tick-all"]')).not.toBeNull();
+      expect(tickAllOf(element).getAttribute('aria-label')?.trim()).not.toBe('');
+    });
+
+    it('ticks every Tape when the header tick box is pressed while none is ticked', async () => {
+      const organ = testOrgan('Street organ', 3);
+      const {add, element, fixture} = await render();
+      await add(organ, 'Melody');
+      await add(organ, 'Waltz');
+
+      tickAllOf(element).click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(tickStates(element)).toEqual([true, true]);
+      expect(collapse(cutButton(element).textContent)).toBe('Cut side by side (2)');
+    });
+
+    it('unticks every Tape when the header tick box is pressed while all are ticked', async () => {
+      const organ = testOrgan('Street organ', 3);
+      const {add, element, fixture} = await render();
+      await add(organ, 'Melody');
+      await add(organ, 'Waltz');
+      tickAllOf(element).click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      tickAllOf(element).click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(tickStates(element)).toEqual([false, false]);
+      expect(element.querySelector('[data-testid="cut-side-by-side"]')).toBeNull();
+    });
+
+    it('shows the header tick box as indeterminate while some, not all, Tapes are ticked', async () => {
+      const organ = testOrgan('Street organ', 3);
+      const {add, element, fixture} = await render();
+      await add(organ, 'Melody');
+      await add(organ, 'Waltz');
+      expect(tickAllOf(element).indeterminate).toBe(false);
+
+      tickOf(element, 'Melody').click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      expect(tickAllOf(element).indeterminate).toBe(true);
+
+      tickOf(element, 'Waltz').click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      expect(tickAllOf(element).indeterminate).toBe(false);
+      expect(tickAllOf(element).checked).toBe(true);
+    });
+
+    it('makes Cut side by side the filled button and Bring a Song onto a Tape the outlined one once Tapes are ticked', async () => {
+      const {add, element, fixture} = await render();
+      await add(testOrgan('Street organ', 3), 'Melody');
+      const newTape = required(element.querySelector<HTMLElement>('[data-testid="new-tape"]'), 'new-tape button');
+      expect(newTape.classList.contains('mat-mdc-unelevated-button')).toBe(true);
+
+      tickOf(element, 'Melody').click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(cutButton(element).classList.contains('mat-mdc-unelevated-button')).toBe(true);
+      expect(newTape.classList.contains('mat-mdc-outlined-button')).toBe(true);
+      expect(newTape.classList.contains('mat-mdc-unelevated-button')).toBe(false);
+    });
+
     it('has a tick box named for the Tape in the first column of its row', async () => {
       const {add, element} = await render();
       await add(testOrgan('Street organ', 3), 'Melody');
@@ -639,6 +742,24 @@ describe('TapeListComponent', () => {
       await fixture.whenStable();
 
       expect(router.url).toBe(`/tapes/side-by-side?tape=${waltz.id}`);
+    });
+  });
+
+  describe('the Cutting Problems of each Tape', () => {
+    it('shows the count of Cutting Problems in the row of a Tape that has some, and none in the row of a Tape without', async () => {
+      const {add, element, fixture} = await render();
+      const organ = testOrgan('Street organ', 3);
+      const melody = await add(organ, 'Melody');
+      await add(organ, 'Waltz');
+      await TestBed.inject(TapeLibrary).update(withoutPipeHoles(melody, [0, 20]));
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      const [melodyRow, waltzRow] = [...element.querySelectorAll('[data-testid="tape"]')];
+      expect(melodyRow?.querySelector('[data-testid="tape-name"]')?.textContent?.trim()).toBe('Melody');
+      expect(melodyRow?.querySelector('[data-testid="tape-problems"]')?.textContent?.trim()).toBe('2 Cutting Problems');
+      expect(waltzRow?.querySelector('[data-testid="tape-name"]')?.textContent?.trim()).toBe('Waltz');
+      expect(waltzRow?.querySelector('[data-testid="tape-problems"]')).toBeNull();
     });
   });
 

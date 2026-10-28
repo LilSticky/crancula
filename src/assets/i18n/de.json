@@ -106,6 +106,7 @@
       "ORGAN_NOT_AVAILABLE": "Drehorgel nicht verfügbar",
       "LENGTH_MM": "{{length}} mm",
       "TICK": "{{name}} für einen Schnitt nebeneinander auswählen",
+      "TICK_ALL": "Alle Lochbänder für einen Schnitt nebeneinander auswählen",
       "CUT_SIDE_BY_SIDE": "Nebeneinander schneiden ({{count}})"
     },
     "SIDE_BY_SIDE": {

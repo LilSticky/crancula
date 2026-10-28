@@ -60,7 +60,7 @@ test.describe('Export a Tape that can not be cut (part 2)', () => {
       await launched.window.getByTestId('row-spacing').fill('4');
       await saveOrgan(launched.window);
       await launched.window.getByRole('link', {name: 'Tapes'}).click();
-      await launched.window.getByTestId('tape').click();
+      await launched.window.getByTestId('open-tape').click();
       await expectExportItemEnabled(launched.window, 'export');
 
       await exportForPlotter(launched.window);

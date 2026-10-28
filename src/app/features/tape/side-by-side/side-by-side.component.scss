@@ -32,6 +32,13 @@
     fill-opacity: 0.5;
   }
 
+  /* The part past the working width: a hatch in brass, which reads on the light and the dark paper (the fill is the pattern #overflow-hatch). */
+  .overflow-hatch {
+    stroke: var(--cr-brass);
+    stroke-width: 1.5px;
+    vector-effect: non-scaling-stroke;
+  }
+
   .lane-outline {
     fill: var(--cr-tape);
     stroke: var(--cr-tape-edge);
@@ -50,10 +57,10 @@
 
   .lane-number {
     fill: var(--cr-brass);
-    font-size: 4px;
     dominant-baseline: middle;
   }
 
+  /* A static dash: non-scaling strokes take the dash in screen px, so the dash stays the same at every zoom. */
   .working-width {
     stroke: var(--cr-brass);
     stroke-width: 1px;
@@ -81,10 +88,17 @@
 }
 
 .lane {
-  display: flex;
+  display: grid;
+  grid-template-columns: 2em minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) 8rem 8rem auto;
   align-items: center;
-  gap: 16px;
+  column-gap: 16px;
   padding: 8px 0;
+
+  .marks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
 
   .measure {
     color: var(--mat-sys-on-surface-variant);
@@ -92,7 +106,6 @@
 
   .actions {
     display: flex;
-    margin-left: auto;
   }
 }
 

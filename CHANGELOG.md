@@ -40,7 +40,9 @@ as its GitHub Release notes.
 - Cut several Tapes side by side on a roll plotter: tick them in the Tape list, choose "Cut side by side", order the
   Lanes and save one SVG. Tapes of different Organs and widths can share a cut, and the same Tape can be added twice. A
   drawing shows the roll and the width still free; a Tape that doesn't fit or has Cutting Problems is named and nothing
-  is saved. A roll plotter has a Tape spacing (3 mm unless changed): the blank strip between two Tapes.
+  is saved. A roll plotter has a Tape spacing (3 mm unless changed): the blank strip between two Tapes. The drawing
+  shows the whole Tape or 1:1 and hatches the part past the working width; the Tape list ticks all Tapes at once and
+  shows the Cutting Problems of each Tape before you tick it.
 
 ### Changed
 - The import button says "Choose a Song Source": a MIDI file or a MusicXML Score.

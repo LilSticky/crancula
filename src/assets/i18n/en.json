@@ -106,6 +106,7 @@
       "ORGAN_NOT_AVAILABLE": "Organ not available",
       "LENGTH_MM": "{{length}} mm",
       "TICK": "Pick {{name}} for a side-by-side cut",
+      "TICK_ALL": "Pick all Tapes for a side-by-side cut",
       "CUT_SIDE_BY_SIDE": "Cut side by side ({{count}})"
     },
     "SIDE_BY_SIDE": {
