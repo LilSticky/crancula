@@ -77,7 +77,7 @@ test.describe('I can set the Tape per Crank turn of my organs', () => {
     await app.close();
   });
 
-  test('loads a version 3 snapshot with the Tape per Crank turn empty and saves it as version 5 with the value set', async () => {
+  test('loads a version 3 snapshot with the Tape per Crank turn empty and saves it as version 6 with the value set', async () => {
     const seeded = await launchApp();
     await seeded.app.close();
     const snapshots = join(seeded.userDataDir, 'snapshots');
@@ -109,12 +109,12 @@ test.describe('I can set the Tape per Crank turn of my organs', () => {
     await app.close();
 
     const saved = await readSnapshot(seeded.userDataDir);
-    expect(saved.version).toBe(5);
+    expect(saved.version).toBe(6);
     expect(saved.organs[0]?.name).toBe(STREET_ORGAN.name);
     expect(saved.organs[0]?.tapePerCrankTurn).toBe(120);
   });
 
-  test('saves a version 3 Organ without a Tape per Crank turn as version 5 without the property', async () => {
+  test('saves a version 3 Organ without a Tape per Crank turn as version 6 without the property', async () => {
     const seeded = await launchApp();
     await seeded.app.close();
     const snapshots = join(seeded.userDataDir, 'snapshots');
@@ -143,7 +143,7 @@ test.describe('I can set the Tape per Crank turn of my organs', () => {
     await app.close();
 
     const saved = await readSnapshot(seeded.userDataDir);
-    expect(saved.version).toBe(5);
+    expect(saved.version).toBe(6);
     expect(saved.organs[0]?.name).toBe('Street organ 2');
     expect(saved.organs[0]).not.toHaveProperty('tapePerCrankTurn');
   });
@@ -170,7 +170,7 @@ test.describe('I can set the Tape per Crank turn of my organs', () => {
     await app.close();
   });
 
-  test('loads a version 4 snapshot with the Crank speed range at 30 to 120 and saves it as version 5 with the range', async () => {
+  test('loads a version 4 snapshot with the Crank speed range at 30 to 120 and saves it as version 6 with the range', async () => {
     const seeded = await launchApp();
     await seeded.app.close();
     const snapshots = join(seeded.userDataDir, 'snapshots');
@@ -204,7 +204,7 @@ test.describe('I can set the Tape per Crank turn of my organs', () => {
     await app.close();
 
     const saved = await readSnapshot(seeded.userDataDir);
-    expect(saved.version).toBe(5);
+    expect(saved.version).toBe(6);
     expect(saved.organs[0]?.tapePerCrankTurn).toBe(120);
     expect(saved.organs[0]?.crankSpeedRange).toEqual({slowest: 30, fastest: 120});
   });
