@@ -39,7 +39,6 @@ What to read per step:
 | `.specify/memory/constitution.md` | Principles, Definition of Done, governance | Only through an ADR plus a version bump |
 | `specs/NNN-slice/` | Spec Kit artifacts per slice (spec, plan, tasks) | During the slice |
 | `CHANGELOG.md` | What changed for organ owners per release; source of the release notes | A release (`release` skill), optionally a user-visible change under `[Unreleased]` |
-| `documentation/AGENTIC-TODO.md` | Agent tooling still to build | Tooling is added |
 | [GitHub Issues](https://github.com/LilSticky/crancula/issues) | Bugs, slices, open questions (`gh issue`) | A bug or question is found or resolved |
 
 ## Workflow
