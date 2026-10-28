@@ -26,6 +26,13 @@ From [the discovery](../../documentation/discovery/later.md), decisions 35–38:
   is optional in the Organ editor (decision 37).
 - Terms: Guide margin (Führungsrand), approved 2026-10-28; Border is now per side (decision 38).
 
+### Session 2026-10-28
+
+- Q: How does the UI name the two Borders? → A: Guide side and far side (German: Führungsseite, Gegenseite),
+  added to the Border entry in DICTIONARY.md.
+- Q: Are the Presets in scope? → A: Yes. #162 is closed and both Drehorgel Presets exist; they gain the Guide
+  margin of their gamma files (20er: 10 mm, 31er: 11 mm).
+
 ## Why
 
 Real tracker bars do not always centre their rows. The Raffin/Carl Frei 20er gamma file gives 10 mm from the
@@ -109,6 +116,27 @@ shows an empty Guide margin and the same Border as before.
 2. **Given** that library, **When** the organ owner saves any change, **Then** it is written in the new version
    and reads back the same.
 
+---
+
+### User Story 4 - The Drehorgel Presets sit where the gamma files say (Priority: P3)
+
+The 20er-Drehorgel Preset fills a Guide margin of 10 mm and the 31er-Drehorgel Preset 11 mm, as their gamma
+files give them.
+
+**Why this priority**: Owners who start from a Preset get correct Tapes without looking up their gamma file.
+
+**Independent Test**: Use the 20er Preset in a new Organ; the Guide margin reads 10 mm and the far-side Border
+25.35 mm (110 − 10 − 19 × 3.85 − 1.5).
+
+**Acceptance Scenarios**:
+
+1. **Given** a new Organ, **When** the organ owner uses the 20er-Drehorgel Preset, **Then** the Guide margin is
+   10 mm, the guide-side Border 8.5 mm and the far-side Border 25.35 mm.
+2. **Given** a new Organ, **When** the organ owner uses the 31er-Drehorgel Preset, **Then** the Guide margin is
+   11 mm and the far-side Border 11.95 mm (140 − 11 − 30 × 3.86 − 1.25).
+3. **Given** an Organ saved from a Preset before this slice, **When** the app starts, **Then** it stays centred:
+   Presets fill new Organs only.
+
 ### Edge Cases
 
 - A Guide margin of exactly half the hole diameter: the guide-side Border is 0, which is valid; the holes touch
@@ -144,7 +172,8 @@ shows an empty Guide margin and the same Border as before.
   library gains a new version that carries the Guide margin.
 - **FR-009**: The Guide margin MUST be validated wherever an Organ is read from untrusted data, like the other
   Tape Bed values.
-- **FR-010**: All new texts MUST exist in English and German, using Guide margin / Führungsrand and Border / Rand.
+- **FR-010a**: The 20er-Drehorgel Preset MUST fill a Guide margin of 10 mm and the 31er-Drehorgel Preset 11 mm.
+- **FR-010**: All new texts MUST exist in English and German, using Guide margin / Führungsrand, Border / Rand, guide side / Führungsseite and far side / Gegenseite.
 
 ### Key Entities
 
@@ -173,5 +202,5 @@ shows an empty Guide margin and the same Border as before.
   where the rows sit.
 - Side-by-side cuts place each Lane's rows by its own Organ's Guide margin; Lane widths are the tape widths and
   do not change.
-- Updating the 20er Preset waits on [#162](https://github.com/LilSticky/crancula/issues/162) and is out of scope.
+- Organs once made from a Preset are ordinary Organs; they are not updated (Presets fill new Organs only).
 - MIDI import, Preview, Recording and Scores export do not depend on where rows sit across the Tape.
