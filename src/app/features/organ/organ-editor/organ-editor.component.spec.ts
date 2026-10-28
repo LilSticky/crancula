@@ -521,10 +521,25 @@ describe('OrganEditorComponent', () => {
 
       expect(state(element)).toBe('Unsaved changes: Guide margin');
     });
+
+    it.each(['1.4', '35.36'])(
+      'hides the fit line and the drawing when the rows fit but a Guide margin of %s mm puts a Border below 0',
+      async (guideMargin) => {
+        const {open: openEditor, library} = render();
+        const organ = guidedOrgan(null);
+        await library.put(organ);
+        const {element, field, type} = await openEditor(organ.id);
+
+        await type(field('guide-margin'), guideMargin);
+
+        expect(element.querySelector('[data-testid="fit-check"]')).toBeNull();
+        expect(drawingOf(element)).toBeNull();
+      },
+    );
   });
 
   describe('saving', () => {
-it('stores nothing while a valid Organ is only edited', async () => {
+  it('stores nothing while a valid Organ is only edited', async () => {
       const {open: openEditor, library, navigate} = render();
       const {fillValidOrgan} = await openEditor();
 

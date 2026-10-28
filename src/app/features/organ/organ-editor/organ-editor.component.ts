@@ -244,10 +244,12 @@ export class OrganEditorComponent implements UnsavedChangesCheck {
   protected readonly fit = computed(() => {
     const fit = this.tapeBedFit();
     if (fit === null) return null;
+    const tooWide = fit.rowSpan > fit.tapeWidth;
+    // Rows that fit with a Border below 0 are a Guide margin problem: the field's error explains it.
+    if (!tooWide && !fits(fit.borders)) return null;
     const language = this.language();
     const one = fit.pipeCount === 1 ? '_ONE' : '';
     const offCentre = this.guided() ? '_OFF_CENTRE' : '';
-    const tooWide = !fits(fit.borders);
     return {
       count: fit.pipeCount,
       rowSpan: formatNumber(fit.rowSpan, language),
