@@ -294,13 +294,22 @@ describe('TapeBedSheetComponent', () => {
       expect(field('guide-margin').closest('mat-form-field')?.querySelector('[matTextSuffix]')?.textContent?.trim()).toBe('mm');
     });
 
-    it('is labelled "Guide margin" and has a hint that is a translated text', async () => {
-      const {field} = await render();
+    it('is labelled "Guide margin" and has a hint under its row that is a translated text', async () => {
+      const {field, element} = await render();
 
       const formField = field('guide-margin').closest('mat-form-field');
       expect(formField?.querySelector('mat-label')?.textContent?.trim()).toBe('Guide margin');
-      const hint = formField?.querySelector('mat-hint')?.textContent?.trim() ?? '';
+      const hint = element.querySelector('[data-testid="guide-margin-hint"]')?.textContent?.trim() ?? '';
       expect(hint).toBe('Guide edge to the centre of row 1; empty: rows centred');
+    });
+
+    it('describes the Guide margin field by a hint id of its own', async () => {
+      const {field, element} = await render();
+
+      const hintId = element.querySelector('[data-testid="guide-margin-hint"]')?.id ?? '';
+      expect(hintId).not.toBe('');
+      expect(hintId).not.toBe('guide-margin-hint');
+      expect(field('guide-margin').getAttribute('aria-describedby')).toBe(hintId);
     });
 
     it('writes a typed decimal comma into the form as a number', async () => {
