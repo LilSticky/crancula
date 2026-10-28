@@ -13,7 +13,7 @@ import {MatTooltip} from '@angular/material/tooltip';
 import {ActivatedRoute, Router, RouterLink} from '@angular/router';
 import {TranslatePipe} from '@ngx-translate/core';
 import {map} from 'rxjs';
-import {type Organ, type Tape, type TapeId, tapeLengthInMillimetres} from '@api/index';
+import {cuttingProblems, type Organ, type Tape, type TapeId, tapeLengthInMillimetres} from '@api/index';
 import {ConfirmableAction, ConfirmDialogComponent} from '../../shared/components/confirm-dialog/confirm-dialog.component';
 import {PageHeadComponent} from '../../shared/components/page-head/page-head.component';
 import {formatNumber} from '../../shared/format-number';
@@ -30,8 +30,15 @@ interface TapeRow {
   readonly name: string;
   /** `undefined` when the Organ is not available. */
   readonly organ: Organ | undefined;
+  /** The Cutting Problems of the Tape on its Organ; 0 while the Organ is not available. */
+  readonly problems: number;
   readonly columns: string;
   readonly lengthInMillimetres: string;
+}
+
+/** The Cutting Problems of `tape` on its Organ, or 0 while the Organ is not available. */
+function problemsOf(tape: Tape, organ: Organ | undefined): number {
+  return organ === undefined ? 0 : cuttingProblems(tape, organ).length;
 }
 
 @Component({
@@ -111,6 +118,9 @@ interface TapeRow {
                   <span data-testid="tape-name">{{ row.tape.name }}</span>
                 </a>
               }
+              @if (row.problems > 0) {
+                <span class="problems" data-testid="tape-problems">{{ (row.problems === 1 ? 'TAPE.CUTTING_PROBLEMS.COUNT_ONE' : 'TAPE.CUTTING_PROBLEMS.COUNT') | translate: {count: row.problems} }}</span>
+              }
             </td>
           </ng-container>
           <ng-container matColumnDef="organ">
@@ -175,6 +185,11 @@ interface TapeRow {
 
     .unavailable-name {
       color: var(--mat-sys-on-surface-variant);
+    }
+
+    .problems {
+      display: block;
+      color: var(--mat-sys-error);
     }
 
     .filter {
@@ -251,6 +266,7 @@ export class TapeListComponent {
         tape,
         name: tape.name,
         organ: organsById.get(tape.organId),
+        problems: problemsOf(tape, organsById.get(tape.organId)),
         columns: formatNumber(tape.length, language),
         lengthInMillimetres: formatNumber(tapeLengthInMillimetres(tape), language),
       }));

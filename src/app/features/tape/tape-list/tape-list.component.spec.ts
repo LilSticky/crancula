@@ -6,14 +6,18 @@ import {MatMenuHarness} from '@angular/material/menu/testing';
 import {provideRouter, Router} from '@angular/router';
 import {type Observable, of} from 'rxjs';
 import {
+  column,
+  columnCount,
   createTape,
   defaultSelectedParts,
+  midiNoteNumber,
   type Organ,
   proposeTransposition,
   readMidiSong,
   type Tape,
   tapeLengthInMillimetres,
 } from '@api/index';
+import {tapeOf} from '@api/tape/tape-fixture';
 import {encodeSmf} from '../../../../../api/song/midi/smf-test-helper';
 import {CRANCULA_API, createInMemoryCranculaApi} from '../../../core/crancula-api.token';
 import {testOrgan} from '../../../../testing/organs';
@@ -65,6 +69,14 @@ function tapeFor(organ: Organ, name: string, columnLength = 2.5) {
   if (!created.ok) throw new Error(`invalid test Tape: ${JSON.stringify(created.error)}`);
   const tape: Tape = created.value.tape;
   return {tape, song};
+}
+
+/** The Tape with one Hole per start column on note 70, which no Pipe of its Organ has: one Cutting Problem each. */
+function withoutPipeHoles(tape: Tape, starts: readonly number[]): Tape {
+  const note = required(midiNoteNumber(70), 'note 70');
+  const length = required(columnCount(1), 'one Column');
+  const holes = starts.map((start) => ({pipe: note, start: required(column(start), `column ${start}`), length}));
+  return tapeOf({...tape, holes: [...tape.holes, ...holes]});
 }
 
 interface RenderOptions {
@@ -711,6 +723,24 @@ describe('TapeListComponent', () => {
       await fixture.whenStable();
 
       expect(router.url).toBe(`/tapes/side-by-side?tape=${waltz.id}`);
+    });
+  });
+
+  describe('the Cutting Problems of each Tape', () => {
+    it('shows the count of Cutting Problems in the row of a Tape that has some, and none in the row of a Tape without', async () => {
+      const {add, element, fixture} = await render();
+      const organ = testOrgan('Street organ', 3);
+      const melody = await add(organ, 'Melody');
+      await add(organ, 'Waltz');
+      await TestBed.inject(TapeLibrary).update(withoutPipeHoles(melody, [0, 20]));
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      const [melodyRow, waltzRow] = [...element.querySelectorAll('[data-testid="tape"]')];
+      expect(melodyRow?.querySelector('[data-testid="tape-name"]')?.textContent?.trim()).toBe('Melody');
+      expect(melodyRow?.querySelector('[data-testid="tape-problems"]')?.textContent?.trim()).toBe('2 Cutting Problems');
+      expect(waltzRow?.querySelector('[data-testid="tape-name"]')?.textContent?.trim()).toBe('Waltz');
+      expect(waltzRow?.querySelector('[data-testid="tape-problems"]')).toBeNull();
     });
   });
 
