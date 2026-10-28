@@ -23,7 +23,7 @@ description: "Tasks for 014 Off-centre rows on a Tape Bed"
 
 ## Phase 1: Setup
 
-- [ ] T001 Add the keys of [contracts/organ-editor-ui.md](contracts/organ-editor-ui.md) to `src/assets/i18n/en.json` and `de.json`: `ORGAN.EDITOR.GUIDE_MARGIN` ("Guide margin" / "Führungsrand"), `GUIDE_MARGIN_HINT` ("Guide edge to the centre of row 1; empty: rows centred"), `BORDER_SIDES` ("{{guide}} mm guide side · {{far}} mm far side" / "{{guide}} mm Führungsseite · {{far}} mm Gegenseite"), `BORDER_SIDES_HINT` ("The guide side is row 1's edge"), `FIT_OFF_CENTRE`, `FIT_OFF_CENTRE_ONE`, `TAPE_BED_DRAWING_OFF_CENTRE`, `TAPE_BED_DRAWING_OFF_CENTRE_ONE` (as `FIT`/`TAPE_BED_DRAWING`, naming both Borders); `ORGAN.ERROR.GUIDE_MARGIN_BELOW_HALF_HOLE` ("At least {{min}} mm, half the hole diameter, or the holes run off the tape."), `GUIDE_MARGIN_TOO_LARGE` ("At most {{max}} mm, or the last row runs off the far side."). `npm run i18n:check` green.
+- [x] T001 Add the keys of [contracts/organ-editor-ui.md](contracts/organ-editor-ui.md) to `src/assets/i18n/en.json` and `de.json`: `ORGAN.EDITOR.GUIDE_MARGIN` ("Guide margin" / "Führungsrand"), `GUIDE_MARGIN_HINT` ("Guide edge to the centre of row 1; empty: rows centred"), `BORDER_SIDES` ("{{guide}} mm guide side · {{far}} mm far side" / "{{guide}} mm Führungsseite · {{far}} mm Gegenseite"), `BORDER_SIDES_HINT` ("The guide side is row 1's edge"), `FIT_OFF_CENTRE`, `FIT_OFF_CENTRE_ONE`, `TAPE_BED_DRAWING_OFF_CENTRE`, `TAPE_BED_DRAWING_OFF_CENTRE_ONE` (as `FIT`/`TAPE_BED_DRAWING`, naming both Borders); `ORGAN.VIOLATION.GUIDE_MARGIN_BELOW_HALF_HOLE` ("At least {{min}} mm, half the hole diameter, or the holes run off the tape."), `GUIDE_MARGIN_TOO_LARGE` ("At most {{max}} mm, or the last row runs off the far side."). `npm run i18n:check` green.
 
 ## Phase 2: Foundational (Borders per side)
 
@@ -39,7 +39,7 @@ description: "Tasks for 014 Off-centre rows on a Tape Bed"
 - [ ] T008 Red: `api/organ/organ-library-snapshot.spec.ts`: writes version 6 with `guideMargin` only when set; round trip keeps it; v5 file reads centred and ignores a stray `guideMargin`; v6 with a string `guideMargin` refused; v6 with a too-large one refused. `app/organ-library-file.spec.ts` fixtures to version 6.
 - [x] T009 Green: `api/organ/organ-library-snapshot.ts` (R4).
 - [ ] T010 Red: `src/app/features/organ/organ-editor/*.spec.ts`: the `guide-margin` field after Spacing between rows, optional; `border` shows "16.93" and the centred hint for an empty field, "8.5 mm guide side · 25.35 mm far side" and the sides hint with 10; the fit line and drawing label use the `_OFF_CENTRE` keys; the drawing's top strip is 8.5 mm and the bottom one 25.35 mm high; errors shown at the field after a save attempt; clearing the field centres again; dirty tracking counts the field; German texts.
-- [ ] T011 Green: `organ-form.ts`, `organ-editor.component.ts`, `tape-bed-sheet/*` (R5).
+- [x] T011 Green: `organ-form.ts`, `organ-editor.component.ts`, `tape-bed-sheet/*` (R5).
 
 ## Phase 4: US2 Tape follows the Guide margin (P1)
 

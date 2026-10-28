@@ -344,8 +344,187 @@ describe('OrganEditorComponent', () => {
     });
   });
 
+  describe('the Guide margin', () => {
+    /** The 20er-Drehorgel on 110 mm: 3 mm holes, 3.85 mm row spacing, so the centred Border is 16.925 mm and a Guide margin of 10 mm gives 8.5 mm (guide side) and 25.35 mm (far side). */
+    const guidedOrgan = (guideMargin: number | null = 10) =>
+      testOrgan('20er-Drehorgel', 20, {tapeBed: {tapeWidth: 110, holeDiameter: 3, rowSpacing: 3.85, guideMargin}});
+    const borderOf = (element: HTMLElement) => element.querySelector<HTMLInputElement>('[data-testid="border"]')?.value ?? '';
+    const hintOf = (input: HTMLInputElement) => input.closest('mat-form-field')?.querySelector('mat-hint')?.textContent?.trim();
+    const fitText = (element: HTMLElement) =>
+      element.querySelector('[data-testid="fit-check"]')?.textContent?.replace(/\s+/g, ' ').trim() ?? '';
+    const drawingOf = (element: HTMLElement) =>
+      element.querySelector<SVGSVGElement>('[data-testid="tape-bed-sheet"] svg[data-testid="tape-bed-drawing"]');
+    const numberAttribute = (node: Element, name: string) => Number(node.getAttribute(name));
+    const state = (element: HTMLElement) =>
+      element.querySelector('cranc-action-bar [data-testid="action-bar-state"]')?.textContent?.replace(/\s+/g, ' ').trim();
+
+    it('is a decimal text input with the suffix "mm" and the label "Guide margin"', async () => {
+      const {open: openEditor} = render();
+      const {field} = await openEditor();
+
+      const formField = field('guide-margin').closest('mat-form-field');
+      expect(field('guide-margin').type).toBe('text');
+      expect(field('guide-margin').getAttribute('inputmode')).toBe('decimal');
+      expect(formField?.querySelector('[matTextSuffix]')?.textContent?.trim()).toBe('mm');
+      expect(formField?.querySelector('mat-label')?.textContent?.trim()).toBe('Guide margin');
+    });
+
+    it('has the hint "Guide edge to the centre of row 1; empty: rows centred"', async () => {
+      const {open: openEditor} = render();
+      const {field} = await openEditor();
+
+      expect(hintOf(field('guide-margin'))).toBe('Guide edge to the centre of row 1; empty: rows centred');
+    });
+
+    it('is empty for a centred Organ', async () => {
+      const {open: openEditor, library} = render();
+      const organ = testOrgan('Street organ', 31);
+      await library.put(organ);
+      const {field} = await openEditor(organ.id);
+
+      expect(field('guide-margin').value).toBe('');
+    });
+
+    it('shows a stored Guide margin of 10 as 10', async () => {
+      const {open: openEditor, library} = render();
+      const organ = guidedOrgan();
+      await library.put(organ);
+      const {field} = await openEditor(organ.id);
+
+      expect(field('guide-margin').value).toBe('10');
+    });
+
+    it('shows a stored Guide margin of 2.5 as 2,5 in German', async () => {
+      TestBed.configureTestingModule({providers: [provideRouter([]), provideTestTranslations('de')]});
+      vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+      const organ = guidedOrgan(2.5);
+      await TestBed.inject(OrganLibrary).put(organ);
+      const {field} = await open(organ.id);
+
+      expect(field('guide-margin').value).toBe('2,5');
+    });
+
+    it('shows one centred Border of 16.925 mm with the hint "On each side, the rows are centred" while it is empty', async () => {
+      const {open: openEditor, library} = render();
+      const organ = guidedOrgan(null);
+      await library.put(organ);
+      const {element, field} = await openEditor(organ.id);
+
+      expect(borderOf(element)).toBe('16.925');
+      expect(hintOf(field('border'))).toBe('On each side, the rows are centred');
+    });
+
+    it('shows the guide side and the far side of the Border with a Guide margin of 10 mm', async () => {
+      const {open: openEditor, library} = render();
+      const organ = guidedOrgan();
+      await library.put(organ);
+      const {element, field} = await openEditor(organ.id);
+
+      expect(borderOf(element)).toBe('8.5 mm guide side · 25.35 mm far side');
+      expect(hintOf(field('border'))).toContain("row 1's edge");
+    });
+
+    it('shows the guide side and the far side in German with the decimal comma', async () => {
+      TestBed.configureTestingModule({providers: [provideRouter([]), provideTestTranslations('de')]});
+      vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+      const organ = guidedOrgan();
+      await TestBed.inject(OrganLibrary).put(organ);
+      const {element} = await open(organ.id);
+
+      expect(borderOf(element)).toBe('8,5 mm Führungsseite · 25,35 mm Gegenseite');
+    });
+
+    it('goes back to one centred Border when the Guide margin is cleared', async () => {
+      const {open: openEditor, library} = render();
+      const organ = guidedOrgan();
+      await library.put(organ);
+      const {element, field, type} = await openEditor(organ.id);
+
+      await type(field('guide-margin'), '');
+
+      expect(borderOf(element)).toBe('16.925');
+      expect(hintOf(field('border'))).toBe('On each side, the rows are centred');
+    });
+
+    it('names both Borders in the fit line instead of one border on each side', async () => {
+      const {open: openEditor, library} = render();
+      const organ = guidedOrgan();
+      await library.put(organ);
+      const {element} = await openEditor(organ.id);
+
+      expect(fitText(element)).toContain('20 rows take 76.15 mm of the 110 mm tape width');
+      expect(fitText(element)).toContain('8.5 mm');
+      expect(fitText(element)).toContain('25.35 mm');
+      expect(fitText(element)).not.toContain('on each side');
+    });
+
+    it('names both Borders in the label of the Tape Bed drawing', async () => {
+      const {open: openEditor, library} = render();
+      const organ = guidedOrgan();
+      await library.put(organ);
+      const {element} = await openEditor(organ.id);
+
+      const label = drawingOf(element)?.getAttribute('aria-label') ?? '';
+      expect(label).toContain('110');
+      expect(label).toContain('8.5 mm');
+      expect(label).toContain('25.35 mm');
+      expect(label).not.toContain('on each side');
+    });
+
+    it('draws the guide side as the top strip and the far side as the bottom strip', async () => {
+      const {open: openEditor, library} = render();
+      const organ = guidedOrgan();
+      await library.put(organ);
+      const {element} = await openEditor(organ.id);
+
+      const strips = [...(drawingOf(element)?.querySelectorAll('[data-testid="tape-bed-border"]') ?? [])].sort(
+        (a, b) => numberAttribute(a, 'y') - numberAttribute(b, 'y'),
+      );
+      expect(strips.map((strip) => numberAttribute(strip, 'height'))).toEqual([8.5, 25.35]);
+      expect(numberAttribute(strips[0], 'y')).toBeCloseTo(0);
+      expect(numberAttribute(strips[1], 'y')).toBeCloseTo(110 - 25.35);
+    });
+
+    it('shows the rule message of a Guide margin below half the hole diameter at the field after pressing Save', async () => {
+      const {open: openEditor, library} = render();
+      const organ = guidedOrgan(null);
+      await library.put(organ);
+      const {type, field, save, violationAt} = await openEditor(organ.id);
+
+      await type(field('guide-margin'), '1.4');
+      await save();
+
+      expect(violationAt('tapeBed.guideMargin')).toEqual([
+        'At least 1.5 mm, half the hole diameter, or the holes run off the tape.',
+      ]);
+    });
+
+    it('shows the rule message of a Guide margin beyond the far-side limit at the field after pressing Save', async () => {
+      const {open: openEditor, library} = render();
+      const organ = guidedOrgan(null);
+      await library.put(organ);
+      const {type, field, save, violationAt} = await openEditor(organ.id);
+
+      await type(field('guide-margin'), '35.36');
+      await save();
+
+      expect(violationAt('tapeBed.guideMargin')).toEqual(['At most 35.35 mm, or the last row runs off the far side.']);
+    });
+
+    it('counts the Guide margin as an unsaved change', async () => {
+      const {open: openEditor, library} = render();
+      const organ = guidedOrgan(null);
+      await library.put(organ);
+      const {element, field, type} = await openEditor(organ.id);
+
+      await type(field('guide-margin'), '10');
+
+      expect(state(element)).toBe('Unsaved changes: Guide margin');
+    });
+  });
+
   describe('saving', () => {
-    it('stores nothing while a valid Organ is only edited', async () => {
+it('stores nothing while a valid Organ is only edited', async () => {
       const {open: openEditor, library, navigate} = render();
       const {fillValidOrgan} = await openEditor();
 
@@ -1952,11 +2131,21 @@ describe('OrganEditorComponent', () => {
       expect(tapeBed.querySelector('.sheet-title')?.textContent?.trim()).toBe('Tape Bed');
     });
 
-    it('orders Name, Tape width, Hole diameter, Spacing between rows, Minimum Gap, Lead-in, Border, Minimum Hole Length in the Tape Bed sheet', async () => {
+    it('orders Name, Tape width, Hole diameter, Spacing between rows, Guide margin, Minimum Gap, Lead-in, Border, Minimum Hole Length in the Tape Bed sheet', async () => {
       const {open: openEditor} = render();
       const {element} = await openEditor();
 
-      const wanted = ['name', 'tape-width', 'hole-diameter', 'row-spacing', 'minimum-gap', 'lead-in', 'border', 'minimum-hole-length'];
+      const wanted = [
+        'name',
+        'tape-width',
+        'hole-diameter',
+        'row-spacing',
+        'guide-margin',
+        'minimum-gap',
+        'lead-in',
+        'border',
+        'minimum-hole-length',
+      ];
       expect(testIdsIn(sheet(element, 'tape-bed-sheet')).filter((id) => wanted.includes(id ?? ''))).toEqual(wanted);
     });
 

@@ -11,6 +11,7 @@ import {Router} from '@angular/router';
 import {TranslatePipe, TranslateService} from '@ngx-translate/core';
 import {
   addPipe,
+  type Borders,
   emptyOrganDraft,
   movePipe,
   newOrganId,
@@ -47,6 +48,7 @@ const FIELD_TEST_IDS: Readonly<Record<string, string>> = {
   'tapeBed.tapeWidth': 'tape-width',
   'tapeBed.holeDiameter': 'hole-diameter',
   'tapeBed.rowSpacing': 'row-spacing',
+  'tapeBed.guideMargin': 'guide-margin',
   minimumGap: 'minimum-gap',
   leadIn: 'lead-in',
   tapePerCrankTurn: 'tape-per-crank-turn',
@@ -218,18 +220,24 @@ export class OrganEditorComponent implements UnsavedChangesCheck {
   protected readonly summaryFields = computed(() => (this.saveAttempt() ? problemFields(organProblems(this.organ)) : []));
   protected readonly problemsKey = computed(() => (this.summaryFields().length === 1 ? 'ORGAN.EDITOR.PROBLEM_ONE' : 'ORGAN.EDITOR.PROBLEMS'));
 
+  /** Whether a Guide margin is set; then the rows sit off-centre and the Border names both of its sides. */
+  protected readonly guided = computed(() => this.draft().tapeBed.guideMargin !== null);
+
   /** How the rows fit the Tape Bed; `null` while a value is missing or there are no Pipes. */
   private readonly tapeBedFit = computed(() => {
-    const {tapeWidth, holeDiameter, rowSpacing} = this.draft().tapeBed;
+    const {tapeWidth, holeDiameter, rowSpacing, guideMargin} = this.draft().tapeBed;
     const pipeCount = this.draft().pipes.length;
     if (tapeWidth === null || holeDiameter === null || rowSpacing === null || pipeCount === 0) return null;
-    return {pipeCount, tapeWidth, holeDiameter, rowSpacing, ...tapeBedFit({tapeWidth, holeDiameter, rowSpacing}, pipeCount)};
+    const tapeBed = {tapeWidth, holeDiameter, rowSpacing, ...(guideMargin === null ? {} : {guideMargin})};
+    return {pipeCount, tapeWidth, holeDiameter, rowSpacing, ...tapeBedFit(tapeBed, pipeCount)};
   });
 
-  /** The Border the rows leave on each side, in the current language; empty while it is unknown or negative. */
+  /** The Border in the current language: one value when centred, both sides when a Guide margin is set; empty while it is unknown or not fitting. */
   protected readonly border = computed(() => {
-    const fit = this.tapeBedFit();
-    return fit === null || fit.borders.guide < 0 ? '' : formatNumber(fit.borders.guide, this.language());
+    const fit = this.fit();
+    if (fit === null || fit.tooWide) return '';
+    if (!this.guided()) return fit.border;
+    return String(this.translate.instant('ORGAN.EDITOR.BORDER_SIDES', {guide: fit.border, far: fit.far}));
   });
 
   /** The numbers of the fit check in the current language; `null` while it can't be computed. */
@@ -238,23 +246,34 @@ export class OrganEditorComponent implements UnsavedChangesCheck {
     if (fit === null) return null;
     const language = this.language();
     const one = fit.pipeCount === 1 ? '_ONE' : '';
+    const offCentre = this.guided() ? '_OFF_CENTRE' : '';
+    const tooWide = !fits(fit.borders);
     return {
       count: fit.pipeCount,
       rowSpan: formatNumber(fit.rowSpan, language),
       tapeWidth: formatNumber(fit.tapeWidth, language),
       border: formatNumber(fit.borders.guide, language),
-      tooWide: fit.borders.guide < 0,
-      fitKey: `ORGAN.EDITOR.${fit.borders.guide < 0 ? 'FIT_TOO_WIDE' : 'FIT'}${one}`,
-      drawingKey: `ORGAN.EDITOR.TAPE_BED_DRAWING${one}`,
+      far: formatNumber(fit.borders.far, language),
+      tooWide,
+      fitKey: tooWide ? `ORGAN.EDITOR.FIT_TOO_WIDE${one}` : `ORGAN.EDITOR.FIT${offCentre}${one}`,
+      drawingKey: `ORGAN.EDITOR.TAPE_BED_DRAWING${offCentre}${one}`,
     };
   });
 
-  /** The Tape Bed in mm, for the drawing; `null` while a value is missing or the Border would be negative. */
+  /** The Tape Bed in mm, for the drawing; `null` while a value is missing or a Border would be negative. */
   protected readonly drawing = computed(() => {
     const fit = this.tapeBedFit();
-    if (fit === null || fit.borders.guide < 0) return null;
-    const rows = Array.from({length: fit.pipeCount}, (_, row) => fit.borders.guide + fit.holeDiameter / 2 + row * fit.rowSpacing);
-    return {tapeWidth: fit.tapeWidth, length: 2 * fit.tapeWidth, border: fit.borders.guide, bottomBorderTop: fit.tapeWidth - fit.borders.guide, rows};
+    if (fit === null || !fits(fit.borders)) return null;
+    const {guide, far} = fit.borders;
+    const rows = Array.from({length: fit.pipeCount}, (_, row) => guide + fit.holeDiameter / 2 + row * fit.rowSpacing);
+    return {
+      tapeWidth: fit.tapeWidth,
+      length: 2 * fit.tapeWidth,
+      border: guide,
+      bottomBorderTop: fit.tapeWidth - far,
+      bottomBorder: roundedMm(far),
+      rows,
+    };
   });
 
   protected readonly minimumHoleLength = computed(() => {
@@ -388,6 +407,16 @@ export class OrganEditorComponent implements UnsavedChangesCheck {
     this.deleted = true;
     await this.router.navigate(['/organs']);
   }
+}
+
+/** Whether both Borders are free of the rows: a Border below zero means the rows run off the Tape. */
+function fits(borders: Borders): boolean {
+  return borders.guide >= 0 && borders.far >= 0;
+}
+
+/** A length in mm without the float noise of the subtraction that gave it (25.349999999999994 is 25.35). */
+function roundedMm(value: number): number {
+  return Math.round(value * 1e6) / 1e6;
 }
 
 function toProblem({path, message}: FieldProblem): LeaveProblem {

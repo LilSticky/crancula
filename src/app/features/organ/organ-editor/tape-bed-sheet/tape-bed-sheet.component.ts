@@ -14,7 +14,10 @@ export interface TapeBedFitText {
   readonly count: number;
   readonly rowSpan: string;
   readonly tapeWidth: string;
+  /** The Border: the centred one, or the guide side when the rows are off-centre. */
   readonly border: string;
+  /** The far side, only when the rows are off-centre. */
+  readonly far?: string;
   readonly tooWide: boolean;
   readonly fitKey: string;
   readonly drawingKey: string;
@@ -24,8 +27,11 @@ export interface TapeBedFitText {
 export interface TapeBedDrawing {
   readonly tapeWidth: number;
   readonly length: number;
+  /** The strip at the top edge: the guide side, or the Border when centred. */
   readonly border: number;
   readonly bottomBorderTop: number;
+  /** The strip at the bottom edge, the far side; as high as `border` when the rows are centred. */
+  readonly bottomBorder?: number;
   readonly rows: readonly number[];
 }
 
@@ -40,6 +46,8 @@ export interface TapeBedDrawing {
 export class TapeBedSheetComponent {
   readonly organ = input.required<FieldTree<OrganDraft>>();
   readonly border = input<string>('');
+  /** Whether a Guide margin is set: the Border then names the guide side and the far side. */
+  readonly guided = input<boolean>(false);
   readonly minimumHoleLength = input<string>('');
   readonly fit = input<TapeBedFitText | null>(null);
   readonly drawing = input<TapeBedDrawing | null>(null);

@@ -217,6 +217,74 @@ describe('TapeBedSheetComponent', () => {
     });
   });
 
+  describe('the Guide margin field', () => {
+    /** A 20er-Drehorgel Tape Bed with 3 mm holes, so the smallest Guide margin is 1.5 mm. */
+    const guided = (guideMargin: number | null) =>
+      toDraft(testOrgan('Positive', 2, {tapeBed: {tapeWidth: 110, holeDiameter: 3, rowSpacing: 3.85, guideMargin}}));
+
+    it('comes after the Spacing between rows and before the Minimum Gap', async () => {
+      const {element} = await render();
+
+      const ids = [...element.querySelectorAll('[data-testid]')].map((node) => node.getAttribute('data-testid'));
+      expect(ids.indexOf('guide-margin')).toBeGreaterThan(ids.indexOf('row-spacing'));
+      expect(ids.indexOf('guide-margin')).toBeLessThan(ids.indexOf('minimum-gap'));
+    });
+
+    it('is empty for a centred Organ', async () => {
+      const {field} = await render();
+
+      expect(field('guide-margin').value).toBe('');
+    });
+
+    it('shows the Guide margin of the Organ', async () => {
+      const {field} = await render({draft: guided(10)});
+
+      expect(field('guide-margin').value).toBe('10');
+    });
+
+    it('is a decimal text input with the suffix "mm"', async () => {
+      const {field} = await render();
+
+      expect(field('guide-margin').type).toBe('text');
+      expect(field('guide-margin').getAttribute('inputmode')).toBe('decimal');
+      expect(field('guide-margin').closest('mat-form-field')?.querySelector('[matTextSuffix]')?.textContent?.trim()).toBe('mm');
+    });
+
+    it('is labelled "Guide margin" and has a hint that is a translated text', async () => {
+      const {field} = await render();
+
+      const formField = field('guide-margin').closest('mat-form-field');
+      expect(formField?.querySelector('mat-label')?.textContent?.trim()).toBe('Guide margin');
+      const hint = formField?.querySelector('mat-hint')?.textContent?.trim() ?? '';
+      expect(hint).toBe('Guide edge to the centre of row 1; empty: rows centred');
+    });
+
+    it('writes a typed decimal comma into the form as a number', async () => {
+      const {field, organ, fixture} = await render({draft: guided(null)});
+
+      const input = field('guide-margin');
+      input.value = '2,5';
+      input.dispatchEvent(new Event('input'));
+      await fixture.whenStable();
+
+      expect(organ.tapeBed.guideMargin().value()).toBe(2.5);
+    });
+
+    it('shows "At least 1.5 mm, half the hole diameter, or the holes run off the tape." under its path for a Guide margin of 1.4', async () => {
+      const {field, fixture, element} = await render({draft: guided(null)});
+
+      const input = field('guide-margin');
+      input.value = '1.4';
+      input.dispatchEvent(new Event('input'));
+      await fixture.whenStable();
+
+      const messages = [...element.querySelectorAll('[data-testid="violation"][data-path="tapeBed.guideMargin"]')].map((error) =>
+        error.textContent?.trim(),
+      );
+      expect(messages).toEqual(['At least 1.5 mm, half the hole diameter, or the holes run off the tape.']);
+    });
+  });
+
   describe('the long fields of the Tape Bed card', () => {
     it.each(['tape-per-crank-turn', 'slowest-crank-speed', 'fastest-crank-speed'])(
       'spans the full row of the field grid, as the Name field does (%s)',
